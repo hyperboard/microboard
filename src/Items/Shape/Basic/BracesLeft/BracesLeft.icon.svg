@@ -1,0 +1,14 @@
+<svg
+   width="24px"
+   height="24px"
+   viewBox="0 0 24 24"
+   xmlns="http://www.w3.org/2000/svg"
+  >
+  <g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4.1666666666666676px;"
+       d="m 0,100 c 0,0 10,0 10,-10 V 55 L 20,50 10,45 V 10 C 10,10 10,3 0,3"
+       transform="translate(1,1) scale(0.22)"
+    />
+  </g>
+</svg>

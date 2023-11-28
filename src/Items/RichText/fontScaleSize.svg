@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="700"
+   height="200"
+   viewBox="0 0 700 200"
+   version="1.1"
+   id="SVGRoot"
+   sodipodi:docname="fontScaleSize.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview459"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="1.6431953"
+     inkscape:cx="377.61792"
+     inkscape:cy="131.14692"
+     inkscape:window-width="1920"
+     inkscape:window-height="999"
+     inkscape:window-x="0"
+     inkscape:window-y="44"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     width="1000px"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid487"
+       spacingx="5"
+       spacingy="5"
+       originx="0"
+       originy="0" />
+  </sodipodi:namedview>
+  <defs
+     id="defs454" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif"
+       x="23.726"
+       y="125.206"
+       id="text788"><tspan
+         sodipodi:role="line"
+         id="tspan786"
+         x="23.726"
+         y="125.206">Paragraph</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:28px;line-height:1.25;font-family:sans-serif"
+       x="322.67599"
+       y="124.356"
+       id="text842"><tspan
+         sodipodi:role="line"
+         id="tspan840"
+         x="322.67599"
+         y="124.356">Header</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:28px;line-height:1.25;font-family:sans-serif"
+       x="147.452"
+       y="125.412"
+       id="text788-3"><tspan
+         sodipodi:role="line"
+         id="tspan786-6"
+         x="147.452"
+         y="125.412">Paragraph</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif"
+       x="323.66882"
+       y="139.17966"
+       id="text788-7"><tspan
+         sodipodi:role="line"
+         id="tspan786-5"
+         x="323.66882"
+         y="139.17966">Paragraph</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:56px;line-height:1.25;font-family:sans-serif"
+       x="470.35199"
+       y="123.712"
+       id="text842-3"><tspan
+         sodipodi:role="line"
+         id="tspan840-5"
+         x="470.35199"
+         y="123.712">Header</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:28px;line-height:1.25;font-family:sans-serif"
+       x="472.68671"
+       y="153.27727"
+       id="text788-3-6"><tspan
+         sodipodi:role="line"
+         id="tspan786-6-2"
+         x="472.68671"
+         y="153.27727">Paragraph</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif;fill:#ff0000"
+       x="23.754"
+       y="74.678001"
+       id="text1796"><tspan
+         sodipodi:role="line"
+         id="tspan1794"
+         x="23.754"
+         y="74.678001"
+         style="font-size:14px">Default font size</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif;fill:#ff0000"
+       x="148.754"
+       y="74.678001"
+       id="text1800"><tspan
+         sodipodi:role="line"
+         id="tspan1798"
+         x="148.754"
+         y="74.678001"
+         style="font-size:14px">Double font size</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif;fill:#ff0000;stroke:none"
+       x="199.87801"
+       y="24.677999"
+       id="text1804"><tspan
+         sodipodi:role="line"
+         id="tspan1802"
+         x="199.87801"
+         y="24.677999">Default text scale</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif;fill:#ff0000"
+       x="474.59799"
+       y="24.677999"
+       id="text1808"><tspan
+         sodipodi:role="line"
+         id="tspan1806"
+         x="474.59799"
+         y="24.677999">Double text scale</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;line-height:1.25;font-family:sans-serif;fill:#ff0000"
+       x="323.89401"
+       y="74.678001"
+       id="text1800-3"><tspan
+         sodipodi:role="line"
+         id="tspan1798-6"
+         x="323.89401"
+         y="74.678001"
+         style="font-size:14px">Both font sizes</tspan></text>
+  </g>
+</svg>

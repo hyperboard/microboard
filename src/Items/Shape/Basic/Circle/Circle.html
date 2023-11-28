@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Inkscape Output</title>
+	</head>
+	<body>
+		<canvas id="canvas" width="1000" height="1000"></canvas>
+		<script>
+			var ctx = document.getElementById("canvas").getContext("2d");
+
+			// #layer1
+
+			// #path3386
+			ctx.translate(100, 100);
+			ctx.scale(5, 5);
+			ctx.beginPath();
+			ctx.strokeStyle = "rgb(0, 0, 0)";
+			ctx.lineWidth = 1;
+			ctx.lineCap = "butt";
+			ctx.lineJoin = "miter";
+			ctx.moveTo(0, 50);
+			ctx.bezierCurveTo(0, -18, 100, -18, 100, 50);
+			ctx.bezierCurveTo(100, 118, 0, 118, 0, 50);
+			ctx.stroke();
+
+			// #path3782
+			ctx.beginPath();
+			ctx.strokeStyle = "rgb(0, 128, 0)";
+			ctx.lineWidth = 1;
+			ctx.lineCap = "butt";
+			ctx.lineJoin = "miter";
+			ctx.moveTo(10, 20);
+			ctx.lineTo(90, 20);
+			ctx.lineTo(90, 80);
+			ctx.lineTo(10, 80);
+			ctx.lineTo(10, 20);
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.strokeStyle = "rgb(0, 0, 128)";
+			ctx.arc(50, 50, 50, 0, 2 * Math.PI);
+			ctx.stroke();
+		</script>
+	</body>
+</html>

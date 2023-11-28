@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="320"
+   height="240"
+   viewBox="0 0 320 240"
+   version="1.1"
+   id="SVGRoot"
+   sodipodi:docname="PointerPosition.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview459"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="1.778"
+     inkscape:cx="217.09786"
+     inkscape:cy="139.76378"
+     inkscape:window-width="1920"
+     inkscape:window-height="999"
+     inkscape:window-x="0"
+     inkscape:window-y="44"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     width="1000px"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid487"
+       spacingx="5"
+       spacingy="5"
+       originx="0"
+       originy="0" />
+  </sodipodi:namedview>
+  <defs
+     id="defs454" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <ellipse
+       style="fill:none;stroke:#000000"
+       id="path109"
+       cx="220.82191"
+       cy="167.03282"
+       rx="65.969376"
+       ry="61.78754" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 26.414012,124.49451 c 0,0 29.2529,-49.23252 75.271488,-49.05451 17.53095,0.06781 30.10976,1.599946 73.68299,45.04156"
+       id="path165"
+       sodipodi:nodetypes="csc" />
+    <path
+       style="fill:none;stroke:#0000ff;stroke-width:0.594956px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 153.2423,141.4803 201.83707,95.511474"
+       id="path167" />
+    <path
+       style="fill:#ff7f2a;stroke:#ff7f2a;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 174.95011,120.33774 -16.9324,-7.86517 11.13416,-9.9752 z"
+       id="path169" />
+    <path
+       style="fill:#008000;stroke:#008000;stroke-width:1.03127px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 174.85526,120.28446 125.50711,70.237878"
+       id="path171" />
+    <text
+       xml:space="preserve"
+       style="font-size:10px;line-height:1.25;font-family:sans-serif;fill:#008000;stroke:none"
+       x="64.304131"
+       y="54.136669"
+       id="text335"><tspan
+         sodipodi:role="line"
+         id="tspan333"
+         x="64.304131"
+         y="54.136669">Normal vector (orthogonal to tangent)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;line-height:1.25;font-family:sans-serif;fill:#0000ff"
+       x="114.14697"
+       y="142.36389"
+       id="text339"><tspan
+         sodipodi:role="line"
+         id="tspan337"
+         x="114.14697"
+         y="142.36389">Tangent</tspan></text>
+    <path
+       style="fill:#ff0000;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 42.012392,25.399941 -16.96005,7.805372 -0.38751,-14.944029 z"
+       id="path169-3" />
+    <text
+       xml:space="preserve"
+       style="font-size:10px;line-height:1.25;font-family:sans-serif;fill:#ff0000"
+       x="53.160912"
+       y="28.409462"
+       id="text466"><tspan
+         sodipodi:role="line"
+         id="tspan464"
+         x="53.160912"
+         y="28.409462">Pointer without transformation</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;line-height:1.25;font-family:sans-serif;fill:#ff9955;stroke:none"
+       x="158.22777"
+       y="91.247337"
+       id="text470"><tspan
+         sodipodi:role="line"
+         id="tspan468"
+         x="158.22777"
+         y="91.247337">Transformed Pointer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;line-height:1.25;font-family:sans-serif"
+       x="206.56436"
+       y="161.50171"
+       id="text474"><tspan
+         sodipodi:role="line"
+         id="tspan472"
+         x="206.56436"
+         y="161.50171">Shape</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;line-height:1.25;font-family:sans-serif"
+       x="74.337494"
+       y="97.381538"
+       id="text478"><tspan
+         sodipodi:role="line"
+         id="tspan476"
+         x="74.337494"
+         y="97.381538">Connector</tspan></text>
+  </g>
+</svg>

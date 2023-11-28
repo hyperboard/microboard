@@ -1,0 +1,99 @@
+import { Transformation } from "./Transformation";
+import { TransformationOperation } from "./TransformationOperations";
+import { Command } from "../../Events";
+import { mapItemsByOperation } from "../ItemsCommandUtils";
+
+export class TransformationCommand implements Command {
+	reverse = this.getReverse();
+
+	constructor(
+		private transformation: Transformation[],
+		private operation: TransformationOperation,
+	) {}
+
+	apply(): void {
+		for (const transformation of this.transformation) {
+			transformation.apply(this.operation);
+		}
+	}
+
+	revert(): void {
+		this.reverse.forEach(({ item, operation }) => {
+			item.apply(operation);
+		});
+	}
+
+	getReverse(): {
+		item: Transformation;
+		operation: TransformationOperation;
+	}[] {
+		const op = this.operation;
+
+		switch (this.operation.method) {
+			case "translateTo":
+				return mapItemsByOperation(
+					this.transformation,
+					transformation => {
+						return {
+							...this.operation,
+							x: transformation.getTranslation().x,
+							y: transformation.getTranslation().y,
+						};
+					},
+				);
+			case "translateBy": {
+				const op = this.operation;
+				return mapItemsByOperation(this.transformation, () => {
+					return {
+						...this.operation,
+						x: -op.x,
+						y: -op.y,
+					};
+				});
+			}
+			case "scaleTo":
+			case "scaleToRelativeTo": {
+				return mapItemsByOperation(
+					this.transformation,
+					transformation => {
+						return {
+							...op,
+							x: transformation.getScale().x,
+							y: transformation.getScale().y,
+						};
+					},
+				);
+			}
+			case "scaleBy":
+			case "scaleByRelativeTo": {
+				const op = this.operation;
+				return mapItemsByOperation(this.transformation, () => {
+					return {
+						...op,
+						x: 1 / op.x,
+						y: 1 / op.y,
+					};
+				});
+			}
+			case "rotateTo":
+				return mapItemsByOperation(
+					this.transformation,
+					transformation => {
+						return {
+							...this.operation,
+							degree: transformation.getRotation(),
+						};
+					},
+				);
+			case "rotateBy": {
+				const op = this.operation;
+				return mapItemsByOperation(this.transformation, () => {
+					return {
+						...this.operation,
+						degree: -op.degree,
+					};
+				});
+			}
+		}
+	}
+}

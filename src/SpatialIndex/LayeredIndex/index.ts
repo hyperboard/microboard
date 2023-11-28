@@ -1,0 +1,287 @@
+import { Mbr, Point } from "Board/Items";
+import { Item } from "Board/Items";
+import { Layers } from "./Layers";
+import { getContainersSortedByZIndex } from "./getContainersSortedByZIndex";
+import { RTreeIndex } from "../RTreeIndex";
+
+export class Container extends Mbr {
+	constructor(
+		public id: string,
+		public item: Item,
+		public layer: number,
+		public zIndex: number,
+	) {
+		const rect = item.getMbr();
+		super(rect.left, rect.top, rect.right, rect.bottom);
+	}
+}
+
+export class LayeredIndex {
+	map = new Map<string, Container>();
+	layers = new Layers(() => {
+		return new RTreeIndex();
+	});
+
+	constructor(private getZIndex: (item: Item) => number) {
+		this.getZIndex = this.getZIndex.bind(this);
+		this.layers.newOnTop();
+	}
+
+	findById(id: string): Item | undefined {
+		const container = this.map.get(id);
+		return container ? container.item : undefined;
+	}
+
+	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
+		let items: Item[] = [];
+		for (const layer of this.layers) {
+			items = items.concat(layer.getEnclosedOrCrossedBy(rect));
+		}
+		return items;
+	}
+
+	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
+		let items: Item[] = [];
+		for (const layer of this.layers) {
+			items = items.concat(layer.getRectsEnclosedOrCrossedBy(rect));
+		}
+		return items;
+	}
+
+	isAnyEnclosedOrCrossedBy(rect: Mbr): boolean {
+		for (const layer of this.layers) {
+			if (layer.isAnyEnclosedOrCrossedBy(rect)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	getNearestTo(
+		point: Point,
+		maxItems: number,
+		filter: (item: Item) => boolean,
+		maxDistance: number,
+	): Item[] {
+		let items: Item[] = [];
+		for (const layer of this.layers) {
+			items = items.concat(
+				layer.getNearestTo(point, maxItems, filter, maxDistance),
+			);
+		}
+		return items;
+	}
+
+	private getContainersFromItems(items: Item[]): Container[] {
+		const containers: Container[] = [];
+		for (const item of items) {
+			const container = this.map.get(item.getId());
+			if (container) {
+				containers.push(container);
+			}
+		}
+		return containers;
+	}
+
+	insertContainer(container: Container): void {
+		this.remove(container.item);
+		while (container.layer > this.layers.getTop()) {
+			this.layers.newOnTop();
+		}
+		while (container.layer < this.layers.getBottom()) {
+			this.layers.newOnBottom();
+		}
+		const layer = this.layers.get(container.layer);
+		if (layer) {
+			layer.insert(container);
+			this.map.set(container.id, container);
+		}
+	}
+
+	shiftContainerAbove(container: Container, layer: number): void {
+		const bounds = container.item.getMbr();
+		this.remove(container.item);
+		const inBounds = this.getEnclosedOrCrossedBy(bounds);
+		const containersInBounds = this.getContainersFromItems(inBounds);
+		const containersAbove = [];
+		const containerZIndex = this.getZIndex(container.item);
+		for (const one of containersInBounds) {
+			if (this.getZIndex(one.item) > containerZIndex) {
+				containersAbove.push(one);
+			}
+		}
+		if (container.layer <= layer) {
+			container.layer = layer + 1;
+		}
+		this.insertContainer(container);
+		if (inBounds.length === 0) {
+			return;
+		}
+		for (const one of containersAbove) {
+			if (container.layer >= one.layer) {
+				this.shiftContainerAbove(one, container.layer);
+			}
+		}
+	}
+
+	shiftContainerBelow(container: Container, layer: number): void {
+		const bounds = container.item.getMbr();
+		this.remove(container.item);
+		const inBounds = this.getEnclosedOrCrossedBy(bounds);
+		const containersInBounds = this.getContainersFromItems(inBounds);
+		const containersBelow = [];
+		const containerZIndex = this.getZIndex(container.item);
+		for (const one of containersInBounds) {
+			if (this.getZIndex(one.item) < containerZIndex) {
+				containersBelow.push(one);
+			}
+		}
+		if (container.layer >= layer) {
+			container.layer = layer - 1;
+		}
+		this.insertContainer(container);
+		if (inBounds.length === 0) {
+			return;
+		}
+		for (const one of containersBelow) {
+			if (container.layer <= one.layer) {
+				this.shiftContainerBelow(one, container.layer);
+			}
+		}
+	}
+
+	insert(item: Item): void {
+		const toInsert = new Container(
+			item.getId(),
+			item,
+			0,
+			this.getZIndex(item),
+		);
+		const bounds = item.getMbr();
+		const inBounds = this.getEnclosedOrCrossedBy(bounds);
+
+		if (inBounds.length === 0) {
+			return this.insertContainer(toInsert);
+		}
+
+		const containersInBounds = this.getContainersFromItems(inBounds);
+		const containersInBoundsCopy = [];
+		for (const one of containersInBounds) {
+			containersInBoundsCopy.push(
+				new Container(one.id, one.item, one.layer, one.zIndex),
+			);
+		}
+
+		const containers = containersInBoundsCopy.concat([toInsert]);
+		const sorted = getContainersSortedByZIndex(containers);
+		const index = sorted.findIndex(container => {
+			return container === toInsert;
+		});
+		const above = containers.length - (index + 1);
+		const below = containers.length - (above + 1);
+		const containersAbove = containers.slice(index + 1, containers.length);
+		const containersBelow = containers.slice(0, index);
+		// TODO clean up unnecessery code
+		let topLayer = -Number.MAX_VALUE;
+		for (const container of containers) {
+			if (topLayer < container.layer) {
+				topLayer = container.layer;
+			}
+		}
+		let bottomLayer = Number.MAX_VALUE;
+		for (const container of containers) {
+			if (bottomLayer > container.layer) {
+				bottomLayer = container.layer;
+			}
+		}
+		let topLayerBelow = -Number.MAX_VALUE;
+		for (const container of containersBelow) {
+			if (topLayerBelow < container.layer) {
+				topLayerBelow = container.layer;
+			}
+		}
+		let bottomLayerAbove = Number.MAX_VALUE;
+		for (const container of containersAbove) {
+			if (bottomLayerAbove > container.layer) {
+				bottomLayerAbove = container.layer;
+			}
+		}
+		if (above === 0) {
+			toInsert.layer = topLayer + 1;
+			return this.insertContainer(toInsert);
+		} else if (below === 0) {
+			toInsert.layer = bottomLayer - 1;
+			return this.insertContainer(toInsert);
+		} else if (above > below) {
+			toInsert.layer = bottomLayerAbove - 1;
+			this.insertContainer(toInsert);
+			for (const container of containersBelow) {
+				if (container.layer >= toInsert.layer) {
+					this.shiftContainerBelow(container, toInsert.layer);
+				}
+			}
+		} else {
+			toInsert.layer = topLayerBelow + 1;
+			this.insertContainer(toInsert);
+			for (const container of containersAbove) {
+				if (container.layer <= toInsert.layer) {
+					this.shiftContainerAbove(container, toInsert.layer);
+				}
+			}
+		}
+	}
+
+	change(item: Item): void {
+		const id = item.getId();
+		const container = this.map.get(id);
+		if (container) {
+			const layer = this.layers.get(container.layer);
+			if (layer) {
+				layer.remove(id);
+				this.map.delete(id);
+				this.insert(item);
+			}
+		}
+	}
+
+	remove(item: Item): void {
+		const id = item.getId();
+		const container = this.map.get(id);
+		if (container) {
+			const layer = this.layers.get(container.layer);
+			if (layer) {
+				layer.remove(id);
+			}
+			this.map.delete(id);
+		}
+	}
+
+	get(id: string): Item | undefined {
+		const container = this.map.get(id);
+		if (container) {
+			return container.item;
+		} else {
+			return undefined;
+		}
+	}
+
+	list(): Item[] {
+		const items = [];
+		for (const record of this.map) {
+			items.push(record[1].item);
+		}
+		return items;
+	}
+
+	batchInsert(items: Item[]): void {
+		for (const item of items) {
+			this.insert(item);
+		}
+	}
+
+	batchChange(items: Item[]): void {
+		for (const item of items) {
+			this.change(item);
+		}
+	}
+}

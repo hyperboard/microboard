@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="700"
+   height="450"
+   viewBox="0 0 700 450"
+   version="1.1"
+   id="SVGRoot"
+   sodipodi:docname="Connectors.svg"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview459"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="1.4788305"
+     inkscape:cx="346.55764"
+     inkscape:cy="204.55353"
+     inkscape:window-width="1920"
+     inkscape:window-height="999"
+     inkscape:window-x="0"
+     inkscape:window-y="44"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     width="1000px"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid487"
+       spacingx="5"
+       spacingy="5"
+       originx="0"
+       originy="0" />
+  </sodipodi:namedview>
+  <defs
+     id="defs454" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <ellipse
+       style="fill:none;stroke:#000000"
+       id="path59"
+       cx="80.119896"
+       cy="275.60068"
+       rx="55"
+       ry="52.5" />
+    <ellipse
+       style="fill:none;stroke:#000000"
+       id="path59-3"
+       cx="235.61989"
+       cy="112.60068"
+       rx="55"
+       ry="52.5" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 115.11989,235.60068 80,-85"
+       id="path1033" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 467.58362,212.87571 160,35"
+       id="path1035" />
+    <ellipse
+       style="fill:none;stroke:#000000"
+       id="path59-6"
+       cx="414.6199"
+       cy="197.60068"
+       rx="55"
+       ry="52.5" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 290.11989,110.60068 c 65,0 -8.07172,95.30993 61.92828,95.30993"
+       id="path2024"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 462.55952,226.18669 c 0,0 164.47832,90.88053 104.78598,139.54438 -58.13039,47.39048 -417.22561,44.86961 -457.22561,14.86961 -39.999995,-30 -29.999995,-50 -29.999995,-50"
+       id="path2026"
+       sodipodi:nodetypes="cssc" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 420.11989,145.60068 V 30.600681 h -185 v 30"
+       id="path2028" />
+    <path
+       style="fill:#ff0000;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 230.24375,43.634456 5,15 5,-15 z"
+       id="path2030" />
+    <path
+       style="fill:#ff0000;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 345.48745,210.44329 14.90026,-5.28981 -15.09409,-4.70831 z"
+       id="path2030-7" />
+    <path
+       style="fill:#ff0000;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 617.75764,251.08237 15.74431,-1.45493 -13.46841,-8.28264 z"
+       id="path2030-7-3" />
+    <path
+       style="fill:#ff0000;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 84.828035,344.13803 -4.91474,-15.02815 -5.0851,14.97136 z"
+       id="path2030-7-5" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 184.79198,149.73484 11.25644,-0.0656 0.1009,10.23714"
+       id="path2133" />
+    <ellipse
+       style="fill:#0000ff;stroke:#0000ff"
+       id="path2205"
+       cx="567.67542"
+       cy="366.19177"
+       rx="3.3135862"
+       ry="2.969584" />
+  </g>
+</svg>
