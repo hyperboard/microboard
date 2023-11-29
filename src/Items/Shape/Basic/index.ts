@@ -19,6 +19,7 @@ import { Trapezoid } from "./Trapezoid";
 import { Rectangle } from "./Rectangle";
 import { Triangle } from "./Triangle";
 import { PredefinedProcess } from "./PredefinedProcess";
+import {Sticker} from "./Sticker";
 
 export const Shapes = {
 	Rectangle,
@@ -42,6 +43,7 @@ export const Shapes = {
 	SpeachBubble,
 	Star,
 	Trapezoid,
+	Sticker
 } as const;
 
 export type ShapeType = keyof typeof Shapes;

@@ -3,7 +3,7 @@ import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
 import { Line } from "../Line";
 import { Point } from "../Point";
-import { BorderStyle, BorderWidth, Path } from "./Path";
+import {BorderStyle, BorderWidth, Path, PathStylize} from "./Path";
 import { Matrix } from "../Transformation";
 import { GeometricNormal } from "../GeometricNormal";
 
@@ -22,6 +22,7 @@ export class Paths implements Geometry {
 		private borderWidth: BorderWidth = 1,
 		private backgroundOpacity = 1,
 		private borderOpacity = 1,
+		private setterFilter: (m:string,v:any,p:Path,i:number) => boolean = () => true
 	) {
 		this.setBackgroundColor(this.backgroundColor);
 		this.setBorderColor(this.borderColor);
@@ -51,55 +52,26 @@ export class Paths implements Geometry {
 		return this.borderWidth;
 	}
 
-	setBackgroundColor(color: string): void {
-		for (const path of this.paths) {
-			path.setBackgroundColor(color);
-		}
-		this.backgroundColor = color;
+	_setter<T extends keyof PathStylize>(p: any, method: T, v: any): void {
+		this.paths
+			.filter((p,i) => this.setterFilter(method,v,p,i))
+			.forEach(path => path[method].call<Path, any, void>(path, v));
+		this[p as keyof this] = v;
 	}
-
-	setBorderColor(color: string): void {
-		for (const path of this.paths) {
-			path.setBorderColor(color);
-		}
-		this.borderColor = color;
-	}
-
-	setBorderStyle(style: BorderStyle): void {
-		for (const path of this.paths) {
-			path.setBorderStyle(style);
-		}
-		this.borderStyle = style;
-	}
-
-	setBorderWidth(width: BorderWidth): void {
-		for (const path of this.paths) {
-			path.setBorderWidth(width);
-		}
-		this.borderWidth = width;
-	}
+	setBackgroundColor(color: string): void {this._setter('backgroundColor', 'setBackgroundColor', color);}
+	setBorderColor(color: string): void {this._setter('borderColor', 'setBorderColor', color);}
+	setBorderStyle(style: BorderStyle): void {this._setter('borderStyle', 'setBorderStyle', style);}
+	setBorderWidth(width: BorderWidth): void {this._setter('borderWidth', 'setBorderWidth', width);}
+	setBackgroundOpacity(opacity: number): void {this._setter('backgroundOpacity', 'setBackgroundOpacity', opacity);}
+	setBorderOpacity(opacity: number): void {this._setter('borderOpacity', 'setBorderOpacity', opacity);}
 
 	getBackgroundOpacity(): number {
 		return this.backgroundOpacity;
 	}
-
-	setBackgroundOpacity(opacity: number): void {
-		for (const path of this.paths) {
-			path.setBackgroundOpacity(opacity);
-		}
-		this.backgroundOpacity = opacity;
-	}
-
 	getBorderOpacity(): number {
 		return this.borderOpacity;
 	}
 
-	setBorderOpacity(opacity: number): void {
-		for (const path of this.paths) {
-			path.setBorderOpacity(opacity);
-		}
-		this.borderOpacity = opacity;
-	}
 
 	getIntersectionPoints(segment: Line): Point[] {
 		let intersections: Point[] = [];
@@ -227,6 +199,9 @@ export class Paths implements Geometry {
 			this.borderColor,
 			this.borderStyle,
 			this.borderWidth,
+			this.backgroundOpacity,
+			this.borderOpacity,
+			this.setterFilter
 		);
 	}
 
@@ -241,6 +216,9 @@ export class Paths implements Geometry {
 			this.borderColor,
 			this.borderStyle,
 			this.borderWidth,
+			this.backgroundOpacity,
+			this.borderOpacity,
+			this.setterFilter
 		);
 	}
 

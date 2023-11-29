@@ -47,6 +47,15 @@ export class Tools extends ToolContext {
 		return this.tool instanceof Select ? this.tool : undefined;
 	}
 
+	addSticker(): void {
+		if (this.getAddSticker()) {
+			this.cancel();
+		} else {
+			this.tool = new AddShape(this.board);
+			this.tool.setShapeType("Sticker");
+		}
+		this.publish();
+	}
 	addShape(): void {
 		if (this.getAddShape()) {
 			this.cancel();
@@ -57,7 +66,10 @@ export class Tools extends ToolContext {
 	}
 
 	getAddShape(): AddShape | undefined {
-		return this.tool instanceof AddShape ? this.tool : undefined;
+		return (this.tool instanceof AddShape && this.tool.type !== "Sticker") ? this.tool : undefined;
+	}
+	getAddSticker(): AddShape | undefined {
+		return (this.tool instanceof AddShape && this.tool.type === "Sticker" ) ? this.tool : undefined;
 	}
 
 	addText(): void {

@@ -63,7 +63,16 @@ export type BorderWidth = keyof typeof scaledPatterns;
 
 export const borderWidths: BorderWidth[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-export class Path implements Geometry {
+export interface PathStylize {
+	setBackgroundColor: (color: string) => void
+	setBorderColor: (color: string) => void
+	setBorderStyle: (style: BorderStyle) => void
+	setBorderWidth: (style: BorderWidth) => void
+	setBackgroundOpacity: (opacity: number) => void
+	setBorderOpacity: (opacity: number) => void
+}
+
+export class Path implements Geometry, PathStylize {
 	private path2d = Path2D ? new Path2D() : undefined; // just to make tests run in node
 	private x: number;
 	private y: number;
@@ -81,6 +90,8 @@ export class Path implements Geometry {
 		private borderWidth = 1,
 		private backgroundOpacity = 1,
 		private borderOpacity = 1,
+		private shadowColor: string = "transparent",
+		private shadowSize: number = 0
 	) {
 		this.updateCache();
 		const mbr = this.getMbr();
@@ -311,12 +322,21 @@ export class Path implements Geometry {
 			}
 			return;
 		}
-		if (context.isBorderInvisible) {
+		if (context.isBorderInvisible && !this.shadowSize) {
 			if (shouldFillBackground) {
 				ctx.fillStyle = this.backgroundColor;
 				ctx.fill(this.path2d!);
 			}
 		} else {
+			if(this.shadowSize) {
+				ctx.shadowColor = this.shadowColor
+				ctx.shadowBlur = this.shadowSize
+				ctx.shadowOffsetX = this.shadowSize
+				ctx.shadowOffsetY = this.shadowSize
+			} else {
+				ctx.shadowColor = 'transparent'
+			}
+
 			ctx.strokeStyle = this.borderColor;
 			ctx.lineWidth = this.borderWidth;
 			ctx.setLineDash(this.linePattern);
@@ -353,6 +373,10 @@ export class Path implements Geometry {
 			this.borderColor,
 			this.borderStyle,
 			this.borderWidth,
+			this.backgroundOpacity,
+			this.borderOpacity,
+			this.shadowColor,
+			this.shadowSize
 		);
 	}
 
