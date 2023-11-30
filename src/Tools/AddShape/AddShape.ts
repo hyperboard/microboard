@@ -24,21 +24,30 @@ export class AddShape extends BoardTool {
 		this.type = type;
 	}
 
+	_initTransformation(sx?:number, sy?:number) {
+		sx = sx || this.bounds.getWidth() / 100;
+		sy = sy || this.bounds.getHeight() / 100
+		if(this.shape.getShapeType() == 'Sticker') {
+			const m = Math.sqrt(sx*sx+sy*sy) / 2.4
+			sy = sx = Math.max(1, m);
+		}
+		this.shape.transformation.translateTo(this.bounds.left,this.bounds.top);
+		this.shape.transformation.scaleTo(sx,sy);
+	}
+
 	leftButtonDown(): boolean {
 		this.isDown = true;
 		const point = this.board.pointer.point;
+		// @todo параметры приходят из стикера или из доски
+		if(this.type == 'Sticker') {
+			point.x -= 105;
+			point.y -= 122;
+		}
 		this.line = new Line(point.copy(), point.copy());
 		this.bounds = this.line.getMbr();
 		this.bounds.borderColor = "blue";
 		this.shape.setShapeType(this.type);
-		this.shape.transformation.translateTo(
-			this.bounds.left,
-			this.bounds.top,
-		);
-		this.shape.transformation.scaleTo(
-			this.bounds.getWidth() / 100,
-			this.bounds.getHeight() / 100,
-		);
+		this._initTransformation();
 		this.board.tools.publish();
 		return true;
 	}
@@ -50,15 +59,12 @@ export class AddShape extends BoardTool {
 				this.board.pointer.point.copy(),
 			);
 			this.bounds = this.line.getMbr();
-			this.bounds.borderColor = "blue";
-			this.shape.transformation.translateTo(
-				this.bounds.left,
-				this.bounds.top,
-			);
-			this.shape.transformation.scaleTo(
-				this.bounds.getWidth() / 100,
-				this.bounds.getHeight() / 100,
-			);
+			if(this.type == 'Sticker') {
+				this.bounds.borderColor = "transparent";
+			} else {
+				this.bounds.borderColor = "blue";
+			}
+			this._initTransformation();
 			this.board.tools.publish();
 			return true;
 		}
@@ -74,11 +80,7 @@ export class AddShape extends BoardTool {
 		if (height < 2) {
 			height = 100;
 		}
-		this.shape.transformation.translateTo(
-			this.bounds.left,
-			this.bounds.top,
-		);
-		this.shape.transformation.scaleTo(width / 100, height / 100);
+		this._initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
 		this.board.selection.removeAll();
 		this.board.selection.add(shape);

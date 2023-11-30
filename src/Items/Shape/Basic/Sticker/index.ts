@@ -1,16 +1,17 @@
 import {Mbr, Line, Path, Point, Paths} from "Board/Items";
 
-const DEFAULTS = [-50,-50,50,50];
+// @todo параметры приходят из доски или из стикера?
+const DEFAULTS = [213,244];
 
 export const Sticker = {
 	name: "Sticker",
-	textBounds: new Mbr(DEFAULTS[0] + 5, DEFAULTS[1] + 5, DEFAULTS[2] - 5, DEFAULTS[3] - 5),
+	textBounds: new Mbr(5,  5, DEFAULTS[0] - 5, DEFAULTS[1] - 5),
 	path: new Paths([new Path(
 			[
-				new Line(new Point(DEFAULTS[0] + 2, DEFAULTS[1] + 2), new Point(DEFAULTS[2], DEFAULTS[1] + 2)),
-				new Line(new Point(DEFAULTS[2], DEFAULTS[1] + 2), new Point(DEFAULTS[2], DEFAULTS[3])),
-				new Line(new Point(DEFAULTS[2], DEFAULTS[3]), new Point(DEFAULTS[0] + 2, DEFAULTS[3])),
-				new Line(new Point(DEFAULTS[0] + 2, DEFAULTS[3]), new Point(DEFAULTS[0] + 2, DEFAULTS[1] + 2)),
+				new Line(new Point(2,  2), new Point(DEFAULTS[0],  2)),
+				new Line(new Point(DEFAULTS[0],  2), new Point(DEFAULTS[0], DEFAULTS[1])),
+				new Line(new Point(DEFAULTS[0], DEFAULTS[1]), new Point(2, DEFAULTS[1])),
+				new Line(new Point(2, DEFAULTS[1]), new Point(2,  2)),
 			],
 			true,
 			'rgba(255,255,255,.1)',
@@ -18,10 +19,10 @@ export const Sticker = {
 		'solid',0,0,0,'black',15
 		),
 		new Path([
-			new Line(new Point(DEFAULTS[0], DEFAULTS[1]), new Point(DEFAULTS[2], DEFAULTS[1])),
-			new Line(new Point(DEFAULTS[2], DEFAULTS[1]), new Point(DEFAULTS[2], DEFAULTS[3])),
-			new Line(new Point(DEFAULTS[2], DEFAULTS[3]), new Point(DEFAULTS[0], DEFAULTS[3])),
-			new Line(new Point(DEFAULTS[0], DEFAULTS[3]), new Point(DEFAULTS[0], DEFAULTS[1])),
+			new Line(new Point(0, 0), new Point(DEFAULTS[0], 0)),
+			new Line(new Point(DEFAULTS[0], 0), new Point(DEFAULTS[0], DEFAULTS[1])),
+			new Line(new Point(DEFAULTS[0], DEFAULTS[1]), new Point(0, DEFAULTS[1])),
+			new Line(new Point(0, DEFAULTS[1]), new Point(0, 0)),
 		], true, 'yellow', 'transparent')
 	], 'yellow', 'black', 'solid', 1, 1, 1,
 		(m,v, p, i) => {
@@ -30,9 +31,9 @@ export const Sticker = {
 			// && ['setBackgroundColor'].indexOf(m) > -1
 	),
 	anchorPoints: [
-		new Point(DEFAULTS[0], (DEFAULTS[3] - DEFAULTS[1]) / 2),
-		new Point(DEFAULTS[2], (DEFAULTS[3] - DEFAULTS[1]) / 2),
-		new Point((DEFAULTS[2] - DEFAULTS[0]) / 2, DEFAULTS[1]),
-		new Point((DEFAULTS[2] - DEFAULTS[0]) / 2, DEFAULTS[1]),
+		new Point(0, (DEFAULTS[1]) / 2),
+		new Point(DEFAULTS[0], (DEFAULTS[1]) / 2),
+		new Point((DEFAULTS[0]) / 2, 0),
+		new Point((DEFAULTS[0]) / 2, 0),
 	]
 };
