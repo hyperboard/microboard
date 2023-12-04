@@ -1,12 +1,12 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Mbr, Point } from "Board/Items";
+import {Mbr, Point, Shape} from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
 import { getResizeType, ResizeType } from "./getResizeType";
 import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getProportionalResize, getResize } from "./getResizeMatrix";
+import { getProportionalResize } from "./getResizeMatrix";
 import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
@@ -17,6 +17,8 @@ export class Transformer extends Tool {
 	resizeType?: ResizeType;
 	oppositePoint?: Point;
 	mbr: Mbr | undefined;
+	// original mbr when resize was triggered
+	startMbr: Mbr | undefined;
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -62,6 +64,7 @@ export class Transformer extends Tool {
 		if (this.resizeType && mbr) {
 			this.oppositePoint = getOppositePoint(this.resizeType, mbr);
 			this.mbr = mbr;
+			this.startMbr = mbr;
 		}
 		return this.resizeType !== undefined;
 	}
@@ -97,18 +100,7 @@ export class Transformer extends Tool {
 		const single = list[0];
 
 		if (isSingle && single.itemType === "Shape") {
-			const matrix = getResize(
-				this.resizeType,
-				this.board.pointer.point,
-				mbr,
-				this.oppositePoint,
-			).matrix;
-			single.transformation.translateBy(
-				matrix.translateX,
-				matrix.translateY,
-			);
-			single.transformation.scaleBy(matrix.scaleX, matrix.scaleY);
-			this.mbr = single.getMbr();
+			this.mbr = single.doResize(this.resizeType, this.board.pointer.point, mbr, this.oppositePoint, this.startMbr).mbr;
 		} else if (isSingle && single.itemType === "RichText") {
 			const matrix = getProportionalResize(
 				this.resizeType,
@@ -167,7 +159,9 @@ export class Transformer extends Tool {
 					}
 				} else {
 					item.transformation.translateBy(translateX, translateY);
-					item.transformation.scaleBy(matrix.scaleX, matrix.scaleY);
+					if(item.itemType != "Shape" || item.getShapeType() != "Sticker") {
+						item.transformation.scaleBy(matrix.scaleX, matrix.scaleY);
+					}
 				}
 			}
 			this.mbr = resize.mbr;
