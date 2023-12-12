@@ -9,6 +9,7 @@ import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { BoardTool } from "./BoardTool";
+import {AddSticker} from "./AddSticker";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -51,8 +52,7 @@ export class Tools extends ToolContext {
 		if (this.getAddSticker()) {
 			this.cancel();
 		} else {
-			this.tool = new AddShape(this.board);
-			this.tool.setShapeType("Sticker");
+			this.tool = new AddSticker(this.board);
 		}
 		this.publish();
 	}
@@ -66,10 +66,10 @@ export class Tools extends ToolContext {
 	}
 
 	getAddShape(): AddShape | undefined {
-		return (this.tool instanceof AddShape && this.tool.type !== "Sticker") ? this.tool : undefined;
+		return this.tool instanceof AddShape ? this.tool : undefined;
 	}
-	getAddSticker(): AddShape | undefined {
-		return (this.tool instanceof AddShape && this.tool.type === "Sticker" ) ? this.tool : undefined;
+	getAddSticker(): AddSticker | undefined {
+		return this.tool instanceof AddSticker ? this.tool : undefined;
 	}
 
 	addText(): void {

@@ -1,9 +1,9 @@
-import {Mbr, Line, Path, Point, Paths} from "Board/Items";
+import {Mbr, Line, Path, Point, Paths} from "Board/Items/index";
 
 // @todo параметры приходят из доски или из стикера?
 const DEFAULTS = [213,244];
 
-export const Sticker = {
+export const StickerShape = {
 	name: "Sticker",
 	textBounds: new Mbr(5,  5, DEFAULTS[0] - 5, DEFAULTS[1] - 5),
 	path: new Paths([new Path(
@@ -35,5 +35,6 @@ export const Sticker = {
 		new Point(DEFAULTS[0], (DEFAULTS[1]) / 2),
 		new Point((DEFAULTS[0]) / 2, 0),
 		new Point((DEFAULTS[0]) / 2, 0),
-	]
+	],
+	DEFAULTS
 };

@@ -14,6 +14,7 @@ import { Connection } from "Connection";
 import { ImageItem } from "./Items/Image";
 import { Drawing } from "./Items/Drawing";
 import { Group } from "./Items/Group";
+import {Sticker} from "./Items/Sticker";
 
 export class Board {
 	events: Events | undefined;
@@ -170,6 +171,8 @@ export class Board {
 
 	createItem(id: string, data: ItemData): Item {
 		switch (data.itemType) {
+			case "Sticker":
+				return new Sticker(this.events).setId(id).deserialize(data);
 			case "Shape":
 				return new Shape(this.events).setId(id).deserialize(data);
 			case "RichText":

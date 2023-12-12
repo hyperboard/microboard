@@ -29,9 +29,6 @@ export class Shape implements Geometry {
 		true,
 	);
 	readonly subject = new Subject<Shape>();
-	private shapeOptions = {
-		breaked: 0
-	};
 
 	constructor(
 		private events?: Events,
@@ -405,37 +402,6 @@ export class Shape implements Geometry {
 			res.matrix.translateX,
 			res.matrix.translateY,
 		);
-
-		if(this.shapeType == "Sticker") {
-			// proportional scale
-			if(res.matrix.scaleX === 1) res.matrix.scaleX = res.matrix.scaleY;
-			else res.matrix.scaleY = res.matrix.scaleX;
-
-			if (['left', 'right'].indexOf(resizeType) > -1) {
-				const d = startMbr.getWidth() / startMbr.getHeight();
-				const originallySquared = (d > 0.9 * (213 / 244) && d < 1.1 * (213 / 244));
-
-				if(originallySquared) {
-					// увеличить при росте
-					if ((res.mbr.getWidth() > startMbr.getWidth() * 1.33) && this.shapeOptions.breaked !== 1) {
-						res.matrix.scaleY *= (1 / 1.33);
-						this.shapeOptions.breaked = 1;
-					} else if ((res.mbr.getWidth() < startMbr.getWidth() * 1.33) && this.shapeOptions.breaked === 1) {
-						res.matrix.scaleY *= (1.33);
-						this.shapeOptions.breaked = -1;
-					}
-				} else {
-					// уменьшать при сжатии
-					if ((res.mbr.getWidth() < startMbr.getWidth() * 0.87) && this.shapeOptions.breaked !== -1) {
-						res.matrix.scaleY *= (1.33);
-						this.shapeOptions.breaked = -1;
-					} else if((res.mbr.getWidth() > startMbr.getWidth() * 0.87) && this.shapeOptions.breaked === -1) {
-						res.matrix.scaleY *= (1 / 1.33);
-						this.shapeOptions.breaked = 1;
-					}
-				}
-			}
-		}
 
 		this.transformation.scaleBy(res.matrix.scaleX, res.matrix.scaleY);
 		res.mbr = this.getMbr();

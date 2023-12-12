@@ -8,6 +8,7 @@ import { ConnectorCommand } from "Board/Items/Connector/ConnectorCommand";
 import { Events } from "./Events";
 import { Operation } from "./EventsOperations";
 import { DrawingCommand } from "Board/Items/Drawing/DrawingCommand";
+import {StickerCommand} from "../Items/Sticker/StickerCommand";
 
 export interface Command {
 	apply(): void;
@@ -65,6 +66,17 @@ export function createCommand(
 				return item;
 			});
 			return new ShapeCommand(items, operation);
+		}
+		case "Sticker": {
+			return new StickerCommand((Array.isArray(operation.item)
+				? operation.item
+				: [operation.item]
+			).map(itemId => {
+				const item = board.items.findById(itemId);
+				if (!item) throw new Error("Create shape command. Shape not found.");
+				if (item.itemType !== "Sticker") throw new Error("Create shape command. Item is not a Shape.",);
+				return item;
+			}), operation);
 		}
 		case "Transformation": {
 			const itemIdList = Array.isArray(operation.item)

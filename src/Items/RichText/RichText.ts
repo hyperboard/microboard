@@ -65,6 +65,7 @@ export class RichText extends Mbr implements Geometry {
 		readonly transformation = new Transformation(id, events),
 		public placeholderText = "Type something",
 		public isInShape = false,
+		private autoSize = false
 	) {
 		super();
 
@@ -163,6 +164,7 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.updateRequired = true;
 		window.requestAnimationFrame(() => {
+			if(this.autoSize) this.calcAutoSize()
 			this.blockNodes = getBlockNodes(
 				this.getTextForNodes(),
 				this.getMaxWidth(),
@@ -174,6 +176,41 @@ export class RichText extends Mbr implements Geometry {
 			this.transformCanvas();
 			this.updateRequired = false;
 		});
+	}
+
+	calcAutoSize() {
+		if(!this.editor) return;
+		if(!this.editor.getText()) return;
+		if(!this.editor.getText()[0].children[0].text) return;
+
+		var div = document.getElementById('shadow-autosize');
+		if(!div) {
+			div = document.createElement('div');
+			div.id = 'shadow-autosize'
+			div.style.visibility = "hidden"
+			div.style.position = "absolute"
+			div.style.top = "0"
+			div.style.height = "auto"
+			div.style.lineHeight = "1.4"
+			div.style.wordBreak = "normal"
+			div.style.whiteSpace = "pre-wrap"
+			div.style.overflowWrap = "break-word"
+			document.body.appendChild(div)
+		}
+		div.innerText = this.editor.getText()[0].children[0].text;
+		div.style.width = (this.getTransformedContainer().getWidth() - 10) + 'px';
+		div.style.fontSize = 288 + 'px';
+		div.style.fontFamily = this.editor.getText()[0].children[0].fontFamily || "Arial";
+
+		var estimate = 288;
+		while(div.scrollHeight > (this.getTransformedContainer().getHeight() - 40)) {
+			estimate *= 0.95;
+			div.style.fontSize = estimate + 'px'
+			if(estimate < 8) break
+		}
+		if( estimate != this.editor.getText()[0].children[0].fontSize ){
+			this.editor.setSelectionFontSize(estimate)
+		}
 	}
 
 	getMaxWidth(): number | undefined {

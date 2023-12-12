@@ -27,10 +27,6 @@ export class AddShape extends BoardTool {
 	_initTransformation(sx?:number, sy?:number) {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100
-		if(this.shape.getShapeType() == 'Sticker') {
-			const m = Math.sqrt(sx*sx+sy*sy) / 2.4
-			sy = sx = Math.max(1, m);
-		}
 		this.shape.transformation.translateTo(this.bounds.left,this.bounds.top);
 		this.shape.transformation.scaleTo(sx,sy);
 	}
@@ -38,11 +34,6 @@ export class AddShape extends BoardTool {
 	leftButtonDown(): boolean {
 		this.isDown = true;
 		const point = this.board.pointer.point;
-		// @todo параметры приходят из стикера или из доски
-		if(this.type == 'Sticker') {
-			point.x -= 105;
-			point.y -= 122;
-		}
 		this.line = new Line(point.copy(), point.copy());
 		this.bounds = this.line.getMbr();
 		this.bounds.borderColor = "blue";
@@ -59,11 +50,7 @@ export class AddShape extends BoardTool {
 				this.board.pointer.point.copy(),
 			);
 			this.bounds = this.line.getMbr();
-			if(this.type == 'Sticker') {
-				this.bounds.borderColor = "transparent";
-			} else {
-				this.bounds.borderColor = "blue";
-			}
+			this.bounds.borderColor = "blue";
 			this._initTransformation();
 			this.board.tools.publish();
 			return true;

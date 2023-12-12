@@ -45,7 +45,7 @@ export class Transformer extends Tool {
 		const item = items.getSingle();
 
 		let resizeType: ResizeType | undefined;
-		if (item && item.itemType === "RichText") {
+		if (item && (item.itemType === "RichText" || item.itemType === "Sticker")) {
 			resizeType = getTextResizeType(
 				pointer.point,
 				camera.getScale(),
@@ -99,7 +99,7 @@ export class Transformer extends Tool {
 		const isSingle = list.length === 1;
 		const single = list[0];
 
-		if (isSingle && single.itemType === "Shape") {
+		if (isSingle && ["Shape", "Sticker"].indexOf(single.itemType) > -1) {
 			this.mbr = single.doResize(this.resizeType, this.board.pointer.point, mbr, this.oppositePoint, this.startMbr).mbr;
 		} else if (isSingle && single.itemType === "RichText") {
 			const matrix = getProportionalResize(
@@ -159,7 +159,7 @@ export class Transformer extends Tool {
 					}
 				} else {
 					item.transformation.translateBy(translateX, translateY);
-					if(item.itemType != "Shape" || item.getShapeType() != "Sticker") {
+					if(item.itemType != "Sticker") {
 						item.transformation.scaleBy(matrix.scaleX, matrix.scaleY);
 					}
 				}

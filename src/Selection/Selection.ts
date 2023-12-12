@@ -144,7 +144,7 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (item.itemType === "Shape") {
+		if (["Shape", "Sticker"].indexOf(item.itemType) > -1) {
 			this.setTextToEdit(item.text);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -244,7 +244,7 @@ export class Selection {
 	canChangeText(): boolean {
 		return (
 			this.items.isSingle() &&
-			this.items.isItemTypes(["Shape", "RichText"])
+			this.items.isItemTypes(["Shape", "Sticker", "RichText"])
 		);
 	}
 
@@ -266,6 +266,7 @@ export class Selection {
 		const item = this.items.getItemsByItemTypes([
 			"RichText",
 			"Shape",
+			"Sticker",
 		])[0] as RichText | Shape | undefined;
 		const text = item?.itemType === "RichText" ? item : item?.text;
 		return text;
@@ -287,10 +288,8 @@ export class Selection {
 	}
 
 	getFillColor(): string {
-		const shape = this.items.getItemsByItemTypes(["Shape"])[0] as
-			| Shape
-			| undefined;
-		return shape?.getBackgroundColor() || defaultShapeData.backgroundColor;
+		const tmp = this.items.getItemsByItemTypes(["Shape", "Sticker"])[0];
+		return tmp?.getBackgroundColor() || defaultShapeData.backgroundColor;
 	}
 
 	getStrokeColor(): string {
@@ -472,12 +471,23 @@ export class Selection {
 
 	setFillColor(backgroundColor: string): void {
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
-		this.emit({
-			class: "Shape",
-			method: "setBackgroundColor",
-			item: shapes,
-			backgroundColor,
-		});
+		if(shapes.length) {
+			this.emit({
+				class: "Shape",
+				method: "setBackgroundColor",
+				item: shapes,
+				backgroundColor,
+			});
+		}
+		const stickers = this.items.getIdsByItemTypes(["Sticker"]);
+		if(stickers.length) {
+			this.emit({
+				class: "Sticker",
+				method: "setBackgroundColor",
+				item: stickers,
+				backgroundColor,
+			});
+		}
 	}
 
 	setShapeType(shapeType: ShapeType): void {
