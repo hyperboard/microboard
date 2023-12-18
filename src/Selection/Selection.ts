@@ -504,12 +504,14 @@ export class Selection {
 		if (this.items.isSingle()) {
 			const item = this.items.list()[0];
 			if (item) {
-				if (item.itemType === "Shape") {
+				if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
 					item.text.setSelectionFontSize(fontSize);
 				} else if (item.itemType === "RichText") {
 					item.setSelectionFontSize(fontSize);
 				}
 			}
+		} else if (this.items.isItemTypes(["Sticker"])) {
+			this.items.list().forEach(x => x.text.setSelectionFontSize(fontSize))
 		} else {
 			this.emit({
 				class: "RichText",
@@ -524,12 +526,14 @@ export class Selection {
 		if (this.items.isSingle()) {
 			const item = this.items.list()[0];
 			if (item) {
-				if (item.itemType === "Shape") {
+				if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
 					item.text.setSelectionFontStyle(fontStyleList);
 				} else if (item.itemType === "RichText") {
 					item.setSelectionFontStyle(fontStyleList);
 				}
 			}
+		} else if (this.items.isItemTypes(["Sticker"])) {
+			this.items.list().forEach(x => x.text.setSelectionFontStyle(fontStyleList))
 		} else {
 			this.emit({
 				class: "RichText",
@@ -544,7 +548,7 @@ export class Selection {
 		if (this.items.isSingle()) {
 			const item = this.items.list()[0];
 			if (item) {
-				if (item.itemType === "Shape") {
+				if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
 					item.text.setSelectionFontColor(fontColor);
 				} else if (item.itemType === "RichText") {
 					item.setSelectionFontColor(fontColor);
@@ -564,7 +568,7 @@ export class Selection {
 		if (this.items.isSingle()) {
 			const item = this.items.list()[0];
 			if (item) {
-				if (item.itemType === "Shape") {
+				if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
 					item.text.setSelectionFontHighlight(fontHighlight);
 				} else if (item.itemType === "RichText") {
 					item.setSelectionFontHighlight(fontHighlight);
@@ -586,7 +590,7 @@ export class Selection {
 		if (this.items.isSingle()) {
 			const item = this.items.list()[0];
 			if (item) {
-				if (item.itemType === "Shape") {
+				if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
 					item.text.setSelectionHorisontalAlignment(
 						horisontalAlignment,
 					);
@@ -594,6 +598,8 @@ export class Selection {
 					item.setSelectionHorisontalAlignment(horisontalAlignment);
 				}
 			}
+		} else if (this.items.isItemTypes(["Sticker"])) {
+			this.items.list().forEach(x => x.text.setSelectionHorisontalAlignment(horisontalAlignment))
 		} else {
 			this.emit({
 				class: "RichText",

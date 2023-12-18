@@ -1,26 +1,18 @@
-import {
-	Mbr,
-	Transformation,
-	Point,
-	TransformationOperation,
-	Path,
-	Paths,
-	Line,
-} from "..";
-import { Descendant, Transforms } from "slate";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { Events, Operation } from "Board/Events";
-import { TextStyle } from "./Editor/TextNode";
-import { BlockType } from "./Editor/BlockNode";
-import { RichTextData, RichTextOperation } from "./RichTextOperations";
-import { Subject } from "Subject";
-import { Geometry } from "../Geometry";
-import { DrawingContext } from "../DrawingContext";
-import { EditorContainer } from "./EditorContainer";
-import { RichTextCommand } from "./RichTextCommand";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
-import { getBlockNodes } from "./RichTextCanvasRenderer";
-import { isTextEmpty } from "./isTextEmpty";
+import {Line, Mbr, Path, Paths, Point, Transformation, TransformationOperation,} from "..";
+import {Descendant, Transforms} from "slate";
+import {HorisontalAlignment, VerticalAlignment} from "../Alignment";
+import {Events, Operation} from "Board/Events";
+import {TextStyle} from "./Editor/TextNode";
+import {BlockType} from "./Editor/BlockNode";
+import {RichTextData, RichTextOperation} from "./RichTextOperations";
+import {Subject} from "Subject";
+import {Geometry} from "../Geometry";
+import {DrawingContext} from "../DrawingContext";
+import {EditorContainer} from "./EditorContainer";
+import {RichTextCommand} from "./RichTextCommand";
+import {operationsRichTextDebugEnabled} from "./RichTextDebugSettings";
+import {getBlockNodes} from "./RichTextCanvasRenderer";
+import {isTextEmpty} from "./isTextEmpty";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
@@ -179,6 +171,7 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	calcAutoSize() {
+		return;
 		if(!this.editor) return;
 		if(!this.editor.getText()) return;
 		if(!this.editor.getText()[0].children[0].text) return;
@@ -197,7 +190,17 @@ export class RichText extends Mbr implements Geometry {
 			div.style.overflowWrap = "break-word"
 			document.body.appendChild(div)
 		}
-		div.innerText = this.editor.getText()[0].children[0].text;
+		let proportions = this.editor.getText()[0].children
+			.map((t: any) => "fontSize" in t ? t.fontSize : 1);
+		const max = Math.max(...proportions);
+		proportions = proportions.map((x: number) => x / max);
+		div.innerHTML = this.editor.getText()[0].children.map((t: any) => {
+			if(!("fontSize" in t)) {
+				return "<span>{t.text}</span>"
+			} else {
+				return "<span style='font-size:{t.fontSize}px'>{t.text}</span>"
+			}
+		});
 		div.style.width = (this.getTransformedContainer().getWidth() - 10) + 'px';
 		div.style.fontSize = 288 + 'px';
 		div.style.fontFamily = this.editor.getText()[0].children[0].fontFamily || "Arial";
@@ -310,8 +313,7 @@ export class RichText extends Mbr implements Geometry {
 	 */
 	getTransformedContainer(): Mbr {
 		const matrix = this.transformation.matrix;
-		const container = this.container.getTransformed(matrix);
-		return container;
+		return this.container.getTransformed(matrix);
 	}
 
 	emitWithoutApplying = (op: RichTextOperation): void => {

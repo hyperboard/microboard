@@ -43,6 +43,8 @@ function validateItemData(itemData: any): boolean {
 
 	// Validate based on the itemType
 	switch (itemData.itemType) {
+		case "Sticker":
+			return validateStickerData(itemData);
 		case "Shape":
 			return validateShapeData(itemData);
 		case "RichText":
@@ -80,6 +82,18 @@ function validateShapeData(shapeData: any): boolean {
 		validateTransformationData(shapeData.transformation) &&
 		validateRichTextData(shapeData.text);
 	// console.log("validateShapeData", shapeData, isValid);
+	return isValid;
+}
+
+function validateStickerData(shapeData: any): boolean {
+	const isValid =
+		shapeData.hasOwnProperty("itemType") &&
+		shapeData.hasOwnProperty("backgroundColor") &&
+		shapeData.hasOwnProperty("transformation") &&
+		shapeData.hasOwnProperty("text") &&
+		typeof shapeData.backgroundColor === "string" &&
+		validateTransformationData(shapeData.transformation) &&
+		validateRichTextData(shapeData.text);
 	return isValid;
 }
 
