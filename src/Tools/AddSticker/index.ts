@@ -7,7 +7,7 @@ import {Sticker} from "../../Items/Sticker";
 export class AddSticker extends BoardTool {
     line: Line | undefined;
     bounds = new Mbr();
-    sticker = new Sticker(undefined,undefined,undefined);
+    sticker = new Sticker();
     isDown = false;
 
     constructor(board: Board) {
