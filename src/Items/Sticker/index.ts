@@ -235,9 +235,19 @@ export class Sticker implements Geometry {
         this.transformation.translateTo(x, y);
         this.transformation.scaleTo(l, l)
     }
-    transformToCenter(pt: Point) {
-        this.transformation.translateTo(pt.x - StickerShape.DEFAULTS[0] / 2, pt.y - StickerShape.DEFAULTS[1] / 2);
-        this.transformation.scaleTo(1,1)
+    transformToCenter(pt: Point, width?: number) {
+        if(width) {
+            const scale = width / StickerShape.DEFAULTS[0];
+
+            const w = StickerShape.DEFAULTS[0] * scale;
+            const h = StickerShape.DEFAULTS[1] * scale;
+
+            this.transformation.translateTo(pt.x - w / 2, pt.y - h / 2);
+            this.transformation.scaleTo(scale, scale)
+        } else {
+            this.transformation.translateTo(pt.x - StickerShape.DEFAULTS[0] / 2, pt.y - StickerShape.DEFAULTS[1] / 2);
+            this.transformation.scaleTo(1,1)
+        }
     }
     doResize(resizeType: ResizeType,
              pointer: Point,

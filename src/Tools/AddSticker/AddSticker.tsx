@@ -5,10 +5,11 @@ import { Board } from "Board/Board";
 import {Sticker} from "../../Items/Sticker";
 
 export class AddSticker extends BoardTool {
+    static MIN_SIZE = 5;
     line: Line | undefined;
     bounds = new Mbr();
     static backgroundColor? : string = undefined;
-    static defaultSize : [number, number] = [213,244];
+    static defaultWidth? : number = undefined;
     sticker = new Sticker(undefined, undefined, AddSticker.backgroundColor);
     isDown = false;
 
@@ -49,8 +50,8 @@ export class AddSticker extends BoardTool {
     leftButtonUp(): boolean {
         let width = this.bounds.getWidth();
         let height = this.bounds.getHeight();
-        if (width < 2 && height < 2) {
-            this.sticker.transformToCenter(this.board.pointer.point.copy())
+        if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
+            this.sticker.transformToCenter(this.board.pointer.point.copy(), AddSticker.defaultWidth)
         }
         const shape = this.board.add(this.sticker);
         this.board.selection.removeAll();
@@ -58,6 +59,12 @@ export class AddSticker extends BoardTool {
         this.board.selection.setContext("EditTextUnderPointer");
         this.board.tools.select();
         this.board.tools.publish();
+
+        if(this.line && this.line.getMbr().getWidth() > AddSticker.MIN_SIZE) {
+            const mbr = this.line.getMbr()
+            AddSticker.defaultWidth = mbr.getWidth();
+        }
+
         return true;
     }
 
