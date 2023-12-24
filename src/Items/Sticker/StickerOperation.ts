@@ -1,11 +1,11 @@
 import { RichTextData } from "../RichText";
 import { TransformationData } from "../Transformation";
-import {stickerColors} from "../../../View/ContextPanel/ContextPanel";
+import {stickerColors} from "../../../View/Pickers/StickerPicker";
 
 export class StickerData {
 	readonly itemType = "Sticker";
 	constructor(
-		public backgroundColor = stickerColors.yellow,
+		public backgroundColor = stickerColors.blue,
 		public transformation = new TransformationData(),
 		public text = new RichTextData(),
 	) {}
