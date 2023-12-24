@@ -49,6 +49,7 @@ export class RichText extends Mbr implements Geometry {
 	private blockNodes: any;
 	private clipPath: Path2D | undefined;
 	private updateRequired = false;
+	private autoSizeScale = 1;
 
 	constructor(
 		public container: Mbr,
@@ -156,11 +157,14 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.updateRequired = true;
 		window.requestAnimationFrame(() => {
-			if(this.autoSize) this.calcAutoSize()
-			this.blockNodes = getBlockNodes(
-				this.getTextForNodes(),
-				this.getMaxWidth(),
-			);
+			if(this.autoSize) {
+				this.calcAutoSize()
+			} else {
+				this.blockNodes = getBlockNodes(
+					this.getTextForNodes(),
+					this.getMaxWidth(),
+				);
+			}
 			this.alignInRectangle(
 				this.getTransformedContainer(),
 				this.editor.verticalAlignment,
@@ -171,6 +175,26 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	calcAutoSize() {
+		const cw = this.container.getWidth();
+
+		let blockNodes = getBlockNodes(
+			this.getTextForNodes(),
+			undefined,
+		);
+		const r = blockNodes.width / blockNodes.height;
+
+		// https://glebkudr.atlassian.net/browse/BD-200?focusedCommentId=10053
+		// 1/17
+		if(r <= 0.0588) {
+			blockNodes = getBlockNodes(this.getTextForNodes(), blockNodes.width / 3);
+			if (blockNodes.width < blockNodes.height) {
+				blockNodes = getBlockNodes(this.getTextForNodes(), blockNodes.height)
+			}
+		}
+		this.autoSizeScale = cw / blockNodes.width;
+		blockNodes = getBlockNodes(this.getTextForNodes(),this.getMaxWidth())
+		this.blockNodes = blockNodes
+
 		return;
 		if(!this.editor) return;
 		if(!this.editor.getText()) return;
@@ -366,6 +390,9 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	getScale = (): number => {
+		if(this.autoSize) {
+			return this.autoSizeScale
+		}
 		return this.transformation.getScale().x;
 	};
 
