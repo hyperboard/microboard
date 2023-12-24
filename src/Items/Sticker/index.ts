@@ -27,7 +27,7 @@ export class Sticker implements Geometry {
         this.events,
         this.transformation,
         "\u00A0",
-        true,
+        false,
         true
     );
     readonly subject = new Subject<Sticker>();

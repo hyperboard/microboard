@@ -50,6 +50,7 @@ export class RichText extends Mbr implements Geometry {
 	private clipPath: Path2D | undefined;
 	private updateRequired = false;
 	private autoSizeScale = 1;
+	private transformedContainer?: Mbr = undefined
 
 	constructor(
 		public container: Mbr,
@@ -176,6 +177,7 @@ export class RichText extends Mbr implements Geometry {
 
 	calcAutoSize() {
 		const cw = this.container.getWidth();
+		const ch = this.container.getHeight();
 
 		let blockNodes = getBlockNodes(
 			this.getTextForNodes(),
@@ -185,15 +187,26 @@ export class RichText extends Mbr implements Geometry {
 
 		// https://glebkudr.atlassian.net/browse/BD-200?focusedCommentId=10053
 		// 1/17
-		if(r <= 0.0588) {
+		if(r <= 0.058) {
+			// never
 			blockNodes = getBlockNodes(this.getTextForNodes(), blockNodes.width / 3);
 			if (blockNodes.width < blockNodes.height) {
 				blockNodes = getBlockNodes(this.getTextForNodes(), blockNodes.height)
 			}
 		}
 		this.autoSizeScale = cw / blockNodes.width;
-		blockNodes = getBlockNodes(this.getTextForNodes(),this.getMaxWidth())
-		this.blockNodes = blockNodes
+		console.log(this.autoSizeScale)
+		this.blockNodes = getBlockNodes(this.getTextForNodes(),this.getMaxWidth())
+
+		const left = (blockNodes.width - cw) * this.autoSizeScale / 2;
+		const top = (blockNodes.height - ch) * this.autoSizeScale / 2
+
+		this.transformedContainer = Mbr.fromDomRect({
+			left,
+			top,
+			right: left + blockNodes.width * this.autoSizeScale,
+			bottom: top + blockNodes.height * this.autoSizeScale
+		} as DOMRect)
 
 		return;
 		if(!this.editor) return;
@@ -398,7 +411,10 @@ export class RichText extends Mbr implements Geometry {
 
 	/** The editor needs the left top point to render itself */
 	getLeftTopPoint(): Point {
-		if (this.isContainerSet) {
+		if (this.transformedContainer) {
+			const container = this.getTransformedContainer();
+			return new Point(container.left + this.transformedContainer.left, container.top + this.transformedContainer.top);
+		} else if (this.isContainerSet) {
 			const container = this.getTransformedContainer();
 			const x = container.left;
 			const y = container.top;
