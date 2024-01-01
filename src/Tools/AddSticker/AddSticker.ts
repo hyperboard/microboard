@@ -2,20 +2,26 @@ import { Mbr, Line } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { BoardTool } from "../BoardTool";
 import { Board } from "Board/Board";
-import {Sticker} from "../../Items/Sticker";
+import { Sticker, stickerColors } from "Board/Items/Sticker";
+
+let backgroundColor = stickerColors["Sky Blue"];
 
 export class AddSticker extends BoardTool {
     static MIN_SIZE = 5;
     line: Line | undefined;
     bounds = new Mbr();
-    static backgroundColor? : string = undefined;
-    static defaultWidth? : number = undefined;
+
+    static defaultWidth?: number = undefined;
     sticker = new Sticker(undefined, undefined, AddSticker.backgroundColor);
     isDown = false;
 
     constructor(board: Board) {
         super(board);
         this.setCursor();
+    }
+
+    setBackgroundColor(color: string): void {
+        backgroundColor = color;
     }
 
     setCursor(): void {
@@ -53,14 +59,16 @@ export class AddSticker extends BoardTool {
         if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
             this.sticker.transformToCenter(this.board.pointer.point.copy(), AddSticker.defaultWidth)
         }
-        const shape = this.board.add(this.sticker);
+        this.sticker.setBackgroundColor(backgroundColor);
+        const sticker = this.board.add(this.sticker);
+
         this.board.selection.removeAll();
-        this.board.selection.add(shape);
+        this.board.selection.add(sticker);
         this.board.selection.setContext("EditTextUnderPointer");
         this.board.tools.select();
         this.board.tools.publish();
 
-        if(this.line && this.line.getMbr().getWidth() > AddSticker.MIN_SIZE) {
+        if (this.line && this.line.getMbr().getWidth() > AddSticker.MIN_SIZE) {
             const mbr = this.line.getMbr()
             AddSticker.defaultWidth = mbr.getWidth();
         }
