@@ -178,6 +178,7 @@ export class Board {
 			case "RichText":
 				return new RichText(new Mbr(), id, this.events)
 					.setId(id)
+					.setBoard(this)
 					.deserialize(data);
 			case "Connector":
 				return new Connector(this, this.events)

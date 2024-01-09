@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Item, Line, Mbr, Point } from "Board/Items";
+import { Item, Line, Mbr, Point, RichText } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 
@@ -82,6 +82,13 @@ export class Select extends Tool {
                 this.board.tools.publish();
                 this.clear();
                 return this.board.selection.tool.getTool().leftButtonDown();
+            }
+            if (this.downOnItem instanceof RichText) {
+                const connectedTo = this.downOnItem.getConnectedItem();
+                if (connectedTo) {
+                    this.clear();
+                    return false;
+                };
             }
             return false;
         }

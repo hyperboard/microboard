@@ -1,9 +1,10 @@
+import { RichText } from 'Board/Items';
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
 import { DrawingContext } from "../DrawingContext";
 import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
 import { Path, Paths } from "../Path";
-import { Matrix, Transformation } from "../Transformation";
+import { Transformation } from "../Transformation";
 import { Subject } from "Subject";
 import { Events, Operation } from "../../Events";
 import { getLine } from "./getLine/getLine";
@@ -34,30 +35,32 @@ export const ConnectionLineWidths = [1, 2, 3, 4, 5, 8, 12, 16, 20, 24] as const;
 export type ConnectionLineWidth = typeof ConnectionLineWidths[number];
 
 export class Connector {
-    readonly itemType = "Connector";
-    parent = "Board";
-    private id = "";
-    readonly transformation = new Transformation(this.id, this.events);
-    private middlePoints: BoardPoint[] = [];
-    private startPointerStyle = "none";
-    private endPointerStyle = "TriangleFilled";
-    private lineColor = "black";
-    private lineStyle: ConnectorLineStyle = "straight";
-    private lineWidth: ConnectionLineWidth = 1;
-    readonly subject = new Subject<Connector>();
-    lines = new Path([new Line(new Point(), new Point())]);
-    startPointer = getStartPointer(
-        this.startPoint,
-        this.startPointerStyle,
-        this.lineStyle,
-        this.lines,
-    );
-    endPointer = getEndPointer(
-        this.endPoint,
-        this.endPointerStyle,
-        this.lineStyle,
-        this.lines,
-    );
+	readonly itemType = "Connector";
+	parent = "Board";
+	private id = "";
+	readonly transformation = new Transformation(this.id, this.events);
+	private middlePoints: BoardPoint[] = [];
+	private startPointerStyle = "none";
+	private endPointerStyle = "TriangleFilled";
+	private lineColor = "black";
+	private lineStyle: ConnectorLineStyle = "straight";
+	private lineWidth: ConnectionLineWidth = 1;
+	readonly subject = new Subject<Connector>();
+	private title?: RichText;
+	private titleDebounceTime: number = Date.now();
+	lines = new Path([new Line(new Point(), new Point())]);
+	startPointer = getStartPointer(
+		this.startPoint,
+		this.startPointerStyle,
+		this.lineStyle,
+		this.lines,
+	);
+	endPointer = getEndPointer(
+		this.endPoint,
+		this.endPointerStyle,
+		this.lineStyle,
+		this.lines,
+	);
 
     constructor(
         private board: Board,
@@ -120,10 +123,14 @@ export class Connector {
         }
     }
 
-    setId(id: string): this {
-        this.id = id;
-        return this;
-    }
+	setId(id: string): this {
+		this.id = id;
+		this.board.items
+			.listAll()
+			.filter((item) => item.itemType === 'RichText')
+			.find((item: RichText) => item.getConnectedItem() === this.id)
+		return this;
+	}
 
     getId(): string {
         return this.id;
@@ -348,9 +355,40 @@ export class Connector {
         return this.middlePoints;
     }
 
-    getStartPointerStyle(): string {
-        return this.startPointerStyle;
-    }
+	getMiddlePoint(): {x: number; y: number} {
+        const line = this.lines.getSegments()[0];
+        let x = 0;
+        let y = 0;
+        if (line instanceof CubicBezier) {
+            const x0 = line.start.x;
+            const y0 = line.start.y;
+            const x1 = line.startControl.x;
+            const y1 = line.startControl.y;
+            const x2 = line.endControl.x;
+            const y2 = line.endControl.y;
+            const x3 = line.end.x;
+            const y3 = line.end.y;
+
+            // Calculate center point at t=0.5
+            const tt = 0.5;
+            x = Math.pow(1 - tt, 3) * x0 + 3 * tt * Math.pow(1 - tt, 2) * x1 + 3 * Math.pow(tt, 2) * (1 - tt) * x2 + Math.pow(tt, 3) * x3;
+            y = Math.pow(1 - tt, 3) * y0 + 3 * tt * Math.pow(1 - tt, 2) * y1 + 3 * Math.pow(tt, 2) * (1 - tt) * y2 + Math.pow(tt, 3) * y3;
+        } else {
+            const start = this.startPoint;
+            const end = this.endPoint;
+            x = (start.x + end.x) / 2;
+            y = (start.y + end.y) / 2;
+        }
+		
+		return {
+			x,
+			y
+		}
+	}
+
+	getStartPointerStyle(): string {
+		return this.startPointerStyle;
+	}
 
     getEndPointerStyle(): string {
         return this.endPointerStyle;
@@ -380,13 +418,52 @@ export class Connector {
         return this.lines.getNearestEdgePointTo(point);
     }
 
-    isEnclosedOrCrossedBy(bounds: Mbr): boolean {
-        return (
-            this.lines.isEnclosedOrCrossedBy(bounds) ||
-            this.startPointer.path.isEnclosedOrCrossedBy(bounds) ||
-            this.endPointer.path.isEnclosedOrCrossedBy(bounds)
+	createTitle(): void {
+		const {x, y} = this.getMiddlePoint();
+		const text = this.board.add(
+            new RichText(
+                this.getMbr(),
+                this.id,
+                this.events,
+                this.transformation,
+                "\u00A0",
+                true
+            )
+            .setMaxWidth(300)
+            .setConnectedItem(this.id)
         );
-    }
+        text.placeholderText = "\u00A0"
+        const textHeight = text.getHeight();
+        const textWidth = text.getWidth();
+        text.setSelectionHorisontalAlignment('left');
+        text.editor.setSelectionHorisontalAlignment('left');
+        text.transformation.translateTo(x - textWidth/2, y - textHeight/2);
+		text.transformation.scaleBy(1, 1);
+        text.setMaxWidth(300);
+		this.board.tools.select();
+		this.board.tools.publish();
+		this.board.selection.removeAll();
+		this.board.selection.add(text);
+		this.board.selection.setContext("EditTextUnderPointer");
+		this.board.tools.select();
+		this.board.tools.publish();
+		this.board.selection.editSelected();
+		this.title = text;
+	}
+
+	setTitle(title: RichText): this {
+		this.title = title;
+        this.title.placeholderText = "\u00A0";
+		return this;
+	}
+
+	isEnclosedOrCrossedBy(bounds: Mbr): boolean {
+		return (
+			this.lines.isEnclosedOrCrossedBy(bounds) ||
+			this.startPointer.path.isEnclosedOrCrossedBy(bounds) ||
+			this.endPointer.path.isEnclosedOrCrossedBy(bounds)
+		);
+	}
 
     isUnderPoint(point: Point): boolean {
         return (
@@ -477,6 +554,18 @@ export class Connector {
         return this;
     }
 
+    updateTitle(): void {
+        if (!this.title) {return};
+        const now = Date.now();
+        const fps60 = 1000 / 60;
+        if (now - this.titleDebounceTime < fps60 ) {return;}
+        this.titleDebounceTime = now;
+        const {x, y} = this.getMiddlePoint();
+        const height = this.title.getHeight();
+        const width = this.title.getWidth();
+        this.title.transformation.translateTo(x - width/2, y - height/2);
+    }
+
     private updatePaths(): void {
         const matrix = this.transformation.matrix;
         let startPoint = this.startPoint;
@@ -491,6 +580,8 @@ export class Connector {
             endPoint = new BoardPoint(endPoint.x, endPoint.y);
             endPoint.transform(matrix);
         }
+
+        this.updateTitle();
 
         this.lines = getLine(
             this.lineStyle,
