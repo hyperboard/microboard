@@ -73,8 +73,8 @@ export function createCommand(
 				: [operation.item]
 			).map(itemId => {
 				const item = board.items.findById(itemId);
-				if (!item) throw new Error("Create shape command. Shape not found.");
-				if (item.itemType !== "Sticker") throw new Error("Create shape command. Item is not a Shape.",);
+				if (!item) {throw new Error("Create shape command. Shape not found.");}
+				if (item.itemType !== "Sticker") {throw new Error("Create shape command. Item is not a Shape.",);}
 				return item;
 			}), operation);
 		}

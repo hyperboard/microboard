@@ -21,6 +21,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { getStartPointer, getEndPointer } from "./Pointers";
 import { Point } from "../Point";
 import { CubicBezier } from "../Curve";
+import { HorisontalAlignment } from '../Alignment';
 
 export const ConnectorLineStyles = [
     "straight",
@@ -34,6 +35,15 @@ export const ConnectionLineWidths = [1, 2, 3, 4, 5, 8, 12, 16, 20, 24] as const;
 
 export type ConnectionLineWidth = typeof ConnectionLineWidths[number];
 
+export interface ConnectorTextStyle {
+    fontSize: number;
+    fontStyle: string[] | string;
+    fontColor: string;
+    verticalAlignment: "middle" | "top" | "bottom";
+    horisontalAlignment?: "left" | "center" | "right";
+    fontHighlight: string;
+}
+
 export class Connector {
 	readonly itemType = "Connector";
 	parent = "Board";
@@ -46,7 +56,15 @@ export class Connector {
 	private lineStyle: ConnectorLineStyle = "straight";
 	private lineWidth: ConnectionLineWidth = 1;
 	readonly subject = new Subject<Connector>();
-	private title?: RichText;
+	private title?: RichText | null = null;
+    private textStyle: ConnectorTextStyle = {
+        fontSize: 14,
+        fontStyle: [],
+        fontColor: "black",
+        verticalAlignment: "middle",
+        horisontalAlignment: "left",
+        fontHighlight: "none",
+    }
 	private titleDebounceTime: number = Date.now();
 	lines = new Path([new Line(new Point(), new Point())]);
 	startPointer = getStartPointer(
@@ -359,6 +377,7 @@ export class Connector {
         const line = this.lines.getSegments()[0];
         let x = 0;
         let y = 0;
+        
         if (line instanceof CubicBezier) {
             const x0 = line.start.x;
             const y0 = line.start.y;
@@ -419,8 +438,11 @@ export class Connector {
     }
 
 	createTitle(): void {
-		const {x, y} = this.getMiddlePoint();
-		const text = this.board.add(
+        if (this.title && this.board.items.findById(this.title.getId())) {
+            return;
+        }
+
+        const text = this.board.add(
             new RichText(
                 this.getMbr(),
                 this.id,
@@ -433,29 +455,108 @@ export class Connector {
             .setConnectedItem(this.id)
         );
         text.placeholderText = "\u00A0"
-        const textHeight = text.getHeight();
-        const textWidth = text.getWidth();
         text.setSelectionHorisontalAlignment('left');
         text.editor.setSelectionHorisontalAlignment('left');
-        text.transformation.translateTo(x - textWidth/2, y - textHeight/2);
-		text.transformation.scaleBy(1, 1);
         text.setMaxWidth(300);
 		this.board.tools.select();
 		this.board.tools.publish();
 		this.board.selection.removeAll();
+        this.board.selection.setContext("EditTextUnderPointer");
 		this.board.selection.add(text);
-		this.board.selection.setContext("EditTextUnderPointer");
+        this.title?.setSelectionFontSize(this.textStyle.fontSize || 14);
+        this.title?.setSelectionFontColor(this.textStyle.fontColor || 'black');
+        this.title?.setSelectionFontHighlight(this.textStyle.fontHighlight || '');
+        this.title?.setSelectionFontStyle(this.textStyle.fontStyle || []);
 		this.board.tools.select();
 		this.board.tools.publish();
 		this.board.selection.editSelected();
 		this.title = text;
+        this.board.tools.cancel();
 	}
 
 	setTitle(title: RichText): this {
+        if (this.title) {
+            return this;
+        }
 		this.title = title;
         this.title.placeholderText = "\u00A0";
+
+        try {
+            this.textStyle.fontColor = this.title.getFontColor();
+            this.textStyle.fontSize = this.title.getFontSize();
+            this.textStyle.fontStyle = this.title.getFontStyles();
+            this.textStyle.horisontalAlignment = "left";
+            this.textStyle.fontHighlight = this.title.getFontHighlight();
+        } catch(error) {
+            console.error('Try to assign RichText styles to Connector. Error: ', error)
+        }
+
 		return this;
 	}
+
+    setFontSize(size: number): this {        
+        if (!this.title) {return this;}
+        this.title.setSelectionFontSize(size);
+        this.textStyle.fontSize = size;
+        return this;
+    }
+
+    setFontStyle(style: string | string[]): this{
+        if (!this.title) {return this;}
+        this.textStyle.fontStyle = style;
+        return this;
+    }
+
+    setHorisontalAlignment(alignment: HorisontalAlignment): this {        
+        if (!this.title) {return this;}
+        this.title.setSelectionHorisontalAlignment(alignment);
+        this.textStyle.horisontalAlignment = alignment;
+        return this;
+    }
+
+    setFontColor(color: string): this{
+        if (!this.title) {return this;}
+        this.title.setSelectionFontColor(color);
+        this.textStyle.fontColor = color;
+        return this;
+    }
+
+    setTextHighlight(color: string): this{
+        if (!this.title) {return this;}
+        this.title.setSelectionFontHighlight(color);
+        this.textStyle.fontHighlight = color;
+        return this;
+    }
+
+    getTextHighlight(): string {
+        if (!this.title) {return '';}
+        return this.title.getFontHighlight();
+    }
+
+    getFontSize(): number | null {
+        if (!this.title) {return null;}
+        return this.title.getFontSize();
+    }
+
+    getFontColor(): string | null {
+        if (!this.title) {
+            return null;
+        }
+        return this.title.getFontColor();
+    }
+
+    getTitle(): RichText | null {
+        return this.title || null;
+    }
+
+    hasTitle(): boolean {
+        return !!this.title;
+    }
+
+    removeTitle(): this {
+        this.title = null;
+        return this;
+    }
 
 	isEnclosedOrCrossedBy(bounds: Mbr): boolean {
 		return (
@@ -530,6 +631,7 @@ export class Connector {
             lineStyle: this.lineStyle,
             lineColor: this.lineColor,
             lineWidth: this.lineWidth,
+            textStyle: this.textStyle,
         };
     }
 
@@ -542,6 +644,9 @@ export class Connector {
         }
         if (data.endPoint) {
             this.applyEndPoint(data.endPoint, false);
+        }
+        if (data.textStyle){
+            this.textStyle = {...this.textStyle, ...data.textStyle};
         }
         this.startPointerStyle =
             data.startPointerStyle ?? this.startPointerStyle;

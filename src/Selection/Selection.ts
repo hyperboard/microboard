@@ -93,7 +93,7 @@ export class Selection {
 
     setContext(context: SelectionContext): void {
         this.context = context;
-        if (context !== "EditTextUnderPointer") {
+        if (context !== "EditTextUnderPointer") {            
             this.setTextToEdit(undefined);
         }
         this.subject.publish(this);

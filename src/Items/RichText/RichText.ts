@@ -153,6 +153,14 @@ export class RichText extends Mbr implements Geometry {
     };
 
     handleBlur = (): void => {
+        const children = this.editor.editor.children;
+        if (this.connectedTo && this.board && isTextEmpty(children)) {    
+            const connectedItem = this.board.items.findById(this.connectedTo)
+            if (connectedItem instanceof Connector) {
+                this.board.remove(this);
+                connectedItem.removeTitle();
+            }
+        }
         isEditInProcessValue = false;
     };
 
@@ -586,7 +594,7 @@ export class RichText extends Mbr implements Geometry {
 		if (data.connectedTo) {
 			this.connectedTo = data.connectedTo;
 			const connector = this.board?.items.findById(data.connectedTo);
-			if (connector instanceof Connector){
+			if (connector instanceof Connector && !connector.hasTitle()){
 				connector.setTitle(this);
 			}
 		}

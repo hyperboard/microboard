@@ -6,6 +6,7 @@ import { SelectionItems } from "./SelectionItems";
 import { Selection } from "./Selection";
 import { DrawingContext } from "../Items/DrawingContext";
 import { ItemsHighlighter } from "./ItemsHighlighter/ItemsHightlighter";
+import { RichText } from "Board/Items";
 
 export class SelectionTransformer extends Tool {
 	private readonly defaultTransformerTool: Transformer;
@@ -46,7 +47,10 @@ export class SelectionTransformer extends Tool {
 		}
 		if (this.selection.items.isSingle()) {
 			const item = this.selection.items.getSingle();
-			if (item?.itemType === "Connector") {
+			if (item?.itemType === "RichText" && (item as RichText).getConnectedItem()) {
+				this.tool = this.itemsHighlighter;
+				return;
+			} else if (item?.itemType === "Connector") {
 				this.tool = this.connectorTransformerTool;
 				return;
 			} else {
