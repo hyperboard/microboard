@@ -21,6 +21,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { getStartPointer, getEndPointer } from "./Pointers";
 import { Point } from "../Point";
 import { CubicBezier } from "../Curve";
+import { HorisontalAlignment } from '../Alignment';
 
 export const ConnectorLineStyles = [
     "straight",
@@ -34,39 +35,49 @@ export const ConnectionLineWidths = [1, 2, 3, 4, 5, 8, 12, 16, 20, 24] as const;
 
 export type ConnectionLineWidth = typeof ConnectionLineWidths[number];
 
+export interface ConnectorTextStyle {
+    fontSize: number;
+    fontStyle: string[] | string;
+    fontColor: string;
+    verticalAlignment: "middle" | "top" | "bottom";
+    horisontalAlignment?: "left" | "center" | "right";
+    fontHighlight: string;
+}
+
 export class Connector {
-	readonly itemType = "Connector";
-	parent = "Board";
-	private id = "";
-	readonly transformation = new Transformation(this.id, this.events);
-	private middlePoints: BoardPoint[] = [];
-	private startPointerStyle = "none";
-	private endPointerStyle = "TriangleFilled";
-	private lineColor = "black";
-	private lineStyle: ConnectorLineStyle = "straight";
-	private lineWidth: ConnectionLineWidth = 1;
-	readonly subject = new Subject<Connector>();
-	lines = new Path([new Line(new Point(), new Point())]);
-	startPointer = getStartPointer(
-		this.startPoint,
-		this.startPointerStyle,
-		this.lineStyle,
-		this.lines,
-	);
-	endPointer = getEndPointer(
-		this.endPoint,
-		this.endPointerStyle,
-		this.lineStyle,
-		this.lines,
-	);
-    animationFrameId?: number;
-    private text: RichText = new RichText(
-        this.getMbr(),
-        this.id,
-        this.events,
-        new Transformation(),
-        "\u00A0",
-        true,
+    readonly itemType = "Connector";
+    parent = "Board";
+    private id = "";
+    readonly transformation = new Transformation(this.id, this.events);
+    private middlePoints: BoardPoint[] = [];
+    private startPointerStyle = "none";
+    private endPointerStyle = "TriangleFilled";
+    private lineColor = "black";
+    private lineStyle: ConnectorLineStyle = "straight";
+    private lineWidth: ConnectionLineWidth = 1;
+    readonly subject = new Subject<Connector>();
+    private title?: RichText | null = null;
+    private textStyle: ConnectorTextStyle = {
+        fontSize: 14,
+        fontStyle: [],
+        fontColor: "black",
+        verticalAlignment: "middle",
+        horisontalAlignment: "left",
+        fontHighlight: "none",
+    }
+    private titleDebounceTime: number = Date.now();
+    lines = new Path([new Line(new Point(), new Point())]);
+    startPointer = getStartPointer(
+        this.startPoint,
+        this.startPointerStyle,
+        this.lineStyle,
+        this.lines,
+    );
+    endPointer = getEndPointer(
+        this.endPoint,
+        this.endPointerStyle,
+        this.lineStyle,
+        this.lines,
     );
 
     constructor(
@@ -80,42 +91,6 @@ export class Connector {
             this.subject.publish(this);
         });
         this.offsetLines();
-        this.initText();
-    }
-
-    private initText(): void {
-        this.text.subject.subscribe(() => {
-			this.subject.publish(this);
-		});
-
-        this.text.apply({
-            class: "RichText",
-            method: 'setMaxWidth',
-            item: [this.id],
-            maxWidth: 300
-        })
-        this.text.addMbr(this.getMbr());
-        this.text.setSelectionHorisontalAlignment('left');
-        this.text.editor.setSelectionHorisontalAlignment('left');
-        this.text.setBoard(this.board);
-        this.text.editor.applyRichTextOp({
-            class: "RichText",
-            method: 'setMaxWidth',
-            item: [this.id],
-            maxWidth: 300
-        })
-
-        const {x, y} = this.getMiddlePoint();
-
-        this.text.transformation.apply({
-            class: "Transformation",
-            method: "translateTo",
-            item: [this.id],
-            x: x,
-            y: y,
-        });
-
-
     }
 
     observerStartPointItem = (): void => {
@@ -166,12 +141,14 @@ export class Connector {
         }
     }
 
-	setId(id: string): this {
-		this.id = id;
-        this.text.setId(id);
-        this.transformation.setId(id);
-		return this;
-	}
+    setId(id: string): this {
+        this.id = id;
+        this.board.items
+            .listAll()
+            .filter((item) => item.itemType === 'RichText')
+            .find((item: RichText) => item.getConnectedItem() === this.id)
+        return this;
+    }
 
     getId(): string {
         return this.id;
@@ -396,11 +373,11 @@ export class Connector {
         return this.middlePoints;
     }
 
-	getMiddlePoint(): {x: number; y: number} {
+    getMiddlePoint(): { x: number; y: number } {
         const line = this.lines.getSegments()[0];
         let x = 0;
         let y = 0;
-        
+
         if (line instanceof CubicBezier) {
             const x0 = line.start.x;
             const y0 = line.start.y;
@@ -421,16 +398,16 @@ export class Connector {
             x = (start.x + end.x) / 2;
             y = (start.y + end.y) / 2;
         }
-		
-		return {
-			x,
-			y
-		}
-	}
 
-	getStartPointerStyle(): string {
-		return this.startPointerStyle;
-	}
+        return {
+            x,
+            y
+        }
+    }
+
+    getStartPointerStyle(): string {
+        return this.startPointerStyle;
+    }
 
     getEndPointerStyle(): string {
         return this.endPointerStyle;
@@ -460,13 +437,134 @@ export class Connector {
         return this.lines.getNearestEdgePointTo(point);
     }
 
-	isEnclosedOrCrossedBy(bounds: Mbr): boolean {
-		return (
-			this.lines.isEnclosedOrCrossedBy(bounds) ||
-			this.startPointer.path.isEnclosedOrCrossedBy(bounds) ||
-			this.endPointer.path.isEnclosedOrCrossedBy(bounds)
-		);
-	}
+    createTitle(): void {
+        if (this.title && this.board.items.findById(this.title.getId())) {
+            return;
+        }
+
+        const text = this.board.add(
+            new RichText(
+                this.getMbr(),
+                this.id,
+                this.events,
+                this.transformation,
+                "\u00A0",
+                true
+            )
+                .setMaxWidth(300)
+                .setConnectedItem(this.id)
+        );
+        text.placeholderText = "\u00A0"
+        text.setSelectionHorisontalAlignment('left');
+        text.editor.setSelectionHorisontalAlignment('left');
+        text.setMaxWidth(300);
+        this.board.tools.select();
+        this.board.tools.publish();
+        this.board.selection.removeAll();
+        this.board.selection.setContext("EditTextUnderPointer");
+        this.board.selection.add(text);
+        this.title?.setSelectionFontSize(this.textStyle.fontSize || 14);
+        this.title?.setSelectionFontColor(this.textStyle.fontColor || 'black');
+        this.title?.setSelectionFontHighlight(this.textStyle.fontHighlight || '');
+        this.title?.setSelectionFontStyle(this.textStyle.fontStyle || []);
+        this.board.tools.select();
+        this.board.tools.publish();
+        this.board.selection.editSelected();
+        this.title = text;
+        this.board.tools.cancel();
+    }
+
+    setTitle(title: RichText): this {
+        if (this.title) {
+            return this;
+        }
+        this.title = title;
+        this.title.placeholderText = "\u00A0";
+
+        try {
+            this.textStyle.fontColor = this.title.getFontColor();
+            this.textStyle.fontSize = this.title.getFontSize();
+            this.textStyle.fontStyle = this.title.getFontStyles();
+            this.textStyle.horisontalAlignment = "left";
+            this.textStyle.fontHighlight = this.title.getFontHighlight();
+        } catch (error) {
+            console.error('Try to assign RichText styles to Connector. Error: ', error)
+        }
+
+        return this;
+    }
+
+    setFontSize(size: number): this {
+        if (!this.title) { return this; }
+        this.title.setSelectionFontSize(size);
+        this.textStyle.fontSize = size;
+        return this;
+    }
+
+    setFontStyle(style: string | string[]): this {
+        if (!this.title) { return this; }
+        this.textStyle.fontStyle = style;
+        return this;
+    }
+
+    setHorisontalAlignment(alignment: HorisontalAlignment): this {
+        if (!this.title) { return this; }
+        this.title.setSelectionHorisontalAlignment(alignment);
+        this.textStyle.horisontalAlignment = alignment;
+        return this;
+    }
+
+    setFontColor(color: string): this {
+        if (!this.title) { return this; }
+        this.title.setSelectionFontColor(color);
+        this.textStyle.fontColor = color;
+        return this;
+    }
+
+    setTextHighlight(color: string): this {
+        if (!this.title) { return this; }
+        this.title.setSelectionFontHighlight(color);
+        this.textStyle.fontHighlight = color;
+        return this;
+    }
+
+    getTextHighlight(): string {
+        if (!this.title) { return ''; }
+        return this.title.getFontHighlight();
+    }
+
+    getFontSize(): number | null {
+        if (!this.title) { return null; }
+        return this.title.getFontSize();
+    }
+
+    getFontColor(): string | null {
+        if (!this.title) {
+            return null;
+        }
+        return this.title.getFontColor();
+    }
+
+    getTitle(): RichText | null {
+        return this.title || null;
+    }
+
+    hasTitle(): boolean {
+        return !!this.title;
+    }
+
+    removeTitle(): this {
+        this.title = null;
+        return this;
+    }
+
+    isEnclosedOrCrossedBy(bounds: Mbr): boolean {
+        return (
+            this.lines.isEnclosedOrCrossedBy(bounds) ||
+            this.startPointer.path.isEnclosedOrCrossedBy(bounds) ||
+            this.endPointer.path.isEnclosedOrCrossedBy(bounds)
+        );
+    }
 
     isUnderPoint(point: Point): boolean {
         return (
@@ -506,7 +604,6 @@ export class Connector {
 
     render(context: DrawingContext): void {
         this.lines.render(context);
-        this.text.render(context);
         this.startPointer.path.render(context);
         this.endPointer.path.render(context);
     }
@@ -534,7 +631,7 @@ export class Connector {
             lineStyle: this.lineStyle,
             lineColor: this.lineColor,
             lineWidth: this.lineWidth,
-            text: this.text.serialize()
+            textStyle: this.textStyle,
         };
     }
 
@@ -548,9 +645,9 @@ export class Connector {
         if (data.endPoint) {
             this.applyEndPoint(data.endPoint, false);
         }
-        if (data.text) {
-			this.text.deserialize(data.text);
-		}
+        if (data.textStyle) {
+            this.textStyle = { ...this.textStyle, ...data.textStyle };
+        }
         this.startPointerStyle =
             data.startPointerStyle ?? this.startPointerStyle;
         this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;
@@ -563,26 +660,18 @@ export class Connector {
     }
 
     updateTitle(): void {
-        if (!this.text){return;}
-        if (this.animationFrameId) {return;}
-        if (this.text!.isEmpty()) {return;}
-        this.animationFrameId = requestAnimationFrame(() => {
-            const {x, y} = this.getMiddlePoint();
-            const height = this.text!.getHeight();
-            const width = this.text!.getWidth();
-
-            this.text.transformation.apply({
-                class: "Transformation",
-                method: "translateTo",
-                item: [this.id],
-                x: x - width / 2,
-                y: y - height / 2,
-            });
-
-
-            this.animationFrameId = 0;
+        if (!this.title) { return };
+        const now = Date.now();
+        const fps60 = 1000 / 60;
+        // if (now - this.titleDebounceTime < fps60) { return; }
+        this.titleDebounceTime = now;
+        const { x, y } = this.getMiddlePoint();
+        const height = this.title.getHeight();
+        const width = this.title.getWidth();
+        this.title.transformation.apply({
+            class: "Transformation",
+            method: "translateTo", x: (x - width / 2), y: (y - height / 2)
         });
-
     }
 
     private updatePaths(): void {
