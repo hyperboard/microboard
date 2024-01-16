@@ -104,11 +104,6 @@ export function createCommand(
 						"Create RichText command. RichText not found.",
 					);
 				}
-				if (item.itemType === "Connector") {
-					throw new Error(
-						"Create RichText command. Item is not a RichText or a Shape.",
-					);
-				}
 				return item.itemType === "RichText" ? item : item.text;
 			});
 			return new RichTextCommand(richTextList, operation);

@@ -52,7 +52,6 @@ export class RichText extends Mbr implements Geometry {
 	private updateRequired = false;
 	private autoSizeScale = 1;
 	private transformedContainer?: Mbr = undefined;
-	private connectedTo?: string = undefined;
 	private board?: Board;
     private containerMaxWidth?: number;
 
@@ -148,23 +147,24 @@ export class RichText extends Mbr implements Geometry {
         }
     }
 
+    isEmpty(): boolean {
+        return isTextEmpty(this.editor.editor.children);
+    }
+
     handleFocus = (): void => {
         isEditInProcessValue = true;
     };
 
     handleBlur = (): void => {
-        const children = this.editor.editor.children;
-        if (this.connectedTo && this.board && isTextEmpty(children)) {    
-            const connectedItem = this.board.items.findById(this.connectedTo)
-            if (connectedItem instanceof Connector) {
-                this.board.remove(this);
-                connectedItem.removeTitle();
-            }
-        }
         isEditInProcessValue = false;
     };
 
     updateElement(): void {
+        const item = this.board?.items.findById(this.id);
+        if (item?.itemType === 'Connector') {
+            (item as Connector).updateTitle();
+        }
+        
         if (this.updateRequired) {
             return;
         }
@@ -179,12 +179,6 @@ export class RichText extends Mbr implements Geometry {
                 );
                 if (this.containerMaxWidth && this.blockNodes.width >= this.containerMaxWidth) {
                     this.blockNodes.width = this.containerMaxWidth;
-                }
-                if (this.connectedTo && this.board) {
-                    const connector = this.board.items.findById(this.connectedTo);
-                    if (connector instanceof Connector) {
-                        connector.updateTitle();
-                    }
                 }
             }
             this.alignInRectangle(
@@ -475,22 +469,9 @@ export class RichText extends Mbr implements Geometry {
         this.updateElement();
     }
 
-	setConnectedItem(id: string): this {
-		this.connectedTo = id;
-        const connector = this.board?.items.findById(id);
-        if (connector instanceof Connector) {
-            connector.updateTitle()
-        }
-		return this;
-	}
-
 	setBoard(board: Board): this {
 		this.board = board;
 		return this;
-	}
-
-	getConnectedItem(): string | undefined {
-		return this.connectedTo;
 	}
 
 	getFontStyles(): TextStyle[] {
@@ -571,7 +552,6 @@ export class RichText extends Mbr implements Geometry {
 			children: this.editor.editor.children,
 			maxWidth: this.editor.maxWidth,
             containerMaxWidth: this.getMaxWidth(),
-			connectedTo: this.connectedTo,
             transformation: (this.isInShape || this.autoSize)
                 ? undefined
                 : this.transformation.serialize(),
@@ -590,13 +570,6 @@ export class RichText extends Mbr implements Geometry {
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
-		}
-		if (data.connectedTo) {
-			this.connectedTo = data.connectedTo;
-			const connector = this.board?.items.findById(data.connectedTo);
-			if (connector instanceof Connector && !connector.hasTitle()){
-				connector.setTitle(this);
-			}
 		}
         if (data.containerMaxWidth) {
             this.containerMaxWidth = data.containerMaxWidth;

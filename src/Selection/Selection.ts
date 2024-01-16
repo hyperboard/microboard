@@ -147,7 +147,7 @@ export class Selection {
         if (!item) {
             return;
         }
-        if (["Shape", "Sticker"].indexOf(item.itemType) > -1) {
+        if (["Shape", "Sticker", "Connector"].indexOf(item.itemType) > -1) {
             this.setTextToEdit(item.text);
             this.setContext("EditTextUnderPointer");
             this.board.items.subject.publish(this.board.items);
@@ -247,7 +247,7 @@ export class Selection {
     canChangeText(): boolean {
         return (
             this.items.isSingle() &&
-            this.items.isItemTypes(["Shape", "Sticker", "RichText"])
+            this.items.isItemTypes(["Shape", "Sticker", "Connector", "RichText"])
         );
     }
 
@@ -270,6 +270,7 @@ export class Selection {
             "RichText",
             "Shape",
             "Sticker",
+            "Connector",
         ])[0] as RichText | Shape | undefined;
         const text = item?.itemType === "RichText" ? item : item?.text;
         return text;
@@ -507,7 +508,7 @@ export class Selection {
         if (this.items.isSingle()) {
             const item = this.items.list()[0];
             if (item) {
-                if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
+                if (["Shape", "Sticker", "Connector"].indexOf(item.itemType) !== -1) {
                     item.text.setSelectionFontSize(fontSize);
                 } else if (item.itemType === "RichText") {
                     item.setSelectionFontSize(fontSize);
@@ -529,7 +530,7 @@ export class Selection {
         if (this.items.isSingle()) {
             const item = this.items.list()[0];
             if (item) {
-                if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
+                if (['Shape', 'Sticker', 'Connector'].indexOf(item.itemType) !== -1) {
                     item.text.setSelectionFontStyle(fontStyleList);
                 } else if (item.itemType === "RichText") {
                     item.setSelectionFontStyle(fontStyleList);
@@ -551,7 +552,7 @@ export class Selection {
         if (this.items.isSingle()) {
             const item = this.items.list()[0];
             if (item) {
-                if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
+                if (['Shape', 'Sticker', 'Connector'].indexOf(item.itemType) !== -1) {
                     item.text.setSelectionFontColor(fontColor);
                 } else if (item.itemType === "RichText") {
                     item.setSelectionFontColor(fontColor);
@@ -571,7 +572,7 @@ export class Selection {
         if (this.items.isSingle()) {
             const item = this.items.list()[0];
             if (item) {
-                if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
+                if (['Shape', 'Sticker', 'Connector'].indexOf(item.itemType) !== -1) {
                     item.text.setSelectionFontHighlight(fontHighlight);
                 } else if (item.itemType === "RichText") {
                     item.setSelectionFontHighlight(fontHighlight);
@@ -593,7 +594,7 @@ export class Selection {
         if (this.items.isSingle()) {
             const item = this.items.list()[0];
             if (item) {
-                if (['Shape', 'Sticker'].indexOf(item.itemType) !== -1) {
+                if (['Shape', 'Sticker', 'Connector'].indexOf(item.itemType) !== -1) {
                     item.text.setSelectionHorisontalAlignment(
                         horisontalAlignment,
                     );

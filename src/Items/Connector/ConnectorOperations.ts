@@ -2,6 +2,7 @@ import { BoardPoint, ControlPointData } from "./ControlPoint";
 import { ConnectorPointerStyle } from "./Pointers/ConnectorPointerStyles";
 import { ConnectionLineWidth, ConnectorLineStyle, ConnectorTextStyle } from "./Connector";
 import { TransformationData } from "../Transformation";
+import { RichTextData } from "../RichText";
 
 export class ConnectorData {
 	readonly itemType = "Connector";
@@ -13,7 +14,7 @@ export class ConnectorData {
 	lineColor = "";
 	lineWidth: ConnectionLineWidth = 1;
 	transformation = new TransformationData();
-	textStyle: Partial<ConnectorTextStyle> = {};
+	text = new RichTextData();
 }
 
 interface SetStartPoint {
