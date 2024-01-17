@@ -64,12 +64,12 @@ export type BorderWidth = keyof typeof scaledPatterns;
 export const borderWidths: BorderWidth[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export interface PathStylize {
-	setBackgroundColor: (color: string) => void
-	setBorderColor: (color: string) => void
-	setBorderStyle: (style: BorderStyle) => void
-	setBorderWidth: (style: BorderWidth) => void
-	setBackgroundOpacity: (opacity: number) => void
-	setBorderOpacity: (opacity: number) => void
+	setBackgroundColor: (color: string) => void;
+	setBorderColor: (color: string) => void;
+	setBorderStyle: (style: BorderStyle) => void;
+	setBorderWidth: (style: BorderWidth) => void;
+	setBackgroundOpacity: (opacity: number) => void;
+	setBorderOpacity: (opacity: number) => void;
 }
 
 export class Path implements Geometry, PathStylize {
@@ -80,6 +80,7 @@ export class Path implements Geometry, PathStylize {
 	private height: number;
 	private maxDimension: number;
 	private linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
+	connectedItemType = '';
 
 	constructor(
 		private segments: Segment[] = [],
@@ -344,8 +345,19 @@ export class Path implements Geometry, PathStylize {
 				ctx.fillStyle = this.backgroundColor;
 				ctx.fill(this.path2d!);
 			}
-			ctx.stroke(this.path2d!);
-		}
+		}		
+
+		// https://github.com/excalidraw/excalidraw/commit/760fd7b3a685e61e73bf0e34f3983ae0dd341b6a#diff-283e04402ba4c222353886885899d9b4ea46a012acc00d7121b3f2afd7e286f8R1084
+		
+		// if(this.connectedItemType === 'Connector') {
+		// 	// TODO: Better implementation
+		// 	ctx.globalCompositeOperation = "destination-out";
+    // 	// ctx.fillStyle = 'red';
+		// 	ctx.fillRect(this.x + this.width/2 - 25 , this.y + this.height/2 - 25, 50, 50);
+		// 	ctx.globalCompositeOperation = 'source-over';
+		// }
+
+		ctx.stroke(this.path2d!);
 	}
 
 	transform(matrix: Matrix): void {
@@ -386,5 +398,10 @@ export class Path implements Geometry, PathStylize {
 
 	isClosed(): boolean {
 		return this.isClosedValue;
+	}
+
+	addConnectedItemType(name: string): this {
+		this.connectedItemType = name;
+		return this
 	}
 }

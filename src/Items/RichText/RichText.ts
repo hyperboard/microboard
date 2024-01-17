@@ -583,9 +583,17 @@ export class RichText extends Mbr implements Geometry {
             const { ctx } = context;
             ctx.save();
             ctx.translate(this.left, this.top);
-            if (this.clipPath) {
-                // ctx.clip(this.clipPath);
-            }
+            // if (this.clipPath && this.connectorId) {
+            //     const PADDING = 5;
+            //     ctx.fillStyle = '#f4f4f4';
+            //     console.log(this);
+            //     ctx.fillRect(
+            //         this.getWidth()/2 - this.blockNodes?.width/2 - PADDING,
+            //         this.getHeight()/2 - this.blockNodes?.height/2 - PADDING,
+            //         (this.blockNodes?.width || 0) + PADDING*2,
+            //         (this.blockNodes?.height || 0) + PADDING*2
+            //         );
+            // }
             if (this.autoSize) {
                 ctx.scale(this.autoSizeScale, this.autoSizeScale);
             } else if (!this.isInShape) {
@@ -630,5 +638,23 @@ export class RichText extends Mbr implements Geometry {
 
     isClosed(): boolean {
         return true;
+    }
+
+    selectText(): void {
+        this.editor.editor.apply({
+            type: 'set_selection',
+            
+            newProperties: {
+                anchor: {
+                 offset: this.editor.textLength,
+                 path: [0, this.editor.textLength],
+                },
+                focus: {
+                 offset: 0,
+                 path: [0, 0],
+                },
+               },
+               properties: null,
+        })
     }
 }

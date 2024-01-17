@@ -83,13 +83,6 @@ export class Select extends Tool {
                 this.clear();
                 return this.board.selection.tool.getTool().leftButtonDown();
             }
-            if (this.downOnItem instanceof RichText) {
-                const connectedTo = this.downOnItem.getConnectedItem();
-                if (connectedTo) {
-                    this.clear();
-                    return false;
-                };
-            }
             return false;
         }
         return false;
@@ -190,6 +183,17 @@ export class Select extends Tool {
                 this.board.tools.publish();
                 return false;
             } else {
+                if (this.board.items.getUnderPointer().length === 1) {
+                    const item = this.board.items.getUnderPointer()[0];
+                    if (item.itemType === "Connector") {
+                        this.board.selection.setTextToEdit(item.text);
+                        this.board.selection.setContext("EditTextUnderPointer");
+                        item.text.selectText();
+                        this.board.items.subject.publish(this.board.items);
+                        this.clear();
+                        return false;
+                    }
+                }
                 this.board.selection.editUnderPointer();
                 this.clear();
                 return false;
@@ -201,7 +205,7 @@ export class Select extends Tool {
             this.board.tools.publish();
             return false;
         }
-        if (this.isDrawingRectangle && this.line && this.rect) {
+        if (this.isDrawingRectangle && this.line && this.rect) { 
             const isAddToSelection = this.board.keyboard.down === "Shift";
             if (isAddToSelection) {
                 const { left, top, right, bottom } = this.rect;

@@ -28,6 +28,7 @@ export class EditorContainer {
     maxWidth: number | undefined = undefined;
     textScale = 1;
     verticalAlignment: VerticalAlignment = "center";
+    textLength = 0;
 
     private decorated = {
         realapply: (_operation: EditorOperation): void => { },
@@ -91,6 +92,9 @@ export class EditorContainer {
         };
         /** We decorate methods */
         editor.apply = (operation: EditorOperation): void => {
+            const editorHTML = document.querySelector('#TextEditor > div > div > p');
+            this.textLength = editorHTML?.innerText.length || 0;
+            
             if (operationsRichTextDebugEnabled) {
                 console.info("editor.apply", operation);
             }

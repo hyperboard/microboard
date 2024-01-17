@@ -103,7 +103,8 @@ export class Connector {
             method: 'setMaxWidth',
             item: [this.id],
             maxWidth: 300
-        })
+        });
+        this.text.setClipPath();
 
         const { x, y } = this.getMiddlePoint();
 
@@ -169,6 +170,7 @@ export class Connector {
     setId(id: string): this {
         this.id = id;
         this.text.setId(id);
+        // this.text.addConnector(id);
         this.transformation.setId(id);
         return this;
     }
@@ -614,7 +616,7 @@ export class Connector {
             startPoint,
             endPoint,
             this.middlePoints,
-        );
+        ).addConnectedItemType(this.itemType);
         this.startPointer = getStartPointer(
             startPoint,
             this.startPointerStyle,
@@ -645,7 +647,7 @@ export class Connector {
         if (line instanceof Line) {
             this.lines = new Path([
                 new Line(this.startPointer.start, this.endPointer.start),
-            ]);
+            ]).addConnectedItemType(this.itemType);
         } else if (line instanceof CubicBezier) {
             this.lines = new Path([
                 new CubicBezier(
@@ -654,7 +656,7 @@ export class Connector {
                     this.endPointer.start,
                     line.endControl,
                 ),
-            ]);
+            ]).addConnectedItemType(this.itemType);
         }
     }
 
