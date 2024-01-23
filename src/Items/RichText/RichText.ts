@@ -45,14 +45,14 @@ export class RichText extends Mbr implements Geometry {
 
     readonly editorTransforms = Transforms;
 
-	private isContainerSet = false;
-	private isRenderEnabled = true;
-	private blockNodes: any;
-	private clipPath: Path2D | undefined;
-	private updateRequired = false;
-	private autoSizeScale = 1;
-	private transformedContainer?: Mbr = undefined;
-	private board?: Board;
+    private isContainerSet = false;
+    private isRenderEnabled = true;
+    private blockNodes: any;
+    private clipPath: Path2D | undefined;
+    private updateRequired = false;
+    private autoSizeScale = 1;
+    private transformedContainer?: Mbr = undefined;
+    private board?: Board;
     private containerMaxWidth?: number;
 
     constructor(
@@ -62,7 +62,7 @@ export class RichText extends Mbr implements Geometry {
         readonly transformation = new Transformation(id, events),
         public placeholderText = "Type something",
         public isInShape = false,
-        private autoSize = false
+        private autoSize = false,
     ) {
         super();
 
@@ -110,6 +110,7 @@ export class RichText extends Mbr implements Geometry {
                     this.updateElement();
                     this.transformCanvas();
                 }
+                this.subject.publish(this);
             },
         );
         this.updateElement();
@@ -160,11 +161,6 @@ export class RichText extends Mbr implements Geometry {
     };
 
     updateElement(): void {
-        const item = this.board?.items.findById(this.id);
-        if (item?.itemType === 'Connector') {
-            (item as Connector).updateTitle();
-        }
-        
         if (this.updateRequired) {
             return;
         }
@@ -299,7 +295,7 @@ export class RichText extends Mbr implements Geometry {
             );
         }
         this.setClipPath();
-        this.subject.publish(this);
+        // this.subject.publish(this);
     }
 
     alignInRectangle(rect: Mbr, alignment: VerticalAlignment): void {
@@ -469,15 +465,15 @@ export class RichText extends Mbr implements Geometry {
         this.updateElement();
     }
 
-	setBoard(board: Board): this {
-		this.board = board;
-		return this;
-	}
+    setBoard(board: Board): this {
+        this.board = board;
+        return this;
+    }
 
-	getFontStyles(): TextStyle[] {
-		const marks = this.editor.getSelectionMarks();
-		return marks?.styles ?? [];
-	}
+    getFontStyles(): TextStyle[] {
+        const marks = this.editor.getSelectionMarks();
+        return marks?.styles ?? [];
+    }
 
     getFontColor(): string {
         const marks = this.editor.getSelectionMarks();
@@ -545,38 +541,38 @@ export class RichText extends Mbr implements Geometry {
         this.subject.publish(this);
     }
 
-	serialize(): RichTextData {
-		return {
-			itemType: "RichText",
-			verticalAlignment: this.editor.verticalAlignment,
-			children: this.editor.editor.children,
-			maxWidth: this.editor.maxWidth,
+    serialize(): RichTextData {
+        return {
+            itemType: "RichText",
+            verticalAlignment: this.editor.verticalAlignment,
+            children: this.editor.editor.children,
+            maxWidth: this.editor.maxWidth,
             containerMaxWidth: this.getMaxWidth(),
             transformation: (this.isInShape || this.autoSize)
                 ? undefined
                 : this.transformation.serialize(),
-		};
-	}
+        };
+    }
 
-	deserialize(data: Partial<RichTextData>): this {
-		if (data.verticalAlignment) {
-			this.editor.verticalAlignment = data.verticalAlignment;
-		}
-		if (data.maxWidth) {
-			this.editor.maxWidth = data.maxWidth;
-		}
-		if (data.children) {
-			this.editor.editor.children = data.children;
-		}
-		if (data.transformation) {
-			this.transformation.deserialize(data.transformation);
-		}
+    deserialize(data: Partial<RichTextData>): this {
+        if (data.verticalAlignment) {
+            this.editor.verticalAlignment = data.verticalAlignment;
+        }
+        if (data.maxWidth) {
+            this.editor.maxWidth = data.maxWidth;
+        }
+        if (data.children) {
+            this.editor.editor.children = data.children;
+        }
+        if (data.transformation) {
+            this.transformation.deserialize(data.transformation);
+        }
         if (data.containerMaxWidth) {
             this.containerMaxWidth = data.containerMaxWidth;
         }
-		this.subject.publish(this);
-		return this;
-	}
+        this.subject.publish(this);
+        return this;
+    }
 
     render(context: DrawingContext): void {
         if (this.isRenderEnabled) {
@@ -605,6 +601,15 @@ export class RichText extends Mbr implements Geometry {
             this.blockNodes.render(ctx);
             ctx.restore();
         }
+    }
+
+    getClipMbr(): Mbr {
+        let mbr = this.getMbr();
+        const center = mbr.getCenter();
+        const { width, height } = this.blockNodes;
+        mbr.left = center.x - width / 2;
+        mbr.right = mbr.left + width;
+        return mbr;
     }
 
     getPath(): Path | Paths {
@@ -643,18 +648,18 @@ export class RichText extends Mbr implements Geometry {
     selectText(): void {
         this.editor.editor.apply({
             type: 'set_selection',
-            
+
             newProperties: {
                 anchor: {
-                 offset: this.editor.textLength,
-                 path: [0, this.editor.textLength],
+                    offset: this.editor.textLength,
+                    path: [0, this.editor.textLength],
                 },
                 focus: {
-                 offset: 0,
-                 path: [0, 0],
+                    offset: 0,
+                    path: [0, 0],
                 },
-               },
-               properties: null,
+            },
+            properties: null,
         })
     }
 }

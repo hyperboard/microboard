@@ -8,9 +8,9 @@ import { Point } from "../Point";
 import { Transformation, TransformationData } from "../Transformation";
 
 export interface ImageItemData {
-	itemType: "Image";
-	dataUrl: string;
-	transformation: TransformationData;
+    itemType: "Image";
+    dataUrl: string;
+    transformation: TransformationData;
 }
 
 const errorImageCanvas = document.createElement("canvas");
@@ -24,151 +24,151 @@ const errorImage = new Image();
 errorImage.src = errorImageCanvas.toDataURL();
 
 export class ImageItem extends Mbr {
-	readonly itemType = "Image";
-	parent = "Board";
-	image: HTMLImageElement;
-	readonly transformation: Transformation;
-	dataUrl: string;
-	readonly subject = new Subject<ImageItem>();
-	loadCallbacks: ((image: ImageItem) => void)[] = [];
+    readonly itemType = "Image";
+    parent = "Board";
+    image: HTMLImageElement;
+    readonly transformation: Transformation;
+    dataUrl: string;
+    readonly subject = new Subject<ImageItem>();
+    loadCallbacks: ((image: ImageItem) => void)[] = [];
 
-	constructor(dataUrl: string, private events?: Events, private id = "") {
-		super();
-		this.transformation = new Transformation(id, events);
-		this.dataUrl = dataUrl;
-		this.image = new Image();
-		this.image.onload = this.onLoad;
-		this.image.onerror = this.onError;
-		this.image.src = dataUrl;
-		this.transformation.subject.subscribe(this.onTransform);
-	}
+    constructor(dataUrl: string, private events?: Events, private id = "") {
+        super();
+        this.transformation = new Transformation(id, events);
+        this.dataUrl = dataUrl;
+        this.image = new Image();
+        this.image.onload = this.onLoad;
+        this.image.onerror = this.onError;
+        this.image.src = dataUrl;
+        this.transformation.subject.subscribe(this.onTransform);
+    }
 
-	onLoad = (): void => {
-		this.updateMbr();
-		this.subject.publish(this);
-		while (this.loadCallbacks.length > 0) {
-			this.loadCallbacks.shift()!(this);
-		}
-	};
+    onLoad = (): void => {
+        this.updateMbr();
+        this.subject.publish(this);
+        while (this.loadCallbacks.length > 0) {
+            this.loadCallbacks.shift()!(this);
+        }
+    };
 
-	onError = (): void => {
-		this.image = errorImage;
-		this.updateMbr();
-		this.subject.publish(this);
-		while (this.loadCallbacks.length > 0) {
-			this.loadCallbacks.shift()!(this);
-		}
-	};
+    onError = (): void => {
+        this.image = errorImage;
+        this.updateMbr();
+        this.subject.publish(this);
+        while (this.loadCallbacks.length > 0) {
+            this.loadCallbacks.shift()!(this);
+        }
+    };
 
-	onTransform = (): void => {
-		this.updateMbr();
-		this.subject.publish(this);
-	};
+    onTransform = (): void => {
+        this.updateMbr();
+        this.subject.publish(this);
+    };
 
-	updateMbr(): void {
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
-		this.left = translateX;
-		this.top = translateY;
-		this.right = this.left + this.image.width * scaleX;
-		this.bottom = this.top + this.image.height * scaleY;
-	}
+    updateMbr(): void {
+        const { translateX, translateY, scaleX, scaleY } =
+            this.transformation.matrix;
+        this.left = translateX;
+        this.top = translateY;
+        this.right = this.left + this.image.width * scaleX;
+        this.bottom = this.top + this.image.height * scaleY;
+    }
 
-	doOnceOnLoad = (callback: (image: ImageItem) => void): void => {
-		this.loadCallbacks.push(callback);
-	};
+    doOnceOnLoad = (callback: (image: ImageItem) => void): void => {
+        this.loadCallbacks.push(callback);
+    };
 
-	setId(id: string): this {
-		this.id = id;
-		this.transformation.setId(id);
-		return this;
-	}
+    setId(id: string): this {
+        this.id = id;
+        this.transformation.setId(id);
+        return this;
+    }
 
-	getId(): string {
-		return this.id;
-	}
+    getId(): string {
+        return this.id;
+    }
 
-	serialize(): ImageItemData {
-		return {
-			itemType: "Image",
-			dataUrl: this.dataUrl,
-			transformation: this.transformation.serialize(),
-		};
-	}
+    serialize(): ImageItemData {
+        return {
+            itemType: "Image",
+            dataUrl: this.dataUrl,
+            transformation: this.transformation.serialize(),
+        };
+    }
 
-	deserialize(data: ImageItemData): ImageItem {
-		this.transformation.deserialize(data.transformation);
-		this.dataUrl = data.dataUrl;
-		this.image.onload = () => {
-			this.left = this.transformation.matrix.translateX;
-			this.top = this.transformation.matrix.translateY;
-			this.right =
-				this.left +
-				this.image.width * this.transformation.matrix.scaleX;
-			this.bottom =
-				this.top +
-				this.image.height * this.transformation.matrix.scaleY;
-			this.subject.publish(this);
-			while (this.loadCallbacks.length > 0) {
-				this.loadCallbacks.shift()!(this);
-			}
-		};
-		this.image.src = data.dataUrl;
-		this.left = this.transformation.matrix.translateX;
-		this.top = this.transformation.matrix.translateY;
-		this.right =
-			this.left + this.image.width * this.transformation.matrix.scaleX;
-		this.bottom =
-			this.top + this.image.height * this.transformation.matrix.scaleY;
-		return this;
-	}
+    deserialize(data: ImageItemData): ImageItem {
+        this.transformation.deserialize(data.transformation);
+        this.dataUrl = data.dataUrl;
+        this.image.onload = () => {
+            this.left = this.transformation.matrix.translateX;
+            this.top = this.transformation.matrix.translateY;
+            this.right =
+                this.left +
+                this.image.width * this.transformation.matrix.scaleX;
+            this.bottom =
+                this.top +
+                this.image.height * this.transformation.matrix.scaleY;
+            this.subject.publish(this);
+            while (this.loadCallbacks.length > 0) {
+                this.loadCallbacks.shift()!(this);
+            }
+        };
+        this.image.src = data.dataUrl;
+        this.left = this.transformation.matrix.translateX;
+        this.top = this.transformation.matrix.translateY;
+        this.right =
+            this.left + this.image.width * this.transformation.matrix.scaleX;
+        this.bottom =
+            this.top + this.image.height * this.transformation.matrix.scaleY;
+        return this;
+    }
 
-	apply(op: Operation): void {
-		switch (op.class) {
-			case "Transformation":
-				this.transformation.apply(op);
-				break;
-		}
-	}
+    apply(op: Operation): void {
+        switch (op.class) {
+            case "Transformation":
+                this.transformation.apply(op);
+                break;
+        }
+    }
 
-	render(context: DrawingContext): void {
-		const ctx = context.ctx;
-		ctx.save();
-		this.transformation.matrix.applyToContext(ctx);
-		ctx.drawImage(this.image, 0, 0);
-		ctx.restore();
-	}
+    render(context: DrawingContext): void {
+        const ctx = context.ctx;
+        ctx.save();
+        this.transformation.matrix.applyToContext(ctx);
+        ctx.drawImage(this.image, 0, 0);
+        ctx.restore();
+    }
 
-	getPath(): Path | Paths {
-		const { left, top, right, bottom } = this.getMbr();
-		const leftTop = new Point(left, top);
-		const rightTop = new Point(right, top);
-		const rightBottom = new Point(right, bottom);
-		const leftBottom = new Point(left, bottom);
-		return new Path(
-			[
-				new Line(leftTop, rightTop),
-				new Line(rightTop, rightBottom),
-				new Line(rightBottom, leftBottom),
-				new Line(leftBottom, leftTop),
-			],
-			true,
-		);
-	}
+    getPath(): Path | Paths {
+        const { left, top, right, bottom } = this.getMbr();
+        const leftTop = new Point(left, top);
+        const rightTop = new Point(right, top);
+        const rightBottom = new Point(right, bottom);
+        const leftBottom = new Point(left, bottom);
+        return new Path(
+            [
+                new Line(leftTop, rightTop),
+                new Line(rightTop, rightBottom),
+                new Line(rightBottom, leftBottom),
+                new Line(leftBottom, leftTop),
+            ],
+            true,
+        );
+    }
 
-	getSnapAnchorPoints(): Point[] {
-		const mbr = this.getMbr();
-		const width = mbr.getWidth();
-		const height = mbr.getHeight();
-		return [
-			new Point(mbr.left + width / 2, mbr.top),
-			new Point(mbr.left + width / 2, mbr.bottom),
-			new Point(mbr.left, mbr.top + height / 2),
-			new Point(mbr.right, mbr.top + height / 2),
-		];
-	}
+    getSnapAnchorPoints(): Point[] {
+        const mbr = this.getMbr();
+        const width = mbr.getWidth();
+        const height = mbr.getHeight();
+        return [
+            new Point(mbr.left + width / 2, mbr.top),
+            new Point(mbr.left + width / 2, mbr.bottom),
+            new Point(mbr.left, mbr.top + height / 2),
+            new Point(mbr.right, mbr.top + height / 2),
+        ];
+    }
 
-	isClosed(): boolean {
-		return true;
-	}
+    isClosed(): boolean {
+        return true;
+    }
 }

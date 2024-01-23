@@ -85,6 +85,7 @@ export class Connector {
 
     private initText(): void {
         this.text.subject.subscribe(() => {
+            this.updateTitle();
             this.subject.publish(this);
         });
 
@@ -106,6 +107,8 @@ export class Connector {
         });
         this.text.setClipPath();
 
+        this.updateTitle();
+        /*
         const { x, y } = this.getMiddlePoint();
 
         this.text.transformation.apply({
@@ -115,7 +118,7 @@ export class Connector {
             x: x,
             y: y,
         });
-
+        */
 
     }
 
@@ -516,7 +519,34 @@ export class Connector {
     }
 
     render(context: DrawingContext): void {
+        const ctx = context.ctx;
+        const textMbr = this.text.getClipMbr();
+
+        // Save the current context state
+        ctx.save();
+
+        // Define the exclusion path for clipping that's the inverse of the text bounding box
+        ctx.beginPath();
+        // Cover the entire canvas area with the rectangle path
+        const cameraMbr = context.camera.getMbr();
+        ctx.rect(cameraMbr.left, cameraMbr.top, cameraMbr.getWidth(), cameraMbr.getHeight());
+
+        // Remove the text rectangle area from the path to create the exclusion/clipping area
+        // This assumes a clockwise definition of the canvas rectangle and an anti-clockwise definition of the inner rectangle
+        ctx.moveTo(textMbr.left, textMbr.top);
+        ctx.lineTo(textMbr.left, textMbr.bottom);
+        ctx.lineTo(textMbr.right, textMbr.bottom);
+        ctx.lineTo(textMbr.right, textMbr.top);
+        ctx.closePath();
+
+        // Use the clip method to clip to the outside of the text rect
+        ctx.clip('evenodd'); // 'evenodd' is a fill rule that allows us to subtract the text rect from the clip area
+
+        // Render lines that won't appear inside the text rect
         this.lines.render(context);
+
+        // Restore the context to remove the clipping region
+        ctx.restore();
         this.text.render(context);
         this.startPointer.path.render(context);
         this.endPointer.path.render(context);
@@ -535,6 +565,8 @@ export class Connector {
     }
 
     serialize(): ConnectorData {
+        const text = this.text.serialize();
+        text.transformation = undefined;
         return {
             itemType: "Connector",
             transformation: this.transformation.serialize(),
@@ -545,7 +577,7 @@ export class Connector {
             lineStyle: this.lineStyle,
             lineColor: this.lineColor,
             lineWidth: this.lineWidth,
-            text: this.text.serialize()
+            text: text,
         };
     }
 
@@ -575,22 +607,20 @@ export class Connector {
 
     updateTitle(): void {
         if (!this.text) { return; }
-        if (this.animationFrameId) { return; }
+        // if (this.animationFrameId) { return; }
         if (this.text!.isEmpty()) { return; }
         const { x, y } = this.getMiddlePoint();
         const height = this.text!.getHeight();
         const width = this.text!.getWidth();
 
-        this.text.transformation.apply({
-            class: "Transformation",
-            method: "translateTo",
-            item: [this.id],
-            x: x - width / 2,
-            y: y - height / 2,
-        });
+        this.text.transformation.applyTranslateTo(
+            x - width / 2,
+            y - height / 2,
+        );
+        this.text.transformCanvas();
 
 
-        this.animationFrameId = 0;
+        // this.animationFrameId = 0;
 
     }
 
@@ -608,8 +638,6 @@ export class Connector {
             endPoint = new BoardPoint(endPoint.x, endPoint.y);
             endPoint.transform(matrix);
         }
-
-
 
         this.lines = getLine(
             this.lineStyle,

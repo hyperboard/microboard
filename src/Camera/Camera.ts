@@ -4,134 +4,145 @@ import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
 
 export class Camera {
-	subject = new Subject<Camera>();
-	scaleLevels = [
-		10, 9, 8, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 1.25, 1, 0.75, 0.5, 0.33, 0.2,
-		0.15, 0.1, 0.05, 0.03, 0.02, 0.01,
-	] as const;
-	maxScale = 10;
-	minScale = 0.001;
-	private matrix = new Matrix();
-	readonly pointer = new Point();
-	window = {
-		width: document.documentElement.clientWidth,
-		height: document.documentElement.clientHeight,
-		dpi: window.devicePixelRatio,
-		getMbr: () => {
-			return new Mbr(0, 0, this.window.width, this.window.height);
-		},
-	};
+    subject = new Subject<Camera>();
+    scaleLevels = [
+        10, 9, 8, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 1.25, 1, 0.75, 0.5, 0.33, 0.2,
+        0.15, 0.1, 0.05, 0.03, 0.02, 0.01,
+    ] as const;
+    maxScale = 10;
+    minScale = 0.001;
+    private matrix = new Matrix();
+    readonly pointer = new Point();
+    window = {
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight,
+        dpi: window.devicePixelRatio,
+        getMbr: () => {
+            return new Mbr(0, 0, this.window.width, this.window.height);
+        },
+    };
 
-	private touchEvents: Map<number, PointerEvent> = new Map();
-	private previousDistance: number | null = null;
-	private previousPositions: { point1: Point; point2: Point } | null = null;
-	private previous: "pinch" | "pan" | null = null;
+    private touchEvents: Map<number, PointerEvent> = new Map();
+    private previousDistance: number | null = null;
+    private previousPositions: { point1: Point; point2: Point } | null = null;
+    private previous: "pinch" | "pan" | null = null;
 
-	constructor(private boardPointer = new Pointer()) {}
+    constructor(private boardPointer = new Pointer()) { }
 
-	getMbr(): Mbr {
-		const { width, height: heigth, dpi } = this.window;
-		const mbr = new Mbr(0, 0, width * dpi, heigth * dpi);
-		mbr.transform(this.matrix.getInverse());
-		return mbr;
-	}
+    getMbr(): Mbr {
+        const mbr = this.getUntransformedMbr();
+        mbr.transform(this.matrix.getInverse());
+        return mbr;
+    }
 
-	private getScaleOneLevelIn(scale: number): number {
-		let index = this.scaleLevels.length - 1;
-		let level = this.scaleLevels[index];
-		while (index > 0 && level <= scale) {
-			index--;
-			level = this.scaleLevels[index];
-		}
-		return level;
-	}
+    getNotInverseMbr(): Mbr {
+        const mbr = this.getUntransformedMbr();
+        mbr.transform(this.matrix);
+        return mbr;
+    }
 
-	private getScaleOneLevelOut(scale: number): number {
-		const length = this.scaleLevels.length;
-		let index = 0;
-		let level = this.scaleLevels[index];
-		while (index < length - 1 && level >= scale) {
-			index++;
-			level = this.scaleLevels[index];
-		}
-		return level;
-	}
+    getUntransformedMbr(): Mbr {
+        const { width, height: heigth } = this.window;
+        const mbr = new Mbr(0, 0, width, heigth);
+        return mbr;
+    }
 
-	private limitScale(scale: number): number {
-		if (scale < this.minScale) {
-			return this.minScale;
-		} else if (scale > this.maxScale) {
-			return this.maxScale;
-		} else {
-			return scale;
-		}
-	}
+    private getScaleOneLevelIn(scale: number): number {
+        let index = this.scaleLevels.length - 1;
+        let level = this.scaleLevels[index];
+        while (index > 0 && level <= scale) {
+            index--;
+            level = this.scaleLevels[index];
+        }
+        return level;
+    }
 
-	view(_left: number, _top: number, _scale: number): void {}
+    private getScaleOneLevelOut(scale: number): number {
+        const length = this.scaleLevels.length;
+        let index = 0;
+        let level = this.scaleLevels[index];
+        while (index < length - 1 && level >= scale) {
+            index++;
+            level = this.scaleLevels[index];
+        }
+        return level;
+    }
 
-	zoomRelativeToPointerBy(scale: number): void {
-		this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y);
-	}
+    private limitScale(scale: number): number {
+        if (scale < this.minScale) {
+            return this.minScale;
+        } else if (scale > this.maxScale) {
+            return this.maxScale;
+        } else {
+            return scale;
+        }
+    }
 
-	zoomRelativeToPointBy(scale: number, x: number, y: number): void {
-		const boardPointX = (x - this.matrix.translateX) / this.matrix.scaleX;
-		const boardPointY = (y - this.matrix.translateY) / this.matrix.scaleX;
-		this.matrix.scaleX *= scale;
-		this.matrix.scaleY *= scale;
-		this.matrix.scaleX = this.limitScale(this.matrix.scaleX);
-		this.matrix.scaleY = this.limitScale(this.matrix.scaleY);
-		this.matrix.translateX = x - boardPointX * this.matrix.scaleX;
-		this.matrix.translateY = y - boardPointY * this.matrix.scaleY;
-		this.subject.publish(this);
-	}
+    view(_left: number, _top: number, _scale: number): void { }
 
-	saveDownEvent(event: PointerEvent): void {
-		this.touchEvents.set(event.pointerId, event);
-		if (this.touchEvents.size === 2) {
-			this.updateDistance();
-			this.updatePositions();
-		}
-	}
+    zoomRelativeToPointerBy(scale: number): void {
+        this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y);
+    }
 
-	updatePositions(): void {
-		const [touch1, touch2] = Array.from(this.touchEvents.values());
-		this.previousPositions = {
-			point1: new Point(touch1.pageX, touch1.pageY),
-			point2: new Point(touch2.pageX, touch2.pageY),
-		};
-	}
+    zoomRelativeToPointBy(scale: number, x: number, y: number): void {
+        const boardPointX = (x - this.matrix.translateX) / this.matrix.scaleX;
+        const boardPointY = (y - this.matrix.translateY) / this.matrix.scaleX;
+        this.matrix.scaleX *= scale;
+        this.matrix.scaleY *= scale;
+        this.matrix.scaleX = this.limitScale(this.matrix.scaleX);
+        this.matrix.scaleY = this.limitScale(this.matrix.scaleY);
+        this.matrix.translateX = x - boardPointX * this.matrix.scaleX;
+        this.matrix.translateY = y - boardPointY * this.matrix.scaleY;
+        this.subject.publish(this);
+    }
 
-	updateDistance(): void {
-		this.previousDistance = this.calculateDistance();
-	}
+    saveDownEvent(event: PointerEvent): void {
+        this.touchEvents.set(event.pointerId, event);
+        if (this.touchEvents.size === 2) {
+            this.updateDistance();
+            this.updatePositions();
+        }
+    }
 
-	removeDownEvent(event: PointerEvent): void {
-		this.touchEvents.delete(event.pointerId);
-		if (this.touchEvents.size !== 2) {
-			this.previousDistance = null;
-			this.previousPositions = null;
-		}
-	}
+    updatePositions(): void {
+        const [touch1, touch2] = Array.from(this.touchEvents.values());
+        this.previousPositions = {
+            point1: new Point(touch1.pageX, touch1.pageY),
+            point2: new Point(touch2.pageX, touch2.pageY),
+        };
+    }
 
-	updateDownEvent(event: PointerEvent): void {
-		if (this.touchEvents.has(event.pointerId)) {
-			this.touchEvents.set(event.pointerId, event);
-		}
-	}
+    updateDistance(): void {
+        this.previousDistance = this.calculateDistance();
+    }
 
-	isTwoPointers(): boolean {
-		return this.touchEvents.size === 2;
-	}
+    removeDownEvent(event: PointerEvent): void {
+        this.touchEvents.delete(event.pointerId);
+        if (this.touchEvents.size !== 2) {
+            this.previousDistance = null;
+            this.previousPositions = null;
+        }
+    }
 
-	getPinchCenter(): { x: number; y: number } {
-		const [touch1, touch2] = Array.from(this.touchEvents.values());
-		const centerX = (touch1.pageX + touch2.pageX) / 2;
-		const centerY = (touch1.pageY + touch2.pageY) / 2;
-		return { x: centerX, y: centerY };
-	}
+    updateDownEvent(event: PointerEvent): void {
+        if (this.touchEvents.has(event.pointerId)) {
+            this.touchEvents.set(event.pointerId, event);
+        }
+    }
 
-	isPinch(): boolean {
-		/*
+    isTwoPointers(): boolean {
+        return this.touchEvents.size === 2;
+    }
+
+    getPinchCenter(): { x: number; y: number } {
+        const [touch1, touch2] = Array.from(this.touchEvents.values());
+        const centerX = (touch1.pageX + touch2.pageX) / 2;
+        const centerY = (touch1.pageY + touch2.pageY) / 2;
+        return { x: centerX, y: centerY };
+    }
+
+    isPinch(): boolean {
+        /*
         const threshold = this.previous === "pinch" ? 0.2 : 10;
         const distance = this.calculateDistance();
         const is =
@@ -139,122 +150,122 @@ export class Camera {
             Math.abs(distance - this.previousDistance) > threshold;
         this.previous = is ? "pinch" : "pan";
         */
-		const previous = this.previousPositions;
-		if (!previous) {
-			return false;
-		}
+        const previous = this.previousPositions;
+        if (!previous) {
+            return false;
+        }
 
-		const [touch1, touch2] = Array.from(this.touchEvents.values());
-		const current = {
-			point1: new Point(touch1.pageX, touch1.pageY),
-			point2: new Point(touch2.pageX, touch2.pageY),
-		};
-		function getDirection(deltaX: number, deltaY: number): string {
-			if (Math.abs(deltaX) > Math.abs(deltaY)) {
-				return deltaX > 0 ? "right" : "left";
-			} else {
-				return deltaY > 0 ? "down" : "up";
-			}
-		}
-		const direction1 = getDirection(
-			previous?.point1.x - current.point1.x,
-			previous?.point1.y - current.point1.y,
-		);
-		const direction2 = getDirection(
-			previous?.point2.x - current.point2.x,
-			previous?.point2.y - current.point2.y,
-		);
-		return (
-			direction1 !== direction2 &&
-			this.previousDistance !== null &&
-			Math.abs(this.calculateDistance() - this.previousDistance) > 5
-		);
-	}
+        const [touch1, touch2] = Array.from(this.touchEvents.values());
+        const current = {
+            point1: new Point(touch1.pageX, touch1.pageY),
+            point2: new Point(touch2.pageX, touch2.pageY),
+        };
+        function getDirection(deltaX: number, deltaY: number): string {
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                return deltaX > 0 ? "right" : "left";
+            } else {
+                return deltaY > 0 ? "down" : "up";
+            }
+        }
+        const direction1 = getDirection(
+            previous?.point1.x - current.point1.x,
+            previous?.point1.y - current.point1.y,
+        );
+        const direction2 = getDirection(
+            previous?.point2.x - current.point2.x,
+            previous?.point2.y - current.point2.y,
+        );
+        return (
+            direction1 !== direction2 &&
+            this.previousDistance !== null &&
+            Math.abs(this.calculateDistance() - this.previousDistance) > 5
+        );
+    }
 
-	getPinchScale(): number {
-		if (this.previousDistance === null) {
-			return 1;
-		}
+    getPinchScale(): number {
+        if (this.previousDistance === null) {
+            return 1;
+        }
 
-		const currentDistance = this.calculateDistance();
-		const scale = currentDistance / this.previousDistance;
-		this.previousDistance = currentDistance;
-		return scale;
-	}
+        const currentDistance = this.calculateDistance();
+        const scale = currentDistance / this.previousDistance;
+        this.previousDistance = currentDistance;
+        return scale;
+    }
 
-	getPanDelta(): { x: number; y: number } {
-		if (this.previousPositions === null) {
-			return { x: 0, y: 0 };
-		}
-		const [touch1, touch2] = Array.from(this.touchEvents.values());
-		const delta1 = {
-			x:
-				(touch1.pageX - this.previousPositions.point1.x) /
-				this.matrix.scaleX,
-			y:
-				(touch1.pageY - this.previousPositions.point1.y) /
-				this.matrix.scaleX,
-		};
-		const delta2 = {
-			x: touch2.pageX - this.previousPositions.point2.x,
-			y: touch2.pageY - this.previousPositions.point2.y,
-		};
-		const delta = delta1;
-		return delta;
-	}
+    getPanDelta(): { x: number; y: number } {
+        if (this.previousPositions === null) {
+            return { x: 0, y: 0 };
+        }
+        const [touch1, touch2] = Array.from(this.touchEvents.values());
+        const delta1 = {
+            x:
+                (touch1.pageX - this.previousPositions.point1.x) /
+                this.matrix.scaleX,
+            y:
+                (touch1.pageY - this.previousPositions.point1.y) /
+                this.matrix.scaleX,
+        };
+        const delta2 = {
+            x: touch2.pageX - this.previousPositions.point2.x,
+            y: touch2.pageY - this.previousPositions.point2.y,
+        };
+        const delta = delta1;
+        return delta;
+    }
 
-	private calculateDistance(): number {
-		const [touch1, touch2] = Array.from(this.touchEvents.values());
-		return Math.sqrt(
-			Math.pow(touch2.pageX - touch1.pageX, 2) +
-				Math.pow(touch2.pageY - touch1.pageY, 2),
-		);
-	}
+    private calculateDistance(): number {
+        const [touch1, touch2] = Array.from(this.touchEvents.values());
+        return Math.sqrt(
+            Math.pow(touch2.pageX - touch1.pageX, 2) +
+            Math.pow(touch2.pageY - touch1.pageY, 2),
+        );
+    }
 
-	zoomToViewCenter(scale: number): void {
-		const centerX = this.window.width / 2;
-		const centerY = this.window.height / 2;
-		const oldScale = this.matrix.scaleX;
-		const newScale = this.limitScale(scale);
-		const relation = newScale / oldScale;
-		this.zoomRelativeToPointBy(relation, centerX, centerY);
-	}
+    zoomToViewCenter(scale: number): void {
+        const centerX = this.window.width / 2;
+        const centerY = this.window.height / 2;
+        const oldScale = this.matrix.scaleX;
+        const newScale = this.limitScale(scale);
+        const relation = newScale / oldScale;
+        this.zoomRelativeToPointBy(relation, centerX, centerY);
+    }
 
-	zoomInToViewCenter(): void {
-		const oldScale = this.matrix.scaleX;
-		const newScale = this.getScaleOneLevelIn(oldScale);
-		this.zoomToViewCenter(newScale);
-	}
+    zoomInToViewCenter(): void {
+        const oldScale = this.matrix.scaleX;
+        const newScale = this.getScaleOneLevelIn(oldScale);
+        this.zoomToViewCenter(newScale);
+    }
 
-	zoomOutFromViewCenter(): void {
-		const oldScale = this.matrix.scaleX;
-		const newScale = this.getScaleOneLevelOut(oldScale);
-		this.zoomToViewCenter(newScale);
-	}
+    zoomOutFromViewCenter(): void {
+        const oldScale = this.matrix.scaleX;
+        const newScale = this.getScaleOneLevelOut(oldScale);
+        this.zoomToViewCenter(newScale);
+    }
 
-	viewRectangle(mbr: Mbr): void {
-		// Calculate the width and height of the Mbr
-		const mbrWidth = mbr.getWidth();
-		const mbrHeight = mbr.getHeight();
+    viewRectangle(mbr: Mbr): void {
+        // Calculate the width and height of the Mbr
+        const mbrWidth = mbr.getWidth();
+        const mbrHeight = mbr.getHeight();
 
-		// Calculate the scale values
-		const scaleX = this.window.width / mbrWidth;
-		const scaleY = this.window.height / mbrHeight;
+        // Calculate the scale values
+        const scaleX = this.window.width / mbrWidth;
+        const scaleY = this.window.height / mbrHeight;
 
-		// Choose the smaller scale value to maintain the aspect ratio
-		const scale = Math.min(scaleX, scaleY);
+        // Choose the smaller scale value to maintain the aspect ratio
+        const scale = Math.min(scaleX, scaleY);
 
-		// Calculate the translation values to center the Mbr in the view
-		const translationX =
-			this.window.width / 2 - (mbr.left + mbrWidth / 2) * scale;
-		const translationY =
-			this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
+        // Calculate the translation values to center the Mbr in the view
+        const translationX =
+            this.window.width / 2 - (mbr.left + mbrWidth / 2) * scale;
+        const translationY =
+            this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
 
-		this.matrix.translateX = translationX;
-		this.matrix.translateY = translationY;
-		this.matrix.scaleX = scale;
-		this.matrix.scaleY = scale;
-		/*
+        this.matrix.translateX = translationX;
+        this.matrix.translateY = translationY;
+        this.matrix.scaleX = scale;
+        this.matrix.scaleY = scale;
+        /*
         const width = mbr.getWidth();
         const height = mbr.getHeight();
         const scale = Math.min(
@@ -271,58 +282,58 @@ export class Camera {
         this.matrix.scaleX = scale;
         this.matrix.scaleY = scale;
         */
-		this.subject.publish(this);
-	}
+        this.subject.publish(this);
+    }
 
-	zoomToFit(rect: Mbr): void {
-		this.viewRectangle(rect);
-	}
+    zoomToFit(rect: Mbr): void {
+        this.viewRectangle(rect);
+    }
 
-	getViewPointer(): { x: number; y: number } {
-		return { x: 0, y: 0 };
-	}
+    getViewPointer(): { x: number; y: number } {
+        return { x: 0, y: 0 };
+    }
 
-	translateTo(x: number, y: number): void {
-		this.matrix.translate(x, y);
-		this.updateBoardPointer();
-		this.subject.publish(this);
-	}
+    translateTo(x: number, y: number): void {
+        this.matrix.translate(x, y);
+        this.updateBoardPointer();
+        this.subject.publish(this);
+    }
 
-	translateBy(x: number, y: number): void {
-		this.matrix.translate(x * this.matrix.scaleX, y * this.matrix.scaleY);
-		this.updateBoardPointer();
-		this.subject.publish(this);
-	}
+    translateBy(x: number, y: number): void {
+        this.matrix.translate(x * this.matrix.scaleX, y * this.matrix.scaleY);
+        this.updateBoardPointer();
+        this.subject.publish(this);
+    }
 
-	getTranslation(): { x: number; y: number } {
-		return { x: this.matrix.translateX, y: this.matrix.translateY };
-	}
+    getTranslation(): { x: number; y: number } {
+        return { x: this.matrix.translateX, y: this.matrix.translateY };
+    }
 
-	getScale(): number {
-		return this.matrix.scaleX;
-	}
+    getScale(): number {
+        return this.matrix.scaleX;
+    }
 
-	getMatrix(): Matrix {
-		return this.matrix;
-	}
+    getMatrix(): Matrix {
+        return this.matrix;
+    }
 
-	private updateBoardPointer(): void {
-		const boardPointX =
-			(this.pointer.x - this.matrix.translateX) / this.matrix.scaleX;
-		const boardPointY =
-			(this.pointer.y - this.matrix.translateY) / this.matrix.scaleX;
-		this.boardPointer.pointTo(boardPointX, boardPointY);
-	}
+    private updateBoardPointer(): void {
+        const boardPointX =
+            (this.pointer.x - this.matrix.translateX) / this.matrix.scaleX;
+        const boardPointY =
+            (this.pointer.y - this.matrix.translateY) / this.matrix.scaleX;
+        this.boardPointer.pointTo(boardPointX, boardPointY);
+    }
 
-	pointTo(x: number, y: number): void {
-		this.pointer.x = toFiniteNumber(x);
-		this.pointer.y = toFiniteNumber(y);
-		this.updateBoardPointer();
-	}
+    pointTo(x: number, y: number): void {
+        this.pointer.x = toFiniteNumber(x);
+        this.pointer.y = toFiniteNumber(y);
+        this.updateBoardPointer();
+    }
 
-	onWindowResize(): void {
-		this.window.width = document.documentElement.clientWidth;
-		this.window.height = document.documentElement.clientHeight;
-		this.subject.publish(this);
-	}
+    onWindowResize(): void {
+        this.window.width = document.documentElement.clientWidth;
+        this.window.height = document.documentElement.clientHeight;
+        this.subject.publish(this);
+    }
 }
