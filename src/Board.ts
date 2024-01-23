@@ -77,7 +77,7 @@ export class Board {
 		this.boardId = boardId;
 	}
 
-	getDrawingContext(): CanvasRenderingContext2D | null {
+	getDrawingContext(): DrawingContext | null {
 		return this.drawingContext;
 	}
 
