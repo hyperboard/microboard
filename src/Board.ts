@@ -14,7 +14,8 @@ import { Connection } from "Connection";
 import { ImageItem } from "./Items/Image";
 import { Drawing } from "./Items/Drawing";
 import { Group } from "./Items/Group";
-import {Sticker} from "./Items/Sticker";
+import { Sticker } from "./Items/Sticker";
+import { DrawingContext } from "./Items/DrawingContext";
 
 export class Board {
 	events: Events | undefined;
@@ -26,6 +27,7 @@ export class Board {
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private itemCounter = 0;
+	private drawingContext: DrawingContext | null = null;
 
 	constructor(private boardId = "") {
 		this.selection = new Selection(this, this.events);
@@ -73,6 +75,14 @@ export class Board {
 
 	setBoardId(boardId: string): void {
 		this.boardId = boardId;
+	}
+
+	getDrawingContext(): CanvasRenderingContext2D | null {
+		return this.drawingContext;
+	}
+
+	setDrawingContext(context: DrawingContext): void {
+		this.drawingContext = context;
 	}
 
 	apply(op: Operation): void | false {
