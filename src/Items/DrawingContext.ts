@@ -31,6 +31,10 @@ export class DrawingContext {
 		this.matrix.applyToContext(this.ctx);
 	}
 
+	applyChanges(resolution = 1): void {
+		this.matrix.applyToContext(this.ctx);
+	}
+
 	getCameraScale(): number {
 		return this.camera.getScale();
 	}
