@@ -92,6 +92,20 @@ function mergeTransformationOperations(
 				item: opA.item,
 				degree: opA.degree + opB.degree,
 			};
+		case "scaleByTranslateBy":
+			return {
+				class: "Transformation",
+				method: "scaleByTranslateBy",
+				item: opA.item,
+				scale: {
+					x: opA.scale.x * opB.scale.x,
+					y: opA.scale.y * opB.scale.y,
+				},
+				translate: {
+					x: opA.translate.x + opB.translate.x,
+					y: opA.translate.y + opB.translate.y,
+				},
+			}
 		default:
 			return;
 	}

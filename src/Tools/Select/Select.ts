@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Item, Line, Mbr, Point, RichText } from "Board/Items";
+import { Item, Line, Mbr, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 
@@ -166,8 +166,16 @@ export class Select extends Tool {
             return false;
         }
         if (!this.isMovedAfterDown) {
-            if (this.board.keyboard.isCtrl) {
+            const { isCtrl, isShift } = this.board.keyboard;
+            if (isCtrl || isShift) {
                 const underPointer = this.board.items.getUnderPointer()[0];
+                const isEmptySelection = this.board.selection.items.list().length === 0;
+                if (!underPointer && !isEmptySelection && isShift){
+                    this.board.selection.add(this.board.selection.items.list()); 
+                    this.clear();
+                    this.board.tools.publish();
+                    return false;
+                }
                 if (!underPointer) {
                     this.board.selection.editUnderPointer();
                     this.clear();

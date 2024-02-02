@@ -85,6 +85,27 @@ export class TransformationCommand implements Command {
 						};
 					},
 				);
+			case "scaleByTranslateBy": {
+				const op = this.operation;
+				const scaleTransformation = mapItemsByOperation(this.transformation, () => {
+					const scaleX = 1 / op.scale.x;
+					const scaleY = 1 / op.scale.y;
+					const translateX = -op.translate.x;
+					const translateY = -op.translate.y;
+					return {
+						...op,
+						scale: {
+							x: scaleX,
+							y: scaleY
+						},
+						translate: {
+							x: translateX,
+							y: translateY
+						},
+					};
+				})
+				return scaleTransformation;
+			}
 			case "rotateBy": {
 				const op = this.operation;
 				return mapItemsByOperation(this.transformation, () => {

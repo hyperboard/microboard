@@ -108,6 +108,9 @@ export class Transformation {
             case "rotateBy":
                 this.applyRotateBy(op.degree);
                 break;
+            case "scaleByTranslateBy":
+                this.applyScaleByTranslateBy(op.scale, op.translate);
+                break;
             default:
                 return;
         }
@@ -130,6 +133,11 @@ export class Transformation {
 
     applyScaleBy(x: number, y: number): void {
         this.matrix.scale(x, y);
+    }
+
+    applyScaleByTranslateBy(scale: { x: number; y: number }, translate: { x: number; y: number }): void {
+        this.matrix.scale(scale.x, scale.y);
+        this.matrix.translate(translate.x, translate.y);
     }
 
     applyScaleByRelativeTo(
@@ -242,6 +250,16 @@ export class Transformation {
             x,
             y,
         });
+    }
+
+    scaleByTranslateBy(scale: { x: number; y: number }, translate: { x: number; y: number }): void {
+        this.emit({
+            class: "Transformation",
+            method: "scaleByTranslateBy",
+            item: [this.id],
+            scale,
+            translate,
+        })
     }
 
     rotateTo(degree: number): void {

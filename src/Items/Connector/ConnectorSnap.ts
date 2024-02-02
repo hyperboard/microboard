@@ -38,7 +38,7 @@ export class ConnectorSnap {
 	};
 
 	maxNeighbors = 10;
-	timeout = 500;
+	timeout = 2000;
 
 	color = {
 		snapBorder: "rgba(0,0,255,0.8)",
@@ -265,7 +265,7 @@ export class ConnectorSnap {
 		if (item) {
 			if (!anchor) {
 				const point = item.getNearestEdgePointTo(pointer);
-				if (point.getDistance(pointer) < this.distance.border) {
+				if (point.getDistance(pointer) < this.distance.border  || !this.hover.isTimeoutElapsed) {
 					this.snap.point = new Anchor(
 						point.x,
 						point.y,

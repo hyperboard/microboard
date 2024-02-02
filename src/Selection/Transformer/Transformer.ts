@@ -1,6 +1,6 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import {Mbr, Point, Shape} from "Board/Items";
+import { Mbr, Point} from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";

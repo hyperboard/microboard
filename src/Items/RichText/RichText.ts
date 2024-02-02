@@ -177,6 +177,8 @@ export class RichText extends Mbr implements Geometry {
                     this.blockNodes.width = this.containerMaxWidth;
                 }
             }
+            // this.blockNodes.maxWidth = this.getWidth()
+        
             this.alignInRectangle(
                 this.getTransformedContainer(),
                 this.editor.verticalAlignment,
@@ -295,7 +297,7 @@ export class RichText extends Mbr implements Geometry {
             );
         }
         this.setClipPath();
-        // this.subject.publish(this);
+        this.subject.publish(this);
     }
 
     alignInRectangle(rect: Mbr, alignment: VerticalAlignment): void {
@@ -461,6 +463,7 @@ export class RichText extends Mbr implements Geometry {
     setSelectionHorisontalAlignment(
         horisontalAlignment: HorisontalAlignment,
     ): void {
+        console.log("set alignment inside RichText: ", horisontalAlignment);
         this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
         this.updateElement();
     }
@@ -604,7 +607,7 @@ export class RichText extends Mbr implements Geometry {
     }
 
     getClipMbr(): Mbr {
-        let mbr = this.getMbr();
+        const mbr = this.getMbr();
         const center = mbr.getCenter();
         const { width, height } = this.blockNodes;
         mbr.left = center.x - width / 2;

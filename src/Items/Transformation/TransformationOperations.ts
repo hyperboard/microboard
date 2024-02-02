@@ -72,6 +72,14 @@ interface ScaleByRelativeTo {
 	point: { x: number; y: number };
 }
 
+interface ScaleByTranslateBy {
+	class: "Transformation";
+	method: "scaleByTranslateBy";
+	item: string[];
+	translate: { x: number; y: number };
+	scale: { x: number; y: number };
+}
+
 interface Deserialize {
 	class: "Transformation";
 	method: "deserialize";
@@ -88,4 +96,5 @@ export type TransformationOperation =
 	| RotateTo
 	| ScaleByRelativeTo
 	| ScaleToRelativeTo
+	| ScaleByTranslateBy
 	| Deserialize;

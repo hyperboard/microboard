@@ -398,12 +398,16 @@ export class Shape implements Geometry {
 			opposite
 		);
 
-		this.transformation.translateBy(
-			res.matrix.translateX,
-			res.matrix.translateY,
+		this.transformation.scaleByTranslateBy(
+			{
+			x: res.matrix.scaleX,
+			y: res.matrix.scaleY 
+		  }, 
+			{
+			x: res.matrix.translateX,
+			y: res.matrix.translateY
+		  }
 		);
-
-		this.transformation.scaleBy(res.matrix.scaleX, res.matrix.scaleY);
 		res.mbr = this.getMbr();
 
 		return res;

@@ -61,7 +61,7 @@ const _relation = width / height;
 
 export class Sticker implements Geometry {
     parent = "Board";
-    public itemType = "Sticker";
+    itemType = "Sticker";
     readonly transformation = new Transformation(this.id, this.events);
     private stickerPath = StickerShape.stickerPath.copy();
     private shadowPath = StickerShape.shadowPath.copy();
@@ -272,8 +272,8 @@ export class Sticker implements Geometry {
         const l = line.getLength() / _hypotenuse;
         let x = line.start.x;
         let y = line.start.y;
-        if (line.end.x < line.start.x) x -= (l * width)
-        if (line.end.y < line.start.y) y -= (l * height)
+        if (line.end.x < line.start.x) {x -= (l * width)}
+        if (line.end.y < line.start.y) {y -= (l * height)}
         this.transformation.translateTo(x, y);
         this.transformation.scaleTo(l, l)
     }
@@ -308,27 +308,32 @@ export class Sticker implements Geometry {
             const originallySquared = (d > 0.99 * _relation && d < 1.01 * _relation);
             const d3 = this.getMbr().getWidth() / this.getMbr().getHeight();
             const nowSquared = (d3 > 0.99 * _relation && d3 < 1.01 * _relation);
-            let growSquared = res.mbr.getWidth() < (startMbr.getWidth())
-            let shrinkSquared = (res.mbr.getWidth() / startMbr.getMbr().getWidth()) < 0.8;
+            const growSquared = res.mbr.getWidth() < (startMbr.getWidth())
+            const shrinkSquared = (res.mbr.getWidth() / startMbr.getMbr().getWidth()) < 0.8;
 
-            let needGrow = (originallySquared && !growSquared && nowSquared) || (!originallySquared && !shrinkSquared && nowSquared)
-            let needShrink = (originallySquared && growSquared && !nowSquared) || (!originallySquared && shrinkSquared && !nowSquared)
+            const needGrow = (originallySquared && !growSquared && nowSquared) || (!originallySquared && !shrinkSquared && nowSquared)
+            const needShrink = (originallySquared && growSquared && !nowSquared) || (!originallySquared && shrinkSquared && !nowSquared)
 
-            let startWidth = this.getMbr().getWidth()
+            const startWidth = this.getMbr().getWidth()
             if (needGrow) {
                 this.transformation.scaleBy(1.33, 1);
-                if (resizeType == 'left') {
+                if (resizeType === 'left') {
                     this.transformation.translateBy(startWidth - this.getMbr().getWidth(), 0)
                 }
             } else if (needShrink) {
                 this.transformation.scaleBy(1 / 1.33, 1);
-                if (resizeType == 'left') {
+                if (resizeType === 'left') {
                     this.transformation.translateBy(startWidth - this.getMbr().getWidth(), 0)
                 }
             }
         } else {
-            this.transformation.scaleBy(res.matrix.scaleX, res.matrix.scaleY);
-            this.transformation.translateBy(res.matrix.translateX, res.matrix.translateY);
+            this.transformation.scaleByTranslateBy({
+                x: res.matrix.scaleX,
+                y: res.matrix.scaleY
+            }, {
+                x: res.matrix.translateX,
+                y: res.matrix.translateY
+            });
         }
         res.mbr = this.getMbr();
 
