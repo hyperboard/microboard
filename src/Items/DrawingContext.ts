@@ -31,7 +31,7 @@ export class DrawingContext {
 		this.matrix.applyToContext(this.ctx);
 	}
 
-	applyChanges(resolution = 1): void {
+	applyChanges(): void {
 		this.matrix.applyToContext(this.ctx);
 	}
 

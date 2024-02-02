@@ -163,7 +163,7 @@ export class SpatialIndex {
 
 export class Items {
 	constructor(
-		private index: SpatialIndex,
+		public index: SpatialIndex,
 		private view: Camera,
 		private pointer: Pointer,
 		readonly subject: Subject<Items>,
