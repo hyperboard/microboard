@@ -1,26 +1,13 @@
-import {
-    Editor,
-    Element,
-    Transforms,
-    createEditor,
-    Operation as EditorOperation,
-    BaseEditor,
-    Descendant,
-} from "slate";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { TextNode, TextStyle } from "./Editor/TextNode";
-import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
-import {
-    RichTextOperation,
-    SelectionMethod,
-    SelectionOp,
-    WholeTextOp,
-} from "./RichTextOperations";
-import { HistoryEditor, withHistory } from "slate-history";
-import { ReactEditor, withReact } from "slate-react";
-import { defaultTextStyle } from "./RichText";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
-import { Subject } from "Subject";
+import {BaseEditor, createEditor, Descendant, Editor, Element, Operation as EditorOperation, Transforms,} from "slate";
+import {HorisontalAlignment, VerticalAlignment} from "../Alignment";
+import {TextNode, TextStyle} from "./Editor/TextNode";
+import {BlockNode, BlockType, ListType, ListTypes} from "./Editor/BlockNode";
+import {RichTextOperation, SelectionMethod, SelectionOp, WholeTextOp,} from "./RichTextOperations";
+import {HistoryEditor, withHistory} from "slate-history";
+import {ReactEditor, withReact} from "slate-react";
+import {defaultTextStyle} from "./RichText";
+import {operationsRichTextDebugEnabled} from "./RichTextDebugSettings";
+import {Subject} from "Subject";
 
 export class EditorContainer {
     readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -64,6 +51,7 @@ export class EditorContainer {
                     {
                         type: "text",
                         text: "",
+                        fontSize: 14
                     },
                 ],
             },
@@ -364,20 +352,16 @@ export class EditorContainer {
         if (!editor) {
             throw new Error("Editor is not initialized");
         }
-        const selection = JSON.parse(JSON.stringify(editor.selection));
-        if (selection?.anchor.offset === selection?.focus.offset) {
             Transforms.select(this.editor, {
                 anchor: Editor.start(this.editor, []),
                 focus: Editor.end(this.editor, []),
             });
-        }
         const marks = this.getSelectionMarks();
         if (!marks) {
             return;
         }
         this.recordMethodOps("setSelectionFontSize");
         Editor.addMark(editor, "fontSize", size);
-        this.editor.selection = selection;
         this.emitMethodOps();
     }
 

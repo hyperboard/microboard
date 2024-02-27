@@ -381,12 +381,58 @@ export class RichText extends Mbr implements Geometry {
         if (op.class === "Transformation") {
             this.transformation.apply(op);
         } else if (op.class === "RichText") {
-            this.editor.applyRichTextOp(op);
-            this.updateElement();
+            if (op.method === 'edit') {
+                this.editor.applyRichTextOp(op);
+                this.updateElement();
+            }
+            else if(this.maxCapableChartsInSticker(op)) {
+                console.log("RichText maxCapableChartsInSticker");
+                this.editor.applyRichTextOp(op);
+                this.updateElement();
+            }
         } else {
             return;
         }
         this.subject.publish(this);
+    }
+
+    maxCapableChartsInSticker(op: Operation): boolean {
+        const fontSize = this.getText()[0]?.children[0].fontSize;
+        const height = this.getMaxHeight();
+        const width = this.getMaxWidth();
+        const lineHeight = fontSize * 1.4;
+        const maxLine = Math.round((height || 0 ) / lineHeight);
+        const text = this.getText();
+        const getWidthOfString = (text: string): number => {
+            const span = document.createElement('span');
+            span.textContent = text;
+            span.style.fontSize = `${fontSize}px`;
+            span.style.visibility = 'hidden';
+            document.body.appendChild(span);
+
+            const width = span.offsetWidth;
+
+            document.body.removeChild(span);
+            return width;
+        };
+
+        const lineCount = text.reduce((count, node) => {
+            if (node.type === 'paragraph') {
+                if (node.children[0].text.length === 0) {
+                    return count + 1;
+                }
+                const countStr = Math.ceil(getWidthOfString(node.children[0].text) / (width || 1));
+                return count + countStr;
+            } else {
+                return count + 1;
+            }
+        }, 0);
+
+        if(op.ops?.[0].type === "split_node" || op.ops?.[0].type === "insert_text"){
+            return !(lineCount + 1 > maxLine);
+        } else {
+            return true;
+        }
     }
 
     getId(): string {
