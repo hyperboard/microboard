@@ -165,8 +165,12 @@ export class Selection {
         if (top) {
             this.add(top);
             this.setTextToEdit(undefined);
-            if (top.itemType === "RichText") {
+            if (top.itemType === "RichText" || top.itemType === "Shape" || top.itemType === "Sticker" || top.itemType === "Connector") {
                 // this.setTextToEdit(top);
+                const item = this.items.getSingle();
+                if (item) {
+                    this.setTextToEdit(item.text);
+                }
                 this.setContext("EditTextUnderPointer");
                 this.board.items.subject.publish(this.board.items);
             } else {

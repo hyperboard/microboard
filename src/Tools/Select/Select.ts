@@ -20,6 +20,7 @@ export class Select extends Tool {
     isMiddleDown = false;
     isMovedAfterDown = false;
     isCtrl = false;
+    lastPointerMoveEventTime = Date.now();
 
     constructor(private board: Board) {
         super();
@@ -40,6 +41,7 @@ export class Select extends Tool {
         this.line = null;
         this.rect = null;
         this.downOnItem = null;
+        this.lastPointerMoveEventTime = Date.now();
     }
 
     leftButtonDown(): boolean {
@@ -131,8 +133,15 @@ export class Select extends Tool {
     }
 
     pointerMoveBy(x: number, y: number): boolean {
-        this.isMovedAfterDown =
-            this.isLeftDown || this.isRightDown || this.isMiddleDown;
+        const throttleTime = 10;
+        const timeDiff = this.lastPointerMoveEventTime + throttleTime - Date.now();
+
+        if (timeDiff > 0) {
+            this.isMovedAfterDown = false;
+        } else {
+            this.isMovedAfterDown =
+                this.isLeftDown || this.isRightDown || this.isMiddleDown;
+        }
         if (this.isDraggingBoard) {
             this.board.camera.translateBy(x, y);
             return false;

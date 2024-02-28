@@ -386,7 +386,6 @@ export class RichText extends Mbr implements Geometry {
                 this.updateElement();
             }
             else if(this.maxCapableChartsInSticker(op)) {
-                console.log("RichText maxCapableChartsInSticker");
                 this.editor.applyRichTextOp(op);
                 this.updateElement();
             }
@@ -428,7 +427,7 @@ export class RichText extends Mbr implements Geometry {
             }
         }, 0);
 
-        if(op.ops?.[0].type === "split_node" || op.ops?.[0].type === "insert_text"){
+        if(op.ops?.[0]?.type === "split_node" || op.ops?.[0]?.type === "insert_text"){
             return !(lineCount + 1 > maxLine);
         } else {
             return true;
