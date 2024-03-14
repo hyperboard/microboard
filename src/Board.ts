@@ -10,12 +10,12 @@ import { Events, ItemOperation, Operation } from "./Events";
 import { BoardOperation, RemoveItem } from "./BoardOperations";
 import { BoardCommand } from "./BoardCommand";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
-import { Connection } from "Connection";
 import { ImageItem } from "./Items/Image";
 import { Drawing } from "./Items/Drawing";
 import { Group } from "./Items/Group";
 import { Sticker } from "./Items/Sticker";
 import { DrawingContext } from "./Items/DrawingContext";
+import { Connection } from "App/Connection";
 
 export class Board {
 	events: Events | undefined;

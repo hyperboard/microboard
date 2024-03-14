@@ -1,4 +1,3 @@
-import { Connection } from "Connection";
 import { Board } from "Board";
 import {
     EventsOperation,
@@ -8,12 +7,12 @@ import {
 import { EventsCommand } from "./EventsCommand";
 import { Command, createCommand } from "./Command";
 import { EventsLog } from "./EventsLog";
-import { SocketMessage } from "../../Connection/SocketMessage";
 import {
     enabledEmitDebug,
     enabledInsertEventDebug,
 } from "./EventsDebugSettings";
 import { Subject } from "Subject";
+import { Connection } from "App/Connection";
 
 export class BoardEvent {
     constructor(public order: number = 0, public body: BoardEventBody) { }
