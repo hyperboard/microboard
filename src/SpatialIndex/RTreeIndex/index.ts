@@ -75,6 +75,16 @@ export class RTreeIndex {
 	}
 
 	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
+		return this.tree
+			.search({
+				minX: rect.left,
+				minY: rect.top,
+				maxX: rect.right,
+				maxY: rect.bottom,
+			})
+			.filter(container => container.item.isEnclosedOrCrossedBy(rect))
+			.map(container => container.item);
+		/*
 		const containers = this.tree.search({
 			minX: rect.left,
 			minY: rect.top,
@@ -88,9 +98,19 @@ export class RTreeIndex {
 			}
 		}
 		return items;
+		*/
 	}
 
 	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
+		return this.tree
+			.search({
+				minX: rect.left,
+				minY: rect.top,
+				maxX: rect.right,
+				maxY: rect.bottom,
+			})
+			.map(container => container.item);
+		/*
 		const rectangles = this.tree.search({
 			minX: rect.left,
 			minY: rect.top,
@@ -102,6 +122,7 @@ export class RTreeIndex {
 			items.push(rectangle.item);
 		}
 		return items;
+		*/
 	}
 
 	isAnyEnclosedOrCrossedBy(rect: Mbr): boolean {
@@ -119,6 +140,15 @@ export class RTreeIndex {
 		filter: (item: Item) => boolean,
 		maxDistance: number,
 	): Item[] {
+		return knn<Container>(
+			this.tree,
+			point.x,
+			point.y,
+			maxItems,
+			container => filter(container.item),
+			maxDistance,
+		).map(container => container.item);
+		/*
 		function containerFilter(container: Container): boolean {
 			return filter(container.item);
 		}
@@ -136,6 +166,7 @@ export class RTreeIndex {
 			items.push(container.item);
 		}
 		return items;
+		*/
 	}
 
 	batchInsert(batch: Container[]): void {

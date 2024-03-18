@@ -34,22 +34,49 @@ export class LayeredIndex {
 
 	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		let items: Item[] = [];
-		for (const layer of this.layers) {
+		for (const layer of this.layers.array) {
 			items = items.concat(layer.getEnclosedOrCrossedBy(rect));
 		}
 		return items;
 	}
 
 	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
+		const items: Container[] = [];
+		const minMax = {
+			minX: rect.left,
+			minY: rect.top,
+			maxX: rect.right,
+			maxY: rect.bottom,
+		};
+		for (const layer of this.layers.array) {
+			const layerRects = layer.tree.search(minMax);
+			if (layerRects.length > 0) {
+				Array.prototype.push.apply(items, layerRects);
+			}
+		}
+		return items.map(container => container.item);
+		/*
+		const items: Item[] = [];
+
+		for (const layer of this.layers.array) {
+			const layerRects = layer.getRectsEnclosedOrCrossedBy(rect);
+			if (layerRects.length > 0) {
+				Array.prototype.push.apply(items, layerRects);
+			}
+		}
+		return items;
+		*/
+		/*
 		let items: Item[] = [];
 		for (const layer of this.layers) {
 			items = items.concat(layer.getRectsEnclosedOrCrossedBy(rect));
 		}
 		return items;
+		*/
 	}
 
 	isAnyEnclosedOrCrossedBy(rect: Mbr): boolean {
-		for (const layer of this.layers) {
+		for (const layer of this.layers.array) {
 			if (layer.isAnyEnclosedOrCrossedBy(rect)) {
 				return true;
 			}
@@ -64,7 +91,7 @@ export class LayeredIndex {
 		maxDistance: number,
 	): Item[] {
 		let items: Item[] = [];
-		for (const layer of this.layers) {
+		for (const layer of this.layers.array) {
 			items = items.concat(
 				layer.getNearestTo(point, maxItems, filter, maxDistance),
 			);
@@ -101,7 +128,7 @@ export class LayeredIndex {
 	shiftContainerAbove(container: Container, layer: number): void {
 		const bounds = container.item.getMbr();
 		this.remove(container.item);
-		const inBounds = this.getEnclosedOrCrossedBy(bounds);
+		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
 		const containersAbove = [];
 		const containerZIndex = this.getZIndex(container.item);
@@ -127,7 +154,7 @@ export class LayeredIndex {
 	shiftContainerBelow(container: Container, layer: number): void {
 		const bounds = container.item.getMbr();
 		this.remove(container.item);
-		const inBounds = this.getEnclosedOrCrossedBy(bounds);
+		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
 		const containersBelow = [];
 		const containerZIndex = this.getZIndex(container.item);
@@ -158,7 +185,7 @@ export class LayeredIndex {
 			this.getZIndex(item),
 		);
 		const bounds = item.getMbr();
-		const inBounds = this.getEnclosedOrCrossedBy(bounds);
+		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 
 		if (inBounds.length === 0) {
 			return this.insertContainer(toInsert);

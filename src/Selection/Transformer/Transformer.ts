@@ -1,6 +1,6 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Mbr, Point} from "Board/Items";
+import { Mbr, Point } from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
@@ -22,6 +22,7 @@ export class Transformer extends Tool {
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
+
 		selection.subject.subscribe(() => {
 			if (!this.resizeType) {
 				this.mbr = this.selection.getMbr();
@@ -45,7 +46,10 @@ export class Transformer extends Tool {
 		const item = items.getSingle();
 
 		let resizeType: ResizeType | undefined;
-		if (item && (item.itemType === "RichText" || item.itemType === "Sticker")) {
+		if (
+			item &&
+			(item.itemType === "RichText" || item.itemType === "Sticker")
+		) {
 			resizeType = getTextResizeType(
 				pointer.point,
 				camera.getScale(),
@@ -84,6 +88,7 @@ export class Transformer extends Tool {
 			return false;
 		}
 
+		// const mbr = this.mbr;
 		const mbr = this.mbr;
 		const list = this.selection.items.list();
 
@@ -100,7 +105,13 @@ export class Transformer extends Tool {
 		const single = list[0];
 
 		if (isSingle && ["Shape", "Sticker"].indexOf(single.itemType) > -1) {
-			this.mbr = single.doResize(this.resizeType, this.board.pointer.point, mbr, this.oppositePoint, this.startMbr).mbr;
+			this.mbr = single.doResize(
+				this.resizeType,
+				this.board.pointer.point,
+				mbr,
+				this.oppositePoint,
+				this.startMbr,
+			).mbr;
 		} else if (isSingle && single.itemType === "RichText") {
 			const matrix = getProportionalResize(
 				this.resizeType,
@@ -159,24 +170,29 @@ export class Transformer extends Tool {
 					}
 				} else {
 					item.transformation.translateBy(translateX, translateY);
-					if(item.itemType != "Sticker") {
-						item.transformation.scaleBy(matrix.scaleX, matrix.scaleY);
+					if (item.itemType != "Sticker") {
+						item.transformation.scaleBy(
+							matrix.scaleX,
+							matrix.scaleY,
+						);
 					}
 				}
 			}
 			this.mbr = resize.mbr;
 		}
 
+		this.selection.off();
 		this.selection.subject.publish(this.selection);
 
 		return true;
 	}
 
 	render(context: DrawingContext): void {
-		if (this.mbr) {
-			this.mbr.strokeWidth = 1 / context.matrix.scaleX;
-			this.mbr.borderColor = "rgba(0, 0, 255, 0.8";
-			this.mbr.render(context);
+		const mbr = this.mbr;
+		if (mbr) {
+			mbr.strokeWidth = 1 / context.matrix.scaleX;
+			mbr.borderColor = "rgba(0, 0, 255, 0.8";
+			mbr.render(context);
 		}
 
 		const anchors = this.calcAnchors();

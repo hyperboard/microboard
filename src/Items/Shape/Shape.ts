@@ -1,4 +1,4 @@
-import {Mbr, Line, Point, Transformation, Path, Paths, Matrix} from "..";
+import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
 import { Shapes, ShapeType } from "./Basic";
 import { BorderStyle, BorderWidth } from "../Path";
 import { Subject } from "Subject";
@@ -9,8 +9,8 @@ import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
 import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
-import {ResizeType} from "../../Selection/Transformer/getResizeType";
-import {getResize} from "../../Selection/Transformer/getResizeMatrix";
+import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { getResize } from "../../Selection/Transformer/getResizeMatrix";
 
 const defaultShapeData = new ShapeData();
 
@@ -43,9 +43,11 @@ export class Shape implements Geometry {
 	) {
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
+			this.updateMbr();
 			this.subject.publish(this);
 		});
 		this.text.subject.subscribe(() => {
+			this.updateMbr();
 			this.subject.publish(this);
 		});
 	}
@@ -113,6 +115,7 @@ export class Shape implements Geometry {
 		switch (op.class) {
 			case "Shape":
 				this.applyShapeOperation(op);
+				this.updateMbr();
 				break;
 			case "RichText":
 				this.text.apply(op);
@@ -290,11 +293,15 @@ export class Shape implements Geometry {
 		return this.getIntersectionPoints(segment);
 	}
 
-	getMbr(): Mbr {
+	updateMbr(): Mbr {
 		const rect = this.path.getMbr();
 		const textRect = this.textContainer.getMbr();
 		rect.combine([textRect]);
-		return rect;
+		this.mbr = rect;
+	}
+
+	getMbr(): Mbr {
+		return this.mbr;
 	}
 
 	getNearestEdgePointTo(point: Point): Point {
@@ -365,7 +372,20 @@ export class Shape implements Geometry {
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);
+		/*
+		const previous = this.transformation.previous.copy();
+		console.log("previous", previous);
+		previous.invert();
+		console.log("inverted", previous);
+		const delta = previous.multiplyByMatrix(
+			this.transformation.matrix.copy(),
+		);
+		console.log("matrix", this.transformation.matrix);
+		console.log("delta", delta);
+		this.path.transform(delta);
+		*/
 		this.path.transform(this.transformation.matrix);
+
 		this.path.setBackgroundColor(this.backgroundColor);
 		this.path.setBackgroundOpacity(this.backgroundOpacity);
 		this.path.setBorderColor(this.borderColor);
@@ -386,30 +406,26 @@ export class Shape implements Geometry {
 		}
 		return points;
 	}
-	doResize(resizeType: ResizeType,
-			  pointer: Point,
-			  mbr: Mbr,
-			  opposite: Point,
-			  startMbr: Mbr): { matrix: Matrix; mbr: Mbr } {
-		const res = getResize(
-			resizeType,
-			pointer,
-			mbr,
-			opposite
-		);
+	doResize(
+		resizeType: ResizeType,
+		pointer: Point,
+		mbr: Mbr,
+		opposite: Point,
+		startMbr: Mbr,
+	): { matrix: Matrix; mbr: Mbr } {
+		const res = getResize(resizeType, pointer, mbr, opposite);
 
 		this.transformation.scaleByTranslateBy(
 			{
-			x: res.matrix.scaleX,
-			y: res.matrix.scaleY 
-		  }, 
+				x: res.matrix.scaleX,
+				y: res.matrix.scaleY,
+			},
 			{
-			x: res.matrix.translateX,
-			y: res.matrix.translateY
-		  }
+				x: res.matrix.translateX,
+				y: res.matrix.translateY,
+			},
 		);
 		res.mbr = this.getMbr();
-
 		return res;
 	}
 }

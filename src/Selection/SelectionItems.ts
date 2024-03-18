@@ -1,137 +1,117 @@
 import { Item, Mbr } from "../Items";
 
 export class SelectionItems {
-    private items: { [key: string]: Item } = {};
+	private items: Map<string, Item> = new Map<string, Item>();
 
-    add(value: Item | Item[]): void {
-        if (Array.isArray(value)) {
-            for (const item of value) {
-                this.items[item.getId()] = item;
-            }
-        } else {
-            this.items[value.getId()] = value;
-        }
-    }
+	add(value: Item | Item[]): void {
+		if (Array.isArray(value)) {
+			value.forEach(item => this.items.set(item.getId(), item));
+		} else {
+			this.items.set(value.getId(), value);
+		}
+	}
 
-    remove(value: Item | Item[]): void {
-        if (Array.isArray(value)) {
-            for (const item of value) {
-                delete this.items[item.getId()];
-            }
-        } else {
-            delete this.items[value.getId()];
-        }
-    }
+	remove(value: Item | Item[]): void {
+		if (Array.isArray(value)) {
+			value.forEach(item => this.items.delete(item.getId()));
+		} else {
+			this.items.delete(value.getId());
+		}
+	}
 
-    removeAll(): void {
-        for (const key in this.items) {
-            delete this.items[key];
-        }
-    }
+	removeAll(): void {
+		this.items.clear();
+	}
 
-    findById(itemId: string): Item | null {
-        const item = this.items[itemId];
-        return item ? item : null;
-    }
+	findById(itemId: string): Item | null {
+		return this.items.get(itemId) || null;
+	}
 
-    list(): Item[] {
-        const items = [];
-        for (const key in this.items) {
-            items.push(this.items[key]);
-        }
-        return items;
-    }
+	list(): Item[] {
+		return Array.from(this.items.values());
+	}
 
-    isEmpty(): boolean {
-        return this.list().length === 0;
-    }
+	isEmpty(): boolean {
+		return this.items.size === 0;
+	}
 
-    isSingle(): boolean {
-        return this.list().length === 1;
-    }
+	isSingle(): boolean {
+		return this.items.size === 1;
+	}
 
-    isTexts(): boolean {
-        if (this.isEmpty()) {
-            return false;
-        }
-        for (const key in this.items) {
-            if (this.items[key].itemType !== "RichText") {
-                return false;
-            }
-        }
-        return true;
-    }
+	values() {
+		return this.items.values();
+	}
 
-    isItemTypes(itemTypes: string[]): boolean {
-        if (this.isEmpty()) {
-            return false;
-        }
-        for (const key in this.items) {
-            if (itemTypes.indexOf(this.items[key].itemType) === -1) {
-                return false;
-            }
-        }
-        return true;
-    }
+	getSize(): number {
+		return this.items.size;
+	}
 
-    getItemTypes(): string[] {
-        const itemTypes = [];
-        for (const key in this.items) {
-            const itemType = this.items[key].itemType;
-            if (itemTypes.indexOf(itemType) === -1) {
-                itemTypes.push(itemType);
-            }
-        }
-        return itemTypes;
-    }
+	isTexts(): boolean {
+		if (this.isEmpty()) {
+			return false;
+		}
+		for (const item of this.items.values()) {
+			if (item.itemType !== "RichText") {
+				return false;
+			}
+		}
+		return true;
+	}
 
-    getItemsByItemTypes(itemTypes: string[]): Item[] {
-        const items = [];
-        for (const key in this.items) {
-            if (itemTypes.indexOf(this.items[key].itemType) > -1) {
-                items.push(this.items[key]);
-            }
-        }
-        return items;
-    }
+	isItemTypes(itemTypes: string[]): boolean {
+		if (this.isEmpty()) {
+			return false;
+		}
+		for (const item of this.items.values()) {
+			if (!itemTypes.includes(item.itemType)) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-    getIdsByItemTypes(itemTypes: string[]): string[] {
-        const ids = [];
-        const items = this.getItemsByItemTypes(itemTypes);
-        for (const item of items) {
-            ids.push(item.getId());
-        }
-        return ids;
-    }
+	getItemTypes(): string[] {
+		const itemTypes = new Set<string>();
+		this.items.forEach(item => itemTypes.add(item.itemType));
+		return Array.from(itemTypes);
+	}
 
-    getSingle(): Item | undefined {
-        const list = this.list();
-        return list.length === 1 ? list[0] : undefined;
-    }
+	getItemsByItemTypes(itemTypes: string[]): Item[] {
+		return Array.from(this.items.values()).filter(item =>
+			itemTypes.includes(item.itemType),
+		);
+	}
 
-    listByIds(itemIdList: string[]): Item[] {
-        const items = [];
-        for (const key in this.items) {
-            if (itemIdList.indexOf(key) > -1) {
-                items.push(this.items[key]);
-            }
-        }
-        return items;
-    }
+	getIdsByItemTypes(itemTypes: string[]): string[] {
+		const ids: string[] = [];
+		this.items.forEach((item, id) => {
+			if (itemTypes.includes(item.itemType)) {
+				ids.push(id);
+			}
+		});
+		return ids;
+	}
 
-    ids(): string[] {
-        return Object.keys(this.items);
-    }
+	getSingle(): Item | undefined {
+		return this.isSingle() ? this.items.values().next().value : undefined;
+	}
 
-    getMbr(): Mbr | undefined {
-        const list = this.list();
-        if (list.length === 0) {
-            return;
-        }
-        const mbr = list[0].getMbr();
-        for (let i = 1, len = list.length; i < len; i++) {
-            mbr.combine(list[i].getMbr());
-        }
-        return mbr;
-    }
+	listByIds(itemIdList: string[]): Item[] {
+		return itemIdList
+			.map(id => this.items.get(id))
+			.filter(item => item !== undefined);
+	}
+
+	ids(): string[] {
+		return Array.from(this.items.keys());
+	}
+
+	getMbr(): Mbr | undefined {
+		const items = this.list();
+		if (items.length === 0) return;
+		const mbr = items[0].getMbr();
+		items.slice(1).forEach(item => mbr.combine(item.getMbr()));
+		return mbr;
+	}
 }

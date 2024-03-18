@@ -16,6 +16,7 @@ import { GeometricNormal } from "../GeometricNormal";
  * https://en.wikipedia.org/wiki/Minimum_bounding_rectangle
  */
 export class Mbr implements Geometry {
+	path: Path2D;
 	static fromDomRect(rect: DOMRect): Mbr {
 		return new Mbr(rect.left, rect.top, rect.right, rect.bottom);
 	}
@@ -33,6 +34,7 @@ export class Mbr implements Geometry {
 		this.top = toFiniteNumber(top);
 		this.right = toFiniteNumber(right);
 		this.bottom = toFiniteNumber(bottom);
+		this.updatePath();
 	}
 
 	getWidth(): number {
@@ -140,6 +142,7 @@ export class Mbr implements Geometry {
 		this.top = min.y;
 		this.right = max.x;
 		this.bottom = max.y;
+		this.updatePath();
 	}
 
 	getTransformed(matrix: Matrix): Mbr {
@@ -308,24 +311,28 @@ export class Mbr implements Geometry {
 		return new GeometricNormal(point, pointOnLine, normal);
 	}
 
+	updatePath(): void {
+		/*
+		this.path = new Path2D();
+		this.path.rect(this.left, this.top, this.getWidth(), this.getHeight());
+		*/
+	}
+
 	render(context: DrawingContext): void {
 		const { ctx } = context;
 		if (this.backgroundColor !== "none") {
 			ctx.fillStyle = this.backgroundColor;
-			context.ctx.fillRect(
+			ctx.fillRect(
 				this.left,
 				this.top,
 				this.getWidth(),
 				this.getHeight(),
 			);
 		}
+
 		ctx.strokeStyle = this.borderColor;
 		ctx.lineWidth = this.strokeWidth;
-		context.ctx.strokeRect(
-			this.left,
-			this.top,
-			this.getWidth(),
-			this.getHeight(),
-		);
+		// ctx.stroke(this.path);
+		ctx.strokeRect(this.left, this.top, this.getWidth(), this.getHeight());
 	}
 }
