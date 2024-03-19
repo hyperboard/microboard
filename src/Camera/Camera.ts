@@ -334,6 +334,7 @@ export class Camera {
 	onWindowResize(): void {
 		this.window.width = document.documentElement.clientWidth;
 		this.window.height = document.documentElement.clientHeight;
+		this.window.dpi = window.devicePixelRatio;
 		this.subject.publish(this);
 	}
 }
