@@ -10,6 +10,7 @@ import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { BoardTool } from "./BoardTool";
 import {AddSticker} from "./AddSticker";
+import { isIframe } from "lib/isIframe";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -49,7 +50,7 @@ export class Tools extends ToolContext {
 	}
 
 	addSticker(): void {
-		if (this.getAddSticker()) {
+		if (this.getAddSticker() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddSticker(this.board);
@@ -57,7 +58,7 @@ export class Tools extends ToolContext {
 		this.publish();
 	}
 	addShape(): void {
-		if (this.getAddShape()) {
+		if (this.getAddShape() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddShape(this.board);
@@ -73,7 +74,7 @@ export class Tools extends ToolContext {
 	}
 
 	addText(): void {
-		if (this.getAddText()) {
+		if (this.getAddText() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddText(this.board);
@@ -86,8 +87,8 @@ export class Tools extends ToolContext {
 	}
 
 	addConnector(): void {
-		if (this.getAddConnector()) {
-			this.cancel();
+		if (this.getAddConnector() && !isIframe()) {
+				this.cancel();
 		} else {
 			this.tool = new AddConnector(this.board);
 		}
@@ -99,7 +100,7 @@ export class Tools extends ToolContext {
 	}
 
 	addDrawing(): void {
-		if (this.getAddDrawing()) {
+		if (this.getAddDrawing() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddDrawing(this.board);
