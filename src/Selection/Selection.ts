@@ -300,11 +300,7 @@ export class Selection {
 	}
 
 	copy(): { [key: string]: ItemData } {
-		const revertMap: { [key: string]: ItemData } = {};
-		this.list().forEach(item => {
-			revertMap[item.getId()] = item.serialize();
-		});
-		return revertMap;
+		return this.items.copy();
 	}
 
 	cut(): { [key: string]: ItemData } {
