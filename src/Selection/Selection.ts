@@ -340,6 +340,14 @@ export class Selection {
 		return tmp?.getBackgroundColor() || defaultShapeData.backgroundColor;
 	}
 
+	getBorderStyle(): string {
+		const shape = this.items.getItemsByItemTypes([
+			"Shape",
+			"Drawing",
+		])[0] as Shape | Drawing | undefined;
+		return shape?.getBorderStyle() || defaultShapeData.borderStyle;
+	}
+
 	getStrokeColor(): string {
 		const shape = this.items.getItemsByItemTypes([
 			"Shape",
@@ -395,6 +403,13 @@ export class Selection {
 			item: this.items.ids(),
 			lineStyle: style,
 		});
+	}
+
+	getConnectorLineStyle(): string {
+		const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as
+			| Connector
+			| undefined;
+		return pointer?.getLineStyle() || "none";
 	}
 
 	getTextToEdit(): RichText[] {
