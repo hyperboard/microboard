@@ -3,7 +3,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { BoardTool } from "../BoardTool";
 import { BorderStyle } from "Board/Items/Path";
 import { Board } from "Board/Board";
-import { penCursor } from "Board/Pointer/Cursor";
+import { penCursor, penCursorTalk } from "Board/Pointer/Cursor";
 
 export class AddDrawing extends BoardTool {
 	drawing = new Drawing([]);
@@ -18,7 +18,7 @@ export class AddDrawing extends BoardTool {
 	}
 
 	setCursor(): void {
-		this.board.pointer.setCursor("default");
+		this.board.pointer.setCursor(penCursorTalk);
 	}
 
 	leftButtonDown(): boolean {
