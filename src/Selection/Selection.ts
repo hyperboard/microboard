@@ -181,11 +181,7 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (["Shape", "Sticker", "Connector"].indexOf(item.itemType) > -1) {
-			this.setTextToEdit(item.text);
-			this.setContext("EditTextUnderPointer");
-			this.board.items.subject.publish(this.board.items);
-		} else if (item.itemType === "RichText") {
+		if (["Shape", "Sticker", "Connector", "RichText"].indexOf(item.itemType) > -1) {
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -226,7 +222,7 @@ export class Selection {
 		}
 		if (
 			!item ||
-			(item.itemType !== "RichText" && item.itemType !== "Shape")
+			(["RichText", "Shape", "Sticker", "Connector"].indexOf(item.itemType) === -1) 
 		) {
 			this.textToEdit = undefined;
 			return;
@@ -300,7 +296,11 @@ export class Selection {
 	}
 
 	copy(): { [key: string]: ItemData } {
-		return this.items.copy();
+		const revertMap: { [key: string]: ItemData } = {};
+		this.list().forEach(item => {
+			revertMap[item.getId()] = item.serialize();
+		});
+		return revertMap;
 	}
 
 	cut(): { [key: string]: ItemData } {

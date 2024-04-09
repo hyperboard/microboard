@@ -177,6 +177,7 @@ export class RichText extends Mbr implements Geometry {
 			if (this.autoSize) {
 				this.calcAutoSize();
 			} else {
+				this.calcAutoSize(false);
 				this.blockNodes = getBlockNodes(
 					this.getTextForNodes(),
 					this.getMaxWidth(),
@@ -188,6 +189,7 @@ export class RichText extends Mbr implements Geometry {
 					this.blockNodes.width = this.containerMaxWidth;
 				}
 			}
+
 			// this.blockNodes.maxWidth = this.getWidth()
 
 			this.alignInRectangle(
@@ -199,7 +201,7 @@ export class RichText extends Mbr implements Geometry {
 		});
 	}
 
-	calcAutoSize() {
+	calcAutoSize(shouldUpdate = true): void {
 		const text = this.getTextForNodes();
 		const container = this.getTransformedContainer();
 		const containerWidth = container.getWidth();
@@ -223,8 +225,9 @@ export class RichText extends Mbr implements Geometry {
             }
         }
         */
-
-		this.blockNodes = blockNodes;
+		if (shouldUpdate) {
+			this.blockNodes = blockNodes;
+		}
 		const textWidth = blockNodes.width;
 		const textHeight = blockNodes.height;
 		const textScale = Math.min(
@@ -729,5 +732,29 @@ export class RichText extends Mbr implements Geometry {
 			},
 			properties: null,
 		});
+	}
+
+	autosizeEnable(): void {
+		this.autoSize = true;
+		this.isInShape = false;
+		this.updateElement();
+		this.subject.publish(this);
+	}
+
+	autosizeDisable(): void {
+		this.autoSize = false;
+		this.isInShape = true;
+		this.updateElement();
+		this.subject.publish(this);
+	}
+
+	getAutosize(): boolean {
+		return this.autoSize;
+	}
+
+	getMaxFontSize(): number {
+		const marks = this.editor.getSelectionMarks();
+		const fontSize = marks?.fontSize ?? defaultTextStyle.fontSize;
+		return fontSize * this.autoSizeScale;;
 	}
 }

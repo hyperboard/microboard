@@ -1,4 +1,4 @@
-import { Item, ItemData, Mbr } from "../Items";
+import { Item, Mbr } from "../Items";
 
 export class SelectionItems {
 	private items: Map<string, Item> = new Map<string, Item>();
@@ -29,14 +29,6 @@ export class SelectionItems {
 
 	list(): Item[] {
 		return Array.from(this.items.values());
-	}
-
-	copy(): Record<string, ItemData> {
-		const copyObject: Record<string, ItemData> = {};
-		this.items.forEach((item, id) => {
-			copyObject[id] = item.serialize();
-		});
-		return copyObject;
 	}
 
 	isEmpty(): boolean {
@@ -117,7 +109,7 @@ export class SelectionItems {
 
 	getMbr(): Mbr | undefined {
 		const items = this.list();
-		if (items.length === 0) return;
+		if (items.length === 0) {return;}
 		const mbr = items[0].getMbr();
 		items.slice(1).forEach(item => mbr.combine(item.getMbr()));
 		return mbr;

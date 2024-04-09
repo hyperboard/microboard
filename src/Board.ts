@@ -283,35 +283,20 @@ export class Board {
 		});
 	}
 
-	copy(): Record<string, ItemData> {
-		return this.items.index.array.reduce((accumulator, item) => {
-			accumulator[item.getId()] = item.serialize();
-			return accumulator;
-		}, {} as Record<string, ItemData>);
-	}
-
-	serialize(): string {
-		return JSON.stringify(this.copy());
-	}
-
-	deserialize(snapshot: string): void {
-		const map = JSON.parse(snapshot);
-		for (const itemData of map) {
-			const item = this.createItem(itemData.id, itemData);
-			this.index.insert(item);
-		}
-	}
-
 	paste(itemsMap: { [key: string]: ItemData }): void {
-		// Replace item ids with new ones
-
 		const newItemIdMap: { [key: string]: string } = {};
 
-		function replaceConnectorHeadItemId(point: ControlPointData): void {
-			if (point.pointType === "Floating" || point.pointType === "Fixed") {
-				point.itemId = newItemIdMap[point.itemId] || point.itemId;
+		const replaceConnectorHeadItemId = (point: ControlPointData): void => {
+			switch (point.pointType) {
+				case "Floating":
+				case "Fixed":
+					const newItemId = newItemIdMap[point.itemId];
+					if (newItemId) {
+						point.itemId = newItemId;
+					}
+					break;
 			}
-		}
+		};
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
@@ -325,20 +310,32 @@ export class Board {
 			newItemIdMap[itemId] = newItemId;
 		}
 
-		// Determine translation values based on pointer position and minimal item transformation
-		const translationDeltas = Object.values(itemsMap).reduce(
-			(deltas, itemData) => ({
-				minX: Math.min(deltas.minX, itemData.transformation.translateX),
-				minY: Math.min(deltas.minY, itemData.transformation.translateY),
-			}),
-			{ minX: Infinity, minY: Infinity },
-		);
-
 		const newMap: { [key: string]: ItemData } = {};
+		// iterate over itemsMap to find the minimal translation
+		let minX = Infinity;
+		let minY = Infinity;
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+			const { translateX, translateY } = itemData.transformation;
+
+			if (translateX < minX) {
+				minX = translateX;
+			}
+
+			if (translateY < minY) {
+				minY = translateY;
+			}
+		}
+
+		if (minX === Infinity) {
+			minX = 0;
+		}
+
+		if (minY === Infinity) {
+			minY = 0;
+		}
 
 		const { x, y } = this.pointer.point;
-
-		const { minX, minY } = translationDeltas;
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
