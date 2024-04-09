@@ -115,15 +115,28 @@ export class Selection {
 		return this.context;
 	}
 
+	timeoutId = null;
+
 	on = (): void => {
+		// Cancel any existing timeout when on is explicitly called
+		if (this.timeoutID !== null) {
+			clearTimeout(this.timeoutID);
+			this.timeoutID = null;
+		}
+
 		this.isOn = true;
 		this.subject.publish(this);
 	};
 
-	off(): void {
+	off = (): void => {
 		this.isOn = false;
-		setTimeout(this.on, 10);
-	}
+		// Clear any existing timeout
+		if (this.timeoutID !== null) {
+			clearTimeout(this.timeoutID);
+		}
+		// Set a new timeout and keep its ID
+		this.timeoutID = setTimeout(this.on, 500);
+	};
 
 	setContext(context: SelectionContext): void {
 		this.context = context;
@@ -181,7 +194,11 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (["Shape", "Sticker", "Connector", "RichText"].indexOf(item.itemType) > -1) {
+		if (
+			["Shape", "Sticker", "Connector", "RichText"].indexOf(
+				item.itemType,
+			) > -1
+		) {
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -222,7 +239,9 @@ export class Selection {
 		}
 		if (
 			!item ||
-			(["RichText", "Shape", "Sticker", "Connector"].indexOf(item.itemType) === -1) 
+			["RichText", "Shape", "Sticker", "Connector"].indexOf(
+				item.itemType,
+			) === -1
 		) {
 			this.textToEdit = undefined;
 			return;

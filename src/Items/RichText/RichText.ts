@@ -173,32 +173,32 @@ export class RichText extends Mbr implements Geometry {
 			return;
 		}
 		this.updateRequired = true;
-		window.requestAnimationFrame(() => {
-			if (this.autoSize) {
-				this.calcAutoSize();
-			} else {
-				this.calcAutoSize(false);
-				this.blockNodes = getBlockNodes(
-					this.getTextForNodes(),
-					this.getMaxWidth(),
-				);
-				if (
-					this.containerMaxWidth &&
-					this.blockNodes.width >= this.containerMaxWidth
-				) {
-					this.blockNodes.width = this.containerMaxWidth;
-				}
-			}
-
-			// this.blockNodes.maxWidth = this.getWidth()
-
-			this.alignInRectangle(
-				this.getTransformedContainer(),
-				this.editor.verticalAlignment,
+		// window.requestAnimationFrame(() => {
+		if (this.autoSize) {
+			this.calcAutoSize();
+		} else {
+			this.calcAutoSize(false);
+			this.blockNodes = getBlockNodes(
+				this.getTextForNodes(),
+				this.getMaxWidth(),
 			);
-			this.transformCanvas();
-			this.updateRequired = false;
-		});
+			if (
+				this.containerMaxWidth &&
+				this.blockNodes.width >= this.containerMaxWidth
+			) {
+				this.blockNodes.width = this.containerMaxWidth;
+			}
+		}
+
+		// this.blockNodes.maxWidth = this.getWidth()
+
+		this.alignInRectangle(
+			this.getTransformedContainer(),
+			this.editor.verticalAlignment,
+		);
+		this.transformCanvas();
+		this.updateRequired = false;
+		// });
 	}
 
 	calcAutoSize(shouldUpdate = true): void {
@@ -641,6 +641,7 @@ export class RichText extends Mbr implements Geometry {
 		if (data.containerMaxWidth) {
 			this.containerMaxWidth = data.containerMaxWidth;
 		}
+		this.updateElement();
 		this.subject.publish(this);
 		return this;
 	}
@@ -650,6 +651,9 @@ export class RichText extends Mbr implements Geometry {
 			const { ctx } = context;
 			ctx.save();
 			ctx.translate(this.left, this.top);
+			if (this.clipPath) {
+				ctx.clip(this.clipPath);
+			}
 			// if (this.clipPath && this.connectorId) {
 			//     const PADDING = 5;
 			//     ctx.fillStyle = '#f4f4f4';
@@ -755,6 +759,6 @@ export class RichText extends Mbr implements Geometry {
 	getMaxFontSize(): number {
 		const marks = this.editor.getSelectionMarks();
 		const fontSize = marks?.fontSize ?? defaultTextStyle.fontSize;
-		return fontSize * this.autoSizeScale;;
+		return fontSize * this.autoSizeScale;
 	}
 }

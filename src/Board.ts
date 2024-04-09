@@ -351,6 +351,77 @@ export class Board {
 			method: "paste",
 			itemsMap: newMap,
 		});
+
+		return;
+		/*
+		const newItemIdMap: { [key: string]: string } = {};
+
+		const replaceConnectorHeadItemId = (point: ControlPointData): void => {
+			switch (point.pointType) {
+				case "Floating":
+				case "Fixed":
+					const newItemId = newItemIdMap[point.itemId];
+					if (newItemId) {
+						point.itemId = newItemId;
+					}
+					break;
+			}
+		};
+
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+
+			if (itemData.itemType === "Connector") {
+				replaceConnectorHeadItemId(itemData.startPoint);
+				replaceConnectorHeadItemId(itemData.endPoint);
+			}
+
+			const newItemId = this.getNewItemId();
+			newItemIdMap[itemId] = newItemId;
+		}
+
+		const newMap: { [key: string]: ItemData } = {};
+		// iterate over itemsMap to find the minimal translation
+		let minX = Infinity;
+		let minY = Infinity;
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+			const { translateX, translateY } = itemData.transformation;
+
+			if (translateX < minX) {
+				minX = translateX;
+			}
+
+			if (translateY < minY) {
+				minY = translateY;
+			}
+		}
+
+		if (minX === Infinity) {
+			minX = 0;
+		}
+
+		if (minY === Infinity) {
+			minY = 0;
+		}
+
+		const { x, y } = this.pointer.point;
+
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+			const newItemId = newItemIdMap[itemId];
+			const { translateX, translateY } = itemData.transformation;
+			itemData.transformation.translateX = translateX - minX + x;
+			itemData.transformation.translateY = translateY - minY + y;
+			newMap[newItemId] = itemData;
+		}
+
+		this.emit({
+			class: "Board",
+			method: "paste",
+			itemsMap: newMap,
+		});
+		*/
 	}
 
 	duplicate(itemsMap: { [key: string]: ItemData }): void {
