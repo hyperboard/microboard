@@ -12,7 +12,11 @@ import { Events, Operation } from "Board/Events";
 import { createCommand } from "../Events/Command";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { Drawing } from "Board/Items/Drawing";
-import { ConnectorLineStyle } from "Board/Items/Connector";
+import {
+	BoardPoint,
+	ConnectorLineStyle,
+	ControlPoint,
+} from "Board/Items/Connector";
 import { toFiniteNumber } from "utils";
 
 const defaultShapeData = new ShapeData();
@@ -115,7 +119,7 @@ export class Selection {
 		return this.context;
 	}
 
-	timeoutId = null;
+	timeoutID: number | null = null;
 
 	on = (): void => {
 		// Cancel any existing timeout when on is explicitly called
@@ -310,11 +314,43 @@ export class Selection {
 	}
 
 	copy(): { [key: string]: ItemData } {
-		const revertMap: { [key: string]: ItemData } = {};
+		const copiedItemsMap: { [key: string]: ItemData } = {};
 		this.list().forEach(item => {
-			revertMap[item.getId()] = item.serialize();
+			const serializedData = item.serialize();
+			// If the item is a Connector and the connected items are not part of selection,
+			// change the control points to BoardPoint.
+			if (item.itemType === "Connector") {
+				const connector = item as Connector;
+				const startPoint = connector.getStartPoint();
+				const endPoint = connector.getEndPoint();
+
+				// If the start or end point items are not in the selection,
+				// change them to BoardPoints with the current absolute position.
+				if (
+					startPoint.pointType !== "Board" &&
+					!this.items.findById(startPoint.item.getId())
+				) {
+					const newStartPointPos = connector.getStartPoint();
+					serializedData.startPoint = new BoardPoint(
+						newStartPointPos.x,
+						newStartPointPos.y,
+					).serialize();
+				}
+
+				if (
+					endPoint.pointType !== "Board" &&
+					!this.items.findById(endPoint.item.getId())
+				) {
+					const newEndPointPos = connector.getEndPoint();
+					serializedData.endPoint = new BoardPoint(
+						newEndPointPos.x,
+						newEndPointPos.y,
+					).serialize();
+				}
+			}
+			copiedItemsMap[item.getId()] = serializedData;
 		});
-		return revertMap;
+		return copiedItemsMap;
 	}
 
 	cut(): { [key: string]: ItemData } {
