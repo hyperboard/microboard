@@ -60,7 +60,7 @@ export class Connector {
         this.lines,
     );
     animationFrameId?: number;
-    private text: RichText = new RichText(
+    readonly text: RichText = new RichText(
         this.getMbr(),
         this.id,
         this.events,

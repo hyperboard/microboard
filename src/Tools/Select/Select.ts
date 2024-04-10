@@ -76,6 +76,10 @@ export class Select extends Tool {
         this.isDownOnUnselectedItem = hover.length !== 0;
         this.isDraggingUnselectedItem = this.isDownOnUnselectedItem;
         if (this.isDownOnUnselectedItem) {
+            const selected = this.board.selection.items.getSingle();
+            if (selected === hover[hover.length - 1]) {
+                return false;
+            }
             this.downOnItem = hover[hover.length - 1];
             // цепляться за якори в коннекторе когда коннектор еще не выделен
             // TODO API Dirty Check
@@ -200,18 +204,9 @@ export class Select extends Tool {
                 this.board.tools.publish();
                 return false;
             } else {
-                if (this.board.items.getUnderPointer().length === 1) {
-                    const item = this.board.items.getUnderPointer()[0];
-                    if (item.itemType === "Connector") {
-                        this.board.selection.setTextToEdit(item.text);
-                        this.board.selection.setContext("EditTextUnderPointer");
-                        item.text.selectText();
-                        this.board.items.subject.publish(this.board.items);
-                        this.clear();
-                        return false;
-                    }
-                }
                 this.board.selection.editUnderPointer();
+                this.board.selection.editText();
+                this.board.tools.publish();
                 this.clear();
                 return false;
             }

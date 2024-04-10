@@ -194,11 +194,7 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (
-			["Shape", "Sticker", "Connector", "RichText"].indexOf(
-				item.itemType,
-			) > -1
-		) {
+		if (["Shape", "Sticker", "RichText", "Connector"].indexOf(item.itemType) > -1) {
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -221,7 +217,7 @@ export class Selection {
 				// this.setTextToEdit(top);
 				const item = this.items.getSingle();
 				if (item) {
-					this.setTextToEdit(item.text);
+					this.setTextToEdit(item);
 				}
 				this.setContext("EditTextUnderPointer");
 				this.board.items.subject.publish(this.board.items);
@@ -239,15 +235,14 @@ export class Selection {
 		}
 		if (
 			!item ||
-			["RichText", "Shape", "Sticker", "Connector"].indexOf(
-				item.itemType,
-			) === -1
+			(["RichText", "Shape", "Sticker", "Connector"].indexOf(item.itemType) === -1) 
 		) {
 			this.textToEdit = undefined;
 			return;
 		}
 		const text = item.itemType === "RichText" ? item : item.text;
 		this.textToEdit = text;
+		text.selectText();
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
 	}
