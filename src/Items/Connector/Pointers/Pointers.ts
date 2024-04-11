@@ -21,9 +21,9 @@ export function getPointer(style: string): Pointer {
 const Pointers: Record<string, Pointer> = {
 	None: {
 		name: "None",
-		path: new Path([new Line(new Point(94, 50), new Point(95, 50))]),
-		start: new Point(94, 50),
-		end: new Point(95, 50),
+		path: new Path([new Line(new Point(70, 50), new Point(99, 50))]),
+		start: new Point(70, 50),
+		end: new Point(99, 50),
 	},
 	Angle: {
 		name: "Angle",

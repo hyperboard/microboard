@@ -482,7 +482,19 @@ export class Connector {
 	}
 
 	render(context: DrawingContext): void {
+		this.clipText(context);
+		this.text.render(context);
+		this.startPointer.path.render(context);
+		this.endPointer.path.render(context);
+	}
+
+	clipText(context: DrawingContext): void {
+		if (this.text.isEmpty()) {
+			this.lines.render(context);
+			return;
+		}
 		const ctx = context.ctx;
+
 		const textMbr = this.text.getClipMbr();
 
 		// Save the current context state
@@ -515,9 +527,6 @@ export class Connector {
 
 		// Restore the context to remove the clipping region
 		ctx.restore();
-		this.text.render(context);
-		this.startPointer.path.render(context);
-		this.endPointer.path.render(context);
 	}
 
 	getPaths(): Path {
