@@ -54,6 +54,10 @@ export class AddSticker extends BoardTool {
     }
 
     leftButtonUp(): boolean {
+        const lastSticker = this.getLastSticker();
+        if (lastSticker) {
+            backgroundColor = lastSticker.backgroundColor;
+        }
         const width = this.bounds.getWidth();
         const height = this.bounds.getHeight();
         if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
@@ -73,6 +77,8 @@ export class AddSticker extends BoardTool {
             const mbr = this.line.getMbr()
             AddSticker.defaultWidth = mbr.getWidth();
         }
+
+        this.setLastSticker(this.sticker);
 
         return true;
     }
@@ -117,4 +123,17 @@ export class AddSticker extends BoardTool {
             this.bounds.render(context);
         }
     }
+
+    private getLastSticker(): Sticker | null {
+		const lastSticker = sessionStorage.getItem("lastSticker");
+		if (lastSticker) {
+			return JSON.parse(lastSticker);
+		} else {
+			return null;
+		}
+	}
+
+	private setLastSticker(lastSticker: Sticker): void {
+		sessionStorage.setItem("lastSticker", JSON.stringify(lastSticker));
+	}
 }
