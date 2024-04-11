@@ -654,17 +654,6 @@ export class RichText extends Mbr implements Geometry {
 			if (this.clipPath) {
 				ctx.clip(this.clipPath);
 			}
-			// if (this.clipPath && this.connectorId) {
-			//     const PADDING = 5;
-			//     ctx.fillStyle = '#f4f4f4';
-			//     console.log(this);
-			//     ctx.fillRect(
-			//         this.getWidth()/2 - this.blockNodes?.width/2 - PADDING,
-			//         this.getHeight()/2 - this.blockNodes?.height/2 - PADDING,
-			//         (this.blockNodes?.width || 0) + PADDING*2,
-			//         (this.blockNodes?.height || 0) + PADDING*2
-			//         );
-			// }
 			if (this.autoSize) {
 				ctx.scale(this.autoSizeScale, this.autoSizeScale);
 			} else if (!this.isInShape) {
