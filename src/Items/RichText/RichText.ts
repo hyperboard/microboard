@@ -651,9 +651,7 @@ export class RichText extends Mbr implements Geometry {
 			const { ctx } = context;
 			ctx.save();
 			ctx.translate(this.left, this.top);
-			if (this.clipPath) {
-				ctx.clip(this.clipPath);
-			}
+
 			if (this.autoSize) {
 				ctx.scale(this.autoSizeScale, this.autoSizeScale);
 			} else if (!this.isInShape) {
@@ -662,7 +660,11 @@ export class RichText extends Mbr implements Geometry {
 					this.transformation.matrix.scaleY,
 				);
 			}
+			if (this.clipPath) {
+				ctx.clip(this.clipPath);
+			}
 			this.blockNodes.render(ctx);
+
 			ctx.restore();
 		}
 	}
