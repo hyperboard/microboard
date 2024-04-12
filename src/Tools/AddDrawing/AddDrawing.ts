@@ -18,7 +18,7 @@ export class AddDrawing extends BoardTool {
 	}
 
 	setCursor(): void {
-		console.log(penCursor)
+		console.log(penCursor);
 		this.board.pointer.setCursor(penCursor);
 	}
 
