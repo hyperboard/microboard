@@ -17,6 +17,10 @@ export class AddSticker extends BoardTool {
 
     constructor(board: Board) {
         super(board);
+        const lastSticker = this.getLastSticker();
+        if (lastSticker) {
+            this.setBackgroundColor(lastSticker.backgroundColor);
+        }
         this.setCursor();
     }
 
@@ -56,7 +60,11 @@ export class AddSticker extends BoardTool {
     leftButtonUp(): boolean {
         const lastSticker = this.getLastSticker();
         if (lastSticker) {
-            backgroundColor = lastSticker.backgroundColor;
+            try{
+                AddSticker.defaultWidth = +lastSticker.stickerPath.width;
+            } catch(err) {
+                console.error('Failed to set AddSticker.defaultWidth', err)
+            }
         }
         const width = this.bounds.getWidth();
         const height = this.bounds.getHeight();
@@ -79,7 +87,6 @@ export class AddSticker extends BoardTool {
         }
 
         this.setLastSticker(this.sticker);
-
         return true;
     }
 
