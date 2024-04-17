@@ -205,7 +205,6 @@ export class Select extends Tool {
                 return false;
             } else {
                 this.board.selection.editUnderPointer();
-                this.board.selection.editText();
                 this.board.tools.publish();
                 this.clear();
                 return false;
