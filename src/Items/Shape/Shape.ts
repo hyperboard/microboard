@@ -301,7 +301,7 @@ export class Shape implements Geometry {
 	}
 
 	getMbr(): Mbr {
-		return this.mbr;
+		return this.mbr.copy();
 	}
 
 	getNearestEdgePointTo(point: Point): Point {

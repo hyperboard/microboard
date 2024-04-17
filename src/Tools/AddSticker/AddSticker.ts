@@ -17,6 +17,10 @@ export class AddSticker extends BoardTool {
 
     constructor(board: Board) {
         super(board);
+        const lastSticker = this.getLastSticker();
+        if (lastSticker) {
+            this.setBackgroundColor(lastSticker.backgroundColor);
+        }
         this.setCursor();
     }
 
@@ -54,8 +58,16 @@ export class AddSticker extends BoardTool {
     }
 
     leftButtonUp(): boolean {
-        let width = this.bounds.getWidth();
-        let height = this.bounds.getHeight();
+        const lastSticker = this.getLastSticker();
+        if (lastSticker) {
+            try{
+                AddSticker.defaultWidth = +lastSticker.stickerPath.width;
+            } catch(err) {
+                console.error('Failed to set AddSticker.defaultWidth', err)
+            }
+        }
+        const width = this.bounds.getWidth();
+        const height = this.bounds.getHeight();
         if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
             this.sticker.transformToCenter(this.board.pointer.point.copy(), AddSticker.defaultWidth)
         }
@@ -65,6 +77,7 @@ export class AddSticker extends BoardTool {
         this.board.selection.removeAll();
         this.board.selection.add(sticker);
         this.board.selection.setContext("EditTextUnderPointer");
+        this.board.selection.editText();
         this.board.tools.select();
         this.board.tools.publish();
 
@@ -73,6 +86,7 @@ export class AddSticker extends BoardTool {
             AddSticker.defaultWidth = mbr.getWidth();
         }
 
+        this.setLastSticker(this.sticker);
         return true;
     }
 
@@ -116,4 +130,17 @@ export class AddSticker extends BoardTool {
             this.bounds.render(context);
         }
     }
+
+    private getLastSticker(): Sticker | null {
+		const lastSticker = sessionStorage.getItem("lastSticker");
+		if (lastSticker) {
+			return JSON.parse(lastSticker);
+		} else {
+			return null;
+		}
+	}
+
+	private setLastSticker(lastSticker: Sticker): void {
+		sessionStorage.setItem("lastSticker", JSON.stringify(lastSticker));
+	}
 }

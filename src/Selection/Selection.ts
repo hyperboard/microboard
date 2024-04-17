@@ -12,7 +12,11 @@ import { Events, Operation } from "Board/Events";
 import { createCommand } from "../Events/Command";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { Drawing } from "Board/Items/Drawing";
-import { ConnectorLineStyle } from "Board/Items/Connector";
+import {
+	BoardPoint,
+	ConnectorLineStyle,
+	ControlPoint,
+} from "Board/Items/Connector";
 import { toFiniteNumber } from "utils";
 
 const defaultShapeData = new ShapeData();
@@ -115,15 +119,28 @@ export class Selection {
 		return this.context;
 	}
 
+	timeoutID: number | null = null;
+
 	on = (): void => {
+		// Cancel any existing timeout when on is explicitly called
+		if (this.timeoutID !== null) {
+			clearTimeout(this.timeoutID);
+			this.timeoutID = null;
+		}
+
 		this.isOn = true;
 		this.subject.publish(this);
 	};
 
-	off(): void {
+	off = (): void => {
 		this.isOn = false;
-		setTimeout(this.on, 10);
-	}
+		// Clear any existing timeout
+		if (this.timeoutID !== null) {
+			clearTimeout(this.timeoutID);
+		}
+		// Set a new timeout and keep its ID
+		this.timeoutID = setTimeout(this.on, 500);
+	};
 
 	setContext(context: SelectionContext): void {
 		this.context = context;
@@ -181,11 +198,7 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (["Shape", "Sticker", "Connector"].indexOf(item.itemType) > -1) {
-			this.setTextToEdit(item.text);
-			this.setContext("EditTextUnderPointer");
-			this.board.items.subject.publish(this.board.items);
-		} else if (item.itemType === "RichText") {
+		if (["Shape", "Sticker", "RichText", "Connector"].indexOf(item.itemType) > -1) {
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -208,7 +221,7 @@ export class Selection {
 				// this.setTextToEdit(top);
 				const item = this.items.getSingle();
 				if (item) {
-					this.setTextToEdit(item.text);
+					this.setTextToEdit(item);
 				}
 				this.setContext("EditTextUnderPointer");
 				this.board.items.subject.publish(this.board.items);
@@ -226,13 +239,14 @@ export class Selection {
 		}
 		if (
 			!item ||
-			(item.itemType !== "RichText" && item.itemType !== "Shape")
+			(["RichText", "Shape", "Sticker", "Connector"].indexOf(item.itemType) === -1) 
 		) {
 			this.textToEdit = undefined;
 			return;
 		}
 		const text = item.itemType === "RichText" ? item : item.text;
 		this.textToEdit = text;
+		text.selectText();
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
 	}
@@ -300,7 +314,43 @@ export class Selection {
 	}
 
 	copy(): { [key: string]: ItemData } {
-		return this.items.copy();
+		const copiedItemsMap: { [key: string]: ItemData } = {};
+		this.list().forEach(item => {
+			const serializedData = item.serialize();
+			// If the item is a Connector and the connected items are not part of selection,
+			// change the control points to BoardPoint.
+			if (item.itemType === "Connector") {
+				const connector = item as Connector;
+				const startPoint = connector.getStartPoint();
+				const endPoint = connector.getEndPoint();
+
+				// If the start or end point items are not in the selection,
+				// change them to BoardPoints with the current absolute position.
+				if (
+					startPoint.pointType !== "Board" &&
+					!this.items.findById(startPoint.item.getId())
+				) {
+					const newStartPointPos = connector.getStartPoint();
+					serializedData.startPoint = new BoardPoint(
+						newStartPointPos.x,
+						newStartPointPos.y,
+					).serialize();
+				}
+
+				if (
+					endPoint.pointType !== "Board" &&
+					!this.items.findById(endPoint.item.getId())
+				) {
+					const newEndPointPos = connector.getEndPoint();
+					serializedData.endPoint = new BoardPoint(
+						newEndPointPos.x,
+						newEndPointPos.y,
+					).serialize();
+				}
+			}
+			copiedItemsMap[item.getId()] = serializedData;
+		});
+		return copiedItemsMap;
 	}
 
 	cut(): { [key: string]: ItemData } {

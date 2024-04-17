@@ -173,33 +173,35 @@ export class RichText extends Mbr implements Geometry {
 			return;
 		}
 		this.updateRequired = true;
-		window.requestAnimationFrame(() => {
-			if (this.autoSize) {
-				this.calcAutoSize();
-			} else {
-				this.blockNodes = getBlockNodes(
-					this.getTextForNodes(),
-					this.getMaxWidth(),
-				);
-				if (
-					this.containerMaxWidth &&
-					this.blockNodes.width >= this.containerMaxWidth
-				) {
-					this.blockNodes.width = this.containerMaxWidth;
-				}
-			}
-			// this.blockNodes.maxWidth = this.getWidth()
-
-			this.alignInRectangle(
-				this.getTransformedContainer(),
-				this.editor.verticalAlignment,
+		// window.requestAnimationFrame(() => {
+		if (this.autoSize) {
+			this.calcAutoSize();
+		} else {
+			this.calcAutoSize(false);
+			this.blockNodes = getBlockNodes(
+				this.getTextForNodes(),
+				this.getMaxWidth(),
 			);
-			this.transformCanvas();
-			this.updateRequired = false;
-		});
+			if (
+				this.containerMaxWidth &&
+				this.blockNodes.width >= this.containerMaxWidth
+			) {
+				this.blockNodes.width = this.containerMaxWidth;
+			}
+		}
+
+		// this.blockNodes.maxWidth = this.getWidth()
+
+		this.alignInRectangle(
+			this.getTransformedContainer(),
+			this.editor.verticalAlignment,
+		);
+		this.transformCanvas();
+		this.updateRequired = false;
+		// });
 	}
 
-	calcAutoSize() {
+	calcAutoSize(shouldUpdate = true): void {
 		const text = this.getTextForNodes();
 		const container = this.getTransformedContainer();
 		const containerWidth = container.getWidth();
@@ -223,8 +225,9 @@ export class RichText extends Mbr implements Geometry {
             }
         }
         */
-
-		this.blockNodes = blockNodes;
+		if (shouldUpdate) {
+			this.blockNodes = blockNodes;
+		}
 		const textWidth = blockNodes.width;
 		const textHeight = blockNodes.height;
 		const textScale = Math.min(
@@ -638,6 +641,7 @@ export class RichText extends Mbr implements Geometry {
 		if (data.containerMaxWidth) {
 			this.containerMaxWidth = data.containerMaxWidth;
 		}
+		this.updateElement();
 		this.subject.publish(this);
 		return this;
 	}
@@ -647,17 +651,7 @@ export class RichText extends Mbr implements Geometry {
 			const { ctx } = context;
 			ctx.save();
 			ctx.translate(this.left, this.top);
-			// if (this.clipPath && this.connectorId) {
-			//     const PADDING = 5;
-			//     ctx.fillStyle = '#f4f4f4';
-			//     console.log(this);
-			//     ctx.fillRect(
-			//         this.getWidth()/2 - this.blockNodes?.width/2 - PADDING,
-			//         this.getHeight()/2 - this.blockNodes?.height/2 - PADDING,
-			//         (this.blockNodes?.width || 0) + PADDING*2,
-			//         (this.blockNodes?.height || 0) + PADDING*2
-			//         );
-			// }
+
 			if (this.autoSize) {
 				ctx.scale(this.autoSizeScale, this.autoSizeScale);
 			} else if (!this.isInShape) {
@@ -666,7 +660,11 @@ export class RichText extends Mbr implements Geometry {
 					this.transformation.matrix.scaleY,
 				);
 			}
+			if (this.clipPath) {
+				ctx.clip(this.clipPath);
+			}
 			this.blockNodes.render(ctx);
+
 			ctx.restore();
 		}
 	}
@@ -729,5 +727,29 @@ export class RichText extends Mbr implements Geometry {
 			},
 			properties: null,
 		});
+	}
+
+	autosizeEnable(): void {
+		this.autoSize = true;
+		this.isInShape = false;
+		this.updateElement();
+		this.subject.publish(this);
+	}
+
+	autosizeDisable(): void {
+		this.autoSize = false;
+		this.isInShape = true;
+		this.updateElement();
+		this.subject.publish(this);
+	}
+
+	getAutosize(): boolean {
+		return this.autoSize;
+	}
+
+	getMaxFontSize(): number {
+		const marks = this.editor.getSelectionMarks();
+		const fontSize = marks?.fontSize ?? defaultTextStyle.fontSize;
+		return fontSize * this.autoSizeScale;
 	}
 }
