@@ -114,7 +114,7 @@ function validateTransformationData(transformationData: any): boolean {
 	return isValid;
 }
 
-function validateRichTextData(richTextData: any): boolean {
+export function validateRichTextData(richTextData: any): boolean {
 	// Validate the presence and types of properties in RichTextData
 	const isValid =
 		richTextData.hasOwnProperty("children") &&

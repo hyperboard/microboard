@@ -223,7 +223,7 @@ export class Selection {
 				if (item) {
 					this.setTextToEdit(item);
 				}
-				this.setContext("EditTextUnderPointer");
+				this.setContext("EditUnderPointer");
 				this.board.items.subject.publish(this.board.items);
 			} else {
 				this.setContext("EditUnderPointer");
