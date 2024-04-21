@@ -198,7 +198,11 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (["Shape", "Sticker", "RichText", "Connector"].indexOf(item.itemType) > -1) {
+		if (
+			["Shape", "Sticker", "RichText", "Connector"].indexOf(
+				item.itemType,
+			) > -1
+		) {
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -239,7 +243,9 @@ export class Selection {
 		}
 		if (
 			!item ||
-			(["RichText", "Shape", "Sticker", "Connector"].indexOf(item.itemType) === -1) 
+			["RichText", "Shape", "Sticker", "Connector"].indexOf(
+				item.itemType,
+			) === -1
 		) {
 			this.textToEdit = undefined;
 			return;
@@ -777,6 +783,18 @@ export class Selection {
 			class: "Board",
 			method: "unlock",
 			item: this.items.ids(),
+		});
+	}
+
+	bringToFront(): void {
+		this.items.list().forEach(item => {
+			this.board.items.index.bringToFront(item);
+		});
+	}
+
+	sendToBack(): void {
+		this.items.list().forEach(item => {
+			this.board.items.index.sendToBack(item);
 		});
 	}
 
