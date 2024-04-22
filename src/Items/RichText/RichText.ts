@@ -8,7 +8,7 @@ import {
 	Transformation,
 	TransformationOperation,
 } from "..";
-import { Descendant, Transforms } from "slate";
+import { Descendant, Transforms, Editor } from "slate";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { Events, Operation } from "Board/Events";
 import { TextStyle } from "./Editor/TextNode";
@@ -23,6 +23,7 @@ import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { isTextEmpty } from "./isTextEmpty";
 import { Board } from "Board/Board";
+import { SelectionContext } from "Board/Selection/Selection";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
@@ -502,7 +503,13 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
-	setSelectionFontStyle(style: TextStyle | TextStyle[]): void {
+	setSelectionFontStyle(style: TextStyle | TextStyle[], selectionContext?: SelectionContext): void {
+		if (selectionContext === "EditUnderPointer") {
+			const start = Editor.start(this.editor.editor, []);
+			const end = Editor.end(this.editor.editor, []);
+			const range = { anchor: start, focus: end };
+			this.editorTransforms.select(this.editor.editor, range);
+		}
 		this.editor.setSelectionFontStyle(style);
 		this.updateElement();
 	}

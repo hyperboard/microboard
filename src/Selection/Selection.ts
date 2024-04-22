@@ -642,17 +642,12 @@ export class Selection {
 	}
 
 	setFontStyle(fontStyleList: TextStyle[]): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionFontStyle(fontStyleList);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionFontStyle(fontStyleList);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontStyle(fontStyleList, this.context);
+			} else {
+				single.text.setSelectionFontStyle(fontStyleList, this.context);
 			}
 		} else if (this.items.isItemTypes(["Sticker"])) {
 			this.items
