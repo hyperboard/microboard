@@ -18,6 +18,7 @@ import {
 	ControlPoint,
 } from "Board/Items/Connector";
 import { toFiniteNumber } from "utils";
+import { SELECTION_COLOR } from "View/Tools/Selection";
 
 const defaultShapeData = new ShapeData();
 
@@ -810,7 +811,7 @@ export class Selection {
 			for (const item of this.items.list()) {
 				const mbr = item.getMbr();
 				mbr.strokeWidth = 1 / context.matrix.scaleX;
-				mbr.borderColor = "rgba(0, 0, 255, 0.4)";
+				mbr.borderColor = SELECTION_COLOR;
 				mbr.render(context);
 			}
 		}
