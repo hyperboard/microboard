@@ -1,9 +1,9 @@
 import { Subscription } from "App/getSubscriptions";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { App } from "../App";
 
 export function useAppSubscription(app: App, subscription: Subscription) {
-	useEffect(() => {
+	useLayoutEffect(() => {
 		app.subscriptions.add(subscription);
 
 		return () => {

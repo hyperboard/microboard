@@ -1,5 +1,5 @@
 import { type App } from "App";
-import { type RefObject, useState, useLayoutEffect } from "react";
+import { type RefObject, useState, useLayoutEffect, useEffect } from "react";
 import { type Board } from "Board";
 import { Mbr } from "Board/Items";
 import { useAppSubscription } from "Board/useBoardSubscription";
@@ -17,7 +17,7 @@ export function useDomMbr({
 	app,
 	board,
 	ref,
-	subjects = ["camera", "selection", "selectionItems", "selectionItem"],
+	subjects = ["camera", "selection"],
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
@@ -25,11 +25,17 @@ export function useDomMbr({
 		subjects,
 		observer: () => {
 			const newMbr = updateRects(board, ref);
-			if (newMbr) {
+			if (newMbr && !newMbr?.isEqual(mbr)) {
 				setMbr(newMbr);
 			}
 			forceUpdate();
 		},
+	});
+	useEffect(() => {
+		const newMbr = updateRects(board, ref);
+		if (newMbr && !newMbr?.isEqual(mbr)) {
+			setMbr(newMbr);
+		}
 	});
 	return mbr;
 }
