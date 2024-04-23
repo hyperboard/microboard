@@ -1,10 +1,10 @@
 import { type App } from "App";
-import { type RefObject, useState, useLayoutEffect, useEffect } from "react";
 import { type Board } from "Board";
 import { Mbr } from "Board/Items";
 import { useAppSubscription } from "Board/useBoardSubscription";
-import { updateRects } from "./updateRects";
 import { useForceUpdate } from "lib/useForceUpdate";
+import { useEffect, useState, type RefObject } from "react";
+import { updateRects } from "./updateRects";
 
 type Params = {
 	app: App;
