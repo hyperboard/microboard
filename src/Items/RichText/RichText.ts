@@ -70,7 +70,7 @@ export class RichText extends Mbr implements Geometry {
 		private id = "",
 		private events?: Events,
 		readonly transformation = new Transformation(id, events),
-		public placeholderText = "Type something",
+		public placeholderText = "Type\u00A0something",
 		public isInShape = false,
 		private autoSize = false,
 	) {
