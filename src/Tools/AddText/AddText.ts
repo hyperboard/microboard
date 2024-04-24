@@ -52,15 +52,11 @@ export class AddText extends BoardTool {
 			text.transformation.translateTo(this.bounds.left, this.bounds.top);
 			text.transformation.scaleBy(1, 1);
 			text.editor.setSelectionHorisontalAlignment("left");
-			// text.setMaxWidth(Math.max(maxWidth, minWidth));
-			this.board.tools.select();
-			this.board.tools.publish();
 			this.board.selection.removeAll();
 			this.board.selection.add(text);
-			this.board.selection.setContext("EditTextUnderPointer");
+			this.board.selection.editText();
 			this.board.tools.select();
 			this.board.tools.publish();
-			this.board.selection.editSelected();
 			this.line = undefined;
 		}
 		return true;
