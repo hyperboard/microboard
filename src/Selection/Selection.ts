@@ -665,17 +665,12 @@ export class Selection {
 	}
 
 	setFontColor(fontColor: string): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionFontColor(fontColor);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionFontColor(fontColor);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontColor(fontColor, this.context);
+			} else if (single instanceof Shape || single instanceof Sticker || single instanceof Connector) {
+				single.text.setSelectionFontColor(fontColor, this.context);
 			}
 		} else {
 			this.emit({
@@ -688,17 +683,12 @@ export class Selection {
 	}
 
 	setFontHighlight(fontHighlight: string): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionFontHighlight(fontHighlight);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionFontHighlight(fontHighlight);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontHighlight(fontHighlight, this.context);
+			} else if (single instanceof Shape || single instanceof Sticker || single instanceof Connector) {
+				single.text.setSelectionFontHighlight(fontHighlight, this.context);
 			}
 		} else {
 			{
