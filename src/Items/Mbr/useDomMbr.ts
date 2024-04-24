@@ -21,13 +21,10 @@ export function useDomMbr({
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
+
 	useAppSubscription(app, {
 		subjects,
 		observer: () => {
-			const newMbr = updateRects(board, ref);
-			if (newMbr && !newMbr?.isEqual(mbr)) {
-				setMbr(newMbr);
-			}
 			forceUpdate();
 		},
 	});
