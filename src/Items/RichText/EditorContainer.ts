@@ -398,22 +398,20 @@ export class EditorContainer {
             throw new Error("Nothing is selected");
         }
 
-        const [match] = Editor.nodes(editor, {
-            at: Editor.unhangRange(editor, selection),
-            match: node => {
-                return (
-                    !Editor.isEditor(node) &&
-                    Element.isElement(node) &&
-                    node.horisontalAlignment === horisontalAlignment
+        const nodes = Editor.nodes(editor, {
+            at: [],
+            universal: true,
+            match: node => !Editor.isEditor(node) && Element.isElement(node)
+        });
+        for (const [node, path] of nodes) {
+            if (node.type === 'paragraph') {
+                Transforms.setNodes(
+                    editor,
+                    { horisontalAlignment: horisontalAlignment },
+                    { at: path }
                 );
-            },
-        });
-
-        const isActive = !!match;
-
-        Transforms.setNodes(editor, {
-            horisontalAlignment: isActive ? undefined : horisontalAlignment,
-        });
+            }
+        }
     }
 
     isBlockActive(format: BlockType): boolean {
