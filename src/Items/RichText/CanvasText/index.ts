@@ -85,8 +85,8 @@ function getTextStyle(data) {
 			case "underline":
 				leafStyle.textDecorationLine = "underline";
 				break;
-			case "strikethrough":
-				leafStyle.textDecorationLine = "line-through";
+			case "line-through":
+				leafStyle.crossed = "line-through";
 				break;
 			case "superscript":
 				leafStyle.verticalAlign = "super";
@@ -556,6 +556,7 @@ function renderTextBlock(ctx, textBlock) {
 	ctx.font = textBlock.style.font;
 	fillHighlight(ctx, textBlock);
 	underline(ctx, textBlock);
+	cross(ctx, textBlock);
 	fillText(ctx, textBlock);
 }
 
@@ -595,6 +596,27 @@ function underline(ctx, textBlock) {
 	ctx.lineWidth = 2;
 	// ctx.strokeText(textBlock.text, x, y);
 	// log("underline: ", x, y, width, height);
+}
+
+function cross(ctx, textBlock) {
+	if (textBlock.style.crossed !== "line-through") {
+		return;
+	}
+	const x = textBlock.x;
+	const y = textBlock.y;
+	const style = textBlock.style;
+	const measure = textBlock.measure;
+	const width = measure.width;
+	const height = measure.height;
+	const color = style.color;
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(x, y - textBlock.fontSize / 2 + 2);
+	ctx.lineTo(x + width, y - textBlock.fontSize / 2 + 2);
+	ctx.stroke();
+	ctx.strokeStyle = style.backgroundColor;
+	ctx.lineWidth = 2;
 }
 
 function fillText(ctx, textBlock) {
