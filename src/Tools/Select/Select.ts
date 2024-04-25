@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Item, Line, Mbr, Point } from "Board/Items";
+import { Item, Line, Mbr, Point, RichText } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
@@ -52,6 +52,17 @@ export class Select extends Tool {
 		this.clear();
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
+
+		const single = selection.items.getSingle();
+		if (
+			selection.getContext() === "EditTextUnderPointer" &&
+			single instanceof RichText &&
+			single.getText().length === 1 &&
+			single.getText()[0].type === "paragraph" &&
+			single.getText()[0].children[0].text.length === 0
+		) {
+			this.board.remove(single);
+		}
 
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection =
