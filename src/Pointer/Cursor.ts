@@ -1,4 +1,4 @@
-export const cursors = [
+export const defaultCursors = [
 	"default",
 	"auto",
 	"text",
@@ -39,7 +39,13 @@ export const cursors = [
 	// 	| "url(.cur),auto"
 ] as const;
 
-export type Cursor = typeof cursors[number];
+export const customCursors = ["pen"] as const;
+
+export type Cursor = typeof defaultCursors[number] | string;
+export type CursorName =
+	| typeof defaultCursors[number]
+	| typeof customCursors[number];
+export type CursorsMap = Partial<Record<CursorName, Cursor>>;
 
 /*
 export class CursorMapChangeOnToolChange implements Observer<ToolName> {
