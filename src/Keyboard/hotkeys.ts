@@ -38,3 +38,13 @@ export function getHotkeyLabel(hotkey: HotkeyName) {
 
 	return (hotkeys[hotkey] as Hotkey).label.windows;
 }
+
+type HotkeysMap = Partial<Record<HotkeyName, (e?: KeyboardEvent) => void>>;
+
+export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent) {
+	Object.entries(hotkeyMap).forEach(([hotkey, cb]) => {
+		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
+			cb(event);
+		}
+	});
+}
