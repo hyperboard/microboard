@@ -21,6 +21,14 @@ import { GeometricNormal } from "../GeometricNormal";
 import { getStartPointer, getEndPointer } from "./Pointers";
 import { Point } from "../Point";
 import { CubicBezier } from "../Curve";
+import {
+	CONNECTOR_COLOR,
+	CONNECTOR_LINE_WIDTH,
+	DEFAULT_END_POINTER,
+	DRAW_TEXT_BORDER,
+	TEXT_BORDER_PADDING,
+} from "View/Items/Connector";
+import { SELECTION_COLOR } from "View/Tools/Selection";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -41,10 +49,10 @@ export class Connector {
 	readonly transformation = new Transformation(this.id, this.events);
 	private middlePoints: BoardPoint[] = [];
 	private startPointerStyle = "none";
-	private endPointerStyle = "TriangleFilled";
-	private lineColor = "black";
+	private endPointerStyle = DEFAULT_END_POINTER;
+	private lineColor = CONNECTOR_COLOR;
 	private lineStyle: ConnectorLineStyle = "straight";
-	private lineWidth: ConnectionLineWidth = 1;
+	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
 	startPointer = getStartPointer(
@@ -489,6 +497,10 @@ export class Connector {
 	}
 
 	clipText(context: DrawingContext): void {
+		if (DRAW_TEXT_BORDER) {
+			this.lines.setBorderWidth(this.lineWidth);
+			this.lines.setBorderColor(this.lineColor);
+		}
 		if (this.text.isEmpty()) {
 			this.lines.render(context);
 			return;
@@ -513,10 +525,22 @@ export class Connector {
 
 		// Remove the text rectangle area from the path to create the exclusion/clipping area
 		// This assumes a clockwise definition of the canvas rectangle and an anti-clockwise definition of the inner rectangle
-		ctx.moveTo(textMbr.left, textMbr.top);
-		ctx.lineTo(textMbr.left, textMbr.bottom);
-		ctx.lineTo(textMbr.right, textMbr.bottom);
-		ctx.lineTo(textMbr.right, textMbr.top);
+		ctx.moveTo(
+			textMbr.left - TEXT_BORDER_PADDING * 2,
+			textMbr.top - TEXT_BORDER_PADDING * 2,
+		);
+		ctx.lineTo(
+			textMbr.left - TEXT_BORDER_PADDING * 2,
+			textMbr.bottom + TEXT_BORDER_PADDING * 2,
+		);
+		ctx.lineTo(
+			textMbr.right + TEXT_BORDER_PADDING * 2,
+			textMbr.bottom + TEXT_BORDER_PADDING * 2,
+		);
+		ctx.lineTo(
+			textMbr.right + TEXT_BORDER_PADDING * 2,
+			textMbr.top - TEXT_BORDER_PADDING * 2,
+		);
 		ctx.closePath();
 
 		// Use the clip method to clip to the outside of the text rect
@@ -527,6 +551,43 @@ export class Connector {
 
 		// Restore the context to remove the clipping region
 		ctx.restore();
+
+		if (
+			DRAW_TEXT_BORDER &&
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			ctx.strokeStyle = SELECTION_COLOR;
+			ctx.beginPath();
+			// Cover the entire canvas area with the rectangle path
+			const cameraMbr = context.camera.getMbr();
+			ctx.rect(
+				cameraMbr.left,
+				cameraMbr.top,
+				cameraMbr.getWidth(),
+				cameraMbr.getHeight(),
+			);
+
+			// Remove the text rectangle area from the path to create the exclusion/clipping area
+			// This assumes a clockwise definition of the canvas rectangle and an anti-clockwise definition of the inner rectangle
+			ctx.moveTo(
+				textMbr.left - TEXT_BORDER_PADDING,
+				textMbr.top - TEXT_BORDER_PADDING,
+			);
+			ctx.lineTo(
+				textMbr.left - TEXT_BORDER_PADDING,
+				textMbr.bottom + TEXT_BORDER_PADDING,
+			);
+			ctx.lineTo(
+				textMbr.right + TEXT_BORDER_PADDING,
+				textMbr.bottom + TEXT_BORDER_PADDING,
+			);
+			ctx.lineTo(
+				textMbr.right + TEXT_BORDER_PADDING,
+				textMbr.top - TEXT_BORDER_PADDING,
+			);
+			ctx.closePath();
+			ctx.stroke();
+		}
 	}
 
 	getPaths(): Path {
@@ -650,6 +711,8 @@ export class Connector {
 			this.lineStyle,
 			this.lines,
 		);
+		this.startPointer.path.setBorderColor(this.lineColor);
+		this.startPointer.path.setBorderWidth(this.lineWidth);
 		this.startPointer.path.setBackgroundColor(this.lineColor);
 		this.endPointer = getEndPointer(
 			endPoint,
@@ -657,6 +720,8 @@ export class Connector {
 			this.lineStyle,
 			this.lines,
 		);
+		this.endPointer.path.setBorderColor(this.lineColor);
+		this.endPointer.path.setBorderWidth(this.lineWidth);
 		this.endPointer.path.setBackgroundColor(this.lineColor);
 
 		this.offsetLines();

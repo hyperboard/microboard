@@ -16,7 +16,6 @@ export class Pointer {
 		if (this.cursor !== cursor) {
 			if (cursor in cursorsMap) {
 				this.cursor = cursorsMap[cursor] as Cursor;
-				console.log(this.cursor);
 			} else {
 				this.cursor = cursor;
 			}
