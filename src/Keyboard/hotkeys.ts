@@ -24,7 +24,6 @@ export function isHotkeyPushed(
 		(!key.alt || event.altKey) &&
 		(!key.shift || event.shiftKey) &&
 		(!key.ctrl || event.ctrlKey || event.metaKey);
-
 	if (isPushed && preventDefault) {
 		event.preventDefault();
 	}
@@ -45,6 +44,7 @@ export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent) {
 	Object.entries(hotkeyMap).forEach(([hotkey, cb]) => {
 		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
 			cb(event);
+			return;
 		}
 	});
 }
