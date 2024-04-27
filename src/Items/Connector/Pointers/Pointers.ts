@@ -37,6 +37,18 @@ const Pointers: Record<string, Pointer> = {
 		start: new Point(94, 50),
 		end: new Point(95, 50),
 	},
+	AngleTalk: {
+		name: "AngleTalk",
+		path: new Path(
+			[
+				new Line(new Point(65, 25), new Point(95, 50)),
+				new Line(new Point(95, 50), new Point(65, 75)),
+			],
+			false,
+		),
+		start: new Point(94, 50),
+		end: new Point(95, 50),
+	},
 	ArrowBroad: {
 		name: "ArrowBroad",
 		path: new Path(
