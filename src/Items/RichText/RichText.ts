@@ -71,7 +71,6 @@ export class RichText extends Mbr implements Geometry {
 		private id = "",
 		private events?: Events,
 		readonly transformation = new Transformation(id, events),
-		// public placeholderText = "Type\u00A0something",
 		public placeholderText = i18next.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
@@ -500,7 +499,10 @@ export class RichText extends Mbr implements Geometry {
     }
     */
 
-	setSelectionFontColor(format: string, selectionContext?: SelectionContext): void {
+	setSelectionFontColor(
+		format: string,
+		selectionContext?: SelectionContext,
+	): void {
 		if (selectionContext === "EditUnderPointer") {
 			const start = Editor.start(this.editor.editor, []);
 			const end = Editor.end(this.editor.editor, []);
@@ -511,7 +513,10 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
-	setSelectionFontStyle(style: TextStyle | TextStyle[], selectionContext?: SelectionContext): void {
+	setSelectionFontStyle(
+		style: TextStyle | TextStyle[],
+		selectionContext?: SelectionContext,
+	): void {
 		if (selectionContext === "EditUnderPointer") {
 			const start = Editor.start(this.editor.editor, []);
 			const end = Editor.end(this.editor.editor, []);
@@ -537,7 +542,10 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
-	setSelectionFontHighlight(format: string, selectionContext?: SelectionContext): void {
+	setSelectionFontHighlight(
+		format: string,
+		selectionContext?: SelectionContext,
+	): void {
 		if (selectionContext === "EditUnderPointer") {
 			const start = Editor.start(this.editor.editor, []);
 			const end = Editor.end(this.editor.editor, []);
