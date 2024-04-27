@@ -24,6 +24,7 @@ import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { isTextEmpty } from "./isTextEmpty";
 import { Board } from "Board/Board";
 import { SelectionContext } from "Board/Selection/Selection";
+import i18next from "i18next";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
@@ -70,7 +71,8 @@ export class RichText extends Mbr implements Geometry {
 		private id = "",
 		private events?: Events,
 		readonly transformation = new Transformation(id, events),
-		public placeholderText = "Type\u00A0something",
+		// public placeholderText = "Type\u00A0something",
+		public placeholderText = i18next.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
 	) {
