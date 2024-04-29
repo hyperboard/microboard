@@ -10,7 +10,7 @@ export class Pointer {
 	previous = new Point();
 	delta = new Point();
 
-	private cursor: string = "default";
+	private cursor = "default";
 
 	setCursor(cursor: CursorName): void {
 		if (this.cursor !== cursor) {

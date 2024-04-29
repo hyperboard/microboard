@@ -11,7 +11,7 @@ export class RichTextData {
 		public verticalAlignment: VerticalAlignment = "center",
 		public maxWidth: number | undefined,
 		public transformation?: TransformationData,
-		public containerMaxWidth?: number
+		public containerMaxWidth?: number,
 	) {}
 }
 

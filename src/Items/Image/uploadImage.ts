@@ -15,7 +15,7 @@ export function uploadImage(file: File, board: Board) {
 					let pagesRendered = 0;
 					let viewportYOffset = 0;
 					let pageHeight;
-					let renderPage = pageNum => {
+					const renderPage = pageNum => {
 						pdf.getPage(pageNum).then(page => {
 							const viewport = page.getViewport({
 								scale: 1,

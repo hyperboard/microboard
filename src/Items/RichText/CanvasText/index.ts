@@ -317,7 +317,7 @@ function setBlockNodeCoordinates(blockNode, x, y) {
 		let highestBlock;
 		let xOffset = 0;
 		let leading = 0;
-		let lineBoxHeight = 0;
+		const lineBoxHeight = 0;
 
 		if (line.length === 0) {
 			continue;
@@ -495,10 +495,16 @@ function align(nodes, maxWidth) {
 			case "left":
 				break;
 			case "center":
-				alignToCenter(node, maxWidth === Infinity ? maxNodeWidth : maxWidth);
+				alignToCenter(
+					node,
+					maxWidth === Infinity ? maxNodeWidth : maxWidth,
+				);
 				break;
 			case "right":
-				alignToRight(node, maxWidth === Infinity ? maxNodeWidth : maxWidth);
+				alignToRight(
+					node,
+					maxWidth === Infinity ? maxNodeWidth : maxWidth,
+				);
 				break;
 		}
 	}
@@ -511,9 +517,8 @@ function alignToCenter(node, maxWidth) {
 		for (const block of line) {
 			lineWidth += block.width;
 		}
-		let xOffset = (maxWidth - lineWidth) / 2;
+		const xOffset = (maxWidth - lineWidth) / 2;
 		if (maxWidth === Infinity) {
-
 		}
 		for (const block of line) {
 			block.x += xOffset;
@@ -528,9 +533,8 @@ function alignToRight(node, maxWidth) {
 		for (const block of line) {
 			lineWidth += block.width;
 		}
-		let xOffset = maxWidth - lineWidth;
+		const xOffset = maxWidth - lineWidth;
 		if (maxWidth === Infinity) {
-
 		}
 		for (const block of line) {
 			block.x += xOffset;

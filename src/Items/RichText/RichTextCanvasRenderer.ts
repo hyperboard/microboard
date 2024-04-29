@@ -1,1 +1,1 @@
-export { getBlockNodes } from "./CanvasText/index.js"
+export { getBlockNodes } from "./CanvasText/index.js";

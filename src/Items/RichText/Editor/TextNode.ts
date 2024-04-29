@@ -1,4 +1,4 @@
-import {HorisontalAlignment} from "../../Alignment";
+import { HorisontalAlignment } from "../../Alignment";
 
 export const TextStyles = [
 	"bold",

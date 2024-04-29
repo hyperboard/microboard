@@ -320,7 +320,7 @@ export class Board {
 		let minY = Infinity;
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
-			let { translateX, translateY } = itemData.transformation;
+			const { translateX, translateY } = itemData.transformation;
 
 			if (translateX < minX) {
 				minX = translateX;

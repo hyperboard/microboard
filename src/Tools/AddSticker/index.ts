@@ -1,1 +1,1 @@
-export {AddSticker} from "./AddSticker";
+export { AddSticker } from "./AddSticker";
