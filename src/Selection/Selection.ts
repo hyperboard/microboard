@@ -805,15 +805,19 @@ export class Selection {
 	}
 
 	bringToFront(): void {
-		this.items.list().forEach(item => {
-			this.board.items.index.bringToFront(item);
-		});
+		if (this.items.isSingle()) {
+			this.board.items.index.bringToFront(this.items.list()[0]);
+		} else {
+			this.board.items.index.bringManyToFront(this.items.list());
+		}
 	}
 
 	sendToBack(): void {
-		this.items.list().forEach(item => {
-			this.board.items.index.sendToBack(item);
-		});
+		if (this.items.isSingle()) {
+			this.board.items.index.sendToBack(this.items.list()[0]);
+		} else {
+			this.board.items.index.sendManyToBack(this.items.list());
+		}
 	}
 
 	duplicate(): void {

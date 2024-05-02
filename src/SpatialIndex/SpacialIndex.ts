@@ -43,7 +43,7 @@ export class SpatialIndex {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
 		this.array.splice(zIndex, 0, item);
-		this.change(item);
+		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
@@ -51,7 +51,19 @@ export class SpatialIndex {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
 		this.array.unshift(item);
-		this.change(item);
+		this.array.forEach(this.change.bind(this));
+		this.subject.publish(this.items);
+	}
+
+	sendManyToBack(items: Item[]) {
+		const newItems: Item[] = [...items];
+		this.array.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		this.array = newItems;
+		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
@@ -59,7 +71,20 @@ export class SpatialIndex {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
 		this.array.push(item);
-		this.change(item);
+		this.array.forEach(this.change.bind(this));
+		this.subject.publish(this.items);
+	}
+
+	bringManyToFront(items: Item[]) {
+		const newItems: Item[] = [];
+		this.array.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		newItems.push(...items);
+		this.array = newItems;
+		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
