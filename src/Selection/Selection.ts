@@ -110,6 +110,11 @@ export class Selection {
 		this.itemsSubject.publish([]);
 	}
 
+	addAll() {
+		const items = this.board.items.listAll();
+		this.add(items);
+	}
+
 	remove(value: Item | Item[]): void {
 		this.items.remove(value);
 		if (Array.isArray(value)) {
