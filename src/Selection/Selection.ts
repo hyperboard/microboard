@@ -113,6 +113,7 @@ export class Selection {
 	addAll() {
 		const items = this.board.items.listAll();
 		this.add(items);
+		this.setContext("SelectByRect");
 	}
 
 	remove(value: Item | Item[]): void {
