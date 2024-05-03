@@ -29,6 +29,7 @@ export class Mbr implements Geometry {
 		public borderColor = "black",
 		public backgroundColor = "none",
 		public strokeWidth = 1,
+		public lineJoin = "miter",
 	) {
 		this.left = toFiniteNumber(left);
 		this.top = toFiniteNumber(top);
@@ -330,9 +331,16 @@ export class Mbr implements Geometry {
 			);
 		}
 
-		ctx.strokeStyle = this.borderColor;
-		ctx.lineWidth = this.strokeWidth;
-		// ctx.stroke(this.path);
-		ctx.strokeRect(this.left, this.top, this.getWidth(), this.getHeight());
+		if (this.strokeWidth) {
+			ctx.strokeStyle = this.borderColor;
+			ctx.lineWidth = this.strokeWidth;
+			// ctx.stroke(this.path);
+			ctx.strokeRect(
+				this.left,
+				this.top,
+				this.getWidth(),
+				this.getHeight(),
+			);
+		}
 	}
 }

@@ -143,6 +143,12 @@ export class Selection {
 		// Set a new timeout and keep its ID
 		this.timeoutID = setTimeout(this.on, 500);
 	};
+	disable(): void {
+		this.isOn = false;
+		this.setContext("None");
+		this.items.removeAll();
+		this.subject.publish(this);
+	}
 
 	setContext(context: SelectionContext): void {
 		this.context = context;

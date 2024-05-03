@@ -11,6 +11,7 @@ import { ToolContext } from "./ToolContext";
 import { BoardTool } from "./BoardTool";
 import { AddSticker } from "./AddSticker";
 import { isIframe } from "lib/isIframe";
+import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -110,6 +111,19 @@ export class Tools extends ToolContext {
 
 	getAddDrawing(): AddDrawing | undefined {
 		return this.tool instanceof AddDrawing ? this.tool : undefined;
+	}
+
+	export(): void {
+		if (this.getExport()) {
+			this.cancel();
+		} else {
+			this.tool = new ExportSnapshot(this.board);
+		}
+		this.publish();
+	}
+
+	getExport(): ExportSnapshot | undefined {
+		return this.tool instanceof ExportSnapshot ? this.tool : undefined;
 	}
 
 	cancel(): void {
