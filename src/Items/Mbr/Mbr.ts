@@ -321,41 +321,19 @@ export class Mbr implements Geometry {
 
 	render(context: DrawingContext): void {
 		const { ctx } = context;
-		// if (this.backgroundColor !== "none") {
-		// 	ctx.fillStyle = this.backgroundColor;
-		// 	ctx.fillRect(
-		// 		this.left,
-		// 		this.top,
-		// 		this.getWidth(),
-		// 		this.getHeight(),
-		// 	);
-		// }
-
-		if (this.blur) {
-			ctx.save();
+		if (this.backgroundColor !== "none") {
 			ctx.fillStyle = this.backgroundColor;
-
 			ctx.fillRect(
 				this.left,
 				this.top,
 				this.getWidth(),
 				this.getHeight(),
 			);
-			ctx.filter = `blur(${this.blur}px)`;
-			ctx.globalAlpha = 0.8;
-			ctx.fillRect(
-				this.left,
-				this.top,
-				this.getWidth(),
-				this.getHeight(),
-			);
-			ctx.restore();
 		}
 
 		if (this.strokeWidth) {
 			ctx.strokeStyle = this.borderColor;
 			ctx.lineWidth = this.strokeWidth;
-			// ctx.stroke(this.path);
 			ctx.strokeRect(
 				this.left,
 				this.top,

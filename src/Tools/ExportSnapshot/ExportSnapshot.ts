@@ -9,6 +9,7 @@ import {
 } from "Board/Selection/Transformer/getResizeType";
 import { Tool } from "Board/Tools/Tool";
 import {
+	BACKGROUND_BLUR,
 	BLUR_BACKGROUND_COLOR,
 	FRAME_DECORATIONS,
 	SELECTION_BOX_HEIGHT,
@@ -207,12 +208,7 @@ export class ExportSnapshot extends Tool {
 			width: this.mbr.getWidth(),
 			height: this.mbr.getHeight(),
 		};
-		// const imageData = ctx.getImageData(
-		// 	clearRect.left,
-		// 	clearRect.top,
-		// 	clearRect.width,
-		// 	clearRect.height,
-		// );
+
 		this.tempCtx.drawImage(ctx.canvas, 0, 0);
 
 		this.tempCtx.fillStyle = BLUR_BACKGROUND_COLOR;
@@ -222,7 +218,7 @@ export class ExportSnapshot extends Tool {
 			this.tempCanvas.width,
 			this.tempCanvas.height,
 		);
-		this.tempCtx.filter = "blur(3px)";
+		this.tempCtx.filter = `blur(${BACKGROUND_BLUR}px)`;
 		this.tempCtx.drawImage(this.tempCanvas, 0, 0);
 
 		ctx.drawImage(
