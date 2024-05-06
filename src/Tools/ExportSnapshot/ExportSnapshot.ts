@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Mbr, Point, Transformation } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { getOppositePoint } from "Board/Selection/Transformer/getOppositePoint";
-import { getProportionalResize } from "Board/Selection/Transformer/getResizeMatrix";
+import { getResize } from "Board/Selection/Transformer/getResizeMatrix";
 import {
 	getResizeType,
 	ResizeType,
@@ -23,6 +23,8 @@ export class ExportSnapshot extends Tool {
 	isDragging = false;
 	resizeType: null | ResizeType = null;
 	oppositePoint: null | Point = null;
+	tempCanvas = document.createElement("canvas")!;
+	tempCtx = this.tempCanvas.getContext("2d")!;
 
 	constructor(private board: Board) {
 		super();
@@ -34,7 +36,7 @@ export class ExportSnapshot extends Tool {
 			cameraCenter.y + SELECTION_BOX_HEIGHT / 2,
 			"transparent",
 			"transparent",
-			0,
+			1,
 		);
 		this.board.selection.disable();
 	}
@@ -47,13 +49,14 @@ export class ExportSnapshot extends Tool {
 
 	resize(): void {
 		if (this.resizeType && this.mbr && this.oppositePoint) {
-			const resize = getProportionalResize(
+			const resize = getResize(
 				this.resizeType,
 				this.board.pointer.point,
 				this.mbr,
 				this.oppositePoint,
 			);
 			this.mbr = resize.mbr;
+			this.mbr.strokeWidth = 0;
 			this.board.tools.publish();
 		}
 	}
@@ -78,23 +81,17 @@ export class ExportSnapshot extends Tool {
 			this.board.camera.getScale(),
 			this.mbr,
 		);
-		if (!resizeType) {
+		if (
+			!resizeType ||
+			resizeType === "bottom" ||
+			resizeType === "left" ||
+			resizeType === "right" ||
+			resizeType === "top"
+		) {
 			return;
 		}
 
 		switch (resizeType) {
-			case "bottom":
-				pointer.setCursor("s-resize");
-				break;
-			case "left":
-				pointer.setCursor("w-resize");
-				break;
-			case "right":
-				pointer.setCursor("e-resize");
-				break;
-			case "top":
-				pointer.setCursor("n-resize");
-				break;
 			case "leftTop":
 				pointer.setCursor("nw-resize");
 				break;
@@ -121,7 +118,6 @@ export class ExportSnapshot extends Tool {
 				this.rectMoveTo(x, y);
 				return true;
 			}
-			console.log(this.isDragging, this.resizeType, this.oppositePoint);
 			if (!this.isDragging && !this.resizeType && !this.oppositePoint) {
 				this.board.camera.translateBy(x, y);
 				return true;
@@ -137,6 +133,14 @@ export class ExportSnapshot extends Tool {
 				this.board.camera.getScale(),
 				this.mbr,
 			) ?? null;
+		if (
+			this.resizeType === "bottom" ||
+			this.resizeType === "left" ||
+			this.resizeType === "top" ||
+			this.resizeType === "right"
+		) {
+			this.resizeType = null;
+		}
 		this.isDown = true;
 		if (
 			this.mbr?.isUnderPoint(this.board.pointer.point) &&
@@ -173,53 +177,95 @@ export class ExportSnapshot extends Tool {
 		this.board.selection.on();
 	}
 
-	renderBlur(context: DrawingContext) {
-		const cameraMbr = this.board.camera.getMbr();
-		const leftMbr = new Mbr(
-			cameraMbr.left,
-			this.mbr.top,
-			this.mbr.left,
-			this.mbr.bottom,
-			"transparent",
-			BLUR_BACKGROUND_COLOR,
-			0,
-		);
-		const topMbr = new Mbr(
-			cameraMbr.left,
-			cameraMbr.top,
-			cameraMbr.right,
-			this.mbr.top,
-			"transparent",
-			BLUR_BACKGROUND_COLOR,
-			0,
-		);
-		const bottomMbr = new Mbr(
-			cameraMbr.left,
-			this.mbr.bottom,
-			cameraMbr.right,
-			cameraMbr.bottom,
-			"transparent",
-			BLUR_BACKGROUND_COLOR,
-			0,
-		);
-		const rightMbr = new Mbr(
-			this.mbr.right,
-			this.mbr.top,
-			cameraMbr.right,
-			this.mbr.bottom,
-			"transparent",
-			BLUR_BACKGROUND_COLOR,
-			0,
-		);
-
-		leftMbr.render(context);
-		topMbr.render(context);
-		bottomMbr.render(context);
-		rightMbr.render(context);
+	renderDecoration(
+		context: DrawingContext,
+		path: Path2D,
+		translateX: number,
+		translateY: number,
+	) {
+		const ctx = context.ctx;
+		ctx.save();
+		ctx.translate(translateX, translateY);
+		ctx.stroke(path);
+		ctx.restore();
 	}
 
 	render(context: DrawingContext): void {
-		this.renderBlur(context);
-		this.mbr.render(context);
+		const cameraMbr = context.camera.getMbr();
+		const ctx = context.ctx;
+		this.tempCanvas.width = ctx.canvas.width;
+		this.tempCanvas.height = ctx.canvas.height;
+
+		const clearRect = {
+			left: this.mbr.left,
+			top: this.mbr.top,
+			width: this.mbr.getWidth(),
+			height: this.mbr.getHeight(),
+		};
+		// const imageData = ctx.getImageData(
+		// 	clearRect.left,
+		// 	clearRect.top,
+		// 	clearRect.width,
+		// 	clearRect.height,
+		// );
+		this.tempCtx.drawImage(ctx.canvas, 0, 0);
+
+		this.tempCtx.fillStyle = BLUR_BACKGROUND_COLOR;
+		this.tempCtx.fillRect(
+			0,
+			0,
+			this.tempCanvas.width,
+			this.tempCanvas.height,
+		);
+		this.tempCtx.filter = "blur(3px)";
+		this.tempCtx.drawImage(this.tempCanvas, 0, 0);
+
+		ctx.drawImage(
+			this.tempCanvas,
+			cameraMbr.left,
+			cameraMbr.top,
+			cameraMbr.getWidth(),
+			cameraMbr.getHeight(),
+		);
+
+		ctx.clearRect(
+			clearRect.left,
+			clearRect.top,
+			clearRect.width,
+			clearRect.height,
+		);
+
+		this.board.items.getInView().forEach(item => {
+			if (item.getMbr().isEnclosedOrCrossedBy(this.mbr)) {
+				item.render(context);
+			}
+		});
+
+		ctx.strokeStyle = "#2291FF";
+		ctx.lineWidth = 6;
+		this.renderDecoration(
+			context,
+			new Path2D("M70 2H22C10.9543 2 2 10.9543 2 22V70"),
+			clearRect.left - 6,
+			clearRect.top - 6,
+		);
+		this.renderDecoration(
+			context,
+			new Path2D("M70 70V22C70 10.9543 61.0457 2 50 2L2 2"),
+			clearRect.left + clearRect.width - 66,
+			clearRect.top - 6,
+		);
+		this.renderDecoration(
+			context,
+			new Path2D("M2 2L2 50C2 61.0457 10.9543 70 22 70H70"),
+			clearRect.left - 6,
+			clearRect.top + clearRect.height - 66,
+		);
+		this.renderDecoration(
+			context,
+			new Path2D("M2 70L50 70C61.0457 70 70 61.0457 70 50L70 2"),
+			clearRect.left + clearRect.width - 66,
+			clearRect.top + clearRect.height - 66,
+		);
 	}
 }

@@ -29,7 +29,7 @@ export class Mbr implements Geometry {
 		public borderColor = "black",
 		public backgroundColor = "none",
 		public strokeWidth = 1,
-		public lineJoin = "miter",
+		public blur = 0,
 	) {
 		this.left = toFiniteNumber(left);
 		this.top = toFiniteNumber(top);
@@ -321,14 +321,35 @@ export class Mbr implements Geometry {
 
 	render(context: DrawingContext): void {
 		const { ctx } = context;
-		if (this.backgroundColor !== "none") {
+		// if (this.backgroundColor !== "none") {
+		// 	ctx.fillStyle = this.backgroundColor;
+		// 	ctx.fillRect(
+		// 		this.left,
+		// 		this.top,
+		// 		this.getWidth(),
+		// 		this.getHeight(),
+		// 	);
+		// }
+
+		if (this.blur) {
+			ctx.save();
 			ctx.fillStyle = this.backgroundColor;
+
 			ctx.fillRect(
 				this.left,
 				this.top,
 				this.getWidth(),
 				this.getHeight(),
 			);
+			ctx.filter = `blur(${this.blur}px)`;
+			ctx.globalAlpha = 0.8;
+			ctx.fillRect(
+				this.left,
+				this.top,
+				this.getWidth(),
+				this.getHeight(),
+			);
+			ctx.restore();
 		}
 
 		if (this.strokeWidth) {
