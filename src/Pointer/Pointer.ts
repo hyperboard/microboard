@@ -1,6 +1,7 @@
-import { Point, Matrix } from "Board/Items";
-import { Cursor } from "./Cursor";
+import { Matrix, Point } from "Board/Items";
+import { cursorsMap } from "View/Cursors/customCursors";
 import { Subject } from "../../Subject";
+import { Cursor, CursorName } from "./Cursor";
 
 export class Pointer {
 	readonly point = new Point();
@@ -9,11 +10,15 @@ export class Pointer {
 	previous = new Point();
 	delta = new Point();
 
-	private cursor: Cursor = "default";
+	private cursor = "default";
 
-	setCursor(cursor: Cursor): void {
+	setCursor(cursor: CursorName): void {
 		if (this.cursor !== cursor) {
-			this.cursor = cursor;
+			if (cursor in cursorsMap) {
+				this.cursor = cursorsMap[cursor] as Cursor;
+			} else {
+				this.cursor = cursor;
+			}
 			this.subject.publish(this);
 		}
 	}

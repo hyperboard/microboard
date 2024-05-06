@@ -80,7 +80,7 @@ export class Path implements Geometry, PathStylize {
 	private height: number;
 	private maxDimension: number;
 	private linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
-	connectedItemType = '';
+	connectedItemType = "";
 
 	constructor(
 		private segments: Segment[] = [],
@@ -92,7 +92,7 @@ export class Path implements Geometry, PathStylize {
 		private backgroundOpacity = 1,
 		private borderOpacity = 1,
 		private shadowColor: string = "transparent",
-		private shadowSize: number = 0
+		private shadowSize: number = 0,
 	) {
 		this.updateCache();
 		const mbr = this.getMbr();
@@ -329,13 +329,13 @@ export class Path implements Geometry, PathStylize {
 				ctx.fill(this.path2d!);
 			}
 		} else {
-			if(this.shadowSize) {
-				ctx.shadowColor = this.shadowColor
-				ctx.shadowBlur = this.shadowSize
-				ctx.shadowOffsetX = this.shadowSize
-				ctx.shadowOffsetY = this.shadowSize
+			if (this.shadowSize) {
+				ctx.shadowColor = this.shadowColor;
+				ctx.shadowBlur = this.shadowSize;
+				ctx.shadowOffsetX = this.shadowSize;
+				ctx.shadowOffsetY = this.shadowSize;
 			} else {
-				ctx.shadowColor = 'transparent'
+				ctx.shadowColor = "transparent";
 			}
 
 			ctx.strokeStyle = this.borderColor;
@@ -345,14 +345,14 @@ export class Path implements Geometry, PathStylize {
 				ctx.fillStyle = this.backgroundColor;
 				ctx.fill(this.path2d!);
 			}
-		}		
+		}
 
 		// https://github.com/excalidraw/excalidraw/commit/760fd7b3a685e61e73bf0e34f3983ae0dd341b6a#diff-283e04402ba4c222353886885899d9b4ea46a012acc00d7121b3f2afd7e286f8R1084
-		
+
 		// if(this.connectedItemType === 'Connector') {
 		// 	// TODO: Better implementation
 		// 	ctx.globalCompositeOperation = "destination-out";
-    // 	// ctx.fillStyle = 'red';
+		// 	// ctx.fillStyle = 'red';
 		// 	ctx.fillRect(this.x + this.width/2 - 25 , this.y + this.height/2 - 25, 50, 50);
 		// 	ctx.globalCompositeOperation = 'source-over';
 		// }
@@ -388,7 +388,7 @@ export class Path implements Geometry, PathStylize {
 			this.backgroundOpacity,
 			this.borderOpacity,
 			this.shadowColor,
-			this.shadowSize
+			this.shadowSize,
 		);
 	}
 
@@ -402,6 +402,6 @@ export class Path implements Geometry, PathStylize {
 
 	addConnectedItemType(name: string): this {
 		this.connectedItemType = name;
-		return this
+		return this;
 	}
 }

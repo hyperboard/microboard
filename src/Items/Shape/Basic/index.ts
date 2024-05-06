@@ -19,14 +19,21 @@ import { Trapezoid } from "./Trapezoid";
 import { Rectangle } from "./Rectangle";
 import { Triangle } from "./Triangle";
 import { PredefinedProcess } from "./PredefinedProcess";
+import { ReversedTriangle } from "./ReversedTriangle";
+import { ReversedParallelogram } from "./ReversedParallelogram";
+import { ArrowBlockLeft } from "./ArrowBlockLeft";
+import { ArrowBlockRight } from "./ArrowBlockRigth";
 
 export const Shapes = {
 	Rectangle,
 	Triangle,
+	ReversedTriangle,
 	Circle,
 	ArrowLeft,
 	ArrowLeftRight,
 	ArrowRight,
+	ArrowBlockLeft,
+	ArrowBlockRight,
 	BracesLeft,
 	BracesRight,
 	Cloud,
@@ -35,13 +42,14 @@ export const Shapes = {
 	Hexagon,
 	Octagon,
 	Parallelogram,
+	ReversedParallelogram,
 	Pentagon,
 	PredefinedProcess,
 	Rhombus,
 	RoundedRectangle,
 	SpeachBubble,
 	Star,
-	Trapezoid
+	Trapezoid,
 } as const;
 
 export type ShapeType = keyof typeof Shapes;

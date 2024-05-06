@@ -18,6 +18,8 @@ import {
 	ControlPoint,
 } from "Board/Items/Connector";
 import { toFiniteNumber } from "utils";
+import { Sticker } from "Board/Items/Sticker";
+import { SELECTION_COLOR } from "View/Tools/Selection";
 
 const defaultShapeData = new ShapeData();
 
@@ -198,7 +200,11 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (["Shape", "Sticker", "RichText", "Connector"].indexOf(item.itemType) > -1) {
+		if (
+			["Shape", "Sticker", "RichText", "Connector"].indexOf(
+				item.itemType,
+			) > -1
+		) {
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -239,7 +245,9 @@ export class Selection {
 		}
 		if (
 			!item ||
-			(["RichText", "Shape", "Sticker", "Connector"].indexOf(item.itemType) === -1) 
+			["RichText", "Shape", "Sticker", "Connector"].indexOf(
+				item.itemType,
+			) === -1
 		) {
 			this.textToEdit = undefined;
 			return;
@@ -390,6 +398,14 @@ export class Selection {
 		return tmp?.getBackgroundColor() || defaultShapeData.backgroundColor;
 	}
 
+	getBorderStyle(): string {
+		const shape = this.items.getItemsByItemTypes([
+			"Shape",
+			"Drawing",
+		])[0] as Shape | Drawing | undefined;
+		return shape?.getBorderStyle() || defaultShapeData.borderStyle;
+	}
+
 	getStrokeColor(): string {
 		const shape = this.items.getItemsByItemTypes([
 			"Shape",
@@ -445,6 +461,13 @@ export class Selection {
 			item: this.items.ids(),
 			lineStyle: style,
 		});
+	}
+
+	getConnectorLineStyle(): string {
+		const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as
+			| Connector
+			| undefined;
+		return pointer?.getLineStyle() || "none";
 	}
 
 	getTextToEdit(): RichText[] {
@@ -627,17 +650,12 @@ export class Selection {
 	}
 
 	setFontStyle(fontStyleList: TextStyle[]): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionFontStyle(fontStyleList);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionFontStyle(fontStyleList);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontStyle(fontStyleList, this.context);
+			} else {
+				single.text.setSelectionFontStyle(fontStyleList, this.context);
 			}
 		} else if (this.items.isItemTypes(["Sticker"])) {
 			this.items
@@ -654,17 +672,16 @@ export class Selection {
 	}
 
 	setFontColor(fontColor: string): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionFontColor(fontColor);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionFontColor(fontColor);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontColor(fontColor, this.context);
+			} else if (
+				single instanceof Shape ||
+				single instanceof Sticker ||
+				single instanceof Connector
+			) {
+				single.text.setSelectionFontColor(fontColor, this.context);
 			}
 		} else {
 			this.emit({
@@ -677,17 +694,19 @@ export class Selection {
 	}
 
 	setFontHighlight(fontHighlight: string): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionFontHighlight(fontHighlight);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionFontHighlight(fontHighlight);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontHighlight(fontHighlight, this.context);
+			} else if (
+				single instanceof Shape ||
+				single instanceof Sticker ||
+				single instanceof Connector
+			) {
+				single.text.setSelectionFontHighlight(
+					fontHighlight,
+					this.context,
+				);
 			}
 		} else {
 			{
@@ -702,19 +721,18 @@ export class Selection {
 	}
 
 	setHorisontalAlignment(horisontalAlignment: HorisontalAlignment): void {
-		if (this.items.isSingle()) {
-			const item = this.items.list()[0];
-			if (item) {
-				if (
-					["Shape", "Sticker", "Connector"].indexOf(item.itemType) !==
-					-1
-				) {
-					item.text.setSelectionHorisontalAlignment(
-						horisontalAlignment,
-					);
-				} else if (item.itemType === "RichText") {
-					item.setSelectionHorisontalAlignment(horisontalAlignment);
-				}
+		const single = this.items.getSingle();
+		if (single) {
+			if (
+				single instanceof Shape ||
+				single instanceof Sticker ||
+				single instanceof Connector
+			) {
+				single.text.setSelectionHorisontalAlignment(
+					horisontalAlignment,
+				);
+			} else if (single instanceof RichText) {
+				single.setSelectionHorisontalAlignment(horisontalAlignment);
 			}
 		} else if (this.items.isItemTypes(["Sticker"])) {
 			this.items
@@ -770,6 +788,18 @@ export class Selection {
 		});
 	}
 
+	bringToFront(): void {
+		this.items.list().forEach(item => {
+			this.board.items.index.bringToFront(item);
+		});
+	}
+
+	sendToBack(): void {
+		this.items.list().forEach(item => {
+			this.board.items.index.sendToBack(item);
+		});
+	}
+
 	duplicate(): void {
 		this.board.duplicate(this.copy());
 	}
@@ -782,7 +812,7 @@ export class Selection {
 			for (const item of this.items.list()) {
 				const mbr = item.getMbr();
 				mbr.strokeWidth = 1 / context.matrix.scaleX;
-				mbr.borderColor = "rgba(0, 0, 255, 0.4)";
+				mbr.borderColor = SELECTION_COLOR;
 				mbr.render(context);
 			}
 		}

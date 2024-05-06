@@ -11,6 +11,7 @@ import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
 import { Anchor } from "Board/Items/Anchor";
+import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -191,7 +192,7 @@ export class Transformer extends Tool {
 		const mbr = this.mbr;
 		if (mbr) {
 			mbr.strokeWidth = 1 / context.matrix.scaleX;
-			mbr.borderColor = "rgba(0, 0, 255, 0.8";
+			mbr.borderColor = SELECTION_COLOR;
 			mbr.render(context);
 		}
 
@@ -221,8 +222,8 @@ export class Transformer extends Tool {
 					point.x,
 					point.y,
 					5,
-					"rgba(0,0,255,0.8)",
-					"rgba(255,255,255,0.8)",
+					SELECTION_COLOR,
+					SELECTION_ANCHOR_COLOR,
 					1,
 				);
 				anchors.push(circle);

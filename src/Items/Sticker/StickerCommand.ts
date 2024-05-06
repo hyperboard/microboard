@@ -1,12 +1,15 @@
-import {StickerOperation} from "./StickerOperation";
-import {Command} from "../../Events";
-import {mapItemsByOperation} from "../ItemsCommandUtils";
-import {Sticker} from "./index";
+import { StickerOperation } from "./StickerOperation";
+import { Command } from "../../Events";
+import { mapItemsByOperation } from "../ItemsCommandUtils";
+import { Sticker } from "./index";
 
 export class StickerCommand implements Command {
 	private reverse = this.getReverse();
 
-	constructor(private sticker: Sticker[], private operation: StickerOperation) {}
+	constructor(
+		private sticker: Sticker[],
+		private operation: StickerOperation,
+	) {}
 
 	apply(): void {
 		for (const sticker of this.sticker) {

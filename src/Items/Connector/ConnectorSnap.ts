@@ -265,7 +265,10 @@ export class ConnectorSnap {
 		if (item) {
 			if (!anchor) {
 				const point = item.getNearestEdgePointTo(pointer);
-				if (point.getDistance(pointer) < this.distance.border  || !this.hover.isTimeoutElapsed) {
+				if (
+					point.getDistance(pointer) < this.distance.border ||
+					!this.hover.isTimeoutElapsed
+				) {
 					this.snap.point = new Anchor(
 						point.x,
 						point.y,

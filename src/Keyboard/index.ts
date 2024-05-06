@@ -13,9 +13,9 @@ export class Keyboard {
 		this.isCtrl = event.ctrlKey;
 
 		this.isCmd = event.metaKey || event.key === "Meta";
-    if (navigator.platform.match("Mac") && this.isCmd) {
-        this.isCtrl = true;
-    }
+		if (navigator.platform.match("Mac") && this.isCmd) {
+			this.isCtrl = true;
+		}
 	}
 
 	keyUp(event: KeyboardEvent): void {

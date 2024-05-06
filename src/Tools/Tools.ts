@@ -9,7 +9,7 @@ import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { BoardTool } from "./BoardTool";
-import {AddSticker} from "./AddSticker";
+import { AddSticker } from "./AddSticker";
 import { isIframe } from "lib/isIframe";
 
 export class Tools extends ToolContext {
@@ -88,7 +88,7 @@ export class Tools extends ToolContext {
 
 	addConnector(): void {
 		if (this.getAddConnector() && !isIframe()) {
-				this.cancel();
+			this.cancel();
 		} else {
 			this.tool = new AddConnector(this.board);
 		}

@@ -105,7 +105,7 @@ function mergeTransformationOperations(
 					x: opA.translate.x + opB.translate.x,
 					y: opA.translate.y + opB.translate.y,
 				},
-			}
+			};
 		default:
 			return;
 	}

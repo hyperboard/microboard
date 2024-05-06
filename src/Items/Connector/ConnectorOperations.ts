@@ -1,6 +1,10 @@
 import { BoardPoint, ControlPointData } from "./ControlPoint";
 import { ConnectorPointerStyle } from "./Pointers/ConnectorPointerStyles";
-import { ConnectionLineWidth, ConnectorLineStyle, ConnectorTextStyle } from "./Connector";
+import {
+	ConnectionLineWidth,
+	ConnectorLineStyle,
+	ConnectorTextStyle,
+} from "./Connector";
 import { TransformationData } from "../Transformation";
 import { RichTextData } from "../RichText";
 

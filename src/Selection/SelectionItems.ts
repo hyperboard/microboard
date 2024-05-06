@@ -59,6 +59,16 @@ export class SelectionItems {
 		return true;
 	}
 
+	isAllItemsType(itemType: string): boolean {
+		if (this.isEmpty()) {
+			return false;
+		}
+
+		return Array.from(this.items).every(
+			([, item]) => item.itemType === itemType,
+		);
+	}
+
 	isItemTypes(itemTypes: string[]): boolean {
 		if (this.isEmpty()) {
 			return false;
@@ -109,7 +119,9 @@ export class SelectionItems {
 
 	getMbr(): Mbr | undefined {
 		const items = this.list();
-		if (items.length === 0) {return;}
+		if (items.length === 0) {
+			return;
+		}
 		const mbr = items[0].getMbr();
 		items.slice(1).forEach(item => mbr.combine(item.getMbr()));
 		return mbr;

@@ -1,4 +1,4 @@
-export const cursors = [
+export const defaultCursors = [
 	"default",
 	"auto",
 	"text",
@@ -39,10 +39,13 @@ export const cursors = [
 	// 	| "url(.cur),auto"
 ] as const;
 
-export const penCursor =
-	"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAT5JREFUOI2d0rFLlWEUBvDfueLFIUHDSbibCEIOanMkbiINCW7amjpEd2uTCFp0aG8LBCcHcVCEJB3ETGjSyb8gaXHK4W3w/eS7eu8ndeB94Zzn8PCccx6YRl9Kyf+8GsZxERE7EbEcEQ3/GI9wigYWsIUfWMEEokrBzcdbvLkt0os5rOMC4w8R9GQVvS0gTXzEIWY6EuTm13hXyhs4Qj0r2sZiFUE3TvA455uYLOF1fMGn8l5qxSZTStcZbEbENC5TSl9L+J+85N/YiIieAiirqGXZPzHQduabq51jF33tGmbxHf0dCNYwj5c4aH8apvI+hu7UR7GHwHssdjYIT3CMp6Xx9jGCYXxDV6XPMVh4AEvZnYEdjLWcsYKk8MBZNtwrrBZ45KbKiIg6PuMXnuF5Sunq3hkfUBL4gBfl+l/GUJu0/4U0egAAAABJRU5ErkJggg==), auto";
+export const customCursors = ["pen"] as const;
 
-export type Cursor = typeof cursors[number];
+export type Cursor = typeof defaultCursors[number] | string;
+export type CursorName =
+	| typeof defaultCursors[number]
+	| typeof customCursors[number];
+export type CursorsMap = Partial<Record<CursorName, Cursor>>;
 
 /*
 export class CursorMapChangeOnToolChange implements Observer<ToolName> {
