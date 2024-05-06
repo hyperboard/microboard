@@ -18,3 +18,21 @@ export interface SnapshotSelection {
 	endX: number;
 	endY: number;
 }
+
+export type ExportFrameDecorationDirection = `${"top" | "bottom"}-${
+	| "left"
+	| "right"}`;
+
+export type ExportFrameDecoration = {
+	path: Path2D;
+	color: string;
+	width: number;
+	height: number;
+	lineWidth: number;
+	offset?: number;
+};
+
+export type ExportFrameDecorationRecord = Record<
+	ExportFrameDecorationDirection,
+	ExportFrameDecoration
+>;

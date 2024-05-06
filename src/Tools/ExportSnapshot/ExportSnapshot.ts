@@ -10,6 +10,7 @@ import {
 import { Tool } from "Board/Tools/Tool";
 import {
 	BLUR_BACKGROUND_COLOR,
+	FRAME_DECORATIONS,
 	SELECTION_BOX_HEIGHT,
 	SELECTION_BOX_WIDTH,
 } from "View/Tools/ExportBoard";
@@ -182,9 +183,13 @@ export class ExportSnapshot extends Tool {
 		path: Path2D,
 		translateX: number,
 		translateY: number,
+		color: string,
+		lineWidth: number,
 	) {
 		const ctx = context.ctx;
 		ctx.save();
+		ctx.strokeStyle = color;
+		ctx.lineWidth = lineWidth;
 		ctx.translate(translateX, translateY);
 		ctx.stroke(path);
 		ctx.restore();
@@ -241,31 +246,43 @@ export class ExportSnapshot extends Tool {
 			}
 		});
 
-		ctx.strokeStyle = "#2291FF";
-		ctx.lineWidth = 6;
-		this.renderDecoration(
-			context,
-			new Path2D("M70 2H22C10.9543 2 2 10.9543 2 22V70"),
-			clearRect.left - 6,
-			clearRect.top - 6,
-		);
-		this.renderDecoration(
-			context,
-			new Path2D("M70 70V22C70 10.9543 61.0457 2 50 2L2 2"),
-			clearRect.left + clearRect.width - 66,
-			clearRect.top - 6,
-		);
-		this.renderDecoration(
-			context,
-			new Path2D("M2 2L2 50C2 61.0457 10.9543 70 22 70H70"),
-			clearRect.left - 6,
-			clearRect.top + clearRect.height - 66,
-		);
-		this.renderDecoration(
-			context,
-			new Path2D("M2 70L50 70C61.0457 70 70 61.0457 70 50L70 2"),
-			clearRect.left + clearRect.width - 66,
-			clearRect.top + clearRect.height - 66,
-		);
+		if (FRAME_DECORATIONS) {
+			const topLeft = FRAME_DECORATIONS["top-left"];
+			this.renderDecoration(
+				context,
+				topLeft.path,
+				clearRect.left - topLeft.offset! ?? 0,
+				clearRect.top - topLeft.offset! ?? 0,
+				topLeft.color,
+				topLeft.lineWidth,
+			);
+			const topRight = FRAME_DECORATIONS["top-right"];
+			this.renderDecoration(
+				context,
+				topRight.path,
+				clearRect.left + clearRect.width - topRight.width,
+				clearRect.top - topRight.offset! ?? 0,
+				topRight.color,
+				topRight.lineWidth,
+			);
+			const bottomLeft = FRAME_DECORATIONS["bottom-left"];
+			this.renderDecoration(
+				context,
+				bottomLeft.path,
+				clearRect.left - bottomLeft.offset! ?? 0,
+				clearRect.top + clearRect.height - bottomLeft.height,
+				bottomLeft.color,
+				bottomLeft.lineWidth,
+			);
+			const bottomRight = FRAME_DECORATIONS["bottom-right"];
+			this.renderDecoration(
+				context,
+				bottomRight.path,
+				clearRect.left + clearRect.width - bottomRight.width,
+				clearRect.top + clearRect.height - bottomRight.width,
+				bottomRight.color,
+				bottomRight.lineWidth,
+			);
+		}
 	}
 }
