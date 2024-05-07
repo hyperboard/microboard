@@ -10,6 +10,7 @@ import {
 } from "../Line";
 import { Geometry } from "../Geometry";
 import { GeometricNormal } from "../GeometricNormal";
+import { BorderStyle, scalePatterns } from "../Path";
 
 /**
  * The minimum bounding rectangle (MBR), also known as bounding box (BBOX) or envelope.
@@ -28,6 +29,7 @@ export class Mbr implements Geometry {
 		public borderColor = "black",
 		public backgroundColor = "none",
 		public strokeWidth = 1,
+		public borderStyle: BorderStyle = "solid",
 	) {
 		this.left = toFiniteNumber(left);
 		this.top = toFiniteNumber(top);
@@ -331,6 +333,7 @@ export class Mbr implements Geometry {
 
 		ctx.strokeStyle = this.borderColor;
 		ctx.lineWidth = this.strokeWidth;
+		ctx.setLineDash(scalePatterns(this.strokeWidth)[this.borderStyle]);
 		// ctx.stroke(this.path);
 		ctx.strokeRect(this.left, this.top, this.getWidth(), this.getHeight());
 	}
