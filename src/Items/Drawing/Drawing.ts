@@ -195,6 +195,7 @@ export class Drawing extends Mbr {
 		ctx.save();
 		ctx.strokeStyle = this.borderColor;
 		ctx.lineWidth = this.strokeWidth;
+		ctx.lineCap = "round";
 		ctx.setLineDash(this.linePattern);
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.stroke(this.path2d!);
