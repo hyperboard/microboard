@@ -16,7 +16,6 @@ import { GeometricNormal } from "../GeometricNormal";
  * https://en.wikipedia.org/wiki/Minimum_bounding_rectangle
  */
 export class Mbr implements Geometry {
-	path: Path2D;
 	static fromDomRect(rect: DOMRect): Mbr {
 		return new Mbr(rect.left, rect.top, rect.right, rect.bottom);
 	}
@@ -245,7 +244,7 @@ export class Mbr implements Geometry {
 	}
 
 	getIntersectionPoints(segment: Line): Point[] {
-		const points = [];
+		const points: Point[] = [];
 		for (const line of this.getLines()) {
 			const relation = getLinesRelationType(segment, line);
 			if (relation.type === "Intersecting") {

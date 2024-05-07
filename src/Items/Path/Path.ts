@@ -303,7 +303,7 @@ export class Path implements Geometry, PathStylize {
 				bestCandidate = candidate;
 			}
 		}
-		return bestCandidate;
+		return bestCandidate || new GeometricNormal(point, point, point);
 	}
 
 	render(context: DrawingContext): void {

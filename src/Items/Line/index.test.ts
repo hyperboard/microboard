@@ -1,82 +1,82 @@
-import { assert } from "chai";
+import { describe, test, expect } from "@jest/globals";
 import { getLinesRelationType, Line } from ".";
 import { Mbr } from "../Mbr";
 import { Point } from "../Point";
 
 describe("getLinesRelationType", () => {
-	it("finds intersecting lines", () => {
+	test("finds intersecting lines", () => {
 		const lineA = new Line(new Point(10, 10), new Point(50, 50));
 		const lineB = new Line(new Point(10, 50), new Point(50, 10));
 		const relation = getLinesRelationType(lineA, lineB);
-		assert.equal(relation.type, "Intersecting");
+		expect(relation.type).toBe("Intersecting");
 	});
 
-	it("finds non-intersecting lines", () => {
+	test("finds non-intersecting lines", () => {
 		const lineA = new Line(new Point(10, 10), new Point(50, 50));
 		const lineB = new Line(new Point(10, 50), new Point(20, 50));
 		const relationAB = getLinesRelationType(lineA, lineB);
-		assert.equal(relationAB.type, "NonIntersecting");
+		expect(relationAB.type).toBe("NonIntersecting");
 		const lineC = new Line(
 			new Point(9.647128004639463, 24.409444195871874),
 			new Point(Number.MAX_VALUE, 24.409444195871874),
 		);
 		const lineD = new Line(new Point(0, 25), new Point(25, 0));
 		const relationCD = getLinesRelationType(lineC, lineD);
-		assert.equal(relationCD.type, "NonIntersecting");
+		expect(relationCD.type).toBe("NonIntersecting");
 	});
 
-	it("finds parallel lines", () => {
-		const lineA = new Line(new Point(10, 10), new Point(50, 50));
-		const lineB = new Line(new Point(20, 20), new Point(20, 50));
+	test("finds parallel lines", () => {
+		const lineA = new Line(new Point(10, 10), new Point(50, 10));
+		const lineB = new Line(new Point(10, 20), new Point(50, 20));
 		const relation = getLinesRelationType(lineA, lineB);
-		assert.equal(relation.type, "Parallel");
+		expect(relation.type).toBe("Parallel");
 	});
 
-	it("finds colenear lines", () => {
+	test("finds colinear lines", () => {
 		const lineA = new Line(new Point(10, 10), new Point(50, 50));
 		const lineB = new Line(new Point(60, 60), new Point(100, 100));
 		const relation = getLinesRelationType(lineA, lineB);
-		assert.equal(relation.type, "Colenear");
+		expect(relation.type).toBe("Colenear");
 	});
 });
 
 describe("getIntersectionPointFromIntersectingLines", () => {});
 
 describe("Line", () => {
-	it("finds intersection point", () => {
+	test("finds intersection point", () => {
 		const lineA = new Line(new Point(10, 10), new Point(50, 50));
 		const lineB = new Line(new Point(10, 50), new Point(50, 10));
 		const intersection = lineA.getIntersectionPoints(lineB)[0];
-		assert.equal(intersection.x, 30);
-		assert.equal(intersection.y, 30);
+		expect(intersection.x).toBe(30);
+		expect(intersection.y).toBe(30);
 	});
 
-	it("finds bounds", () => {
+	test("finds bounds", () => {
 		const line = new Line(new Point(5, 5), new Point(50, 50));
 		const rect = line.getMbr();
-		assert.equal(rect.left, 5);
-		assert.equal(rect.top, 5);
-		assert.equal(rect.right, 50);
-		assert.equal(rect.bottom, 50);
+		expect(rect.left).toBe(5);
+		expect(rect.top).toBe(5);
+		expect(rect.right).toBe(50);
+		expect(rect.bottom).toBe(50);
 	});
 
-	it("finds if item is in bounds by point", () => {
+	test("finds if item is in bounds by point", () => {
 		const line = new Line(new Point(5, 5), new Point(50, 50));
 		const intersects = new Mbr(0, -10, 40, 100);
-		assert.isTrue(line.isEnclosedOrCrossedBy(intersects));
+		expect(line.isEnclosedOrCrossedBy(intersects)).toBeTruthy();
 		const contains = new Mbr(-10, -10, 110, 110);
-		assert.isTrue(line.isEnclosedOrCrossedBy(contains));
+		expect(line.isEnclosedOrCrossedBy(contains)).toBeTruthy();
 		const notInBounds = new Mbr(55, 55, 110, 110);
-		assert.isTrue(line.isEnclosedOrCrossedBy(notInBounds));
+		expect(!line.isEnclosedOrCrossedBy(notInBounds)).toBeTruthy();
 	});
 
-	it("finds intersection with infinite line", () => {
+	test("finds intersection with infinite line", () => {
 		const lineA = new Line(new Point(5, 5), new Point(50, 50));
 		const lineB = new Line(
 			new Point(5, 10),
 			new Point(Number.MAX_VALUE, 10),
 		);
 		const intersections = lineA.getIntersectionPoints(lineB);
-		assert.equal(intersections.length, 1);
+		expect(intersections.length).toBe(1);
 	});
 });
