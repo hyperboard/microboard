@@ -121,18 +121,16 @@ export class Board {
 				}
 				return this.index.moveSecondAfterFirst(first, second);
 			case "bringToFront": {
-				const item = this.items.getById(op.item);
-				if (!item) {
-					return;
-				}
-				return this.index.bringToFront(item);
+				const items = op.item
+					.map(item => this.items.getById(item))
+					.filter((item): item is Item => item !== undefined);
+				return this.index.bringManyToFront(items);
 			}
 			case "sendToBack": {
-				const item = this.items.getById(op.item);
-				if (!item) {
-					return;
-				}
-				return this.index.sendToBack(item);
+				const items = op.item
+					.map(item => this.items.getById(item))
+					.filter((item): item is Item => item !== undefined);
+				return this.index.sendManyToBack(items);
 			}
 			case "add":
 				const item = this.createItem(op.item, op.data);
@@ -270,19 +268,25 @@ export class Board {
 		});
 	}
 
-	bringToFront(item: Item): void {
+	bringToFront(items: Item | Item[]): void {
+		if (!Array.isArray(items)) {
+			items = [items];
+		}
 		this.emit({
 			class: "Board",
 			method: "bringToFront",
-			item: item.getId(),
+			item: items.map(item => item.getId()),
 		});
 	}
 
-	sendToBack(item: Item): void {
+	sendToBack(items: Item | Item[]): void {
+		if (!Array.isArray(items)) {
+			items = [items];
+		}
 		this.emit({
 			class: "Board",
 			method: "sendToBack",
-			item: item.getId(),
+			item: items.map(item => item.getId()),
 		});
 	}
 

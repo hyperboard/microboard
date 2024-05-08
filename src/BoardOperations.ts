@@ -37,13 +37,13 @@ interface MoveSecondAfterFirst {
 interface BringToFront {
 	class: "Board";
 	method: "bringToFront";
-	item: string;
+	item: string[];
 }
 
 interface SendToBack {
 	class: "Board";
 	method: "sendToBack";
-	item: string;
+	item: string[];
 }
 
 interface Paste {

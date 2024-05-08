@@ -811,19 +811,11 @@ export class Selection {
 	}
 
 	bringToFront(): void {
-		if (this.items.isSingle()) {
-			this.board.items.index.bringToFront(this.items.list()[0]);
-		} else {
-			this.board.items.index.bringManyToFront(this.items.list());
-		}
+		this.board.bringToFront(this.items.list());
 	}
 
 	sendToBack(): void {
-		if (this.items.isSingle()) {
-			this.board.items.index.sendToBack(this.items.list()[0]);
-		} else {
-			this.board.items.index.sendManyToBack(this.items.list());
-		}
+		this.board.sendToBack(this.items.list());
 	}
 
 	duplicate(): void {

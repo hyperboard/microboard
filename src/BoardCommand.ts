@@ -1,6 +1,7 @@
 import { Command } from "./Events";
 import { BoardOperation } from "./BoardOperations";
 import { Board } from "Board";
+import { Item } from "./Items";
 
 export class BoardCommand implements Command {
 	private reverse = this.getReverse();
@@ -25,8 +26,26 @@ export class BoardCommand implements Command {
 		const operation = this.operation;
 
 		switch (operation.method) {
-			case "bringToFront":
-			case "sendToBack":
+			case "bringToFront": {
+				const items = operation.item
+					.map(item => this.board.items.getById(item))
+					.filter((item): item is Item => item !== undefined);
+				return {
+					class: "Board",
+					method: "sendToBack",
+					item: items.map(item => item.getId()),
+				};
+			}
+			case "sendToBack": {
+				const items = operation.item
+					.map(item => this.board.items.getById(item))
+					.filter((item): item is Item => item !== undefined);
+				return {
+					class: "Board",
+					method: "bringToFront",
+					item: items.map(item => item.getId()),
+				};
+			}
 			case "moveSecondAfterFirst":
 			case "moveSecondBeforeFirst":
 			case "moveToZIndex": {
