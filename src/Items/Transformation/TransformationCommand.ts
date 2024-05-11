@@ -118,6 +118,10 @@ export class TransformationCommand implements Command {
 					};
 				});
 			}
+			default:
+				return [
+					{ item: this.transformation[0], operation: this.operation },
+				];
 		}
 	}
 }

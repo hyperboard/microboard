@@ -12,7 +12,7 @@ import { BoardCommand } from "./BoardCommand";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
 import { ImageItem } from "./Items/Image";
 import { Drawing } from "./Items/Drawing";
-import { Group } from "./Items/Group";
+// import { Group } from "./Items/Group";
 import { Sticker } from "./Items/Sticker";
 import { DrawingContext } from "./Items/DrawingContext";
 import { Connection } from "App/Connection";
@@ -89,6 +89,8 @@ export class Board {
 		switch (op.class) {
 			case "Board":
 				return this.applyBoardOperation(op);
+			case "Events":
+				return;
 			default:
 				return this.applyItemOperation(op);
 		}
@@ -200,8 +202,10 @@ export class Board {
 					.deserialize(data);
 			case "Drawing":
 				return new Drawing([]).setId(id).deserialize(data);
+			/*
 			case "Group":
 				return new Group(this.events).setId(id).deserialize(data);
+			*/
 		}
 	}
 
@@ -320,7 +324,10 @@ export class Board {
 		let minY = Infinity;
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
-			const { translateX, translateY } = itemData.transformation;
+			const { translateX, translateY } = itemData.transformation || {
+				translateX: 0,
+				translateY: 0,
+			};
 
 			if (translateX < minX) {
 				minX = translateX;
@@ -344,7 +351,10 @@ export class Board {
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
 			const newItemId = newItemIdMap[itemId];
-			const { translateX, translateY } = itemData.transformation;
+			const { translateX, translateY } = itemData.transformation || {
+				translateX: 0,
+				translateY: 0,
+			};
 			if (itemData.itemType === "Connector") {
 				if (itemData.startPoint.pointType === "Board") {
 					itemData.startPoint.x += -minX + x;
@@ -354,7 +364,7 @@ export class Board {
 					itemData.endPoint.x += -minX + x;
 					itemData.endPoint.y += -minY + y;
 				}
-			} else {
+			} else if (itemData.transformation) {
 				itemData.transformation.translateX = translateX - minX + x;
 				itemData.transformation.translateY = translateY - minY + y;
 			}
@@ -404,7 +414,10 @@ export class Board {
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
-			const { translateX, translateY } = itemData.transformation;
+			const { translateX, translateY } = itemData.transformation || {
+				translateX: 0,
+				translateY: 0,
+			};
 
 			if (translateX < minX) {
 				minX = translateX;
@@ -431,7 +444,10 @@ export class Board {
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
 			const newItemId = newItemIdMap[itemId];
-			const { translateX, translateY } = itemData.transformation;
+			const { translateX, translateY } = itemData.transformation || {
+				translateX: 0,
+				translateY: 0,
+			};
 			if (itemData.itemType === "Connector") {
 				if (itemData.startPoint.pointType === "Board") {
 					itemData.startPoint.x += -minX + right + width;
@@ -441,7 +457,7 @@ export class Board {
 					itemData.endPoint.x += -minX + right + width;
 					itemData.endPoint.y += -minY + top;
 				}
-			} else {
+			} else if (itemData.transformation) {
 				itemData.transformation.translateX =
 					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
@@ -459,7 +475,7 @@ export class Board {
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const context = this.selection.getContext();
-		const items = [];
+		const items: Item[] = [];
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];

@@ -9,7 +9,7 @@ describe("of transformer", () => {
 			const resizeType = "right";
 			const pointer = new Point(50, 50);
 			const opposite = new Point(0, 0);
-			const matrix = getResize(resizeType, pointer, mbr, opposite);
+			const matrix = getResize(resizeType, pointer, mbr, opposite).matrix;
 			assert.equal(matrix.translateX, 0);
 			assert.equal(matrix.translateY, 0);
 			assert.equal(matrix.scaleX, 0.5);
@@ -20,7 +20,7 @@ describe("of transformer", () => {
 			const resizeType = "right";
 			const pointer = new Point(-50, 50);
 			const opposite = new Point(0, 0);
-			const matrix = getResize(resizeType, pointer, mbr, opposite);
+			const matrix = getResize(resizeType, pointer, mbr, opposite).matrix;
 			assert.equal(matrix.translateX, -50);
 			assert.equal(matrix.translateY, 0);
 			assert.equal(matrix.scaleX, 0.5);
@@ -33,7 +33,7 @@ describe("of transformer", () => {
 			const resizeType = "right";
 			const pointer = new Point(-50, 50);
 			const opposite = new Point(0, 0);
-			const matrix = getResize(resizeType, pointer, mbr, opposite);
+			const matrix = getResize(resizeType, pointer, mbr, opposite).matrix;
 			const newMbr = mbr.copy();
 			newMbr.transform(matrix);
 			assert.equal(newMbr.left, -50);
@@ -48,7 +48,7 @@ describe("of transformer", () => {
 			const resizeType = "right";
 			const pointer = new Point(0, 0);
 			const opposite = new Point(0, 0);
-			const matrix = getResize(resizeType, pointer, mbr, opposite);
+			const matrix = getResize(resizeType, pointer, mbr, opposite).matrix;
 			const newMbr = mbr.copy();
 			newMbr.transform(matrix);
 			assert.equal(newMbr.left, 0);
@@ -63,7 +63,7 @@ describe("of transformer", () => {
 				secondPointer,
 				newMbr,
 				opposite,
-			);
+			).matrix;
 			const secondNewMbr = newMbr.copy();
 			secondNewMbr.transform(secondMatrix);
 			assert.equal(secondNewMbr.left, -50);

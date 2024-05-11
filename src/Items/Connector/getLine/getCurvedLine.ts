@@ -1,5 +1,5 @@
 import { CubicBezier } from "../../Curve";
-import { Path } from "../../Path";
+import { Path, Segment } from "../../Path";
 import {
 	BoardPoint,
 	ControlPoint,
@@ -30,7 +30,7 @@ export function getCurvedLine(
 	end: ControlPoint,
 	middle: BoardPoint[],
 ): Path {
-	const segments = [];
+	const segments: Segment[] = [];
 
 	let startControl: { point: Point; control: Point };
 	let endControl: { point: Point; control: Point };
@@ -82,10 +82,17 @@ export function getCurvedLine(
 	} else {
 		for (const point of middle) {
 			segments.push(
-				new CubicBezier(start, startControl, endControl, point),
+				new CubicBezier(
+					start,
+					startControl.point,
+					endControl.point,
+					point,
+				),
 			);
 		}
-		segments.push(new CubicBezier(start, startControl, endControl, end));
+		segments.push(
+			new CubicBezier(start, startControl.point, endControl.point, end),
+		);
 	}
 	return new Path(segments);
 }

@@ -1,24 +1,20 @@
 import { BoardPoint, ControlPointData } from "./ControlPoint";
-import { ConnectorPointerStyle } from "./Pointers/ConnectorPointerStyles";
-import {
-	ConnectionLineWidth,
-	ConnectorLineStyle,
-	ConnectorTextStyle,
-} from "./Connector";
+import { ConnectionLineWidth, ConnectorLineStyle } from "./Connector";
 import { TransformationData } from "../Transformation";
 import { RichTextData } from "../RichText";
+import { ConnectorPointerStyle } from "./Pointers/Pointers";
 
 export class ConnectorData {
 	readonly itemType = "Connector";
 	startPoint: ControlPointData = new BoardPoint(0, 0);
 	endPoint: ControlPointData = new BoardPoint(0, 0);
-	startPointerStyle: ConnectorPointerStyle = "none";
-	endPointerStyle: ConnectorPointerStyle = "arrow";
+	startPointerStyle: ConnectorPointerStyle = "None";
+	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";
 	lineColor = "";
 	lineWidth: ConnectionLineWidth = 1;
 	transformation = new TransformationData();
-	text = new RichTextData();
+	text = new RichTextData([], "center", undefined);
 }
 
 interface SetStartPoint {

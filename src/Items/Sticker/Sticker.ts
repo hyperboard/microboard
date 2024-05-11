@@ -68,7 +68,7 @@ const _relation = width / height;
 
 export class Sticker implements Geometry {
 	parent = "Board";
-	itemType = "Sticker";
+	readonly itemType = "Sticker";
 	readonly transformation = new Transformation(this.id, this.events);
 	private stickerPath = StickerShape.stickerPath.copy();
 	private shadowPath = StickerShape.shadowPath.copy();
@@ -268,7 +268,7 @@ export class Sticker implements Geometry {
 
 	getSnapAnchorPoints(): Point[] {
 		const anchorPoints = StickerShape.anchorPoints;
-		const points = [];
+		const points: Point[] = [];
 		for (const anchorPoint of anchorPoints) {
 			points.push(anchorPoint.getTransformed(this.transformation.matrix));
 		}

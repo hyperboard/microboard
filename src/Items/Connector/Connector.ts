@@ -29,6 +29,7 @@ import {
 	TEXT_BORDER_PADDING,
 } from "View/Items/Connector";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { ConnectorPointerStyle } from "./Pointers/Pointers";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -48,8 +49,8 @@ export class Connector {
 	private id = "";
 	readonly transformation = new Transformation(this.id, this.events);
 	private middlePoints: BoardPoint[] = [];
-	private startPointerStyle = "none";
-	private endPointerStyle = DEFAULT_END_POINTER;
+	private startPointerStyle: ConnectorPointerStyle = "None";
+	private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER;
 	private lineColor = CONNECTOR_COLOR;
 	private lineStyle: ConnectorLineStyle = "straight";
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
@@ -310,7 +311,7 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	setStartPointerStyle(style: string): void {
+	setStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setStartPointerStyle",
@@ -319,12 +320,12 @@ export class Connector {
 		});
 	}
 
-	private applyStartPointerStyle(style: string): void {
+	private applyStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.startPointerStyle = style;
 		this.updatePaths();
 	}
 
-	setEndPointerStyle(style: string): void {
+	setEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setEndPointerStyle",
@@ -333,7 +334,7 @@ export class Connector {
 		});
 	}
 
-	private applyEndPointerStyle(style: string): void {
+	private applyEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.endPointerStyle = style;
 		this.updatePaths();
 	}
@@ -413,11 +414,11 @@ export class Connector {
 		};
 	}
 
-	getStartPointerStyle(): string {
+	getStartPointerStyle(): ConnectorPointerStyle {
 		return this.startPointerStyle;
 	}
 
-	getEndPointerStyle(): string {
+	getEndPointerStyle(): ConnectorPointerStyle {
 		return this.endPointerStyle;
 	}
 
@@ -752,7 +753,7 @@ export class Connector {
 	}
 
 	getSnapAnchorPoints(): Point[] {
-		const points = [];
+		const points: Point[] = [];
 		for (const line of this.lines.getSegments()) {
 			points.push(line.getCenterPoint());
 		}

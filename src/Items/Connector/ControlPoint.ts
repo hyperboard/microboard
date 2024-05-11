@@ -184,16 +184,17 @@ export function getControlPoint(
 
 		switch (data.pointType) {
 			case "FixedConnector":
-				if (item.itemType !== "Connector") {
+				if (item.itemType === "Connector") {
+					return new FixedConnectorPoint(
+						item,
+						data.tangent,
+						data.segment,
+					);
+				} else {
 					throw new Error(
 						`getControlPoint(): item must be a connector`,
 					);
 				}
-				return new FixedConnectorPoint(
-					item,
-					data.tangent,
-					data.segment,
-				);
 			case "Floating":
 				return new FloatingPoint(
 					item,

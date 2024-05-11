@@ -18,7 +18,7 @@ export function getPointer(style: string): Pointer {
 	return path;
 }
 
-const Pointers: Record<string, Pointer> = {
+const Pointers = {
 	None: {
 		name: "None",
 		path: new Path([new Line(new Point(70, 50), new Point(99, 50))]),
@@ -310,4 +310,6 @@ const Pointers: Record<string, Pointer> = {
 		start: new Point(64.5, 49.5),
 		end: new Point(95, 50),
 	},
-};
+} as const;
+
+export type ConnectorPointerStyle = keyof typeof Pointers;

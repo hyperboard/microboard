@@ -18,7 +18,7 @@ export class BaseCurve {
 			p1: segment.start,
 			p2: segment.end,
 		}) as number[];
-		const intersections = [];
+		const intersections: Point[] = [];
 		for (const parameter of parameters) {
 			const { x, y } = this.curve.get(parameter);
 			intersections.push(new Point(x, y));

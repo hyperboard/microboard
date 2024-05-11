@@ -2,6 +2,8 @@ import { Connector } from ".";
 import { Command } from "../../Events";
 import { ConnectorOperation } from "./ConnectorOperations";
 
+type ReverseOperation = { item: Connector; operation: ConnectorOperation }[];
+
 export class ConnectorCommand implements Command {
 	reverse = this.getReverse();
 
@@ -22,8 +24,8 @@ export class ConnectorCommand implements Command {
 		}
 	}
 
-	getReverse(): { item: Connector; operation: ConnectorOperation }[] {
-		const reverse = [];
+	getReverse(): ReverseOperation {
+		const reverse: ReverseOperation = [];
 		switch (this.operation.method) {
 			case "setStartPoint":
 				for (const connector of this.connector) {

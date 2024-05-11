@@ -1,5 +1,4 @@
 import {
-	Connector,
 	Line,
 	Mbr,
 	Path,
@@ -62,9 +61,8 @@ export class RichText extends Mbr implements Geometry {
 	private clipPath: Path2D | undefined;
 	private updateRequired = false;
 	private autoSizeScale = 1;
-	private transformedContainer?: Mbr = undefined;
-	private board?: Board;
 	private containerMaxWidth?: number;
+	maxHeight: number;
 
 	constructor(
 		public container: Mbr,
@@ -265,10 +263,12 @@ export class RichText extends Mbr implements Geometry {
 
 	/** Get text dimensions for text editor */
 	getDimensions(): {
+		point: Point;
 		width: number;
 		height: number;
 		maxWidth?: number;
 		maxHeight?: number;
+		textScale: number;
 	} {
 		let left = this.left;
 		let top = this.top;
@@ -701,7 +701,7 @@ export class RichText extends Mbr implements Geometry {
 	getClipMbr(): Mbr {
 		const mbr = this.getMbr();
 		const center = mbr.getCenter();
-		const { width, height } = this.blockNodes;
+		const { width } = this.blockNodes;
 		mbr.left = center.x - width / 2;
 		mbr.right = mbr.left + width;
 		return mbr;

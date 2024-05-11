@@ -6,7 +6,7 @@ export function getStraightLine(
 	end: ControlPoint,
 	middle: BoardPoint[],
 ): Path {
-	const segments = [];
+	const segments: Line[] = [];
 	if (middle.length === 0) {
 		segments.push(new Line(start, end));
 	} else {

@@ -42,7 +42,7 @@ export class Selection {
 
 	textToEdit: RichText | undefined;
 
-	constructor(private board: Board, private events?: Events) {
+	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
 	}
 

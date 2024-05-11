@@ -36,7 +36,7 @@ const scaledPatterns: { [key: number]: typeof LinePatterns } = {};
 
 export function scalePatterns(scale: number): typeof LinePatterns {
 	function scaleLinePattern(pattern: BorderStyle): number[] {
-		const scaledPattern = [];
+		const scaledPattern: number[] = [];
 		for (const number of LinePatterns[pattern]) {
 			scaledPattern.push(number * scale);
 		}

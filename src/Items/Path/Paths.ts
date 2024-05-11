@@ -205,7 +205,7 @@ export class Paths implements Geometry {
 	}
 
 	getTransformed(matrix: Matrix): Paths {
-		const transformedPaths = [];
+		const transformedPaths: Path[] = [];
 		for (const path of this.paths) {
 			transformedPaths.push(path.getTransformed(matrix));
 		}
