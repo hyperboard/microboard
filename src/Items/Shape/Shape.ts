@@ -295,6 +295,11 @@ export class Shape implements Geometry {
 
 	updateMbr(): Mbr {
 		const rect = this.path.getMbr();
+		const rectOffset = this.getStrokeWidth() / 2;
+		rect.left -= rectOffset;
+		rect.right += rectOffset;
+		rect.top -= rectOffset;
+		rect.bottom += rectOffset;
 		const textRect = this.textContainer.getMbr();
 		rect.combine([textRect]);
 		this.mbr = rect;
