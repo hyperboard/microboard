@@ -5,6 +5,7 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { Camera } from "Board/Camera";
 import { LayeredIndex } from "./LayeredIndex";
+import { ItemsIndexRecord } from "../BoardOperations";
 
 export class SpatialIndex {
 	subject = new Subject<Items>();
@@ -47,6 +48,22 @@ export class SpatialIndex {
 		this.subject.publish(this.items);
 	}
 
+	moveManyToZIndex(itemsRecord: ItemsIndexRecord): void {
+		const items = Object.keys(itemsRecord)
+			.map(id => this.items.getById(id))
+			.filter(item => item !== undefined);
+		const zIndex = Object.values(itemsRecord);
+		const newItems: Item[] = [];
+		for (let i = 0; i < zIndex.length; i++) {
+			const index = zIndex[i];
+			newItems[index] = items[i] as Item;
+		}
+
+		this.array = newItems;
+		this.array.forEach(this.change.bind(this));
+		this.subject.publish(this.items);
+	}
+
 	sendToBack(item: Item): void {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
@@ -62,6 +79,10 @@ export class SpatialIndex {
 				newItems.push(item);
 			}
 		});
+		// this.moveManyToZIndex(
+		// 	items,
+		// 	newItems.map(item => newItems.indexOf(item)),
+		// );
 		this.array = newItems;
 		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);

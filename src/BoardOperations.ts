@@ -1,5 +1,7 @@
 import { ItemData } from "./Items";
 
+export type ItemsIndexRecord = Record<string, number>;
+
 interface CreateItem {
 	class: "Board";
 	method: "add";
@@ -20,6 +22,12 @@ interface MoveToZIndex {
 	zIndex: number;
 }
 
+interface MoveManyToZIndex {
+	class: "Board";
+	method: "moveManyToZIndex";
+	item: ItemsIndexRecord;
+}
+
 interface MoveSecondBeforeFirst {
 	class: "Board";
 	method: "moveSecondBeforeFirst";
@@ -38,12 +46,14 @@ interface BringToFront {
 	class: "Board";
 	method: "bringToFront";
 	item: string[];
+	prevZIndex: ItemsIndexRecord;
 }
 
 interface SendToBack {
 	class: "Board";
 	method: "sendToBack";
 	item: string[];
+	prevZIndex: ItemsIndexRecord;
 }
 
 interface Paste {
@@ -69,6 +79,7 @@ export type BoardOperation =
 	| CreateItem
 	| RemoveItem
 	| MoveToZIndex
+	| MoveManyToZIndex
 	| MoveSecondBeforeFirst
 	| MoveSecondAfterFirst
 	| BringToFront

@@ -7,7 +7,11 @@ import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import { BoardOperation, RemoveItem } from "./BoardOperations";
+import {
+	BoardOperation,
+	ItemsIndexRecord,
+	RemoveItem,
+} from "./BoardOperations";
 import { BoardCommand } from "./BoardCommand";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
 import { ImageItem } from "./Items/Image";
@@ -97,6 +101,7 @@ export class Board {
 	}
 
 	private applyBoardOperation(op: BoardOperation): void {
+		console.log(op);
 		switch (op.method) {
 			case "moveToZIndex": {
 				const item = this.index.getById(op.item);
@@ -104,6 +109,16 @@ export class Board {
 					return;
 				}
 				return this.index.moveToZIndex(item, op.zIndex);
+			}
+			case "moveManyToZIndex": {
+				for (const id in op.item) {
+					const item = this.items.getById(id);
+					if (!item) {
+						delete op.item.id;
+					}
+				}
+
+				return this.index.moveManyToZIndex(op.item);
 			}
 			case "moveSecondBeforeFirst": {
 				const first = this.items.getById(op.item);
@@ -241,6 +256,14 @@ export class Board {
 		return this.index.getLastZIndex();
 	}
 
+	moveManyToZIndex(items: ItemsIndexRecord): void {
+		this.emit({
+			class: "Board",
+			method: "moveManyToZIndex",
+			item: items,
+		});
+	}
+
 	moveToZIndex(item: Item, zIndex: number): void {
 		this.emit({
 			class: "Board",
@@ -272,10 +295,19 @@ export class Board {
 		if (!Array.isArray(items)) {
 			items = [items];
 		}
+		const boardItems = this.items.listAll();
+
+		console.log(boardItems);
 		this.emit({
 			class: "Board",
 			method: "bringToFront",
 			item: items.map(item => item.getId()),
+			prevZIndex: Object.fromEntries(
+				boardItems.map(item => [
+					item.getId(),
+					boardItems.indexOf(item),
+				]),
+			),
 		});
 	}
 
@@ -283,10 +315,17 @@ export class Board {
 		if (!Array.isArray(items)) {
 			items = [items];
 		}
+		const boardItems = this.items.listAll();
 		this.emit({
 			class: "Board",
 			method: "sendToBack",
 			item: items.map(item => item.getId()),
+			prevZIndex: Object.fromEntries(
+				boardItems.map(item => [
+					item.getId(),
+					boardItems.indexOf(item),
+				]),
+			),
 		});
 	}
 

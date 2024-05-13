@@ -26,23 +26,29 @@ export class BoardCommand implements Command {
 		const operation = this.operation;
 		switch (operation.method) {
 			case "bringToFront": {
-				const items = operation.item
-					.map(item => this.board.items.getById(item))
-					.filter((item): item is Item => item !== undefined);
+				for (const id in operation.prevZIndex) {
+					const item = this.board.items.getById(id);
+					if (!item) {
+						delete operation.prevZIndex.id;
+					}
+				}
 				return {
 					class: "Board",
-					method: "sendToBack",
-					item: items.map(item => item.getId()),
+					method: "moveManyToZIndex",
+					item: operation.prevZIndex,
 				};
 			}
 			case "sendToBack": {
-				const items = operation.item
-					.map(item => this.board.items.getById(item))
-					.filter((item): item is Item => item !== undefined);
+				for (const id in operation.prevZIndex) {
+					const item = this.board.items.getById(id);
+					if (!item) {
+						delete operation.prevZIndex.id;
+					}
+				}
 				return {
 					class: "Board",
-					method: "bringToFront",
-					item: items.map(item => item.getId()),
+					method: "moveManyToZIndex",
+					item: operation.prevZIndex,
 				};
 			}
 			case "moveSecondAfterFirst":
@@ -61,6 +67,25 @@ export class BoardCommand implements Command {
 					method: "moveToZIndex",
 					item: operation.item,
 					zIndex,
+				};
+			}
+			case "moveManyToZIndex": {
+				for (const id in operation.item) {
+					const item = this.board.items.getById(id);
+					if (!item) {
+						delete operation.item.id;
+					}
+				}
+				if (!operation.item) {
+					throw new Error(
+						"Get reverse board operation. Item not found",
+					);
+				}
+				console.log("moveMany", operation.item);
+				return {
+					class: "Board",
+					method: "moveManyToZIndex",
+					item: operation.item,
 				};
 			}
 			case "remove": {
