@@ -12,6 +12,8 @@ import {
 	BACKGROUND_BLUR,
 	BLUR_BACKGROUND_COLOR,
 	FRAME_DECORATIONS,
+	MIN_EXPORT_HEIGHT,
+	MIN_EXPORT_WIDTH,
 	SELECTION_BOX_HEIGHT,
 	SELECTION_BOX_WIDTH,
 } from "View/Tools/ExportBoard";
@@ -57,7 +59,14 @@ export class ExportSnapshot extends Tool {
 				this.mbr,
 				this.oppositePoint,
 			);
-			this.mbr = resize.mbr;
+			if (resize.mbr.getWidth() > MIN_EXPORT_WIDTH) {
+				this.mbr.left = resize.mbr.left;
+				this.mbr.right = resize.mbr.right;
+			}
+			if (resize.mbr.getHeight() > MIN_EXPORT_HEIGHT) {
+				this.mbr.top = resize.mbr.top;
+				this.mbr.bottom = resize.mbr.bottom;
+			}
 			this.mbr.strokeWidth = 0;
 			this.board.tools.publish();
 		}
