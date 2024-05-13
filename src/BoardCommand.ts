@@ -24,7 +24,6 @@ export class BoardCommand implements Command {
 
 	getReverse(): BoardOperation | BoardOperation[] {
 		const operation = this.operation;
-
 		switch (operation.method) {
 			case "bringToFront": {
 				const items = operation.item
@@ -92,6 +91,7 @@ export class BoardCommand implements Command {
 					item: [operation.item],
 				};
 			}
+			case "duplicate":
 			case "paste": {
 				const item = [];
 				const map = operation.itemsMap;

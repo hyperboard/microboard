@@ -53,6 +53,13 @@ export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent) {
 	const entries = Object.entries(hotkeyMap);
 	for (const [hotkey, cb] of entries) {
 		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
+			if (import.meta.env.NODE_ENV === "development") {
+				console.log(
+					`Triggered hotkey ${hotkey} (${getHotkeyLabel(
+						hotkey as HotkeyName,
+					)})`,
+				);
+			}
 			cb(event);
 			return true;
 		}
