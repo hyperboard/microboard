@@ -1,7 +1,6 @@
 import { Command } from "./Events";
 import { BoardOperation } from "./BoardOperations";
 import { Board } from "Board";
-import { Item } from "./Items";
 
 export class BoardCommand implements Command {
 	private reverse = this.getReverse();
@@ -81,7 +80,6 @@ export class BoardCommand implements Command {
 						"Get reverse board operation. Item not found",
 					);
 				}
-				console.log("moveMany", operation.item);
 				return {
 					class: "Board",
 					method: "moveManyToZIndex",

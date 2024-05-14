@@ -101,7 +101,6 @@ export class Board {
 	}
 
 	private applyBoardOperation(op: BoardOperation): void {
-		console.log(op);
 		switch (op.method) {
 			case "moveToZIndex": {
 				const item = this.index.getById(op.item);
@@ -297,7 +296,6 @@ export class Board {
 		}
 		const boardItems = this.items.listAll();
 
-		console.log(boardItems);
 		this.emit({
 			class: "Board",
 			method: "bringToFront",
