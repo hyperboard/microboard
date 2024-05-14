@@ -24,7 +24,13 @@ export function isHotkeyPushed(
 		(!key.alt || event.altKey) &&
 		(!key.shift || event.shiftKey) &&
 		(!key.ctrl || event.ctrlKey || event.metaKey);
-
+	if (isMacos() && key.button === "Delete") {
+		isPushed =
+			(event.code === "Delete" || event.code === "Backspace") &&
+			(!key.alt || event.altKey) &&
+			(!key.shift || event.shiftKey) &&
+			(!key.ctrl || event.ctrlKey || event.metaKey);
+	}
 	if (
 		(!key.ctrl && (event.ctrlKey || event.metaKey)) ||
 		(!key.alt && event.altKey) ||
