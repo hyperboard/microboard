@@ -127,6 +127,7 @@ export class Tools extends ToolContext {
 	}
 
 	cancel(): void {
+		this.tool.onCancel();
 		this.tool = new Select(this.board);
 		this.publish();
 	}

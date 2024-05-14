@@ -27,8 +27,9 @@ export class ExportSnapshot extends Tool {
 	isDragging = false;
 	resizeType: null | ResizeType = null;
 	oppositePoint: null | Point = null;
-	tempCanvas = document.createElement("canvas")!;
+	tempCanvas = document.getElementById("ExportLayer") as HTMLCanvasElement;
 	tempCtx = this.tempCanvas.getContext("2d")!;
+	tempDrawingContext: DrawingContext;
 
 	constructor(private board: Board) {
 		super();
@@ -43,6 +44,10 @@ export class ExportSnapshot extends Tool {
 			1,
 		);
 		this.board.selection.disable();
+		this.tempDrawingContext = new DrawingContext(
+			board.camera,
+			this.tempCtx,
+		);
 	}
 
 	rectMoveTo(x: number, y: number): void {
@@ -205,86 +210,64 @@ export class ExportSnapshot extends Tool {
 		ctx.restore();
 	}
 
+	onCancel() {
+		console.log("canceled");
+		this.tempDrawingContext.clear();
+	}
+
 	render(context: DrawingContext): void {
 		const cameraMbr = context.camera.getMbr();
-		const ctx = context.ctx;
-		this.tempCanvas.width = ctx.canvas.width;
-		this.tempCanvas.height = ctx.canvas.height;
+		this.tempDrawingContext.setCamera(this.board.camera);
+		this.tempDrawingContext.clear();
+		cameraMbr.backgroundColor = BLUR_BACKGROUND_COLOR;
+		cameraMbr.strokeWidth = 0;
+		cameraMbr.render(this.tempDrawingContext);
 
-		const clearRect = {
-			left: this.mbr.left,
-			top: this.mbr.top,
-			width: this.mbr.getWidth(),
-			height: this.mbr.getHeight(),
-		};
+		// this.tempCtx.filter = "blur(15px)";
+		// this.tempCtx.drawImage(this.tempCanvas, 0, 0);
+		// this.tempCanvas.style.backdropFilter = "blur(5px)";
 
-		this.tempCtx.drawImage(ctx.canvas, 0, 0);
-
-		this.tempCtx.fillStyle = BLUR_BACKGROUND_COLOR;
-		this.tempCtx.fillRect(
-			0,
-			0,
-			this.tempCanvas.width,
-			this.tempCanvas.height,
+		this.tempCtx.clearRect(
+			this.mbr.left,
+			this.mbr.top,
+			this.mbr.getWidth(),
+			this.mbr.getHeight(),
 		);
-		this.tempCtx.filter = `blur(${BACKGROUND_BLUR}px)`;
-		this.tempCtx.drawImage(this.tempCanvas, 0, 0);
-
-		ctx.drawImage(
-			this.tempCanvas,
-			cameraMbr.left,
-			cameraMbr.top,
-			cameraMbr.getWidth(),
-			cameraMbr.getHeight(),
-		);
-
-		ctx.clearRect(
-			clearRect.left,
-			clearRect.top,
-			clearRect.width,
-			clearRect.height,
-		);
-
-		this.board.items.getInView().forEach(item => {
-			if (item.getMbr().isEnclosedOrCrossedBy(this.mbr)) {
-				item.render(context);
-			}
-		});
 
 		if (FRAME_DECORATIONS) {
 			const topLeft = FRAME_DECORATIONS["top-left"];
 			this.renderDecoration(
-				context,
+				this.tempDrawingContext,
 				topLeft.path,
-				clearRect.left - topLeft.offset! ?? 0,
-				clearRect.top - topLeft.offset! ?? 0,
+				this.mbr.left - topLeft.offset! ?? 0,
+				this.mbr.top - topLeft.offset! ?? 0,
 				topLeft.color,
 				topLeft.lineWidth,
 			);
 			const topRight = FRAME_DECORATIONS["top-right"];
 			this.renderDecoration(
-				context,
+				this.tempDrawingContext,
 				topRight.path,
-				clearRect.left + clearRect.width - topRight.width,
-				clearRect.top - topRight.offset! ?? 0,
+				this.mbr.left + this.mbr.getWidth() - topRight.width,
+				this.mbr.top - topRight.offset! ?? 0,
 				topRight.color,
 				topRight.lineWidth,
 			);
 			const bottomLeft = FRAME_DECORATIONS["bottom-left"];
 			this.renderDecoration(
-				context,
+				this.tempDrawingContext,
 				bottomLeft.path,
-				clearRect.left - bottomLeft.offset! ?? 0,
-				clearRect.top + clearRect.height - bottomLeft.height,
+				this.mbr.left - bottomLeft.offset! ?? 0,
+				this.mbr.top + this.mbr.getHeight() - bottomLeft.height,
 				bottomLeft.color,
 				bottomLeft.lineWidth,
 			);
 			const bottomRight = FRAME_DECORATIONS["bottom-right"];
 			this.renderDecoration(
-				context,
+				this.tempDrawingContext,
 				bottomRight.path,
-				clearRect.left + clearRect.width - bottomRight.width,
-				clearRect.top + clearRect.height - bottomRight.width,
+				this.mbr.left + this.mbr.getWidth() - bottomRight.width,
+				this.mbr.top + this.mbr.getHeight() - bottomRight.width,
 				bottomRight.color,
 				bottomRight.lineWidth,
 			);
