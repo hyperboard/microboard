@@ -21,7 +21,6 @@ import { RichTextCommand } from "./RichTextCommand";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { isTextEmpty } from "./isTextEmpty";
-import { Board } from "Board/Board";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
 
@@ -562,11 +561,6 @@ export class RichText extends Mbr implements Geometry {
 		console.log("set alignment inside RichText: ", horisontalAlignment);
 		this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
 		this.updateElement();
-	}
-
-	setBoard(board: Board): this {
-		this.board = board;
-		return this;
 	}
 
 	getFontStyles(): TextStyle[] {

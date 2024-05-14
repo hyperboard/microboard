@@ -1,5 +1,4 @@
 import { Subject } from "Subject";
-import { Events } from "pg";
 import { DrawingContext } from "../DrawingContext";
 import { GeometricNormal } from "../GeometricNormal";
 import { Geometry } from "../Geometry";
@@ -9,6 +8,7 @@ import { Mbr } from "../Mbr";
 import { Point } from "../Point";
 import { Transformation, TransformationData } from "../Transformation";
 import { Board } from "../../Board";
+import { Events } from "Board/Events";
 
 export interface GroupData {
 	itemType: "Group";
