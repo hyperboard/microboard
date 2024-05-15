@@ -46,6 +46,22 @@ export class Selection {
 		requestAnimationFrame(this.updateScheduledObservers);
 	}
 
+	serialize(): string {
+		const selectedItems = this.items.list().map(item => item.getId());
+		return JSON.stringify(selectedItems);
+	}
+
+	deserialize(serializedData: string): void {
+		const selectedItems: string[] = JSON.parse(serializedData);
+		this.removeAll();
+		selectedItems.forEach(itemId => {
+			const item = this.board.items.find(item => item.getId() === itemId);
+			if (item) {
+				this.items.push(item);
+			}
+		});
+	}
+
 	private emit(operation: Operation): void {
 		if (this.events) {
 			const command = createCommand(this.events, this.board, operation);

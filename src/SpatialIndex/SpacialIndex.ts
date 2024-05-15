@@ -8,7 +8,7 @@ import { LayeredIndex } from "./LayeredIndex";
 
 export class SpatialIndex {
 	subject = new Subject<Items>();
-	private array: Item[] = [];
+	readonly array: Item[] = [];
 	private index = new LayeredIndex((item: Item): number => {
 		return this.array.indexOf(item);
 	});

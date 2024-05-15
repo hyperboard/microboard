@@ -286,6 +286,25 @@ export class Board {
 		});
 	}
 
+	copy(): Record<string, ItemData> {
+		return this.items.index.array.reduce((accumulator, item) => {
+			accumulator[item.getId()] = item.serialize();
+			return accumulator;
+		}, {} as Record<string, ItemData>);
+	}
+
+	serialize(): string {
+		return JSON.stringify(this.copy());
+	}
+
+	deserialize(snapshot: string): void {
+		const map = JSON.parse(snapshot);
+		for (const itemData of map) {
+			const item = this.createItem(itemData.id, itemData);
+			this.index.insert(item);
+		}
+	}
+
 	paste(itemsMap: { [key: string]: ItemData }): void {
 		const newItemIdMap: { [key: string]: string } = {};
 

@@ -38,6 +38,16 @@ export class Events {
 		setInterval(this.republishEvents, 5000);
 	}
 
+	serialize(): string {
+		const events = this.log.list.map(record => record.event);
+		return JSON.stringify(events);
+	}
+
+	deserialize(serializedData: string): void {
+		const events: BoardEvent[] = JSON.parse(serializedData);
+		this.insertEvents(events);
+	}
+
 	disconnect(): void {
 		this.connection.unsubscribe(
 			this.board.getBoardId(),
