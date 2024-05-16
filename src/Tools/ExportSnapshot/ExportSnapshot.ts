@@ -83,7 +83,7 @@ export class ExportSnapshot extends Tool {
 		}
 		const { pointer } = this.board;
 		if (this.mbr?.isUnderPoint(pointer.point)) {
-			pointer.setCursor("default");
+			pointer.setCursor("pointer");
 		}
 		if (!this.mbr?.isUnderPoint(pointer.point)) {
 			if (this.isDown) {
