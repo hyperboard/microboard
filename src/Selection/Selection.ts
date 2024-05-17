@@ -110,6 +110,12 @@ export class Selection {
 		this.itemsSubject.publish([]);
 	}
 
+	addAll() {
+		const items = this.board.items.listAll();
+		this.add(items);
+		this.setContext("SelectByRect");
+	}
+
 	remove(value: Item | Item[]): void {
 		this.items.remove(value);
 		if (Array.isArray(value)) {
@@ -811,15 +817,11 @@ export class Selection {
 	}
 
 	bringToFront(): void {
-		this.items.list().forEach(item => {
-			this.board.items.index.bringToFront(item);
-		});
+		this.board.bringToFront(this.items.list());
 	}
 
 	sendToBack(): void {
-		this.items.list().forEach(item => {
-			this.board.items.index.sendToBack(item);
-		});
+		this.board.sendToBack(this.items.list());
 	}
 
 	duplicate(): void {

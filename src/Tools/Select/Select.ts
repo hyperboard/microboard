@@ -216,6 +216,7 @@ export class Select extends Tool {
 					) === null;
 				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
+					this.board.selection.setContext("EditUnderPointer");
 				} else {
 					this.board.selection.remove(underPointer);
 				}

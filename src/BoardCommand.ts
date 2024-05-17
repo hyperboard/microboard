@@ -23,10 +23,33 @@ export class BoardCommand implements Command {
 
 	getReverse(): BoardOperation | BoardOperation[] {
 		const operation = this.operation;
-
 		switch (operation.method) {
-			case "bringToFront":
-			case "sendToBack":
+			case "bringToFront": {
+				for (const id in operation.prevZIndex) {
+					const item = this.board.items.getById(id);
+					if (!item) {
+						delete operation.prevZIndex.id;
+					}
+				}
+				return {
+					class: "Board",
+					method: "moveManyToZIndex",
+					item: operation.prevZIndex,
+				};
+			}
+			case "sendToBack": {
+				for (const id in operation.prevZIndex) {
+					const item = this.board.items.getById(id);
+					if (!item) {
+						delete operation.prevZIndex.id;
+					}
+				}
+				return {
+					class: "Board",
+					method: "moveManyToZIndex",
+					item: operation.prevZIndex,
+				};
+			}
 			case "moveSecondAfterFirst":
 			case "moveSecondBeforeFirst":
 			case "moveToZIndex": {
@@ -43,6 +66,24 @@ export class BoardCommand implements Command {
 					method: "moveToZIndex",
 					item: operation.item,
 					zIndex,
+				};
+			}
+			case "moveManyToZIndex": {
+				for (const id in operation.item) {
+					const item = this.board.items.getById(id);
+					if (!item) {
+						delete operation.item.id;
+					}
+				}
+				if (!operation.item) {
+					throw new Error(
+						"Get reverse board operation. Item not found",
+					);
+				}
+				return {
+					class: "Board",
+					method: "moveManyToZIndex",
+					item: operation.item,
 				};
 			}
 			case "remove": {
@@ -73,6 +114,7 @@ export class BoardCommand implements Command {
 					item: [operation.item],
 				};
 			}
+			case "duplicate":
 			case "paste": {
 				const item = [];
 				const map = operation.itemsMap;
