@@ -7,6 +7,7 @@ import { DrawingContext } from "../../Items/DrawingContext";
 import { Cursor } from "../../Pointer";
 import { Anchor } from "Board/Items/Anchor";
 import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
+import { CONNECTOR_ANCHOR_COLOR } from "View/Items/Connector";
 
 const config = {
 	anchorDistance: 5,
@@ -131,16 +132,16 @@ export class ConnectorTransformer extends Tool {
 				start.x,
 				start.y,
 				5,
-				"blue",
-				"white",
+				CONNECTOR_ANCHOR_COLOR.anchorBorder,
+				CONNECTOR_ANCHOR_COLOR.anchorBackground,
 			);
 			const end = connector.getEndPoint();
 			this.endPointerAnchor = new Anchor(
 				end.x,
 				end.y,
 				5,
-				"blue",
-				"white",
+				CONNECTOR_ANCHOR_COLOR.anchorBorder,
+				CONNECTOR_ANCHOR_COLOR.anchorBackground,
 			);
 		} else {
 			this.startPointerAnchor = null;

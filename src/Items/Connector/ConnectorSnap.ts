@@ -12,6 +12,7 @@ import { DrawingContext } from "../DrawingContext";
 import { Anchor } from "../Anchor";
 import { Path, Paths } from "../Path";
 import { Connector } from "./Connector";
+import { CONNECTOR_ANCHOR_COLOR } from "View/Items/Connector";
 
 function getFixedPoint(
 	item: Item,
@@ -40,16 +41,7 @@ export class ConnectorSnap {
 	maxNeighbors = 10;
 	timeout = 2000;
 
-	color = {
-		snapBorder: "rgba(0,0,255,0.8)",
-		snapBackgroundHighlight: "rgba(0,0,0,0.2)",
-		snapBackground: "rgba(0,0,0,0)",
-		anchorBorder: "rgba(0,0,255,0.8)",
-		anchorBackground: "rgba(255,255,255,0.8)",
-		anchorHighlight: "rgba(0,0,255,0.8)",
-		pointBorder: "rgba(0,0,0,0)",
-		pointBackground: "rgba(0,0,255,0.8)",
-	};
+	color = CONNECTOR_ANCHOR_COLOR;
 
 	snap: {
 		item: Item | null;
