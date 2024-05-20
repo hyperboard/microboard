@@ -5,6 +5,7 @@ import { toFiniteNumber } from "utils";
 
 export class Camera {
 	subject = new Subject<Camera>();
+	resizeSubject = new Subject<Camera>();
 	scaleLevels = [
 		10, 9, 8, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 1.25, 1, 0.75, 0.5, 0.33, 0.2,
 		0.15, 0.1, 0.05, 0.03, 0.02, 0.01,
@@ -335,6 +336,7 @@ export class Camera {
 		this.window.width = document.documentElement.clientWidth;
 		this.window.height = document.documentElement.clientHeight;
 		this.window.dpi = window.devicePixelRatio;
+		this.resizeSubject.publish(this);
 		this.subject.publish(this);
 	}
 }

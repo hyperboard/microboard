@@ -43,6 +43,9 @@ export class AddDrawing extends BoardTool {
 		const mbr = this.drawing.getMbr();
 		const x = mbr.left;
 		const y = mbr.top;
+		if (points.length === 0) {
+			return false;
+		}
 		for (const point of points) {
 			point.x -= x;
 			point.y -= y;
