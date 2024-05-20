@@ -19,11 +19,26 @@ export function isHotkeyPushed(
 	event: KeyboardEvent,
 ): boolean {
 	const { key, preventDefault = true } = hotkeys[hotkey] as Hotkey;
-	const isPushed =
+	let isPushed =
 		key.button === event.code &&
 		(!key.alt || event.altKey) &&
 		(!key.shift || event.shiftKey) &&
 		(!key.ctrl || event.ctrlKey || event.metaKey);
+	if (isMacos() && key.button === "Delete") {
+		isPushed =
+			(event.code === "Delete" || event.code === "Backspace") &&
+			(!key.alt || event.altKey) &&
+			(!key.shift || event.shiftKey) &&
+			(!key.ctrl || event.ctrlKey || event.metaKey);
+	}
+	if (
+		(!key.ctrl && (event.ctrlKey || event.metaKey)) ||
+		(!key.alt && event.altKey) ||
+		(!key.shift && event.shiftKey)
+	) {
+		isPushed = false;
+	}
+
 	if (isPushed && preventDefault) {
 		event.preventDefault();
 	}
@@ -41,10 +56,20 @@ export function getHotkeyLabel(hotkey: HotkeyName) {
 type HotkeysMap = Partial<Record<HotkeyName, (e?: KeyboardEvent) => void>>;
 
 export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent) {
-	Object.entries(hotkeyMap).forEach(([hotkey, cb]) => {
+	const entries = Object.entries(hotkeyMap);
+	for (const [hotkey, cb] of entries) {
 		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
+			if (import.meta.env.NODE_ENV === "development") {
+				console.log(
+					`Triggered hotkey ${hotkey} (${getHotkeyLabel(
+						hotkey as HotkeyName,
+					)})`,
+				);
+			}
 			cb(event);
-			return;
+			return true;
 		}
-	});
+	}
+
+	return false;
 }

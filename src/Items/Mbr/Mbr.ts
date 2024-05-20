@@ -331,10 +331,16 @@ export class Mbr implements Geometry {
 			);
 		}
 
-		ctx.strokeStyle = this.borderColor;
-		ctx.lineWidth = this.strokeWidth;
-		ctx.setLineDash(scalePatterns(this.strokeWidth)[this.borderStyle]);
-		// ctx.stroke(this.path);
-		ctx.strokeRect(this.left, this.top, this.getWidth(), this.getHeight());
+		if (this.strokeWidth) {
+			ctx.strokeStyle = this.borderColor;
+			ctx.lineWidth = this.strokeWidth;
+			ctx.setLineDash(scalePatterns(this.strokeWidth)[this.borderStyle]);
+			ctx.strokeRect(
+				this.left,
+				this.top,
+				this.getWidth(),
+				this.getHeight(),
+			);
+		}
 	}
 }

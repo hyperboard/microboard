@@ -110,6 +110,12 @@ export class Selection {
 		this.itemsSubject.publish([]);
 	}
 
+	addAll() {
+		const items = this.board.items.listAll();
+		this.add(items);
+		this.setContext("SelectByRect");
+	}
+
 	remove(value: Item | Item[]): void {
 		this.items.remove(value);
 		if (Array.isArray(value)) {
@@ -159,6 +165,12 @@ export class Selection {
 		// Set a new timeout and keep its ID
 		this.timeoutID = setTimeout(this.on, 500);
 	};
+	disable(): void {
+		this.isOn = false;
+		this.setContext("None");
+		this.items.removeAll();
+		this.subject.publish(this);
+	}
 
 	setContext(context: SelectionContext): void {
 		this.context = context;
@@ -805,15 +817,11 @@ export class Selection {
 	}
 
 	bringToFront(): void {
-		this.items.list().forEach(item => {
-			this.board.items.index.bringToFront(item);
-		});
+		this.board.bringToFront(this.items.list());
 	}
 
 	sendToBack(): void {
-		this.items.list().forEach(item => {
-			this.board.items.index.sendToBack(item);
-		});
+		this.board.sendToBack(this.items.list());
 	}
 
 	duplicate(): void {

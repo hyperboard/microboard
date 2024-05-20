@@ -5,6 +5,7 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { Camera } from "Board/Camera";
 import { LayeredIndex } from "./LayeredIndex";
+import { ItemsIndexRecord } from "../BoardOperations";
 
 export class SpatialIndex {
 	subject = new Subject<Items>();
@@ -43,7 +44,23 @@ export class SpatialIndex {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
 		this.array.splice(zIndex, 0, item);
-		this.change(item);
+		this.array.forEach(this.change.bind(this));
+		this.subject.publish(this.items);
+	}
+
+	moveManyToZIndex(itemsRecord: ItemsIndexRecord): void {
+		const items = Object.keys(itemsRecord)
+			.map(id => this.items.getById(id))
+			.filter(item => item !== undefined);
+		const zIndex = Object.values(itemsRecord);
+		const newItems: Item[] = [];
+		for (let i = 0; i < zIndex.length; i++) {
+			const index = zIndex[i];
+			newItems[index] = items[i] as Item;
+		}
+
+		this.array = newItems;
+		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
@@ -51,7 +68,23 @@ export class SpatialIndex {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
 		this.array.unshift(item);
-		this.change(item);
+		this.array.forEach(this.change.bind(this));
+		this.subject.publish(this.items);
+	}
+
+	sendManyToBack(items: Item[]) {
+		const newItems: Item[] = [...items];
+		this.array.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		// this.moveManyToZIndex(
+		// 	items,
+		// 	newItems.map(item => newItems.indexOf(item)),
+		// );
+		this.array = newItems;
+		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
@@ -59,7 +92,20 @@ export class SpatialIndex {
 		const index = this.array.indexOf(item);
 		this.array.splice(index, 1);
 		this.array.push(item);
-		this.change(item);
+		this.array.forEach(this.change.bind(this));
+		this.subject.publish(this.items);
+	}
+
+	bringManyToFront(items: Item[]) {
+		const newItems: Item[] = [];
+		this.array.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		newItems.push(...items);
+		this.array = newItems;
+		this.array.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
