@@ -339,6 +339,7 @@ export class Board {
 	}
 
 	deserialize(snapshot: string): void {
+		debugger;
 		const map = JSON.parse(snapshot);
 		for (const itemData of map) {
 			const item = this.createItem(itemData.id, itemData);

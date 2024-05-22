@@ -58,6 +58,7 @@ export class Tools extends ToolContext {
 		}
 		this.publish();
 	}
+
 	addShape(): void {
 		if (this.getAddShape() && !isIframe()) {
 			this.cancel();
