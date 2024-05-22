@@ -108,6 +108,8 @@ export class Connector {
 		this.text.addMbr(this.getMbr());
 		this.text.setSelectionHorisontalAlignment("left");
 		this.text.editor.setSelectionHorisontalAlignment("left");
+		this.text.insideOf = this.itemType;
+		this.text.setBoard(this.board);
 		this.text.editor.applyRichTextOp({
 			class: "RichText",
 			method: "setMaxWidth",

@@ -13,6 +13,7 @@ import {
 } from "./EventsDebugSettings";
 import { Subject } from "Subject";
 import { Connection } from "App/Connection";
+import { TransformationCommand } from "Board/Items/Transformation/TransformationCommand";
 
 export class BoardEvent {
 	constructor(public order: number = 0, public body: BoardEventBody) {}

@@ -18,7 +18,7 @@ import {
 } from "./RichTextOperations";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
-import { defaultTextStyle } from "./RichText";
+import { defaultTextStyle, RichText } from "./RichText";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { Subject } from "Subject";
 
@@ -51,7 +51,8 @@ export class EditorContainer {
 		undo: () => void,
 		redo: () => void,
 		private getScale: () => number,
-	) {
+	) // private richText: RichText, // TODO bd-695
+	{
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
 		/** The editor must have initial descendants */
@@ -212,6 +213,50 @@ export class EditorContainer {
 
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
+		/* TODO bd-695
+        if (this.richText.getAutosize()
+            && (op.ops[0].type === "insert_text"
+            || op.ops[0].type === "split_node")
+        ) {
+            console.log("text len", this.textLength);
+            console.log("w", this.richText.getWidth());
+            if (this.richText.getFontSize() > 14) { // 14 - defaultSize
+                console.log("BEFORE", this.richText.getFontSize());
+                if (op.ops[0].type === "split_node"
+                || op.ops[0].text.length === 1) {
+                    this.decorated.apply(op.ops[0]);
+                    setTimeout(() => {
+                        if (this.richText.getFontSize() < 14) {
+                            console.log("overflowed");
+                            // Clear all / remove last one
+                            const removeOp = {
+                                type: "remove_text",
+                                path: op.ops[0].path,
+                                offset: op.ops[0].offset + op.ops[0].text.length - 1,
+                                text: op.ops[0].text.slice(-1)
+                            };
+                            this.richText.clearText();
+                            this.decorated.apply(removeOp);
+                        }
+                    }, 5);
+                } else {
+                    op.ops[0].text.split("").forEach((letter, index) => {
+                        const newOp = {
+                            ...op,
+                            ops: [{
+                                ...op.ops[0],
+                                text: letter,
+                                offset: op.ops[0].offset + index
+                            }]
+                        };
+                        this.applySelectionEdit(newOp);
+                    })
+                }
+            }
+        } else {
+            this.decorated.apply(op.ops[0]);
+        }
+        */
 		this.decorated.apply(op.ops[0]);
 		this.shouldEmit = true;
 	}
@@ -364,16 +409,24 @@ export class EditorContainer {
 	setSelectionFontSize(fontSize: number): void {
 		const size = fontSize;
 		const editor = this.editor;
+		const selection = editor.selection;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
 		}
-		Transforms.select(this.editor, {
-			anchor: Editor.start(this.editor, []),
-			focus: Editor.end(this.editor, []),
-		});
+
 		const marks = this.getSelectionMarks();
 		if (!marks) {
 			return;
+		}
+
+		if (
+			JSON.stringify(selection?.anchor) ===
+			JSON.stringify(selection?.focus)
+		) {
+			Transforms.select(this.editor, {
+				anchor: Editor.start(this.editor, []),
+				focus: Editor.end(this.editor, []),
+			});
 		}
 		this.recordMethodOps("setSelectionFontSize");
 		Editor.addMark(editor, "fontSize", size);
@@ -413,20 +466,20 @@ export class EditorContainer {
 			throw new Error("Nothing is selected");
 		}
 
-		const nodes = Editor.nodes(editor, {
-			at: [],
-			universal: true,
-			match: node => !Editor.isEditor(node) && Element.isElement(node),
-		});
-		for (const [node, path] of nodes) {
-			if (node.type === "paragraph") {
-				Transforms.setNodes(
-					editor,
-					{ horisontalAlignment: horisontalAlignment },
-					{ at: path },
+		const [match] = Editor.nodes(editor, {
+			at: Editor.unhangRange(editor, selection),
+			match: node => {
+				return (
+					!Editor.isEditor(node) &&
+					Element.isElement(node) &&
+					node.horisontalAlignment === horisontalAlignment
 				);
-			}
-		}
+			},
+		});
+
+		Transforms.setNodes(editor, {
+			horisontalAlignment: horisontalAlignment,
+		});
 	}
 
 	isBlockActive(format: BlockType): boolean {

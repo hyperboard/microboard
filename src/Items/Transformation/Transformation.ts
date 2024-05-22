@@ -114,6 +114,9 @@ export class Transformation {
 			case "scaleByTranslateBy":
 				this.applyScaleByTranslateBy(op.scale, op.translate);
 				break;
+			case "transformMany":
+				this.applyTransformMany(op.items[this.id]);
+				break;
 			default:
 				return;
 		}
@@ -144,6 +147,16 @@ export class Transformation {
 	): void {
 		this.matrix.scale(scale.x, scale.y);
 		this.matrix.translate(translate.x, translate.y);
+	}
+
+	applyTransformMany(op: TransformationOperation): void {
+		if (op.method === "scaleByTranslateBy") {
+			this.applyScaleByTranslateBy(op.scale, op.translate);
+		} else if (op.method === "scaleBy") {
+			this.applyScaleBy(op.x, op.y);
+		} else if (op.method === "translateBy") {
+			this.applyTranslateBy(op.x, op.y);
+		}
 	}
 
 	applyScaleByRelativeTo(
@@ -210,6 +223,10 @@ export class Transformation {
 		const copy = this.copy();
 		copy.matrix.invert();
 		return copy;
+	}
+
+	getId(): string {
+		return this.id;
 	}
 
 	translateTo(x: number, y: number): void {

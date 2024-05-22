@@ -35,9 +35,12 @@ export function createCommand(
 			}
 			default: {
 				const itemType = operation.class;
-				const itemIdList = Array.isArray(operation.item)
-					? operation.item
-					: [operation.item];
+				const itemIdList =
+					operation.method !== "transformMany"
+						? Array.isArray(operation.item)
+							? operation.item
+							: [operation.item]
+						: Object.keys(operation.items);
 				const items = itemIdList
 					.map(itemId => board.items.findById(itemId) ?? itemId)
 					.filter((item): item is Item => {

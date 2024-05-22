@@ -53,17 +53,6 @@ export class Select extends Tool {
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
 
-		const single = selection.items.getSingle();
-		if (
-			selection.getContext() === "EditTextUnderPointer" &&
-			single instanceof RichText &&
-			single.getText().length === 1 &&
-			single.getText()[0].type === "paragraph" &&
-			single.getText()[0].children[0].text.length === 0
-		) {
-			this.board.remove(single);
-		}
-
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection =
 			selectionMbr !== undefined &&
