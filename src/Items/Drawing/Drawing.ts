@@ -17,7 +17,6 @@ export interface DrawingData {
 }
 
 export class Drawing extends Mbr {
-	private id = "";
 	readonly itemType = "Drawing";
 	parent = "Board";
 	readonly transformation = new Transformation();
@@ -30,7 +29,11 @@ export class Drawing extends Mbr {
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 	private borderOpacity = 1;
 
-	constructor(public points: Point[], private events?: Events) {
+	constructor(
+		public points: Point[],
+		private events?: Events,
+		private id = "",
+	) {
 		super();
 		this.transformation.subject.subscribe(() => {
 			this.updateMbr();
@@ -183,6 +186,7 @@ export class Drawing extends Mbr {
 
 	setId(id: string): this {
 		this.id = id;
+		this.transformation.setId(id);
 		return this;
 	}
 

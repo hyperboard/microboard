@@ -16,7 +16,7 @@ interface TranslateTo {
 	y: number;
 }
 
-interface TranslateBy {
+export interface TranslateBy {
 	class: "Transformation";
 	method: "translateBy";
 	item: string[];
@@ -32,7 +32,7 @@ interface ScaleTo {
 	y: number;
 }
 
-interface ScaleBy {
+export interface ScaleBy {
 	class: "Transformation";
 	method: "scaleBy";
 	item: string[];
@@ -72,7 +72,7 @@ interface ScaleByRelativeTo {
 	point: { x: number; y: number };
 }
 
-interface ScaleByTranslateBy {
+export interface ScaleByTranslateBy {
 	class: "Transformation";
 	method: "scaleByTranslateBy";
 	item: string[];
@@ -87,6 +87,12 @@ interface Deserialize {
 	data: TransformationData;
 }
 
+export interface TransformMany {
+	class: "Transformation";
+	method: "transformMany";
+	items: { [key: string]: ScaleByTranslateBy | ScaleBy | TranslateBy };
+}
+
 export type TransformationOperation =
 	| TranslateTo
 	| TranslateBy
@@ -97,4 +103,5 @@ export type TransformationOperation =
 	| ScaleByRelativeTo
 	| ScaleToRelativeTo
 	| ScaleByTranslateBy
-	| Deserialize;
+	| Deserialize
+	| TransformMany;

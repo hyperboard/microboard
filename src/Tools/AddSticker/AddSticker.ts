@@ -77,10 +77,8 @@ export class AddSticker extends BoardTool {
 		}
 		this.sticker.setBackgroundColor(backgroundColor);
 		const sticker = this.board.add(this.sticker);
-
 		this.board.selection.removeAll();
 		this.board.selection.add(sticker);
-		this.board.selection.setContext("EditTextUnderPointer");
 		this.board.selection.editText();
 		this.board.tools.select();
 		this.board.tools.publish();

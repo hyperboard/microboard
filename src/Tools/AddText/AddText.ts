@@ -52,7 +52,9 @@ export class AddText extends BoardTool {
 			const text = this.board.add(new RichText(new Mbr()));
 			text.transformation.translateTo(this.bounds.left, this.bounds.top);
 			text.transformation.scaleBy(1, 1);
+			text.editor.setMaxWidth(600);
 			text.editor.setSelectionHorisontalAlignment("left");
+			text.insideOf = text.itemType;
 			this.board.selection.removeAll();
 			this.board.selection.add(text);
 			this.board.selection.editText();

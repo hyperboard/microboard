@@ -2,9 +2,13 @@ import { Transformation } from "./Transformation";
 import { TransformationOperation } from "./TransformationOperations";
 import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
+import { Board } from "Board/Board";
+import { Shape } from "../Shape";
 
 export class TransformationCommand implements Command {
 	reverse = this.getReverse();
+
+	// TODO HANDLE MULTIPLE OPERATIONS
 
 	constructor(
 		private transformation: Transformation[],
@@ -42,7 +46,6 @@ export class TransformationCommand implements Command {
 					},
 				);
 			case "translateBy": {
-				const op = this.operation;
 				return mapItemsByOperation(this.transformation, () => {
 					return {
 						...this.operation,
@@ -116,6 +119,21 @@ export class TransformationCommand implements Command {
 						...this.operation,
 						degree: -op.degree,
 					};
+				});
+			}
+			case "transformMany": {
+				const { operation, transformation } = this;
+				return transformation.map(currTrans => {
+					const currOp = operation.items[currTrans.getId()];
+					const op = {
+						...currOp,
+						scale: { x: 1 / currOp.scale.x, y: 1 / currOp.scale.y },
+						translate: {
+							x: -currOp.translate.x,
+							y: -currOp.translate.y,
+						},
+					};
+					return { item: currTrans, operation: op };
 				});
 			}
 			default:

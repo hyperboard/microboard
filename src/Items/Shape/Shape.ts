@@ -44,12 +44,14 @@ export class Shape implements Geometry {
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
 			this.updateMbr();
+			this.text.updateElement();
 			this.subject.publish(this);
 		});
 		this.text.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
+		this.text.insideOf = this.itemType;
 	}
 
 	emit(operation: ShapeOperation): void {
@@ -122,13 +124,7 @@ export class Shape implements Geometry {
 				break;
 			case "Transformation":
 				this.transformation.apply(op);
-				this.text.setContainer(this.text.container);
-				if (
-					op.method !== "translateTo" &&
-					op.method !== "translateBy"
-				) {
-					this.text.updateElement();
-				}
+				// this.text.setContainer(this.text.container);
 				break;
 			default:
 				return;

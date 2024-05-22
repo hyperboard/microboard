@@ -1,4 +1,10 @@
-export function getBlockNodes(data, maxWidth) {
+export function getBlockNodes(
+	data,
+	maxWidth,
+	insideOf?: string,
+	containerWidth?: number,
+	containerHeight?: number,
+) {
 	if (!maxWidth) {
 		maxWidth = Infinity;
 	}
@@ -13,14 +19,23 @@ export function getBlockNodes(data, maxWidth) {
 		width = Math.max(width, node.width);
 		height += node.height;
 	}
-	align(nodes, maxWidth);
+	if (containerWidth && containerHeight) {
+		align(
+			nodes,
+			maxWidth,
+			insideOf,
+			Math.min(containerWidth / width, containerHeight / height),
+		);
+	} else {
+		align(nodes, maxWidth, insideOf);
+	}
 	return {
 		nodes,
 		maxWidth,
 		width,
 		height,
-		render: ctx => {
-			renderBlockNodes(ctx, nodes);
+		render: (ctx, scale?: number) => {
+			renderBlockNodes(ctx, nodes, scale);
 		},
 	};
 }
@@ -483,7 +498,7 @@ function setBlockNodesCoordinates(nodes) {
 	}
 }
 
-function align(nodes, maxWidth) {
+function align(nodes, maxWidth, insideOf?: string, scale?: number) {
 	const maxNodeWidth = nodes.reduce((acc, node) => {
 		if (node.width > acc) {
 			return node.width;
@@ -495,56 +510,86 @@ function align(nodes, maxWidth) {
 			case "left":
 				break;
 			case "center":
-				alignToCenter(
-					node,
-					maxWidth === Infinity ? maxNodeWidth : maxWidth,
-				);
+				if (insideOf === "RichText" || insideOf === "Connector") {
+					alignToCenter(node, maxNodeWidth);
+				} else if (insideOf === "Shape" || insideOf === "Sticker") {
+					alignToCenter(node, maxWidth, scale);
+				} else {
+					alignToCenter(
+						node,
+						maxWidth === Infinity ? maxNodeWidth : maxWidth,
+					);
+				}
 				break;
 			case "right":
-				alignToRight(
-					node,
-					maxWidth === Infinity ? maxNodeWidth : maxWidth,
-				);
+				if (insideOf === "RichText" || insideOf === "Connector") {
+					alignToRight(node, maxNodeWidth);
+				} else if (insideOf === "Shape" || insideOf === "Sticker") {
+					alignToRight(node, maxWidth, scale);
+				} else {
+					alignToRight(
+						node,
+						maxWidth === Infinity ? maxNodeWidth : maxWidth,
+					);
+				}
 				break;
 		}
 	}
 }
 
-function alignToCenter(node, maxWidth) {
+function alignToCenter(node, maxWidth, scale?: number) {
 	const nodeWidth = node.width;
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
-			lineWidth += block.width;
+			if (scale) {
+				lineWidth += block.width * scale;
+			} else {
+				lineWidth += block.width;
+			}
 		}
 		const xOffset = (maxWidth - lineWidth) / 2;
-		if (maxWidth === Infinity) {
-		}
 		for (const block of line) {
-			block.x += xOffset;
+			if (scale) {
+				block.x += xOffset / scale;
+			} else {
+				block.x += xOffset;
+			}
 		}
 	}
 }
 
-function alignToRight(node, maxWidth) {
+function alignToRight(node, maxWidth, scale?: number) {
 	const nodeWidth = node.width;
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
-			lineWidth += block.width;
+			if (scale) {
+				lineWidth += block.width * scale;
+			} else {
+				lineWidth += block.width;
+			}
 		}
 		const xOffset = maxWidth - lineWidth;
-		if (maxWidth === Infinity) {
-		}
 		for (const block of line) {
-			block.x += xOffset;
+			if (scale) {
+				block.x += xOffset / scale;
+			} else {
+				block.x += xOffset;
+			}
 		}
 	}
 }
 
-function renderBlockNodes(ctx, nodes) {
+function renderBlockNodes(ctx, nodes, scale?: number) {
+	if (scale) {
+		ctx.scale(scale, scale);
+	}
 	for (const node of nodes) {
 		renderTextLines(ctx, node.lines);
+	}
+	if (scale) {
+		ctx.scale(1 / scale, 1 / scale);
 	}
 }
 
@@ -591,10 +636,10 @@ function underline(ctx, textBlock) {
 	const height = measure.height;
 	const color = style.color;
 	ctx.strokeStyle = color;
-	ctx.lineWidth = 1;
+	ctx.lineWidth = textBlock.fontSize / 14;
 	ctx.beginPath();
-	ctx.moveTo(x, y + 2);
-	ctx.lineTo(x + width, y + 2);
+	ctx.moveTo(x, y + (2 * textBlock.fontSize) / 14); // 14 - default fontSize
+	ctx.lineTo(x + width, y + (2 * textBlock.fontSize) / 14);
 	ctx.stroke();
 	ctx.strokeStyle = style.backgroundColor;
 	ctx.lineWidth = 2;
@@ -614,10 +659,10 @@ function cross(ctx, textBlock) {
 	const height = measure.height;
 	const color = style.color;
 	ctx.strokeStyle = color;
-	ctx.lineWidth = 1;
+	ctx.lineWidth = textBlock.fontSize / 14;
 	ctx.beginPath();
-	ctx.moveTo(x, y - textBlock.fontSize / 2 + 2);
-	ctx.lineTo(x + width, y - textBlock.fontSize / 2 + 2);
+	ctx.moveTo(x, y - height / 4);
+	ctx.lineTo(x + width, y - height / 4);
 	ctx.stroke();
 	ctx.strokeStyle = style.backgroundColor;
 	ctx.lineWidth = 2;
