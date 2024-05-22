@@ -211,7 +211,6 @@ export class ExportSnapshot extends Tool {
 	}
 
 	onCancel() {
-		console.log("canceled");
 		this.tempDrawingContext.clear();
 	}
 

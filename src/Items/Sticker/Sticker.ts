@@ -349,7 +349,6 @@ export class Sticker implements Geometry {
 				}
 			}
 		} else {
-			console.log("AFTER");
 			this.transformation.scaleByTranslateBy(
 				{
 					x: res.matrix.scaleX,

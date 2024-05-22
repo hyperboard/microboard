@@ -101,7 +101,6 @@ export class Transformer extends Tool {
 		const list = this.selection.items.list();
 
 		if (!mbr || list.length === 0 || !this.oppositePoint) {
-			console.log("no mbr");
 			return false;
 		}
 

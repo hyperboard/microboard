@@ -97,7 +97,6 @@ export class Events {
 		}
 		const command = createCommand(this, this.board, eventBody.operation);
 		const record = { event, command };
-		// console.log("Insert", command, event);
 		command.apply();
 		this.log.push(record);
 		this.log.pushRecordsStackAndRecreateCommands(
@@ -153,7 +152,6 @@ export class Events {
 		} as BoardEventBody;
 		const event = new BoardEvent(0, eventBody);
 		const record = { event, command };
-		// console.log("Emit", command, event);
 		this.log.push(record, false);
 		// TODO replace connectionId with userId
 		this.setLatestUserEvent(operation, this.connection.connectionId);

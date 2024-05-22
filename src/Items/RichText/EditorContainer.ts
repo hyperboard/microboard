@@ -21,6 +21,7 @@ import { ReactEditor, withReact } from "slate-react";
 import { defaultTextStyle, RichText } from "./RichText";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { Subject } from "Subject";
+import { validateItemsMap } from "Board/Validators";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -50,9 +51,8 @@ export class EditorContainer {
 		private emitWithoutApplying: (op: RichTextOperation) => void,
 		undo: () => void,
 		redo: () => void,
-		private getScale: () => number,
-	) // private richText: RichText, // TODO bd-695
-	{
+		private getScale: () => number, // private richText: RichText, // TODO bd-695
+	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
 		/** The editor must have initial descendants */
@@ -74,20 +74,7 @@ export class EditorContainer {
 		this.decorated = {
 			realapply: editor.apply,
 			apply: op => {
-				if (operationsRichTextDebugEnabled) {
-					console.log(
-						"[before] decorated.apply(): editor.children",
-						JSON.parse(JSON.stringify(this.editor.children)),
-					);
-					console.info("decorated.apply()", op);
-				}
 				this.decorated.realapply(op);
-				if (operationsRichTextDebugEnabled) {
-					console.log(
-						"[after] decorated.apply(): editor.children",
-						JSON.parse(JSON.stringify(this.editor.children)),
-					);
-				}
 			},
 			undo: editor.undo,
 			redo: editor.redo,
@@ -99,9 +86,6 @@ export class EditorContainer {
 			);
 			this.textLength = editorHTML?.innerText.length || 0;
 
-			if (operationsRichTextDebugEnabled) {
-				console.info("editor.apply", operation);
-			}
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
@@ -141,6 +125,19 @@ export class EditorContainer {
 			this.decorated.undo();
 			undo();
 			this.shouldEmit = true;
+		};
+		const { insertData } = editor;
+		editor.insertData = (data: DataTransfer): void => {
+			const text = data.getData("text/plain");
+			try {
+				const map = JSON.parse(text);
+				const isDataValid = validateItemsMap(map);
+				if (!isDataValid) {
+					insertData(data);
+				}
+			} catch (error) {
+				insertData(data);
+			}
 		};
 	}
 
@@ -368,7 +365,6 @@ export class EditorContainer {
 		const editor = this.editor;
 		const styleList = Array.isArray(style) ? style : [style];
 		const marks = this.getSelectionMarks();
-		console.log(JSON.stringify(marks));
 		if (!marks) {
 			return;
 		}
