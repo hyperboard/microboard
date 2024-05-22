@@ -286,7 +286,7 @@ export class Shape implements Geometry {
 	}
 
 	getIntersectionPoints(segment: Line): Point[] {
-		return this.getIntersectionPoints(segment);
+		return this.getIntersectionPoints(segment); // REFACTOR infloop
 	}
 
 	updateMbr(): Mbr {

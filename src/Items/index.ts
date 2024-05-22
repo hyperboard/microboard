@@ -13,6 +13,7 @@ export {
 export { Connector, ConnectorData, ConnectorOperation } from "./Connector";
 export { RichText, RichTextData, RichTextOperation } from "./RichText";
 export { Shape, ShapeData } from "./Shape";
+export { Frame, FrameData } from "./Frame";
 
 export { Item, ItemType, ItemData } from "./Item";
 

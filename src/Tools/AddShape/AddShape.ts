@@ -25,7 +25,7 @@ export class AddShape extends BoardTool {
 		this.type = type;
 	}
 
-	_initTransformation(sx?: number, sy?: number) {
+	initTransformation(sx?: number, sy?: number) {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100;
 		this.shape.transformation.translateTo(
@@ -42,7 +42,7 @@ export class AddShape extends BoardTool {
 		this.bounds = this.line.getMbr();
 		this.bounds.borderColor = SELECTION_COLOR;
 		this.shape.setShapeType(this.type);
-		this._initTransformation();
+		this.initTransformation();
 		this.board.tools.publish();
 		return true;
 	}
@@ -55,7 +55,7 @@ export class AddShape extends BoardTool {
 			);
 			this.bounds = this.line.getMbr();
 			this.bounds.borderColor = SELECTION_COLOR;
-			this._initTransformation();
+			this.initTransformation();
 			this.board.tools.publish();
 			return true;
 		}
@@ -71,7 +71,7 @@ export class AddShape extends BoardTool {
 		if (height < 2) {
 			height = 100;
 		}
-		this._initTransformation(width / 100, height / 100);
+		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
 		this.board.selection.removeAll();
 		this.board.selection.add(shape);

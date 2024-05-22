@@ -13,7 +13,6 @@ import {
 } from "./EventsDebugSettings";
 import { Subject } from "Subject";
 import { Connection } from "App/Connection";
-import { TransformationCommand } from "Board/Items/Transformation/TransformationCommand";
 
 export class BoardEvent {
 	constructor(public order: number = 0, public body: BoardEventBody) {}
@@ -70,6 +69,21 @@ export class Events {
 					this.addEvent(event);
 				}
 			}
+			// TODO onBoardLoad
+			const searchParams = new URLSearchParams(
+				window.location.search.slice(1),
+			);
+			const toFocusId = searchParams.get("focus") ?? "";
+			const toFocusItem = this.board.items.getById(toFocusId);
+			if (toFocusItem) {
+				const mbr = toFocusItem.getMbr();
+				mbr.left -= 50;
+				mbr.top -= 50;
+				mbr.right += 50;
+				mbr.bottom += 50;
+				this.board.camera.zoomToFit(mbr);
+			}
+			// onBoardLoad
 		}
 	};
 

@@ -5,6 +5,7 @@ import { BoardOperation } from "../BoardOperations";
 import { ConnectorOperation } from "../Items/Connector";
 import { DrawingOperation } from "Board/Items/Drawing/DrawingCommand";
 import { StickerOperation } from "../Items/Sticker/StickerOperation";
+import { FrameOperation } from "../Items/Frame";
 
 interface Undo {
 	class: "Events";
@@ -26,7 +27,8 @@ export type ItemOperation =
 	| StickerOperation
 	| RichTextOperation
 	| ConnectorOperation
-	| DrawingOperation;
+	| DrawingOperation
+	| FrameOperation;
 
 export type UndoableOperation = BoardOperation | ItemOperation;
 

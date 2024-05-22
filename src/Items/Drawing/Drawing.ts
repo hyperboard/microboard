@@ -19,7 +19,7 @@ export interface DrawingData {
 export class Drawing extends Mbr {
 	readonly itemType = "Drawing";
 	parent = "Board";
-	readonly transformation = new Transformation();
+	readonly transformation = new Transformation(this.id, this.events);
 	private path2d = Path2D ? new Path2D() : undefined; // just to make tests run in node
 	readonly subject = new Subject<Drawing>();
 	untransformedMbr = new Mbr();

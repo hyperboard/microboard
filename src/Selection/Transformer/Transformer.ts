@@ -1,6 +1,7 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import {
+	Frame,
 	Mbr,
 	Point,
 	Shape,
@@ -19,6 +20,7 @@ import { Geometry } from "Board/Items/Geometry";
 import { Anchor } from "Board/Items/Anchor";
 import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
+import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -27,6 +29,8 @@ export class Transformer extends Tool {
 	mbr: Mbr | undefined;
 	// original mbr when resize was triggered
 	startMbr: Mbr | undefined;
+	clickedOn?: ResizeType;
+	private toDrawBorders = new NestingHighlighter();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -73,6 +77,7 @@ export class Transformer extends Tool {
 		this.updateAnchorType();
 		const mbr = this.selection.getMbr();
 		this.resizeType = this.getResizeType();
+		this.clickedOn = this.getResizeType();
 		if (this.resizeType && mbr) {
 			this.oppositePoint = getOppositePoint(this.resizeType, mbr);
 			this.mbr = mbr;
@@ -85,8 +90,10 @@ export class Transformer extends Tool {
 		this.updateAnchorType();
 		const wasResising = this.resizeType !== undefined;
 		this.resizeType = undefined;
+		this.clickedOn = undefined;
 		this.oppositePoint = undefined;
 		this.mbr = undefined;
+		this.toDrawBorders.clear();
 		return wasResising;
 	}
 
@@ -110,7 +117,11 @@ export class Transformer extends Tool {
 			this.resizeType === "top" || this.resizeType === "bottom";
 		const single = this.selection.items.getSingle();
 
-		if (single instanceof Shape || single instanceof Sticker) {
+		if (
+			single instanceof Shape ||
+			single instanceof Sticker ||
+			single instanceof Frame
+		) {
 			this.mbr = single.doResize(
 				this.resizeType,
 				this.board.pointer.point,
@@ -189,6 +200,31 @@ export class Transformer extends Tool {
 							scale: { x: matrix.scaleX, y: matrix.scaleY },
 						};
 					}
+				} else if (item instanceof Frame) {
+					if (!item.getCanChangeRatio()) {
+						if (
+							this.clickedOn === "leftBottom" ||
+							this.clickedOn === "leftTop" ||
+							this.clickedOn === "rightBottom" ||
+							this.clickedOn === "rightTop"
+						) {
+							translation[item.getId()] = {
+								class: "Transformation",
+								method: "scaleByTranslateBy",
+								item: [item.getId()],
+								translate: { x: translateX, y: translateY },
+								scale: { x: matrix.scaleX, y: matrix.scaleY },
+							};
+						}
+					} else {
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: translateX, y: translateY },
+							scale: { x: matrix.scaleX, y: matrix.scaleY },
+						};
+					}
 				} else {
 					translation[item.getId()] = {
 						class: "Transformation",
@@ -206,6 +242,62 @@ export class Transformer extends Tool {
 
 			this.mbr = resize.mbr;
 		}
+
+		const frames = this.board.items
+			.getEnclosedOrCrossed(mbr.left, mbr.top, mbr.right, mbr.bottom)
+			.filter(item => item instanceof Frame);
+		list.forEach(item => {
+			if (item instanceof Frame) {
+				const itemsToCheck = this.board.items
+					.getEnclosedOrCrossed(
+						item.getMbr().left,
+						item.getMbr().top,
+						item.getMbr().right,
+						item.getMbr().bottom,
+					)
+					.filter(
+						currItem =>
+							currItem !== item &&
+							!(currItem instanceof Frame) &&
+							(currItem.parent === "Board" ||
+								currItem.parent === item.getId()),
+					);
+				itemsToCheck.forEach(currItem => {
+					if (item.handleNesting(currItem)) {
+						this.toDrawBorders.add([item, currItem]);
+						if (
+							this.board.getZIndex(item) >
+							this.board.getZIndex(currItem)
+						) {
+							/*
+							this.board.moveToZIndex(
+								currItem,
+								this.board.getZIndex(item) + 1,
+							);
+							*/
+						}
+					} else {
+						if (
+							this.toDrawBorders.listAll().includes(item) &&
+							this.toDrawBorders.listAll().includes(currItem)
+						) {
+							this.toDrawBorders.remove([item, currItem]);
+						}
+					}
+				});
+			} else {
+				frames.forEach(frame => {
+					if (!frame.handleNesting(item, { onlyForOut: true })) {
+						if (
+							this.toDrawBorders.listAll().includes(frame) &&
+							this.toDrawBorders.listAll().includes(item)
+						) {
+							this.toDrawBorders.remove([frame, item]);
+						}
+					}
+				});
+			}
+		});
 
 		this.selection.off();
 		this.selection.subject.publish(this.selection);
@@ -225,6 +317,8 @@ export class Transformer extends Tool {
 		for (const anchor of anchors) {
 			anchor.render(context);
 		}
+
+		this.toDrawBorders.render(context);
 	}
 
 	handleSelectionUpdate(_items: SelectionItems): void {
