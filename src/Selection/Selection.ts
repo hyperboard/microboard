@@ -5,6 +5,7 @@ import {
 	RichText,
 	Shape,
 	ShapeData,
+	Frame,
 	TransformationOperation,
 } from "../Items";
 import { Item, ItemData } from "../Items";
@@ -243,19 +244,14 @@ export class Selection {
 			item instanceof Shape ||
 			item instanceof Sticker ||
 			item instanceof Connector ||
-			item instanceof RichText
+			item instanceof RichText ||
+			item instanceof Frame
 		) {
 			if (shouldReplace) {
 				const text = item instanceof RichText ? item : item.text;
 				text.clearText();
 				text.editor.editor.insertText(shouldReplace);
-				// probably should be REFACTORed
-				setTimeout(() => {
-					text.editorTransforms.move(text.editor.editor, {
-						distance: 1,
-						unit: "line",
-					});
-				}, 10); // probably should be 20
+				text.moveCursorToEOL(); // prob should be 20 ms
 			}
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
@@ -274,7 +270,8 @@ export class Selection {
 				top.itemType === "RichText" ||
 				top.itemType === "Shape" ||
 				top.itemType === "Sticker" ||
-				top.itemType === "Connector"
+				top.itemType === "Connector" ||
+				top.itemType === "Frame"
 			) {
 				// this.setTextToEdit(top);
 				const item = this.items.getSingle();
@@ -300,6 +297,7 @@ export class Selection {
 			(!(item instanceof RichText) &&
 				!(item instanceof Shape) &&
 				!(item instanceof Sticker) &&
+				!(item instanceof Frame) &&
 				!(item instanceof Connector))
 		) {
 			this.textToEdit = undefined;
@@ -344,12 +342,15 @@ export class Selection {
 
 	selectEnclosedOrCrossedBy(rect: Mbr): void {
 		this.removeAll();
-		const list = this.board.items.getEnclosed(
-			rect.left,
-			rect.top,
-			rect.right,
-			rect.bottom,
-		);
+		const enclosedFrames = this.board.items
+			.getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
+			.filter(item => item instanceof Frame);
+		const list = this.board.items
+			.getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
+			.filter(
+				item =>
+					!(item instanceof Frame) || enclosedFrames.includes(item),
+			);
 		if (list.length !== 0) {
 			this.add(list);
 			this.setContext("SelectByRect");
@@ -369,6 +370,7 @@ export class Selection {
 				"Shape",
 				"Sticker",
 				"Connector",
+				"Frame",
 				"RichText",
 			])
 		);
@@ -426,7 +428,8 @@ export class Selection {
 			"Shape",
 			"Sticker",
 			"Connector",
-		])[0] as RichText | Shape | undefined;
+			"Frame",
+		])[0] as RichText | Shape | Frame | undefined;
 		const text = item?.itemType === "RichText" ? item : item?.text;
 		return text;
 	}
@@ -447,7 +450,11 @@ export class Selection {
 	}
 
 	getFillColor(): string {
-		const tmp = this.items.getItemsByItemTypes(["Shape", "Sticker"])[0];
+		const tmp = this.items.getItemsByItemTypes([
+			"Shape",
+			"Sticker",
+			"Frame",
+		])[0];
 		return tmp?.getBackgroundColor() || defaultShapeData.backgroundColor;
 	}
 
@@ -684,6 +691,15 @@ export class Selection {
 				backgroundColor,
 			});
 		}
+		const frames = this.items.getIdsByItemTypes(["Frame"]);
+		if (frames.length) {
+			this.emit({
+				class: "Frame",
+				method: "setBackgroundColor",
+				item: frames,
+				backgroundColor,
+			});
+		}
 	}
 
 	setShapeType(shapeType: ShapeType): void {
@@ -704,6 +720,7 @@ export class Selection {
 			} else if (
 				single instanceof Shape ||
 				single instanceof Sticker ||
+				single instanceof Frame ||
 				single instanceof Connector
 			) {
 				single.text.setSelectionFontSize(fontSize, this.getContext());
@@ -754,7 +771,8 @@ export class Selection {
 			} else if (
 				single instanceof Shape ||
 				single instanceof Sticker ||
-				single instanceof Connector
+				single instanceof Connector ||
+				single instanceof Frame
 			) {
 				single.text.setSelectionFontColor(fontColor, this.context);
 			}
@@ -776,7 +794,8 @@ export class Selection {
 			} else if (
 				single instanceof Shape ||
 				single instanceof Sticker ||
-				single instanceof Connector
+				single instanceof Connector ||
+				single instanceof Frame
 			) {
 				single.text.setSelectionFontHighlight(
 					fontHighlight,
@@ -847,6 +866,7 @@ export class Selection {
 			method: "remove",
 			item: this.items.ids(),
 		});
+		this.board.tools.getSelect()?.toHighlight.clear();
 		this.setContext("None");
 	}
 

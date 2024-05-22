@@ -488,6 +488,16 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	/** Moves cursor to the end of first line */
+	moveCursorToEOL(delay = 10): void {
+		setTimeout(() => {
+			this.editorTransforms.move(this.editor.editor, {
+				distance: 1,
+				unit: "line",
+			});
+		}, delay);
+	}
+
 	getId(): string {
 		return this.id;
 	}
@@ -500,6 +510,14 @@ export class RichText extends Mbr implements Geometry {
 
 	getText(): Descendant[] {
 		return this.editor.getText();
+	}
+
+	getTextString(): string {
+		return this.getText()
+			.filter(desc => desc.type === "paragraph")
+			.flatMap(paragraph => paragraph.children)
+			.map(node => node.text)
+			.join("\n");
 	}
 
 	getScale = (): number => {

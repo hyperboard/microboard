@@ -32,6 +32,14 @@ export class LayeredIndex {
 		return container ? container.item : undefined;
 	}
 
+	getEnclosed(rect: Mbr): Item[] {
+		let items: Item[] = [];
+		for (const layer of this.layers.array) {
+			items = items.concat(layer.getEnclosed(rect));
+		}
+		return items;
+	}
+
 	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		let items: Item[] = [];
 		for (const layer of this.layers.array) {
