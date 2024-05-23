@@ -131,19 +131,18 @@ export class RichText extends Mbr implements Geometry {
 		});
 	}
 
-	getTextForNodes() {
+	getTextForNodes(): Descendant[] {
 		const children = this.editor.editor.children;
 		if (isTextEmpty(children)) {
 			return [
 				{
 					type: "paragraph",
-					lineHeight: 1.4,
 					children: [
 						{
 							type: "text",
 							styles: this.getFontStyles().includes("bold")
-								? "bold"
-								: "",
+								? ["bold"]
+								: [""],
 							fontColor: "black",
 							fontHighlight: "",
 							fontSize: this.getFontSize(),

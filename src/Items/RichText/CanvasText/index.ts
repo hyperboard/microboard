@@ -1,14 +1,24 @@
+import { BlockNode } from "../Editor/BlockNode";
+import { TextNode } from "../Editor/TextNode";
+
+interface LayoutBlockNodes {
+	nodes: LayoutBlockNode[];
+	maxWidth: number;
+	width: number;
+	height: number;
+	render: (ctx: Ctx, scale?: number) => void;
+}
+
+type Ctx = CanvasRenderingContext2D;
+
 export function getBlockNodes(
-	data,
-	maxWidth,
+	data: BlockNode[],
+	maxWidth = Infinity,
 	insideOf?: string,
 	containerWidth?: number,
 	containerHeight?: number,
-) {
-	if (!maxWidth) {
-		maxWidth = Infinity;
-	}
-	const nodes = [];
+): LayoutBlockNodes {
+	const nodes: LayoutBlockNode[] = [];
 	for (const node of data) {
 		nodes.push(getBlockNode(node, maxWidth));
 	}
@@ -40,33 +50,57 @@ export function getBlockNodes(
 	};
 }
 
-const getNode = {
-	paragraph: getBlockNode,
-	heading: getBlockNode,
-	"block-quote": getBlockNode,
-	"bulleted-list": getBlockNode,
-	"numbered-list": getBlockNode,
-	"list-item": getBlockNode,
-	text: getTextNode,
-};
+interface LayoutBlockNode {
+	type:
+		| "paragraph"
+		| "heading"
+		| "block-quote"
+		| "bulleted-list"
+		| "numbered-list"
+		| "list-item"
+		| "text";
+	lineHeight: number;
+	children: LayoutTextNode[];
+	lines: LayoutTextBlock[][];
+	align: "left" | "center" | "right" | undefined;
+	width: number;
+	height: number;
+}
 
-function getBlockNode(data, maxWidth) {
-	const node = {
+function getBlockNode(data: BlockNode, maxWidth: number): LayoutBlockNode {
+	const node: LayoutBlockNode = {
 		type: data.type,
-		lineHeight: data.lineHeight ?? 1.4,
+		lineHeight: 1.4,
 		children: [],
 		lines: [],
 		align: data.horisontalAlignment,
+		width: 0,
+		height: 0,
 	};
 	for (const child of data.children) {
-		node.children.push(getNode[child.type](child));
+		switch (child.type) {
+			case "bulleted-list":
+			case "numbered-list":
+			case "list-item":
+				getBlockNode(child, maxWidth);
+				break;
+			case "text":
+				getTextNode(child);
+		}
 	}
 	layoutBlockNode(node, maxWidth);
 
 	return node;
 }
 
-function getTextNode(data) {
+interface LayoutTextNode {
+	type: string;
+	text: string;
+	style: LeafStyle;
+	blocks: never[];
+}
+
+function getTextNode(data: TextNode): LayoutTextNode {
 	const text = data.text.length === 0 ? "\u00A0" : data.text;
 	const node = {
 		type: "text",
@@ -77,8 +111,21 @@ function getTextNode(data) {
 	return node;
 }
 
-function getTextStyle(data) {
-	const leafStyle = {
+interface LeafStyle {
+	fontStyle: string;
+	fontWeight: string;
+	color: string;
+	backgroundColor: string | undefined;
+	fontSize: number;
+	fontFamily: string;
+	textDecorationLine?: "underline";
+	crossed?: "line-through";
+	verticalAlign?: "super" | "sub";
+	font?: string;
+}
+
+function getTextStyle(data: TextNode): LeafStyle {
+	const leafStyle: LeafStyle = {
 		fontStyle: "normal",
 		fontWeight: "normal",
 		color: data.fontColor ?? "black",
@@ -115,9 +162,9 @@ function getTextStyle(data) {
 	return leafStyle;
 }
 
-const defaultStyle = getTextStyle({});
+const defaultStyle = getTextStyle({} as TextNode);
 
-function getFont(style) {
+function getFont(style: LeafStyle): string {
 	const fontStyle = style.fontStyle || "normal";
 	const fontWeight = style.fontWeight || 400;
 	const fontSize = style.fontSize || "14";
@@ -126,59 +173,55 @@ function getFont(style) {
 	return font;
 }
 
-function layoutBlockNode(blockNode, maxWidth) {
-	const lines = [];
+function layoutBlockNode(blockNode: LayoutBlockNode, maxWidth: number): void {
+	const lines: LayoutTextBlock[][] = [];
 	for (const child of blockNode.children) {
 		layoutTextNode(lines, child, maxWidth);
 	}
 	blockNode.lines = lines;
 	fillEmptyLines(blockNode);
-	setBlockNodeCoordinates(blockNode, 0, 0);
+	setBlockNodeCoordinates(blockNode);
 }
 
-function layoutTextNode(lines, textNode, maxWidth) {
+function layoutTextNode(
+	lines: LayoutTextBlock[][],
+	textNode: LayoutTextNode,
+	maxWidth: number,
+): void {
 	// Check if textNode.text is empty. If it is, return since there is no text to process.
 	if (textNode.text === "") {
-		log("Text is empty. Exiting...");
 		return;
 	}
 
 	// Check if the lines array is empty. If it is, add a new line to it.
 	if (lines.length === 0) {
 		lines.push([]);
-		log("Empty lines array. Adding a new line...");
 	}
 
 	const style = textNode.style;
 	const nodeLines = textNode.text.split("\n");
 
 	for (let nodeLine of nodeLines) {
-		nodeLine = nodeLine.replaceAll("\t", "        ");
-
+		nodeLine = nodeLine.replace(/\t/g, "        ");
 		// Create an array of words by using the splitWords function on the textNode.text.
 		const words = splitTextIntoWords(nodeLine);
-		log("Words:", words);
 
 		// Create a variable to hold the current text string.
 		let currentString = "";
 
 		// Shift words from the words array and process each word.
-		let count = 0;
 		let hasWrapped = false;
 		while (words.length > 0) {
-			count++;
 			const word = words.shift();
+			if (!word) {
+				break;
+			}
 			const newText =
 				currentString === "" ? word : currentString + "" + word;
-			log("Count:", count);
-			log("Words:", words);
-			log("Processing word:", word);
-			log("Current text string:", newText);
 
 			// Create a text block using the getTextBlock function with the current string.
 			// The function will measure the text and set the text block width.
 			const block = getTextBlock(newText, style);
-			log("Created text block:", block);
 
 			// Get the last line in the lines array and its width.
 			const lastLine = lines[lines.length - 1];
@@ -186,26 +229,15 @@ function layoutTextNode(lines, textNode, maxWidth) {
 			for (const block of lastLine) {
 				lastLineWidth += block.width;
 			}
-			log("Last line:", lastLine);
-			log("Last line width:", lastLineWidth);
 
 			// Check if the newly created block's width, together with the width of the last line,
 			// fits within the maxWidth.
 			if (lastLineWidth + block.width <= maxWidth) {
-				log(
-					"Text block fits within maxWidth. Updating current text string.",
-				);
-				log("Current text string:", newText);
 				currentString = newText;
 			} else {
-				log(
-					"Text block does not fit within maxWidth. Processing current text string.",
-				);
 				if (currentString === "") {
-					log("Current text string is empty.");
 					// If the current string is empty, it means a single word does not fit the remaining width.
 					if (lastLine.length === 0) {
-						log("Last line is empty.");
 						// If the last line is empty, a single word does not fit maxWidth and must be broken down.
 						// Find the largest substring of the word that fits within the maxWidth.
 						const substring = findLargestSubstring(
@@ -214,74 +246,52 @@ function layoutTextNode(lines, textNode, maxWidth) {
 							maxWidth,
 						);
 						const remainingPart = word.slice(substring.length);
-						log("Largest substring:", substring);
-						log("Remaining part:", remainingPart);
 
 						// Create a new block with the substring.
 						const newBlock = getTextBlock(substring, style);
-						log("New block:", newBlock);
 
 						// Push the new block to the line.
 						lastLine.push(newBlock);
-						log("Updated last line:", lastLine);
 
 						// Push a new line to the lines array.
 						lines.push([]);
-						log("Added a new line to lines array.");
 
 						hasWrapped = true;
 
 						// Insert the remaining part of the word at the start of the words array.
 						words.unshift(remainingPart);
-						log(
-							"Inserted remaining part of the word at the start of the words array.",
-						);
 					} else {
-						log("Last line is not empty.");
 						// If the last line is not empty, we must attempt to fit the word into a new empty line.
 						// Push a new line to the lines array.
 						lines.push([]);
-						log("Added a new line to lines array.");
 
 						hasWrapped = true;
 
 						// Insert the current word back at the start of the words array.
 						words.unshift(word);
-						log(
-							"Inserted current word at the start of the words array.",
-						);
 					}
 				} else {
-					log("Current text string is not empty.");
 					// If the current string is not empty, we can push it to the last line and create the next line.
 					if (lastLine.length === 0 && hasWrapped) {
-						log("Last line is empty.");
 						currentString = currentString.trimStart();
 					}
 
 					// Create a text block from the current string.
 					const newBlock = getTextBlock(currentString, style);
-					log("New block:", newBlock);
 
 					// Push the new block to the last line.
 					lastLine.push(newBlock);
-					log("Updated last line:", lastLine);
 
 					// Push a new empty line to the lines array.
 					lines.push([]);
-					log("Added a new line to lines array.");
 
 					hasWrapped = true;
 
 					// Set the current string to an empty string.
 					currentString = "";
-					log("Reset current text string to an empty string.");
 
 					// Insert the current word back at the start of the words array.
 					words.unshift(word);
-					log(
-						"Inserted current word at the start of the words array.",
-					);
 				}
 			}
 		}
@@ -290,7 +300,6 @@ function layoutTextNode(lines, textNode, maxWidth) {
 		if (currentString !== "") {
 			const lastBlock = getTextBlock(currentString, style);
 			lines[lines.length - 1].push(lastBlock);
-			log("Pushed the last text block to the lines array.");
 		}
 
 		// Push a new empty line to the lines array.
@@ -302,7 +311,7 @@ function layoutTextNode(lines, textNode, maxWidth) {
 	}
 }
 
-function fillEmptyLines(blockNode) {
+function fillEmptyLines(blockNode: LayoutBlockNode): void {
 	for (let i = 0; i < blockNode.lines.length; i++) {
 		const line = blockNode.lines[i];
 		if (line.length === 0) {
@@ -311,18 +320,17 @@ function fillEmptyLines(blockNode) {
 			if (previousLine !== undefined) {
 				previousStyle = previousLine[previousLine.length - 1].style;
 			}
-			line.push(getTextBlock(" ", previousStyle ?? defaultStyle, 0, 0));
+			line.push(getTextBlock(" ", previousStyle ?? defaultStyle));
 		}
 	}
 }
 
-function setBlockNodeCoordinates(blockNode, x, y) {
+function setBlockNodeCoordinates(blockNode: LayoutBlockNode): void {
 	const lines = blockNode.lines;
 	const lineHeight = blockNode.lineHeight;
 	// Update x and y coordinates of text blocks.
 	let yOffset = 0;
 	let lineBottom = 0;
-	let lineTop = 0;
 
 	let maxWidth = 0;
 	let totalHeight = 0;
@@ -332,7 +340,6 @@ function setBlockNodeCoordinates(blockNode, x, y) {
 		let highestBlock;
 		let xOffset = 0;
 		let leading = 0;
-		const lineBoxHeight = 0;
 
 		if (line.length === 0) {
 			continue;
@@ -340,8 +347,6 @@ function setBlockNodeCoordinates(blockNode, x, y) {
 
 		for (const block of line) {
 			block.x = xOffset;
-
-			// log("Updated coordinates of text block:", block);
 
 			if (block.fontSize > maxFontSize || !highestBlock) {
 				// maxFontSize = block.measure.height;
@@ -358,7 +363,6 @@ function setBlockNodeCoordinates(blockNode, x, y) {
 			maxWidth = xOffset;
 		}
 
-		lineTop = lineBottom;
 		lineBottom += maxFontSize * lineHeight;
 		leading = maxFontSize * lineHeight - maxFontSize;
 		yOffset = lineBottom - leading / 2 - highestBlock.measure.descent;
@@ -366,42 +370,71 @@ function setBlockNodeCoordinates(blockNode, x, y) {
 		for (const block of line) {
 			block.y = yOffset;
 		}
-
-		// log("Incremented yOffset to move to the next line:", yOffset);
 	}
 
 	blockNode.width = maxWidth;
 	blockNode.height = totalHeight;
 }
 
-function getTextBlock(text, style, x, y) {
+interface LayoutTextBlock {
+	text: string;
+	style: LeafStyle;
+	width: number;
+	x: number;
+	y: number;
+	measure: MeasuredRect;
+	fontSize: number;
+}
+
+function getTextBlock(text: string, style: LeafStyle): LayoutTextBlock {
 	const measure = measureText(text, style);
 	const textBlock = {
 		text,
 		style,
 		width: measure.width,
-		x,
-		y,
+		x: 0,
+		y: 0,
 		measure,
-		fontSize: parseFloat(style.fontSize),
+		fontSize: style.fontSize,
 	};
 	return textBlock;
 }
 
-const measureCanvas = document.createElement("canvas");
-const measureCtx = measureCanvas.getContext("2d");
-const measureCache = {};
+function getMeasureCtx(): Ctx {
+	const measureCanvas = document.createElement("canvas");
+	const measureCtx = measureCanvas.getContext("2d");
+	if (!measureCtx) {
+		throw new Error("Failde to create canvas and get 2d context");
+	}
+	return measureCtx;
+}
 
-function isFiniteNumber(value) {
+const measureCtx = getMeasureCtx();
+
+const measureCache: Record<string, Record<string, MeasuredRect>> = {};
+
+function isFiniteNumber(value: unknown): value is number {
 	return typeof value === "number" && isFinite(value);
 }
 
-function toFiniteNumber(value, coerce = 0) {
+function toFiniteNumber(value: unknown, coerce = 0): number {
 	return isFiniteNumber(value) ? value : coerce;
 }
 
-function measureText(text, style) {
-	// log("measureText: ", text, style);
+interface MeasuredRect {
+	actualBoundingBoxAscent: number;
+	actualBoundingBoxDescent: number;
+	actualBoundingBoxLeft: number;
+	actualBoundingBoxRight: number;
+	fontBoundingBoxAscent: number;
+	fontBoundingBoxDescent: number;
+	ascent: number;
+	descent: number;
+	width: number;
+	height: number;
+}
+
+function measureText(text: string, style): MeasuredRect {
 	if (measureCache[style.font]) {
 		if (measureCache[style.font][text]) {
 			return measureCache[style.font][text];
@@ -445,11 +478,11 @@ function measureText(text, style) {
 	return rect;
 }
 
-function splitTextIntoWords(text) {
+function splitTextIntoWords(text: string): string[] {
 	return text.split(/(\s+)/);
 }
 
-function findLargestSubstring(word, style, maxWidth) {
+function findLargestSubstring(word, style, maxWidth: number): string {
 	// Use binary search to find the largest substring of the word that fits within the maxWidth.
 	let start = 0;
 	let end = word.length;
@@ -486,7 +519,7 @@ function findLargestSubstring(word, style, maxWidth) {
 	return largestSubstring;
 }
 
-function setBlockNodesCoordinates(nodes) {
+function setBlockNodesCoordinates(nodes): void {
 	let yOffset = 0;
 	for (const node of nodes) {
 		for (const line of node.lines) {
@@ -498,7 +531,12 @@ function setBlockNodesCoordinates(nodes) {
 	}
 }
 
-function align(nodes, maxWidth, insideOf?: string, scale?: number) {
+function align(
+	nodes,
+	maxWidth: number,
+	insideOf?: string,
+	scale?: number,
+): void {
 	const maxNodeWidth = nodes.reduce((acc, node) => {
 		if (node.width > acc) {
 			return node.width;
@@ -537,8 +575,7 @@ function align(nodes, maxWidth, insideOf?: string, scale?: number) {
 	}
 }
 
-function alignToCenter(node, maxWidth, scale?: number) {
-	const nodeWidth = node.width;
+function alignToCenter(node, maxWidth: number, scale?: number): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
@@ -559,8 +596,7 @@ function alignToCenter(node, maxWidth, scale?: number) {
 	}
 }
 
-function alignToRight(node, maxWidth, scale?: number) {
-	const nodeWidth = node.width;
+function alignToRight(node, maxWidth: number, scale?: number): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
@@ -581,7 +617,11 @@ function alignToRight(node, maxWidth, scale?: number) {
 	}
 }
 
-function renderBlockNodes(ctx, nodes, scale?: number) {
+function renderBlockNodes(
+	ctx: Ctx,
+	nodes: LayoutBlockNode[],
+	scale?: number,
+): void {
 	if (scale) {
 		ctx.scale(scale, scale);
 	}
@@ -593,7 +633,7 @@ function renderBlockNodes(ctx, nodes, scale?: number) {
 	}
 }
 
-function renderTextLines(ctx, lines) {
+function renderTextLines(ctx: Ctx, lines: LayoutTextBlock[][]): void {
 	for (const line of lines) {
 		for (const textBlock of line) {
 			renderTextBlock(ctx, textBlock);
@@ -601,15 +641,15 @@ function renderTextLines(ctx, lines) {
 	}
 }
 
-function renderTextBlock(ctx, textBlock) {
-	ctx.font = textBlock.style.font;
+function renderTextBlock(ctx: Ctx, textBlock: LayoutTextBlock): void {
+	ctx.font = textBlock.style.font ?? "Arial";
 	fillHighlight(ctx, textBlock);
 	underline(ctx, textBlock);
 	cross(ctx, textBlock);
 	fillText(ctx, textBlock);
 }
 
-function fillHighlight(ctx, textBlock) {
+function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	if (!textBlock.style.backgroundColor) {
 		return;
 	}
@@ -621,10 +661,9 @@ function fillHighlight(ctx, textBlock) {
 		measure.width,
 		measure.height,
 	);
-	// log("fillHighlight: ", textBlock.x, textBlock.y, measure);
 }
 
-function underline(ctx, textBlock) {
+function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	if (textBlock.style.textDecorationLine !== "underline") {
 		return;
 	}
@@ -633,7 +672,6 @@ function underline(ctx, textBlock) {
 	const style = textBlock.style;
 	const measure = textBlock.measure;
 	const width = measure.width;
-	const height = measure.height;
 	const color = style.color;
 	ctx.strokeStyle = color;
 	ctx.lineWidth = textBlock.fontSize / 14;
@@ -641,13 +679,12 @@ function underline(ctx, textBlock) {
 	ctx.moveTo(x, y + (2 * textBlock.fontSize) / 14); // 14 - default fontSize
 	ctx.lineTo(x + width, y + (2 * textBlock.fontSize) / 14);
 	ctx.stroke();
-	ctx.strokeStyle = style.backgroundColor;
+	ctx.strokeStyle = style.backgroundColor ?? "black";
 	ctx.lineWidth = 2;
 	// ctx.strokeText(textBlock.text, x, y);
-	// log("underline: ", x, y, width, height);
 }
 
-function cross(ctx, textBlock) {
+function cross(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	if (textBlock.style.crossed !== "line-through") {
 		return;
 	}
@@ -664,17 +701,12 @@ function cross(ctx, textBlock) {
 	ctx.moveTo(x, y - height / 4);
 	ctx.lineTo(x + width, y - height / 4);
 	ctx.stroke();
-	ctx.strokeStyle = style.backgroundColor;
+	ctx.strokeStyle = style.backgroundColor ?? "black";
 	ctx.lineWidth = 2;
 }
 
-function fillText(ctx, textBlock) {
-	const { text, style, x, y, measure } = textBlock;
+function fillText(ctx: Ctx, textBlock: LayoutTextBlock): void {
+	const { text, style, x, y } = textBlock;
 	ctx.fillStyle = style.color;
 	ctx.fillText(text, x, y);
-	// log("fillText: ", text, x, y);
-}
-
-function log() {
-	// console.log(...arguments);
 }
