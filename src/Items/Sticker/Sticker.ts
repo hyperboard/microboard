@@ -81,6 +81,7 @@ export class Sticker implements Geometry {
 		"\u00A0",
 		false,
 		true,
+		this.itemType,
 	);
 	readonly subject = new Subject<Sticker>();
 
@@ -96,6 +97,7 @@ export class Sticker implements Geometry {
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
+		this.text.updateElement();
 	}
 
 	emit(operation: StickerOperation): void {
@@ -125,6 +127,8 @@ export class Sticker implements Geometry {
 		if (data.text) {
 			this.text.deserialize(data.text);
 		}
+		this.text.updateElement();
+		// this.transformPath();
 		this.subject.publish(this);
 		return this;
 	}
@@ -136,7 +140,9 @@ export class Sticker implements Geometry {
 		const matrix = this.transformation.matrix;
 		this.stickerPath.transform(matrix);
 		this.shadowPath.transform(matrix);
-		this.text.setContainer(this.textContainer);
+		this.text.setContainer(this.textContainer.copy());
+		this.textContainer.transform(this.transformation.matrix);
+		// this.text.setContainer(this.textContainer);
 		this.text.updateElement();
 		this.stickerPath.setBackgroundColor(this.backgroundColor);
 	}
@@ -166,13 +172,6 @@ export class Sticker implements Geometry {
 				break;
 			case "Transformation":
 				this.transformation.apply(op);
-				this.text.setContainer(this.text.container);
-				if (
-					op.method !== "translateTo" &&
-					op.method !== "translateBy"
-				) {
-					this.text.updateElement();
-				}
 				break;
 			default:
 				return;

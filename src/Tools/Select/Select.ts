@@ -1,8 +1,18 @@
 import { Board } from "Board";
-import { Item, Line, Mbr, Point, RichText } from "Board/Items";
+import {
+	Frame,
+	Item,
+	Line,
+	Mbr,
+	Point,
+	RichText,
+	TransformationOperation,
+} from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
+import { NestingHighlighter } from "../NestingHighlighter";
+import { Drawing } from "Board/Items/Drawing";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -22,6 +32,7 @@ export class Select extends Tool {
 	isMovedAfterDown = false;
 	isCtrl = false;
 	lastPointerMoveEventTime = Date.now();
+	toHighlight = new NestingHighlighter();
 
 	constructor(private board: Board) {
 		super();
@@ -43,6 +54,8 @@ export class Select extends Tool {
 		this.rect = null;
 		this.downOnItem = null;
 		this.lastPointerMoveEventTime = Date.now();
+
+		this.toHighlight.clear();
 	}
 
 	leftButtonDown(): boolean {
@@ -53,16 +66,7 @@ export class Select extends Tool {
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
 
-		const single = selection.items.getSingle();
-		if (
-			selection.getContext() === "EditTextUnderPointer" &&
-			single instanceof RichText &&
-			single.getText().length === 1 &&
-			single.getText()[0].type === "paragraph" &&
-			single.getText()[0].children[0].text.length === 0
-		) {
-			this.board.remove(single);
-		}
+		const hover = items.getUnderPointer();
 
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection =
@@ -73,9 +77,9 @@ export class Select extends Tool {
 			return false;
 		}
 
-		const hover = items.getUnderPointer();
 		this.isDownOnBoard = hover.length === 0;
-		this.isDrawingRectangle = this.isDownOnBoard;
+		this.isDrawingRectangle =
+			hover.filter(item => !(item instanceof Frame)).length === 0;
 		if (this.isDrawingRectangle) {
 			const { x, y } = pointer.point;
 			this.line = new Line(new Point(x, y), new Point(x, y));
@@ -165,7 +169,66 @@ export class Select extends Tool {
 			return false;
 		}
 		if (this.isDraggingSelection) {
-			this.board.selection.translateBy(x, y);
+			const { selection } = this.board;
+			const frames = this.board.items
+				.getEnclosedOrCrossed(
+					selection.getMbr()!.left,
+					selection.getMbr()!.top,
+					selection.getMbr()!.right,
+					selection.getMbr()!.bottom,
+				)
+				.filter(item => item instanceof Frame)
+				.filter(frame => !selection.items.list().includes(frame));
+			const draggingFramesIds = selection
+				.list()
+				.filter(item => item instanceof Frame)
+				.map(frame => frame.getId());
+			const translation: { [key: string]: TransformationOperation } = {};
+			selection.list().forEach(selectedItem => {
+				translation[selectedItem.getId()] = {
+					class: "Transformation",
+					method: "scaleByTranslateBy",
+					item: [selectedItem.getId()],
+					scale: { x: 1, y: 1 },
+					translate: { x, y },
+				};
+			});
+			selection.list().forEach(item => {
+				if (item instanceof Frame) {
+					item.getChildrenIds().forEach(childId => {
+						if (!(childId in translation)) {
+							translation[childId] = {
+								class: "Transformation",
+								method: "scaleByTranslateBy",
+								item: [childId],
+								scale: { x: 1, y: 1 },
+								translate: { x, y },
+							};
+						}
+					});
+				}
+			});
+			selection.tranformMany(translation);
+			selection.list().forEach(item => {
+				if (
+					!(item instanceof Frame) &&
+					!draggingFramesIds.includes(item.parent)
+				) {
+					frames.forEach(frame => {
+						if (frame.handleNesting(item)) {
+							this.toHighlight.add([item, frame]);
+						} else {
+							if (
+								this.toHighlight.listAll().includes(frame) &&
+								this.toHighlight.listAll().includes(item)
+							) {
+								this.toHighlight.remove([item, frame]);
+							}
+						}
+					});
+				}
+			});
+
 			return false;
 		}
 		if (
@@ -174,7 +237,26 @@ export class Select extends Tool {
 			this.downOnItem.itemType !== "Connector"
 		) {
 			// translate item without selection
-			this.downOnItem.transformation.translateBy(x, y);
+
+			const { downOnItem: draggingItem } = this;
+			draggingItem.transformation.translateBy(x, y);
+
+			const frames = this.board.items
+				.getEnclosedOrCrossed(
+					draggingItem.getMbr().left,
+					draggingItem.getMbr().top,
+					draggingItem.getMbr().right,
+					draggingItem.getMbr().bottom,
+				)
+				.filter(item => item instanceof Frame);
+			frames.forEach(frame => {
+				if (frame.handleNesting(draggingItem)) {
+					this.toHighlight.add([draggingItem, frame]);
+				} else if (this.toHighlight.listAll().includes(frame)) {
+					this.toHighlight.remove([draggingItem, frame]);
+				}
+			});
+
 			return false;
 		}
 		if (this.isDrawingRectangle && this.line && this.rect) {
@@ -301,6 +383,8 @@ export class Select extends Tool {
 	render(context: DrawingContext): void {
 		if (this.isDrawingRectangle && this.rect) {
 			this.rect.render(context);
+		} else {
+			this.toHighlight.render(context);
 		}
 	}
 }

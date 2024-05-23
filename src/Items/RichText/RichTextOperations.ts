@@ -12,6 +12,7 @@ export class RichTextData {
 		public maxWidth: number | undefined,
 		public transformation?: TransformationData,
 		public containerMaxWidth?: number,
+		public insideOf?: string,
 	) {}
 }
 

@@ -1,3 +1,4 @@
+import { FrameData } from "Board/Items";
 import { DrawingData } from "Board/Items/Drawing";
 import { ImageItemData } from "Board/Items/Image";
 import {
@@ -55,9 +56,37 @@ function validateItemData(itemData: any): boolean {
 			return validateImageItemData(itemData);
 		case "Drawing":
 			return validateDrawingData(itemData);
+		case "Frame":
+			return validateFrameData(itemData);
 		default:
 			return false;
 	}
+}
+
+function validateFrameData(frameData: FrameData): boolean {
+	// Validate the presence and types of properties in FrameData
+	const isValid =
+		frameData.hasOwnProperty("shapeType") &&
+		frameData.hasOwnProperty("backgroundColor") &&
+		frameData.hasOwnProperty("backgroundOpacity") &&
+		frameData.hasOwnProperty("borderColor") &&
+		frameData.hasOwnProperty("borderOpacity") &&
+		frameData.hasOwnProperty("borderStyle") &&
+		frameData.hasOwnProperty("borderWidth") &&
+		frameData.hasOwnProperty("transformation") &&
+		frameData.hasOwnProperty("text") &&
+		frameData.hasOwnProperty("children") &&
+		typeof frameData.shapeType === "string" &&
+		typeof frameData.backgroundColor === "string" &&
+		typeof frameData.backgroundOpacity === "number" &&
+		typeof frameData.borderColor === "string" &&
+		typeof frameData.borderOpacity === "number" &&
+		typeof frameData.borderStyle === "string" &&
+		typeof frameData.borderWidth === "number" &&
+		Array.isArray(frameData.children) &&
+		validateTransformationData(frameData.transformation) &&
+		validateRichTextData(frameData.text);
+	return isValid;
 }
 
 function validateShapeData(shapeData: any): boolean {

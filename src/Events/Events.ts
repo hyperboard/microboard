@@ -69,6 +69,21 @@ export class Events {
 					this.addEvent(event);
 				}
 			}
+			// TODO onBoardLoad
+			const searchParams = new URLSearchParams(
+				window.location.search.slice(1),
+			);
+			const toFocusId = searchParams.get("focus") ?? "";
+			const toFocusItem = this.board.items.getById(toFocusId);
+			if (toFocusItem) {
+				const mbr = toFocusItem.getMbr();
+				mbr.left -= 50;
+				mbr.top -= 50;
+				mbr.right += 50;
+				mbr.bottom += 50;
+				this.board.camera.zoomToFit(mbr);
+			}
+			// onBoardLoad
 		}
 	};
 
@@ -96,7 +111,6 @@ export class Events {
 		}
 		const command = createCommand(this, this.board, eventBody.operation);
 		const record = { event, command };
-		// console.log("Insert", command, event);
 		command.apply();
 		this.log.push(record);
 		this.log.pushRecordsStackAndRecreateCommands(
@@ -152,7 +166,6 @@ export class Events {
 		} as BoardEventBody;
 		const event = new BoardEvent(0, eventBody);
 		const record = { event, command };
-		// console.log("Emit", command, event);
 		this.log.push(record, false);
 		// TODO replace connectionId with userId
 		this.setLatestUserEvent(operation, this.connection.connectionId);

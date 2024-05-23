@@ -9,9 +9,10 @@ import { Events } from "./Events";
 import { Operation } from "./EventsOperations";
 import { DrawingCommand } from "Board/Items/Drawing/DrawingCommand";
 import { StickerCommand } from "../Items/Sticker/StickerCommand";
-import { Connector, Item, Shape } from "Board/Items";
+import { Connector, Frame, Item, Shape } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { Sticker } from "Board/Items/Sticker";
+import { FrameCommand } from "Board/Items/Frame/FrameCommand";
 
 export interface Command {
 	apply(): void;
@@ -35,9 +36,12 @@ export function createCommand(
 			}
 			default: {
 				const itemType = operation.class;
-				const itemIdList = Array.isArray(operation.item)
-					? operation.item
-					: [operation.item];
+				const itemIdList =
+					operation.method !== "transformMany"
+						? Array.isArray(operation.item)
+							? operation.item
+							: [operation.item]
+						: Object.keys(operation.items);
 				const items = itemIdList
 					.map(itemId => board.items.findById(itemId) ?? itemId)
 					.filter((item): item is Item => {
@@ -100,6 +104,14 @@ export function createCommand(
 						return new RichTextCommand(
 							items.map(item =>
 								item.itemType === "RichText" ? item : item.text,
+							),
+							operation,
+						);
+					case "Frame":
+						return new FrameCommand(
+							items.filter(
+								(item): item is Frame =>
+									item.itemType === "Frame",
 							),
 							operation,
 						);

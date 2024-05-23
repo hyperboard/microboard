@@ -17,10 +17,9 @@ export interface DrawingData {
 }
 
 export class Drawing extends Mbr {
-	private id = "";
 	readonly itemType = "Drawing";
 	parent = "Board";
-	readonly transformation = new Transformation();
+	readonly transformation = new Transformation(this.id, this.events);
 	private path2d = Path2D ? new Path2D() : undefined; // just to make tests run in node
 	readonly subject = new Subject<Drawing>();
 	untransformedMbr = new Mbr();
@@ -30,7 +29,11 @@ export class Drawing extends Mbr {
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 	private borderOpacity = 1;
 
-	constructor(public points: Point[], private events?: Events) {
+	constructor(
+		public points: Point[],
+		private events?: Events,
+		private id = "",
+	) {
 		super();
 		this.transformation.subject.subscribe(() => {
 			this.updateMbr();
@@ -183,6 +186,7 @@ export class Drawing extends Mbr {
 
 	setId(id: string): this {
 		this.id = id;
+		this.transformation.setId(id);
 		return this;
 	}
 
@@ -195,6 +199,7 @@ export class Drawing extends Mbr {
 		ctx.save();
 		ctx.strokeStyle = this.borderColor;
 		ctx.lineWidth = this.strokeWidth;
+		ctx.lineCap = "round";
 		ctx.setLineDash(this.linePattern);
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.stroke(this.path2d!);

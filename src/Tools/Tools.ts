@@ -4,6 +4,7 @@ import { Subject } from "Subject";
 import { AddConnector } from "./AddConnector";
 import { AddDrawing } from "./AddDrawing/AddDrawing";
 import { AddShape } from "./AddShape";
+import { AddFrame } from "./AddFrame";
 import { AddText } from "./AddText";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
@@ -125,6 +126,19 @@ export class Tools extends ToolContext {
 
 	getExport(): ExportSnapshot | undefined {
 		return this.tool instanceof ExportSnapshot ? this.tool : undefined;
+	}
+
+	addFrame(): void {
+		if (this.getAddFrame() && !isIframe()) {
+			this.cancel();
+		} else {
+			this.tool = new AddFrame(this.board);
+		}
+		this.publish();
+	}
+
+	getAddFrame(): AddFrame | undefined {
+		return this.tool instanceof AddFrame ? this.tool : undefined;
 	}
 
 	cancel(): void {

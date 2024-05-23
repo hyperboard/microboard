@@ -1,4 +1,4 @@
-import { Mbr, Connector, RichText, Shape } from "./Items";
+import { Mbr, Connector, RichText, Shape, Frame, FrameData } from "./Items";
 import { Item, ItemData } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
@@ -193,26 +193,72 @@ export class Board {
 		}
 	}
 
+	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
+	 */
+	// Should rename?
+	private handleNesting(item: Item): void {
+		const itemCenter = item.getMbr().getCenter();
+		const frame = this.items
+			.getFramesInView()
+			.filter(frame => item.isEnclosedOrCrossedBy(frame.getMbr()))
+			.reduce((acc: Frame | undefined, frame) => {
+				if (
+					!acc ||
+					frame.getDistanceToPoint(itemCenter) >
+						acc.getDistanceToPoint(itemCenter)
+				) {
+					acc = frame;
+				}
+				return acc;
+			}, undefined);
+		if (frame) {
+			frame.handleNesting(item);
+		}
+	}
+
 	createItem(id: string, data: ItemData): Item {
 		switch (data.itemType) {
 			case "Sticker":
-				return new Sticker(this.events).setId(id).deserialize(data);
+				const sticker = new Sticker(this.events)
+					.setId(id)
+					.deserialize(data);
+				this.handleNesting(sticker);
+				return sticker;
 			case "Shape":
-				return new Shape(this.events).setId(id).deserialize(data);
+				const shape = new Shape(this.events)
+					.setId(id)
+					.deserialize(data);
+				this.handleNesting(shape);
+				return shape;
 			case "RichText":
-				return new RichText(new Mbr(), id, this.events)
+				const richText = new RichText(new Mbr(), id, this.events)
 					.setId(id)
 					.deserialize(data);
+				this.handleNesting(richText);
+				return richText;
 			case "Connector":
-				return new Connector(this, this.events)
+				const connector = new Connector(this, this.events)
 					.setId(id)
 					.deserialize(data);
+				this.handleNesting(connector);
+				return connector;
 			case "Image":
-				return new ImageItem(data.dataUrl, this.events, id)
+				const image = new ImageItem(data.dataUrl, this.events, id)
 					.setId(id)
 					.deserialize(data);
+				this.handleNesting(image);
+				return image;
 			case "Drawing":
-				return new Drawing([]).setId(id).deserialize(data);
+				const drawing = new Drawing([], this.events)
+					.setId(id)
+					.deserialize(data);
+				this.handleNesting(drawing);
+				return drawing;
+			case "Frame":
+				const frame = new Frame(this.events)
+					.setId(id)
+					.deserialize(data);
+				return frame;
 			/*
 			case "Group":
 				return new Group(this.events).setId(id).deserialize(data);
@@ -354,6 +400,16 @@ export class Board {
 			// Generate new IDs for all the items being pasted
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
+			if (itemsMap[itemId].itemType === "Frame") {
+				itemsMap[itemId].children.forEach(childId => {
+					if (!(childId in itemsMap)) {
+						const child = this.items.getById(childId);
+						itemsMap[childId] = child!.serialize();
+						const newChildId = this.getNewItemId();
+						newItemIdMap[childId] = newChildId;
+					}
+				});
+			}
 		}
 
 		// Replace connector
@@ -427,6 +483,17 @@ export class Board {
 			} else if (itemData.transformation) {
 				itemData.transformation.translateX = translateX - minX + x;
 				itemData.transformation.translateY = translateY - minY + y;
+				if (itemData.itemType === "Frame") {
+					// handle new id for children
+					itemData.children = itemData.children
+						.map(childId =>
+							// newItemIdMap[childId]
+							newItemIdMap[childId] !== undefined
+								? newItemIdMap[childId]
+								: "",
+						)
+						.filter(childId => childId !== "");
+				}
 			}
 			newMap[newItemId] = itemData;
 		}
@@ -465,6 +532,16 @@ export class Board {
 
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
+			if (itemsMap[itemId].itemType === "Frame") {
+				itemsMap[itemId].children.forEach(childId => {
+					if (!(childId in itemsMap)) {
+						const child = this.items.getById(childId);
+						itemsMap[childId] = child!.serialize();
+						const newChildId = this.getNewItemId();
+						newItemIdMap[childId] = newChildId;
+					}
+				});
+			}
 		}
 
 		const newMap: { [key: string]: ItemData } = {};
@@ -521,6 +598,16 @@ export class Board {
 				itemData.transformation.translateX =
 					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
+				if (itemData.itemType === "Frame") {
+					// handle new id for children
+					itemData.children = itemData.children
+						.map(childId =>
+							newItemIdMap[childId] !== undefined
+								? newItemIdMap[childId]
+								: "",
+						)
+						.filter(childId => childId !== "");
+				}
 			}
 
 			newMap[newItemId] = itemData;
@@ -541,6 +628,12 @@ export class Board {
 			const itemData = itemsMap[itemId];
 			const item = this.createItem(itemId, itemData);
 			this.index.insert(item);
+			if (
+				item instanceof Frame &&
+				item.text.getTextString().match(/^Frame (\d+)$/)
+			) {
+				item.setNameSerial(this.items.listFrames());
+			}
 			items.push(item);
 		}
 

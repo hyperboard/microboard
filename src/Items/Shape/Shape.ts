@@ -44,12 +44,14 @@ export class Shape implements Geometry {
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
 			this.updateMbr();
+			this.text.updateElement();
 			this.subject.publish(this);
 		});
 		this.text.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
+		this.text.insideOf = this.itemType;
 	}
 
 	emit(operation: ShapeOperation): void {
@@ -122,13 +124,7 @@ export class Shape implements Geometry {
 				break;
 			case "Transformation":
 				this.transformation.apply(op);
-				this.text.setContainer(this.text.container);
-				if (
-					op.method !== "translateTo" &&
-					op.method !== "translateBy"
-				) {
-					this.text.updateElement();
-				}
+				// this.text.setContainer(this.text.container);
 				break;
 			default:
 				return;
@@ -290,11 +286,16 @@ export class Shape implements Geometry {
 	}
 
 	getIntersectionPoints(segment: Line): Point[] {
-		return this.getIntersectionPoints(segment);
+		return this.getIntersectionPoints(segment); // REFACTOR infloop
 	}
 
 	updateMbr(): Mbr {
 		const rect = this.path.getMbr();
+		const rectOffset = this.getStrokeWidth() / 2;
+		rect.left -= rectOffset;
+		rect.right += rectOffset;
+		rect.top -= rectOffset;
+		rect.bottom += rectOffset;
 		const textRect = this.textContainer.getMbr();
 		rect.combine([textRect]);
 		this.mbr = rect;

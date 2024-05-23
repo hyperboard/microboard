@@ -74,6 +74,18 @@ export class RTreeIndex {
 		return items;
 	}
 
+	getEnclosed(rect: Mbr): Item[] {
+		return this.tree
+			.search({
+				minX: rect.left,
+				minY: rect.top,
+				maxX: rect.right,
+				maxY: rect.bottom,
+			})
+			.filter(container => container.item.isEnclosedBy(rect))
+			.map(container => container.item);
+	}
+
 	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		return this.tree
 			.search({

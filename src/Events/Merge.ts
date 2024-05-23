@@ -5,6 +5,12 @@ import {
 } from "Board/Items";
 import { Path } from "slate";
 import { Operation } from "./EventsOperations";
+import {
+	TranslateBy,
+	ScaleBy,
+	ScaleByTranslateBy,
+	TransformMany,
+} from "Board/Items/Transformation/TransformationOperations";
 
 // TODO API Conditional to Map
 export function canNotBeMerged(op: Operation): boolean {
@@ -19,6 +25,31 @@ export function canNotBeMerged(op: Operation): boolean {
 		(op.method === "setStartPoint" || op.method === "setEndPoint")
 	) {
 		return false;
+	}
+	return true;
+}
+
+function areItemsTheSame(opA: Operation, opB: Operation): boolean {
+	if (opA.method === "transformMany" && opB.method === "transformMany") {
+		const itemsA = Object.keys(opA.items);
+		const itemsB = Object.keys(opB.items);
+		const setA = new Set(itemsA);
+		const setB = new Set(itemsB);
+
+		const areArraysEqual =
+			setA.size === setB.size && [...setA].every(item => setB.has(item));
+		return areArraysEqual;
+	}
+	if (!(Array.isArray(opA.item) && Array.isArray(opB.item))) {
+		return false;
+	}
+	if (opA.item.length !== opB.item.length) {
+		return false;
+	}
+	for (let i = 0; i < opA.item.length; i++) {
+		if (opA.item[i] !== opB.item[i]) {
+			return false;
+		}
 	}
 	return true;
 }
@@ -43,21 +74,6 @@ export function mergeOperations(
 		return mergeConnectorOperations(opA, opB);
 	}
 	return;
-}
-
-function areItemsTheSame(opA: Operation, opB: Operation): boolean {
-	if (!(Array.isArray(opA.item) && Array.isArray(opB.item))) {
-		return false;
-	}
-	if (opA.item.length !== opB.item.length) {
-		return false;
-	}
-	for (let i = 0; i < opA.item.length; i++) {
-		if (opA.item[i] !== opB.item[i]) {
-			return false;
-		}
-	}
-	return true;
 }
 
 function mergeTransformationOperations(
@@ -106,8 +122,124 @@ function mergeTransformationOperations(
 					y: opA.translate.y + opB.translate.y,
 				},
 			};
+		case "transformMany":
+			const items = mergeItems(opA, opB);
+			return {
+				class: "Transformation",
+				method: "transformMany",
+				items,
+			};
 		default:
 			return;
+	}
+}
+
+function mergeItems(
+	opA: TransformationOperation,
+	opB: TransformationOperation,
+): { [key: string]: TranslateBy | ScaleBy | ScaleByTranslateBy } {
+	if (opA.method === "transformMany" && opB.method === "transformMany") {
+		interface Transformer {
+			x: number;
+			y: number;
+		}
+		const resolve = (
+			currScale?: Transformer,
+			currTranslate?: Transformer,
+			opB: TransformationOperation,
+		): { scale: Transformer; translate: Transformer } => {
+			switch (opB.method) {
+				case "scaleByTranslateBy":
+					return {
+						scale: {
+							x: currScale
+								? currScale.x * opB.scale.x
+								: opB.scale.x,
+							y: currScale
+								? currScale.y * opB.scale.y
+								: opB.scale.y,
+						},
+						translate: {
+							x: currTranslate
+								? currTranslate.x + opB.translate.x
+								: opB.translate.x,
+							y: currTranslate
+								? currTranslate.y + opB.translate.y
+								: opB.translate.y,
+						},
+					};
+				case "scaleBy":
+					return {
+						scale: {
+							x: currScale ? currScale.x * opB.x : opB.x,
+							y: currScale ? currScale.y * opB.y : opB.y,
+						},
+						translate: {
+							x: currTranslate ? currTranslate.x : 0,
+							y: currTranslate ? currTranslate.y : 0,
+						},
+					};
+				case "translateBy":
+					return {
+						scale: {
+							x: currScale ? currScale.x : 1,
+							y: currScale ? currScale.y : 1,
+						},
+						translate: {
+							x: currTranslate ? currTranslate.x + opB.x : opB.x,
+							y: currTranslate ? currTranslate.y + opB.y : opB.y,
+						},
+					};
+			}
+		};
+		const items: { [key: string]: ScaleByTranslateBy } = {};
+		Object.keys(opB.items).forEach(itemId => {
+			if (opA.items[itemId] !== undefined) {
+				if (opA.items[itemId].method === "scaleByTranslateBy") {
+					const newTransformation = resolve(
+						opA.items[itemId].scale,
+						opA.items[itemId].translate,
+						opB.items[itemId],
+					);
+					items[itemId] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [itemId],
+						scale: newTransformation.scale,
+						translate: newTransformation.translate,
+					};
+				} else if (opA.items[itemId].method === "scaleBy") {
+					const newTransformation = resolve(
+						{ x: opA.items[itemId].x, y: opA.items[itemId].y },
+						undefined,
+						opB.items[itemId],
+					);
+					items[itemId] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [itemId],
+						scale: newTransformation.scale,
+						translate: newTransformation.translate,
+					};
+				} else if (opA.items[itemId].method === "translateBy") {
+					const newTransformation = resolve(
+						undefined,
+						{ x: opA.items[itemId].x, y: opA.items[itemId].y },
+						opB.items[itemId],
+					);
+					items[itemId] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [itemId],
+						scale: newTransformation.scale,
+						translate: newTransformation.translate,
+					};
+				}
+			} else {
+				items[itemId] = opB.items[itemId];
+			}
+		});
+		return items;
 	}
 }
 

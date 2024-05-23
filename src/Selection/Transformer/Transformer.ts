@@ -1,17 +1,26 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Mbr, Point } from "Board/Items";
+import {
+	Frame,
+	Mbr,
+	Point,
+	Shape,
+	TransformationOperation,
+	RichText,
+} from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
 import { getResizeType, ResizeType } from "./getResizeType";
 import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getProportionalResize } from "./getResizeMatrix";
+import { getProportionalResize, getResize } from "./getResizeMatrix";
 import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
 import { Anchor } from "Board/Items/Anchor";
 import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
+import { Sticker } from "Board/Items/Sticker";
+import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -20,6 +29,8 @@ export class Transformer extends Tool {
 	mbr: Mbr | undefined;
 	// original mbr when resize was triggered
 	startMbr: Mbr | undefined;
+	clickedOn?: ResizeType;
+	private toDrawBorders = new NestingHighlighter();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -66,6 +77,7 @@ export class Transformer extends Tool {
 		this.updateAnchorType();
 		const mbr = this.selection.getMbr();
 		this.resizeType = this.getResizeType();
+		this.clickedOn = this.getResizeType();
 		if (this.resizeType && mbr) {
 			this.oppositePoint = getOppositePoint(this.resizeType, mbr);
 			this.mbr = mbr;
@@ -78,8 +90,10 @@ export class Transformer extends Tool {
 		this.updateAnchorType();
 		const wasResising = this.resizeType !== undefined;
 		this.resizeType = undefined;
+		this.clickedOn = undefined;
 		this.oppositePoint = undefined;
 		this.mbr = undefined;
+		this.toDrawBorders.clear();
 		return wasResising;
 	}
 
@@ -94,7 +108,6 @@ export class Transformer extends Tool {
 		const list = this.selection.items.list();
 
 		if (!mbr || list.length === 0 || !this.oppositePoint) {
-			console.log("no mbr");
 			return false;
 		}
 
@@ -102,10 +115,13 @@ export class Transformer extends Tool {
 			this.resizeType === "left" || this.resizeType === "right";
 		const isHeight =
 			this.resizeType === "top" || this.resizeType === "bottom";
-		const isSingle = list.length === 1;
-		const single = list[0];
+		const single = this.selection.items.getSingle();
 
-		if (isSingle && ["Shape", "Sticker"].indexOf(single.itemType) > -1) {
+		if (
+			single instanceof Shape ||
+			single instanceof Sticker ||
+			single instanceof Frame
+		) {
 			this.mbr = single.doResize(
 				this.resizeType,
 				this.board.pointer.point,
@@ -113,7 +129,7 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 				this.startMbr,
 			).mbr;
-		} else if (isSingle && single.itemType === "RichText") {
+		} else if (single instanceof RichText) {
 			const matrix = getProportionalResize(
 				this.resizeType,
 				this.board.pointer.point,
@@ -143,6 +159,7 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 			);
 			const matrix = resize.matrix;
+			const translation: { [key: string]: TransformationOperation } = {};
 			for (const item of list) {
 				const itemMbr = item.getMbr();
 				const deltaX = itemMbr.left - mbr.left;
@@ -152,35 +169,135 @@ export class Transformer extends Tool {
 				const translateY =
 					deltaY * matrix.scaleY - deltaY + matrix.translateY;
 
-				if (item.itemType === "RichText") {
+				if (item instanceof RichText) {
 					if (isWidth) {
 						item.editor.setMaxWidth(
 							(item.getWidth() /
 								item.transformation.getScale().x) *
 								matrix.scaleX,
 						);
-						item.transformation.translateBy(matrix.translateX, 0);
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: matrix.translateX, y: 0 },
+							scale: { x: 1, y: 1 },
+						};
 					} else if (isHeight) {
-						item.transformation.translateBy(translateX, translateY);
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: translateX, y: translateY },
+							scale: { x: 1, y: 1 },
+						};
 					} else {
-						item.transformation.translateBy(translateX, translateY);
-						item.transformation.scaleBy(
-							matrix.scaleX,
-							matrix.scaleY,
-						);
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: translateX, y: translateY },
+							scale: { x: matrix.scaleX, y: matrix.scaleY },
+						};
+					}
+				} else if (item instanceof Frame) {
+					if (!item.getCanChangeRatio()) {
+						if (
+							this.clickedOn === "leftBottom" ||
+							this.clickedOn === "leftTop" ||
+							this.clickedOn === "rightBottom" ||
+							this.clickedOn === "rightTop"
+						) {
+							translation[item.getId()] = {
+								class: "Transformation",
+								method: "scaleByTranslateBy",
+								item: [item.getId()],
+								translate: { x: translateX, y: translateY },
+								scale: { x: matrix.scaleX, y: matrix.scaleY },
+							};
+						}
+					} else {
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: translateX, y: translateY },
+							scale: { x: matrix.scaleX, y: matrix.scaleY },
+						};
 					}
 				} else {
-					item.transformation.translateBy(translateX, translateY);
-					if (item.itemType != "Sticker") {
-						item.transformation.scaleBy(
-							matrix.scaleX,
-							matrix.scaleY,
-						);
-					}
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale:
+							item instanceof Sticker
+								? { x: 1, y: 1 }
+								: { x: matrix.scaleX, y: matrix.scaleY },
+					};
 				}
 			}
+			this.selection.tranformMany(translation);
+
 			this.mbr = resize.mbr;
 		}
+
+		const frames = this.board.items
+			.getEnclosedOrCrossed(mbr.left, mbr.top, mbr.right, mbr.bottom)
+			.filter(item => item instanceof Frame);
+		list.forEach(item => {
+			if (item instanceof Frame) {
+				const itemsToCheck = this.board.items
+					.getEnclosedOrCrossed(
+						item.getMbr().left,
+						item.getMbr().top,
+						item.getMbr().right,
+						item.getMbr().bottom,
+					)
+					.filter(
+						currItem =>
+							currItem !== item &&
+							!(currItem instanceof Frame) &&
+							(currItem.parent === "Board" ||
+								currItem.parent === item.getId()),
+					);
+				itemsToCheck.forEach(currItem => {
+					if (item.handleNesting(currItem)) {
+						this.toDrawBorders.add([item, currItem]);
+						if (
+							this.board.getZIndex(item) >
+							this.board.getZIndex(currItem)
+						) {
+							/*
+							this.board.moveToZIndex(
+								currItem,
+								this.board.getZIndex(item) + 1,
+							);
+							*/
+						}
+					} else {
+						if (
+							this.toDrawBorders.listAll().includes(item) &&
+							this.toDrawBorders.listAll().includes(currItem)
+						) {
+							this.toDrawBorders.remove([item, currItem]);
+						}
+					}
+				});
+			} else {
+				frames.forEach(frame => {
+					if (!frame.handleNesting(item, { onlyForOut: true })) {
+						if (
+							this.toDrawBorders.listAll().includes(frame) &&
+							this.toDrawBorders.listAll().includes(item)
+						) {
+							this.toDrawBorders.remove([frame, item]);
+						}
+					}
+				});
+			}
+		});
 
 		this.selection.off();
 		this.selection.subject.publish(this.selection);
@@ -200,6 +317,8 @@ export class Transformer extends Tool {
 		for (const anchor of anchors) {
 			anchor.render(context);
 		}
+
+		this.toDrawBorders.render(context);
 	}
 
 	handleSelectionUpdate(_items: SelectionItems): void {

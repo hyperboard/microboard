@@ -1,4 +1,10 @@
 import { DrawingContext } from "Board/Items/DrawingContext";
+import {
+	ANCHOR_BACKGROUND_COLOR,
+	ANCHOR_BORDER_COLOR,
+	ANCHOR_STROKE_WIDTH,
+	renderAnchor,
+} from "View/Items/Anchor";
 import { Mbr, Point } from "..";
 
 /**
@@ -10,9 +16,9 @@ export class Anchor extends Mbr {
 		public x = 0,
 		public y = 0,
 		public radius = 50,
-		public borderColor = "black",
-		public backgroundColor = "none",
-		public strokeWidth = 1,
+		public borderColor = ANCHOR_BORDER_COLOR,
+		public backgroundColor = ANCHOR_BACKGROUND_COLOR,
+		public strokeWidth = ANCHOR_STROKE_WIDTH,
 	) {
 		super(
 			x - radius,
@@ -39,22 +45,15 @@ export class Anchor extends Mbr {
 		const center = this.getCenter();
 		const { ctx } = context;
 		const scale = context.getCameraScale();
-		ctx.strokeStyle = this.borderColor;
-		ctx.lineWidth = this.strokeWidth / scale;
-		ctx.beginPath();
-		ctx.arc(
-			center.x,
-			center.y,
-			this.getWidth() / scale / 2,
-			0,
-			Math.PI * 2,
-			false,
+
+		renderAnchor(
+			ctx,
+			center,
+			this.getWidth(),
+			this.borderColor,
+			this.backgroundColor,
+			this.strokeWidth,
+			scale,
 		);
-		if (this.backgroundColor !== "none") {
-			ctx.fillStyle = this.backgroundColor;
-			ctx.fill();
-		}
-		ctx.stroke();
-		ctx.closePath();
 	}
 }

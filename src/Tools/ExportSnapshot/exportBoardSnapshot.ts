@@ -4,12 +4,17 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { Camera } from "Board/Camera";
 import { Matrix, Mbr } from "Board/Items";
 
+export interface SnapshotInfo {
+	dataUrl: string;
+	nameToExport: string;
+}
+
 export function exportBoardSnapshot(
 	board: Board,
 	quality: Quality,
 	selection?: Mbr,
 	nameToExport?: string,
-): void {
+): SnapshotInfo | undefined {
 	const boardId = board.getBoardId();
 	const resolution = Resolution[quality];
 	const canvas = document.createElement("canvas");
@@ -95,4 +100,9 @@ export function exportBoardSnapshot(
 		? `${nameToExport}.png`
 		: `board-${boardId}.png`;
 	link.click();
+
+	return {
+		dataUrl: dataURL,
+		nameToExport: nameToExport ?? `board-${boardId}`,
+	};
 }
