@@ -33,6 +33,7 @@ export class Select extends Tool {
 	isCtrl = false;
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
+	beginTimeStamp = Date.now();
 
 	constructor(private board: Board) {
 		super();
@@ -54,7 +55,7 @@ export class Select extends Tool {
 		this.rect = null;
 		this.downOnItem = null;
 		this.lastPointerMoveEventTime = Date.now();
-
+		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
 	}
 
@@ -67,6 +68,7 @@ export class Select extends Tool {
 		const { items, selection, pointer } = this.board;
 
 		const hover = items.getUnderPointer();
+		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection =
@@ -208,7 +210,7 @@ export class Select extends Tool {
 					});
 				}
 			});
-			selection.tranformMany(translation);
+			selection.tranformMany(translation, this.beginTimeStamp);
 			selection.list().forEach(item => {
 				if (
 					!(item instanceof Frame) &&
@@ -239,7 +241,7 @@ export class Select extends Tool {
 			// translate item without selection
 
 			const { downOnItem: draggingItem } = this;
-			draggingItem.transformation.translateBy(x, y);
+			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
 
 			const frames = this.board.items
 				.getEnclosedOrCrossed(

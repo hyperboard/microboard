@@ -413,6 +413,7 @@ export class Shape implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
+		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getResize(resizeType, pointer, mbr, opposite);
 
@@ -425,6 +426,7 @@ export class Shape implements Geometry {
 				x: res.matrix.translateX,
 				y: res.matrix.translateY,
 			},
+			timeStamp,
 		);
 		res.mbr = this.getMbr();
 		return res;

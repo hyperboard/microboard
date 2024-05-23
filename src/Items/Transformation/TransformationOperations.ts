@@ -5,7 +5,8 @@ export class TransformationData {
 		public scaleX = 1,
 		public scaleY = 1,
 		public rotate = 0,
-	) {}
+	) // private timeStamp?: number,
+	{}
 }
 
 interface TranslateTo {
@@ -14,6 +15,7 @@ interface TranslateTo {
 	item: string[];
 	x: number;
 	y: number;
+	timeStamp?: number;
 }
 
 export interface TranslateBy {
@@ -22,6 +24,7 @@ export interface TranslateBy {
 	item: string[];
 	x: number;
 	y: number;
+	timeStamp?: number;
 }
 
 interface ScaleTo {
@@ -30,6 +33,7 @@ interface ScaleTo {
 	item: string[];
 	x: number;
 	y: number;
+	timeStamp?: number;
 }
 
 export interface ScaleBy {
@@ -38,6 +42,7 @@ export interface ScaleBy {
 	item: string[];
 	x: number;
 	y: number;
+	timeStamp?: number;
 }
 
 interface RotateTo {
@@ -45,6 +50,7 @@ interface RotateTo {
 	method: "rotateTo";
 	item: string[];
 	degree: number;
+	timeStamp?: number;
 }
 
 interface RotateBy {
@@ -52,6 +58,7 @@ interface RotateBy {
 	method: "rotateBy";
 	item: string[];
 	degree: number;
+	timeStamp?: number;
 }
 
 interface ScaleToRelativeTo {
@@ -61,6 +68,7 @@ interface ScaleToRelativeTo {
 	x: number;
 	y: number;
 	point: { x: number; y: number };
+	timeStamp?: number;
 }
 
 interface ScaleByRelativeTo {
@@ -70,6 +78,7 @@ interface ScaleByRelativeTo {
 	x: number;
 	y: number;
 	point: { x: number; y: number };
+	timeStamp?: number;
 }
 
 export interface ScaleByTranslateBy {
@@ -78,6 +87,7 @@ export interface ScaleByTranslateBy {
 	item: string[];
 	translate: { x: number; y: number };
 	scale: { x: number; y: number };
+	timeStamp?: number;
 }
 
 interface Deserialize {
@@ -85,12 +95,14 @@ interface Deserialize {
 	method: "deserialize";
 	item: string[];
 	data: TransformationData;
+	timeStamp?: number;
 }
 
 export interface TransformMany {
 	class: "Transformation";
 	method: "transformMany";
 	items: { [key: string]: ScaleByTranslateBy | ScaleBy | TranslateBy };
+	timeStamp?: number;
 }
 
 export type TransformationOperation =

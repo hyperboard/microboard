@@ -207,18 +207,6 @@ export class Frame implements Geometry {
 		return this.children;
 	}
 
-	// getChildren(getById: (id: string) => Item | undefined): Item[] {
-	// 	return this.getChildrenIds()
-	// 		.map((childId) => getById(childId))
-	// 		.filter((child) => child !== undefined);
-	// }
-
-	// translateChildrenBy(board: Board, x: number, y: number): void {
-	// 	this.getChildren(board.items.getById).forEach((child) => {
-	// 		child.transformation.translateBy(x, y);
-	// 	})
-	// }
-
 	updateMbr(): void {
 		const rect = this.path.getMbr();
 		this.mbr = rect;
@@ -234,6 +222,7 @@ export class Frame implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
+		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		if (this.getCanChangeRatio()) {
 			const res = getResize(resizeType, pointer, mbr, opposite);
@@ -246,6 +235,7 @@ export class Frame implements Geometry {
 					x: res.matrix.translateX,
 					y: res.matrix.translateY,
 				},
+				timeStamp,
 			);
 			this.setLastFrameScale();
 			res.mbr = this.getMbr();
@@ -279,6 +269,7 @@ export class Frame implements Geometry {
 						x: translateX,
 						y: translateY,
 					},
+					timeStamp,
 				);
 				this.setLastFrameScale();
 				res.mbr = this.getMbr();

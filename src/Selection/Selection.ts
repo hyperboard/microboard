@@ -540,30 +540,33 @@ export class Selection {
 		return [this.textToEdit];
 	}
 
-	translateBy(x: number, y: number): void {
+	translateBy(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "translateBy",
 			item: this.items.ids(),
 			x,
 			y,
+			timeStamp,
 		});
 		this.off();
 	}
 
-	scaleBy(x: number, y: number): void {
+	scaleBy(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "scaleBy",
 			item: this.items.ids(),
 			x,
 			y,
+			timeStamp,
 		});
 	}
 
 	scaleByTranslateBy(
 		scale: { x: number; y: number },
 		translate: { x: number; y: number },
+		timeStamp?: number,
 	): void {
 		this.emit({
 			class: "Transformation",
@@ -571,14 +574,19 @@ export class Selection {
 			item: this.items.ids(),
 			scale,
 			translate,
+			timeStamp,
 		});
 	}
 
-	tranformMany(items: { [key: string]: TransformationOperation }): void {
+	tranformMany(
+		items: { [key: string]: TransformationOperation },
+		timeStamp?: number,
+	): void {
 		this.emit({
 			class: "Transformation",
 			method: "transformMany",
 			items,
+			timeStamp,
 		});
 	}
 

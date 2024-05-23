@@ -83,6 +83,9 @@ function mergeTransformationOperations(
 	if (!areItemsTheSame(opA, opB)) {
 		return;
 	}
+	if (opA.timeStamp && opB.timeStamp && opA.timeStamp !== opB.timeStamp) {
+		return;
+	}
 	const method = opA.method;
 	switch (method) {
 		case "translateBy":
@@ -92,6 +95,7 @@ function mergeTransformationOperations(
 				item: opA.item,
 				x: opA.x + opB.x,
 				y: opA.y + opB.y,
+				timeStamp: opB.timeStamp,
 			};
 		case "scaleBy":
 			return {
@@ -100,6 +104,7 @@ function mergeTransformationOperations(
 				item: opA.item,
 				x: opA.x * opB.x,
 				y: opA.y * opB.y,
+				timeStamp: opB.timeStamp,
 			};
 		case "rotateBy":
 			return {
@@ -107,6 +112,7 @@ function mergeTransformationOperations(
 				method: "rotateBy",
 				item: opA.item,
 				degree: opA.degree + opB.degree,
+				timeStamp: opB.timeStamp,
 			};
 		case "scaleByTranslateBy":
 			return {
@@ -121,6 +127,7 @@ function mergeTransformationOperations(
 					x: opA.translate.x + opB.translate.x,
 					y: opA.translate.y + opB.translate.y,
 				},
+				timeStamp: opB.timeStamp,
 			};
 		case "transformMany":
 			const items = mergeItems(opA, opB);
@@ -128,6 +135,7 @@ function mergeTransformationOperations(
 				class: "Transformation",
 				method: "transformMany",
 				items,
+				timeStamp: opB.timeStamp,
 			};
 		default:
 			return;

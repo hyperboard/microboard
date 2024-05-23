@@ -310,6 +310,7 @@ export class Sticker implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
+		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getProportionalResize(resizeType, pointer, mbr, opposite);
 
@@ -332,19 +333,21 @@ export class Sticker implements Geometry {
 
 			const startWidth = this.getMbr().getWidth();
 			if (needGrow) {
-				this.transformation.scaleBy(1.33, 1);
+				this.transformation.scaleBy(1.33, 1, timeStamp);
 				if (resizeType === "left") {
 					this.transformation.translateBy(
 						startWidth - this.getMbr().getWidth(),
 						0,
+						timeStamp,
 					);
 				}
 			} else if (needShrink) {
-				this.transformation.scaleBy(1 / 1.33, 1);
+				this.transformation.scaleBy(1 / 1.33, 1, timeStamp);
 				if (resizeType === "left") {
 					this.transformation.translateBy(
 						startWidth - this.getMbr().getWidth(),
 						0,
+						timeStamp,
 					);
 				}
 			}
@@ -358,6 +361,7 @@ export class Sticker implements Geometry {
 					x: res.matrix.translateX,
 					y: res.matrix.translateY,
 				},
+				timeStamp,
 			);
 		}
 		res.mbr = this.getMbr();
