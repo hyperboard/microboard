@@ -1,8 +1,8 @@
+import { Board } from "Board/Board";
 import { Line, Mbr, Point, RichText } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { BoardTool } from "../BoardTool";
-import { Board } from "Board/Board";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { BoardTool } from "../BoardTool";
 
 const minWidth = 100;
 const height = 16;
