@@ -18,14 +18,6 @@ export function getBlockNodes(
 	containerWidth?: number,
 	containerHeight?: number,
 ): LayoutBlockNodes {
-	console.log(
-		"getBlockNodes",
-		data,
-		maxWidth,
-		insideOf,
-		containerWidth,
-		containerHeight,
-	);
 	const nodes: LayoutBlockNode[] = [];
 	for (const node of data) {
 		nodes.push(getBlockNode(node, maxWidth));

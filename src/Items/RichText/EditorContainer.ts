@@ -1,27 +1,27 @@
+import { validateItemsMap } from "Board/Validators";
+import { Subject } from "Subject";
 import {
 	BaseEditor,
-	createEditor,
 	Descendant,
 	Editor,
-	Element,
 	Operation as EditorOperation,
+	Element,
 	Transforms,
+	createEditor,
 } from "slate";
+import { HistoryEditor, withHistory } from "slate-history";
+import { ReactEditor, withReact } from "slate-react";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { TextNode, TextStyle } from "./Editor/TextNode";
 import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
+import { defaultTextStyle } from "./RichText";
+import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import {
 	RichTextOperation,
 	SelectionMethod,
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { HistoryEditor, withHistory } from "slate-history";
-import { ReactEditor, withReact } from "slate-react";
-import { defaultTextStyle, RichText } from "./RichText";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
-import { Subject } from "Subject";
-import { validateItemsMap } from "Board/Validators";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -520,6 +520,12 @@ export class EditorContainer {
 			return null;
 		}
 		return node;
+	}
+
+	appendText(text: string) {
+		const endPoint = Editor.end(this.editor, []);
+		Transforms.select(this.editor, endPoint);
+		Transforms.insertText(this.editor, text);
 	}
 
 	getText(): Descendant[] {

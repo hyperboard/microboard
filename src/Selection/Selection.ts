@@ -1,34 +1,30 @@
+import { Board } from "Board";
+import { Events, Operation } from "Board/Events";
+import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
+import { Drawing } from "Board/Items/Drawing";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
+import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
+import { SELECTION_COLOR } from "View/Tools/Selection";
+import { toFiniteNumber } from "utils";
+import { createCommand } from "../Events/Command";
 import {
 	Connector,
+	Frame,
+	Item,
+	ItemData,
 	Mbr,
 	RichText,
 	Shape,
-	ShapeData,
-	Frame,
 	TransformationOperation,
 } from "../Items";
-import { Item, ItemData } from "../Items";
-import { SelectionItems } from "./SelectionItems";
-import { Board } from "Board";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
-import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Events, Operation } from "Board/Events";
-import { createCommand } from "../Events/Command";
+import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
-import { Drawing } from "Board/Items/Drawing";
-import {
-	BoardPoint,
-	ConnectorLineStyle,
-	ControlPoint,
-} from "Board/Items/Connector";
-import { toFiniteNumber } from "utils";
-import { Sticker } from "Board/Items/Sticker";
-import { SELECTION_COLOR } from "View/Tools/Selection";
-import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -254,6 +250,33 @@ export class Selection {
 				text.editor.editor.insertText(shouldReplace);
 				text.moveCursorToEOL(); // prob should be 20 ms
 			}
+			this.setTextToEdit(item);
+			this.setContext("EditTextUnderPointer");
+			this.board.items.subject.publish(this.board.items);
+		}
+	}
+
+	async appendText(appendedText: string) {
+		if (this.items.isEmpty()) {
+			return;
+		}
+		if (!this.items.isSingle()) {
+			return;
+		}
+		const item = this.items.getSingle();
+		if (!item) {
+			return;
+		}
+		if (
+			item instanceof Shape ||
+			item instanceof Sticker ||
+			item instanceof Connector ||
+			item instanceof RichText ||
+			item instanceof Frame
+		) {
+			const text = item instanceof RichText ? item : item.text;
+			await text.moveCursorToEnd(); // prob should be 20 ms
+			text.editor.appendText(appendedText);
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -751,25 +774,54 @@ export class Selection {
 	}
 
 	setFontStyle(fontStyleList: TextStyle[]): void {
-		const single = this.items.getSingle();
-		if (single) {
-			if (single instanceof RichText) {
-				single.setSelectionFontStyle(fontStyleList, this.context);
-			} else {
-				single.text.setSelectionFontStyle(fontStyleList, this.context);
+		const items = this.items.list();
+		const changedIds: string[] = [];
+		items.forEach(item => {
+			switch (item.itemType) {
+				case "RichText":
+					(item as RichText).setSelectionFontStyle(
+						fontStyleList,
+						this.context,
+					);
+					changedIds.push(item.getId());
+					break;
+				case "Connector":
+				case "Shape":
+				case "Sticker":
+					(
+						item as Shape | Sticker | Connector
+					).text.setSelectionFontStyle(fontStyleList, this.context);
+					changedIds.push(item.getId());
+					break;
 			}
-		} else if (this.items.isItemTypes(["Sticker"])) {
-			this.items
-				.list()
-				.forEach(x => x.text.setSelectionFontStyle(fontStyleList));
-		} else {
+		});
+		if (changedIds.length) {
 			this.emit({
 				class: "RichText",
 				method: "setFontStyle",
-				item: this.items.ids(),
+				item: changedIds,
 				fontStyleList,
 			});
 		}
+		// const single = this.items.getSingle();
+		// if (single) {
+		// 	if (single instanceof RichText) {
+		// 		single.setSelectionFontStyle(fontStyleList, this.context);
+		// 	} else {
+		// 		single.text.setSelectionFontStyle(fontStyleList, this.context);
+		// 	}
+		// } else if (this.items.isItemTypes(["Sticker"])) {
+		// 	this.items
+		// 		.list()
+		// 		.forEach(x => x.text.setSelectionFontStyle(fontStyleList));
+		// } else {
+		// 	this.emit({
+		// 		class: "RichText",
+		// 		method: "setFontStyle",
+		// 		item: this.items.ids(),
+		// 		fontStyleList,
+		// 	});
+		// }
 	}
 
 	setFontColor(fontColor: string): void {
@@ -909,6 +961,11 @@ export class Selection {
 
 	duplicate(): void {
 		this.board.duplicate(this.copy());
+		if (this.items.isSingle()) {
+			this.setContext("EditUnderPointer");
+		} else {
+			this.setContext("SelectByRect");
+		}
 	}
 
 	render(context: DrawingContext): void {

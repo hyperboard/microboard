@@ -1,9 +1,9 @@
-import { Mbr, Line, Shape } from "Board/Items";
+import { Board } from "Board/Board";
+import { Line, Mbr, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape/Basic";
-import { BoardTool } from "../BoardTool";
-import { Board } from "Board/Board";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { BoardTool } from "../BoardTool";
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;

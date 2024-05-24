@@ -5,14 +5,12 @@ import {
 	Line,
 	Mbr,
 	Point,
-	RichText,
 	TransformationOperation,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
-import { Drawing } from "Board/Items/Drawing";
 
 export class Select extends Tool {
 	line: null | Line = null;

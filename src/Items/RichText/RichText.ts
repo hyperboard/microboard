@@ -1,3 +1,9 @@
+import { Board } from "Board";
+import { Events, Operation } from "Board/Events";
+import { SelectionContext } from "Board/Selection/Selection";
+import { Subject } from "Subject";
+import i18next from "i18next";
+import { Descendant, Editor, Transforms } from "slate";
 import {
 	Line,
 	Mbr,
@@ -7,24 +13,17 @@ import {
 	Transformation,
 	TransformationOperation,
 } from "..";
-import { Descendant, Transforms, Editor } from "slate";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { Events, Operation } from "Board/Events";
-import { TextStyle } from "./Editor/TextNode";
-import { BlockType } from "./Editor/BlockNode";
-import { RichTextOperation } from "./RichTextOperations";
-import { RichTextData } from "./RichTextData";
-import { Subject } from "Subject";
-import { Geometry } from "../Geometry";
 import { DrawingContext } from "../DrawingContext";
+import { Geometry } from "../Geometry";
+import { BlockType } from "./Editor/BlockNode";
+import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
+import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
-import { getBlockNodes } from "./RichTextCanvasRenderer";
+import { RichTextData, RichTextOperation } from "./RichTextOperations";
 import { isTextEmpty } from "./isTextEmpty";
-import { SelectionContext } from "Board/Selection/Selection";
-import i18next from "i18next";
-import { Board } from "Board";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
@@ -497,6 +496,19 @@ export class RichText extends Mbr implements Geometry {
 				unit: "line",
 			});
 		}, delay);
+	}
+
+	/** Moves cursor to the end of a text */
+	moveCursorToEnd(delay = 10) {
+		return new Promise<void>(resolve => {
+			setTimeout(() => {
+				this.editorTransforms.move(this.editor.editor, {
+					distance: this.getTextString().length,
+					unit: "character",
+				});
+			}, delay);
+			resolve();
+		});
 	}
 
 	getId(): string {

@@ -25,3 +25,8 @@ export class Keyboard {
 		this.isCtrl = event.ctrlKey;
 	}
 }
+
+export { isHotkeyPushed } from "./isHotkeyPushed";
+export { checkHotkeys } from "./checkHotkeys";
+export { getHotkeyLabel } from "./getHotkeyLabel";
+export { isControlCharacter } from "./isControlCharacter";
