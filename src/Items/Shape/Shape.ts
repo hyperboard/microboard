@@ -3,7 +3,8 @@ import { Shapes, ShapeType } from "./Basic";
 import { BorderStyle, BorderWidth } from "../Path";
 import { Subject } from "Subject";
 import { RichText } from "../RichText";
-import { ShapeData, ShapeOperation } from "./ShapeOperation";
+import { ShapeOperation } from "./ShapeOperation";
+import { DefaultShapeData, ShapeData } from "./ShapeData";
 import { Geometry } from "../Geometry";
 import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
@@ -12,7 +13,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
 
-const defaultShapeData = new ShapeData();
+const defaultShapeData = new DefaultShapeData();
 
 export class Shape implements Geometry {
 	readonly itemType = "Shape";

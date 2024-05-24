@@ -1,8 +1,8 @@
 import { BorderStyle, BorderWidth } from "../Path";
 import { FrameType } from "./Basic";
-import { TransformationData } from "../Transformation";
-import { RichTextData } from "..";
 import { Board } from "Board/Board";
+import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { DefaultRichTextData } from "../RichText/RichTextData";
 
 export class FrameData {
 	readonly itemType = "Frame";
@@ -14,9 +14,9 @@ export class FrameData {
 		public borderOpacity = 1,
 		public borderStyle: BorderStyle = "solid",
 		public borderWidth: BorderWidth = 1,
-		public transformation = new TransformationData(),
+		public transformation = new DefaultTransformationData(),
 		public children: string[] = [],
-		public text = new RichTextData(),
+		public text = new DefaultRichTextData([], "top", 600),
 		public canChangeRatio = true,
 	) {}
 }

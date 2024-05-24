@@ -7,7 +7,6 @@ import {
 	Paths,
 	Item,
 	RichText,
-	RichTextData,
 	Matrix,
 } from "..";
 import { Geometry } from "../Geometry";

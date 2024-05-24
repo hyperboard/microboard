@@ -1,20 +1,7 @@
-import { BaseSelection, Descendant, Operation } from "slate";
+import { BaseSelection, Operation } from "slate";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { TransformationData } from "../Transformation";
 import { BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
-
-export class RichTextData {
-	readonly itemType = "RichText";
-	constructor(
-		public children: Descendant[] = [],
-		public verticalAlignment: VerticalAlignment = "center",
-		public maxWidth: number | undefined,
-		public transformation?: TransformationData,
-		public containerMaxWidth?: number,
-		public insideOf?: string,
-	) {}
-}
 
 interface SetBlockType {
 	class: "RichText";

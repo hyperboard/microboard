@@ -2,80 +2,70 @@ import { ItemData } from "./Items";
 
 export type ItemsIndexRecord = Record<string, number>;
 
-interface CreateItem {
+interface BoardOp {
 	class: "Board";
-	method: "add";
-	item: string;
-	data: ItemData;
 }
 
-export interface RemoveItem {
-	class: "Board";
-	method: "remove";
+interface SingleItemBoardOp extends BoardOp {
+	item: string;
+}
+
+interface MultiItemBoardOp extends BoardOp {
 	item: string[];
 }
 
-interface MoveToZIndex {
-	class: "Board";
+interface ItemMapBoardOp extends BoardOp {
+	itemsMap: { [key: string]: ItemData };
+}
+
+interface CreateItem extends SingleItemBoardOp {
+	method: "add";
+	data: ItemData;
+}
+
+export interface RemoveItem extends MultiItemBoardOp {
+	method: "remove";
+}
+
+interface MoveToZIndex extends SingleItemBoardOp {
 	method: "moveToZIndex";
-	item: string;
 	zIndex: number;
 }
 
-interface MoveManyToZIndex {
-	class: "Board";
+interface MoveManyToZIndex extends BoardOp {
 	method: "moveManyToZIndex";
 	item: ItemsIndexRecord;
 }
 
-interface MoveSecondBeforeFirst {
-	class: "Board";
+interface MoveSecondBeforeFirst extends SingleItemBoardOp {
 	method: "moveSecondBeforeFirst";
-	item: string;
 	secondItem: string;
 }
 
-interface MoveSecondAfterFirst {
-	class: "Board";
+interface MoveSecondAfterFirst extends SingleItemBoardOp {
 	method: "moveSecondAfterFirst";
-	item: string;
 	secondItem: string;
 }
 
-interface BringToFront {
-	class: "Board";
+interface BringToFront extends MultiItemBoardOp {
 	method: "bringToFront";
-	item: string[];
 	prevZIndex: ItemsIndexRecord;
 }
 
-interface SendToBack {
-	class: "Board";
+interface SendToBack extends MultiItemBoardOp {
 	method: "sendToBack";
-	item: string[];
 	prevZIndex: ItemsIndexRecord;
 }
 
-interface Paste {
-	class: "Board";
+interface Paste extends ItemMapBoardOp {
 	method: "paste";
-	itemsMap: { [key: string]: ItemData };
 }
 
-interface Duplicate {
-	class: "Board";
+interface Duplicate extends ItemMapBoardOp {
 	method: "duplicate";
-	itemsMap: { [key: string]: ItemData };
 }
 
-/* export interface BoardItemOperation {
-	class: "Board";
-	method: "itemOperation";
-	item: string | string[];
-	itemOperation: ItemOperation;
-} */
-
-export type BoardOperation =
+export type BoardOps =
 	| CreateItem
 	| RemoveItem
 	| MoveToZIndex

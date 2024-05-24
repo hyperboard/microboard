@@ -1,7 +1,7 @@
 import { TransformationOperation } from "../Items";
 import { ShapeOperation } from "../Items/Shape";
 import { RichTextOperation } from "../Items";
-import { BoardOperation } from "../BoardOperations";
+import { BoardOps } from "../BoardOperations";
 import { ConnectorOperation } from "../Items/Connector";
 import { DrawingOperation } from "Board/Items/Drawing/DrawingCommand";
 import { StickerOperation } from "../Items/Sticker/StickerOperation";
@@ -30,6 +30,6 @@ export type ItemOperation =
 	| DrawingOperation
 	| FrameOperation;
 
-export type UndoableOperation = BoardOperation | ItemOperation;
+export type UndoableOperation = BoardOps | ItemOperation;
 
 export type Operation = UndoableOperation | EventsOperation;

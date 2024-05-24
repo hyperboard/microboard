@@ -14,7 +14,9 @@ export interface ImageItemData {
 }
 
 const errorImageCanvas = document.createElement("canvas");
-const errorImageContext = errorImageCanvas.getContext("2d");
+const errorImageContext = errorImageCanvas.getContext(
+	"2d",
+) as CanvasRenderingContext2D; // this does not fail
 errorImageCanvas.width = 250;
 errorImageCanvas.height = 50;
 errorImageContext.font = "16px Arial";
@@ -32,16 +34,41 @@ export class ImageItem extends Mbr {
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 
-	constructor(dataUrl: string, private events?: Events, private id = "") {
+	constructor(
+		dataUrl: string | ArrayBuffer | null | undefined,
+		events?: Events,
+		private id = "",
+	) {
 		super();
 		this.transformation = new Transformation(id, events);
-		this.dataUrl = dataUrl;
-		this.image = new Image();
-		this.image.onload = this.onLoad;
-		this.image.onerror = this.onError;
-		this.image.src = dataUrl;
+
+		// Convert dataUrl to string if it's valid, else handle the error
+		if (typeof dataUrl === "string") {
+			this.dataUrl = dataUrl;
+			this.image = new Image();
+			this.image.onload = this.onLoad;
+			this.image.onerror = this.onError;
+			this.image.src = dataUrl;
+		} else {
+			this.dataUrl = "";
+			this.image = new Image();
+			this.image.src = ""; // or provide a default/fallback dataUrl
+			this.handleError();
+		}
+
 		this.transformation.subject.subscribe(this.onTransform);
 	}
+
+	handleError = (): void => {
+		// Provide handling logic for errors
+		console.error("Invalid dataUrl or image failed to load.");
+		this.image = errorImage; // assuming errorImage is defined elsewhere
+		this.updateMbr();
+		this.subject.publish(this);
+		while (this.loadCallbacks.length > 0) {
+			this.loadCallbacks.shift()!(this);
+		}
+	};
 
 	onLoad = (): void => {
 		this.updateMbr();
