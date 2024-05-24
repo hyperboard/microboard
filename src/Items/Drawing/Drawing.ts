@@ -5,8 +5,9 @@ import { Line } from "../Line";
 import { Mbr } from "../Mbr";
 import { BorderStyle, BorderWidth, Path, Paths, scalePatterns } from "../Path";
 import { Point } from "../Point";
-import { TransformationData, Transformation } from "../Transformation";
+import { Transformation } from "../Transformation";
 import { DrawingOperation, DrawingCommand } from "./DrawingCommand";
+import { TransformationData } from "../Transformation/TransformationData";
 
 export interface DrawingData {
 	itemType: "Drawing";

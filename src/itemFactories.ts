@@ -75,7 +75,7 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
 	if (!isDrawingData(data)) {
 		throw new Error("Invalid data for Drawing");
 	}
-	return new Drawing([]).setId(id).deserialize(data);
+	return new Drawing([], board.events, id).setId(id).deserialize(data);
 }
 
 function createFrame(id: string, data: ItemData, board: Board): Frame {

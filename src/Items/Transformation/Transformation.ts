@@ -8,7 +8,6 @@ import {
 import { Events, Operation } from "../../Events";
 import { TransformationCommand } from "./TransformationCommand";
 import { SubjectOperation } from "SubjectOperation";
-import { time, timeStamp } from "console";
 
 const defaultData = new DefaultTransformationData();
 
