@@ -1,4 +1,4 @@
-import { Frame, Mbr, Point } from "Board/Items";
+import { Frame, ItemData, Mbr, Point } from "Board/Items";
 import { Item } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Pointer } from "Board/Pointer";
@@ -17,13 +17,25 @@ export class SpatialIndex {
 		},
 	);
 	private framesIndex = new LayeredIndex((item: Frame): number => {
-		return this.itemsArray.indexOf(item);
+		return this.framesArray.indexOf(item);
 	});
 	private Mbr = new Mbr();
 	readonly items: Items;
 
 	constructor(view: Camera, pointer: Pointer) {
 		this.items = new Items(this, view, pointer, this.subject);
+	}
+
+	clear(): void {
+		this.itemsArray = [];
+		this.framesArray = [];
+		this.itemsIndex = new LayeredIndex((item: Item): number => {
+			return this.itemsArray.indexOf(item);
+		});
+		this.framesIndex = new LayeredIndex((item: Item): number => {
+			return this.framesArray.indexOf(item);
+		});
+		this.Mbr = new Mbr();
 	}
 
 	insert(item: Item): void {
@@ -75,6 +87,18 @@ export class SpatialIndex {
 		this.subject.publish(this.items);
 	}
 
+	copy(): Record<string, ItemData> {
+		const items = this.itemsArray.reduce((accumulator, item) => {
+			accumulator[item.getId()] = item.serialize();
+			return accumulator;
+		}, {} as Record<string, ItemData>);
+		const itemsAndFrames = this.framesArray.reduce((accumulator, item) => {
+			accumulator[item.getId()] = item.serialize();
+			return accumulator;
+		}, items as Record<string, ItemData>);
+		return itemsAndFrames;
+	}
+
 	moveToZIndex(item: Item, zIndex: number): void {
 		if (item instanceof Frame) {
 			const index = this.framesArray.indexOf(item);
@@ -100,8 +124,8 @@ export class SpatialIndex {
 			newItems[index] = items[i] as Item;
 		}
 
-		this.array = newItems;
-		this.array.forEach(this.change.bind(this));
+		this.itemsArray = newItems; // ???
+		this.itemsArray.forEach(this.change.bind(this));
 		this.subject.publish(this.items);
 	}
 
@@ -122,7 +146,7 @@ export class SpatialIndex {
 		}
 	}
 
-	sendManyToBack(items: Item[]) {
+	sendManyToBack(items: Item[]): void {
 		items.forEach(item => this.sendToBack(item, false));
 		this.subject.publish(this.items);
 	}
@@ -148,7 +172,7 @@ export class SpatialIndex {
 		items.forEach(item => this.bringToFront(item, false));
 		this.subject.publish(this.items);
 	}
-
+	// TODO Item could be frame
 	moveSecondAfterFirst(first: Item, second: Item): void {
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
@@ -158,7 +182,7 @@ export class SpatialIndex {
 		this.change(second);
 		this.subject.publish(this.items);
 	}
-
+	// TODO Item could be frame
 	moveSecondBeforeFirst(first: Item, second: Item): void {
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
@@ -313,182 +337,6 @@ export class SpatialIndex {
 				return this.itemsArray[lastIndex];
 			}
 		}
-	}
-}
-
-export class SlowSpatialIndex {
-	private array: Item[] = [];
-	subject = new Subject<Items>();
-	readonly items: Items;
-	private mbr = new Mbr();
-
-	constructor(view: Camera, pointer: Pointer) {
-		this.items = new Items(this, view, pointer, this.subject);
-	}
-
-	insert(item: Item): void {
-		this.array.push(item);
-		this.subject.publish(this.items);
-		this.updateMbr(item.getMbr());
-	}
-
-	change(item: Item): void {
-		this.updateMbr(item.getMbr());
-		this.subject.publish(this.items);
-	}
-
-	remove(item: Item): void {
-		const index = this.array.indexOf(item);
-		if (index > -1) {
-			this.array.splice(index, 1);
-		}
-		this.subject.publish(this.items);
-	}
-
-	moveToZIndex(item: Item, zIndex: number): void {
-		this.remove(item);
-		// Вставить элемент на новый индекс, обеспечивая валидность диапазона.
-		zIndex = Math.max(0, Math.min(zIndex, this.array.length));
-		this.array.splice(zIndex, 0, item);
-		this.subject.publish(this.items);
-	}
-
-	sendToBack(item: Item): void {
-		this.remove(item);
-		this.array.unshift(item);
-		this.subject.publish(this.items);
-	}
-
-	bringToFront(item: Item): void {
-		this.remove(item);
-		this.array.push(item);
-		this.subject.publish(this.items);
-	}
-
-	moveSecondAfterFirst(first: Item, second: Item): void {
-		this.remove(second);
-		const firstIndex = this.array.indexOf(first);
-		// Вставить второй элемент сразу за первым элементом.
-		this.array.splice(firstIndex + 1, 0, second);
-		this.subject.publish(this.items);
-	}
-
-	moveSecondBeforeFirst(first: Item, second: Item): void {
-		this.remove(second);
-		const firstIndex = this.array.indexOf(first);
-		// Вставить второй элемент перед первым элементом.
-		this.array.splice(firstIndex, 0, second);
-		this.subject.publish(this.items);
-	}
-
-	getById(id: string): Item | undefined {
-		return this.findById(id);
-	}
-
-	// Для findById разумнее будет хранить ассоциацию через Map, если у вас есть уникальные идентификаторы.
-	findById(id: string): Item | undefined {
-		return this.array.find(item => item.getId() === id);
-	}
-
-	getEnclosedOrCrossedBy(mbr: Mbr): Item[] {
-		return this.array.filter(item => item.isEnclosedOrCrossedBy(mbr));
-	}
-
-	getEnclosed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
-		const searchMbr = new Mbr(left, top, right, bottom);
-		return this.items.filter(item => {
-			const itemMbr = item.getMbr();
-			return (
-				itemMbr.left >= searchMbr.left &&
-				itemMbr.right <= searchMbr.right &&
-				itemMbr.top >= searchMbr.top &&
-				itemMbr.bottom <= searchMbr.bottom
-			);
-		});
-	}
-
-	getEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
-		return this.getEnclosedOrCrossedBy(new Mbr(left, top, right, bottom));
-	}
-
-	getRectsEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
-		// В этом случае метод полностью идентичен getEnclosedOrCrossed,
-		// но в общем случае может вести себя иначе, если требуется специфическая логика.
-		return this.getEnclosedOrCrossed(left, top, right, bottom);
-	}
-
-	getMbr(): Mbr {
-		return this.mbr;
-	}
-
-	private updateMbr(newMbr: Mbr): void {
-		// Обновляет общий MBR после вставки каждого нового элемента
-		this.mbr.left = Math.min(this.mbr.left, newMbr.left);
-		this.mbr.top = Math.min(this.mbr.top, newMbr.top);
-		this.mbr.right = Math.max(this.mbr.right, newMbr.right);
-		this.mbr.bottom = Math.max(this.mbr.bottom, newMbr.bottom);
-	}
-
-	getNearestTo(
-		point: Point,
-		maxItems: number,
-		filter: (item: Item) => boolean,
-		maxDistance?: number,
-	): Item[] {
-		// Функция помощник для расчета расстояния между точками.
-		const distance = (a: Point, b: Point): number =>
-			Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
-
-		return this.array
-			.filter(item => filter(item))
-			.map(item => ({
-				item,
-				distance: distance(point, item.getCenter()),
-			}))
-			.filter(
-				({ distance }) =>
-					maxDistance === undefined || distance <= maxDistance,
-			)
-			.sort((a, b) => a.distance - b.distance)
-			.slice(0, maxItems)
-			.map(({ item }) => item);
-	}
-
-	list(): Item[] {
-		// Возвращает копию массива, чтобы предотвратить изменение извне.
-		return [...this.array];
-	}
-
-	getZIndex(item: Item): number {
-		// Возвращает индекс элемента в массиве, что соответствует его Z индексу.
-		return this.array.indexOf(item);
-	}
-
-	getLastZIndex(): number {
-		return this.array.length - 1;
-	}
-
-	getByZIndex(zIndex: number): Item | undefined {
-		// Получает элемент по его Z индексу.
-		if (zIndex >= 0 && zIndex < this.array.length) {
-			return this.array[zIndex];
-		}
-		return undefined;
 	}
 }
 

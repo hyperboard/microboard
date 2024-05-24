@@ -1,3 +1,4 @@
+import { Item } from "Board/Items";
 import { FrameData } from "Board/Items";
 import { DrawingData } from "Board/Items/Drawing";
 import { ImageItemData } from "Board/Items/Image";
@@ -12,6 +13,11 @@ import {
 } from "Board/Items/RichText/Editor/BlockNode";
 import { TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { Descendant } from "slate";
+import Ajv from "ajv";
+
+export const validator = new Ajv();
+
+type ItemsMap = Record<string, Item>;
 
 export function validateItemsMap(parsedObject: any): parsedObject is ItemsMap {
 	// Validate the presence and structure of the serialized ItemsMap object

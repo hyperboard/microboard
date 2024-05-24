@@ -38,7 +38,8 @@ export class FrameCommand implements Command {
 					};
 				});
 			case "addChild":
-				return mapItemsByOperation(frame, frame => { // REFACTOR add child to mapItems 
+				return mapItemsByOperation(frame, frame => {
+					// REFACTOR add child to mapItems
 					return {
 						...this.operation,
 						children: frame.getChildrenIds(),

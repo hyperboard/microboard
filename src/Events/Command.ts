@@ -5,7 +5,6 @@ import { TransformationCommand } from "../Items/Transformation/TransformationCom
 import { RichTextCommand } from "../Items/RichText/RichTextCommand";
 import { EventsCommand } from "./EventsCommand";
 import { ConnectorCommand } from "Board/Items/Connector/ConnectorCommand";
-import { Events } from "./Events";
 import { Operation } from "./EventsOperations";
 import { DrawingCommand } from "Board/Items/Drawing/DrawingCommand";
 import { StickerCommand } from "../Items/Sticker/StickerCommand";
@@ -20,15 +19,15 @@ export interface Command {
 	revert(): void;
 }
 
-export function createCommand(
-	events: Events,
-	board: Board,
-	operation: Operation,
-): Command {
+export function createCommand(board: Board, operation: Operation): Command {
 	// TODO API
 	try {
 		switch (operation.class) {
 			case "Events": {
+				const events = board.events;
+				if (!events) {
+					return new NoOpCommand("Board Has No Events Record");
+				}
 				return new EventsCommand(events, operation);
 			}
 			case "Board": {

@@ -1,15 +1,16 @@
 import { Point } from "../Point";
 import { Matrix } from "./Matrix";
+import { TransformationOperation } from "./TransformationOperations";
 import {
-	TransformationOperation,
 	TransformationData,
-} from "./TransformationOperations";
+	DefaultTransformationData,
+} from "./TransformationData";
 import { Events, Operation } from "../../Events";
 import { TransformationCommand } from "./TransformationCommand";
 import { SubjectOperation } from "SubjectOperation";
 import { time, timeStamp } from "console";
 
-const defaultData = new TransformationData();
+const defaultData = new DefaultTransformationData();
 
 export class Transformation {
 	readonly subject = new SubjectOperation<

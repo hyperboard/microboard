@@ -1,11 +1,11 @@
 import { Command } from "./Events";
-import { BoardOperation } from "./BoardOperations";
+import { BoardOps } from "./BoardOperations";
 import { Board } from "Board";
 
 export class BoardCommand implements Command {
 	private reverse = this.getReverse();
 
-	constructor(private board: Board, private operation: BoardOperation) {}
+	constructor(private board: Board, private operation: BoardOps) {}
 
 	apply(): void {
 		this.board.apply(this.operation);
@@ -21,7 +21,7 @@ export class BoardCommand implements Command {
 		}
 	}
 
-	getReverse(): BoardOperation | BoardOperation[] {
+	getReverse(): BoardOps | BoardOps[] {
 		const operation = this.operation;
 		switch (operation.method) {
 			case "bringToFront": {
@@ -88,7 +88,7 @@ export class BoardCommand implements Command {
 			}
 			case "remove": {
 				const items = this.board.items;
-				const reverse: BoardOperation[] = [];
+				const reverse: BoardOps[] = [];
 
 				for (const itemId of operation.item) {
 					const item = items.getById(itemId);

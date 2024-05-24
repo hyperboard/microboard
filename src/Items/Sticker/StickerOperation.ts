@@ -1,13 +1,13 @@
-import { RichTextData } from "../RichText";
-import { TransformationData } from "../Transformation";
 import { stickerColors } from ".";
+import { DefaultRichTextData } from "../RichText/RichTextData";
+import { DefaultTransformationData } from "../Transformation/TransformationData";
 
 export class StickerData {
 	readonly itemType = "Sticker";
 	constructor(
 		public backgroundColor = stickerColors["Sky Blue"],
-		public transformation = new TransformationData(),
-		public text = new RichTextData(),
+		public transformation = new DefaultTransformationData(),
+		public text = new DefaultRichTextData(),
 	) {}
 }
 

@@ -28,8 +28,9 @@ import {
 import { toFiniteNumber } from "utils";
 import { Sticker } from "Board/Items/Sticker";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 
-const defaultShapeData = new ShapeData();
+const defaultShapeData = new DefaultShapeData();
 
 export type SelectionContext =
 	| "SelectUnderPointer"
@@ -72,7 +73,7 @@ export class Selection {
 
 	private emit(operation: Operation): void {
 		if (this.events) {
-			const command = createCommand(this.events, this.board, operation);
+			const command = createCommand(this.board, operation);
 			command.apply();
 			this.events.emit(operation, command);
 		}

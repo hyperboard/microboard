@@ -1,5 +1,4 @@
-import { Mbr, Connector, RichText, Shape, Frame, FrameData } from "./Items";
-import { Item, ItemData } from "./Items";
+import { Frame, Item, ItemData } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
@@ -7,19 +6,15 @@ import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import {
-	BoardOperation,
-	ItemsIndexRecord,
-	RemoveItem,
-} from "./BoardOperations";
+import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { BoardCommand } from "./BoardCommand";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
-import { ImageItem } from "./Items/Image";
-import { Drawing } from "./Items/Drawing";
 // import { Group } from "./Items/Group";
-import { Sticker } from "./Items/Sticker";
 import { DrawingContext } from "./Items/DrawingContext";
 import { Connection } from "App/Connection";
+import { BoardEvent, createEvents } from "./Events/Events";
+import { v4 as uuidv4 } from "uuid";
+import { itemFactories } from "./itemFactories";
 
 export class Board {
 	events: Events | undefined;
@@ -30,7 +25,6 @@ export class Board {
 	private index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
-	private itemCounter = 0;
 	private drawingContext: DrawingContext | null = null;
 
 	constructor(private boardId = "") {
@@ -40,7 +34,7 @@ export class Board {
 
 	/* Connect to the server to recieve the events*/
 	connect(connection: Connection): void {
-		this.events = new Events(this, connection);
+		this.events = createEvents(this, connection);
 		this.selection.events = this.events;
 	}
 
@@ -56,14 +50,10 @@ export class Board {
 	}
 
 	getNewItemId(): string {
-		if (this.events) {
-			return this.events.getNewItemId();
-		} else {
-			return this.boardId + ":" + this.itemCounter++;
-		}
+		return uuidv4();
 	}
 
-	emit(operation: BoardOperation): void {
+	emit(operation: BoardOps): void {
 		if (this.events) {
 			const command = new BoardCommand(this, operation);
 			command.apply();
@@ -100,7 +90,7 @@ export class Board {
 		}
 	}
 
-	private applyBoardOperation(op: BoardOperation): void {
+	private applyBoardOperation(op: BoardOps): void {
 		switch (op.method) {
 			case "moveToZIndex": {
 				const item = this.index.getById(op.item);
@@ -217,53 +207,11 @@ export class Board {
 	}
 
 	createItem(id: string, data: ItemData): Item {
-		switch (data.itemType) {
-			case "Sticker":
-				const sticker = new Sticker(this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(sticker);
-				return sticker;
-			case "Shape":
-				const shape = new Shape(this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(shape);
-				return shape;
-			case "RichText":
-				const richText = new RichText(new Mbr(), id, this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(richText);
-				return richText;
-			case "Connector":
-				const connector = new Connector(this, this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(connector);
-				return connector;
-			case "Image":
-				const image = new ImageItem(data.dataUrl, this.events, id)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(image);
-				return image;
-			case "Drawing":
-				const drawing = new Drawing([], this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(drawing);
-				return drawing;
-			case "Frame":
-				const frame = new Frame(this.events)
-					.setId(id)
-					.deserialize(data);
-				return frame;
-			/*
-			case "Group":
-				return new Group(this.events).setId(id).deserialize(data);
-			*/
+		const factory = itemFactories[data.itemType];
+		if (!factory) {
+			throw new Error(`Unknown item type: ${data.itemType}`);
 		}
+		return factory(id, data, this);
 	}
 
 	add<T extends Item>(item: T): T {
@@ -374,21 +322,32 @@ export class Board {
 	}
 
 	copy(): Record<string, ItemData> {
-		return this.items.index.array.reduce((accumulator, item) => {
-			accumulator[item.getId()] = item.serialize();
-			return accumulator;
-		}, {} as Record<string, ItemData>);
+		return this.items.index.copy();
 	}
 
-	serialize(): string {
-		return JSON.stringify(this.copy());
+	serialize(): Record<string, ItemData> {
+		return this.copy();
 	}
 
-	deserialize(snapshot: string): void {
-		const map = JSON.parse(snapshot);
-		for (const itemData of map) {
-			const item = this.createItem(itemData.id, itemData);
+	deserialize(snapshot: BoardSnapshot): void {
+		const { items, events } = snapshot;
+		this.index.clear();
+		for (const key in items) {
+			const itemData = items[key];
+			const item = this.createItem(key, itemData);
 			this.index.insert(item);
+		}
+		this.events?.deserialize(events);
+	}
+
+	getSnapshot(): BoardSnapshot {
+		if (this.events) {
+			return this.events.getSnapshot();
+		} else {
+			return {
+				items: this.serialize(),
+				events: [],
+			};
 		}
 	}
 
@@ -644,4 +603,10 @@ export class Board {
 	isOnBoard(item: Item): boolean {
 		return this.items.findById(item.getId()) !== undefined;
 	}
+}
+
+export interface BoardSnapshot {
+	items: Record<string, ItemData>;
+	events: BoardEvent[];
+	lastIndex: number;
 }
