@@ -1,4 +1,4 @@
-import { Mbr, Point, Matrix } from "Board/Items";
+import { Matrix, Mbr, Point } from "Board/Items";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";

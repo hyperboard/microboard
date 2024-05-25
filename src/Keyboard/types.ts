@@ -13,12 +13,13 @@ export type Hotkey = {
 
 export type HotkeyName = keyof typeof hotkeys;
 
-type HotkeyCb = (event?: KeyboardEvent) => void;
-type HotkeyConfig = {
+export type HotkeyCb = (event?: KeyboardEvent) => void;
+export type HotkeyConfig = {
 	cb: HotkeyCb;
 	selectionContext?: SelectionContext[];
 	preventDefault?: boolean;
 	singleItemOnly?: boolean;
+	allItemsType?: string[];
 };
 
 export type HotkeysMap = Partial<Record<HotkeyName, HotkeyCb | HotkeyConfig>>;
