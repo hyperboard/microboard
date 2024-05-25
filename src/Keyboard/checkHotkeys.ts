@@ -1,4 +1,3 @@
-// import { isEditInProcess } from "Board/Items/RichText/RichText";
 import type { Board } from "Board/Board";
 import { isHotkeyPushed } from "./isHotkeyPushed";
 import { logHotkey } from "./logHotkey";
@@ -12,23 +11,51 @@ export function checkHotkeys(
 	const entries = Object.entries(hotkeyMap);
 	for (const [hotkey, configOrCb] of entries) {
 		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
+			const context = board.selection.getContext();
+
 			if (typeof configOrCb === "function") {
 				event.preventDefault();
 				configOrCb(event);
-				logHotkey(hotkey as HotkeyName, "triggered");
+				logHotkey(
+					configOrCb,
+					hotkey as HotkeyName,
+					"triggered",
+					context,
+				);
 				return true;
 			}
 			const {
 				preventDefault = true,
 				selectionContext,
 				singleItemOnly = false,
+				allItemsType,
 				cb,
 			} = configOrCb;
 
-			const context = board.selection.getContext();
 			const isSingle = board.selection.items.isSingle();
+
+			if (
+				allItemsType?.length &&
+				!allItemsType.some(itemType =>
+					board.selection.items.isAllItemsType(itemType),
+				)
+			) {
+				logHotkey(
+					configOrCb,
+					hotkey as HotkeyName,
+					"canceledByAllItemsType",
+					context,
+				);
+				return false;
+			}
+
 			if (singleItemOnly && !isSingle) {
-				logHotkey(hotkey as HotkeyName, "canceledBySingleItemOnly");
+				logHotkey(
+					configOrCb,
+					hotkey as HotkeyName,
+					"canceledBySingleItemOnly",
+					context,
+				);
 				return false;
 			}
 			if (
@@ -36,10 +63,10 @@ export function checkHotkeys(
 				!selectionContext.includes(context)
 			) {
 				logHotkey(
+					configOrCb,
 					hotkey as HotkeyName,
 					"canceledBySelectionContext",
 					context,
-					selectionContext,
 				);
 				return false;
 			}
@@ -48,7 +75,7 @@ export function checkHotkeys(
 				event.preventDefault();
 			}
 			cb(event);
-			logHotkey(hotkey as HotkeyName, "triggered");
+			logHotkey(configOrCb, hotkey as HotkeyName, "triggered", context);
 			return true;
 		}
 	}
