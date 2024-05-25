@@ -1,11 +1,10 @@
-import { Frame, ItemData, Mbr, Point } from "Board/Items";
-import { Item } from "Board/Items";
+import { Camera } from "Board/Camera";
+import { Frame, Item, ItemData, Mbr, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
-import { Camera } from "Board/Camera";
-import { LayeredIndex } from "./LayeredIndex";
 import { ItemsIndexRecord } from "../BoardOperations";
+import { LayeredIndex } from "./LayeredIndex";
 
 export class SpatialIndex {
 	subject = new Subject<Items>();
@@ -126,15 +125,13 @@ export class SpatialIndex {
 			.map(id => this.items.getById(id))
 			.filter(item => item !== undefined);
 		const zIndex = Object.values(itemsRecord);
-		const newItems: Item[] = [];
+		// const newItems: Item[] = [];
 		for (let i = 0; i < zIndex.length; i++) {
 			const index = zIndex[i];
-			newItems[index] = items[i] as Item;
+			this.itemsArray[index] = items[i] as Item;
 		}
 
-		this.itemsArray = newItems; // ???
 		this.itemsArray.forEach(this.change.bind(this));
-		this.subject.publish(this.items);
 	}
 
 	sendToBack(item: Item, shouldPublish = true): void {
@@ -155,8 +152,14 @@ export class SpatialIndex {
 	}
 
 	sendManyToBack(items: Item[]): void {
-		items.forEach(item => this.sendToBack(item, false));
-		this.subject.publish(this.items);
+		const newItems: Item[] = [...items];
+		this.itemsArray.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		this.itemsArray = newItems;
+		this.itemsArray.forEach(this.change.bind(this));
 	}
 
 	bringToFront(item: Item, shouldPublish = true): void {
@@ -177,8 +180,15 @@ export class SpatialIndex {
 	}
 
 	bringManyToFront(items: Item[]) {
-		items.forEach(item => this.bringToFront(item, false));
-		this.subject.publish(this.items);
+		const newItems: Item[] = [];
+		this.itemsArray.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		newItems.push(...items);
+		this.itemsArray = newItems;
+		this.itemsArray.forEach(this.change.bind(this));
 	}
 	// TODO Item could be frame
 	moveSecondAfterFirst(first: Item, second: Item): void {
