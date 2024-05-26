@@ -120,8 +120,11 @@ export function uploadImage(file: File, board: Board) {
 				const centerPoint = viewportMbr.getCenter();
 				const translateX = centerPoint.x - scaledImageCenterX;
 				const translateY = centerPoint.y - scaledImageCenterY;
-				boardImage.transformation.translateTo(translateX, translateY);
-				boardImage.transformation.scaleTo(finalScale, finalScale);
+				boardImage.transformation.applyTranslateTo(
+					translateX,
+					translateY,
+				);
+				boardImage.transformation.applyScaleTo(finalScale, finalScale);
 
 				board.selection.removeAll();
 				board.selection.add(boardImage);
