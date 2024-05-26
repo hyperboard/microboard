@@ -5,12 +5,12 @@ import { Line } from "../Line";
 import { Mbr } from "../Mbr";
 import { Path, Paths } from "../Path";
 import { Point } from "../Point";
-import { Transformation, TransformationData } from "../Transformation";
+import { Transformation } from "../Transformation";
 
 export interface ImageItemData {
 	itemType: "Image";
 	dataUrl: string;
-	transformation: TransformationData;
+	transformation: Transformation;
 }
 
 const errorImageCanvas = document.createElement("canvas");
@@ -33,6 +33,7 @@ export class ImageItem extends Mbr {
 	dataUrl: string;
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
+	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
@@ -72,6 +73,9 @@ export class ImageItem extends Mbr {
 	};
 
 	onLoad = (): void => {
+		while (this.beforeLoadCallbacks.length > 0) {
+			this.beforeLoadCallbacks.shift()!(this);
+		}
 		this.updateMbr();
 		this.subject.publish(this);
 		while (this.loadCallbacks.length > 0) {
@@ -101,6 +105,10 @@ export class ImageItem extends Mbr {
 		this.right = this.left + this.image.width * scaleX;
 		this.bottom = this.top + this.image.height * scaleY;
 	}
+
+	doOnceBeforeOnLoad = (callback: (image: ImageItem) => void): void => {
+		this.loadCallbacks.push(callback);
+	};
 
 	doOnceOnLoad = (callback: (image: ImageItem) => void): void => {
 		this.loadCallbacks.push(callback);
