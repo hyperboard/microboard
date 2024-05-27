@@ -7,6 +7,7 @@ import {
 	RichTextData,
 	ConnectorData,
 	Frame,
+	FrameData,
 } from "./Items";
 import { Item, ItemData } from "./Items";
 import { ImageItem, ImageItemData } from "./Items/Image";
@@ -36,53 +37,68 @@ function createSticker(id: string, data: ItemData, board: Board): Sticker {
 	if (!isStickerData(data)) {
 		throw new Error("Invalid data for Sticker");
 	}
-	return new Sticker(board.events).setId(id).deserialize(data);
+	const sticker = new Sticker(board.events).setId(id).deserialize(data);
+	board.handleNesting(sticker);
+	return sticker;
 }
 
 function createShape(id: string, data: ItemData, board: Board): Shape {
 	if (!isShapeData(data)) {
 		throw new Error("Invalid data for Shape");
 	}
-	return new Shape(board.events).setId(id).deserialize(data);
+	const shape = new Shape(board.events).setId(id).deserialize(data);
+	board.handleNesting(shape);
+	return shape;
 }
 
 function createRichText(id: string, data: ItemData, board: Board): RichText {
 	if (!isRichTextData(data)) {
 		throw new Error("Invalid data for RichText");
 	}
-	return new RichText(new Mbr(), id, board.events)
+	const richText = new RichText(new Mbr(), id, board.events)
 		.setId(id)
 		.deserialize(data);
+	board.handleNesting(richText);
+	return richText;
 }
 
 function createConnector(id: string, data: ItemData, board: Board): Connector {
 	if (!isConnectorData(data)) {
 		throw new Error("Invalid data for Connector");
 	}
-	return new Connector(board, board.events).setId(id).deserialize(data);
+	const connector = new Connector(board, board.events)
+		.setId(id)
+		.deserialize(data);
+	board.handleNesting(connector);
+	return connector;
 }
 
 function createImage(id: string, data: ItemData, board: Board): ImageItem {
 	if (!isImageItemData(data)) {
 		throw new Error("Invalid data for ImageItem");
 	}
-	return new ImageItem(data.dataUrl, board.events, id)
+	const image = new ImageItem(data.dataUrl, board.events, id)
 		.setId(id)
 		.deserialize(data);
+	board.handleNesting(image);
+	return image;
 }
 
 function createDrawing(id: string, data: ItemData, board: Board): Drawing {
 	if (!isDrawingData(data)) {
 		throw new Error("Invalid data for Drawing");
 	}
-	return new Drawing([], board.events, id).setId(id).deserialize(data);
+	const drawing = new Drawing([], board.events).setId(id).deserialize(data);
+	board.handleNesting(drawing);
+	return drawing;
 }
 
 function createFrame(id: string, data: ItemData, board: Board): Frame {
 	if (!isFrameData(data)) {
 		throw new Error("Invalid data for Drawing");
 	}
-	return new Frame(board.events).setId(id).deserialize(data);
+	const frame = new Frame(board.events).setId(id).deserialize(data);
+	return frame;
 }
 
 // function createGroup(id: string, data: ItemData, board: Board): Group {
@@ -114,7 +130,7 @@ function isDrawingData(data: ItemData): data is DrawingData {
 	return data.itemType === "Drawing";
 }
 
-function isFrameData(data: ItemData): data is DrawingData {
+function isFrameData(data: ItemData): data is FrameData {
 	return data.itemType === "Frame";
 }
 

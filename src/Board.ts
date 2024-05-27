@@ -187,7 +187,7 @@ export class Board {
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
 	 */
 	// Should rename?
-	private handleNesting(item: Item): void {
+	handleNesting(item: Item): void {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
 			.getFramesInView()
