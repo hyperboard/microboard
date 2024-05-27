@@ -1,16 +1,15 @@
 import {
+	ConnectorOperation,
 	RichTextOperation,
 	TransformationOperation,
-	ConnectorOperation,
 } from "Board/Items";
-import { Path } from "slate";
-import { Operation } from "./EventsOperations";
 import {
-	TranslateBy,
 	ScaleBy,
 	ScaleByTranslateBy,
-	TransformMany,
+	TranslateBy,
 } from "Board/Items/Transformation/TransformationOperations";
+import { Path } from "slate";
+import { Operation } from "./EventsOperations";
 
 // TODO API Conditional to Map
 export function canNotBeMerged(op: Operation): boolean {

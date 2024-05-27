@@ -379,7 +379,7 @@ export class EditorContainer {
 			}
 			Editor.removeMark(editor, "styles");
 			Editor.addMark(editor, "styles", styles);
-			ReactEditor.focus(editor);
+			// ReactEditor.focus(editor);
 		});
 		this.emitMethodOps();
 	}
