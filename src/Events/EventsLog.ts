@@ -33,7 +33,17 @@ export function createEventsLog(board: Board): EventsLog {
 
 	function deserialize(events: BoardEvent[]): void {
 		list = [];
-		insertEvents(events);
+		const eventArray = Array.isArray(events) ? events : [events];
+		if (eventArray.length === 0) {
+			return;
+		}
+		for (const event of events) {
+			const eventBody = event.body;
+			const command = createCommand(board, eventBody.operation);
+			const record = { event, command };
+			command.apply();
+			push(record);
+		}
 	}
 
 	function getSnapshot(): BoardSnapshot {
@@ -50,11 +60,30 @@ export function createEventsLog(board: Board): EventsLog {
 		return snapshot;
 	}
 
+	function getLatestOrder(): number {
+		for (let i = list.length - 1; i >= 0; i--) {
+			const record = list[i];
+			if (record.event.order) {
+				return record.event.order;
+			}
+		}
+		return 0;
+	}
+
 	function insertEvents(events: BoardEvent | BoardEvent[]): void {
+		const eventArray = Array.isArray(events) ? events : [events];
+		if (eventArray.length === 0) {
+			return;
+		}
+		const latestEventOrder = getLatestOrder();
+		const newEvents = eventArray.filter(event => {
+			return event.order > latestEventOrder;
+		});
+		if (newEvents.length === 0) {
+			return;
+		}
 		const unordered = popUnorderedRecords();
-		const mergedEvents = Array.isArray(events)
-			? mergeEvents(events)
-			: [events];
+		const mergedEvents = mergeEvents(newEvents);
 		for (const event of mergedEvents) {
 			const eventBody = event.body;
 			const command = createCommand(board, eventBody.operation);

@@ -78,29 +78,32 @@ export function createEvents(board: Board, connection: Connection): Events {
 						addEvent(event);
 					}
 				}
-				// TODO onBoardLoad
-				const searchParams = new URLSearchParams(
-					window.location.search.slice(1),
-				);
-				const toFocusId = searchParams.get("focus") ?? "";
-				const toFocusItem = board.items.getById(toFocusId);
-				if (toFocusItem) {
-					const mbr = toFocusItem.getMbr();
-					mbr.left -= 50;
-					mbr.top -= 50;
-					mbr.right += 50;
-					mbr.bottom += 50;
-					this.board.camera.zoomToFit(mbr);
-				}
-				// onBoardLoad
+				onBoardLoad();
 				break;
 			case "CreateSnapshotRequest":
 				const snapshot = getSnapshot();
 				connection.publishSnapshot(board.getBoardId(), snapshot);
 				break;
 			case "BoardSnapshot":
-				deserialize(message.snapshot);
+				board.deserialize(message.snapshot);
+				onBoardLoad();
 				break;
+		}
+	}
+
+	function onBoardLoad(): void {
+		const searchParams = new URLSearchParams(
+			window.location.search.slice(1),
+		);
+		const toFocusId = searchParams.get("focus") ?? "";
+		const toFocusItem = board.items.getById(toFocusId);
+		if (toFocusItem) {
+			const mbr = toFocusItem.getMbr();
+			mbr.left -= 50;
+			mbr.top -= 50;
+			mbr.right += 50;
+			mbr.bottom += 50;
+			board.camera.zoomToFit(mbr);
 		}
 	}
 
