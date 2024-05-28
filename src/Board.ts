@@ -331,12 +331,14 @@ export class Board {
 
 	deserialize(snapshot: BoardSnapshot): void {
 		const { items, events } = snapshot;
+		/*
 		this.index.clear();
 		for (const key in items) {
 			const itemData = items[key];
 			const item = this.createItem(key, itemData);
 			this.index.insert(item);
 		}
+		*/
 		this.events?.deserialize(events);
 	}
 
