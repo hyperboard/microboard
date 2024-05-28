@@ -3,16 +3,16 @@ import {
 	Frame,
 	Item,
 	Line,
+	Matrix,
 	Mbr,
 	Point,
-	RichText,
 	TransformationOperation,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
-import { Drawing } from "Board/Items/Drawing";
+import { Camera } from "Board/Camera";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -34,6 +34,8 @@ export class Select extends Tool {
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
+	lastCreatedCanvas?: HTMLCanvasElement = undefined;
+	lastTranslationKeys?: string[] = undefined;
 
 	constructor(private board: Board) {
 		super();
@@ -57,6 +59,20 @@ export class Select extends Tool {
 		this.lastPointerMoveEventTime = Date.now();
 		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
+		if (this.lastCreatedCanvas) {
+			this.lastCreatedCanvas.remove();
+			this.lastCreatedCanvas = undefined;
+		}
+		if (this.lastTranslationKeys) {
+			this.lastTranslationKeys.forEach(id => {
+				const item = this.board.items.getById(id);
+				if (item) {
+					item.transformationRenderBlock = undefined;
+				}
+			});
+			this.lastTranslationKeys = undefined;
+		}
+		this.board.selection.transformationRenderBlock = undefined;
 	}
 
 	leftButtonDown(): boolean {
@@ -211,6 +227,66 @@ export class Select extends Tool {
 				}
 			});
 			selection.tranformMany(translation, this.beginTimeStamp);
+			const sumMbr = Object.keys(translation).reduce(
+				(mbr: Mbr | undefined, id) => {
+					const item = this.board.items.getById(id);
+					if (item) {
+						if (!mbr) {
+							mbr = item.getMbr();
+						} else {
+							mbr.combine(item.getMbr());
+						}
+					}
+					return mbr;
+				},
+				undefined,
+			);
+			if (sumMbr) {
+				const translationKeys = Object.keys(translation);
+				if (
+					this.lastCreatedCanvas &&
+					this.lastTranslationKeys?.length ===
+						translationKeys.length &&
+					this.lastTranslationKeys?.every(key =>
+						translationKeys.includes(key),
+					)
+				) {
+					this.lastCreatedCanvas.style.left = `${
+						(sumMbr.left - this.board.camera.getMbr().left) *
+						this.board.camera.getMatrix().scaleX
+					}px`;
+					this.lastCreatedCanvas.style.top = `${
+						(sumMbr.top - this.board.camera.getMbr().top) *
+						this.board.camera.getMatrix().scaleY
+					}px`;
+				} else {
+					const cnvs = this.drawMbrOnCanvas(sumMbr);
+					if (cnvs) {
+						cnvs.style.position = "absolute";
+						cnvs.style.zIndex = "100";
+						cnvs.style.left = `${
+							(sumMbr.left - this.board.camera.getMbr().left) *
+							this.board.camera.getMatrix().scaleX
+						}px`;
+						cnvs.style.top = `${
+							(sumMbr.top - this.board.camera.getMbr().top) *
+							this.board.camera.getMatrix().scaleY
+						}px`;
+						cnvs.style.pointerEvents = "none";
+						document.body.appendChild(cnvs);
+						this.lastCreatedCanvas = cnvs;
+						this.lastTranslationKeys = Object.keys(translation);
+						this.lastTranslationKeys.forEach(id => {
+							const item = this.board.items.getById(id);
+							if (item) {
+								item.transformationRenderBlock = true;
+							}
+						});
+						selection.transformationRenderBlock = true;
+					}
+				}
+			}
+
 			selection.list().forEach(item => {
 				if (
 					!(item instanceof Frame) &&
@@ -380,6 +456,59 @@ export class Select extends Tool {
 		this.board.selection.editTextUnderPointer();
 		this.board.selection.editText();
 		return false;
+	}
+
+	/** Creates new canvas and returns it. Renders all items inside of mbr on new canvas
+	 * @param mbr - in which mbr we should find items
+	 */
+	private drawMbrOnCanvas(mbr: Mbr): HTMLCanvasElement | undefined {
+		const canvas = document.createElement("canvas");
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		canvas.width = width * this.board.camera.getMatrix().scaleX;
+		canvas.height = height * this.board.camera.getMatrix().scaleY;
+
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			console.error("Export Board: Unable to get 2D context");
+			return;
+		}
+
+		ctx.rect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = "transparent";
+		ctx.fill();
+
+		const camera = new Camera();
+		const newCameraMatix = new Matrix(-mbr.left, -mbr.top, 1, 1);
+		camera.matrix = newCameraMatix;
+
+		const context = new DrawingContext(camera, ctx);
+
+		context.setCamera(camera);
+		context.ctx.setTransform(
+			this.board.camera.getMatrix().scaleX,
+			0,
+			0,
+			this.board.camera.getMatrix().scaleY,
+			0,
+			0,
+		);
+		context.matrix.applyToContext(context.ctx);
+
+		const cameraMbr = camera.getMbr();
+		this.board.items.index
+			.getRectsEnclosedOrCrossed(
+				cameraMbr.left,
+				cameraMbr.top,
+				cameraMbr.right,
+				cameraMbr.bottom,
+			)
+			.forEach(item => {
+				item.render(context);
+				this.board.selection.renderItemMbr(context, item);
+			});
+
+		return canvas;
 	}
 
 	render(context: DrawingContext): void {

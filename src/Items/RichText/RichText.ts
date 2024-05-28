@@ -65,6 +65,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	maxHeight: number;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		public container: Mbr,
@@ -96,7 +97,6 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 			this.getScale,
-			// this, // TODO bd-695
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -710,6 +710,9 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		if (this.isRenderEnabled) {
 			const { ctx } = context;
 			ctx.save();

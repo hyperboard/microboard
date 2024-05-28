@@ -45,6 +45,7 @@ export class Frame implements Geometry {
 	);
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -607,21 +608,33 @@ export class Frame implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.text.render(context);
 	}
 
 	renderName(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.text.render(context);
 	}
 
 	renderBorders(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const copy = this.getPath();
 		copy.setBackgroundColor("none");
 		copy.render(context);
 	}
 
 	renderPath(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.renderNewShape(context);
 	}

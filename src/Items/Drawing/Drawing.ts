@@ -29,6 +29,7 @@ export class Drawing extends Mbr {
 	private borderStyle: BorderStyle = "solid";
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 	private borderOpacity = 1;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		public points: Point[],
@@ -196,6 +197,9 @@ export class Drawing extends Mbr {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const ctx = context.ctx;
 		ctx.save();
 		ctx.strokeStyle = this.borderColor;

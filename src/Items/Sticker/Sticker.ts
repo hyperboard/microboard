@@ -84,6 +84,7 @@ export class Sticker implements Geometry {
 		this.itemType,
 	);
 	readonly subject = new Subject<Sticker>();
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -246,6 +247,9 @@ export class Sticker implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.shadowPath.render(context);
 		this.stickerPath.render(context);
 		this.text.render(context);

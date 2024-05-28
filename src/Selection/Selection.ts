@@ -50,6 +50,7 @@ export class Selection {
 	readonly tool = new SelectionTransformer(this.board, this);
 
 	textToEdit: RichText | undefined;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
@@ -911,16 +912,24 @@ export class Selection {
 		this.board.duplicate(this.copy());
 	}
 
+	renderItemMbr(context: DrawingContext, item: Item): void {
+		const mbr = item.getMbr();
+		mbr.strokeWidth = 1 / context.matrix.scaleX;
+		mbr.borderColor = SELECTION_COLOR;
+		mbr.render(context);
+	}
+
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
 		const isSingleConnector = single && single.itemType === "Connector";
 		const isSelectionTooBig = this.items.getSize() > 100;
-		if (!isSingleConnector && !isSelectionTooBig) {
+		if (
+			!isSingleConnector &&
+			!isSelectionTooBig &&
+			!this.transformationRenderBlock
+		) {
 			for (const item of this.items.list()) {
-				const mbr = item.getMbr();
-				mbr.strokeWidth = 1 / context.matrix.scaleX;
-				mbr.borderColor = SELECTION_COLOR;
-				mbr.render(context);
+				this.renderItemMbr(context, item);
 			}
 		}
 		this.tool.render(context);

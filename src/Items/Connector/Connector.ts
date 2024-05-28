@@ -77,6 +77,7 @@ export class Connector {
 		"\u00A0",
 		true,
 	);
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private board: Board,
@@ -492,6 +493,9 @@ export class Connector {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.clipText(context);
 		this.text.render(context);
 		this.startPointer.path.render(context);
