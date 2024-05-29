@@ -46,7 +46,11 @@ export class SpatialIndex {
 			this.itemsArray.push(item);
 			this.itemsIndex.insert(item);
 		}
-		this.Mbr.combine([item.getMbr()]);
+		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
+			this.Mbr = item.getMbr().copy();
+		} else {
+			this.Mbr.combine([item.getMbr()]);
+		}
 		item.subject.subscribe(this.change);
 		this.subject.publish(this.items);
 	}
@@ -57,7 +61,11 @@ export class SpatialIndex {
 		} else {
 			this.itemsIndex.change(item);
 		}
-		this.Mbr.combine([item.getMbr()]);
+		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
+			this.Mbr = item.getMbr().copy();
+		} else {
+			this.Mbr.combine([item.getMbr()]);
+		}
 		this.subject.publish(this.items);
 	};
 
