@@ -373,11 +373,14 @@ export class Board {
 		}
 
 		// Replace connector
-		function replaceConnectorItem(point: ControlPointData): void {
+		function replaceConnectorItem(
+			id: string,
+			point: ControlPointData,
+		): void {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
-					const newItemId = newItemIdMap[point.itemId];
+					const newItemId = newItemIdMap[id];
 					if (newItemId) {
 						point.itemId = newItemId;
 					}
@@ -389,8 +392,8 @@ export class Board {
 			const itemData = itemsMap[itemId];
 
 			if (itemData.itemType === "Connector") {
-				replaceConnectorItem(itemData.startPoint);
-				replaceConnectorItem(itemData.endPoint);
+				replaceConnectorItem(itemId, itemData.startPoint);
+				replaceConnectorItem(itemId, itemData.endPoint);
 			}
 		}
 
