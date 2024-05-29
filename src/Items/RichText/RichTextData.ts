@@ -1,6 +1,6 @@
 import { Descendant } from "slate";
 import { VerticalAlignment } from "../Alignment";
-import { TransformationData } from "../Transformation";
+import { TransformationData } from "../Transformation/TransformationData";
 import { validator } from "Board/Validators";
 import { JSONSchemaType } from "ajv";
 
@@ -11,6 +11,7 @@ export interface RichTextData {
 	maxWidth: number | undefined;
 	transformation?: TransformationData;
 	containerMaxWidth?: number;
+	insideOf?: string;
 }
 
 const richTextDataSchema: JSONSchemaType<RichTextData> = {

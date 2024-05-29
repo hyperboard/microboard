@@ -687,15 +687,15 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	deserialize(data: Partial<RichTextData>): this {
+		if (data.children) {
+			this.editor.editor.children = data.children;
+		}
 		if (data.verticalAlignment) {
 			this.editor.verticalAlignment = data.verticalAlignment;
 		}
 		if (data.maxWidth) {
 			// this.editor.maxWidth = data.maxWidth;
 			this.editor.setMaxWidth(data.maxWidth);
-		}
-		if (data.children) {
-			this.editor.editor.children = data.children;
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
