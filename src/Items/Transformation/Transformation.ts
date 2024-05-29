@@ -1,13 +1,13 @@
+import { SubjectOperation } from "SubjectOperation";
+import { Events, Operation } from "../../Events";
 import { Point } from "../Point";
 import { Matrix } from "./Matrix";
-import { TransformationOperation } from "./TransformationOperations";
-import {
-	TransformationData,
-	DefaultTransformationData,
-} from "./TransformationData";
-import { Events, Operation } from "../../Events";
 import { TransformationCommand } from "./TransformationCommand";
-import { SubjectOperation } from "SubjectOperation";
+import {
+	DefaultTransformationData,
+	TransformationData,
+} from "./TransformationData";
+import { TransformationOperation } from "./TransformationOperations";
 
 const defaultData = new DefaultTransformationData();
 

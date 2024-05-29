@@ -1,9 +1,9 @@
-import { Mbr, Line } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { BoardTool } from "../BoardTool";
 import { Board } from "Board/Board";
+import { Line, Mbr } from "Board/Items";
+import { DrawingContext } from "Board/Items/DrawingContext";
 import { Sticker, stickerColors } from "Board/Items/Sticker";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { BoardTool } from "../BoardTool";
 
 let backgroundColor = stickerColors["Sky Blue"];
 
