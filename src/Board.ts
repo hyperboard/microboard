@@ -69,6 +69,7 @@ export class Board {
 
 	setBoardId(boardId: string): void {
 		this.boardId = boardId;
+		this.camera.setBoardId(boardId);
 	}
 
 	getDrawingContext(): DrawingContext | null {
