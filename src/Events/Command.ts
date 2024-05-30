@@ -1,17 +1,17 @@
 import { Board } from "Board";
-import { ShapeCommand } from "Board/Items/Shape/ShapeCommand";
-import { BoardCommand } from "../BoardCommand";
-import { TransformationCommand } from "../Items/Transformation/TransformationCommand";
-import { RichTextCommand } from "../Items/RichText/RichTextCommand";
-import { EventsCommand } from "./EventsCommand";
-import { ConnectorCommand } from "Board/Items/Connector/ConnectorCommand";
-import { Operation } from "./EventsOperations";
-import { DrawingCommand } from "Board/Items/Drawing/DrawingCommand";
-import { StickerCommand } from "../Items/Sticker/StickerCommand";
 import { Connector, Frame, Item, Shape } from "Board/Items";
+import { ConnectorCommand } from "Board/Items/Connector/ConnectorCommand";
 import { Drawing } from "Board/Items/Drawing";
-import { Sticker } from "Board/Items/Sticker";
+import { DrawingCommand } from "Board/Items/Drawing/DrawingCommand";
 import { FrameCommand } from "Board/Items/Frame/FrameCommand";
+import { ShapeCommand } from "Board/Items/Shape/ShapeCommand";
+import { Sticker } from "Board/Items/Sticker";
+import { BoardCommand } from "../BoardCommand";
+import { RichTextCommand } from "../Items/RichText/RichTextCommand";
+import { StickerCommand } from "../Items/Sticker/StickerCommand";
+import { TransformationCommand } from "../Items/Transformation/TransformationCommand";
+import { EventsCommand } from "./EventsCommand";
+import { Operation } from "./EventsOperations";
 
 export interface Command {
 	apply(): void;

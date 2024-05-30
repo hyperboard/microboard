@@ -563,7 +563,10 @@ export class RichText extends Mbr implements Geometry {
 		style: TextStyle | TextStyle[],
 		selectionContext?: SelectionContext,
 	): void {
-		if (selectionContext === "EditUnderPointer") {
+		if (
+			selectionContext === "EditUnderPointer" ||
+			selectionContext === "SelectByRect"
+		) {
 			this.selectWholeText();
 		}
 		this.editor.setSelectionFontStyle(style);
