@@ -1,24 +1,15 @@
-import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
-import { Subject } from "Subject";
-import { RichText } from "../RichText";
-import { Geometry } from "../Geometry";
-import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
-import { GeometricNormal } from "../GeometricNormal";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { Subject } from "Subject";
+import { DEFAULT_STICKER_COLOR } from "View/Tools/AddSticker";
+import { Line, Matrix, Mbr, Path, Paths, Point, Transformation } from "..";
 import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
+import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { DrawingContext } from "../DrawingContext";
+import { GeometricNormal } from "../GeometricNormal";
+import { Geometry } from "../Geometry";
+import { RichText } from "../RichText";
 import { StickerCommand } from "./StickerCommand";
 import { StickerData, StickerOperation } from "./StickerOperation";
-
-export const stickerColors = {
-	"Sky Blue": "rgb(174, 212, 250)",
-	"Pale Yellow": "rgb(252, 245, 174)",
-	"Sage Green": "rgb(175, 214, 167)",
-	Lavender: "rgb(233, 191, 233)",
-	"Aqua Cyan": "rgb(171, 221, 221)",
-	"Pastel Red": "rgb(246, 168, 168)",
-	"Light Gray": "rgb(230, 230, 230)",
-} as { [color: string]: string };
 
 const width = 200;
 const height = 200;
@@ -50,7 +41,7 @@ export const StickerShape = {
 			new Line(new Point(0, height), new Point(0, 0)),
 		],
 		true,
-		stickerColors["Sky Blue"],
+		DEFAULT_STICKER_COLOR,
 		"none",
 	),
 	anchorPoints: [

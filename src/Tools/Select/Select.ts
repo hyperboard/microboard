@@ -35,6 +35,7 @@ export class Select extends Tool {
 
 	constructor(private board: Board) {
 		super();
+		this.board.pointer.setCursor("default");
 	}
 
 	clear(): void {
