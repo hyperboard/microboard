@@ -11,6 +11,8 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "Board/drawMbrOnCanvas";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -32,8 +34,7 @@ export class Select extends Tool {
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
-	lastCreatedCanvas?: HTMLCanvasElement = undefined;
-	lastTranslationKeys?: string[] = undefined;
+	canvasDrawer = createCanvasDrawer(this.board);
 
 	constructor(private board: Board) {
 		super();
@@ -57,20 +58,7 @@ export class Select extends Tool {
 		this.lastPointerMoveEventTime = Date.now();
 		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
-		if (this.lastCreatedCanvas) {
-			this.lastCreatedCanvas.remove();
-			this.lastCreatedCanvas = undefined;
-		}
-		if (this.lastTranslationKeys) {
-			this.lastTranslationKeys.forEach(id => {
-				const item = this.board.items.getById(id);
-				if (item) {
-					item.transformationRenderBlock = undefined;
-				}
-			});
-			this.lastTranslationKeys = undefined;
-		}
-		this.board.selection.transformationRenderBlock = undefined;
+		this.canvasDrawer.clearCanvasAndKeys();
 	}
 
 	leftButtonDown(): boolean {
@@ -199,7 +187,7 @@ export class Select extends Tool {
 				.list()
 				.filter(item => item instanceof Frame)
 				.map(frame => frame.getId());
-			const translation: { [key: string]: TransformationOperation } = {};
+			const translation: TransformManyItems = {};
 			selection.list().forEach(selectedItem => {
 				translation[selectedItem.getId()] = {
 					class: "Transformation",
@@ -225,64 +213,10 @@ export class Select extends Tool {
 				}
 			});
 			selection.tranformMany(translation, this.beginTimeStamp);
-			const sumMbr = Object.keys(translation).reduce(
-				(mbr: Mbr | undefined, id) => {
-					const item = this.board.items.getById(id);
-					if (item) {
-						if (!mbr) {
-							mbr = item.getMbr();
-						} else {
-							mbr.combine(item.getMbr());
-						}
-					}
-					return mbr;
-				},
-				undefined,
-			);
+
+			const sumMbr = this.canvasDrawer.countSumMbr(translation);
 			if (sumMbr) {
-				const translationKeys = Object.keys(translation);
-				if (
-					this.lastCreatedCanvas &&
-					this.lastTranslationKeys?.length ===
-						translationKeys.length &&
-					this.lastTranslationKeys?.every(key =>
-						translationKeys.includes(key),
-					)
-				) {
-					this.lastCreatedCanvas.style.left = `${
-						(sumMbr.left - this.board.camera.getMbr().left) *
-						this.board.camera.getMatrix().scaleX
-					}px`;
-					this.lastCreatedCanvas.style.top = `${
-						(sumMbr.top - this.board.camera.getMbr().top) *
-						this.board.camera.getMatrix().scaleY
-					}px`;
-				} else {
-					const cnvs = this.board.drawMbrOnCanvas(sumMbr);
-					if (cnvs) {
-						cnvs.style.position = "absolute";
-						cnvs.style.zIndex = "100";
-						cnvs.style.left = `${
-							(sumMbr.left - this.board.camera.getMbr().left) *
-							this.board.camera.getMatrix().scaleX
-						}px`;
-						cnvs.style.top = `${
-							(sumMbr.top - this.board.camera.getMbr().top) *
-							this.board.camera.getMatrix().scaleY
-						}px`;
-						cnvs.style.pointerEvents = "none";
-						document.body.appendChild(cnvs);
-						this.lastCreatedCanvas = cnvs;
-						this.lastTranslationKeys = Object.keys(translation);
-						this.lastTranslationKeys.forEach(id => {
-							const item = this.board.items.getById(id);
-							if (item) {
-								item.transformationRenderBlock = true;
-							}
-						});
-						selection.transformationRenderBlock = true;
-					}
-				}
+				this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation);
 			}
 
 			selection.list().forEach(item => {

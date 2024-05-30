@@ -21,6 +21,7 @@ import { Anchor } from "Board/Items/Anchor";
 import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -174,7 +175,7 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 			);
 			const matrix = resize.matrix;
-			const translation: { [key: string]: TransformationOperation } = {};
+			const translation: TransformManyItems = {};
 			for (const item of list) {
 				const itemMbr = item.getMbr();
 				const deltaX = itemMbr.left - mbr.left;
@@ -218,6 +219,14 @@ export class Transformer extends Tool {
 							matrix.scaleY,
 							this.beginTimeStamp,
 						);
+						// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: 0, y: 0 },
+							scale: { x: 1, y: 1 },
+						};
 						// translation[item.getId()] = {
 						// 	class: "Transformation",
 						// 	method: "scaleByTranslateBy",
