@@ -21,7 +21,6 @@ import { Anchor } from "Board/Items/Anchor";
 import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
-import { timeStamp } from "console";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";

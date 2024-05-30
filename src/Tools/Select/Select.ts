@@ -3,7 +3,6 @@ import {
 	Frame,
 	Item,
 	Line,
-	Matrix,
 	Mbr,
 	Point,
 	TransformationOperation,
@@ -12,7 +11,6 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
-import { Camera } from "Board/Camera";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -260,7 +258,7 @@ export class Select extends Tool {
 						this.board.camera.getMatrix().scaleY
 					}px`;
 				} else {
-					const cnvs = this.drawMbrOnCanvas(sumMbr);
+					const cnvs = this.board.drawMbrOnCanvas(sumMbr);
 					if (cnvs) {
 						cnvs.style.position = "absolute";
 						cnvs.style.zIndex = "100";
@@ -456,59 +454,6 @@ export class Select extends Tool {
 		this.board.selection.editTextUnderPointer();
 		this.board.selection.editText();
 		return false;
-	}
-
-	/** Creates new canvas and returns it. Renders all items inside of mbr on new canvas
-	 * @param mbr - in which mbr we should find items
-	 */
-	private drawMbrOnCanvas(mbr: Mbr): HTMLCanvasElement | undefined {
-		const canvas = document.createElement("canvas");
-		const width = mbr.getWidth();
-		const height = mbr.getHeight();
-		canvas.width = width * this.board.camera.getMatrix().scaleX;
-		canvas.height = height * this.board.camera.getMatrix().scaleY;
-
-		const ctx = canvas.getContext("2d");
-		if (!ctx) {
-			console.error("Export Board: Unable to get 2D context");
-			return;
-		}
-
-		ctx.rect(0, 0, canvas.width, canvas.height);
-		ctx.fillStyle = "transparent";
-		ctx.fill();
-
-		const camera = new Camera();
-		const newCameraMatix = new Matrix(-mbr.left, -mbr.top, 1, 1);
-		camera.matrix = newCameraMatix;
-
-		const context = new DrawingContext(camera, ctx);
-
-		context.setCamera(camera);
-		context.ctx.setTransform(
-			this.board.camera.getMatrix().scaleX,
-			0,
-			0,
-			this.board.camera.getMatrix().scaleY,
-			0,
-			0,
-		);
-		context.matrix.applyToContext(context.ctx);
-
-		const cameraMbr = camera.getMbr();
-		this.board.items.index
-			.getRectsEnclosedOrCrossed(
-				cameraMbr.left,
-				cameraMbr.top,
-				cameraMbr.right,
-				cameraMbr.bottom,
-			)
-			.forEach(item => {
-				item.render(context);
-				this.board.selection.renderItemMbr(context, item);
-			});
-
-		return canvas;
 	}
 
 	render(context: DrawingContext): void {

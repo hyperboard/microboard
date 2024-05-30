@@ -8,6 +8,7 @@ import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { DrawingOperation, DrawingCommand } from "./DrawingCommand";
 import { TransformationData } from "../Transformation/TransformationData";
+import { Geometry } from "../Geometry";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -17,7 +18,7 @@ export interface DrawingData {
 	strokeWidth: number;
 }
 
-export class Drawing extends Mbr {
+export class Drawing extends Mbr implements Geometry {
 	readonly itemType = "Drawing";
 	parent = "Board";
 	readonly transformation = new Transformation(this.id, this.events);

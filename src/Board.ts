@@ -1,4 +1,4 @@
-import { Frame, Item, ItemData } from "./Items";
+import { Frame, Item, ItemData, Matrix, Mbr } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
@@ -186,7 +186,6 @@ export class Board {
 
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
 	 */
-	// Should rename?
 	handleNesting(item: Item): void {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
@@ -205,6 +204,59 @@ export class Board {
 		if (frame) {
 			frame.handleNesting(item);
 		}
+	}
+
+	/** Creates new canvas and returns it. Renders all items inside of mbr on new canvas
+	 * @param mbr - in which mbr we should find items
+	 */
+	drawMbrOnCanvas(mbr: Mbr): HTMLCanvasElement | undefined {
+		const canvas = document.createElement("canvas");
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		canvas.width = width * this.camera.getMatrix().scaleX;
+		canvas.height = height * this.camera.getMatrix().scaleY;
+
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			console.error("Export Board: Unable to get 2D context");
+			return;
+		}
+
+		ctx.rect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = "transparent";
+		ctx.fill();
+
+		const camera = new Camera();
+		const newCameraMatix = new Matrix(-mbr.left, -mbr.top, 1, 1);
+		camera.matrix = newCameraMatix;
+
+		const context = new DrawingContext(camera, ctx);
+
+		context.setCamera(camera);
+		context.ctx.setTransform(
+			this.camera.getMatrix().scaleX,
+			0,
+			0,
+			this.camera.getMatrix().scaleY,
+			0,
+			0,
+		);
+		context.matrix.applyToContext(context.ctx);
+
+		const cameraMbr = camera.getMbr();
+		this.items.index
+			.getRectsEnclosedOrCrossed(
+				cameraMbr.left,
+				cameraMbr.top,
+				cameraMbr.right,
+				cameraMbr.bottom,
+			)
+			.forEach(item => {
+				item.render(context);
+				this.selection.renderItemMbr(context, item);
+			});
+
+		return canvas;
 	}
 
 	createItem(id: string, data: ItemData): Item {
