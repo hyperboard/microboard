@@ -2,6 +2,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import {
 	ANCHOR_BACKGROUND_COLOR,
 	ANCHOR_BORDER_COLOR,
+	ANCHOR_RADIUS,
 	ANCHOR_STROKE_WIDTH,
 	renderAnchor,
 } from "View/Items/Anchor";
@@ -15,7 +16,7 @@ export class Anchor extends Mbr {
 	constructor(
 		public x = 0,
 		public y = 0,
-		public radius = 50,
+		public radius = ANCHOR_RADIUS,
 		public borderColor = ANCHOR_BORDER_COLOR,
 		public backgroundColor = ANCHOR_BACKGROUND_COLOR,
 		public strokeWidth = ANCHOR_STROKE_WIDTH,

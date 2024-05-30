@@ -1,11 +1,11 @@
-import { stickerColors } from ".";
+import { DEFAULT_STICKER_COLOR } from "View/Tools/AddSticker";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 
 export class StickerData {
 	readonly itemType = "Sticker";
 	constructor(
-		public backgroundColor = stickerColors["Sky Blue"],
+		public backgroundColor = DEFAULT_STICKER_COLOR,
 		public transformation = new DefaultTransformationData(),
 		public text = new DefaultRichTextData(),
 	) {}

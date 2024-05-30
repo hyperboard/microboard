@@ -1,26 +1,5 @@
 import { RichText } from "Board/Items";
-import { Line } from "../Line";
-import { Mbr } from "../Mbr";
-import { DrawingContext } from "../DrawingContext";
-import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
-import { Path, Paths } from "../Path";
-import { Transformation } from "../Transformation";
 import { Subject } from "Subject";
-import { Events, Operation } from "../../Events";
-import { getLine } from "./getLine/getLine";
-import {
-	BoardPoint,
-	ControlPoint,
-	ControlPointData,
-	getControlPoint,
-} from "./ControlPoint";
-import { ConnectorCommand } from "./ConnectorCommand";
-import { Item } from "../Item";
-import { Board } from "../../Board";
-import { GeometricNormal } from "../GeometricNormal";
-import { getStartPointer, getEndPointer } from "./Pointers";
-import { Point } from "../Point";
-import { CubicBezier } from "../Curve";
 import {
 	CONNECTOR_COLOR,
 	CONNECTOR_LINE_WIDTH,
@@ -29,7 +8,28 @@ import {
 	TEXT_BORDER_PADDING,
 } from "View/Items/Connector";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { Board } from "../../Board";
+import { Events, Operation } from "../../Events";
+import { CubicBezier } from "../Curve";
+import { DrawingContext } from "../DrawingContext";
+import { GeometricNormal } from "../GeometricNormal";
+import { Item } from "../Item";
+import { Line } from "../Line";
+import { Mbr } from "../Mbr";
+import { Path, Paths } from "../Path";
+import { Point } from "../Point";
+import { Transformation } from "../Transformation";
+import { ConnectorCommand } from "./ConnectorCommand";
+import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
+import {
+	BoardPoint,
+	ControlPoint,
+	ControlPointData,
+	getControlPoint,
+} from "./ControlPoint";
+import { getEndPointer, getStartPointer } from "./Pointers";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
+import { getLine } from "./getLine/getLine";
 
 export const ConnectorLineStyles = [
 	"straight",
