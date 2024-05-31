@@ -803,25 +803,6 @@ export class Selection {
 				fontStyleList,
 			});
 		}
-		// const single = this.items.getSingle();
-		// if (single) {
-		// 	if (single instanceof RichText) {
-		// 		single.setSelectionFontStyle(fontStyleList, this.context);
-		// 	} else {
-		// 		single.text.setSelectionFontStyle(fontStyleList, this.context);
-		// 	}
-		// } else if (this.items.isItemTypes(["Sticker"])) {
-		// 	this.items
-		// 		.list()
-		// 		.forEach(x => x.text.setSelectionFontStyle(fontStyleList));
-		// } else {
-		// 	this.emit({
-		// 		class: "RichText",
-		// 		method: "setFontStyle",
-		// 		item: this.items.ids(),
-		// 		fontStyleList,
-		// 	});
-		// }
 	}
 
 	setFontColor(fontColor: string): void {
