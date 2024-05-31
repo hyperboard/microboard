@@ -1,4 +1,4 @@
-import { Frame, Item, ItemData } from "./Items";
+import { Frame, Item, ItemData, ConnectorData } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
@@ -374,14 +374,11 @@ export class Board {
 		}
 
 		// Replace connector
-		function replaceConnectorItem(
-			id: string,
-			point: ControlPointData,
-		): void {
+		function replaceConnectorItem(point: ControlPointData): void {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
-					const newItemId = newItemIdMap[id];
+					const newItemId = newItemIdMap[point.itemId];
 					if (newItemId) {
 						point.itemId = newItemId;
 					}
@@ -393,8 +390,8 @@ export class Board {
 			const itemData = itemsMap[itemId];
 
 			if (itemData.itemType === "Connector") {
-				replaceConnectorItem(itemId, itemData.startPoint);
-				replaceConnectorItem(itemId, itemData.endPoint);
+				replaceConnectorItem(itemData.startPoint);
+				replaceConnectorItem(itemData.endPoint);
 			}
 		}
 
@@ -487,13 +484,6 @@ export class Board {
 		};
 
 		for (const itemId in itemsMap) {
-			const itemData = itemsMap[itemId];
-
-			if (itemData.itemType === "Connector") {
-				replaceConnectorHeadItemId(itemData.startPoint);
-				replaceConnectorHeadItemId(itemData.endPoint);
-			}
-
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
 			if (itemsMap[itemId].itemType === "Frame") {
@@ -505,6 +495,15 @@ export class Board {
 						newItemIdMap[childId] = newChildId;
 					}
 				});
+			}
+		}
+
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+
+			if (itemData.itemType === "Connector") {
+				replaceConnectorHeadItemId(itemData.startPoint);
+				replaceConnectorHeadItemId(itemData.endPoint);
 			}
 		}
 
@@ -589,6 +588,9 @@ export class Board {
 		const items: Item[] = [];
 
 		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				continue;
+			}
 			const itemData = itemsMap[itemId];
 			const item = this.createItem(itemId, itemData);
 			this.index.insert(item);
@@ -599,6 +601,21 @@ export class Board {
 				item.setNameSerial(this.items.listFrames());
 			}
 			items.push(item);
+		}
+
+		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				const itemData = itemsMap[itemId];
+				const item = this.createItem(itemId, itemData);
+				this.index.insert(item);
+				if (
+					item instanceof Frame &&
+					item.text.getTextString().match(/^Frame (\d+)$/)
+				) {
+					item.setNameSerial(this.items.listFrames());
+				}
+				items.push(item);
+			}
 		}
 
 		this.selection.removeAll();
