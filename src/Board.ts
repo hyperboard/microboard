@@ -1,4 +1,4 @@
-import { Frame, Item, ItemData, Matrix, Mbr } from "./Items";
+import { Frame, Item, ItemData, Matrix, Mbr, ConnectorData } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
@@ -463,14 +463,11 @@ export class Board {
 		}
 
 		// Replace connector
-		function replaceConnectorItem(
-			id: string,
-			point: ControlPointData,
-		): void {
+		function replaceConnectorItem(point: ControlPointData): void {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
-					const newItemId = newItemIdMap[id];
+					const newItemId = newItemIdMap[point.itemId];
 					if (newItemId) {
 						point.itemId = newItemId;
 					}
@@ -482,8 +479,8 @@ export class Board {
 			const itemData = itemsMap[itemId];
 
 			if (itemData.itemType === "Connector") {
-				replaceConnectorItem(itemId, itemData.startPoint);
-				replaceConnectorItem(itemId, itemData.endPoint);
+				replaceConnectorItem(itemData.startPoint);
+				replaceConnectorItem(itemData.endPoint);
 			}
 		}
 
@@ -576,13 +573,6 @@ export class Board {
 		};
 
 		for (const itemId in itemsMap) {
-			const itemData = itemsMap[itemId];
-
-			if (itemData.itemType === "Connector") {
-				replaceConnectorHeadItemId(itemData.startPoint);
-				replaceConnectorHeadItemId(itemData.endPoint);
-			}
-
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
 			if (itemsMap[itemId].itemType === "Frame") {
@@ -594,6 +584,15 @@ export class Board {
 						newItemIdMap[childId] = newChildId;
 					}
 				});
+			}
+		}
+
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+
+			if (itemData.itemType === "Connector") {
+				replaceConnectorHeadItemId(itemData.startPoint);
+				replaceConnectorHeadItemId(itemData.endPoint);
 			}
 		}
 
@@ -677,8 +676,11 @@ export class Board {
 		const context = this.selection.getContext();
 		const items: Item[] = [];
 
-		for (const itemId in itemsMap) {
+		const pasteItem = (itemId: string): void => {
 			const itemData = itemsMap[itemId];
+			if (!itemData) {
+				throw new Error("Pasting itemId doesn't exist in itemsMap");
+			}
 			const item = this.createItem(itemId, itemData);
 			this.index.insert(item);
 			if (
@@ -688,6 +690,19 @@ export class Board {
 				item.setNameSerial(this.items.listFrames());
 			}
 			items.push(item);
+		};
+
+		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				continue;
+			}
+			pasteItem(itemId);
+		}
+
+		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				pasteItem(itemId);
+			}
 		}
 
 		this.selection.removeAll();
