@@ -15,6 +15,7 @@ import { Connection } from "App/Connection";
 import { BoardEvent, createEvents } from "./Events/Events";
 import { v4 as uuidv4 } from "uuid";
 import { itemFactories } from "./itemFactories";
+import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
 export class Board {
 	events: Events | undefined;
@@ -209,7 +210,10 @@ export class Board {
 	/** Creates new canvas and returns it. Renders all items inside of mbr on new canvas
 	 * @param mbr - in which mbr we should find items
 	 */
-	drawMbrOnCanvas(mbr: Mbr): HTMLCanvasElement | undefined {
+	drawMbrOnCanvas(
+		mbr: Mbr,
+		translation: TransformManyItems,
+	): HTMLCanvasElement | undefined {
 		const canvas = document.createElement("canvas");
 		const width = mbr.getWidth();
 		const height = mbr.getHeight();
@@ -243,18 +247,13 @@ export class Board {
 		);
 		context.matrix.applyToContext(context.ctx);
 
-		const cameraMbr = camera.getMbr();
-		this.items.index
-			.getRectsEnclosedOrCrossed(
-				cameraMbr.left,
-				cameraMbr.top,
-				cameraMbr.right,
-				cameraMbr.bottom,
-			)
-			.forEach(item => {
+		Object.keys(translation).forEach(id => {
+			const item = this.items.getById(id);
+			if (item) {
 				item.render(context);
 				this.selection.renderItemMbr(context, item);
-			});
+			}
+		});
 
 		return canvas;
 	}

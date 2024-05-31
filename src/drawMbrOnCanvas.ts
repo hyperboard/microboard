@@ -48,7 +48,7 @@ export default function createCanvasDrawer(board: Board): {
 				board.camera.getMatrix().scaleY
 			}px`;
 		} else {
-			const cnvs = board.drawMbrOnCanvas(sumMbr);
+			const cnvs = board.drawMbrOnCanvas(sumMbr, translation);
 			if (cnvs) {
 				cnvs.style.position = "absolute";
 				cnvs.style.zIndex = "100";
