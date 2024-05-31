@@ -587,11 +587,11 @@ export class Board {
 		const context = this.selection.getContext();
 		const items: Item[] = [];
 
-		for (const itemId in itemsMap) {
-			if (itemsMap[itemId].itemType === "Connector") {
-				continue;
-			}
+		const pasteItem = (itemId: string): void => {
 			const itemData = itemsMap[itemId];
+			if (!itemData) {
+				throw new Error("Pasting itemId doesn't exist in itemsMap");
+			}
 			const item = this.createItem(itemId, itemData);
 			this.index.insert(item);
 			if (
@@ -601,20 +601,18 @@ export class Board {
 				item.setNameSerial(this.items.listFrames());
 			}
 			items.push(item);
+		};
+
+		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				continue;
+			}
+			pasteItem(itemId);
 		}
 
 		for (const itemId in itemsMap) {
 			if (itemsMap[itemId].itemType === "Connector") {
-				const itemData = itemsMap[itemId];
-				const item = this.createItem(itemId, itemData);
-				this.index.insert(item);
-				if (
-					item instanceof Frame &&
-					item.text.getTextString().match(/^Frame (\d+)$/)
-				) {
-					item.setNameSerial(this.items.listFrames());
-				}
-				items.push(item);
+				pasteItem(itemId);
 			}
 		}
 
