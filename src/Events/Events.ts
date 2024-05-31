@@ -41,9 +41,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 	let latestServerOrder = 0;
 	const subject = new Subject<BoardEvent>();
 
-	let loadingSnapshot = false;
-	let loadingCollector: BoardEvent[] = [];
-
 	connection.subscribe(board.getBoardId(), handleNewMessage);
 	setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
 
@@ -66,18 +63,10 @@ export function createEvents(board: Board, connection: Connection): Events {
 	function handleNewMessage(message: SocketMessage): void {
 		switch (message.type) {
 			case "BoardEvent":
-				if (loadingSnapshot) {
-					loadingCollector.push(message.event);
-					return;
-				}
 				addEvent(message.event);
 				break;
 			case "BoardEventList":
 				const events = message.events;
-				if (loadingSnapshot) {
-					loadingCollector.push(...events);
-					return;
-				}
 				const isFirstBatchOfEvents =
 					log.getList().length === 0 && events.length > 0;
 				if (isFirstBatchOfEvents) {
@@ -102,13 +91,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 						event => event.order > existingSnapshot.lastIndex,
 					);
 					if (newerEvents.length > 0) {
-						loadingSnapshot = true;
 						newerEvents.forEach(event => addEvent(event));
-						loadingCollector.forEach(collected =>
-							addEvent(collected),
-						);
-						loadingSnapshot = false;
-						loadingCollector = [];
 					}
 				} else {
 					board.deserialize(message.snapshot);
