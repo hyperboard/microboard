@@ -9,7 +9,11 @@ import { GeometricNormal } from "../GeometricNormal";
 import { Geometry } from "../Geometry";
 import { RichText } from "../RichText";
 import { StickerCommand } from "./StickerCommand";
-import { StickerData, StickerOperation } from "./StickerOperation";
+import {
+	DefaultStickerData,
+	StickerData,
+	StickerOperation,
+} from "./StickerOperation";
 
 const width = 200;
 const height = 200;
@@ -53,7 +57,7 @@ export const StickerShape = {
 	DEFAULTS: [width, height],
 };
 
-const defaultStickerData = new StickerData();
+const defaultStickerData = new DefaultStickerData();
 const _hypotenuse = Math.sqrt(height * height + width * width);
 const _relation = width / height;
 

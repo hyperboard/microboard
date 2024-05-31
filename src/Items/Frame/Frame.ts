@@ -13,7 +13,7 @@ import { Geometry } from "../Geometry";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
-import { FrameData, FrameOperation } from "./FrameOperation";
+import { DefaultFrameData, FrameData, FrameOperation } from "./FrameOperation";
 import { Frames, FrameType } from "./Basic";
 import { GeometricNormal } from "../GeometricNormal";
 import { FrameCommand } from "./FrameCommand";
@@ -24,7 +24,7 @@ import {
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { Board } from "Board/Board";
 
-const defaultFrameData = new FrameData();
+const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {
 	readonly itemType = "Frame";
