@@ -37,6 +37,10 @@ export class Board {
 	connect(connection: Connection): void {
 		this.events = createEvents(this, connection);
 		this.selection.events = this.events;
+		const snapshot = this.getSnapshotFromCache();
+		if (snapshot && this.getSnapshot().lastIndex === 0) {
+			this.deserialize(snapshot);
+		}
 	}
 
 	disconnect(): void {
@@ -400,6 +404,33 @@ export class Board {
 		this.events?.deserialize(events);
 	}
 
+	getSnapshotFromCache(): BoardSnapshot | undefined {
+		const snapshotString = localStorage.getItem(
+			`board_${this.getBoardId()}`,
+		);
+		if (snapshotString) {
+			try {
+				const snapshot = JSON.parse(snapshotString);
+				return snapshot;
+			} catch {}
+		}
+		return undefined;
+	}
+
+	saveSnapshot(snapshot?: BoardSnapshot): void {
+		if (snapshot) {
+			localStorage.setItem(
+				`board_${this.getBoardId()}`,
+				JSON.stringify(snapshot),
+			);
+		} else {
+			localStorage.setItem(
+				`board_${this.getBoardId()}`,
+				JSON.stringify(this.getSnapshot()),
+			);
+		}
+	}
+
 	getSnapshot(): BoardSnapshot {
 		if (this.events) {
 			return this.events.getSnapshot();
@@ -407,6 +438,7 @@ export class Board {
 			return {
 				items: this.serialize(),
 				events: [],
+				lastIndex: 0,
 			};
 		}
 	}

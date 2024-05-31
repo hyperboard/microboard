@@ -41,6 +41,9 @@ export function createEvents(board: Board, connection: Connection): Events {
 	let latestServerOrder = 0;
 	const subject = new Subject<BoardEvent>();
 
+	let loadingSnapshot = false;
+	let loadingCollector: BoardEvent[] = [];
+
 	connection.subscribe(board.getBoardId(), handleNewMessage);
 	setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
 
@@ -63,12 +66,20 @@ export function createEvents(board: Board, connection: Connection): Events {
 	function handleNewMessage(message: SocketMessage): void {
 		switch (message.type) {
 			case "BoardEvent":
+				if (loadingSnapshot) {
+					loadingCollector.push(message.event);
+					return;
+				}
 				addEvent(message.event);
 				break;
 			case "BoardEventList":
 				const events = message.events;
+				if (loadingSnapshot) {
+					loadingCollector.push(...events);
+					return;
+				}
 				const isFirstBatchOfEvents =
-					log.list.length === 0 && events.length > 0;
+					log.getList().length === 0 && events.length > 0;
 				if (isFirstBatchOfEvents) {
 					log.insertEvents(events);
 					subject.publish(events);
@@ -85,7 +96,24 @@ export function createEvents(board: Board, connection: Connection): Events {
 				connection.publishSnapshot(board.getBoardId(), snapshot);
 				break;
 			case "BoardSnapshot":
-				board.deserialize(message.snapshot);
+				const existingSnapshot = board.getSnapshot();
+				if (existingSnapshot.lastIndex > 0) {
+					const newerEvents = message.snapshot.events.filter(
+						event => event.order > existingSnapshot.lastIndex,
+					);
+					if (newerEvents.length > 0) {
+						loadingSnapshot = true;
+						newerEvents.forEach(event => addEvent(event));
+						loadingCollector.forEach(collected =>
+							addEvent(collected),
+						);
+						loadingSnapshot = false;
+						loadingCollector = [];
+					}
+				} else {
+					board.deserialize(message.snapshot);
+				}
+				board.saveSnapshot(message.snapshot);
 				onBoardLoad();
 				break;
 		}
