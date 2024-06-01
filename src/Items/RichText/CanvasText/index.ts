@@ -213,7 +213,7 @@ function layoutTextNode(
 		let hasWrapped = false;
 		while (words.length > 0) {
 			const word = words.shift();
-			if (!word) {
+			if (word === undefined) {
 				break;
 			}
 			const newText =
@@ -479,7 +479,7 @@ function measureText(text: string, style): MeasuredRect {
 }
 
 function splitTextIntoWords(text: string): string[] {
-	return text.split(/(\s+)/);
+	return text.split(/(\s+)/).filter(element => element !== "");
 }
 
 function findLargestSubstring(word, style, maxWidth: number): string {

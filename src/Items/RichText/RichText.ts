@@ -16,8 +16,8 @@ import {
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
-import { BlockType } from "./Editor/BlockNode";
-import { TextStyle } from "./Editor/TextNode";
+import { BlockType, ParagraphNode } from "./Editor/BlockNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
@@ -96,6 +96,7 @@ export class RichText extends Mbr implements Geometry {
 			},
 			this.getScale,
 			// this, // TODO bd-695
+			this.getDefaultHorizontalAlignment(),
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -149,9 +150,8 @@ export class RichText extends Mbr implements Geometry {
 							fontHighlight: "",
 							fontSize: this.getFontSize(),
 							fontFamily: this.getFontFamily(),
-							horisontalAlignment: this.isInShape
-								? "center"
-								: "left",
+							horisontalAlignment:
+								this.getDefaultHorizontalAlignment(),
 							text: this.placeholderText,
 						},
 					],
@@ -160,6 +160,10 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			return children;
 		}
+	}
+
+	getDefaultHorizontalAlignment(): HorisontalAlignment {
+		return this.isInShape ? "center" : "left";
 	}
 
 	isEmpty(): boolean {
@@ -541,7 +545,7 @@ export class RichText extends Mbr implements Geometry {
 		return this.transformation.getScale().x;
 	};
 
-	private selectWholeText(): void {
+	selectWholeText(): void {
 		const start = Editor.start(this.editor.editor, []);
 		const end = Editor.end(this.editor.editor, []);
 		const range = { anchor: start, focus: end };
@@ -710,8 +714,8 @@ export class RichText extends Mbr implements Geometry {
 			this.editor.verticalAlignment = data.verticalAlignment;
 		}
 		if (data.maxWidth) {
-			// this.editor.maxWidth = data.maxWidth;
-			this.editor.setMaxWidth(data.maxWidth);
+			this.editor.maxWidth = data.maxWidth;
+			// this.editor.setMaxWidth(data.maxWidth);
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
@@ -802,22 +806,17 @@ export class RichText extends Mbr implements Geometry {
 		return true;
 	}
 
-	selectText(): void {
-		this.editor.editor.apply({
-			type: "set_selection",
-
-			newProperties: {
-				anchor: {
-					offset: this.editor.textLength,
-					path: [0, this.editor.textLength],
-				},
-				focus: {
-					offset: 0,
-					path: [0, 0],
-				},
-			},
-			properties: null,
+	selectAllText(): void {
+		const { editor } = this.editor;
+		Transforms.select(editor, {
+			anchor: Editor.start(editor, []),
+			focus: Editor.end(editor, []),
 		});
+	}
+
+	moveCursorToTheEnd(): void {
+		this.selectAllText();
+		Transforms.collapse(this.editor.editor, { edge: "end" });
 	}
 
 	autosizeEnable(): void {

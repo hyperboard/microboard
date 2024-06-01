@@ -48,15 +48,16 @@ export class AddText extends BoardTool {
 	leftButtonUp(): boolean {
 		if (this.line) {
 			const maxWidth = this.bounds.getWidth();
-
-			const text = this.board.add(new RichText(new Mbr()));
+			const text = new RichText(new Mbr());
 			text.transformation.translateTo(this.bounds.left, this.bounds.top);
 			text.transformation.scaleBy(1, 1);
-			text.editor.setMaxWidth(600);
+			text.editor.setMaxWidth(Math.max(maxWidth, 600));
 			text.editor.setSelectionHorisontalAlignment("left");
 			text.insideOf = text.itemType;
+			const boardText = this.board.add(text);
+			boardText.updateElement();
 			this.board.selection.removeAll();
-			this.board.selection.add(text);
+			this.board.selection.add(boardText);
 			this.board.selection.editText();
 			this.board.tools.select();
 			this.board.tools.publish();

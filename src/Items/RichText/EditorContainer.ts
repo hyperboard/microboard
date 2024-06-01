@@ -29,7 +29,6 @@ export class EditorContainer {
 	maxWidth: number | undefined = undefined;
 	textScale = 1;
 	verticalAlignment: VerticalAlignment = "center";
-	textLength = 0;
 
 	private decorated = {
 		realapply: (_operation: EditorOperation): void => {},
@@ -45,6 +44,9 @@ export class EditorContainer {
 	private recordedSelectionOp: SelectionOp | undefined = undefined;
 	readonly subject = new Subject<EditorContainer>();
 
+	private insertingText = false;
+	private recordedInsertionOps: EditorOperation[] = [];
+
 	constructor(
 		private id: string,
 		private emit: (op: RichTextOperation) => void,
@@ -52,6 +54,7 @@ export class EditorContainer {
 		undo: () => void,
 		redo: () => void,
 		private getScale: () => number, // private richText: RichText, // TODO bd-695
+		horisontalAlignment: HorisontalAlignment,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -60,7 +63,7 @@ export class EditorContainer {
 		editor.children = [
 			{
 				type: "paragraph",
-				horisontalAlignment: "center",
+				horisontalAlignment: horisontalAlignment,
 				children: [
 					{
 						type: "text",
@@ -81,11 +84,6 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: EditorOperation): void => {
-			const editorHTML = document.querySelector(
-				"#TextEditor > div > div > p",
-			);
-			this.textLength = editorHTML?.innerText.length || 0;
-
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
@@ -98,8 +96,10 @@ export class EditorContainer {
 					if (operation.type === "set_selection") {
 						this.decorated.apply(operation);
 						this.subject.publish(this);
-					} else {
-						if (this.id !== "") {
+					} else if (this.id !== "") {
+						if (this.insertingText) {
+							this.recordedInsertionOps.push(operation);
+						} else {
 							this.emit({
 								class: "RichText",
 								method: "edit",
@@ -110,6 +110,9 @@ export class EditorContainer {
 								ops: [operation],
 							});
 						}
+					} else {
+						this.decorated.apply(operation);
+						this.subject.publish(this);
 					}
 				}
 			}
@@ -133,12 +136,29 @@ export class EditorContainer {
 				const map = JSON.parse(text);
 				const isDataValid = validateItemsMap(map);
 				if (!isDataValid) {
-					insertData(data);
+					this.insertAndEmit(insertData, data);
 				}
 			} catch (error) {
-				insertData(data);
+				this.insertAndEmit(insertData, data);
 			}
 		};
+	}
+
+	private insertAndEmit(
+		insertData: (data: DataTransfer) => void,
+		data: DataTransfer,
+	): void {
+		this.insertingText = true;
+		insertData(data);
+		this.insertingText = false;
+		this.emit({
+			class: "RichText",
+			method: "edit",
+			item: [this.id],
+			selection: JSON.parse(JSON.stringify(this.editor.selection)),
+			ops: this.recordedInsertionOps,
+		});
+		this.recordedInsertionOps = [];
 	}
 
 	setId(id: string): this {
@@ -211,50 +231,52 @@ export class EditorContainer {
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
 		/* TODO bd-695
-        if (this.richText.getAutosize()
-            && (op.ops[0].type === "insert_text"
-            || op.ops[0].type === "split_node")
-        ) {
-            console.log("text len", this.textLength);
-            console.log("w", this.richText.getWidth());
-            if (this.richText.getFontSize() > 14) { // 14 - defaultSize
-                console.log("BEFORE", this.richText.getFontSize());
-                if (op.ops[0].type === "split_node"
-                || op.ops[0].text.length === 1) {
-                    this.decorated.apply(op.ops[0]);
-                    setTimeout(() => {
-                        if (this.richText.getFontSize() < 14) {
-                            console.log("overflowed");
-                            // Clear all / remove last one
-                            const removeOp = {
-                                type: "remove_text",
-                                path: op.ops[0].path,
-                                offset: op.ops[0].offset + op.ops[0].text.length - 1,
-                                text: op.ops[0].text.slice(-1)
-                            };
-                            this.richText.clearText();
-                            this.decorated.apply(removeOp);
-                        }
-                    }, 5);
-                } else {
-                    op.ops[0].text.split("").forEach((letter, index) => {
-                        const newOp = {
-                            ...op,
-                            ops: [{
-                                ...op.ops[0],
-                                text: letter,
-                                offset: op.ops[0].offset + index
-                            }]
-                        };
-                        this.applySelectionEdit(newOp);
-                    })
-                }
-            }
-        } else {
-            this.decorated.apply(op.ops[0]);
-        }
-        */
-		this.decorated.apply(op.ops[0]);
+								if (this.richText.getAutosize()
+												&& (op.ops[0].type === "insert_text"
+												|| op.ops[0].type === "split_node")
+								) {
+												console.log("text len", this.textLength);
+												console.log("w", this.richText.getWidth());
+												if (this.richText.getFontSize() > 14) { // 14 - defaultSize
+																console.log("BEFORE", this.richText.getFontSize());
+																if (op.ops[0].type === "split_node"
+																|| op.ops[0].text.length === 1) {
+																				this.decorated.apply(op.ops[0]);
+																				setTimeout(() => {
+																								if (this.richText.getFontSize() < 14) {
+																												console.log("overflowed");
+																												// Clear all / remove last one
+																												const removeOp = {
+																																type: "remove_text",
+																																path: op.ops[0].path,
+																																offset: op.ops[0].offset + op.ops[0].text.length - 1,
+																																text: op.ops[0].text.slice(-1)
+																												};
+																												this.richText.clearText();
+																												this.decorated.apply(removeOp);
+																								}
+																				}, 5);
+																} else {
+																				op.ops[0].text.split("").forEach((letter, index) => {
+																								const newOp = {
+																												...op,
+																												ops: [{
+																																...op.ops[0],
+																																text: letter,
+																																offset: op.ops[0].offset + index
+																												}]
+																								};
+																								this.applySelectionEdit(newOp);
+																				})
+																}
+												}
+								} else {
+												this.decorated.apply(op.ops[0]);
+								}
+								*/
+		for (const operation of op.ops) {
+			this.decorated.apply(operation);
+		}
 		this.shouldEmit = true;
 	}
 
@@ -530,5 +552,10 @@ export class EditorContainer {
 
 	getText(): Descendant[] {
 		return this.editor.children;
+	}
+
+	insertText(text: string): void {
+		const { editor } = this;
+		Transforms.insertText(editor, text);
 	}
 }
