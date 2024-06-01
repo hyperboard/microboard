@@ -275,8 +275,8 @@ export class Selection {
 			item instanceof Frame
 		) {
 			const text = item instanceof RichText ? item : item.text;
-			text.moveCursorToTheEnd(); // prob should be 20 ms
 			text.editor.appendText(appendedText);
+			text.moveCursorToTheEnd();
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);

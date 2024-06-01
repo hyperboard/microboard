@@ -493,6 +493,14 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	selectAllText(): void {
+		const { editor } = this.editor;
+		Transforms.select(editor, {
+			anchor: Editor.start(editor, []),
+			focus: Editor.end(editor, []),
+		});
+	}
+
 	/** Moves cursor to the end of first line */
 	moveCursorToEOL(delay = 10): void {
 		setTimeout(() => {
@@ -503,17 +511,13 @@ export class RichText extends Mbr implements Geometry {
 		}, delay);
 	}
 
-	/** Moves cursor to the end of a text */
-	moveCursorToEnd(delay = 10) {
-		return new Promise<void>(resolve => {
-			setTimeout(() => {
-				this.editorTransforms.move(this.editor.editor, {
-					distance: this.getTextString().length,
-					unit: "character",
-				});
-			}, delay);
-			resolve();
-		});
+	moveCursorToTheEnd(): void {
+		// Update of text react component causes set_selection to start
+		// until the issue is resolved here is a unstable workaround
+		setTimeout(() => {
+			this.selectAllText();
+			Transforms.collapse(this.editor.editor, { edge: "end" });
+		}, 20);
 	}
 
 	getId(): string {
@@ -545,19 +549,12 @@ export class RichText extends Mbr implements Geometry {
 		return this.transformation.getScale().x;
 	};
 
-	selectWholeText(): void {
-		const start = Editor.start(this.editor.editor, []);
-		const end = Editor.end(this.editor.editor, []);
-		const range = { anchor: start, focus: end };
-		this.editorTransforms.select(this.editor.editor, range);
-	}
-
 	setSelectionFontColor(
 		format: string,
 		selectionContext?: SelectionContext,
 	): void {
 		if (selectionContext === "EditUnderPointer") {
-			this.selectWholeText();
+			this.selectAllText();
 		}
 		this.editor.setSelectionFontColor(format);
 		this.updateElement();
@@ -571,7 +568,7 @@ export class RichText extends Mbr implements Geometry {
 			selectionContext === "EditUnderPointer" ||
 			selectionContext === "SelectByRect"
 		) {
-			this.selectWholeText();
+			this.selectAllText();
 		}
 		this.editor.setSelectionFontStyle(style);
 		this.updateElement();
@@ -587,7 +584,7 @@ export class RichText extends Mbr implements Geometry {
 		selectionContext?: SelectionContext,
 	): void {
 		if (selectionContext === "EditUnderPointer") {
-			this.selectWholeText();
+			this.selectAllText();
 		}
 		if (this.isInShape) {
 			this.editor.setSelectionFontSize(fontSize);
@@ -603,7 +600,7 @@ export class RichText extends Mbr implements Geometry {
 		selectionContext?: SelectionContext,
 	): void {
 		if (selectionContext === "EditUnderPointer") {
-			this.selectWholeText();
+			this.selectAllText();
 		}
 		this.editor.setSelectionFontHighlight(format);
 		this.updateElement();
@@ -614,7 +611,7 @@ export class RichText extends Mbr implements Geometry {
 		selectionContext?: SelectionContext,
 	): void {
 		if (selectionContext === "EditUnderPointer") {
-			this.selectWholeText();
+			this.selectAllText();
 		}
 		this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
 		this.updateElement();
@@ -804,19 +801,6 @@ export class RichText extends Mbr implements Geometry {
 
 	isClosed(): boolean {
 		return true;
-	}
-
-	selectAllText(): void {
-		const { editor } = this.editor;
-		Transforms.select(editor, {
-			anchor: Editor.start(editor, []),
-			focus: Editor.end(editor, []),
-		});
-	}
-
-	moveCursorToTheEnd(): void {
-		this.selectAllText();
-		Transforms.collapse(this.editor.editor, { edge: "end" });
 	}
 
 	autosizeEnable(): void {

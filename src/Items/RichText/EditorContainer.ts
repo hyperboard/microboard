@@ -95,7 +95,7 @@ export class EditorContainer {
 				} else {
 					if (operation.type === "set_selection") {
 						this.decorated.apply(operation);
-						this.subject.publish(this);
+						// this.subject.publish(this);
 					} else if (this.id !== "") {
 						if (this.insertingText) {
 							this.recordedInsertionOps.push(operation);
