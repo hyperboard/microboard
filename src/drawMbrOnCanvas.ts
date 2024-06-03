@@ -1,16 +1,21 @@
 import { Board } from "Board/Board";
-import { Mbr } from "./Items";
+import { Matrix, Mbr } from "./Items";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
 export default function createCanvasDrawer(board: Board): {
 	lastCreatedCanvas?: HTMLCanvasElement;
 	lastTranslationKeys?: string[];
 	clearCanvasAndKeys: () => void;
-	updateCanvasAndKeys: (sumMbr: Mbr, translation: TransformManyItems) => void;
+	updateCanvasAndKeys: (
+		sumMbr: Mbr,
+		translation: TransformManyItems,
+		resizingMatrix: Matrix,
+	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
 } {
 	let lastCreatedCanvas: HTMLCanvasElement | undefined = undefined;
 	let lastTranslationKeys: string[] | undefined = undefined;
+	let matrix = new Matrix();
 
 	function clearCanvasAndKeys(): void {
 		if (lastCreatedCanvas) {
@@ -22,16 +27,19 @@ export default function createCanvasDrawer(board: Board): {
 				const item = board.items.getById(id);
 				if (item) {
 					item.transformationRenderBlock = undefined;
+					item.subject.publish(item);
 				}
 			});
 			lastTranslationKeys = undefined;
 		}
 		board.selection.transformationRenderBlock = undefined;
+		matrix = new Matrix();
 	}
 
 	function updateCanvasAndKeys(
 		sumMbr: Mbr,
 		translation: TransformManyItems,
+		resizingMatrix: Matrix,
 	): void {
 		const translationKeys = Object.keys(translation);
 		if (
@@ -39,6 +47,11 @@ export default function createCanvasDrawer(board: Board): {
 			lastTranslationKeys?.length === translationKeys.length &&
 			lastTranslationKeys?.every(key => translationKeys.includes(key))
 		) {
+			if (resizingMatrix) {
+				matrix.scale(resizingMatrix.scaleX, resizingMatrix.scaleY);
+				lastCreatedCanvas.style.transformOrigin = "top left";
+				lastCreatedCanvas.style.transform = `scale(${matrix.scaleX}, ${matrix.scaleY})`;
+			}
 			lastCreatedCanvas.style.left = `${
 				(sumMbr.left - board.camera.getMbr().left) *
 				board.camera.getMatrix().scaleX

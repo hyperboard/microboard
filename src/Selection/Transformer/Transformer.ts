@@ -22,6 +22,7 @@ import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "Board/drawMbrOnCanvas";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -33,6 +34,7 @@ export class Transformer extends Tool {
 	clickedOn?: ResizeType;
 	private toDrawBorders = new NestingHighlighter();
 	beginTimeStamp = Date.now();
+	canvasDrawer = createCanvasDrawer(this.board);
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -98,6 +100,7 @@ export class Transformer extends Tool {
 		this.mbr = undefined;
 		this.toDrawBorders.clear();
 		this.beginTimeStamp = Date.now();
+		this.canvasDrawer.clearCanvasAndKeys();
 		return wasResising;
 	}
 
@@ -274,6 +277,13 @@ export class Transformer extends Tool {
 				}
 			}
 			this.selection.tranformMany(translation, this.beginTimeStamp);
+			if (Object.keys(translation).length > 50) {
+				this.canvasDrawer.updateCanvasAndKeys(
+					resize.mbr,
+					translation,
+					resize.matrix,
+				);
+			}
 
 			this.mbr = resize.mbr;
 		}
