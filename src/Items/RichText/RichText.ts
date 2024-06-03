@@ -163,7 +163,14 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	getDefaultHorizontalAlignment(): HorisontalAlignment {
-		return this.isInShape ? "center" : "left";
+		switch (this.insideOf) {
+			case "Sticker":
+				return "center";
+			case "Shape":
+				return "center";
+			default:
+				return "left";
+		}
 	}
 
 	isEmpty(): boolean {
