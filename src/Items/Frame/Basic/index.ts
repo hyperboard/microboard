@@ -1,9 +1,9 @@
 import { Custom } from "./Custom";
-import { Frame16x9 } from "./16:9";
-import { Frame4x3 } from "./4:3";
+import { Frame16x9 } from "./16-9";
+import { Frame4x3 } from "./4-3";
 import { A4 } from "./A4";
 import { Letter } from "./Letter";
-import { Frame1x1 } from "./1:1";
+import { Frame1x1 } from "./1-1";
 
 export const Frames = {
 	Custom,
