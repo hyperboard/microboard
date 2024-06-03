@@ -124,7 +124,7 @@ export class RichText extends Mbr implements Geometry {
 					this.updateElement();
 					// this.transformCanvas();
 				}
-				this.enableRender();
+				this.updateElement();
 			},
 		);
 		this.editorTransforms.select(this.editor.editor, {
