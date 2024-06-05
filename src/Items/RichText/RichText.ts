@@ -662,7 +662,9 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	getHorisontalAlignment(): HorisontalAlignment | undefined {
-		const blockNode = this.editor.getSelectedBlockNode();
+		const blockNode = this.editor.getSelectedBlockNode()
+			? this.editor.getSelectedBlockNode()
+			: this.editor.editor.children[0];
 		switch (blockNode?.type) {
 			case "paragraph":
 			case "heading":
