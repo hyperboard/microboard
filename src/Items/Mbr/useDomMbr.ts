@@ -11,6 +11,8 @@ type Params = {
 	board: Board;
 	ref: RefObject<HTMLElement>;
 	subjects?: string[];
+	shouldUpd?: boolean;
+	setShouldUpd?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export function useDomMbr({
@@ -18,6 +20,8 @@ export function useDomMbr({
 	board,
 	ref,
 	subjects = ["camera", "selection"],
+	shouldUpd = true,
+	setShouldUpd,
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
@@ -31,7 +35,11 @@ export function useDomMbr({
 	useEffect(() => {
 		const newMbr = updateRects(board, ref);
 		if (newMbr && !newMbr?.isEqual(mbr)) {
-			setMbr(newMbr);
+			if (shouldUpd) {
+				setMbr(newMbr);
+			} else if (setShouldUpd) {
+				setShouldUpd(true);
+			}
 		}
 	});
 	return mbr;
