@@ -451,7 +451,8 @@ export class Connector {
 		return (
 			this.lines.isEnclosedOrCrossedBy(bounds) ||
 			this.startPointer.path.isEnclosedOrCrossedBy(bounds) ||
-			this.endPointer.path.isEnclosedOrCrossedBy(bounds)
+			this.endPointer.path.isEnclosedOrCrossedBy(bounds) ||
+			this.text.isEnclosedOrCrossedBy(bounds)
 		);
 	}
 
