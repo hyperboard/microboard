@@ -3,7 +3,7 @@ import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import { Subject } from "Subject";
 import i18next from "i18next";
-import { Descendant, Editor, Transforms } from "slate";
+import { Descendant, Editor, Node, Transforms } from "slate";
 import {
 	Line,
 	Mbr,
@@ -24,6 +24,8 @@ import { RichTextCommand } from "./RichTextCommand";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextData, RichTextOperation } from "./RichTextOperations";
 import { isTextEmpty } from "./isTextEmpty";
+import { ReactEditor } from "slate-react";
+import { DOMPoint } from "slate-react/dist/utils/dom";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
@@ -64,6 +66,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	maxHeight: number;
+	lastClickPoint?: Point;
 
 	constructor(
 		public container: Mbr,
@@ -95,7 +98,6 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 			this.getScale,
-			// this, // TODO bd-695
 			this.getDefaultHorizontalAlignment(),
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
@@ -518,6 +520,11 @@ export class RichText extends Mbr implements Geometry {
 		}, delay);
 	}
 
+	forceCursorToTheEnd(): void {
+		this.selectAllText();
+		Transforms.collapse(this.editor.editor, { edge: "end" });
+	}
+
 	moveCursorToTheEnd(): void {
 		// Update of text react component causes set_selection to start
 		// until the issue is resolved here is a unstable workaround
@@ -677,6 +684,82 @@ export class RichText extends Mbr implements Geometry {
 
 	getVerticalAlignment(): VerticalAlignment {
 		return this.editor.verticalAlignment;
+	}
+
+	saveLastClickPoint(board: Board): void {
+		const point = board.pointer.point.copy();
+		point.transform(board.camera.getMatrix());
+		this.lastClickPoint = point;
+	}
+
+	getLastClickPoint(): Point | undefined {
+		return this.lastClickPoint?.copy();
+	}
+
+	clearLastClickPoint(): void {
+		this.lastClickPoint = undefined;
+	}
+
+	setCursorUnderLastClick(ref: HTMLDivElement | null): void {
+		const point = this.getLastClickPoint();
+		if (ref && point) {
+			this.clearLastClickPoint();
+			const domMbr = ref.getBoundingClientRect();
+			const refMbr = new Mbr(
+				domMbr.left,
+				domMbr.top,
+				domMbr.right,
+				domMbr.bottom,
+			);
+			// if there are TS errors, document.caretPositionFromPoint can support most browser, need to refactor
+			// FYI https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint
+			// @ts-expect-error: Suppress TS error for non-existent method
+			if (
+				refMbr.isInside(point) &&
+				(document.caretPositionFromPoint ||
+					document.caretRangeFromPoint)
+			) {
+				// @ts-expect-error: Suppress TS error for non-existent method
+				const domRange = document.caretPositionFromPoint
+					? // @ts-expect-error: Suppress TS error for non-existent method
+					  document.caretPositionFromPoint(point.x, point.y)
+					: document.caretRangeFromPoint(point.x, point.y);
+				// @ts-expect-error: Suppress TS error for non-existent method
+				const textNode = document.caretPositionFromPoint
+					? domRange.offsetNode
+					: domRange.startContainer;
+				// @ts-expect-error: Suppress TS error for non-existent method
+				const offset = document.caretPositionFromPoint
+					? domRange.offset
+					: domRange.startOffset;
+				const domPoint = [textNode, offset] as DOMPoint;
+				const slatePoint = ReactEditor.toSlatePoint(
+					this.editor.editor,
+					domPoint,
+					{
+						exactMatch: false,
+						suppressThrow: false,
+					},
+				);
+				const nRange = { anchor: slatePoint, focus: slatePoint };
+				this.editorTransforms.select(this.editor.editor, nRange);
+				ReactEditor.focus(this.editor.editor);
+			} else {
+				// @ts-expect-error: Suppress TS error for non-existent method
+				if (
+					!(
+						document.caretPositionFromPoint ||
+						document.caretRangeFromPoint
+					)
+				) {
+					console.error(
+						"document.caretPositionFromPoint and document.caretRangeFromPoint are not available!",
+					);
+				}
+				// this.forceCursorToTheEnd(); // Uncomment if necessary
+				ReactEditor.focus(this.editor.editor);
+			}
+		}
 	}
 
 	undo(): void {

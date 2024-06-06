@@ -5,12 +5,15 @@ import {
 	Line,
 	Mbr,
 	Point,
+	RichText,
 	TransformationOperation,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
+import { ImageItem } from "Board/Items/Image";
+import { Drawing } from "Board/Items/Drawing";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -307,7 +310,25 @@ export class Select extends Tool {
 				this.board.tools.publish();
 				return false;
 			} else {
-				this.board.selection.editUnderPointer();
+				const topItem = this.board.items.getUnderPointer().pop();
+				const curr = this.board.selection.items.getSingle();
+				if (
+					this.board.selection.getContext() === "EditUnderPointer" &&
+					curr &&
+					topItem === curr
+				) {
+					if (
+						!(curr instanceof ImageItem) &&
+						!(curr instanceof Drawing)
+					) {
+						const text =
+							curr instanceof RichText ? curr : curr.text;
+						text.saveLastClickPoint(this.board);
+					}
+					this.board.selection.editText();
+				} else {
+					this.board.selection.editUnderPointer();
+				}
 				this.board.tools.publish();
 				this.clear();
 				return false;
@@ -377,6 +398,15 @@ export class Select extends Tool {
 
 	leftButtonDouble(): boolean {
 		this.board.selection.editTextUnderPointer();
+		const toEdit = this.board.selection.items.getSingle();
+		if (
+			toEdit &&
+			!(toEdit instanceof ImageItem) &&
+			!(toEdit instanceof Drawing)
+		) {
+			const text = toEdit instanceof RichText ? toEdit : toEdit.text;
+			text.saveLastClickPoint(this.board);
+		}
 		this.board.selection.editText();
 		return false;
 	}

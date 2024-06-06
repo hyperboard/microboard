@@ -248,7 +248,7 @@ export class Selection {
 				const text = item instanceof RichText ? item : item.text;
 				text.clearText();
 				text.editor.editor.insertText(shouldReplace);
-				text.moveCursorToTheEnd(); // prob should be 20 ms
+				text.moveCursorToTheEnd();
 			}
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
@@ -331,7 +331,6 @@ export class Selection {
 		this.textToEdit = text;
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
-		text.moveCursorToTheEnd();
 	}
 
 	editTextUnderPointer(): void {
