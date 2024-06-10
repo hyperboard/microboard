@@ -207,8 +207,11 @@ export class Board {
 		}
 	}
 
-	/** Creates new canvas and returns it. Renders all items inside of mbr on new canvas
-	 * @param mbr - in which mbr we should find items
+	/**
+	 * Creates new canvas and returns it.
+	 * Renders all items from translation on new canvas.
+	 * @param mbr - width and height for resulting canvas
+	 * @param translation - in which mbr we should find items
 	 */
 	drawMbrOnCanvas(
 		mbr: Mbr,
@@ -222,7 +225,10 @@ export class Board {
 
 		const ctx = canvas.getContext("2d");
 		if (!ctx) {
-			console.error("Export Board: Unable to get 2D context");
+			console.error(
+				"drawMbrOnCanvas: Unable to get 2D context from canvasElemnt",
+				canvas,
+			);
 			return;
 		}
 
