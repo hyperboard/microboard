@@ -650,7 +650,8 @@ function renderTextBlock(ctx: Ctx, textBlock: LayoutTextBlock): void {
 }
 
 function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	if (!textBlock.style.backgroundColor) {
+	if (!textBlock.style.backgroundColor || textBlock.text === "\u00A0") {
+		// U+00a0 is empty, for not highlighting emptyLine
 		return;
 	}
 	const measure = textBlock.measure;

@@ -24,7 +24,7 @@ const width = 200;
 const height = 200;
 
 export const StickerShape = {
-	textBounds: new Mbr(5, 5, width - 5, height - 5),
+	textBounds: new Mbr(6.67, 6.67, width - 6.67, height - 6.67),
 	shadowPath: new Path(
 		[
 			new Line(new Point(2, 2), new Point(width, 2)),

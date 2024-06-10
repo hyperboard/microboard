@@ -560,7 +560,9 @@ export class Connector {
 
 		if (
 			DRAW_TEXT_BORDER &&
-			this.board.selection.getContext() === "EditTextUnderPointer"
+			(this.board.selection.getContext() === "EditUnderPointer" ||
+				this.board.selection.getContext() === "EditTextUnderPointer") &&
+			this.board.selection.items.list().includes(this)
 		) {
 			ctx.strokeStyle = SELECTION_COLOR;
 			ctx.beginPath();

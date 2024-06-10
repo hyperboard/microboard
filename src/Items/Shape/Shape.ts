@@ -28,6 +28,8 @@ export class Shape implements Geometry {
 		this.transformation,
 		"\u00A0",
 		true,
+		false,
+		"Shape",
 	);
 	readonly subject = new Subject<Shape>();
 	transformationRenderBlock?: boolean = undefined;
