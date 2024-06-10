@@ -68,7 +68,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			case "BoardEventList":
 				const events = message.events;
 				const isFirstBatchOfEvents =
-					log.list.length === 0 && events.length > 0;
+					log.getList().length === 0 && events.length > 0;
 				if (isFirstBatchOfEvents) {
 					log.insertEvents(events);
 					subject.publish(events);
@@ -85,7 +85,18 @@ export function createEvents(board: Board, connection: Connection): Events {
 				connection.publishSnapshot(board.getBoardId(), snapshot);
 				break;
 			case "BoardSnapshot":
-				board.deserialize(message.snapshot);
+				const existingSnapshot = board.getSnapshot();
+				if (existingSnapshot.lastIndex > 0) {
+					const newerEvents = message.snapshot.events.filter(
+						event => event.order > existingSnapshot.lastIndex,
+					);
+					if (newerEvents.length > 0) {
+						newerEvents.forEach(event => addEvent(event));
+					}
+				} else {
+					board.deserialize(message.snapshot);
+				}
+				board.saveSnapshot(message.snapshot);
 				onBoardLoad();
 				break;
 		}
