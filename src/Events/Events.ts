@@ -97,9 +97,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 					board.deserialize(message.snapshot);
 				}
 				board.saveSnapshot(message.snapshot);
-				// setInterval(() => {;
-				// 	// board.saveLocalSnapshot();
-				// }, 60 * 1000); // every minute
 				onBoardLoad();
 				break;
 		}
