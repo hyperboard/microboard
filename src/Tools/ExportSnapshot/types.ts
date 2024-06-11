@@ -29,8 +29,7 @@ export type ExportFrameDecoration = {
 	width: number;
 	height: number;
 	lineWidth: number;
-	offsetX?: number;
-	offsetY?: number;
+	offset?: number;
 };
 
 export type ExportFrameDecorationRecord = Record<

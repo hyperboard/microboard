@@ -32,6 +32,7 @@ export class Shape implements Geometry {
 		"Shape",
 	);
 	readonly subject = new Subject<Shape>();
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -348,6 +349,9 @@ export class Shape implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.text.render(context);
 	}

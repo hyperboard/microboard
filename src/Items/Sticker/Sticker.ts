@@ -1,19 +1,24 @@
-import { Events, Operation } from "Board/Events";
+import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
 import { Subject } from "Subject";
-import { DEFAULT_STICKER_COLOR } from "View/Tools/AddSticker";
-import { Line, Matrix, Mbr, Path, Paths, Point, Transformation } from "..";
-import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
-import { DrawingContext } from "../DrawingContext";
-import { GeometricNormal } from "../GeometricNormal";
-import { Geometry } from "../Geometry";
 import { RichText } from "../RichText";
+import { Geometry } from "../Geometry";
+import { DrawingContext } from "../DrawingContext";
+import { Events, Operation } from "Board/Events";
+import { GeometricNormal } from "../GeometricNormal";
+import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
 import { StickerCommand } from "./StickerCommand";
-import {
-	DefaultStickerData,
-	StickerData,
-	StickerOperation,
-} from "./StickerOperation";
+import { StickerData, StickerOperation } from "./StickerOperation";
+
+export const stickerColors = {
+	"Sky Blue": "rgb(174, 212, 250)",
+	"Pale Yellow": "rgb(252, 245, 174)",
+	"Sage Green": "rgb(175, 214, 167)",
+	Lavender: "rgb(233, 191, 233)",
+	"Aqua Cyan": "rgb(171, 221, 221)",
+	"Pastel Red": "rgb(246, 168, 168)",
+	"Light Gray": "rgb(230, 230, 230)",
+} as { [color: string]: string };
 
 const width = 200;
 const height = 200;
@@ -45,7 +50,7 @@ export const StickerShape = {
 			new Line(new Point(0, height), new Point(0, 0)),
 		],
 		true,
-		DEFAULT_STICKER_COLOR,
+		stickerColors["Sky Blue"],
 		"none",
 	),
 	anchorPoints: [
@@ -57,7 +62,7 @@ export const StickerShape = {
 	DEFAULTS: [width, height],
 };
 
-const defaultStickerData = new DefaultStickerData();
+const defaultStickerData = new StickerData();
 const _hypotenuse = Math.sqrt(height * height + width * width);
 const _relation = width / height;
 
@@ -79,6 +84,7 @@ export class Sticker implements Geometry {
 		this.itemType,
 	);
 	readonly subject = new Subject<Sticker>();
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -241,6 +247,9 @@ export class Sticker implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.shadowPath.render(context);
 		this.stickerPath.render(context);
 		this.text.render(context);

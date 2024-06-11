@@ -4,11 +4,12 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { getOppositePoint } from "Board/Selection/Transformer/getOppositePoint";
 import { getResize } from "Board/Selection/Transformer/getResizeMatrix";
 import {
-	ResizeType,
 	getResizeType,
+	ResizeType,
 } from "Board/Selection/Transformer/getResizeType";
 import { Tool } from "Board/Tools/Tool";
 import {
+	BACKGROUND_BLUR,
 	BLUR_BACKGROUND_COLOR,
 	FRAME_DECORATIONS,
 	MIN_EXPORT_HEIGHT,
@@ -18,8 +19,6 @@ import {
 } from "View/Tools/ExportBoard";
 import { exportBoardSnapshot } from "./exportBoardSnapshot";
 import { Quality } from "./types";
-
-const resizeTypeDistance = 50;
 
 export class ExportSnapshot extends Tool {
 	mbr: Mbr;
@@ -34,7 +33,6 @@ export class ExportSnapshot extends Tool {
 
 	constructor(private board: Board) {
 		super();
-		this.setCursor();
 		const cameraCenter = this.board.camera.getMbr().getCenter();
 		this.mbr = new Mbr(
 			cameraCenter.x - SELECTION_BOX_WIDTH / 2,
@@ -50,10 +48,6 @@ export class ExportSnapshot extends Tool {
 			board.camera,
 			this.tempCtx,
 		);
-	}
-
-	setCursor() {
-		this.board.pointer.setCursor("default");
 	}
 
 	rectMoveTo(x: number, y: number): void {
@@ -102,7 +96,6 @@ export class ExportSnapshot extends Tool {
 			this.board.pointer.point,
 			this.board.camera.getScale(),
 			this.mbr,
-			resizeTypeDistance,
 		);
 		if (
 			!resizeType ||
@@ -155,7 +148,6 @@ export class ExportSnapshot extends Tool {
 				this.board.pointer.point,
 				this.board.camera.getScale(),
 				this.mbr,
-				resizeTypeDistance,
 			) ?? null;
 		if (
 			this.resizeType === "bottom" ||
@@ -171,7 +163,6 @@ export class ExportSnapshot extends Tool {
 			!this.resizeType
 		) {
 			this.isDragging = true;
-			this.board.pointer.setCursor("grabbing");
 		}
 		if (
 			this.mbr?.isUnderPoint(this.board.pointer.point) &&
@@ -210,14 +201,11 @@ export class ExportSnapshot extends Tool {
 		color: string,
 		lineWidth: number,
 	) {
-		const scale = this.board.camera.getScale();
 		const ctx = context.ctx;
 		ctx.save();
-		ctx.lineCap = "round";
 		ctx.strokeStyle = color;
 		ctx.lineWidth = lineWidth;
 		ctx.translate(translateX, translateY);
-		ctx.scale(1 / scale, 1 / scale);
 		ctx.stroke(path);
 		ctx.restore();
 	}
@@ -247,14 +235,11 @@ export class ExportSnapshot extends Tool {
 
 		if (FRAME_DECORATIONS) {
 			const topLeft = FRAME_DECORATIONS["top-left"];
-			const scale = context.camera.getScale();
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topLeft.path,
-				this.mbr.left - topLeft.lineWidth / scale + topLeft.offsetX! ??
-					0,
-				this.mbr.top - topLeft.lineWidth / scale + topLeft.offsetY! ??
-					0,
+				this.mbr.left - topLeft.offset! ?? 0,
+				this.mbr.top - topLeft.offset! ?? 0,
 				topLeft.color,
 				topLeft.lineWidth,
 			);
@@ -262,10 +247,8 @@ export class ExportSnapshot extends Tool {
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topRight.path,
-				this.mbr.right - topRight.width / scale + topRight.offsetX! ??
-					0,
-				this.mbr.top - topRight.lineWidth / scale + topRight.offsetY! ??
-					0,
+				this.mbr.left + this.mbr.getWidth() - topRight.width,
+				this.mbr.top - topRight.offset! ?? 0,
 				topRight.color,
 				topRight.lineWidth,
 			);
@@ -273,12 +256,8 @@ export class ExportSnapshot extends Tool {
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomLeft.path,
-				this.mbr.left -
-					bottomLeft.lineWidth / scale +
-					bottomLeft.offsetX! ?? 0,
-				this.mbr.bottom -
-					bottomLeft.height / scale +
-					bottomLeft.offsetY! ?? 0,
+				this.mbr.left - bottomLeft.offset! ?? 0,
+				this.mbr.top + this.mbr.getHeight() - bottomLeft.height,
 				bottomLeft.color,
 				bottomLeft.lineWidth,
 			);
@@ -286,12 +265,8 @@ export class ExportSnapshot extends Tool {
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomRight.path,
-				this.mbr.right -
-					bottomRight.width / scale +
-					bottomRight.offsetX! ?? 0,
-				this.mbr.bottom -
-					bottomRight.height / scale +
-					bottomRight.offsetY! ?? 0,
+				this.mbr.left + this.mbr.getWidth() - bottomRight.width,
+				this.mbr.top + this.mbr.getHeight() - bottomRight.width,
 				bottomRight.color,
 				bottomRight.lineWidth,
 			);

@@ -4,22 +4,7 @@ import { Board } from "Board/Board";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 
-export interface FrameData {
-	readonly itemType: string;
-	readonly shapeType: FrameType;
-	backgroundColor: string;
-	backgroundOpacity: number;
-	borderColor: string;
-	borderOpacity: number;
-	borderStyle: BorderStyle;
-	borderWidth: BorderWidth;
-	transformation: DefaultTransformationData;
-	children: string[];
-	text: DefaultRichTextData;
-	canChangeRatio: boolean;
-}
-
-export class DefaultFrameData implements FrameData {
+export class FrameData {
 	readonly itemType = "Frame";
 	constructor(
 		readonly shapeType: FrameType = "Custom",

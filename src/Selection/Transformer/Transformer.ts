@@ -21,7 +21,8 @@ import { Anchor } from "Board/Items/Anchor";
 import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
-import { timeStamp } from "console";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "Board/drawMbrOnCanvas";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -33,6 +34,7 @@ export class Transformer extends Tool {
 	clickedOn?: ResizeType;
 	private toDrawBorders = new NestingHighlighter();
 	beginTimeStamp = Date.now();
+	canvasDrawer = createCanvasDrawer(this.board);
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -98,6 +100,7 @@ export class Transformer extends Tool {
 		this.mbr = undefined;
 		this.toDrawBorders.clear();
 		this.beginTimeStamp = Date.now();
+		this.canvasDrawer.clearCanvasAndKeys();
 		return wasResising;
 	}
 
@@ -175,7 +178,7 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 			);
 			const matrix = resize.matrix;
-			const translation: { [key: string]: TransformationOperation } = {};
+			const translation: TransformManyItems = {};
 			for (const item of list) {
 				const itemMbr = item.getMbr();
 				const deltaX = itemMbr.left - mbr.left;
@@ -219,6 +222,14 @@ export class Transformer extends Tool {
 							matrix.scaleY,
 							this.beginTimeStamp,
 						);
+						// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: 0, y: 0 },
+							scale: { x: 1, y: 1 },
+						};
 						// translation[item.getId()] = {
 						// 	class: "Transformation",
 						// 	method: "scaleByTranslateBy",
@@ -266,6 +277,13 @@ export class Transformer extends Tool {
 				}
 			}
 			this.selection.tranformMany(translation, this.beginTimeStamp);
+			if (Object.keys(translation).length > 50) {
+				this.canvasDrawer.updateCanvasAndKeys(
+					resize.mbr,
+					translation,
+					resize.matrix,
+				);
+			}
 
 			this.mbr = resize.mbr;
 		}

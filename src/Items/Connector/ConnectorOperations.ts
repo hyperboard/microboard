@@ -4,20 +4,7 @@ import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 
-export interface ConnectorData {
-	readonly itemType: "Connector";
-	startPoint: ControlPointData;
-	endPoint: ControlPointData;
-	startPointerStyle: ConnectorPointerStyle;
-	endPointerStyle: ConnectorPointerStyle;
-	lineStyle: ConnectorLineStyle;
-	lineColor: string;
-	lineWidth: ConnectionLineWidth;
-	transformation: DefaultTransformationData;
-	text: DefaultRichTextData;
-}
-
-export class DefaultConnectorData implements ConnectorData {
+export class ConnectorData {
 	readonly itemType = "Connector";
 	startPoint: ControlPointData = new BoardPoint(0, 0);
 	endPoint: ControlPointData = new BoardPoint(0, 0);

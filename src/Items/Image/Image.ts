@@ -34,6 +34,7 @@ export class ImageItem extends Mbr {
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		dataUrl: string | ArrayBuffer | null | undefined,
@@ -167,6 +168,9 @@ export class ImageItem extends Mbr {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const ctx = context.ctx;
 		ctx.save();
 		this.transformation.matrix.applyToContext(ctx);

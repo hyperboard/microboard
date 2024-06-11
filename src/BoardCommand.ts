@@ -1,6 +1,6 @@
-import { Board } from "Board";
-import { BoardOps } from "./BoardOperations";
 import { Command } from "./Events";
+import { BoardOps } from "./BoardOperations";
+import { Board } from "Board";
 
 export class BoardCommand implements Command {
 	private reverse = this.getReverse();

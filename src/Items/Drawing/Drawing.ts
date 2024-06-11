@@ -8,6 +8,7 @@ import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { DrawingOperation, DrawingCommand } from "./DrawingCommand";
 import { TransformationData } from "../Transformation/TransformationData";
+import { Geometry } from "../Geometry";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -17,7 +18,7 @@ export interface DrawingData {
 	strokeWidth: number;
 }
 
-export class Drawing extends Mbr {
+export class Drawing extends Mbr implements Geometry {
 	readonly itemType = "Drawing";
 	parent = "Board";
 	readonly transformation = new Transformation(this.id, this.events);
@@ -29,6 +30,7 @@ export class Drawing extends Mbr {
 	private borderStyle: BorderStyle = "solid";
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 	private borderOpacity = 1;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		public points: Point[],
@@ -196,6 +198,9 @@ export class Drawing extends Mbr {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const ctx = context.ctx;
 		ctx.save();
 		ctx.strokeStyle = this.borderColor;

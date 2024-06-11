@@ -1,8 +1,8 @@
 import { Board, BoardSnapshot } from "Board/Board";
 import { Command, createCommand } from "./Command";
 import { BoardEvent } from "./Events";
-import { Operation } from "./EventsOperations";
 import { mergeOperations } from "./Merge";
+import { Operation } from "./EventsOperations";
 
 export interface HistoryRecord {
 	event: BoardEvent;
@@ -10,7 +10,7 @@ export interface HistoryRecord {
 }
 
 export interface EventsLog {
-	list: HistoryRecord[];
+	getList(): HistoryRecord[];
 	insertEvents(events: BoardEvent | BoardEvent[]): void;
 	setEventOrder(event: BoardEvent): void;
 	push(record: HistoryRecord): HistoryRecord;
@@ -31,8 +31,16 @@ export function createEventsLog(board: Board): EventsLog {
 		return events;
 	}
 
-	function deserialize(events: BoardEvent[]): void {
+	function clearList(): void {
 		list = [];
+	}
+
+	function getList(): HistoryRecord[] {
+		return list;
+	}
+
+	function deserialize(events: BoardEvent[]): void {
+		clearList();
 		const eventArray = Array.isArray(events) ? events : [events];
 		if (eventArray.length === 0) {
 			return;
@@ -50,7 +58,8 @@ export function createEventsLog(board: Board): EventsLog {
 		const unordered = popUnorderedRecords();
 		const events = serialize();
 		const items = board.serialize();
-		const lastIndex = events[events.length - 1].order;
+		const lastIndex =
+			events.length > 0 ? events[events.length - 1].order : 0;
 		const snapshot = {
 			events,
 			items,
@@ -255,10 +264,6 @@ export function createEventsLog(board: Board): EventsLog {
 
 			const { method } = record.event.body.operation;
 
-			if (method !== "undo" && method !== "redo") {
-				return null;
-			}
-
 			if (method === "redo") {
 				counter++;
 			} else if (method === "undo") {
@@ -283,7 +288,7 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	return {
-		list,
+		getList,
 		insertEvents,
 		setEventOrder,
 		push,

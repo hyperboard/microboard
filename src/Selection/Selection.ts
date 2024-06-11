@@ -46,6 +46,7 @@ export class Selection {
 	readonly tool = new SelectionTransformer(this.board, this);
 
 	textToEdit: RichText | undefined;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
@@ -248,7 +249,7 @@ export class Selection {
 				const text = item instanceof RichText ? item : item.text;
 				text.clearText();
 				text.editor.editor.insertText(shouldReplace);
-				text.moveCursorToTheEnd();
+				text.moveCursorToEnd();
 			}
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
@@ -275,8 +276,8 @@ export class Selection {
 			item instanceof Frame
 		) {
 			const text = item instanceof RichText ? item : item.text;
+			await text.moveCursorToEnd(); // prob should be 20 ms
 			text.editor.appendText(appendedText);
-			text.moveCursorToTheEnd();
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -329,6 +330,7 @@ export class Selection {
 		}
 		const text = item instanceof RichText ? item : item.text;
 		this.textToEdit = text;
+		text.selectText();
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
 	}
@@ -802,6 +804,25 @@ export class Selection {
 				fontStyleList,
 			});
 		}
+		// const single = this.items.getSingle();
+		// if (single) {
+		// 	if (single instanceof RichText) {
+		// 		single.setSelectionFontStyle(fontStyleList, this.context);
+		// 	} else {
+		// 		single.text.setSelectionFontStyle(fontStyleList, this.context);
+		// 	}
+		// } else if (this.items.isItemTypes(["Sticker"])) {
+		// 	this.items
+		// 		.list()
+		// 		.forEach(x => x.text.setSelectionFontStyle(fontStyleList));
+		// } else {
+		// 	this.emit({
+		// 		class: "RichText",
+		// 		method: "setFontStyle",
+		// 		item: this.items.ids(),
+		// 		fontStyleList,
+		// 	});
+		// }
 	}
 
 	setFontColor(fontColor: string): void {
@@ -948,16 +969,24 @@ export class Selection {
 		}
 	}
 
+	renderItemMbr(context: DrawingContext, item: Item): void {
+		const mbr = item.getMbr();
+		mbr.strokeWidth = 1 / context.matrix.scaleX;
+		mbr.borderColor = SELECTION_COLOR;
+		mbr.render(context);
+	}
+
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
 		const isSingleConnector = single && single.itemType === "Connector";
 		const isSelectionTooBig = this.items.getSize() > 100;
-		if (!isSingleConnector && !isSelectionTooBig) {
+		if (
+			!isSingleConnector &&
+			!isSelectionTooBig &&
+			!this.transformationRenderBlock
+		) {
 			for (const item of this.items.list()) {
-				const mbr = item.getMbr();
-				mbr.strokeWidth = 1 / context.matrix.scaleX;
-				mbr.borderColor = SELECTION_COLOR;
-				mbr.render(context);
+				this.renderItemMbr(context, item);
 			}
 		}
 		this.tool.render(context);

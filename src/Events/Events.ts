@@ -1,11 +1,11 @@
-import { Connection, SocketMessage } from "App/Connection";
 import { Board } from "Board";
-import { BoardSnapshot } from "Board/Board";
-import { Subject } from "Subject";
-import { Command } from "./Command";
-import { EventsCommand } from "./EventsCommand";
-import { createEventsLog } from "./EventsLog";
 import { EventsOperation, Operation } from "./EventsOperations";
+import { EventsCommand } from "./EventsCommand";
+import { Command } from "./Command";
+import { createEventsLog } from "./EventsLog";
+import { Subject } from "Subject";
+import { Connection, SocketMessage } from "App/Connection";
+import { BoardSnapshot } from "Board/Board";
 
 const EVENTS_REPUBLISH_INTERVAL = 5000;
 
@@ -68,7 +68,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			case "BoardEventList":
 				const events = message.events;
 				const isFirstBatchOfEvents =
-					log.list.length === 0 && events.length > 0;
+					log.getList().length === 0 && events.length > 0;
 				if (isFirstBatchOfEvents) {
 					log.insertEvents(events);
 					subject.publish(events);
@@ -85,7 +85,18 @@ export function createEvents(board: Board, connection: Connection): Events {
 				connection.publishSnapshot(board.getBoardId(), snapshot);
 				break;
 			case "BoardSnapshot":
-				board.deserialize(message.snapshot);
+				const existingSnapshot = board.getSnapshot();
+				if (existingSnapshot.lastIndex > 0) {
+					const newerEvents = message.snapshot.events.filter(
+						event => event.order > existingSnapshot.lastIndex,
+					);
+					if (newerEvents.length > 0) {
+						newerEvents.forEach(event => addEvent(event));
+					}
+				} else {
+					board.deserialize(message.snapshot);
+				}
+				board.saveSnapshot(message.snapshot);
 				onBoardLoad();
 				break;
 		}
@@ -179,7 +190,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 	function undo(apply = true): void {
 		const currentUserId = getUserId();
 		const record = log.getUndoRecord(currentUserId);
-
 		if (!record) {
 			return;
 		}
@@ -218,7 +228,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 	function redo(apply = true): void {
 		const userId = getUserId();
 		const record = log.getRedoRecord(userId);
-		console.log(record, "redo");
 		if (!record) {
 			return;
 		}

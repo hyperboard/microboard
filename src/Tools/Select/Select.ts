@@ -12,6 +12,8 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "Board/drawMbrOnCanvas";
 import { ImageItem } from "Board/Items/Image";
 import { Drawing } from "Board/Items/Drawing";
 
@@ -35,10 +37,10 @@ export class Select extends Tool {
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
+	canvasDrawer = createCanvasDrawer(this.board);
 
 	constructor(private board: Board) {
 		super();
-		this.board.pointer.setCursor("default");
 	}
 
 	clear(): void {
@@ -59,6 +61,7 @@ export class Select extends Tool {
 		this.lastPointerMoveEventTime = Date.now();
 		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
+		this.canvasDrawer.clearCanvasAndKeys();
 	}
 
 	leftButtonDown(): boolean {
@@ -187,7 +190,7 @@ export class Select extends Tool {
 				.list()
 				.filter(item => item instanceof Frame)
 				.map(frame => frame.getId());
-			const translation: { [key: string]: TransformationOperation } = {};
+			const translation: TransformManyItems = {};
 			selection.list().forEach(selectedItem => {
 				translation[selectedItem.getId()] = {
 					class: "Transformation",
@@ -213,6 +216,12 @@ export class Select extends Tool {
 				}
 			});
 			selection.tranformMany(translation, this.beginTimeStamp);
+
+			const sumMbr = this.canvasDrawer.countSumMbr(translation);
+			if (sumMbr) {
+				this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation);
+			}
+
 			selection.list().forEach(item => {
 				if (
 					!(item instanceof Frame) &&

@@ -47,15 +47,17 @@ interface DeserializeOperation extends TransformationBase {
 	timeStamp?: number;
 }
 
+export interface TransformManyItems {
+	[key: string]:
+		| ScaleByTranslateByOperation
+		| ScaleOperation
+		| TranslateOperation;
+}
+
 export interface TransformMany {
 	class: "Transformation";
 	method: "transformMany";
-	items: {
-		[key: string]:
-			| ScaleByTranslateByOperation
-			| ScaleOperation
-			| TranslateOperation;
-	};
+	items: TransformManyItems;
 	timeStamp?: number;
 }
 
@@ -65,4 +67,5 @@ export type TransformationOperation =
 	| RotateOperation
 	| ScaleRelativeToOperation
 	| ScaleByTranslateByOperation
-	| DeserializeOperation;
+	| DeserializeOperation
+	| TransformMany;

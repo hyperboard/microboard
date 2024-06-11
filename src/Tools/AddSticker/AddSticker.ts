@@ -1,21 +1,19 @@
 import { Board } from "Board/Board";
 import { Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Sticker } from "Board/Items/Sticker";
-import { DEFAULT_STICKER_COLOR } from "View/Tools/AddSticker";
+import { Sticker, stickerColors } from "Board/Items/Sticker";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
-// let backgroundColor = stickerColors["Sky Blue"];
+let backgroundColor = stickerColors["Sky Blue"];
 
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
 	line: Line | undefined;
 	bounds = new Mbr();
-	backgroundColor = DEFAULT_STICKER_COLOR;
 
 	static defaultWidth?: number = undefined;
-	sticker = new Sticker(undefined, undefined, this.backgroundColor);
+	sticker = new Sticker(undefined, undefined, AddSticker.backgroundColor);
 	isDown = false;
 
 	constructor(board: Board) {
@@ -28,12 +26,7 @@ export class AddSticker extends BoardTool {
 	}
 
 	setBackgroundColor(color: string): void {
-		this.backgroundColor = color;
-		this.board.tools.publish();
-	}
-
-	getBackgroundColor(): string {
-		return this.backgroundColor;
+		backgroundColor = color;
 	}
 
 	setCursor(): void {
@@ -82,7 +75,7 @@ export class AddSticker extends BoardTool {
 				AddSticker.defaultWidth,
 			);
 		}
-		this.sticker.setBackgroundColor(this.backgroundColor);
+		this.sticker.setBackgroundColor(backgroundColor);
 		const sticker = this.board.add(this.sticker);
 		this.board.selection.removeAll();
 		this.board.selection.add(sticker);

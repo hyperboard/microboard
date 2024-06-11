@@ -13,7 +13,7 @@ import { Geometry } from "../Geometry";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
-import { DefaultFrameData, FrameData, FrameOperation } from "./FrameOperation";
+import { FrameData, FrameOperation } from "./FrameOperation";
 import { Frames, FrameType } from "./Basic";
 import { GeometricNormal } from "../GeometricNormal";
 import { FrameCommand } from "./FrameCommand";
@@ -24,7 +24,7 @@ import {
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { Board } from "Board/Board";
 
-const defaultFrameData = new DefaultFrameData();
+const defaultFrameData = new FrameData();
 
 export class Frame implements Geometry {
 	readonly itemType = "Frame";
@@ -45,6 +45,7 @@ export class Frame implements Geometry {
 	);
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -607,21 +608,33 @@ export class Frame implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.text.render(context);
 	}
 
 	renderName(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.text.render(context);
 	}
 
 	renderBorders(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const copy = this.getPath();
 		copy.setBackgroundColor("none");
 		copy.render(context);
 	}
 
 	renderPath(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.renderNewShape(context);
 	}
