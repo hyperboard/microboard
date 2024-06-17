@@ -2,7 +2,6 @@ import { RichText } from "./RichText";
 import { RichTextOperation } from "./RichTextOperations";
 import { Command } from "Board/Events";
 import { Operation } from "slate";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class RichTextCommand implements Command {
 	private reverse = this.getReverse();
@@ -25,28 +24,38 @@ export class RichTextCommand implements Command {
 	}
 
 	getReverse(): { item: RichText; operation: RichTextOperation }[] {
+		const items = Array.isArray(this.richText)
+			? this.richText
+			: [this.richText];
 		switch (this.operation.method) {
 			case "edit":
-				const inverseOp = Operation.inverse(this.operation.ops[0]);
-				return mapItemsByOperation(this.richText, () => {
-					return {
+				const inverseOps = this.operation.ops.map(op =>
+					Operation.inverse(op),
+				);
+				return items.map(item => {
+					const operation = {
 						...this.operation,
-						ops: [inverseOp],
+						ops: inverseOps,
 					};
+					return { item, operation };
 				});
-			case "setFontColor":
-				return mapItemsByOperation(this.richText, richText => {
-					return {
+			case "setFontColor": {
+				return items.map(richText => {
+					const operation = {
 						...this.operation,
 						fontColor: richText.getFontColor() || "",
 					};
+					return { item: richText, operation };
 				});
-			default:
-				return mapItemsByOperation(this.richText, () => {
-					return {
+			}
+			default: {
+				return items.map(richText => {
+					const operation = {
 						...this.operation,
 					};
+					return { item: richText, operation };
 				});
+			}
 		}
 	}
 }

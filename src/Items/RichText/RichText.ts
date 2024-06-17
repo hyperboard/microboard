@@ -409,9 +409,6 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	emitWithoutApplying = (op: RichTextOperation): void => {
-		if (operationsRichTextDebugEnabled) {
-			console.info("<- RichText.emitWithoutApplying", op);
-		}
 		if (this.events) {
 			const command = new RichTextCommand([this], op);
 			this.events.emit(op, command);
@@ -419,9 +416,6 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	emit = (op: RichTextOperation): void => {
-		if (operationsRichTextDebugEnabled) {
-			console.info("<- RichText.emit", op);
-		}
 		if (this.events) {
 			const command = new RichTextCommand([this], op);
 			command.apply();

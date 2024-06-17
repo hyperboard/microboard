@@ -100,6 +100,7 @@ export class EditorContainer {
 					} else if (this.id !== "") {
 						if (this.insertingText) {
 							this.recordedInsertionOps.push(operation);
+							this.decorated.apply(operation);
 						} else {
 							this.emit({
 								class: "RichText",
@@ -152,7 +153,7 @@ export class EditorContainer {
 		this.insertingText = true;
 		insertData(data);
 		this.insertingText = false;
-		this.emit({
+		this.emitWithoutApplying({
 			class: "RichText",
 			method: "edit",
 			item: [this.id],
@@ -275,7 +276,9 @@ export class EditorContainer {
             this.decorated.apply(op.ops[0]);
         }
         */
-		this.decorated.apply(op.ops[0]);
+		for (const operation of op.ops) {
+			this.decorated.apply(operation);
+		}
 		this.shouldEmit = true;
 	}
 
