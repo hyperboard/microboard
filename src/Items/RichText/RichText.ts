@@ -99,6 +99,7 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 			this.getScale,
+			this.getDefaultHorizontalAlignment(),
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -152,9 +153,8 @@ export class RichText extends Mbr implements Geometry {
 							fontHighlight: "",
 							fontSize: this.getFontSize(),
 							fontFamily: this.getFontFamily(),
-							horisontalAlignment: this.isInShape
-								? "center"
-								: "left",
+							horisontalAlignment:
+								this.getDefaultHorizontalAlignment(),
 							text: this.placeholderText,
 						},
 					],
@@ -162,6 +162,17 @@ export class RichText extends Mbr implements Geometry {
 			];
 		} else {
 			return children;
+		}
+	}
+
+	getDefaultHorizontalAlignment(): HorisontalAlignment {
+		switch (this.insideOf) {
+			case "Sticker":
+				return "center";
+			case "Shape":
+				return "center";
+			default:
+				return "left";
 		}
 	}
 

@@ -64,7 +64,7 @@ export class EditorContainer {
 		editor.children = [
 			{
 				type: "paragraph",
-				horisontalAlignment: "center",
+				horisontalAlignment,
 				children: [
 					{
 						type: "text",
