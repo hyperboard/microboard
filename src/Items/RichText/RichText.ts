@@ -21,7 +21,6 @@ import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextData, RichTextOperation } from "./RichTextOperations";
 import { isTextEmpty } from "./isTextEmpty";
 import { ReactEditor } from "slate-react";
