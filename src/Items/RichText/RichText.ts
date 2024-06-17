@@ -549,7 +549,7 @@ export class RichText extends Mbr implements Geometry {
 		return this.transformation.getScale().x;
 	};
 
-	private selectWholeText(): void {
+	selectWholeText(): void {
 		const start = Editor.start(this.editor.editor, []);
 		const end = Editor.end(this.editor.editor, []);
 		const range = { anchor: start, focus: end };
@@ -887,24 +887,6 @@ export class RichText extends Mbr implements Geometry {
 
 	isClosed(): boolean {
 		return true;
-	}
-
-	selectText(): void {
-		this.editor.editor.apply({
-			type: "set_selection",
-
-			newProperties: {
-				anchor: {
-					offset: this.editor.textLength,
-					path: [0, this.editor.textLength],
-				},
-				focus: {
-					offset: 0,
-					path: [0, 0],
-				},
-			},
-			properties: null,
-		});
 	}
 
 	autosizeEnable(): void {

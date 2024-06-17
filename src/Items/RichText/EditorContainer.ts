@@ -45,6 +45,9 @@ export class EditorContainer {
 	private recordedSelectionOp: SelectionOp | undefined = undefined;
 	readonly subject = new Subject<EditorContainer>();
 
+	private insertingText = false;
+	private recordedInsertionOps: EditorOperation[] = [];
+
 	constructor(
 		private id: string,
 		private emit: (op: RichTextOperation) => void,
@@ -52,6 +55,7 @@ export class EditorContainer {
 		undo: () => void,
 		redo: () => void,
 		private getScale: () => number, // private richText: RichText, // TODO bd-695
+		horisontalAlignment: HorisontalAlignment,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -81,11 +85,6 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: EditorOperation): void => {
-			const editorHTML = document.querySelector(
-				"#TextEditor > div > div > p",
-			);
-			this.textLength = editorHTML?.innerText.length || 0;
-
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
@@ -98,8 +97,10 @@ export class EditorContainer {
 					if (operation.type === "set_selection") {
 						this.decorated.apply(operation);
 						this.subject.publish(this);
-					} else {
-						if (this.id !== "") {
+					} else if (this.id !== "") {
+						if (this.insertingText) {
+							this.recordedInsertionOps.push(operation);
+						} else {
 							this.emit({
 								class: "RichText",
 								method: "edit",
@@ -110,6 +111,9 @@ export class EditorContainer {
 								ops: [operation],
 							});
 						}
+					} else {
+						this.decorated.apply(operation);
+						this.subject.publish(this);
 					}
 				}
 			}
@@ -133,12 +137,29 @@ export class EditorContainer {
 				const map = JSON.parse(text);
 				const isDataValid = validateItemsMap(map);
 				if (!isDataValid) {
-					insertData(data);
+					this.insertAndEmit(insertData, data);
 				}
 			} catch (error) {
-				insertData(data);
+				this.insertAndEmit(insertData, data);
 			}
 		};
+	}
+
+	private insertAndEmit(
+		insertData: (data: DataTransfer) => void,
+		data: DataTransfer,
+	): void {
+		this.insertingText = true;
+		insertData(data);
+		this.insertingText = false;
+		this.emit({
+			class: "RichText",
+			method: "edit",
+			item: [this.id],
+			selection: JSON.parse(JSON.stringify(this.editor.selection)),
+			ops: this.recordedInsertionOps,
+		});
+		this.recordedInsertionOps = [];
 	}
 
 	setId(id: string): this {
@@ -530,5 +551,10 @@ export class EditorContainer {
 
 	getText(): Descendant[] {
 		return this.editor.children;
+	}
+
+	insertText(text: string): void {
+		const { editor } = this;
+		Transforms.insertText(editor, text);
 	}
 }

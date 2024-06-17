@@ -330,7 +330,7 @@ export class Selection {
 		}
 		const text = item instanceof RichText ? item : item.text;
 		this.textToEdit = text;
-		text.selectText();
+		text.selectWholeText();
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
 	}
