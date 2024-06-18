@@ -21,10 +21,13 @@ import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
-import { RichTextData, RichTextOperation } from "./RichTextOperations";
+import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
+import { RichTextOperation } from "./RichTextOperations";
+import { RichTextData } from "..";
 import { isTextEmpty } from "./isTextEmpty";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
+import { LayoutBlockNodes } from "./CanvasText";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
@@ -59,7 +62,7 @@ export class RichText extends Mbr implements Geometry {
 
 	private isContainerSet = false;
 	private isRenderEnabled = true;
-	private blockNodes: any;
+	private blockNodes: LayoutBlockNodes;
 	private clipPath: Path2D | undefined;
 	private updateRequired = false;
 	private autoSizeScale = 1;
@@ -83,7 +86,10 @@ export class RichText extends Mbr implements Geometry {
 		this.editor = new EditorContainer(
 			id,
 			this.emit,
-			this.emitWithoutApplying,
+			(op: RichTextOperation) => {
+				this.emitWithoutApplying(op);
+				this.updateElement();
+			},
 			(): void => {
 				if (this.events) {
 					// this.events.undo(false);
@@ -103,16 +109,12 @@ export class RichText extends Mbr implements Geometry {
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
 		});
-		this.blockNodes = getBlockNodes(
-			this.getTextForNodes(),
-			this.getMaxWidth(),
-			this.insideOf,
-		);
 		this.transformation.subject.subscribe(
 			(tr: Transformation, op: TransformationOperation) => {
 				if (
 					op.method === "translateTo" ||
-					op.method === "translateBy"
+					op.method === "translateBy" ||
+					op.method === "transformMany"
 				) {
 					this.transformCanvas();
 				} else if (op.method === "scaleTo" || op.method === "scaleBy") {
@@ -120,14 +122,16 @@ export class RichText extends Mbr implements Geometry {
 						this.transformCanvas();
 					} else {
 						this.updateElement();
-						// this.transformCanvas();
 					}
 				} else if (op.method === "deserialize") {
 					this.updateElement();
-					// this.transformCanvas();
 				}
-				this.enableRender();
 			},
+		);
+		this.blockNodes = getBlockNodes(
+			this.getTextForNodes(),
+			this.getMaxWidth(),
+			this.insideOf,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -196,7 +200,7 @@ export class RichText extends Mbr implements Geometry {
 		if (this.autoSize) {
 			this.calcAutoSize();
 		} else {
-			this.calcAutoSize(false);
+			// this.calcAutoSize(false);
 			this.blockNodes = getBlockNodes(
 				this.getTextForNodes(),
 				this.getMaxWidth(),
@@ -274,8 +278,11 @@ export class RichText extends Mbr implements Geometry {
 		this.maxHeight = containerHeight / textScale;
 	}
 
+	getTextWidth(): number {
+		return this.blockNodes.width;
+	}
+
 	getMaxWidth(): number | undefined {
-		// if (this.autoSize && this.insideOf === "Sticker") {
 		if (this.autoSize) {
 			return this.editor.maxWidth;
 		}
@@ -423,6 +430,7 @@ export class RichText extends Mbr implements Geometry {
 			const command = new RichTextCommand([this], op);
 			this.events.emit(op, command);
 		}
+		// this.updateElement();
 	};
 
 	emit = (op: RichTextOperation): void => {
@@ -771,7 +779,6 @@ export class RichText extends Mbr implements Geometry {
 
 	enableRender(): void {
 		this.isRenderEnabled = true;
-		this.updateElement();
 		this.subject.publish(this);
 	}
 
@@ -913,6 +920,30 @@ export class RichText extends Mbr implements Geometry {
 
 	getAutoSizeScale(): number {
 		return this.autoSizeScale;
+	}
+
+	scaleAutoSizeScale(scale: number): number {
+		this.autoSizeScale *= scale;
+		return this.autoSizeScale;
+	}
+
+	realign(): void {
+		const maxWidth = this.getMaxWidth();
+		if (maxWidth) {
+			this.blockNodes.realign(maxWidth);
+		} else {
+			this.blockNodes.realign(this.getTransformedContainer().getWidth());
+		}
+	}
+
+	recoordinate(): void {
+		this.blockNodes.recoordinate();
+	}
+
+	hasWraps(): boolean {
+		return this.blockNodes.nodes.some(
+			node => node.height > node.lineHeight * this.getFontSize(),
+		);
 	}
 
 	getMaxFontSize(): number {

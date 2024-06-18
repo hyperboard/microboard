@@ -1,4 +1,13 @@
-import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
+import {
+	Mbr,
+	Line,
+	Point,
+	Transformation,
+	Path,
+	Paths,
+	Matrix,
+	TransformationOperation,
+} from "..";
 import { Shapes, ShapeType } from "./Basic";
 import { BorderStyle, BorderWidth } from "../Path";
 import { Subject } from "Subject";
@@ -45,12 +54,54 @@ export class Shape implements Geometry {
 		private borderStyle = defaultShapeData.borderStyle,
 		private borderWidth = defaultShapeData.borderWidth,
 	) {
-		this.transformation.subject.subscribe(() => {
-			this.transformPath();
-			this.updateMbr();
-			this.text.updateElement();
-			this.subject.publish(this);
-		});
+		this.transformation.subject.subscribe(
+			(_subject: Transformation, op: TransformationOperation) => {
+				this.transformPath();
+				this.updateMbr();
+				if (
+					op.method === "translateTo" ||
+					op.method === "translateBy"
+				) {
+					this.text.transformCanvas();
+				} else if (op.method === "transformMany") {
+					if (
+						op.items[this.getId()].scale.x === 1 &&
+						op.items[this.getId()].scale.y === 1
+					) {
+						// translating
+						this.text.transformCanvas();
+					} else {
+						// scaling
+						if (
+							this.text.getTextWidth() >
+								(this.text.getMaxWidth() || 0) ||
+							this.text.hasWraps()
+						) {
+							this.text.updateElement();
+						} else {
+							this.text.transformCanvas();
+							this.text.realign();
+						}
+					}
+				} else {
+					if (op.method === "scaleByTranslateBy") {
+						if (
+							this.text.getTextWidth() >
+								(this.text.getMaxWidth() || 0) ||
+							this.text.hasWraps()
+						) {
+							this.text.updateElement();
+						} else {
+							this.text.realign();
+							this.text.transformCanvas();
+						}
+					} else {
+						this.text.updateElement();
+					}
+				}
+				this.subject.publish(this);
+			},
+		);
 		this.text.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);

@@ -62,7 +62,7 @@ export class Frame implements Geometry {
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
 			this.updateMbr();
-			this.text.updateElement();
+			this.text.transformCanvas();
 			this.subject.publish(this);
 		});
 		this.text.subject.subscribe(() => {

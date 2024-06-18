@@ -217,9 +217,11 @@ export class Select extends Tool {
 			});
 			selection.tranformMany(translation, this.beginTimeStamp);
 
-			const sumMbr = this.canvasDrawer.countSumMbr(translation);
-			if (sumMbr) {
-				this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation);
+			if (Object.keys(translation).length > 1) {
+				const sumMbr = this.canvasDrawer.countSumMbr(translation);
+				if (sumMbr) {
+					this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation);
+				}
 			}
 
 			selection.list().forEach(item => {

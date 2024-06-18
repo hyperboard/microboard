@@ -315,6 +315,7 @@ export class Selection {
 
 	setTextToEdit(item: Item | undefined): void {
 		if (this.textToEdit) {
+			this.textToEdit.updateElement();
 			this.textToEdit.enableRender();
 		}
 		if (

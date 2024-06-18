@@ -9,7 +9,7 @@ export default function createCanvasDrawer(board: Board): {
 	updateCanvasAndKeys: (
 		sumMbr: Mbr,
 		translation: TransformManyItems,
-		resizingMatrix: Matrix,
+		resizingMatrix?: Matrix,
 	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
 } {
@@ -39,7 +39,7 @@ export default function createCanvasDrawer(board: Board): {
 	function updateCanvasAndKeys(
 		sumMbr: Mbr,
 		translation: TransformManyItems,
-		resizingMatrix: Matrix,
+		resizingMatrix?: Matrix,
 	): void {
 		const translationKeys = Object.keys(translation);
 		if (

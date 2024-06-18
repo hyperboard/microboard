@@ -1,4 +1,13 @@
-import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
+import {
+	Mbr,
+	Line,
+	Point,
+	Transformation,
+	Path,
+	Paths,
+	Matrix,
+	TransformationOperation,
+} from "..";
 import { Subject } from "Subject";
 import { RichText } from "../RichText";
 import { Geometry } from "../Geometry";
@@ -91,10 +100,32 @@ export class Sticker implements Geometry {
 		private id = "",
 		private backgroundColor = defaultStickerData.backgroundColor,
 	) {
-		this.transformation.subject.subscribe(() => {
-			this.transformPath();
-			this.subject.publish(this);
-		});
+		this.transformation.subject.subscribe(
+			(_subject: Transformation, op: TransformationOperation) => {
+				this.transformPath();
+				if (op.method === "scaleBy") {
+					this.text.updateElement();
+				} else if (op.method === "scaleByTranslateBy") {
+					if (this.text.getAutoSizeScale()) {
+						this.text.scaleAutoSizeScale(
+							Math.min(op.scale.x, op.scale.y),
+						);
+						this.text.recoordinate();
+						this.text.transformCanvas();
+					} else if (
+						this.text.getTextWidth() >
+							(this.text.getMaxWidth() || 0) ||
+						this.text.hasWraps()
+					) {
+						this.text.updateElement();
+					} else {
+						this.text.realign();
+						this.text.transformCanvas();
+					}
+				}
+				this.subject.publish(this);
+			},
+		);
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
@@ -144,7 +175,6 @@ export class Sticker implements Geometry {
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);
 		// this.text.setContainer(this.textContainer);
-		this.text.updateElement();
 		this.stickerPath.setBackgroundColor(this.backgroundColor);
 	}
 
