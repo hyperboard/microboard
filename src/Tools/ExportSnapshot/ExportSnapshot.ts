@@ -8,8 +8,8 @@ import {
 	ResizeType,
 } from "Board/Selection/Transformer/getResizeType";
 import { Tool } from "Board/Tools/Tool";
+import { CANVAS_BG_COLOR } from "View/consts";
 import {
-	BACKGROUND_BLUR,
 	BLUR_BACKGROUND_COLOR,
 	FRAME_DECORATIONS,
 	MIN_EXPORT_HEIGHT,
@@ -17,8 +17,7 @@ import {
 	SELECTION_BOX_HEIGHT,
 	SELECTION_BOX_WIDTH,
 } from "View/Tools/ExportBoard";
-import { exportBoardSnapshot } from "./exportBoardSnapshot";
-import { Quality } from "./types";
+import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";
 
 export class ExportSnapshot extends Tool {
 	mbr: Mbr;
@@ -185,12 +184,18 @@ export class ExportSnapshot extends Tool {
 		return true;
 	}
 
-	takeSnapshot(): void {
+	async takeSnapshot(): Promise<SnapshotInfo> {
 		if (!this.mbr) {
-			return;
+			throw new Error("No selection");
 		}
-		exportBoardSnapshot(this.board, Quality.HIGH, this.mbr);
+		const res = await exportBoardSnapshot({
+			board: this.board,
+			bgColor: CANVAS_BG_COLOR,
+			selection: this.mbr,
+			upscaleTo: 4000,
+		});
 		this.board.selection.on();
+		return res;
 	}
 
 	renderDecoration(
