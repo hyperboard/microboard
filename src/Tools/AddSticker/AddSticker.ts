@@ -5,15 +5,13 @@ import { Sticker, stickerColors } from "Board/Items/Sticker";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
-let backgroundColor = stickerColors["Sky Blue"];
-
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
 	line: Line | undefined;
 	bounds = new Mbr();
 
 	static defaultWidth?: number = undefined;
-	sticker = new Sticker(undefined, undefined, AddSticker.backgroundColor);
+	sticker = new Sticker(undefined, undefined);
 	isDown = false;
 
 	constructor(board: Board) {
@@ -26,7 +24,12 @@ export class AddSticker extends BoardTool {
 	}
 
 	setBackgroundColor(color: string): void {
-		backgroundColor = color;
+		this.sticker.setBackgroundColor(color);
+		this.board.tools.publish();
+	}
+
+	getBackgroundColor(): string {
+		return this.sticker.getBackgroundColor();
 	}
 
 	setCursor(): void {
@@ -75,7 +78,6 @@ export class AddSticker extends BoardTool {
 				AddSticker.defaultWidth,
 			);
 		}
-		this.sticker.setBackgroundColor(backgroundColor);
 		const sticker = this.board.add(this.sticker);
 		this.board.selection.removeAll();
 		this.board.selection.add(sticker);
