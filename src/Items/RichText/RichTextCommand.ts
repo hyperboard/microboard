@@ -29,9 +29,17 @@ export class RichTextCommand implements Command {
 			: [this.richText];
 		switch (this.operation.method) {
 			case "edit":
-				const inverseOps = this.operation.ops.map(op =>
-					Operation.inverse(op),
-				);
+			case "setSelectionHorizontalAlignment":
+			case "setSelectionFontHighlight":
+			case "setSelectionFontSize":
+			case "setSelectionFontFamily":
+			case "setSelectionFontStyle":
+			case "setSelectionFontColor":
+			case "setSelectionBlockType":
+				const inverseOps = this.operation.ops
+					.map(op => Operation.inverse(op))
+					.reverse();
+				// actually there is only one item
 				return items.map(item => {
 					const operation = {
 						...this.operation,
@@ -39,6 +47,8 @@ export class RichTextCommand implements Command {
 					};
 					return { item, operation };
 				});
+			// should replace whole text ops with selection ops
+			// and handle them the same way, or the reverse ops would be incorrect
 			case "setFontColor": {
 				return items.map(richText => {
 					const operation = {
@@ -48,6 +58,80 @@ export class RichTextCommand implements Command {
 					return { item: richText, operation };
 				});
 			}
+			case "setFontColor":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						fontColor: richText.getFontColor() || "",
+					};
+					return { item: richText, operation };
+				});
+			case "setBlockType":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						type: richText.getBlockType(),
+					};
+					return { item: richText, operation };
+				});
+			case "setFontStyle":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						fontStyleList: richText.getFontStyles(),
+					};
+					return { item: richText, operation };
+				});
+			case "setFontFamily":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						fontFamily: richText.getFontFamily(),
+					};
+					return { item: richText, operation };
+				});
+			case "setFontSize":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						fontSize: richText.getFontSize(),
+					};
+					return { item: richText, operation };
+				});
+			case "setFontHighlight":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						fontHighlight: richText.getFontHighlight(),
+					};
+					return { item: richText, operation };
+				});
+			case "setHorisontalAlignment":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						horisontalAlignment:
+							richText.getHorisontalAlignment() ?? "left",
+					};
+					return { item: richText, operation };
+				});
+			case "setVerticalAlignment":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						verticalAlignment: richText.getVerticalAlignment(),
+					};
+					return { item: richText, operation };
+				});
+
+			case "setMaxWidth":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						maxWidth: richText.getMaxWidth(),
+					};
+					return { item: richText, operation };
+				});
 			default: {
 				return items.map(richText => {
 					const operation = {

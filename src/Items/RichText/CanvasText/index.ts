@@ -492,7 +492,8 @@ function measureText(text: string, style): MeasuredRect {
 }
 
 function splitTextIntoWords(text: string): string[] {
-	return text.split(/(\s+)/);
+	// filter is important, do not remove
+	return text.split(/(\s+)/).filter(element => element !== "");
 }
 
 function findLargestSubstring(word, style, maxWidth: number): string {

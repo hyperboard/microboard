@@ -450,7 +450,7 @@ export class RichText extends Mbr implements Geometry {
 			if (op.method === "edit") {
 				this.editor.applyRichTextOp(op);
 				this.updateElement();
-			} else if (this.maxCapableChartsInSticker(op)) {
+			} /* if (this.maxCapableChartsInSticker(op)) */ else {
 				this.editor.applyRichTextOp(op);
 				this.updateElement();
 			}
@@ -805,8 +805,8 @@ export class RichText extends Mbr implements Geometry {
 			this.editor.verticalAlignment = data.verticalAlignment;
 		}
 		if (data.maxWidth) {
-			// this.editor.maxWidth = data.maxWidth;
-			this.editor.setMaxWidth(data.maxWidth);
+			this.editor.applyMaxWidth(data.maxWidth);
+			// this.editor.setMaxWidth(data.maxWidth);
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);

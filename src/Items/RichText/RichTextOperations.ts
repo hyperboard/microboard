@@ -3,70 +3,58 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 
-interface SetBlockType {
+interface RichTextBaseOp {
 	class: "RichText";
-	method: "setBlockType";
 	item: string[];
+}
+
+interface SetBlockType extends RichTextBaseOp {
+	method: "setBlockType";
 	type: BlockType;
 }
 
-interface SetFontColor {
-	class: "RichText";
+interface SetFontColor extends RichTextBaseOp {
 	method: "setFontColor";
-	item: string[];
 	fontColor: string;
 }
 
-interface SetFontStyle {
-	class: "RichText";
+interface SetFontStyle extends RichTextBaseOp {
 	method: "setFontStyle";
-	item: string[];
 	fontStyleList: TextStyle[];
 }
 
-interface SetFontFamily {
-	class: "RichText";
+interface SetFontFamily extends RichTextBaseOp {
 	method: "setFontFamily";
-	item: string[];
 	fontFamily: string;
 }
 
-interface SetFontSize {
-	class: "RichText";
+interface SetFontSize extends RichTextBaseOp {
 	method: "setFontSize";
-	item: string[];
 	fontSize: number;
 }
 
-interface SetFontHighlight {
-	class: "RichText";
+interface SetFontHighlight extends RichTextBaseOp {
 	method: "setFontHighlight";
-	item: string[];
 	fontHighlight: string;
 }
 
-interface SetHorisontalAligment {
-	class: "RichText";
+interface SetHorisontalAligment extends RichTextBaseOp {
 	method: "setHorisontalAlignment";
-	item: string[];
 	horisontalAlignment: HorisontalAlignment;
 }
 
-interface SetVerticalAlignment {
-	class: "RichText";
+interface SetVerticalAlignment extends RichTextBaseOp {
 	method: "setVerticalAlignment";
-	item: string[];
 	verticalAlignment: VerticalAlignment;
 }
-interface SetMaxWidth {
-	class: "RichText";
+
+interface SetMaxWidth extends RichTextBaseOp {
 	method: "setMaxWidth";
-	item: string[];
-	maxWidth: number;
+	maxWidth: number | undefined;
 }
 
 export type SelectionMethod =
-	| "setSelectionHorisontalAlignment"
+	| "setSelectionHorizontalAlignment"
 	| "setSelectionFontHighlight"
 	| "setSelectionFontSize"
 	| "setSelectionFontFamily"
@@ -75,10 +63,8 @@ export type SelectionMethod =
 	| "setSelectionBlockType"
 	| "edit";
 
-export interface SelectionOp {
-	class: "RichText";
+export interface SelectionOp extends RichTextBaseOp {
 	method: SelectionMethod;
-	item: string[];
 	selection: BaseSelection;
 	ops: Operation[];
 }

@@ -284,7 +284,7 @@ export class EditorContainer {
 
 	private applySelectionOp(op: SelectionOp): void {
 		this.shouldEmit = false;
-		this.editor.selection = op.selection;
+		// this.editor.selection = op.selection;
 		Editor.withoutNormalizing(this.editor, () => {
 			for (const operation of op.ops) {
 				this.decorated.apply(operation);
@@ -324,7 +324,7 @@ export class EditorContainer {
 				this.setSelectionHorisontalAlignment(op.horisontalAlignment);
 				break;
 			case "setMaxWidth":
-				this.maxWidth = op.maxWidth;
+				this.applyMaxWidth(op.maxWidth);
 				break;
 		}
 		if (selection) {
@@ -333,7 +333,7 @@ export class EditorContainer {
 		this.shouldEmit = true;
 	}
 
-	private applyMaxWidth(maxWidth: number): void {
+	applyMaxWidth(maxWidth: number): void {
 		this.maxWidth = maxWidth;
 	}
 

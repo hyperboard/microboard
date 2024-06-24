@@ -604,6 +604,8 @@ export class Selection {
 		});
 	}
 
+	// TODO all the other transformations are redundant, use this one for everything
+	// Instead of TransformationOperation just put matrix in it
 	tranformMany(
 		items: { [key: string]: TransformationOperation },
 		timeStamp?: number,
@@ -617,6 +619,7 @@ export class Selection {
 	}
 
 	setStrokeStyle(borderStyle: BorderStyle): void {
+		// TODO make single operation to set strokeStyle on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
 			this.emit({
@@ -647,6 +650,7 @@ export class Selection {
 	}
 
 	setStrokeColor(borderColor: string): void {
+		// TODO make single operation to set strokeColor on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
 			this.emit({
@@ -677,6 +681,7 @@ export class Selection {
 	}
 
 	setStrokeWidth(width: number): void {
+		// TODO make single operation to set strokeWidth on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
 			this.emit({
@@ -707,6 +712,7 @@ export class Selection {
 	}
 
 	setFillColor(backgroundColor: string): void {
+		// TODO make single operation to set color on any item with fill
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length) {
 			this.emit({
@@ -749,6 +755,7 @@ export class Selection {
 		const fontSize = toFiniteNumber(size);
 		const single = this.items.getSingle();
 		if (single) {
+			// TODO add getTextEditor method to each item to avoid instanceof checks
 			if (single instanceof RichText) {
 				single.setSelectionFontSize(fontSize, this.getContext());
 			} else if (
@@ -776,6 +783,7 @@ export class Selection {
 	}
 
 	setFontStyle(fontStyleList: TextStyle[]): void {
+		/*
 		const items = this.items.list();
 		const changedIds: string[] = [];
 		items.forEach(item => {
@@ -805,25 +813,22 @@ export class Selection {
 				fontStyleList,
 			});
 		}
-		// const single = this.items.getSingle();
-		// if (single) {
-		// 	if (single instanceof RichText) {
-		// 		single.setSelectionFontStyle(fontStyleList, this.context);
-		// 	} else {
-		// 		single.text.setSelectionFontStyle(fontStyleList, this.context);
-		// 	}
-		// } else if (this.items.isItemTypes(["Sticker"])) {
-		// 	this.items
-		// 		.list()
-		// 		.forEach(x => x.text.setSelectionFontStyle(fontStyleList));
-		// } else {
-		// 	this.emit({
-		// 		class: "RichText",
-		// 		method: "setFontStyle",
-		// 		item: this.items.ids(),
-		// 		fontStyleList,
-		// 	});
-		// }
+		*/
+		const single = this.items.getSingle();
+		if (single) {
+			if (single instanceof RichText) {
+				single.setSelectionFontStyle(fontStyleList, this.context);
+			} else if ("text" in single) {
+				single.text.setSelectionFontStyle(fontStyleList, this.context);
+			}
+		} else {
+			this.emit({
+				class: "RichText",
+				method: "setFontStyle",
+				item: this.items.ids(),
+				fontStyleList,
+			});
+		}
 	}
 
 	setFontColor(fontColor: string): void {
