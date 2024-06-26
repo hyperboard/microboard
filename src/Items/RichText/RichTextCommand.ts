@@ -58,14 +58,6 @@ export class RichTextCommand implements Command {
 					return { item: richText, operation };
 				});
 			}
-			case "setFontColor":
-				return items.map(richText => {
-					const operation = {
-						...this.operation,
-						fontColor: richText.getFontColor() || "",
-					};
-					return { item: richText, operation };
-				});
 			case "setBlockType":
 				return items.map(richText => {
 					const operation = {

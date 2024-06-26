@@ -1,5 +1,5 @@
 import { Subscription } from "App/getSubscriptions";
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 import { App } from "../App";
 
 export function useAppSubscription(app: App, subscription: Subscription) {

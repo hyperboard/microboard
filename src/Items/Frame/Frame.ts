@@ -23,7 +23,11 @@ import {
 } from "Board/Selection/Transformer/getResizeMatrix";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { Board } from "Board/Board";
-
+import {
+	exportBoardSnapshot,
+	SnapshotInfo,
+} from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
+import { FRAME_TITLE_COLOR } from "View/Items/Frame";
 const defaultFrameData = new FrameData();
 
 export class Frame implements Geometry {
@@ -58,6 +62,7 @@ export class Frame implements Geometry {
 		private borderStyle = defaultFrameData.borderStyle,
 		private borderWidth = defaultFrameData.borderWidth,
 	) {
+		this.text.setSelectionFontColor(FRAME_TITLE_COLOR, "EditUnderPointer");
 		this.text.setSelectionHorisontalAlignment("left");
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
@@ -605,6 +610,32 @@ export class Frame implements Geometry {
 			item: [this.getId()],
 			backgroundColor,
 		});
+	}
+
+	getExportName(): string {
+		return this.text
+			.getText()
+			.flatMap(el => (el.type === "paragraph" ? el.children : []))
+			.map(child => (child.type === "text" ? child.text : ""))
+			.join(" ");
+	}
+
+	export(
+		board: Board,
+		name: string = this.getExportName(),
+	): Promise<SnapshotInfo> {
+		return exportBoardSnapshot({
+			board,
+			nameToExport: name,
+			selection: this.getMbr(),
+			upscaleTo: 4000,
+		});
+	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
 	}
 
 	render(context: DrawingContext): void {

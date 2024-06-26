@@ -1,11 +1,12 @@
 import { JSONSchemaType } from "ajv";
+import { validator } from "Board/Validators";
+import { DEFAULT_STROKE_COLOR } from "View/Tools/AddShape";
 import { BorderStyle, BorderWidth } from "../Path";
 import { RichTextData } from "../RichText";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { TransformationData } from "../Transformation";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { ShapeType } from "./Basic";
-import { validator } from "Board/Validators";
 
 export interface ShapeData {
 	readonly itemType: "Shape";
@@ -59,9 +60,9 @@ export class DefaultShapeData implements ShapeData {
 	readonly itemType = "Shape";
 	constructor(
 		public shapeType: ShapeType = "Rectangle",
-		public backgroundColor = "",
+		public backgroundColor = "none",
 		public backgroundOpacity = 1,
-		public borderColor = "black",
+		public borderColor = DEFAULT_STROKE_COLOR,
 		public borderOpacity = 1,
 		public borderStyle: BorderStyle = "solid",
 		public borderWidth: BorderWidth = 1,

@@ -1,9 +1,8 @@
 import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
-import { Subject } from "Subject";
 import i18next from "i18next";
-import { Descendant, Editor, Node, Transforms } from "slate";
+import { Descendant, Editor, Transforms } from "slate";
 import {
 	Line,
 	Mbr,
@@ -19,20 +18,21 @@ import { Geometry } from "../Geometry";
 import { BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
+import { isTextEmpty } from "./isTextEmpty";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextOperation } from "./RichTextOperations";
 import { RichTextData } from "..";
-import { isTextEmpty } from "./isTextEmpty";
-import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { LayoutBlockNodes } from "./CanvasText";
+import { DEFAULT_TEXT_COLOR } from "View/Tools/AddText";
+import { Subject } from "Subject";
+import { ReactEditor } from "slate-react";
 
 export const defaultTextStyle = {
 	fontFamily: "Arial",
 	fontSize: 14,
-	fontColor: "black",
+	fontColor: DEFAULT_TEXT_COLOR,
 	fontHighlight: "",
 	lineHeight: 1.4,
 } as const;
@@ -152,7 +152,7 @@ export class RichText extends Mbr implements Geometry {
 							styles: this.getFontStyles().includes("bold")
 								? "bold"
 								: "",
-							fontColor: "black",
+							fontColor: this.getFontColor(),
 							fontHighlight: "",
 							fontSize: this.getFontSize(),
 							fontFamily: this.getFontFamily(),
