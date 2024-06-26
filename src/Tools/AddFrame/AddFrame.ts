@@ -229,7 +229,7 @@ export class AddFrame extends BoardTool {
 
 	render(context: DrawingContext): void {
 		if (this.isDown) {
-			this.frame.renderBorders(context);
+			// this.frame.renderBorders(context);
 			this.mbr.render(context);
 			this.toDrawBorder.render(context);
 		}

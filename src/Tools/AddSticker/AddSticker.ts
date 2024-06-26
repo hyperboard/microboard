@@ -1,7 +1,7 @@
 import { Board } from "Board/Board";
 import { Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Sticker, stickerColors } from "Board/Items/Sticker";
+import { Sticker } from "Board/Items/Sticker";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
@@ -13,19 +13,26 @@ export class AddSticker extends BoardTool {
 	static defaultWidth?: number = undefined;
 	sticker = new Sticker(undefined, undefined);
 	isDown = false;
-
+	sticker: Sticker;
 	constructor(board: Board) {
 		super(board);
 		const lastSticker = this.getLastSticker();
-		if (lastSticker) {
-			this.setBackgroundColor(lastSticker.backgroundColor);
-		}
+		this.sticker = new Sticker(
+			undefined,
+			undefined,
+			lastSticker?.backgroundColor,
+		);
+
 		this.setCursor();
 	}
 
 	setBackgroundColor(color: string): void {
 		this.sticker.setBackgroundColor(color);
 		this.board.tools.publish();
+	}
+
+	getBackgroundColor(): string {
+		return this.sticker.getBackgroundColor();
 	}
 
 	getBackgroundColor(): string {

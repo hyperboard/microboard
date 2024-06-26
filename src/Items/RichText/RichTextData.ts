@@ -12,6 +12,7 @@ export interface RichTextData {
 	transformation?: TransformationData;
 	containerMaxWidth?: number;
 	insideOf?: string;
+	color?: string;
 }
 
 const richTextDataSchema: JSONSchemaType<RichTextData> = {
@@ -42,5 +43,6 @@ export class DefaultRichTextData implements RichTextData {
 		public transformation?: TransformationData,
 		public containerMaxWidth?: number,
 		public insideOf?: string,
+		public color?: string,
 	) {}
 }

@@ -11,6 +11,7 @@ type Params = {
 	board: Board;
 	ref: RefObject<HTMLElement>;
 	subjects?: string[];
+	targetMbr?: Mbr;
 };
 
 export function useDomMbr({
@@ -18,6 +19,7 @@ export function useDomMbr({
 	board,
 	ref,
 	subjects = ["camera", "selection"],
+	targetMbr,
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
@@ -29,7 +31,7 @@ export function useDomMbr({
 		},
 	});
 	useEffect(() => {
-		const newMbr = updateRects(board, ref);
+		const newMbr = updateRects(board, ref, targetMbr);
 		if (newMbr && !newMbr?.isEqual(mbr)) {
 			setMbr(newMbr);
 		}

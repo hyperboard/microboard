@@ -3,15 +3,16 @@ import { FrameType } from "./Basic";
 import { Board } from "Board/Board";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { DefaultRichTextData } from "../RichText/RichTextData";
+import { FRAME_BORDER_COLOR, FRAME_FILL_COLOR } from "View/Items/Frame";
 
 export class FrameData {
 	readonly itemType = "Frame";
 	constructor(
 		readonly shapeType: FrameType = "Custom",
-		public backgroundColor = "white",
+		public backgroundColor = FRAME_FILL_COLOR,
 		public backgroundOpacity = 1,
-		public borderColor = "black",
-		public borderOpacity = 1,
+		public borderColor = FRAME_BORDER_COLOR,
+		public borderOpacity = 0,
 		public borderStyle: BorderStyle = "solid",
 		public borderWidth: BorderWidth = 1,
 		public transformation = new DefaultTransformationData(),
