@@ -20,6 +20,8 @@ import {
 import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";
 import { getDecorationResizeType } from "./getDecorationResizeType";
 
+const TOLERANCE = 30;
+
 export class ExportSnapshot extends Tool {
 	mbr: Mbr;
 	transformation = new Transformation();
@@ -96,13 +98,13 @@ export class ExportSnapshot extends Tool {
 			getDecorationResizeType(
 				this.board.pointer.point,
 				this.mbr,
-				20, // Increase this value to make the resize area larger
+				TOLERANCE, // Increase this value to make the resize area larger
 			) ??
 			getResizeType(
 				this.board.pointer.point,
 				this.board.camera.getScale(),
 				this.mbr,
-				20, // Increase this value to make the resize area larger
+				TOLERANCE, // Increase this value to make the resize area larger
 			);
 
 		if (
