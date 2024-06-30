@@ -7,7 +7,6 @@ import {
 	Paths,
 	Item,
 	RichText,
-	RichTextData,
 	Matrix,
 } from "..";
 import { Geometry } from "../Geometry";
@@ -24,7 +23,11 @@ import {
 } from "Board/Selection/Transformer/getResizeMatrix";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { Board } from "Board/Board";
-
+import {
+	exportBoardSnapshot,
+	SnapshotInfo,
+} from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
+import { FRAME_TITLE_COLOR } from "View/Items/Frame";
 const defaultFrameData = new FrameData();
 
 export class Frame implements Geometry {
@@ -46,6 +49,7 @@ export class Frame implements Geometry {
 	);
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -58,11 +62,12 @@ export class Frame implements Geometry {
 		private borderStyle = defaultFrameData.borderStyle,
 		private borderWidth = defaultFrameData.borderWidth,
 	) {
+		this.text.setSelectionFontColor(FRAME_TITLE_COLOR, "EditUnderPointer");
 		this.text.setSelectionHorisontalAlignment("left");
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
 			this.updateMbr();
-			this.text.updateElement();
+			this.text.transformCanvas();
 			this.subject.publish(this);
 		});
 		this.text.subject.subscribe(() => {
@@ -207,18 +212,6 @@ export class Frame implements Geometry {
 		return this.children;
 	}
 
-	// getChildren(getById: (id: string) => Item | undefined): Item[] {
-	// 	return this.getChildrenIds()
-	// 		.map((childId) => getById(childId))
-	// 		.filter((child) => child !== undefined);
-	// }
-
-	// translateChildrenBy(board: Board, x: number, y: number): void {
-	// 	this.getChildren(board.items.getById).forEach((child) => {
-	// 		child.transformation.translateBy(x, y);
-	// 	})
-	// }
-
 	updateMbr(): void {
 		const rect = this.path.getMbr();
 		this.mbr = rect;
@@ -234,6 +227,7 @@ export class Frame implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
+		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		if (this.getCanChangeRatio()) {
 			const res = getResize(resizeType, pointer, mbr, opposite);
@@ -246,6 +240,7 @@ export class Frame implements Geometry {
 					x: res.matrix.translateX,
 					y: res.matrix.translateY,
 				},
+				timeStamp,
 			);
 			this.setLastFrameScale();
 			res.mbr = this.getMbr();
@@ -279,6 +274,7 @@ export class Frame implements Geometry {
 						x: translateX,
 						y: translateY,
 					},
+					timeStamp,
 				);
 				this.setLastFrameScale();
 				res.mbr = this.getMbr();
@@ -616,22 +612,60 @@ export class Frame implements Geometry {
 		});
 	}
 
+	getExportName(): string {
+		return this.text
+			.getText()
+			.flatMap(el => (el.type === "paragraph" ? el.children : []))
+			.map(child => (child.type === "text" ? child.text : ""))
+			.join(" ");
+	}
+
+	export(
+		board: Board,
+		name: string = this.getExportName(),
+	): Promise<SnapshotInfo> {
+		return exportBoardSnapshot({
+			board,
+			nameToExport: name,
+			selection: this.getMbr(),
+			upscaleTo: 4000,
+		});
+	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
+
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.text.render(context);
 	}
 
 	renderName(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.text.render(context);
 	}
 
 	renderBorders(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const copy = this.getPath();
 		copy.setBackgroundColor("none");
 		copy.render(context);
 	}
 
 	renderPath(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.renderNewShape(context);
 	}

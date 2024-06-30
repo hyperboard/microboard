@@ -21,6 +21,8 @@ import { Anchor } from "Board/Items/Anchor";
 import { SELECTION_ANCHOR_COLOR, SELECTION_COLOR } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "Board/drawMbrOnCanvas";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -31,6 +33,8 @@ export class Transformer extends Tool {
 	startMbr: Mbr | undefined;
 	clickedOn?: ResizeType;
 	private toDrawBorders = new NestingHighlighter();
+	beginTimeStamp = Date.now();
+	canvasDrawer = createCanvasDrawer(this.board);
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -83,6 +87,7 @@ export class Transformer extends Tool {
 			this.mbr = mbr;
 			this.startMbr = mbr;
 		}
+		this.beginTimeStamp = Date.now();
 		return this.resizeType !== undefined;
 	}
 
@@ -94,6 +99,8 @@ export class Transformer extends Tool {
 		this.oppositePoint = undefined;
 		this.mbr = undefined;
 		this.toDrawBorders.clear();
+		this.beginTimeStamp = Date.now();
+		this.canvasDrawer.clearCanvasAndKeys();
 		return wasResising;
 	}
 
@@ -128,6 +135,7 @@ export class Transformer extends Tool {
 				mbr,
 				this.oppositePoint,
 				this.startMbr,
+				this.beginTimeStamp,
 			).mbr;
 		} else if (single instanceof RichText) {
 			const matrix = getProportionalResize(
@@ -137,6 +145,7 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 			).matrix;
 
+			// TODO fix RichText transformation
 			if (isWidth) {
 				single.editor.setMaxWidth(
 					(single.getWidth() / single.transformation.getScale().x) *
@@ -147,8 +156,18 @@ export class Transformer extends Tool {
 				single.transformation.translateBy(
 					matrix.translateX,
 					matrix.translateY,
+					this.beginTimeStamp,
 				);
-				single.transformation.scaleBy(matrix.scaleX, matrix.scaleY);
+				single.transformation.scaleBy(
+					matrix.scaleX,
+					matrix.scaleY,
+					this.beginTimeStamp,
+				);
+				// single.transformation.translateByScaleBy(
+				// 	{ x: matrix.translateX, y: matrix.translateY },
+				// 	{ x: matrix.scaleX, y: matrix.scaleY },
+				// 	this.beginTimeStamp,
+				// );
 			}
 			this.mbr = single.getMbr();
 		} else {
@@ -159,7 +178,7 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 			);
 			const matrix = resize.matrix;
-			const translation: { [key: string]: TransformationOperation } = {};
+			const translation: TransformManyItems = {};
 			for (const item of list) {
 				const itemMbr = item.getMbr();
 				const deltaX = itemMbr.left - mbr.left;
@@ -192,13 +211,32 @@ export class Transformer extends Tool {
 							scale: { x: 1, y: 1 },
 						};
 					} else {
+						// TODO fix RichText transformation
+						item.transformation.translateBy(
+							matrix.translateX,
+							matrix.translateY,
+							this.beginTimeStamp,
+						);
+						item.transformation.scaleBy(
+							matrix.scaleX,
+							matrix.scaleY,
+							this.beginTimeStamp,
+						);
+						// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
 						translation[item.getId()] = {
 							class: "Transformation",
 							method: "scaleByTranslateBy",
 							item: [item.getId()],
-							translate: { x: translateX, y: translateY },
-							scale: { x: matrix.scaleX, y: matrix.scaleY },
+							translate: { x: 0, y: 0 },
+							scale: { x: 1, y: 1 },
 						};
+						// translation[item.getId()] = {
+						// 	class: "Transformation",
+						// 	method: "scaleByTranslateBy",
+						// 	item: [item.getId()],
+						// 	translate: { x: translateX, y: translateY },
+						// 	scale: { x: matrix.scaleX, y: matrix.scaleY },
+						// };
 					}
 				} else if (item instanceof Frame) {
 					if (!item.getCanChangeRatio()) {
@@ -238,7 +276,14 @@ export class Transformer extends Tool {
 					};
 				}
 			}
-			this.selection.tranformMany(translation);
+			this.selection.tranformMany(translation, this.beginTimeStamp);
+			if (Object.keys(translation).length > 50) {
+				this.canvasDrawer.updateCanvasAndKeys(
+					resize.mbr,
+					translation,
+					resize.matrix,
+				);
+			}
 
 			this.mbr = resize.mbr;
 		}
@@ -265,17 +310,6 @@ export class Transformer extends Tool {
 				itemsToCheck.forEach(currItem => {
 					if (item.handleNesting(currItem)) {
 						this.toDrawBorders.add([item, currItem]);
-						if (
-							this.board.getZIndex(item) >
-							this.board.getZIndex(currItem)
-						) {
-							/*
-							this.board.moveToZIndex(
-								currItem,
-								this.board.getZIndex(item) + 1,
-							);
-							*/
-						}
 					} else {
 						if (
 							this.toDrawBorders.listAll().includes(item) &&

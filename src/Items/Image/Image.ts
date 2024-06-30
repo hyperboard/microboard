@@ -5,16 +5,18 @@ import { Line } from "../Line";
 import { Mbr } from "../Mbr";
 import { Path, Paths } from "../Path";
 import { Point } from "../Point";
-import { Transformation, TransformationData } from "../Transformation";
+import { Transformation } from "../Transformation";
 
 export interface ImageItemData {
 	itemType: "Image";
 	dataUrl: string;
-	transformation: TransformationData;
+	transformation: Transformation;
 }
 
 const errorImageCanvas = document.createElement("canvas");
-const errorImageContext = errorImageCanvas.getContext("2d");
+const errorImageContext = errorImageCanvas.getContext(
+	"2d",
+) as CanvasRenderingContext2D; // this does not fail
 errorImageCanvas.width = 250;
 errorImageCanvas.height = 50;
 errorImageContext.font = "16px Arial";
@@ -31,19 +33,49 @@ export class ImageItem extends Mbr {
 	dataUrl: string;
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
+	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
+	transformationRenderBlock?: boolean = undefined;
 
-	constructor(dataUrl: string, private events?: Events, private id = "") {
+	constructor(
+		dataUrl: string | ArrayBuffer | null | undefined,
+		events?: Events,
+		private id = "",
+	) {
 		super();
 		this.transformation = new Transformation(id, events);
-		this.dataUrl = dataUrl;
-		this.image = new Image();
-		this.image.onload = this.onLoad;
-		this.image.onerror = this.onError;
-		this.image.src = dataUrl;
+
+		// Convert dataUrl to string if it's valid, else handle the error
+		if (typeof dataUrl === "string") {
+			this.dataUrl = dataUrl;
+			this.image = new Image();
+			this.image.onload = this.onLoad;
+			this.image.onerror = this.onError;
+			this.image.src = dataUrl;
+		} else {
+			this.dataUrl = "";
+			this.image = new Image();
+			this.image.src = ""; // or provide a default/fallback dataUrl
+			this.handleError();
+		}
+
 		this.transformation.subject.subscribe(this.onTransform);
 	}
 
+	handleError = (): void => {
+		// Provide handling logic for errors
+		console.error("Invalid dataUrl or image failed to load.");
+		this.image = errorImage; // assuming errorImage is defined elsewhere
+		this.updateMbr();
+		this.subject.publish(this);
+		while (this.loadCallbacks.length > 0) {
+			this.loadCallbacks.shift()!(this);
+		}
+	};
+
 	onLoad = (): void => {
+		while (this.beforeLoadCallbacks.length > 0) {
+			this.beforeLoadCallbacks.shift()!(this);
+		}
 		this.updateMbr();
 		this.subject.publish(this);
 		while (this.loadCallbacks.length > 0) {
@@ -73,6 +105,10 @@ export class ImageItem extends Mbr {
 		this.right = this.left + this.image.width * scaleX;
 		this.bottom = this.top + this.image.height * scaleY;
 	}
+
+	doOnceBeforeOnLoad = (callback: (image: ImageItem) => void): void => {
+		this.loadCallbacks.push(callback);
+	};
 
 	doOnceOnLoad = (callback: (image: ImageItem) => void): void => {
 		this.loadCallbacks.push(callback);
@@ -132,6 +168,9 @@ export class ImageItem extends Mbr {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		const ctx = context.ctx;
 		ctx.save();
 		this.transformation.matrix.applyToContext(ctx);

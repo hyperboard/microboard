@@ -1,9 +1,19 @@
-import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
+import {
+	Mbr,
+	Line,
+	Point,
+	Transformation,
+	Path,
+	Paths,
+	Matrix,
+	TransformationOperation,
+} from "..";
 import { Shapes, ShapeType } from "./Basic";
 import { BorderStyle, BorderWidth } from "../Path";
 import { Subject } from "Subject";
 import { RichText } from "../RichText";
-import { ShapeData, ShapeOperation } from "./ShapeOperation";
+import { ShapeOperation } from "./ShapeOperation";
+import { DefaultShapeData, ShapeData } from "./ShapeData";
 import { Geometry } from "../Geometry";
 import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
@@ -12,7 +22,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
 
-const defaultShapeData = new ShapeData();
+const defaultShapeData = new DefaultShapeData();
 
 export class Shape implements Geometry {
 	readonly itemType = "Shape";
@@ -27,8 +37,11 @@ export class Shape implements Geometry {
 		this.transformation,
 		"\u00A0",
 		true,
+		false,
+		"Shape",
 	);
 	readonly subject = new Subject<Shape>();
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
@@ -41,12 +54,54 @@ export class Shape implements Geometry {
 		private borderStyle = defaultShapeData.borderStyle,
 		private borderWidth = defaultShapeData.borderWidth,
 	) {
-		this.transformation.subject.subscribe(() => {
-			this.transformPath();
-			this.updateMbr();
-			this.text.updateElement();
-			this.subject.publish(this);
-		});
+		this.transformation.subject.subscribe(
+			(_subject: Transformation, op: TransformationOperation) => {
+				this.transformPath();
+				this.updateMbr();
+				if (
+					op.method === "translateTo" ||
+					op.method === "translateBy"
+				) {
+					this.text.transformCanvas();
+				} else if (op.method === "transformMany") {
+					if (
+						op.items[this.getId()].scale.x === 1 &&
+						op.items[this.getId()].scale.y === 1
+					) {
+						// translating
+						this.text.transformCanvas();
+					} else {
+						// scaling
+						if (
+							this.text.getTextWidth() >
+								(this.text.getMaxWidth() || 0) ||
+							this.text.hasWraps()
+						) {
+							this.text.updateElement();
+						} else {
+							this.text.transformCanvas();
+							this.text.realign();
+						}
+					}
+				} else {
+					if (op.method === "scaleByTranslateBy") {
+						if (
+							this.text.getTextWidth() >
+								(this.text.getMaxWidth() || 0) ||
+							this.text.hasWraps()
+						) {
+							this.text.updateElement();
+						} else {
+							this.text.realign();
+							this.text.transformCanvas();
+						}
+					} else {
+						this.text.updateElement();
+					}
+				}
+				this.subject.publish(this);
+			},
+		);
 		this.text.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
@@ -345,6 +400,9 @@ export class Shape implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.path.render(context);
 		this.text.render(context);
 	}
@@ -413,6 +471,7 @@ export class Shape implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
+		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getResize(resizeType, pointer, mbr, opposite);
 
@@ -425,6 +484,7 @@ export class Shape implements Geometry {
 				x: res.matrix.translateX,
 				y: res.matrix.translateY,
 			},
+			timeStamp,
 		);
 		res.mbr = this.getMbr();
 		return res;

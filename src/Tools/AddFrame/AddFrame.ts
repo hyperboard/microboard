@@ -1,8 +1,8 @@
 import { Board } from "Board";
-import { BoardTool } from "../BoardTool";
-import { Frame, Line, Mbr, Point } from "Board/Items";
-import { FrameType } from "Board/Items/Frame/Basic";
+import { Frame, Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { FrameType } from "Board/Items/Frame/Basic";
+import { BoardTool } from "../BoardTool";
 import { NestingHighlighter } from "../NestingHighlighter";
 
 export class AddFrame extends BoardTool {
@@ -229,7 +229,7 @@ export class AddFrame extends BoardTool {
 
 	render(context: DrawingContext): void {
 		if (this.isDown) {
-			this.frame.renderBorders(context);
+			// this.frame.renderBorders(context);
 			this.mbr.render(context);
 			this.toDrawBorder.render(context);
 		}

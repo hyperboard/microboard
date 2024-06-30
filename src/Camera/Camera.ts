@@ -1,4 +1,4 @@
-import { Mbr, Point, Matrix } from "Board/Items";
+import { Matrix, Mbr, Point } from "Board/Items";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
@@ -27,8 +27,13 @@ export class Camera {
 	private previousDistance: number | null = null;
 	private previousPositions: { point1: Point; point2: Point } | null = null;
 	private previous: "pinch" | "pan" | null = null;
+	boardId = "";
 
-	constructor(private boardPointer = new Pointer()) {}
+	constructor(private boardPointer = new Pointer()) {
+		this.subject.subscribe((_camera: Camera) => {
+			this.saveMatrixSnapshot();
+		});
+	}
 
 	getMbr(): Mbr {
 		const mbr = this.getUntransformedMbr();
@@ -103,6 +108,59 @@ export class Camera {
 			this.updateDistance();
 			this.updatePositions();
 		}
+	}
+
+	getMatrixSnapshot(): Matrix | undefined {
+		try {
+			const snap = localStorage.getItem(`${this.boardId}_camera`);
+			if (snap) {
+				const matrix = JSON.parse(snap);
+				if (
+					"translateX" in matrix &&
+					"translateY" in matrix &&
+					"scaleX" in matrix &&
+					"scaleY" in matrix &&
+					"shearX" in matrix &&
+					"shearY" in matrix
+				) {
+					return matrix as Matrix;
+				}
+			}
+			throw new Error();
+		} catch {
+			return undefined;
+		}
+	}
+
+	saveMatrixSnapshot(): void {
+		if (this.boardId) {
+			localStorage.setItem(
+				`${this.boardId}_camera`,
+				JSON.stringify(this.getMatrix()),
+			);
+		}
+	}
+
+	setBoardId(id: string): void {
+		this.boardId = id;
+	}
+
+	/** Returns true if found and used saved snapshot, false otherwise */
+	useSavedSnapshot(): boolean {
+		const cachedCameraMatrix = this.getMatrixSnapshot();
+		if (cachedCameraMatrix) {
+			this.matrix = new Matrix(
+				cachedCameraMatrix.translateX,
+				cachedCameraMatrix.translateY,
+				cachedCameraMatrix.scaleX,
+				cachedCameraMatrix.scaleY,
+				cachedCameraMatrix.shearX,
+				cachedCameraMatrix.shearY,
+			);
+			this.subject.publish(this);
+			return true;
+		}
+		return false;
 	}
 
 	updatePositions(): void {

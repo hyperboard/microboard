@@ -1,20 +1,22 @@
-import { Mbr, Line, Shape } from "Board/Items";
+import { Board } from "Board/Board";
+import { Line, Mbr, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape/Basic";
-import { BoardTool } from "../BoardTool";
-import { Board } from "Board/Board";
+import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
+import { BoardTool } from "../BoardTool";
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;
 	bounds = new Mbr();
-	type: ShapeType = "Rectangle";
+	type: ShapeType | "None" = DEFAULT_SHAPE;
 	shape = new Shape();
 	isDown = false;
 
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
+		console.log(this.type);
 	}
 
 	setCursor(): void {
@@ -23,6 +25,7 @@ export class AddShape extends BoardTool {
 
 	setShapeType(type: ShapeType): void {
 		this.type = type;
+		this.board.tools.publish();
 	}
 
 	initTransformation(sx?: number, sy?: number) {
@@ -36,6 +39,9 @@ export class AddShape extends BoardTool {
 	}
 
 	leftButtonDown(): boolean {
+		if (this.type === "None") {
+			return false;
+		}
 		this.isDown = true;
 		const point = this.board.pointer.point;
 		this.line = new Line(point.copy(), point.copy());
@@ -63,6 +69,9 @@ export class AddShape extends BoardTool {
 	}
 
 	leftButtonUp(): boolean {
+		if (this.type === "None") {
+			return false;
+		}
 		let width = this.bounds.getWidth();
 		let height = this.bounds.getHeight();
 		if (width < 2) {
@@ -73,10 +82,13 @@ export class AddShape extends BoardTool {
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
-		this.board.selection.removeAll();
-		this.board.selection.add(shape);
-		this.board.selection.editText();
-		this.board.tools.select();
+		this.isDown = false;
+		if (ADD_TO_SELECTION) {
+			this.board.selection.removeAll();
+			this.board.selection.add(shape);
+			this.board.selection.editText();
+			this.board.tools.select();
+		}
 		this.board.tools.publish();
 		return true;
 	}

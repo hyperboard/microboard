@@ -1,35 +1,32 @@
+import { Board } from "Board";
+import { Events, Operation } from "Board/Events";
+import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
+import { Drawing } from "Board/Items/Drawing";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
+import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
+import { SELECTION_COLOR } from "View/Tools/Selection";
+import { toFiniteNumber } from "utils";
+import { createCommand } from "../Events/Command";
 import {
 	Connector,
+	Frame,
+	Item,
+	ItemData,
 	Mbr,
 	RichText,
 	Shape,
-	ShapeData,
-	Frame,
 	TransformationOperation,
 } from "../Items";
-import { Item, ItemData } from "../Items";
-import { SelectionItems } from "./SelectionItems";
-import { Board } from "Board";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
-import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Events, Operation } from "Board/Events";
-import { createCommand } from "../Events/Command";
+import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
-import { Drawing } from "Board/Items/Drawing";
-import {
-	BoardPoint,
-	ConnectorLineStyle,
-	ControlPoint,
-} from "Board/Items/Connector";
-import { toFiniteNumber } from "utils";
-import { Sticker } from "Board/Items/Sticker";
-import { SELECTION_COLOR } from "View/Tools/Selection";
 
-const defaultShapeData = new ShapeData();
+const defaultShapeData = new DefaultShapeData();
 
 export type SelectionContext =
 	| "SelectUnderPointer"
@@ -49,6 +46,7 @@ export class Selection {
 	readonly tool = new SelectionTransformer(this.board, this);
 
 	textToEdit: RichText | undefined;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
@@ -72,7 +70,7 @@ export class Selection {
 
 	private emit(operation: Operation): void {
 		if (this.events) {
-			const command = createCommand(this.events, this.board, operation);
+			const command = createCommand(this.board, operation);
 			command.apply();
 			this.events.emit(operation, command);
 		}
@@ -251,8 +249,35 @@ export class Selection {
 				const text = item instanceof RichText ? item : item.text;
 				text.clearText();
 				text.editor.editor.insertText(shouldReplace);
-				text.moveCursorToEOL(); // prob should be 20 ms
+				text.moveCursorToEnd();
 			}
+			this.setTextToEdit(item);
+			this.setContext("EditTextUnderPointer");
+			this.board.items.subject.publish(this.board.items);
+		}
+	}
+
+	async appendText(appendedText: string) {
+		if (this.items.isEmpty()) {
+			return;
+		}
+		if (!this.items.isSingle()) {
+			return;
+		}
+		const item = this.items.getSingle();
+		if (!item) {
+			return;
+		}
+		if (
+			item instanceof Shape ||
+			item instanceof Sticker ||
+			item instanceof Connector ||
+			item instanceof RichText ||
+			item instanceof Frame
+		) {
+			const text = item instanceof RichText ? item : item.text;
+			await text.moveCursorToEnd(); // prob should be 20 ms
+			text.editor.appendText(appendedText);
 			this.setTextToEdit(item);
 			this.setContext("EditTextUnderPointer");
 			this.board.items.subject.publish(this.board.items);
@@ -290,6 +315,7 @@ export class Selection {
 
 	setTextToEdit(item: Item | undefined): void {
 		if (this.textToEdit) {
+			this.textToEdit.updateElement();
 			this.textToEdit.enableRender();
 		}
 		if (
@@ -305,7 +331,7 @@ export class Selection {
 		}
 		const text = item instanceof RichText ? item : item.text;
 		this.textToEdit = text;
-		text.selectText();
+		text.selectWholeText();
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
 	}
@@ -540,30 +566,33 @@ export class Selection {
 		return [this.textToEdit];
 	}
 
-	translateBy(x: number, y: number): void {
+	translateBy(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "translateBy",
 			item: this.items.ids(),
 			x,
 			y,
+			timeStamp,
 		});
 		this.off();
 	}
 
-	scaleBy(x: number, y: number): void {
+	scaleBy(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "scaleBy",
 			item: this.items.ids(),
 			x,
 			y,
+			timeStamp,
 		});
 	}
 
 	scaleByTranslateBy(
 		scale: { x: number; y: number },
 		translate: { x: number; y: number },
+		timeStamp?: number,
 	): void {
 		this.emit({
 			class: "Transformation",
@@ -571,18 +600,26 @@ export class Selection {
 			item: this.items.ids(),
 			scale,
 			translate,
+			timeStamp,
 		});
 	}
 
-	tranformMany(items: { [key: string]: TransformationOperation }): void {
+	// TODO all the other transformations are redundant, use this one for everything
+	// Instead of TransformationOperation just put matrix in it
+	tranformMany(
+		items: { [key: string]: TransformationOperation },
+		timeStamp?: number,
+	): void {
 		this.emit({
 			class: "Transformation",
 			method: "transformMany",
 			items,
+			timeStamp,
 		});
 	}
 
 	setStrokeStyle(borderStyle: BorderStyle): void {
+		// TODO make single operation to set strokeStyle on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
 			this.emit({
@@ -613,6 +650,7 @@ export class Selection {
 	}
 
 	setStrokeColor(borderColor: string): void {
+		// TODO make single operation to set strokeColor on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
 			this.emit({
@@ -643,6 +681,7 @@ export class Selection {
 	}
 
 	setStrokeWidth(width: number): void {
+		// TODO make single operation to set strokeWidth on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
 			this.emit({
@@ -673,6 +712,7 @@ export class Selection {
 	}
 
 	setFillColor(backgroundColor: string): void {
+		// TODO make single operation to set color on any item with fill
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length) {
 			this.emit({
@@ -715,6 +755,7 @@ export class Selection {
 		const fontSize = toFiniteNumber(size);
 		const single = this.items.getSingle();
 		if (single) {
+			// TODO add getTextEditor method to each item to avoid instanceof checks
 			if (single instanceof RichText) {
 				single.setSelectionFontSize(fontSize, this.getContext());
 			} else if (
@@ -742,17 +783,44 @@ export class Selection {
 	}
 
 	setFontStyle(fontStyleList: TextStyle[]): void {
+		/*
+		const items = this.items.list();
+		const changedIds: string[] = [];
+		items.forEach(item => {
+			switch (item.itemType) {
+				case "RichText":
+					(item as RichText).setSelectionFontStyle(
+						fontStyleList,
+						this.context,
+					);
+					changedIds.push(item.getId());
+					break;
+				case "Connector":
+				case "Shape":
+				case "Sticker":
+					(
+						item as Shape | Sticker | Connector
+					).text.setSelectionFontStyle(fontStyleList, this.context);
+					changedIds.push(item.getId());
+					break;
+			}
+		});
+		if (changedIds.length) {
+			this.emit({
+				class: "RichText",
+				method: "setFontStyle",
+				item: changedIds,
+				fontStyleList,
+			});
+		}
+		*/
 		const single = this.items.getSingle();
 		if (single) {
 			if (single instanceof RichText) {
 				single.setSelectionFontStyle(fontStyleList, this.context);
-			} else {
+			} else if ("text" in single) {
 				single.text.setSelectionFontStyle(fontStyleList, this.context);
 			}
-		} else if (this.items.isItemTypes(["Sticker"])) {
-			this.items
-				.list()
-				.forEach(x => x.text.setSelectionFontStyle(fontStyleList));
 		} else {
 			this.emit({
 				class: "RichText",
@@ -900,18 +968,31 @@ export class Selection {
 
 	duplicate(): void {
 		this.board.duplicate(this.copy());
+		if (this.items.isSingle()) {
+			this.setContext("EditUnderPointer");
+		} else {
+			this.setContext("SelectByRect");
+		}
+	}
+
+	renderItemMbr(context: DrawingContext, item: Item): void {
+		const mbr = item.getMbr();
+		mbr.strokeWidth = 1 / context.matrix.scaleX;
+		mbr.borderColor = SELECTION_COLOR;
+		mbr.render(context);
 	}
 
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
 		const isSingleConnector = single && single.itemType === "Connector";
 		const isSelectionTooBig = this.items.getSize() > 100;
-		if (!isSingleConnector && !isSelectionTooBig) {
+		if (
+			!isSingleConnector &&
+			!isSelectionTooBig &&
+			!this.transformationRenderBlock
+		) {
 			for (const item of this.items.list()) {
-				const mbr = item.getMbr();
-				mbr.strokeWidth = 1 / context.matrix.scaleX;
-				mbr.borderColor = SELECTION_COLOR;
-				mbr.render(context);
+				this.renderItemMbr(context, item);
 			}
 		}
 		this.tool.render(context);

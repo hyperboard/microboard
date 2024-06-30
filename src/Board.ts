@@ -1,5 +1,4 @@
-import { Mbr, Connector, RichText, Shape, Frame, FrameData } from "./Items";
-import { Item, ItemData } from "./Items";
+import { Frame, Item, ItemData, Matrix, Mbr, ConnectorData } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
@@ -7,19 +6,16 @@ import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import {
-	BoardOperation,
-	ItemsIndexRecord,
-	RemoveItem,
-} from "./BoardOperations";
+import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { BoardCommand } from "./BoardCommand";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
-import { ImageItem } from "./Items/Image";
-import { Drawing } from "./Items/Drawing";
 // import { Group } from "./Items/Group";
-import { Sticker } from "./Items/Sticker";
 import { DrawingContext } from "./Items/DrawingContext";
 import { Connection } from "App/Connection";
+import { BoardEvent, createEvents } from "./Events/Events";
+import { v4 as uuidv4 } from "uuid";
+import { itemFactories } from "./itemFactories";
+import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
 export class Board {
 	events: Events | undefined;
@@ -30,7 +26,6 @@ export class Board {
 	private index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
-	private itemCounter = 0;
 	private drawingContext: DrawingContext | null = null;
 
 	constructor(private boardId = "") {
@@ -40,8 +35,12 @@ export class Board {
 
 	/* Connect to the server to recieve the events*/
 	connect(connection: Connection): void {
-		this.events = new Events(this, connection);
+		this.events = createEvents(this, connection);
 		this.selection.events = this.events;
+		const snapshot = this.getSnapshotFromCache();
+		if (snapshot && this.getSnapshot().lastIndex === 0) {
+			this.deserialize(snapshot);
+		}
 	}
 
 	disconnect(): void {
@@ -56,14 +55,10 @@ export class Board {
 	}
 
 	getNewItemId(): string {
-		if (this.events) {
-			return this.events.getNewItemId();
-		} else {
-			return this.boardId + ":" + this.itemCounter++;
-		}
+		return uuidv4();
 	}
 
-	emit(operation: BoardOperation): void {
+	emit(operation: BoardOps): void {
 		if (this.events) {
 			const command = new BoardCommand(this, operation);
 			command.apply();
@@ -79,6 +74,7 @@ export class Board {
 
 	setBoardId(boardId: string): void {
 		this.boardId = boardId;
+		this.camera.setBoardId(boardId);
 	}
 
 	getDrawingContext(): DrawingContext | null {
@@ -100,7 +96,7 @@ export class Board {
 		}
 	}
 
-	private applyBoardOperation(op: BoardOperation): void {
+	private applyBoardOperation(op: BoardOps): void {
 		switch (op.method) {
 			case "moveToZIndex": {
 				const item = this.index.getById(op.item);
@@ -195,8 +191,7 @@ export class Board {
 
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
 	 */
-	// Should rename?
-	private handleNesting(item: Item): void {
+	handleNesting(item: Item): void {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
 			.getFramesInView()
@@ -216,54 +211,69 @@ export class Board {
 		}
 	}
 
-	createItem(id: string, data: ItemData): Item {
-		switch (data.itemType) {
-			case "Sticker":
-				const sticker = new Sticker(this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(sticker);
-				return sticker;
-			case "Shape":
-				const shape = new Shape(this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(shape);
-				return shape;
-			case "RichText":
-				const richText = new RichText(new Mbr(), id, this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(richText);
-				return richText;
-			case "Connector":
-				const connector = new Connector(this, this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(connector);
-				return connector;
-			case "Image":
-				const image = new ImageItem(data.dataUrl, this.events, id)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(image);
-				return image;
-			case "Drawing":
-				const drawing = new Drawing([], this.events)
-					.setId(id)
-					.deserialize(data);
-				this.handleNesting(drawing);
-				return drawing;
-			case "Frame":
-				const frame = new Frame(this.events)
-					.setId(id)
-					.deserialize(data);
-				return frame;
-			/*
-			case "Group":
-				return new Group(this.events).setId(id).deserialize(data);
-			*/
+	/**
+	 * Creates new canvas and returns it.
+	 * Renders all items from translation on new canvas.
+	 * @param mbr - width and height for resulting canvas
+	 * @param translation - in which mbr we should find items
+	 */
+	drawMbrOnCanvas(
+		mbr: Mbr,
+		translation: TransformManyItems,
+	): HTMLCanvasElement | undefined {
+		const canvas = document.createElement("canvas");
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		canvas.width = width * this.camera.getMatrix().scaleX;
+		canvas.height = height * this.camera.getMatrix().scaleY;
+
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			console.error(
+				"drawMbrOnCanvas: Unable to get 2D context from canvasElemnt",
+				canvas,
+			);
+			return;
 		}
+
+		ctx.rect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = "transparent";
+		ctx.fill();
+
+		const camera = new Camera();
+		const newCameraMatix = new Matrix(-mbr.left, -mbr.top, 1, 1);
+		camera.matrix = newCameraMatix;
+
+		const context = new DrawingContext(camera, ctx);
+
+		context.setCamera(camera);
+		context.ctx.setTransform(
+			this.camera.getMatrix().scaleX,
+			0,
+			0,
+			this.camera.getMatrix().scaleY,
+			0,
+			0,
+		);
+		context.matrix.applyToContext(context.ctx);
+
+		Object.keys(translation).forEach(id => {
+			const item = this.items.getById(id);
+			if (item) {
+				item.render(context);
+				this.selection.renderItemMbr(context, item);
+			}
+		});
+
+		return canvas;
+	}
+
+	createItem(id: string, data: ItemData): Item {
+		const factory = itemFactories[data.itemType];
+		if (!factory) {
+			throw new Error(`Unknown item type: ${data.itemType}`);
+		}
+		return factory(id, data, this);
 	}
 
 	add<T extends Item>(item: T): T {
@@ -374,22 +384,62 @@ export class Board {
 	}
 
 	copy(): Record<string, ItemData> {
-		return this.items.index.array.reduce((accumulator, item) => {
-			accumulator[item.getId()] = item.serialize();
-			return accumulator;
-		}, {} as Record<string, ItemData>);
+		return this.items.index.copy();
 	}
 
-	serialize(): string {
-		return JSON.stringify(this.copy());
+	serialize(): Record<string, ItemData> {
+		return this.copy();
 	}
 
-	deserialize(snapshot: string): void {
-		debugger;
-		const map = JSON.parse(snapshot);
-		for (const itemData of map) {
-			const item = this.createItem(itemData.id, itemData);
+	deserialize(snapshot: BoardSnapshot): void {
+		const { items, events } = snapshot;
+		/*
+		this.index.clear();
+		for (const key in items) {
+			const itemData = items[key];
+			const item = this.createItem(key, itemData);
 			this.index.insert(item);
+		}
+		*/
+		this.events?.deserialize(events);
+	}
+
+	getSnapshotFromCache(): BoardSnapshot | undefined {
+		const snapshotString = localStorage.getItem(
+			`board_${this.getBoardId()}`,
+		);
+		if (snapshotString) {
+			try {
+				const snapshot = JSON.parse(snapshotString);
+				return snapshot;
+			} catch {}
+		}
+		return undefined;
+	}
+
+	saveSnapshot(snapshot?: BoardSnapshot): void {
+		if (snapshot) {
+			localStorage.setItem(
+				`board_${this.getBoardId()}`,
+				JSON.stringify(snapshot),
+			);
+		} else {
+			localStorage.setItem(
+				`board_${this.getBoardId()}`,
+				JSON.stringify(this.getSnapshot()),
+			);
+		}
+	}
+
+	getSnapshot(): BoardSnapshot {
+		if (this.events) {
+			return this.events.getSnapshot();
+		} else {
+			return {
+				items: this.serialize(),
+				events: [],
+				lastIndex: 0,
+			};
 		}
 	}
 
@@ -523,13 +573,6 @@ export class Board {
 		};
 
 		for (const itemId in itemsMap) {
-			const itemData = itemsMap[itemId];
-
-			if (itemData.itemType === "Connector") {
-				replaceConnectorHeadItemId(itemData.startPoint);
-				replaceConnectorHeadItemId(itemData.endPoint);
-			}
-
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
 			if (itemsMap[itemId].itemType === "Frame") {
@@ -541,6 +584,15 @@ export class Board {
 						newItemIdMap[childId] = newChildId;
 					}
 				});
+			}
+		}
+
+		for (const itemId in itemsMap) {
+			const itemData = itemsMap[itemId];
+
+			if (itemData.itemType === "Connector") {
+				replaceConnectorHeadItemId(itemData.startPoint);
+				replaceConnectorHeadItemId(itemData.endPoint);
 			}
 		}
 
@@ -624,8 +676,11 @@ export class Board {
 		const context = this.selection.getContext();
 		const items: Item[] = [];
 
-		for (const itemId in itemsMap) {
+		const pasteItem = (itemId: string): void => {
 			const itemData = itemsMap[itemId];
+			if (!itemData) {
+				throw new Error("Pasting itemId doesn't exist in itemsMap");
+			}
 			const item = this.createItem(itemId, itemData);
 			this.index.insert(item);
 			if (
@@ -635,6 +690,19 @@ export class Board {
 				item.setNameSerial(this.items.listFrames());
 			}
 			items.push(item);
+		};
+
+		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				continue;
+			}
+			pasteItem(itemId);
+		}
+
+		for (const itemId in itemsMap) {
+			if (itemsMap[itemId].itemType === "Connector") {
+				pasteItem(itemId);
+			}
 		}
 
 		this.selection.removeAll();
@@ -645,4 +713,10 @@ export class Board {
 	isOnBoard(item: Item): boolean {
 		return this.items.findById(item.getId()) !== undefined;
 	}
+}
+
+export interface BoardSnapshot {
+	items: Record<string, ItemData>;
+	events: BoardEvent[];
+	lastIndex: number;
 }

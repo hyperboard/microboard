@@ -1,12 +1,14 @@
 import { BlockNode } from "../Editor/BlockNode";
 import { TextNode } from "../Editor/TextNode";
 
-interface LayoutBlockNodes {
+export interface LayoutBlockNodes {
 	nodes: LayoutBlockNode[];
 	maxWidth: number;
 	width: number;
 	height: number;
 	render: (ctx: Ctx, scale?: number) => void;
+	realign: (newMaxWidht: number) => void;
+	recoordinate: () => void;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -18,14 +20,6 @@ export function getBlockNodes(
 	containerWidth?: number,
 	containerHeight?: number,
 ): LayoutBlockNodes {
-	console.log(
-		"getBlockNodes",
-		data,
-		maxWidth,
-		insideOf,
-		containerWidth,
-		containerHeight,
-	);
 	const nodes: LayoutBlockNode[] = [];
 	for (const node of data) {
 		nodes.push(getBlockNode(node, maxWidth));
@@ -37,16 +31,21 @@ export function getBlockNodes(
 		width = Math.max(width, node.width);
 		height += node.height;
 	}
-	if (containerWidth && containerHeight) {
-		align(
-			nodes,
-			maxWidth,
-			insideOf,
-			Math.min(containerWidth / width, containerHeight / height),
-		);
-	} else {
-		align(nodes, maxWidth, insideOf);
+
+	function alignNodes(maxWidth: number): void {
+		if (containerWidth && containerHeight) {
+			align(
+				nodes,
+				maxWidth,
+				insideOf,
+				Math.min(containerWidth / width, containerHeight / height),
+			);
+		} else {
+			align(nodes, maxWidth, insideOf);
+		}
 	}
+	alignNodes(maxWidth);
+
 	return {
 		nodes,
 		maxWidth,
@@ -54,6 +53,12 @@ export function getBlockNodes(
 		height,
 		render: (ctx, scale?: number) => {
 			renderBlockNodes(ctx, nodes, scale);
+		},
+		realign: (newMaxWidth: number) => {
+			alignNodes(newMaxWidth);
+		},
+		recoordinate: () => {
+			setBlockNodesCoordinates(nodes);
 		},
 	};
 }
@@ -487,7 +492,8 @@ function measureText(text: string, style): MeasuredRect {
 }
 
 function splitTextIntoWords(text: string): string[] {
-	return text.split(/(\s+)/);
+	// filter is important, do not remove
+	return text.split(/(\s+)/).filter(element => element !== "");
 }
 
 function findLargestSubstring(word, style, maxWidth: number): string {
@@ -540,7 +546,7 @@ function setBlockNodesCoordinates(nodes): void {
 }
 
 function align(
-	nodes,
+	nodes: LayoutBlockNode[],
 	maxWidth: number,
 	insideOf?: string,
 	scale?: number,
@@ -583,7 +589,11 @@ function align(
 	}
 }
 
-function alignToCenter(node, maxWidth: number, scale?: number): void {
+function alignToCenter(
+	node: LayoutBlockNode,
+	maxWidth: number,
+	scale?: number,
+): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
@@ -596,15 +606,19 @@ function alignToCenter(node, maxWidth: number, scale?: number): void {
 		const xOffset = (maxWidth - lineWidth) / 2;
 		for (const block of line) {
 			if (scale) {
-				block.x += xOffset / scale;
+				block.x = xOffset / scale;
 			} else {
-				block.x += xOffset;
+				block.x = xOffset;
 			}
 		}
 	}
 }
 
-function alignToRight(node, maxWidth: number, scale?: number): void {
+function alignToRight(
+	node: LayoutBlockNode,
+	maxWidth: number,
+	scale?: number,
+): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
@@ -658,7 +672,8 @@ function renderTextBlock(ctx: Ctx, textBlock: LayoutTextBlock): void {
 }
 
 function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	if (!textBlock.style.backgroundColor) {
+	if (!textBlock.style.backgroundColor || textBlock.text === "\u00A0") {
+		// U+00a0 is empty, for not highlighting emptyLine
 		return;
 	}
 	const measure = textBlock.measure;

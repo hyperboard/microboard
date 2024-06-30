@@ -8,8 +8,8 @@ import {
 	ResizeType,
 } from "Board/Selection/Transformer/getResizeType";
 import { Tool } from "Board/Tools/Tool";
+import { CANVAS_BG_COLOR } from "View/consts";
 import {
-	BACKGROUND_BLUR,
 	BLUR_BACKGROUND_COLOR,
 	FRAME_DECORATIONS,
 	MIN_EXPORT_HEIGHT,
@@ -17,8 +17,10 @@ import {
 	SELECTION_BOX_HEIGHT,
 	SELECTION_BOX_WIDTH,
 } from "View/Tools/ExportBoard";
-import { exportBoardSnapshot } from "./exportBoardSnapshot";
-import { Quality } from "./types";
+import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";
+import { getDecorationResizeType } from "./getDecorationResizeType";
+
+const TOLERANCE = 30;
 
 export class ExportSnapshot extends Tool {
 	mbr: Mbr;
@@ -92,11 +94,19 @@ export class ExportSnapshot extends Tool {
 			pointer.setCursor("grab");
 		}
 
-		const resizeType: ResizeType | undefined = getResizeType(
-			this.board.pointer.point,
-			this.board.camera.getScale(),
-			this.mbr,
-		);
+		const resizeType: ResizeType | undefined =
+			getDecorationResizeType(
+				this.board.pointer.point,
+				this.mbr,
+				TOLERANCE, // Increase this value to make the resize area larger
+			) ??
+			getResizeType(
+				this.board.pointer.point,
+				this.board.camera.getScale(),
+				this.mbr,
+				TOLERANCE, // Increase this value to make the resize area larger
+			);
+
 		if (
 			!resizeType ||
 			resizeType === "bottom" ||
@@ -144,11 +154,19 @@ export class ExportSnapshot extends Tool {
 
 	leftButtonDown(): boolean {
 		this.resizeType =
+			getDecorationResizeType(
+				this.board.pointer.point,
+				this.mbr,
+				20, // Increase this value to make the resize area larger
+			) ??
 			getResizeType(
 				this.board.pointer.point,
 				this.board.camera.getScale(),
 				this.mbr,
-			) ?? null;
+				20, // Increase this value to make the resize area larger
+			) ??
+			null;
+
 		if (
 			this.resizeType === "bottom" ||
 			this.resizeType === "left" ||
@@ -185,12 +203,18 @@ export class ExportSnapshot extends Tool {
 		return true;
 	}
 
-	takeSnapshot(): void {
+	async takeSnapshot(): Promise<SnapshotInfo> {
 		if (!this.mbr) {
-			return;
+			throw new Error("No selection");
 		}
-		exportBoardSnapshot(this.board, Quality.HIGH, this.mbr);
+		const res = await exportBoardSnapshot({
+			board: this.board,
+			bgColor: CANVAS_BG_COLOR,
+			selection: this.mbr,
+			upscaleTo: 4000,
+		});
 		this.board.selection.on();
+		return res;
 	}
 
 	renderDecoration(
@@ -238,8 +262,8 @@ export class ExportSnapshot extends Tool {
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topLeft.path,
-				this.mbr.left - topLeft.offset! ?? 0,
-				this.mbr.top - topLeft.offset! ?? 0,
+				this.mbr.left + (topLeft.offsetX ?? 0),
+				this.mbr.top + (topLeft.offsetY ?? 0),
 				topLeft.color,
 				topLeft.lineWidth,
 			);
@@ -247,8 +271,8 @@ export class ExportSnapshot extends Tool {
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topRight.path,
-				this.mbr.left + this.mbr.getWidth() - topRight.width,
-				this.mbr.top - topRight.offset! ?? 0,
+				this.mbr.right + (topRight.offsetX ?? 0),
+				this.mbr.top + (topRight.offsetY ?? 0),
 				topRight.color,
 				topRight.lineWidth,
 			);
@@ -256,8 +280,8 @@ export class ExportSnapshot extends Tool {
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomLeft.path,
-				this.mbr.left - bottomLeft.offset! ?? 0,
-				this.mbr.top + this.mbr.getHeight() - bottomLeft.height,
+				this.mbr.left + (bottomLeft.offsetX ?? 0),
+				this.mbr.bottom + (bottomLeft.offsetY ?? 0),
 				bottomLeft.color,
 				bottomLeft.lineWidth,
 			);

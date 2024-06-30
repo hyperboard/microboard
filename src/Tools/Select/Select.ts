@@ -12,6 +12,9 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { Tool } from "Board/Tools/Tool";
 import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "Board/drawMbrOnCanvas";
+import { ImageItem } from "Board/Items/Image";
 import { Drawing } from "Board/Items/Drawing";
 
 export class Select extends Tool {
@@ -33,6 +36,8 @@ export class Select extends Tool {
 	isCtrl = false;
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
+	beginTimeStamp = Date.now();
+	canvasDrawer = createCanvasDrawer(this.board);
 
 	constructor(private board: Board) {
 		super();
@@ -54,8 +59,9 @@ export class Select extends Tool {
 		this.rect = null;
 		this.downOnItem = null;
 		this.lastPointerMoveEventTime = Date.now();
-
+		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
+		this.canvasDrawer.clearCanvasAndKeys();
 	}
 
 	leftButtonDown(): boolean {
@@ -67,6 +73,7 @@ export class Select extends Tool {
 		const { items, selection, pointer } = this.board;
 
 		const hover = items.getUnderPointer();
+		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection =
@@ -183,7 +190,7 @@ export class Select extends Tool {
 				.list()
 				.filter(item => item instanceof Frame)
 				.map(frame => frame.getId());
-			const translation: { [key: string]: TransformationOperation } = {};
+			const translation: TransformManyItems = {};
 			selection.list().forEach(selectedItem => {
 				translation[selectedItem.getId()] = {
 					class: "Transformation",
@@ -208,7 +215,15 @@ export class Select extends Tool {
 					});
 				}
 			});
-			selection.tranformMany(translation);
+			selection.tranformMany(translation, this.beginTimeStamp);
+
+			if (Object.keys(translation).length > 1) {
+				const sumMbr = this.canvasDrawer.countSumMbr(translation);
+				if (sumMbr) {
+					this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation);
+				}
+			}
+
 			selection.list().forEach(item => {
 				if (
 					!(item instanceof Frame) &&
@@ -239,7 +254,7 @@ export class Select extends Tool {
 			// translate item without selection
 
 			const { downOnItem: draggingItem } = this;
-			draggingItem.transformation.translateBy(x, y);
+			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
 
 			const frames = this.board.items
 				.getEnclosedOrCrossed(
@@ -306,7 +321,25 @@ export class Select extends Tool {
 				this.board.tools.publish();
 				return false;
 			} else {
-				this.board.selection.editUnderPointer();
+				const topItem = this.board.items.getUnderPointer().pop();
+				const curr = this.board.selection.items.getSingle();
+				if (
+					this.board.selection.getContext() === "EditUnderPointer" &&
+					curr &&
+					topItem === curr
+				) {
+					if (
+						!(curr instanceof ImageItem) &&
+						!(curr instanceof Drawing)
+					) {
+						const text =
+							curr instanceof RichText ? curr : curr.text;
+						text.saveLastClickPoint(this.board);
+					}
+					this.board.selection.editText();
+				} else {
+					this.board.selection.editUnderPointer();
+				}
 				this.board.tools.publish();
 				this.clear();
 				return false;
@@ -376,6 +409,15 @@ export class Select extends Tool {
 
 	leftButtonDouble(): boolean {
 		this.board.selection.editTextUnderPointer();
+		const toEdit = this.board.selection.items.getSingle();
+		if (
+			toEdit &&
+			!(toEdit instanceof ImageItem) &&
+			!(toEdit instanceof Drawing)
+		) {
+			const text = toEdit instanceof RichText ? toEdit : toEdit.text;
+			text.saveLastClickPoint(this.board);
+		}
 		this.board.selection.editText();
 		return false;
 	}

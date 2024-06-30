@@ -1,14 +1,15 @@
+import { SubjectOperation } from "SubjectOperation";
+import { Events, Operation } from "../../Events";
 import { Point } from "../Point";
 import { Matrix } from "./Matrix";
-import {
-	TransformationOperation,
-	TransformationData,
-} from "./TransformationOperations";
-import { Events, Operation } from "../../Events";
 import { TransformationCommand } from "./TransformationCommand";
-import { SubjectOperation } from "SubjectOperation";
+import {
+	DefaultTransformationData,
+	TransformationData,
+} from "./TransformationData";
+import { TransformationOperation } from "./TransformationOperations";
 
-const defaultData = new TransformationData();
+const defaultData = new DefaultTransformationData();
 
 export class Transformation {
 	readonly subject = new SubjectOperation<
@@ -229,7 +230,7 @@ export class Transformation {
 		return this.id;
 	}
 
-	translateTo(x: number, y: number): void {
+	translateTo(x: number, y: number, timeStamp?: number): void {
 		if (!this.id) {
 			// TODO console.warn("Transformation.translateTo() has no itemId");
 		}
@@ -239,10 +240,11 @@ export class Transformation {
 			item: [this.id],
 			x,
 			y,
+			timeStamp,
 		});
 	}
 
-	translateBy(x: number, y: number): void {
+	translateBy(x: number, y: number, timeStamp?: number): void {
 		if (!this.id) {
 			// TODO console.warn("Transformation.translateTo() has no itemId");
 		}
@@ -252,32 +254,36 @@ export class Transformation {
 			item: [this.id],
 			x,
 			y,
+			timeStamp,
 		});
 	}
 
-	scaleTo(x: number, y: number): void {
+	scaleTo(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "scaleTo",
 			item: [this.id],
 			x,
 			y,
+			timeStamp,
 		});
 	}
 
-	scaleBy(x: number, y: number): void {
+	scaleBy(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "scaleBy",
 			item: [this.id],
 			x,
 			y,
+			timeStamp,
 		});
 	}
 
 	scaleByTranslateBy(
 		scale: { x: number; y: number },
 		translate: { x: number; y: number },
+		timeStamp?: number,
 	): void {
 		this.emit({
 			class: "Transformation",
@@ -285,28 +291,36 @@ export class Transformation {
 			item: [this.id],
 			scale,
 			translate,
+			timeStamp,
 		});
 	}
 
-	rotateTo(degree: number): void {
+	rotateTo(degree: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "rotateTo",
 			item: [this.id],
 			degree,
+			timeStamp,
 		});
 	}
 
-	rotateBy(degree: number): void {
+	rotateBy(degree: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
 			method: "rotateBy",
 			item: [this.id],
 			degree,
+			timeStamp,
 		});
 	}
 
-	scaleToRelativeTo(x: number, y: number, point: Point): void {
+	scaleToRelativeTo(
+		x: number,
+		y: number,
+		point: Point,
+		timeStamp?: number,
+	): void {
 		this.emit({
 			class: "Transformation",
 			method: "scaleToRelativeTo",
@@ -314,10 +328,16 @@ export class Transformation {
 			x,
 			y,
 			point,
+			timeStamp,
 		});
 	}
 
-	scaleByRelativeTo(x: number, y: number, point: Point): void {
+	scaleByRelativeTo(
+		x: number,
+		y: number,
+		point: Point,
+		timeStamp?: number,
+	): void {
 		this.emit({
 			class: "Transformation",
 			method: "scaleByRelativeTo",
@@ -325,6 +345,7 @@ export class Transformation {
 			x,
 			y,
 			point,
+			timeStamp,
 		});
 	}
 }

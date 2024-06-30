@@ -1,18 +1,18 @@
 import { Board } from "Board";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { isIframe } from "lib/isIframe";
 import { Subject } from "Subject";
 import { AddConnector } from "./AddConnector";
 import { AddDrawing } from "./AddDrawing/AddDrawing";
-import { AddShape } from "./AddShape";
 import { AddFrame } from "./AddFrame";
+import { AddShape } from "./AddShape";
+import { AddSticker } from "./AddSticker";
 import { AddText } from "./AddText";
+import { BoardTool } from "./BoardTool";
+import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
-import { BoardTool } from "./BoardTool";
-import { AddSticker } from "./AddSticker";
-import { isIframe } from "lib/isIframe";
-import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -38,11 +38,14 @@ export class Tools extends ToolContext {
 		return this.tool instanceof Navigate ? this.tool : undefined;
 	}
 
-	select(): void {
+	select(clearSelection = false): void {
 		if (this.getSelect()) {
 			this.navigate();
 		} else {
 			this.tool = new Select(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}
@@ -51,20 +54,26 @@ export class Tools extends ToolContext {
 		return this.tool instanceof Select ? this.tool : undefined;
 	}
 
-	addSticker(): void {
+	addSticker(clearSelection = false): void {
 		if (this.getAddSticker() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddSticker(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}
 
-	addShape(): void {
+	addShape(clearSelection = false): void {
 		if (this.getAddShape() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddShape(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}
@@ -76,11 +85,14 @@ export class Tools extends ToolContext {
 		return this.tool instanceof AddSticker ? this.tool : undefined;
 	}
 
-	addText(): void {
+	addText(clearSelection = false): void {
 		if (this.getAddText() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddText(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}
@@ -89,11 +101,14 @@ export class Tools extends ToolContext {
 		return this.tool instanceof AddText ? this.tool : undefined;
 	}
 
-	addConnector(): void {
+	addConnector(clearSelection = false): void {
 		if (this.getAddConnector() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddConnector(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}
@@ -102,11 +117,14 @@ export class Tools extends ToolContext {
 		return this.tool instanceof AddConnector ? this.tool : undefined;
 	}
 
-	addDrawing(): void {
+	addDrawing(clearSelection = false): void {
 		if (this.getAddDrawing() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddDrawing(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}
@@ -128,11 +146,14 @@ export class Tools extends ToolContext {
 		return this.tool instanceof ExportSnapshot ? this.tool : undefined;
 	}
 
-	addFrame(): void {
+	addFrame(clearSelection = false): void {
 		if (this.getAddFrame() && !isIframe()) {
 			this.cancel();
 		} else {
 			this.tool = new AddFrame(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
 		}
 		this.publish();
 	}

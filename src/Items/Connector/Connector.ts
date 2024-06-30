@@ -77,6 +77,7 @@ export class Connector {
 		"\u00A0",
 		true,
 	);
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private board: Board,
@@ -451,7 +452,8 @@ export class Connector {
 		return (
 			this.lines.isEnclosedOrCrossedBy(bounds) ||
 			this.startPointer.path.isEnclosedOrCrossedBy(bounds) ||
-			this.endPointer.path.isEnclosedOrCrossedBy(bounds)
+			this.endPointer.path.isEnclosedOrCrossedBy(bounds) ||
+			this.text.isEnclosedOrCrossedBy(bounds)
 		);
 	}
 
@@ -492,6 +494,9 @@ export class Connector {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.clipText(context);
 		this.text.render(context);
 		this.startPointer.path.render(context);
@@ -556,7 +561,9 @@ export class Connector {
 
 		if (
 			DRAW_TEXT_BORDER &&
-			this.board.selection.getContext() === "EditTextUnderPointer"
+			(this.board.selection.getContext() === "EditUnderPointer" ||
+				this.board.selection.getContext() === "EditTextUnderPointer") &&
+			this.board.selection.items.list().includes(this)
 		) {
 			ctx.strokeStyle = SELECTION_COLOR;
 			ctx.beginPath();

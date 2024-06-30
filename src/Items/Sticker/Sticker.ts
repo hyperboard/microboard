@@ -1,4 +1,13 @@
-import { Mbr, Line, Point, Transformation, Path, Paths, Matrix } from "..";
+import {
+	Mbr,
+	Line,
+	Point,
+	Transformation,
+	Path,
+	Paths,
+	Matrix,
+	TransformationOperation,
+} from "..";
 import { Subject } from "Subject";
 import { RichText } from "../RichText";
 import { Geometry } from "../Geometry";
@@ -24,7 +33,7 @@ const width = 200;
 const height = 200;
 
 export const StickerShape = {
-	textBounds: new Mbr(5, 5, width - 5, height - 5),
+	textBounds: new Mbr(6.67, 6.67, width - 6.67, height - 6.67),
 	shadowPath: new Path(
 		[
 			new Line(new Point(2, 2), new Point(width, 2)),
@@ -84,16 +93,39 @@ export class Sticker implements Geometry {
 		this.itemType,
 	);
 	readonly subject = new Subject<Sticker>();
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private events?: Events,
 		private id = "",
 		private backgroundColor = defaultStickerData.backgroundColor,
 	) {
-		this.transformation.subject.subscribe(() => {
-			this.transformPath();
-			this.subject.publish(this);
-		});
+		this.transformation.subject.subscribe(
+			(_subject: Transformation, op: TransformationOperation) => {
+				this.transformPath();
+				if (op.method === "scaleBy") {
+					this.text.updateElement();
+				} else if (op.method === "scaleByTranslateBy") {
+					if (this.text.getAutoSizeScale()) {
+						this.text.scaleAutoSizeScale(
+							Math.min(op.scale.x, op.scale.y),
+						);
+						this.text.recoordinate();
+						this.text.transformCanvas();
+					} else if (
+						this.text.getTextWidth() >
+							(this.text.getMaxWidth() || 0) ||
+						this.text.hasWraps()
+					) {
+						this.text.updateElement();
+					} else {
+						this.text.realign();
+						this.text.transformCanvas();
+					}
+				}
+				this.subject.publish(this);
+			},
+		);
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
@@ -143,7 +175,6 @@ export class Sticker implements Geometry {
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);
 		// this.text.setContainer(this.textContainer);
-		this.text.updateElement();
 		this.stickerPath.setBackgroundColor(this.backgroundColor);
 	}
 
@@ -246,6 +277,9 @@ export class Sticker implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
+		if (this.transformationRenderBlock) {
+			return;
+		}
 		this.shadowPath.render(context);
 		this.stickerPath.render(context);
 		this.text.render(context);
@@ -310,6 +344,7 @@ export class Sticker implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
+		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getProportionalResize(resizeType, pointer, mbr, opposite);
 
@@ -332,19 +367,21 @@ export class Sticker implements Geometry {
 
 			const startWidth = this.getMbr().getWidth();
 			if (needGrow) {
-				this.transformation.scaleBy(1.33, 1);
+				this.transformation.scaleBy(1.33, 1, timeStamp);
 				if (resizeType === "left") {
 					this.transformation.translateBy(
 						startWidth - this.getMbr().getWidth(),
 						0,
+						timeStamp,
 					);
 				}
 			} else if (needShrink) {
-				this.transformation.scaleBy(1 / 1.33, 1);
+				this.transformation.scaleBy(1 / 1.33, 1, timeStamp);
 				if (resizeType === "left") {
 					this.transformation.translateBy(
 						startWidth - this.getMbr().getWidth(),
 						0,
+						timeStamp,
 					);
 				}
 			}
@@ -358,6 +395,7 @@ export class Sticker implements Geometry {
 					x: res.matrix.translateX,
 					y: res.matrix.translateY,
 				},
+				timeStamp,
 			);
 		}
 		res.mbr = this.getMbr();

@@ -1,27 +1,27 @@
+import { validateItemsMap } from "Board/Validators";
+import { Subject } from "Subject";
 import {
 	BaseEditor,
-	createEditor,
 	Descendant,
 	Editor,
-	Element,
 	Operation as EditorOperation,
+	Element,
 	Transforms,
+	createEditor,
 } from "slate";
+import { HistoryEditor, withHistory } from "slate-history";
+import { ReactEditor, withReact } from "slate-react";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { TextNode, TextStyle } from "./Editor/TextNode";
 import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
+import { defaultTextStyle } from "./RichText";
+import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import {
 	RichTextOperation,
 	SelectionMethod,
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { HistoryEditor, withHistory } from "slate-history";
-import { ReactEditor, withReact } from "slate-react";
-import { defaultTextStyle, RichText } from "./RichText";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
-import { Subject } from "Subject";
-import { validateItemsMap } from "Board/Validators";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -45,6 +45,9 @@ export class EditorContainer {
 	private recordedSelectionOp: SelectionOp | undefined = undefined;
 	readonly subject = new Subject<EditorContainer>();
 
+	private insertingText = false;
+	private recordedInsertionOps: EditorOperation[] = [];
+
 	constructor(
 		private id: string,
 		private emit: (op: RichTextOperation) => void,
@@ -52,6 +55,7 @@ export class EditorContainer {
 		undo: () => void,
 		redo: () => void,
 		private getScale: () => number, // private richText: RichText, // TODO bd-695
+		horisontalAlignment: HorisontalAlignment,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -60,7 +64,7 @@ export class EditorContainer {
 		editor.children = [
 			{
 				type: "paragraph",
-				horisontalAlignment: "center",
+				horisontalAlignment,
 				children: [
 					{
 						type: "text",
@@ -81,11 +85,6 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: EditorOperation): void => {
-			const editorHTML = document.querySelector(
-				"#TextEditor > div > div > p",
-			);
-			this.textLength = editorHTML?.innerText.length || 0;
-
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
@@ -98,8 +97,11 @@ export class EditorContainer {
 					if (operation.type === "set_selection") {
 						this.decorated.apply(operation);
 						this.subject.publish(this);
-					} else {
-						if (this.id !== "") {
+					} else if (this.id !== "") {
+						if (this.insertingText) {
+							this.recordedInsertionOps.push(operation);
+							this.decorated.apply(operation);
+						} else {
 							this.emit({
 								class: "RichText",
 								method: "edit",
@@ -110,6 +112,9 @@ export class EditorContainer {
 								ops: [operation],
 							});
 						}
+					} else {
+						this.decorated.apply(operation);
+						this.subject.publish(this);
 					}
 				}
 			}
@@ -133,12 +138,29 @@ export class EditorContainer {
 				const map = JSON.parse(text);
 				const isDataValid = validateItemsMap(map);
 				if (!isDataValid) {
-					insertData(data);
+					this.insertAndEmit(insertData, data);
 				}
 			} catch (error) {
-				insertData(data);
+				this.insertAndEmit(insertData, data);
 			}
 		};
+	}
+
+	private insertAndEmit(
+		insertData: (data: DataTransfer) => void,
+		data: DataTransfer,
+	): void {
+		this.insertingText = true;
+		insertData(data);
+		this.insertingText = false;
+		this.emitWithoutApplying({
+			class: "RichText",
+			method: "edit",
+			item: [this.id],
+			selection: JSON.parse(JSON.stringify(this.editor.selection)),
+			ops: this.recordedInsertionOps,
+		});
+		this.recordedInsertionOps = [];
 	}
 
 	setId(id: string): this {
@@ -254,13 +276,15 @@ export class EditorContainer {
             this.decorated.apply(op.ops[0]);
         }
         */
-		this.decorated.apply(op.ops[0]);
+		for (const operation of op.ops) {
+			this.decorated.apply(operation);
+		}
 		this.shouldEmit = true;
 	}
 
 	private applySelectionOp(op: SelectionOp): void {
 		this.shouldEmit = false;
-		this.editor.selection = op.selection;
+		// this.editor.selection = op.selection;
 		Editor.withoutNormalizing(this.editor, () => {
 			for (const operation of op.ops) {
 				this.decorated.apply(operation);
@@ -300,7 +324,7 @@ export class EditorContainer {
 				this.setSelectionHorisontalAlignment(op.horisontalAlignment);
 				break;
 			case "setMaxWidth":
-				this.maxWidth = op.maxWidth;
+				this.applyMaxWidth(op.maxWidth);
 				break;
 		}
 		if (selection) {
@@ -309,7 +333,7 @@ export class EditorContainer {
 		this.shouldEmit = true;
 	}
 
-	private applyMaxWidth(maxWidth: number): void {
+	applyMaxWidth(maxWidth: number): void {
 		this.maxWidth = maxWidth;
 	}
 
@@ -522,7 +546,18 @@ export class EditorContainer {
 		return node;
 	}
 
+	appendText(text: string) {
+		const endPoint = Editor.end(this.editor, []);
+		Transforms.select(this.editor, endPoint);
+		Transforms.insertText(this.editor, text);
+	}
+
 	getText(): Descendant[] {
 		return this.editor.children;
+	}
+
+	insertText(text: string): void {
+		const { editor } = this;
+		Transforms.insertText(editor, text);
 	}
 }

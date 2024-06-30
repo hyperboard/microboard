@@ -2,8 +2,6 @@ import { Transformation } from "./Transformation";
 import { TransformationOperation } from "./TransformationOperations";
 import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
-import { Board } from "Board/Board";
-import { Shape } from "../Shape";
 
 export class TransformationCommand implements Command {
 	reverse = this.getReverse();

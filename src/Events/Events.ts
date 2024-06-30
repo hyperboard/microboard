@@ -1,21 +1,31 @@
 import { Board } from "Board";
-import {
-	EventsOperation,
-	Operation,
-	UndoableOperation,
-} from "./EventsOperations";
+import { EventsOperation, Operation } from "./EventsOperations";
 import { EventsCommand } from "./EventsCommand";
-import { Command, createCommand } from "./Command";
-import { EventsLog } from "./EventsLog";
-import {
-	enabledEmitDebug,
-	enabledInsertEventDebug,
-} from "./EventsDebugSettings";
+import { Command } from "./Command";
+import { createEventsLog } from "./EventsLog";
 import { Subject } from "Subject";
-import { Connection } from "App/Connection";
+import { Connection, SocketMessage } from "App/Connection";
+import { BoardSnapshot } from "Board/Board";
 
-export class BoardEvent {
-	constructor(public order: number = 0, public body: BoardEventBody) {}
+const EVENTS_REPUBLISH_INTERVAL = 5000;
+
+export interface Events {
+	subject: Subject<BoardEvent>;
+	serialize(): BoardEvent[];
+	deserialize(serializedData: BoardEvent[]): void;
+	getSnapshot(): BoardSnapshot;
+	disconnect(): void;
+	emit(operation: Operation, command: Command): void;
+	apply(operation: EventsOperation): void | false;
+	undo(): void;
+	redo(): void;
+	canUndo(): boolean;
+	canRedo(): boolean;
+}
+
+export interface BoardEvent {
+	order: number;
+	body: BoardEventBody;
 }
 
 export interface BoardEventBody {
@@ -25,241 +35,188 @@ export interface BoardEventBody {
 	operation: Operation;
 }
 
-export class Events {
-	private eventCounter = 0;
-	private itemCounter = 0;
-	private log = new EventsLog(this.board, this);
-	readonly latestEventTouch: { [key: string]: number } = {};
-	latestServerOrder = 0;
-	subject = new Subject<BoardEvent>();
+export function createEvents(board: Board, connection: Connection): Events {
+	const log = createEventsLog(board);
+	const latestEvent: { [key: string]: number } = {};
+	let latestServerOrder = 0;
+	const subject = new Subject<BoardEvent>();
 
-	constructor(private board: Board, private connection: Connection) {
-		connection.subscribe(board.getBoardId(), this.handleNewMessage);
-		setInterval(this.republishEvents, 5000);
+	connection.subscribe(board.getBoardId(), handleNewMessage);
+	setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
+
+	function serialize(): BoardEvent[] {
+		return log.serialize();
 	}
 
-	serialize(): string {
-		const events = this.log.list.map(record => record.event);
-		return JSON.stringify(events);
+	function deserialize(serializedData: BoardEvent[]): void {
+		log.deserialize(serializedData);
 	}
 
-	deserialize(serializedData: string): void {
-		const events: BoardEvent[] = JSON.parse(serializedData);
-		this.insertEvents(events);
+	function getSnapshot(): BoardSnapshot {
+		return log.getSnapshot();
 	}
 
-	disconnect(): void {
-		this.connection.unsubscribe(
-			this.board.getBoardId(),
-			this.handleNewMessage,
-		);
+	function disconnect(): void {
+		connection.unsubscribe(board.getBoardId(), handleNewMessage);
 	}
 
-	handleNewMessage = (message: SocketMessage): void => {
-		if (message.type === "BoardEvent") {
-			this.addEvent(message.event);
-		} else if (message.type === "BoardEventList") {
-			const events = message.events;
-			if (this.log.list.length === 0 && events.length > 0) {
-				this.insertEvents(events);
-				this.subject.publish(events);
-				this.latestServerOrder = events[events.length - 1].order;
-			} else {
-				for (const event of events) {
-					this.addEvent(event);
+	function handleNewMessage(message: SocketMessage): void {
+		switch (message.type) {
+			case "BoardEvent":
+				addEvent(message.event);
+				break;
+			case "BoardEventList":
+				const events = message.events;
+				const isFirstBatchOfEvents =
+					log.getList().length === 0 && events.length > 0;
+				if (isFirstBatchOfEvents) {
+					log.insertEvents(events);
+					subject.publish(events);
+					latestServerOrder = events[events.length - 1].order;
+				} else {
+					for (const event of events) {
+						addEvent(event);
+					}
 				}
-			}
-			// TODO onBoardLoad
-			const searchParams = new URLSearchParams(
-				window.location.search.slice(1),
-			);
-			const toFocusId = searchParams.get("focus") ?? "";
-			const toFocusItem = this.board.items.getById(toFocusId);
-			if (toFocusItem) {
-				const mbr = toFocusItem.getMbr();
-				mbr.left -= 50;
-				mbr.top -= 50;
-				mbr.right += 50;
-				mbr.bottom += 50;
-				this.board.camera.zoomToFit(mbr);
-			}
-			// onBoardLoad
+				onBoardLoad();
+				break;
+			case "CreateSnapshotRequest":
+				const snapshot = getSnapshot();
+				connection.publishSnapshot(board.getBoardId(), snapshot);
+				break;
+			case "BoardSnapshot":
+				const existingSnapshot = board.getSnapshot();
+				if (existingSnapshot.lastIndex > 0) {
+					const newerEvents = message.snapshot.events.filter(
+						event => event.order > existingSnapshot.lastIndex,
+					);
+					if (newerEvents.length > 0) {
+						newerEvents.forEach(event => addEvent(event));
+					}
+				} else {
+					board.deserialize(message.snapshot);
+				}
+				board.saveSnapshot(message.snapshot);
+				onBoardLoad();
+				break;
 		}
-	};
+	}
 
-	addEvent(event: BoardEvent): void {
-		if (event.order <= this.latestServerOrder) {
+	function onBoardLoad(): void {
+		const searchParams = new URLSearchParams(
+			window.location.search.slice(1),
+		);
+		const toFocusId = searchParams.get("focus") ?? "";
+		const toFocusItem = board.items.getById(toFocusId);
+		if (toFocusItem) {
+			const mbr = toFocusItem.getMbr();
+			mbr.left -= 50;
+			mbr.top -= 50;
+			mbr.right += 50;
+			mbr.bottom += 50;
+			board.camera.zoomToFit(mbr);
+		}
+		board.camera.setBoardId(board.getBoardId());
+		board.camera.useSavedSnapshot();
+	}
+
+	function addEvent(event: BoardEvent): void {
+		if (event.order <= latestServerOrder) {
 			return;
 		}
-		const eventConnectionId = parseFloat(event.body.eventId.split(":")[0]);
-		const isEventFromFromOtherConnection =
-			this.connection.connectionId !== eventConnectionId;
-		if (isEventFromFromOtherConnection) {
-			this.insertEvent(event);
-			this.subject.publish(event);
+		const eventUserId = parseFloat(event.body.eventId.split(":")[0]);
+		const currentUserId = getUserId();
+
+		const isEventFromCurrentUser = eventUserId === currentUserId;
+		if (!isEventFromCurrentUser) {
+			log.insertEvents(event);
+			subject.publish(event);
 		} else {
-			this.setLocalEventOrder(event);
+			log.setEventOrder(event);
 		}
-		this.latestServerOrder = event.order;
+		latestServerOrder = event.order;
 	}
 
-	insertEvent(event: BoardEvent): void {
-		const unordered = this.log.popUnorderedRecords();
-		const eventBody = event.body;
-		if (enabledInsertEventDebug) {
-			console.info("-> Events.insertEvent()", event);
-		}
-		const command = createCommand(this, this.board, eventBody.operation);
-		const record = { event, command };
-		command.apply();
-		this.log.push(record);
-		this.log.pushRecordsStackAndRecreateCommands(
-			unordered,
-			this.createCommand,
-		);
-	}
-
-	insertEvents(events: BoardEvent[]): void {
-		const unordered = this.log.popUnorderedRecords();
-		const mergedEvents = this.log.mergeEvents(events);
-		for (const event of mergedEvents) {
-			const eventBody = event.body;
-			if (enabledInsertEventDebug) {
-				console.info("-> Events.insertEvent()", event);
-			}
-			const command = createCommand(
-				this,
-				this.board,
-				eventBody.operation,
-			);
-			const record = { event, command };
-			command.apply();
-			this.log.list.push(record);
-		}
-		this.log.pushRecordsStackAndRecreateCommands(
-			unordered,
-			this.createCommand,
-		);
-	}
-
-	createCommand = (op: Operation): Command => {
-		return createCommand(this, this.board, op);
-	};
-
-	setLocalEventOrder(event: BoardEvent): void {
-		const record = this.log.getRecordById(event.body.eventId);
-		if (record) {
-			record.event.order = event.order;
-		}
-	}
-
-	emit(operation: Operation, command: Command): void {
-		if (enabledEmitDebug) {
-			console.info("-> Events.emit()", operation);
-		}
-		// TODO replace connectionId with userId
-		const eventBody = {
-			eventId: this.getNextLocalEventId(),
-			userId: this.connection.connectionId,
-			boardId: this.board.getBoardId(),
+	function emit(operation: Operation, command: Command): void {
+		const userId = getUserId();
+		const body = {
+			eventId: getNextEventId(),
+			userId,
+			boardId: board.getBoardId(),
 			operation: operation,
 		} as BoardEventBody;
-		const event = new BoardEvent(0, eventBody);
+		const event = { order: 0, body };
 		const record = { event, command };
-		this.log.push(record, false);
-		// TODO replace connectionId with userId
-		this.setLatestUserEvent(operation, this.connection.connectionId);
-		this.connection.publishBoardEvent(this.board.getBoardId(), event);
-		this.subject.publish(event);
+		log.push(record);
+		setLatestUserEvent(operation, userId);
+		connection.publishBoardEvent(board.getBoardId(), event);
+		subject.publish(event);
 	}
 
-	republishEvents = (): void => {
-		const unordered = this.log.popUnorderedRecordsWithoutRevert();
+	function republishEvents(): void {
+		const unordered = log.getUnorderedRecords();
 		for (const record of unordered) {
-			this.connection.publishBoardEvent(
-				this.board.getBoardId(),
-				record.event,
-			);
+			connection.publishBoardEvent(board.getBoardId(), record.event);
 		}
-		this.log.pushRecordsStackWithoutApply(unordered);
-	};
+	}
 
-	apply(operation: EventsOperation): void | false {
+	function apply(operation: EventsOperation): void | false {
 		switch (operation.method) {
 			case "undo":
-				return this.applyUndo(operation.eventId);
+				return applyUndo(operation.eventId);
 			case "redo":
-				return this.applyRedo(operation.eventId);
+				return applyRedo(operation.eventId);
+			default:
+				return false;
 		}
 	}
 
-	setLatestLocalEventId(localEventId: number): void {
-		this.eventCounter = localEventId;
+	let eventCounter = 0;
+
+	function getNextEventId(): string {
+		const id = ++eventCounter;
+		const userId = getUserId();
+		return userId + ":" + id;
 	}
 
-	getNextLocalEventId(): string {
-		const id = ++this.eventCounter;
-		return this.connection.connectionId + ":" + id;
-	}
-
-	getNewItemId(): string {
-		const id = ++this.itemCounter;
-		return this.connection.connectionId + ":" + id;
-	}
-
-	applyUndo(updateLocalId: string): void {
-		const record = this.log.getRecordById(updateLocalId);
+	function applyUndo(updateLocalId: string): void {
+		const record = log.getRecordById(updateLocalId);
 		if (!record) {
 			return;
 		}
-		const { userId, operation } = record.event.body;
 		record.command.revert();
-		/*
-        switch (operation.class) {
-            case "Board":
-            case "Shape":
-            case "Transformation":
-            case "RichText":
-                record.command.revert();
-                break;
-        }
-        */
 	}
 
-	// RichText passes false because the undo is handled by the RichTextEditor
-	undo(apply = true): void {
-		// TODO replace connectionId with userId
-		const record = this.log.getUserUndoRecord(this.connection.connectionId);
+	function undo(apply = true): void {
+		const currentUserId = getUserId();
+		const record = log.getUndoRecord(currentUserId);
 		if (!record) {
 			return;
 		}
-		if (
-			!this.canUndoEvent(
-				record.event.body.operation,
-				record.event.body.userId,
-			)
-		) {
+		const { operation, userId, eventId } = record.event.body;
+		const canUndo = canUndoEvent(operation, userId);
+		if (!canUndo) {
 			return;
 		}
-		const operation: EventsOperation = {
+		const undoOp: EventsOperation = {
 			class: "Events",
 			method: "undo",
-			eventId: record.event.body.eventId,
+			eventId,
 		};
-		const command = new EventsCommand(this, operation);
+		const command = new EventsCommand(instance, undoOp);
 		if (apply) {
 			command.apply();
 		}
-		this.emit(operation, command);
+		emit(undoOp, command);
 	}
 
-	applyRedo(updateLocalId: string): void {
-		const record = this.log.getRecordById(updateLocalId);
+	function applyRedo(updateLocalId: string): void {
+		const record = log.getRecordById(updateLocalId);
 		if (!record) {
 			return;
 		}
 		if (record.event.body.operation.method === "undo") {
-			const undoable = this.log.getRecordById(
+			const undoable = log.getRecordById(
 				record.event.body.operation.eventId,
 			);
 			undoable?.command.apply();
@@ -268,9 +225,9 @@ export class Events {
 		}
 	}
 
-	redo(apply = true): void {
-		// TODO replace connectionId with userId
-		const record = this.log.getUserRedoRecord(this.connection.connectionId);
+	function redo(apply = true): void {
+		const userId = getUserId();
+		const record = log.getRedoRecord(userId);
 		if (!record) {
 			return;
 		}
@@ -279,50 +236,74 @@ export class Events {
 			method: "redo",
 			eventId: record.event.body.eventId,
 		};
-		const command = new EventsCommand(this, operation);
+		const command = new EventsCommand(instance, operation);
 		if (apply) {
 			command.apply();
 		}
-		this.emit(operation, command);
+		emit(operation, command);
 	}
 
-	canUndoEvent(op: Operation, byUserId?: number): boolean {
+	function canUndoEvent(op: Operation, byUserId?: number): boolean {
 		if (op.method === "undo") {
 			return false;
 		}
-		if (op.method === "redo") {
-			return true;
-		}
-		if (op.method === "paste") {
+		const isRedoPasteOrDuplicate =
+			op.method === "redo" ||
+			op.method === "paste" ||
+			op.method === "duplicate";
+		if (isRedoPasteOrDuplicate) {
 			return true;
 		}
 		const key = `${op.method}_${op.item}`;
-		const latestUserIdEventTouch = this.latestEventTouch[key];
-		return byUserId === undefined || byUserId === latestUserIdEventTouch;
+		const latest = latestEvent[key];
+		return byUserId === undefined || byUserId === latest;
 	}
 
-	setLatestUserEvent(operation: Operation, userId: number): void {
-		if (operation.class !== "Events") {
-			this.latestEventTouch[`${operation.method}_${operation.item}`] =
-				userId;
+	function setLatestUserEvent(op: Operation, userId: number): void {
+		if (
+			op.class !== "Events" &&
+			op.method !== "paste" &&
+			op.method !== "duplicate"
+		) {
+			latestEvent[`${op.method}_${op.item}`] = userId;
 		}
 	}
 
-	canUndo(): boolean {
-		// TODO replace connectionId with userId
-		const record = this.log.getUserUndoRecord(this.connection.connectionId);
+	function canUndo(): boolean {
+		const userId = getUserId();
+		const record = log.getUndoRecord(userId);
 		if (!record) {
 			return false;
 		}
-		return this.canUndoEvent(
+		return canUndoEvent(
 			record.event.body.operation,
 			record.event.body.userId,
 		);
 	}
 
-	canRedo(): boolean {
-		// TODO replace connectionId with userId
-		const record = this.log.getUserRedoRecord(this.connection.connectionId);
+	function canRedo(): boolean {
+		const userId = getUserId();
+		const record = log.getRedoRecord(userId);
 		return record !== null;
 	}
+
+	function getUserId(): number {
+		return connection.connectionId;
+	}
+
+	const instance: Events = {
+		subject,
+		serialize,
+		deserialize,
+		getSnapshot,
+		disconnect,
+		emit,
+		apply,
+		undo,
+		redo,
+		canUndo,
+		canRedo,
+	};
+
+	return instance;
 }
