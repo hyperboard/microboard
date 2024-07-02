@@ -2,7 +2,11 @@ import { Board } from "Board/Board";
 import { Line, Mbr, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape/Basic";
-import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
+import {
+	ADD_TO_SELECTION,
+	DEFAULT_SHAPE,
+	SHAPE_LAST_TYPE_KEY,
+} from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
@@ -16,7 +20,11 @@ export class AddShape extends BoardTool {
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
-		console.log(this.type);
+
+		const lastShapeType = localStorage.getItem(SHAPE_LAST_TYPE_KEY);
+		if (lastShapeType) {
+			this.type = lastShapeType as ShapeType;
+		}
 	}
 
 	setCursor(): void {
@@ -25,6 +33,7 @@ export class AddShape extends BoardTool {
 
 	setShapeType(type: ShapeType): void {
 		this.type = type;
+		localStorage.setItem(SHAPE_LAST_TYPE_KEY, type);
 		this.board.tools.publish();
 	}
 
