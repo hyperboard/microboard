@@ -89,6 +89,7 @@ export class RichText extends Mbr implements Geometry {
 			(op: RichTextOperation) => {
 				this.emitWithoutApplying(op);
 				this.updateElement();
+				this.subject.publish(this);
 			},
 			(): void => {
 				if (this.events) {
