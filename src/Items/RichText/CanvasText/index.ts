@@ -58,7 +58,11 @@ export function getBlockNodes(
 			alignNodes(newMaxWidth);
 		},
 		recoordinate: () => {
+			nodes.forEach(node => {
+				setBlockNodeCoordinates(node);
+			});
 			setBlockNodesCoordinates(nodes);
+			alignNodes(maxWidth);
 		},
 	};
 }
