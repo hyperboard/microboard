@@ -1,4 +1,4 @@
-import { Item, Mbr } from "../Items";
+import { Item, ItemType, Mbr } from "../Items";
 
 export class SelectionItems {
 	private items: Map<string, Item> = new Map<string, Item>();
@@ -39,7 +39,7 @@ export class SelectionItems {
 		return this.items.size === 1;
 	}
 
-	values() {
+	values(): IterableIterator<Item> {
 		return this.items.values();
 	}
 
@@ -59,7 +59,7 @@ export class SelectionItems {
 		return true;
 	}
 
-	isAllItemsType(itemType: string): boolean {
+	isAllItemsType(itemType: ItemType): boolean {
 		if (this.isEmpty()) {
 			return false;
 		}
@@ -69,7 +69,7 @@ export class SelectionItems {
 		);
 	}
 
-	isItemTypes(itemTypes: string[]): boolean {
+	isItemTypes(itemTypes: ItemType[]): boolean {
 		if (this.isEmpty()) {
 			return false;
 		}
@@ -81,15 +81,18 @@ export class SelectionItems {
 		return true;
 	}
 
-	getItemTypes(): string[] {
-		const itemTypes = new Set<string>();
+	getItemTypes(): ItemType[] {
+		const itemTypes = new Set<ItemType>();
 		this.items.forEach(item => itemTypes.add(item.itemType));
 		return Array.from(itemTypes);
 	}
 
-	getItemsByItemTypes(itemTypes: string[]): Item[] {
-		return Array.from(this.items.values()).filter(item =>
-			itemTypes.includes(item.itemType),
+	getItemsByItemTypes<T extends ItemType>(
+		itemTypes: T[],
+	): Extract<Item, { itemType: T }>[] {
+		return Array.from(this.items.values()).filter(
+			(item): item is Extract<Item, { itemType: T }> =>
+				(itemTypes as ItemType[]).includes(item.itemType),
 		);
 	}
 

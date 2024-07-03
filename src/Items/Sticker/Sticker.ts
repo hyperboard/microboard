@@ -106,7 +106,7 @@ export class Sticker implements Geometry {
 				if (op.method === "scaleBy") {
 					this.text.updateElement();
 				} else if (op.method === "scaleByTranslateBy") {
-					if (this.text.getAutoSizeScale()) {
+					if (this.text.getAutosize()) {
 						this.text.scaleAutoSizeScale(
 							Math.min(op.scale.x, op.scale.y),
 						);
