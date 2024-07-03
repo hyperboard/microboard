@@ -46,6 +46,9 @@ export class Frame implements Geometry {
 		this.transformation,
 		"\u00A0",
 		true,
+		false,
+		undefined,
+		FRAME_TITLE_COLOR,
 	);
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
@@ -62,7 +65,6 @@ export class Frame implements Geometry {
 		private borderStyle = defaultFrameData.borderStyle,
 		private borderWidth = defaultFrameData.borderWidth,
 	) {
-		this.text.setSelectionFontColor(FRAME_TITLE_COLOR, "EditUnderPointer");
 		this.text.setSelectionHorisontalAlignment("left");
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();

@@ -2,7 +2,7 @@ import { Mbr, Line, Path, Point } from "Board/Items";
 
 export const Frame1x1 = {
 	name: "1:1",
-	textBounds: new Mbr(0, -15, 100, -1),
+	textBounds: new Mbr(0, -10, 100, -1),
 	path: new Path(
 		[
 			new Line(new Point(0, 0), new Point(100, 0)),
