@@ -455,9 +455,13 @@ export class Selection {
 			"Sticker",
 			"Connector",
 			"Frame",
-		])[0] as RichText | Shape | Frame | undefined;
-		const text = item?.itemType === "RichText" ? item : item?.text;
-		return text;
+		])[0];
+		return item instanceof RichText ? item : item?.text;
+	}
+
+	getAutosize(): boolean {
+		const sticker = this.items.getItemsByItemTypes(["Sticker"])[0];
+		return sticker?.text.getAutosize() || false;
 	}
 
 	getFontSize(): number {
@@ -485,40 +489,27 @@ export class Selection {
 	}
 
 	getBorderStyle(): string {
-		const shape = this.items.getItemsByItemTypes([
-			"Shape",
-			"Drawing",
-		])[0] as Shape | Drawing | undefined;
+		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
 		return shape?.getBorderStyle() || defaultShapeData.borderStyle;
 	}
 
 	getStrokeColor(): string {
-		const shape = this.items.getItemsByItemTypes([
-			"Shape",
-			"Drawing",
-		])[0] as Shape | Drawing | undefined;
+		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
 		return shape?.getStrokeColor() || defaultShapeData.borderColor;
 	}
 
 	getStrokeWidth(): number {
-		const shape = this.items.getItemsByItemTypes([
-			"Shape",
-			"Drawing",
-		])[0] as Shape | Drawing | undefined;
+		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
 		return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
 	}
 
 	getStartPointerStyle(): string {
-		const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as
-			| Connector
-			| undefined;
+		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
 		return pointer?.getStartPointerStyle() || "none";
 	}
 
 	getEndPointerStyle(): string {
-		const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as
-			| Connector
-			| undefined;
+		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
 		return pointer?.getEndPointerStyle() || "none";
 	}
 
@@ -550,9 +541,7 @@ export class Selection {
 	}
 
 	getConnectorLineStyle(): string {
-		const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as
-			| Connector
-			| undefined;
+		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
 		return pointer?.getLineStyle() || "none";
 	}
 
@@ -925,6 +914,20 @@ export class Selection {
 			method: "setVerticalAlignment",
 			item: this.items.ids(),
 			verticalAlignment,
+		});
+	}
+
+	autosizeEnable(): void {
+		this.items
+			.getItemsByItemTypes(["Sticker"])
+			.forEach(sticker => sticker.text.autosizeEnable());
+	}
+
+	autosizeDisable(): void {
+		this.items.getItemsByItemTypes(["Sticker"]).forEach(sticker => {
+			if (sticker.text.getAutosize()) {
+				sticker.text.autosizeDisable();
+			}
 		});
 	}
 
