@@ -645,7 +645,6 @@ export class RichText extends Mbr implements Geometry {
 		if (this.initialFontColor) {
 			const color = this.initialFontColor;
 			this.initialFontColor = undefined;
-			console.log("initialFontColor", color);
 			return color;
 		}
 		return marks?.fontColor ?? defaultTextStyle.fontColor;
