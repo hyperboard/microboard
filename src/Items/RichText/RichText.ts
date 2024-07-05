@@ -80,6 +80,7 @@ export class RichText extends Mbr implements Geometry {
 		public isInShape = false,
 		private autoSize = false,
 		public insideOf?: string,
+		public initialFontColor?: string,
 	) {
 		super();
 
@@ -641,6 +642,11 @@ export class RichText extends Mbr implements Geometry {
 
 	getFontColor(): string {
 		const marks = this.editor.getSelectionMarks();
+		if (this.initialFontColor) {
+			const color = this.initialFontColor;
+			this.initialFontColor = undefined;
+			return color;
+		}
 		return marks?.fontColor ?? defaultTextStyle.fontColor;
 	}
 

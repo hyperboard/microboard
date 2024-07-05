@@ -25,6 +25,7 @@ import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
+import { FrameType } from "Board/Items/Frame/Basic";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -729,6 +730,41 @@ export class Selection {
 				backgroundColor,
 			});
 		}
+	}
+
+	setCanChangeRatio(canChangeRatio: boolean): void {
+		const frames = this.items.getIdsByItemTypes(["Frame"]);
+		if (frames.length) {
+			this.emit({
+				class: "Frame",
+				method: "setCanChangeRatio",
+				item: frames,
+				canChangeRatio,
+			});
+		}
+	}
+
+	getCanChangeRatio(): boolean {
+		const frame = this.items.getItemsByItemTypes(["Frame"])[0] as Frame;
+		return frame?.getCanChangeRatio() ?? true;
+	}
+
+	setFrameType(frameType: FrameType): void {
+		const frames = this.items.getIdsByItemTypes(["Frame"]);
+		if (frames.length) {
+			this.emit({
+				class: "Frame",
+				method: "setFrameType",
+				item: frames,
+				shapeType: frameType,
+				board: this.board,
+			});
+		}
+	}
+
+	getFrameType(): FrameType {
+		const frame = this.items.getItemsByItemTypes(["Frame"])[0] as Frame;
+		return frame?.getFrameType() ?? "Custom";
 	}
 
 	setShapeType(shapeType: ShapeType): void {
