@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { Descendant, Editor, Transforms } from "slate";
+import { Element, Descendant, Editor, Transforms, Node, Range } from "slate";
 import {
 	Line,
 	Mbr,
@@ -646,7 +646,14 @@ export class RichText extends Mbr implements Geometry {
 
 	getFontStyles(): TextStyle[] {
 		const marks = this.editor.getSelectionMarks();
-		return marks?.styles ?? [];
+		const editor = this.editor.editor;
+		const { selection } = editor;
+		const isCollapsed = selection ? Range.isCollapsed(selection) : true;
+		if (isCollapsed || !selection) {
+			return marks?.styles ?? [];
+		}
+		const styles = this.editor.getSelectionStyles();
+		return styles ?? [];
 	}
 
 	getFontColor(): string {

@@ -305,6 +305,11 @@ export class Selection {
 					this.setTextToEdit(item);
 				}
 				this.setContext("EditUnderPointer");
+				if ("text" in top) {
+					top.text.selectWholeText();
+				} else {
+					top.selectWholeText();
+				}
 				this.board.items.subject.publish(this.board.items);
 			} else {
 				this.setContext("EditUnderPointer");
@@ -808,37 +813,6 @@ export class Selection {
 	}
 
 	setFontStyle(fontStyleList: TextStyle[]): void {
-		/*
-		const items = this.items.list();
-		const changedIds: string[] = [];
-		items.forEach(item => {
-			switch (item.itemType) {
-				case "RichText":
-					(item as RichText).setSelectionFontStyle(
-						fontStyleList,
-						this.context,
-					);
-					changedIds.push(item.getId());
-					break;
-				case "Connector":
-				case "Shape":
-				case "Sticker":
-					(
-						item as Shape | Sticker | Connector
-					).text.setSelectionFontStyle(fontStyleList, this.context);
-					changedIds.push(item.getId());
-					break;
-			}
-		});
-		if (changedIds.length) {
-			this.emit({
-				class: "RichText",
-				method: "setFontStyle",
-				item: changedIds,
-				fontStyleList,
-			});
-		}
-		*/
 		const single = this.items.getSingle();
 		if (single) {
 			if (single instanceof RichText) {

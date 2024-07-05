@@ -6,6 +6,7 @@ import {
 	Editor,
 	Operation as EditorOperation,
 	Element,
+	Range,
 	Transforms,
 	createEditor,
 } from "slate";
@@ -22,6 +23,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+import { Text } from "slate";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -394,15 +396,17 @@ export class EditorContainer {
 		}
 		this.recordMethodOps("setSelectionFontStyle");
 		styleList.forEach(style => {
-			const styles = marks.styles ? marks.styles.slice() : [];
-			const index = styles.indexOf(style);
-			if (index === -1) {
-				styles.push(style);
+			const currentStyles = this.getSelectionStyles() ?? [];
+			if (currentStyles.includes(style)) {
+				const updatedStyles = currentStyles.filter(s => s !== style);
+				Editor.removeMark(editor, "styles");
+				Editor.addMark(editor, "styles", updatedStyles);
 			} else {
-				styles.splice(index, 1);
+				Editor.addMark(editor, "styles", [
+					...currentStyles,
+					...styleList,
+				]);
 			}
-			Editor.removeMark(editor, "styles");
-			Editor.addMark(editor, "styles", styles);
 			ReactEditor.focus(editor);
 		});
 		this.emitMethodOps();
@@ -531,6 +535,49 @@ export class EditorContainer {
 
 	getSelectionMarks(): Omit<TextNode, "text"> | null {
 		return Editor.marks(this.editor);
+	}
+
+	getSelectionStyles(): string[] | undefined {
+		const editor = this.editor;
+		const { selection } = editor;
+		if (!selection) {
+			return;
+		}
+		const nodes = Array.from(
+			Editor.nodes(editor, {
+				at: Editor.unhangRange(editor, selection),
+				match: node =>
+					!Editor.isEditor(node) &&
+					Element.isElement(node) &&
+					node.type === "paragraph",
+			}),
+		);
+		const styles = nodes
+			.flatMap(nodeEntry => {
+				const [node, path] = nodeEntry;
+				const { children } = node;
+				const filteredChildren = children.filter((child, index) => {
+					const childPath = path.concat(index);
+					return Range.includes(
+						selection,
+						Editor.range(editor, childPath),
+					);
+				});
+				return filteredChildren;
+			})
+			.map(textNode => {
+				return textNode.styles;
+			})
+			.reduce(
+				(acc: string[], currStyles) => {
+					if (!currStyles) {
+						return [];
+					}
+					return acc.filter(style => currStyles.includes(style));
+				},
+				["bold", "italic", "underline", "line-through"],
+			);
+		return styles;
 	}
 
 	getSelectedBlockNode(): BlockNode | null {
