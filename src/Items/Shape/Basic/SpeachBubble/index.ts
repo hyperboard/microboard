@@ -7,23 +7,23 @@ export const SpeachBubble = {
 		[
 			new CubicBezier(
 				new Point(0, 10),
-				new Point(0, 10),
+				new Point(0, 5), // Adjusted control point
 				new Point(10, 0),
-				new Point(0, 0),
+				new Point(5, 0), // Adjusted control point
 			),
 			new Line(new Point(10, 0), new Point(90, 0)),
 			new CubicBezier(
-				new Point(10, 0),
 				new Point(90, 0),
+				new Point(95, 0), // Adjusted control point
 				new Point(100, 10),
-				new Point(100, 0),
+				new Point(100, 5), // Adjusted control point
 			),
 			new Line(new Point(100, 10), new Point(100, 80)),
 			new CubicBezier(
 				new Point(100, 80),
-				new Point(100, 80),
+				new Point(100, 85), // Adjusted control point
 				new Point(90, 90),
-				new Point(100, 90),
+				new Point(95, 90), // Adjusted control point
 			),
 			new Line(new Point(90, 90), new Point(30, 90)),
 			new Line(new Point(30, 90), new Point(20, 100)),
@@ -31,9 +31,9 @@ export const SpeachBubble = {
 			new Line(new Point(20, 90), new Point(10, 90)),
 			new CubicBezier(
 				new Point(10, 90),
-				new Point(10, 90),
+				new Point(5, 90), // Adjusted control point
 				new Point(0, 80),
-				new Point(0, 90),
+				new Point(0, 85), // Adjusted control point
 			),
 			new Line(new Point(0, 80), new Point(0, 10)),
 		],
