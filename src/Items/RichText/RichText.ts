@@ -306,6 +306,15 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	addText(text: string): void {
+		this.editor.editor.apply({
+			type: "insert_text",
+			text: text,
+			path: [0, 0],
+			offset: 0,
+		});
+	}
+
 	/** Get text dimensions for text editor */
 	getDimensions(): {
 		point: Point;
