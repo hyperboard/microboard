@@ -558,10 +558,8 @@ export class EditorContainer {
 				const { children } = node;
 				const filteredChildren = children.filter((child, index) => {
 					const childPath = path.concat(index);
-					return Range.includes(
-						selection,
-						Editor.range(editor, childPath),
-					);
+					const childRange = Editor.range(editor, childPath);
+					return Range.intersection(selection, childRange) !== null;
 				});
 				return filteredChildren;
 			})
