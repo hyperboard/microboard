@@ -112,15 +112,8 @@ export class Sticker implements Geometry {
 						);
 						this.text.recoordinate();
 						this.text.transformCanvas();
-					} else if (
-						this.text.getTextWidth() >
-							(this.text.getMaxWidth() || 0) ||
-						this.text.hasWraps()
-					) {
-						this.text.updateElement();
 					} else {
-						this.text.realign();
-						this.text.transformCanvas();
+						this.text.handleInshapeScale();
 					}
 				}
 				this.subject.publish(this);

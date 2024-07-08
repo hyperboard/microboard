@@ -8,7 +8,7 @@ export interface LayoutBlockNodes {
 	height: number;
 	render: (ctx: Ctx, scale?: number) => void;
 	realign: (newMaxWidht: number) => void;
-	recoordinate: () => void;
+	recoordinate: (newMaxWidth?: number) => void;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -57,12 +57,16 @@ export function getBlockNodes(
 		realign: (newMaxWidth: number) => {
 			alignNodes(newMaxWidth);
 		},
-		recoordinate: () => {
+		recoordinate: (newMaxWidth?: number) => {
 			nodes.forEach(node => {
 				setBlockNodeCoordinates(node);
 			});
 			setBlockNodesCoordinates(nodes);
-			alignNodes(maxWidth);
+			if (newMaxWidth) {
+				alignNodes(newMaxWidth);
+			} else {
+				alignNodes(maxWidth);
+			}
 		},
 	};
 }
@@ -610,9 +614,9 @@ function alignToCenter(
 		const xOffset = (maxWidth - lineWidth) / 2;
 		for (const block of line) {
 			if (scale) {
-				block.x = xOffset / scale;
+				block.x += xOffset / scale;
 			} else {
-				block.x = xOffset;
+				block.x += xOffset;
 			}
 		}
 	}
@@ -691,7 +695,10 @@ function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
 }
 
 function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	if (textBlock.style.textDecorationLine !== "underline") {
+	if (
+		textBlock.style.textDecorationLine !== "underline" ||
+		textBlock.text === "\u00A0"
+	) {
 		return;
 	}
 	const x = textBlock.x;
@@ -712,7 +719,10 @@ function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 }
 
 function cross(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	if (textBlock.style.crossed !== "line-through") {
+	if (
+		textBlock.style.crossed !== "line-through" ||
+		textBlock.text === "\u00A0"
+	) {
 		return;
 	}
 	const x = textBlock.x;

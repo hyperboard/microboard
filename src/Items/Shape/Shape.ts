@@ -72,29 +72,11 @@ export class Shape implements Geometry {
 						this.text.transformCanvas();
 					} else {
 						// scaling
-						if (
-							this.text.getTextWidth() >
-								(this.text.getMaxWidth() || 0) ||
-							this.text.hasWraps()
-						) {
-							this.text.updateElement();
-						} else {
-							this.text.transformCanvas();
-							this.text.realign();
-						}
+						this.text.handleInshapeScale();
 					}
 				} else {
 					if (op.method === "scaleByTranslateBy") {
-						if (
-							this.text.getTextWidth() >
-								(this.text.getMaxWidth() || 0) ||
-							this.text.hasWraps()
-						) {
-							this.text.updateElement();
-						} else {
-							this.text.realign();
-							this.text.transformCanvas();
-						}
+						this.text.handleInshapeScale();
 					} else {
 						this.text.updateElement();
 					}

@@ -185,6 +185,20 @@ export class RichText extends Mbr implements Geometry {
 		return isTextEmpty(this.editor.editor.children);
 	}
 
+	handleInshapeScale(): void {
+		if (this.isInShape) {
+			if (
+				this.getTextWidth() > (this.getMaxWidth() || 0) ||
+				this.hasWraps()
+			) {
+				this.updateElement();
+			} else {
+				this.transformCanvas();
+				this.recoordinate(this.getMaxWidth());
+			}
+		}
+	}
+
 	handleFocus = (): void => {
 		isEditInProcessValue = true;
 	};
@@ -959,8 +973,8 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
-	recoordinate(): void {
-		this.blockNodes.recoordinate();
+	recoordinate(newMaxWidth?: number): void {
+		this.blockNodes.recoordinate(newMaxWidth);
 	}
 
 	hasWraps(): boolean {
