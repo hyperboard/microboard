@@ -16,6 +16,7 @@ import { ToolContext } from "./ToolContext";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
+
 	constructor(protected board: Board) {
 		super();
 	}
@@ -81,6 +82,7 @@ export class Tools extends ToolContext {
 	getAddShape(): AddShape | undefined {
 		return this.tool instanceof AddShape ? this.tool : undefined;
 	}
+
 	getAddSticker(): AddSticker | undefined {
 		return this.tool instanceof AddSticker ? this.tool : undefined;
 	}
@@ -118,7 +120,7 @@ export class Tools extends ToolContext {
 	}
 
 	addDrawing(clearSelection = false): void {
-		if (this.getAddDrawing() && !isIframe()) {
+		if (this.getAddDrawing()) {
 			this.cancel();
 		} else {
 			this.tool = new AddDrawing(this.board);
