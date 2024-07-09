@@ -215,7 +215,7 @@ export class Select extends Tool {
 					});
 				}
 			});
-			selection.tranformMany(translation, this.beginTimeStamp);
+			selection.transformMany(translation, this.beginTimeStamp);
 
 			if (Object.keys(translation).length > 1) {
 				const sumMbr = this.canvasDrawer.countSumMbr(translation);

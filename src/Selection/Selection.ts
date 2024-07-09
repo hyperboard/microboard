@@ -601,7 +601,7 @@ export class Selection {
 
 	// TODO all the other transformations are redundant, use this one for everything
 	// Instead of TransformationOperation just put matrix in it
-	tranformMany(
+	transformMany(
 		items: { [key: string]: TransformationOperation },
 		timeStamp?: number,
 	): void {

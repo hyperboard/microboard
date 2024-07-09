@@ -276,7 +276,7 @@ export class Transformer extends Tool {
 					};
 				}
 			}
-			this.selection.tranformMany(translation, this.beginTimeStamp);
+			this.selection.transformMany(translation, this.beginTimeStamp);
 			if (Object.keys(translation).length > 50) {
 				this.canvasDrawer.updateCanvasAndKeys(
 					resize.mbr,
