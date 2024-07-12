@@ -1,4 +1,3 @@
-// import { Board } from "Board";
 import { Board } from "../../Board";
 import { Frame, Item, Line, Mbr, Point, RichText } from "../../Items";
 import { DrawingContext } from "../../Items/DrawingContext";
