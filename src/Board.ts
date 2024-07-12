@@ -222,8 +222,8 @@ export class Board {
 		translation: TransformManyItems,
 	): HTMLCanvasElement | undefined {
 		const canvas = document.createElement("canvas");
-		const width = mbr.getWidth();
-		const height = mbr.getHeight();
+		const width = mbr.getWidth() + 100;
+		const height = mbr.getHeight() + 100;
 		canvas.width = width * this.camera.getMatrix().scaleX;
 		canvas.height = height * this.camera.getMatrix().scaleY;
 
@@ -262,6 +262,7 @@ export class Board {
 			if (item) {
 				item.render(context);
 				this.selection.renderItemMbr(context, item);
+				this.selection.tool.render(context);
 			}
 		});
 

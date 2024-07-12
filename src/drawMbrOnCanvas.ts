@@ -1,10 +1,15 @@
-import { Board } from "Board/Board";
+import { Board } from "./Board";
 import { Matrix, Mbr } from "./Items";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
 export default function createCanvasDrawer(board: Board): {
-	lastCreatedCanvas?: HTMLCanvasElement;
-	lastTranslationKeys?: string[];
+	getLastCreatedCanvas: () => HTMLCanvasElement | undefined;
+	getLastTranslationKeys: () => string[] | undefined;
+	getMatrix: () => Matrix;
+	translateCanvasBy: (x: number, y: number) => void;
+	recoordinateCanvas: (sumMbr: Mbr) => void;
+	scaleCanvasBy: (scaleX: number, scaleY: number) => void;
+	scaleCanvasTo: (scaleX: number, scaleY: number) => void;
 	clearCanvasAndKeys: () => void;
 	updateCanvasAndKeys: (
 		sumMbr: Mbr,
@@ -16,6 +21,63 @@ export default function createCanvasDrawer(board: Board): {
 	let lastCreatedCanvas: HTMLCanvasElement | undefined = undefined;
 	let lastTranslationKeys: string[] | undefined = undefined;
 	let matrix = new Matrix();
+
+	function getLastCreatedCanvas(): HTMLCanvasElement | undefined {
+		return lastCreatedCanvas;
+	}
+
+	function getLastTranslationKeys(): string[] | undefined {
+		return lastTranslationKeys;
+	}
+
+	function getMatrix(): Matrix {
+		return matrix;
+	}
+
+	function translateCanvasBy(x: number, y: number) {
+		if (lastCreatedCanvas) {
+			matrix.translate(x, y);
+			const currentLeft = parseFloat(lastCreatedCanvas.style.left || "0");
+			const currentTop = parseFloat(lastCreatedCanvas.style.top || "0");
+			lastCreatedCanvas.style.left = `${
+				currentLeft + x * board.camera.getMatrix().scaleX
+			}px`;
+			lastCreatedCanvas.style.top = `${
+				currentTop + y * board.camera.getMatrix().scaleY
+			}px`;
+		}
+	}
+
+	function recoordinateCanvas(sumMbr: Mbr) {
+		if (lastCreatedCanvas) {
+			lastCreatedCanvas.style.left = `${
+				(sumMbr.left - board.camera.getMbr().left) *
+				board.camera.getMatrix().scaleX
+			}px`;
+			lastCreatedCanvas.style.top = `${
+				(sumMbr.top - board.camera.getMbr().top) *
+				board.camera.getMatrix().scaleY
+			}px`;
+			matrix = new Matrix();
+		}
+	}
+
+	function scaleCanvasBy(scaleX: number, scaleY: number) {
+		if (lastCreatedCanvas) {
+			matrix.scale(scaleX, scaleY);
+			lastCreatedCanvas.style.transformOrigin = "top left";
+			lastCreatedCanvas.style.transform = `scale(${matrix.scaleX}, ${matrix.scaleY})`;
+		}
+	}
+
+	function scaleCanvasTo(scaleX: number, scaleY: number) {
+		if (lastCreatedCanvas) {
+			matrix.scaleX = scaleX;
+			matrix.scaleY = scaleY;
+			lastCreatedCanvas.style.transformOrigin = "top left";
+			lastCreatedCanvas.style.transform = `scale(${matrix.scaleX}, ${matrix.scaleY})`;
+		}
+	}
 
 	function clearCanvasAndKeys(): void {
 		if (lastCreatedCanvas) {
@@ -47,19 +109,10 @@ export default function createCanvasDrawer(board: Board): {
 			lastTranslationKeys?.length === translationKeys.length &&
 			lastTranslationKeys?.every(key => translationKeys.includes(key))
 		) {
+			recoordinateCanvas(sumMbr);
 			if (resizingMatrix) {
-				matrix.scale(resizingMatrix.scaleX, resizingMatrix.scaleY);
-				lastCreatedCanvas.style.transformOrigin = "top left";
-				lastCreatedCanvas.style.transform = `scale(${matrix.scaleX}, ${matrix.scaleY})`;
+				scaleCanvasBy(resizingMatrix.scaleX, resizingMatrix.scaleY);
 			}
-			lastCreatedCanvas.style.left = `${
-				(sumMbr.left - board.camera.getMbr().left) *
-				board.camera.getMatrix().scaleX
-			}px`;
-			lastCreatedCanvas.style.top = `${
-				(sumMbr.top - board.camera.getMbr().top) *
-				board.camera.getMatrix().scaleY
-			}px`;
 		} else {
 			const cnvs = board.drawMbrOnCanvas(sumMbr, translation);
 			if (cnvs) {
@@ -103,8 +156,13 @@ export default function createCanvasDrawer(board: Board): {
 	}
 
 	return {
-		lastCreatedCanvas,
-		lastTranslationKeys,
+		getLastCreatedCanvas,
+		getLastTranslationKeys,
+		getMatrix,
+		translateCanvasBy,
+		recoordinateCanvas,
+		scaleCanvasBy,
+		scaleCanvasTo,
 		clearCanvasAndKeys,
 		updateCanvasAndKeys,
 		countSumMbr,
