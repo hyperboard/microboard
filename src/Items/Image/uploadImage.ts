@@ -1,6 +1,7 @@
 import { Board } from "Board/Board";
 import { ImageItem } from "./Image";
 import { calculatePosition } from "./calculatePosition";
+import { prepareImage } from "./ImageHelpers";
 
 export function uploadImage(file: File, board: Board) {
 	const reader = new FileReader();
@@ -35,44 +36,56 @@ export function uploadImage(file: File, board: Board) {
 								pagesRendered++;
 								const base64String =
 									canvas.toDataURL("image/png");
-								const image = new ImageItem(base64String);
-								const boardImage = board.add(image);
-								boardImage.doOnceOnLoad(() => {
-									const viewportMbr = board.camera.getMbr();
-									const scale = 1;
-									const viewportCenter =
-										viewportMbr.getCenter();
-									viewportCenter.y = viewportMbr.top;
-									const offsetX =
-										((pagesRendered - 1) % 2) *
-											(scale * image.getWidth()) -
-										(scale * image.getWidth()) / 2;
-									const offsetY = viewportYOffset;
-									const centeredX =
-										viewportCenter.x + offsetX;
-									const centeredY =
-										viewportCenter.y + offsetY;
-									boardImage.transformation.translateTo(
-										centeredX,
-										centeredY,
-									);
-									boardImage.transformation.scaleTo(
-										scale,
-										scale,
-									);
+								prepareImage(base64String)
+									.then(imageData => {
+										const image = new ImageItem(imageData);
+										const boardImage = board.add(image);
+										boardImage.doOnceOnLoad(() => {
+											const viewportMbr =
+												board.camera.getMbr();
+											const scale = 1;
+											const viewportCenter =
+												viewportMbr.getCenter();
+											viewportCenter.y = viewportMbr.top;
+											const offsetX =
+												((pagesRendered - 1) % 2) *
+													(scale * image.getWidth()) -
+												(scale * image.getWidth()) / 2;
+											const offsetY = viewportYOffset;
+											const centeredX =
+												viewportCenter.x + offsetX;
+											const centeredY =
+												viewportCenter.y + offsetY;
+											boardImage.transformation.translateTo(
+												centeredX,
+												centeredY,
+											);
+											boardImage.transformation.scaleTo(
+												scale,
+												scale,
+											);
 
-									if (
-										pageNum % 2 === 0 ||
-										pageNum === maxPages
-									) {
-										viewportYOffset += pageHeight * scale;
-									}
+											if (
+												pageNum % 2 === 0 ||
+												pageNum === maxPages
+											) {
+												viewportYOffset +=
+													pageHeight * scale;
+											}
 
-									if (pagesRendered < maxPages) {
-										renderPage(pageNum + 1);
-									}
-								});
-								canvas.remove();
+											if (pagesRendered < maxPages) {
+												renderPage(pageNum + 1);
+											}
+										});
+										canvas.remove();
+									})
+									.catch(er => {
+										console.error(
+											"Could not create pdf page:",
+											er,
+										);
+										// TODO notification
+									});
 							});
 						});
 					};
@@ -86,19 +99,29 @@ export function uploadImage(file: File, board: Board) {
 		};
 		reader.readAsArrayBuffer(file);
 	} else {
-		reader.onload = (event: any) => {
-			const base64String = event.target.result;
-			const image = new ImageItem(base64String);
-			image.doOnceBeforeOnLoad(() => {
-				const { scaleX, scaleY, translateX, translateY } =
-					calculatePosition(image, board);
-				image.transformation.applyTranslateTo(translateX, translateY);
-				image.transformation.applyScaleTo(scaleX, scaleY);
-				image.updateMbr();
-				const boardImage = board.add(image);
-				board.selection.removeAll();
-				board.selection.add(boardImage);
-			});
+		reader.onload = (event: ProgressEvent<FileReader>) => {
+			const base64String = event.target?.result as string;
+			prepareImage(base64String)
+				.then(imageData => {
+					const image = new ImageItem(imageData);
+					image.doOnceBeforeOnLoad(() => {
+						const { scaleX, scaleY, translateX, translateY } =
+							calculatePosition(image, board);
+						image.transformation.applyTranslateTo(
+							translateX,
+							translateY,
+						);
+						image.transformation.applyScaleTo(scaleX, scaleY);
+						image.updateMbr();
+						const boardImage = board.add(image);
+						board.selection.removeAll();
+						board.selection.add(boardImage);
+					});
+				})
+				.catch(er => {
+					console.error("Could not create image:", er);
+					// TODO notification
+				});
 		};
 		reader.readAsDataURL(file);
 	}

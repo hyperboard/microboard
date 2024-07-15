@@ -215,7 +215,7 @@ export class Board {
 	 * Creates new canvas and returns it.
 	 * Renders all items from translation on new canvas.
 	 * @param mbr - width and height for resulting canvas
-	 * @param translation - in which mbr we should find items
+	 * @param translation - ids of items to draw on mbr
 	 */
 	drawMbrOnCanvas(
 		mbr: Mbr,
