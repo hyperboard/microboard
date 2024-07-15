@@ -28,6 +28,7 @@ import {
 	SnapshotInfo,
 } from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
 import { FRAME_TITLE_COLOR } from "View/Items/Frame";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 const defaultFrameData = new FrameData();
 
 export class Frame implements Geometry {
@@ -39,17 +40,7 @@ export class Frame implements Geometry {
 	private children: string[] = [];
 	private mbr: Mbr = new Mbr();
 	private textContainer = Frames[this.shapeType].textBounds.copy();
-	readonly text = new RichText(
-		this.textContainer,
-		this.id,
-		this.events,
-		this.transformation,
-		"\u00A0",
-		true,
-		false,
-		undefined,
-		FRAME_TITLE_COLOR,
-	);
+	readonly text: RichText;
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
 	transformationRenderBlock?: boolean = undefined;
@@ -57,6 +48,7 @@ export class Frame implements Geometry {
 	constructor(
 		private events?: Events,
 		private id = "",
+		private name = "",
 		private shapeType = defaultFrameData.shapeType,
 		private backgroundColor = defaultFrameData.backgroundColor,
 		private backgroundOpacity = defaultFrameData.backgroundOpacity,
@@ -65,6 +57,17 @@ export class Frame implements Geometry {
 		private borderStyle = defaultFrameData.borderStyle,
 		private borderWidth = defaultFrameData.borderWidth,
 	) {
+		this.text = new RichText(
+			this.textContainer,
+			this.id,
+			this.events,
+			this.transformation,
+			this.name,
+			true,
+			false,
+			undefined,
+			{ ...DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR },
+		);
 		this.text.setSelectionHorisontalAlignment("left");
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
@@ -183,20 +186,23 @@ export class Frame implements Geometry {
 		return this.path instanceof Path && this.path.isClosed();
 	}
 
-	setNameSerial(existingFrames: Frame[]): void {
-		const existingNames = existingFrames
-			.filter(frame => frame !== this)
-			.map(frame => frame.text.getTextString());
-		const maxNumber = existingNames
+	// setNameSerial(existingFrames: Frame[]): void {
+	// 	this.text.clearText();
+	// 	this.text.editorTransforms.insertText(
+	// 		this.text.editor.editor,
+	// 		`Frame ${this.getMaxNumber(existingFrames) + 1}`,
+	// 	);
+	// }
+
+	static getMaxNumber(existingFrames: Frame[]) {
+		const existingNames = existingFrames.map(frame =>
+			frame.text.getTextString(),
+		);
+		return existingNames
 			.map(name => name.match(/^Frame (\d+)$/))
 			.filter(match => match !== null)
 			.map(match => parseInt(match[1], 10))
 			.reduce((max, num) => Math.max(max, num), 0);
-		this.text.clearText();
-		this.text.editorTransforms.insertText(
-			this.text.editor.editor,
-			`Frame ${maxNumber + 1}`,
-		);
 	}
 
 	setId(id: string): this {
@@ -406,7 +412,10 @@ export class Frame implements Geometry {
 			const newMatrix = this.getSavedProportionsMatrix();
 			this.path.transform(newMatrix);
 			this.textContainer.transform(newMatrix);
-			this.transformation.scaleTo(newMatrix.scaleX, newMatrix.scaleY);
+			this.transformation.applyScaleTo(
+				newMatrix.scaleX,
+				newMatrix.scaleY,
+			);
 		} else {
 			this.path.transform(this.transformation.matrix);
 			this.textContainer.transform(this.transformation.matrix);
@@ -530,7 +539,7 @@ export class Frame implements Geometry {
 		this.transformPath(true);
 		if (this.newShape === "Custom") {
 			const scale = this.getLastFrameScale();
-			this.transformation.scaleTo(scale.x, scale.y);
+			this.transformation.applyScaleTo(scale.x, scale.y);
 		}
 		if (board) {
 			this.getChildrenIds().forEach(childId => {

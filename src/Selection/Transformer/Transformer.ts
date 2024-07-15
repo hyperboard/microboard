@@ -183,19 +183,19 @@ export class Transformer extends Tool {
 				);
 				single.transformation.translateBy(matrix.translateX, 0);
 			} else {
-				single.transformation.translateBy(
-					matrix.translateX,
-					matrix.translateY,
-					this.beginTimeStamp,
-				);
+				// single.transformation.translateBy(
+				// 	matrix.translateX,
+				// 	matrix.translateY,
+				// 	this.beginTimeStamp,
+				// );
 				single.transformation.scaleBy(
 					matrix.scaleX,
 					matrix.scaleY,
 					this.beginTimeStamp,
 				);
-				// single.transformation.translateByScaleBy(
-				// 	{ x: matrix.translateX, y: matrix.translateY },
+				// single.transformation.scaleByTranslateBy(
 				// 	{ x: matrix.scaleX, y: matrix.scaleY },
+				// 	{ x: matrix.translateX, y: matrix.translateY },
 				// 	this.beginTimeStamp,
 				// );
 			}

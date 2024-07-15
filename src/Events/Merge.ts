@@ -11,6 +11,9 @@ import {
 	ScaleByTranslateBy,
 	TransformMany,
 } from "Board/Items/Transformation/TransformationOperations";
+import { type ShapeOperation } from "Board/Items/Shape";
+import { DrawingOperation } from "Board/Items/Drawing/DrawingCommand";
+import { BoardOps } from "Board/BoardOperations";
 
 // TODO API Conditional to Map
 export function canNotBeMerged(op: Operation): boolean {
@@ -58,20 +61,35 @@ export function mergeOperations(
 	opA: Operation,
 	opB: Operation,
 ): Operation | undefined {
+	// if (opA.class === "Board" && opB.class === "RichText") {
+	// 	mergeRichTextCreation(opA, opB);
+	// }
+
 	if (opA.class !== opB.class) {
 		return;
 	}
+
 	if (opA.method !== opB.method) {
 		return;
 	}
 	if (opA.class === "Transformation" && opB.class === "Transformation") {
 		return mergeTransformationOperations(opA, opB);
 	}
+
 	if (opA.class === "RichText" && opB.class === "RichText") {
 		return mergeRichTextOperations(opA, opB);
 	}
+
 	if (opA.class === "Connector" && opB.class === "Connector") {
 		return mergeConnectorOperations(opA, opB);
+	}
+
+	if (opA.class === "Shape" && opB.class === "Shape") {
+		return mergeShapeOperations(opA, opB);
+	}
+
+	if (opA.class === "Drawing" && opB.class === "Drawing") {
+		return mergeDrawingOperations(opA, opB);
 	}
 	return;
 }
@@ -259,13 +277,10 @@ function mergeRichTextOperations(
 		return;
 	}
 
-	/*
-    if (opA.method !== opB.method) {
-        return;
-    }
-    const method = opA.method;
-    if (method !== "edit") {}
-    */
+	if (opA.method !== opB.method) {
+		return;
+	}
+
 	if (opA.method !== "edit" || opB.method !== "edit") {
 		return;
 	}
@@ -275,6 +290,18 @@ function mergeRichTextOperations(
 
 	const A = opA.ops[0];
 	const B = opB.ops[0];
+
+	if (
+		A.type === "set_node" &&
+		B.type === "set_node" &&
+		"horisontalAlignment" in A.newProperties &&
+		"horisontalAlignment" in B.newProperties
+	) {
+		return {
+			...opB,
+			ops: [...opA.ops, ...opB.ops],
+		};
+	}
 
 	if (
 		B.type === "insert_text" &&
@@ -315,6 +342,21 @@ function mergeRichTextOperations(
 	return;
 }
 
+// function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation): void {
+// 	// if (!areItemsTheSame(opA, opB)) {
+// 	// 	return;
+// 	// }
+// 	console.log(opA, opB);
+// 	if (
+// 		opA.method === "add" &&
+// 		opB.method === "edit" &&
+// 		opA.item === opB.item[0] &&
+// 		opB.ops[0].type === "insert_text"
+// 	) {
+// 		console.log("merged");
+// 	}
+// }
+
 function mergeConnectorOperations(
 	opA: ConnectorOperation,
 	opB: ConnectorOperation,
@@ -334,5 +376,35 @@ function mergeConnectorOperations(
 		};
 	}
 
+	return;
+}
+
+function mergeShapeOperations(
+	opA: ShapeOperation,
+	opB: ShapeOperation,
+): ShapeOperation | undefined {
+	if (!areItemsTheSame(opA, opB)) {
+		return;
+	}
+	if (opA.method === "setBorderWidth" && opB.method === "setBorderWidth") {
+		return {
+			...opB,
+			prevBorderWidth: opA.prevBorderWidth,
+		};
+	}
+
+	return;
+}
+
+function mergeDrawingOperations(
+	opA: DrawingOperation,
+	opB: DrawingOperation,
+): DrawingOperation | undefined {
+	if (opA.method === "setStrokeWidth" && opB.method === "setStrokeWidth") {
+		return {
+			...opB,
+			prevWidth: opA.prevWidth,
+		};
+	}
 	return;
 }

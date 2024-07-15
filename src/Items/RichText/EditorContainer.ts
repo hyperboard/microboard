@@ -1,21 +1,21 @@
 import { validateItemsMap } from "Board/Validators";
-import { Subject } from "Subject";
 import {
 	BaseEditor,
+	createEditor,
 	Descendant,
 	Editor,
-	Operation as EditorOperation,
 	Element,
+	Operation as EditorOperation,
 	Range,
 	Transforms,
-	createEditor,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
+import { Subject } from "Subject";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
-import { defaultTextStyle } from "./RichText";
+import { DefaultTextStyles } from "./RichText";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import {
 	RichTextOperation,
@@ -23,7 +23,6 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { Text } from "slate";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -58,6 +57,7 @@ export class EditorContainer {
 		redo: () => void,
 		private getScale: () => number, // private richText: RichText, // TODO bd-695
 		horisontalAlignment: HorisontalAlignment,
+		private initialTextStyles: DefaultTextStyles,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -71,7 +71,7 @@ export class EditorContainer {
 					{
 						type: "text",
 						text: "",
-						fontSize: 14,
+						...initialTextStyles,
 					},
 				],
 			},
@@ -119,20 +119,13 @@ export class EditorContainer {
 						this.subject.publish(this);
 					}
 				}
+			} else {
+				this.decorated.apply(operation);
 			}
 		};
-		editor.redo = (): void => {
-			this.shouldEmit = false;
-			this.decorated.redo();
-			redo();
-			this.shouldEmit = true;
-		};
-		editor.undo = (): void => {
-			this.shouldEmit = false;
-			this.decorated.undo();
-			undo();
-			this.shouldEmit = true;
-		};
+		// Disable editor's native undo/redo
+		editor.redo = (): void => {};
+		editor.undo = (): void => {};
 		const { insertData } = editor;
 		editor.insertData = (data: DataTransfer): void => {
 			const text = data.getData("text/plain");
@@ -232,6 +225,44 @@ export class EditorContainer {
 		}
 	}
 
+	addFontStyle(style: TextStyle): void {
+		this.shouldEmit = false;
+		const editor = this.editor;
+		this.selectWholeText();
+
+		Editor.withoutNormalizing(editor, () => {
+			const marks = this.getSelectionMarks();
+			if (!marks) {
+				return;
+			}
+			const styles = marks.styles ? marks.styles.slice() : [];
+			if (!styles.includes(style)) {
+				styles.push(style);
+				Editor.addMark(editor, "styles", styles);
+			}
+		});
+		this.shouldEmit = true;
+	}
+
+	removeFontStyle(style: TextStyle): void {
+		this.shouldEmit = false;
+		const editor = this.editor;
+		Editor.withoutNormalizing(editor, () => {
+			this.selectWholeText();
+			const marks = this.getSelectionMarks();
+			if (!marks) {
+				return;
+			}
+			const styles = marks.styles ? marks.styles.slice() : [];
+			const index = styles.indexOf(style);
+			if (index !== -1) {
+				styles.splice(index, 1);
+				Editor.addMark(editor, "styles", styles);
+			}
+		});
+		this.shouldEmit = true;
+	}
+
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
 		/* TODO bd-695
@@ -295,12 +326,16 @@ export class EditorContainer {
 		this.shouldEmit = true;
 	}
 
+	selectWholeText() {
+		const start = Editor.start(this.editor, []);
+		const end = Editor.end(this.editor, []);
+		const range = { anchor: start, focus: end };
+		Transforms.select(this.editor, range);
+	}
+
 	private applyWholeTextOp(op: WholeTextOp): void {
 		const selection = this.editor.selection;
-		Transforms.select(this.editor, {
-			anchor: Editor.start(this.editor, []),
-			focus: Editor.end(this.editor, []),
-		});
+		this.selectWholeText();
 		this.shouldEmit = false;
 		switch (op.method) {
 			case "setBlockType":
@@ -317,7 +352,9 @@ export class EditorContainer {
 				break;
 			case "setFontSize":
 				this.textScale =
-					op.fontSize / this.getScale() / defaultTextStyle.fontSize;
+					op.fontSize /
+					this.getScale() /
+					this.initialTextStyles.fontSize;
 				break;
 			case "setFontHighlight":
 				this.setSelectionFontHighlight(op.fontHighlight);
@@ -395,6 +432,8 @@ export class EditorContainer {
 			return;
 		}
 		this.recordMethodOps("setSelectionFontStyle");
+
+		const styles = marks.styles ? marks.styles.slice() : [];
 		styleList.forEach(style => {
 			const currentStyles = this.getSelectionStyles() ?? [];
 			if (currentStyles.includes(style)) {
@@ -604,5 +643,16 @@ export class EditorContainer {
 	insertText(text: string): void {
 		const { editor } = this;
 		Transforms.insertText(editor, text);
+	}
+
+	hasTextInSelection(): boolean {
+		const { selection } = this.editor;
+		if (!selection || Range.isCollapsed(this.editor, selection)) {
+			return false;
+		}
+
+		const [start, end] = Range.edges(selection);
+		const text = Editor.string(this.editor, { anchor: start, focus: end });
+		return text.length > 0;
 	}
 }

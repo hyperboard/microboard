@@ -537,6 +537,13 @@ export class Selection {
 		});
 	}
 
+	switchPointers(): void {
+		this.emit({
+			class: "Connector",
+			method: "switchPointers",
+			item: this.items.ids(),
+		});
+	}
 	setConnectorLineStyle(style: ConnectorLineStyle): void {
 		this.emit({
 			class: "Connector",
@@ -684,6 +691,7 @@ export class Selection {
 				method: "setBorderWidth",
 				item: shapes,
 				borderWidth: width,
+				prevBorderWidth: this.getStrokeWidth(),
 			});
 		}
 		const connectors = this.items.getIdsByItemTypes(["Connector"]);
@@ -702,6 +710,7 @@ export class Selection {
 				method: "setStrokeWidth",
 				item: drawings,
 				width: width,
+				prevWidth: this.getStrokeWidth(),
 			});
 		}
 	}
@@ -762,6 +771,7 @@ export class Selection {
 				method: "setFrameType",
 				item: frames,
 				shapeType: frameType,
+				prevShapeType: this.getFrameType(),
 				board: this.board,
 			});
 		}
@@ -824,95 +834,194 @@ export class Selection {
 			this.emit({
 				class: "RichText",
 				method: "setFontStyle",
-				item: this.items.ids(),
-				fontStyleList,
+				item: filteredItems.map(item => item.getId()),
+				fontStyleList: [fontStyle],
 			});
 		}
 	}
 
 	setFontColor(fontColor: string): void {
-		const single = this.items.getSingle();
-		if (single) {
-			if (single instanceof RichText) {
-				single.setSelectionFontColor(fontColor, this.context);
-			} else if (
-				single instanceof Shape ||
-				single instanceof Sticker ||
-				single instanceof Connector ||
-				single instanceof Frame
-			) {
-				single.text.setSelectionFontColor(fontColor, this.context);
+		if (this.items.isSingle()) {
+			const item = this.items.getSingle();
+			if (item instanceof RichText) {
+				item.setSelectionFontColor(fontColor, this.context);
+				return;
 			}
-		} else {
+			if (
+				item.itemType === "Shape" ||
+				item.itemType === "Sticker" ||
+				item.itemType === "Connector" ||
+				item.itemType === "Frame"
+			) {
+				(
+					item as Shape | Sticker | Connector | Frame
+				).text.setSelectionFontColor(fontColor, this.context);
+				return;
+			}
+		}
+
+		const filteredItems = this.items
+			.list()
+			.filter(
+				item =>
+					item.itemType === "RichText" ||
+					item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Connector" ||
+					item.itemType === "Frame",
+			);
+
+		const changedIds = filteredItems
+			.filter(item => {
+				if (item instanceof RichText) {
+					return item.getFontColor() !== fontColor;
+				}
+				return item.text.getFontColor() !== fontColor;
+			})
+			.map(item => item.getId());
+
+		if (changedIds.length > 0) {
 			this.emit({
 				class: "RichText",
 				method: "setFontColor",
-				item: this.items.ids(),
+				item: changedIds,
+				fontColor,
+			});
+		}
+
+		if (changedIds.length === 0) {
+			this.emit({
+				class: "RichText",
+				method: "setFontColor",
+				item: filteredItems.map(item => item.getId()),
 				fontColor,
 			});
 		}
 	}
 
 	setFontHighlight(fontHighlight: string): void {
-		const single = this.items.getSingle();
-		if (single) {
-			if (single instanceof RichText) {
-				single.setSelectionFontHighlight(fontHighlight, this.context);
-			} else if (
-				single instanceof Shape ||
-				single instanceof Sticker ||
-				single instanceof Connector ||
-				single instanceof Frame
+		if (this.items.isSingle()) {
+			const item = this.items.getSingle();
+			if (item instanceof RichText) {
+				item.setSelectionFontHighlight(fontHighlight, this.context);
+				return;
+			}
+			if (
+				item.itemType === "Shape" ||
+				item.itemType === "Sticker" ||
+				item.itemType === "Connector" ||
+				item.itemType === "Frame"
 			) {
-				single.text.setSelectionFontHighlight(
-					fontHighlight,
-					this.context,
-				);
+				(
+					item as Shape | Sticker | Connector | Frame
+				).text.setSelectionFontHighlight(fontHighlight, this.context);
+				return;
 			}
-		} else {
-			{
-				this.emit({
-					class: "RichText",
-					method: "setFontHighlight",
-					item: this.items.ids(),
-					fontHighlight,
-				});
-			}
+		}
+
+		const filteredItems = this.items
+			.list()
+			.filter(
+				item =>
+					item.itemType === "RichText" ||
+					item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Connector" ||
+					item.itemType === "Frame",
+			);
+
+		const changedIds = filteredItems
+			.filter(item => {
+				if (item instanceof RichText) {
+					return item.getFontHighlight() !== fontHighlight;
+				}
+				return item.text.getFontHighlight() !== fontHighlight;
+			})
+			.map(item => item.getId());
+
+		if (changedIds.length > 0) {
+			this.emit({
+				class: "RichText",
+				method: "setFontHighlight",
+				item: changedIds,
+				fontHighlight,
+			});
+		}
+
+		if (changedIds.length === 0) {
+			this.emit({
+				class: "RichText",
+				method: "setFontHighlight",
+				item: filteredItems.map(item => item.getId()),
+				fontHighlight,
+			});
 		}
 	}
 
 	setHorisontalAlignment(horisontalAlignment: HorisontalAlignment): void {
-		const single = this.items.getSingle();
-		if (single) {
-			if (
-				single instanceof Shape ||
-				single instanceof Sticker ||
-				single instanceof Connector
-			) {
-				single.text.setSelectionHorisontalAlignment(
+		if (this.items.isSingle()) {
+			const item = this.items.getSingle();
+			if (item instanceof RichText) {
+				item.setSelectionHorisontalAlignment(
 					horisontalAlignment,
-					this.getContext(),
+					this.context,
 				);
-			} else if (single instanceof RichText) {
-				single.setSelectionHorisontalAlignment(
-					horisontalAlignment,
-					this.getContext(),
-				);
+				return;
 			}
-		} else if (this.items.isItemTypes(["Sticker"])) {
-			this.items
-				.list()
-				.forEach(x =>
-					x.text.setSelectionHorisontalAlignment(
-						horisontalAlignment,
-						this.getContext(),
-					),
+			if (
+				item.itemType === "Shape" ||
+				item.itemType === "Sticker" ||
+				item.itemType === "Connector" ||
+				item.itemType === "Frame"
+			) {
+				(
+					item as Shape | Sticker | Connector | Frame
+				).text.setSelectionHorisontalAlignment(
+					horisontalAlignment,
+					this.context,
 				);
-		} else {
+				return;
+			}
+		}
+
+		const filteredItems = this.items
+			.list()
+			.filter(
+				item =>
+					item.itemType === "RichText" ||
+					item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Connector" ||
+					item.itemType === "Frame",
+			);
+
+		const changedIds = filteredItems
+			.filter(item => {
+				if (item instanceof RichText) {
+					return (
+						item.getHorisontalAlignment() !== horisontalAlignment
+					);
+				}
+				return (
+					item.text.getHorisontalAlignment() !== horisontalAlignment
+				);
+			})
+			.map(item => item.getId());
+
+		if (changedIds.length > 0) {
 			this.emit({
 				class: "RichText",
 				method: "setHorisontalAlignment",
-				item: this.items.ids(),
+				item: changedIds,
+				horisontalAlignment,
+			});
+		}
+
+		if (changedIds.length === 0) {
+			this.emit({
+				class: "RichText",
+				method: "setHorisontalAlignment",
+				item: filteredItems.map(item => item.getId()),
 				horisontalAlignment,
 			});
 		}

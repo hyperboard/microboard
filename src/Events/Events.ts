@@ -1,11 +1,11 @@
-import { Board } from "Board";
-import { EventsOperation, Operation } from "./EventsOperations";
-import { EventsCommand } from "./EventsCommand";
-import { Command } from "./Command";
-import { createEventsLog } from "./EventsLog";
-import { Subject } from "Subject";
 import { Connection, SocketMessage } from "App/Connection";
+import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
+import { Subject } from "Subject";
+import { Command } from "./Command";
+import { EventsCommand } from "./EventsCommand";
+import { createEventsLog } from "./EventsLog";
+import { EventsOperation, Operation } from "./EventsOperations";
 
 const EVENTS_REPUBLISH_INTERVAL = 5000;
 

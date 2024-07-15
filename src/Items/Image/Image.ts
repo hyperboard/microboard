@@ -1,5 +1,6 @@
 import { Events, Operation } from "Board/Events";
 import { Subject } from "Subject";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
@@ -7,7 +8,6 @@ import { Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
-import { defaultTextStyle } from "../RichText/RichText";
 
 export interface ImageItemData {
 	itemType: "Image";
@@ -43,7 +43,7 @@ function getPlaceholderImage(
 		placeholderCanvas.width = 250;
 		placeholderCanvas.height = 50;
 	}
-	placeholderContext.font = `${defaultTextStyle.fontSize} ${defaultTextStyle.fontFamily}`;
+	placeholderContext.font = `${DEFAULT_TEXT_STYLES.fontSize} ${DEFAULT_TEXT_STYLES.fontFamily}`;
 	placeholderContext.fillStyle = "black";
 	placeholderContext.fillText(
 		text ? text : "The image could not be loaded.",

@@ -41,6 +41,7 @@ interface SetFrameType {
 	method: "setFrameType";
 	item: string[];
 	shapeType: FrameType;
+	prevShapeType: FrameType;
 	board?: Board;
 }
 

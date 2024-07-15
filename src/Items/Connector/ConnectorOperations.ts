@@ -66,6 +66,12 @@ interface SetLineWidth {
 	lineWidth: ConnectionLineWidth;
 }
 
+interface SwitchPointers {
+	class: "Connector";
+	method: "switchPointers";
+	item: string[];
+}
+
 export type ConnectorOperation =
 	| SetStartPoint
 	| SetEndPoint
@@ -73,4 +79,5 @@ export type ConnectorOperation =
 	| SetEndPointerStyle
 	| SetLineStyle
 	| SetLineColor
-	| SetLineWidth;
+	| SetLineWidth
+	| SwitchPointers;

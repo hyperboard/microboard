@@ -63,7 +63,7 @@ export class ShapeCommand implements Command {
 				return mapItemsByOperation(shape, shape => {
 					return {
 						...this.operation,
-						borderWidth: shape.getStrokeWidth(),
+						borderWidth: this.operation.prevBorderWidth,
 					};
 				});
 			case "setShapeType":

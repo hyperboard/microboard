@@ -14,6 +14,7 @@ interface DrawingSetStrokeWidthOp {
 	method: "setStrokeWidth";
 	item: string[];
 	width: number;
+	prevWidth: number;
 }
 
 interface DrawingSetStrokeOpacityOp {
@@ -81,7 +82,8 @@ export class DrawingCommand implements Command {
 					class: "Drawing",
 					method: "setStrokeWidth",
 					item: [item.getId()],
-					width: item.getStrokeWidth(),
+					width: this.operation.prevWidth,
+					prevWidth: item.getStrokeWidth(),
 				};
 			case "setStrokeOpacity":
 				return {

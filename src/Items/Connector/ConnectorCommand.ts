@@ -106,6 +106,14 @@ export class ConnectorCommand implements Command {
 					});
 				}
 				break;
+			case "switchPointers":
+				for (const connector of this.connector) {
+					reverse.push({
+						item: connector,
+						operation: this.operation,
+					});
+				}
+				break;
 		}
 		return reverse;
 	}

@@ -25,17 +25,18 @@ import { RichTextOperation } from "./RichTextOperations";
 import { RichTextData } from "..";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { LayoutBlockNodes } from "./CanvasText";
-import { DEFAULT_TEXT_COLOR } from "View/Tools/AddText";
 import { Subject } from "Subject";
 import { ReactEditor } from "slate-react";
+import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
-export const defaultTextStyle = {
-	fontFamily: "Arial",
-	fontSize: 14,
-	fontColor: DEFAULT_TEXT_COLOR,
-	fontHighlight: "",
-	lineHeight: 1.4,
-} as const;
+export type DefaultTextStyles = {
+	fontFamily: string;
+	fontSize: number;
+	fontColor: string;
+	fontHighlight: string;
+	lineHeight: number;
+};
 
 let isEditInProcessValue = false;
 
@@ -67,6 +68,7 @@ export class RichText extends Mbr implements Geometry {
 	private updateRequired = false;
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
+	private shouldEmit = true;
 	maxHeight: number;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
@@ -80,7 +82,7 @@ export class RichText extends Mbr implements Geometry {
 		public isInShape = false,
 		private autoSize = false,
 		public insideOf?: string,
-		public initialFontColor?: string,
+		private initialTextStyles: DefaultTextStyles = DEFAULT_TEXT_STYLES,
 	) {
 		super();
 
@@ -107,6 +109,7 @@ export class RichText extends Mbr implements Geometry {
 			},
 			this.getScale,
 			this.getDefaultHorizontalAlignment(),
+			initialTextStyles,
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -459,7 +462,10 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	emit = (op: RichTextOperation): void => {
-		if (this.events) {
+		if (operationsRichTextDebugEnabled) {
+			console.info("<- RichText.emit", op);
+		}
+		if (this.events && this.shouldEmit) {
 			const command = new RichTextCommand([this], op);
 			command.apply();
 			this.events.emit(op, command);
@@ -472,7 +478,12 @@ export class RichText extends Mbr implements Geometry {
 		if (op.class === "Transformation") {
 			this.transformation.apply(op);
 		} else if (op.class === "RichText") {
-			if (op.method === "edit") {
+			if (
+				op.method === "edit" ||
+				op.method === "setSelectionFontStyle" ||
+				op.method === "setSelectionFontColor" ||
+				op.method === "setSelectionFontHighlight"
+			) {
 				this.editor.applyRichTextOp(op);
 				this.updateElement();
 			} /* if (this.maxCapableChartsInSticker(op)) */ else {
@@ -587,10 +598,7 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	selectWholeText(): void {
-		const start = Editor.start(this.editor.editor, []);
-		const end = Editor.end(this.editor.editor, []);
-		const range = { anchor: start, focus: end };
-		this.editorTransforms.select(this.editor.editor, range);
+		this.editor.selectWholeText();
 	}
 
 	setSelectionFontColor(
@@ -658,6 +666,19 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
+	applySetSelectionHorisontalAlignment(
+		horisontalAlignment: HorisontalAlignment,
+		selectionContext?: SelectionContext,
+	): void {
+		if (selectionContext === "EditUnderPointer") {
+			this.selectWholeText();
+		}
+		this.shouldEmit = false;
+		this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
+		this.shouldEmit = true;
+		this.updateElement();
+	}
+
 	getFontStyles(): TextStyle[] {
 		const marks = this.editor.getSelectionMarks();
 		const editor = this.editor.editor;
@@ -677,17 +698,17 @@ export class RichText extends Mbr implements Geometry {
 			this.initialFontColor = undefined;
 			return color;
 		}
-		return marks?.fontColor ?? defaultTextStyle.fontColor;
+		return marks?.fontColor ?? this.initialTextStyles.fontColor;
 	}
 
 	getFontFamily(): string {
 		const marks = this.editor.getSelectionMarks();
-		return marks?.fontFamily ?? defaultTextStyle.fontFamily;
+		return marks?.fontFamily ?? this.initialTextStyles.fontFamily;
 	}
 
 	getFontSize(): number {
 		const marks = this.editor.getSelectionMarks();
-		const fontSize = marks?.fontSize ?? defaultTextStyle.fontSize;
+		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
 		if (this.autoSize) {
 			return fontSize * this.autoSizeScale;
 		} else if (this.isInShape) {
@@ -699,7 +720,7 @@ export class RichText extends Mbr implements Geometry {
 
 	getFontHighlight(): string {
 		const marks = this.editor.getSelectionMarks();
-		return marks?.fontHighlight ?? defaultTextStyle.fontHighlight;
+		return marks?.fontHighlight ?? this.initialTextStyles.fontHighlight;
 	}
 
 	getBlockType(): BlockType {
@@ -826,6 +847,7 @@ export class RichText extends Mbr implements Geometry {
 			children: this.editor.editor.children,
 			maxWidth: this.editor.maxWidth,
 			containerMaxWidth: this.getMaxWidth(),
+			placeholderText: this.placeholderText,
 			transformation:
 				this.isInShape || this.autoSize
 					? undefined
@@ -850,6 +872,9 @@ export class RichText extends Mbr implements Geometry {
 		}
 		if (data.containerMaxWidth) {
 			this.containerMaxWidth = data.containerMaxWidth;
+		}
+		if (data.placeholderText) {
+			this.placeholderText = data.placeholderText;
 		}
 		this.insideOf = data.insideOf;
 		this.updateElement();
@@ -985,7 +1010,7 @@ export class RichText extends Mbr implements Geometry {
 
 	getMaxFontSize(): number {
 		const marks = this.editor.getSelectionMarks();
-		const fontSize = marks?.fontSize ?? defaultTextStyle.fontSize;
+		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
 		return fontSize * this.autoSizeScale;
 	}
 }

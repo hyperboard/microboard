@@ -43,6 +43,7 @@ interface SetBorderStyle extends BaseShapeOperation {
 interface SetBorderWidth extends BaseShapeOperation {
 	method: "setBorderWidth";
 	borderWidth: number;
+	prevBorderWidth: number;
 }
 
 interface SetShapeType extends BaseShapeOperation {

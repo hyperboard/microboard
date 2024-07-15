@@ -8,7 +8,11 @@ import { NestingHighlighter } from "../NestingHighlighter";
 export class AddFrame extends BoardTool {
 	line: Line | undefined;
 	shape: FrameType = "Custom";
-	frame = new Frame();
+	frame = new Frame(
+		undefined,
+		"",
+		`Frame ${Frame.getMaxNumber(this.board.items.listFrames()) + 1}`,
+	);
 	mbr = new Mbr();
 	isDown = false;
 	toDrawBorder = new NestingHighlighter();
@@ -105,7 +109,7 @@ export class AddFrame extends BoardTool {
 			frame.setCanChangeRatio(false);
 		}
 
-		frame.setNameSerial(this.board.items.listFrames());
+		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.moveCursorToEOL();
 
 		this.toDrawBorder.clear();
@@ -187,7 +191,7 @@ export class AddFrame extends BoardTool {
 			.filter(item => item.parent === "Board")
 			.forEach(item => this.frame.handleNesting(item));
 		const frame = this.board.add(this.frame);
-		frame.setNameSerial(this.board.items.listFrames());
+		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.moveCursorToEOL();
 
 		this.toDrawBorder.clear();
