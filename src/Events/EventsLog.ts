@@ -258,6 +258,13 @@ export function createEventsLog(board: Board): EventsLog {
 		for (let i = list.length - 1; i >= 0; i--) {
 			const record = list[i];
 
+			if (
+				record.event.body.operation.method !== "undo" &&
+				record.event.body.operation.method !== "redo"
+			) {
+				return null;
+			}
+
 			if (record.event.body.userId !== userId) {
 				continue;
 			}

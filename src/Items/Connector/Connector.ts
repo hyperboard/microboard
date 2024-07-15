@@ -220,6 +220,9 @@ export class Connector {
 					case "setLineWidth":
 						this.applyLineWidth(operation.lineWidth);
 						break;
+					case "switchPointers":
+						this.applySwitchPointers();
+						break;
 				}
 				break;
 			default:
@@ -290,6 +293,13 @@ export class Connector {
 		if (updatePath) {
 			this.updatePaths();
 		}
+	}
+
+	private applySwitchPointers(): void {
+		const temp = this.startPointerStyle;
+		this.startPointerStyle = this.endPointerStyle;
+		this.endPointerStyle = temp;
+		this.updatePaths();
 	}
 
 	addMiddlePoint(point: BoardPoint, afterPoint?: BoardPoint): void {

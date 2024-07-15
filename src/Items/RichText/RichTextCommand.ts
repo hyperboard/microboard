@@ -66,14 +66,6 @@ export class RichTextCommand implements Command {
 					};
 					return { item: richText, operation };
 				});
-			case "setFontStyle":
-				return items.map(richText => {
-					const operation = {
-						...this.operation,
-						fontStyleList: richText.getFontStyles(),
-					};
-					return { item: richText, operation };
-				});
 			case "setFontFamily":
 				return items.map(richText => {
 					const operation = {

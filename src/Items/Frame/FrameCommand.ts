@@ -37,6 +37,13 @@ export class FrameCommand implements Command {
 						canChangeRatio: frame.getCanChangeRatio(),
 					};
 				});
+			case "setFrameType":
+				return mapItemsByOperation(frame, frame => {
+					return {
+						...this.operation,
+						shapeType: this.operation.prevShapeType,
+					};
+				});
 			case "addChild":
 				return mapItemsByOperation(frame, frame => {
 					// REFACTOR add child to mapItems

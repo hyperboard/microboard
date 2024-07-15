@@ -248,6 +248,9 @@ export class Transformation {
 		if (!this.id) {
 			// TODO console.warn("Transformation.translateTo() has no itemId");
 		}
+		if (x === 0 && y === 0) {
+			return;
+		}
 		this.emit({
 			class: "Transformation",
 			method: "translateBy",
@@ -270,6 +273,9 @@ export class Transformation {
 	}
 
 	scaleBy(x: number, y: number, timeStamp?: number): void {
+		if (x === 0 && y === 0) {
+			return;
+		}
 		this.emit({
 			class: "Transformation",
 			method: "scaleBy",
@@ -285,6 +291,14 @@ export class Transformation {
 		translate: { x: number; y: number },
 		timeStamp?: number,
 	): void {
+		if (
+			scale.x === 0 &&
+			scale.y === 0 &&
+			translate.x === 0 &&
+			translate.y === 0
+		) {
+			return;
+		}
 		this.emit({
 			class: "Transformation",
 			method: "scaleByTranslateBy",

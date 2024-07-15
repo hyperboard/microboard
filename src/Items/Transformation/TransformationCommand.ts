@@ -44,6 +44,7 @@ export class TransformationCommand implements Command {
 					},
 				);
 			case "translateBy": {
+				const op = this.operation;
 				return mapItemsByOperation(this.transformation, () => {
 					return {
 						...this.operation,
