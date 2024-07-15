@@ -6,56 +6,90 @@ import { Mbr } from "../Mbr";
 import { Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
+import { TransformationData } from "../Transformation/TransformationData";
+import { defaultTextStyle } from "../RichText/RichText";
 
 export interface ImageItemData {
 	itemType: "Image";
-	dataUrl: string;
-	transformation: Transformation;
+	storageLink: string;
+	imageDimension: Dimension;
+	transformation: TransformationData;
 }
 
-const errorImageCanvas = document.createElement("canvas");
-const errorImageContext = errorImageCanvas.getContext(
-	"2d",
-) as CanvasRenderingContext2D; // this does not fail
-errorImageCanvas.width = 250;
-errorImageCanvas.height = 50;
-errorImageContext.font = "16px Arial";
-errorImageContext.fillStyle = "black";
-errorImageContext.fillText("The image could not be loaded.", 0, 25);
-const errorImage = new Image();
-errorImage.src = errorImageCanvas.toDataURL();
+export interface Dimension {
+	height: number;
+	width: number;
+}
+
+function getPlaceholderImage(
+	imageDimension?: Dimension,
+	text?: string,
+): HTMLImageElement {
+	const placeholderCanvas = document.createElement("canvas");
+	const placeholderContext = placeholderCanvas.getContext(
+		"2d",
+	) as CanvasRenderingContext2D; // this does not fail
+	if (imageDimension) {
+		placeholderCanvas.width = imageDimension.width;
+		placeholderCanvas.height = imageDimension.height;
+		placeholderContext.strokeStyle = "black";
+		placeholderContext.strokeRect(
+			0,
+			0,
+			imageDimension.width - 1,
+			imageDimension.height - 1,
+		);
+	} else {
+		placeholderCanvas.width = 250;
+		placeholderCanvas.height = 50;
+	}
+	placeholderContext.font = `${defaultTextStyle.fontSize} ${defaultTextStyle.fontFamily}`;
+	placeholderContext.fillStyle = "black";
+	placeholderContext.fillText(
+		text ? text : "The image could not be loaded.",
+		0,
+		25,
+	);
+	const placeholderImage = new Image();
+	placeholderImage.src = placeholderCanvas.toDataURL();
+	return placeholderImage;
+}
+
+export interface ImageConstructorData {
+	base64?: string;
+	storageLink: string;
+	imageDimension: Dimension;
+}
 
 export class ImageItem extends Mbr {
 	readonly itemType = "Image";
 	parent = "Board";
 	image: HTMLImageElement;
 	readonly transformation: Transformation;
-	dataUrl: string;
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
+	storageLink: string;
+	imageDimension: Dimension;
 
 	constructor(
-		dataUrl: string | ArrayBuffer | null | undefined,
+		{ base64, storageLink, imageDimension }: ImageConstructorData,
 		events?: Events,
 		private id = "",
 	) {
 		super();
+		this.storageLink = storageLink;
+		this.imageDimension = imageDimension;
 		this.transformation = new Transformation(id, events);
 
-		// Convert dataUrl to string if it's valid, else handle the error
-		if (typeof dataUrl === "string") {
-			this.dataUrl = dataUrl;
-			this.image = new Image();
-			this.image.onload = this.onLoad;
-			this.image.onerror = this.onError;
-			this.image.src = dataUrl;
+		this.image = new Image();
+		this.image.onload = this.onLoad;
+		this.image.onerror = this.onError;
+		if (typeof base64 === "string") {
+			this.image.src = base64;
 		} else {
-			this.dataUrl = "";
-			this.image = new Image();
-			this.image.src = ""; // or provide a default/fallback dataUrl
-			this.handleError();
+			this.image.src = storageLink;
 		}
 
 		this.transformation.subject.subscribe(this.onTransform);
@@ -64,32 +98,24 @@ export class ImageItem extends Mbr {
 	handleError = (): void => {
 		// Provide handling logic for errors
 		console.error("Invalid dataUrl or image failed to load.");
-		this.image = errorImage; // assuming errorImage is defined elsewhere
+		this.image = getPlaceholderImage();
 		this.updateMbr();
 		this.subject.publish(this);
-		while (this.loadCallbacks.length > 0) {
-			this.loadCallbacks.shift()!(this);
-		}
+		this.shootLoadCallbacks();
 	};
 
-	onLoad = (): void => {
-		while (this.beforeLoadCallbacks.length > 0) {
-			this.beforeLoadCallbacks.shift()!(this);
-		}
+	onLoad = async (): Promise<void> => {
+		this.shootBeforeLoadCallbacks();
 		this.updateMbr();
 		this.subject.publish(this);
-		while (this.loadCallbacks.length > 0) {
-			this.loadCallbacks.shift()!(this);
-		}
+		this.shootLoadCallbacks();
 	};
 
 	onError = (): void => {
-		this.image = errorImage;
+		this.image = getPlaceholderImage();
 		this.updateMbr();
 		this.subject.publish(this);
-		while (this.loadCallbacks.length > 0) {
-			this.loadCallbacks.shift()!(this);
-		}
+		this.shootLoadCallbacks();
 	};
 
 	onTransform = (): void => {
@@ -127,36 +153,60 @@ export class ImageItem extends Mbr {
 	serialize(): ImageItemData {
 		return {
 			itemType: "Image",
-			dataUrl: this.dataUrl,
+			storageLink: this.storageLink,
+			imageDimension: this.imageDimension,
 			transformation: this.transformation.serialize(),
 		};
 	}
 
-	deserialize(data: ImageItemData): ImageItem {
-		this.transformation.deserialize(data.transformation);
-		this.dataUrl = data.dataUrl;
-		this.image.onload = () => {
-			this.left = this.transformation.matrix.translateX;
-			this.top = this.transformation.matrix.translateY;
-			this.right =
-				this.left +
-				this.image.width * this.transformation.matrix.scaleX;
-			this.bottom =
-				this.top +
-				this.image.height * this.transformation.matrix.scaleY;
-			this.subject.publish(this);
-			while (this.loadCallbacks.length > 0) {
-				this.loadCallbacks.shift()!(this);
-			}
-		};
-		this.image.src = data.dataUrl;
+	private setCoordinates(): void {
 		this.left = this.transformation.matrix.translateX;
 		this.top = this.transformation.matrix.translateY;
 		this.right =
 			this.left + this.image.width * this.transformation.matrix.scaleX;
 		this.bottom =
 			this.top + this.image.height * this.transformation.matrix.scaleY;
+		this.subject.publish(this);
+	}
+
+	private shootBeforeLoadCallbacks(): void {
+		while (this.beforeLoadCallbacks.length > 0) {
+			this.beforeLoadCallbacks.shift()!(this);
+		}
+	}
+
+	private shootLoadCallbacks(): void {
+		while (this.loadCallbacks.length > 0) {
+			this.loadCallbacks.shift()!(this);
+		}
+	}
+
+	deserialize(data: ImageItemData): ImageItem {
+		this.transformation.deserialize(data.transformation);
+		this.image.onload = () => {
+			this.setCoordinates();
+			this.shootLoadCallbacks();
+		};
+		this.image = getPlaceholderImage(
+			data.imageDimension,
+			"The image is loading from the storage",
+		);
+		const storageImage = new Image();
+		storageImage.onload = () => {
+			this.image = storageImage;
+			this.subject.publish(this);
+		};
+		storageImage.onerror = this.onError;
+		storageImage.src = this.storageLink;
 		return this;
+	}
+
+	setStorageLink(src: string): void {
+		this.storageLink = src;
+	}
+
+	setDimensions(dim: Dimension): void {
+		this.imageDimension = dim;
 	}
 
 	apply(op: Operation): void {
