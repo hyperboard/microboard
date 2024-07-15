@@ -11,6 +11,7 @@ import { TransformManyItems } from "../../Items/Transformation/TransformationOpe
 import createCanvasDrawer from "../../drawMbrOnCanvas";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
+import { createDebounceUpdater } from "../DebounceUpdater";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -33,7 +34,7 @@ export class Select extends Tool {
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
-	debounceUpd = false;
+	debounceUpd = createDebounceUpdater();
 
 	constructor(private board: Board) {
 		super();
@@ -58,7 +59,7 @@ export class Select extends Tool {
 		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
-		this.debounceUpd = false;
+		this.debounceUpd.setFalse();
 	}
 
 	leftButtonDown(): boolean {
@@ -177,7 +178,7 @@ export class Select extends Tool {
 			const selectionMbr = selection.getMbr();
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd &&
+				!this.debounceUpd.shouldUpd() &&
 				JSON.stringify(
 					this.canvasDrawer.getLastTranslationKeys()?.sort(),
 				) ===
@@ -202,7 +203,7 @@ export class Select extends Tool {
 					this.beginTimeStamp,
 				);
 				this.canvasDrawer.clearCanvasAndKeys();
-				this.debounceUpd = false;
+				this.debounceUpd.setFalse();
 			} else {
 				const translation = this.handleMultipleItemsTranslate(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
@@ -214,10 +215,8 @@ export class Select extends Tool {
 							sumMbr,
 							translation,
 						);
-						this.debounceUpd = false;
-						setTimeout(() => {
-							this.debounceUpd = true;
-						}, 1000);
+						this.debounceUpd.setFalse();
+						this.debounceUpd.setTimeoutUpdate(1000);
 					}
 				}
 			}

@@ -14,7 +14,7 @@ import { Board } from "Board";
 import { Selection } from "Board/Selection";
 import { getResizeType, ResizeType } from "./getResizeType";
 import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getProportionalResize, getResize } from "./getResizeMatrix";
+import { getProportionalResize } from "./getResizeMatrix";
 import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
@@ -24,6 +24,7 @@ import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import createCanvasDrawer from "Board/drawMbrOnCanvas";
+import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -36,7 +37,7 @@ export class Transformer extends Tool {
 	private toDrawBorders = new NestingHighlighter();
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
-	debounceUpd = false;
+	debounceUpd = createDebounceUpdater();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -118,6 +119,7 @@ export class Transformer extends Tool {
 			);
 			this.selection.transformMany(translation, this.beginTimeStamp);
 			this.mbr = resize.mbr;
+			this.debounceUpd.setFalse();
 		}
 
 		this.updateAnchorType();
@@ -207,7 +209,7 @@ export class Transformer extends Tool {
 			);
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd &&
+				!this.debounceUpd.shouldUpd() &&
 				JSON.stringify(
 					this.canvasDrawer.getLastTranslationKeys()?.sort(),
 				) ===
@@ -225,7 +227,10 @@ export class Transformer extends Tool {
 				);
 				return false;
 			}
-			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				this.debounceUpd.shouldUpd()
+			) {
 				const translation = this.handleMultipleItemsResize(
 					resize,
 					mbr,
@@ -249,10 +254,8 @@ export class Transformer extends Tool {
 						translation,
 						resize.matrix,
 					);
-					this.debounceUpd = false;
-					setTimeout(() => {
-						this.debounceUpd = true;
-					}, 1000);
+					this.debounceUpd.setFalse();
+					this.debounceUpd.setTimeoutUpdate(1000);
 				}
 			}
 			this.mbr = resize.mbr;
