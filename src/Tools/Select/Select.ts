@@ -1,21 +1,17 @@
-import { Board } from "Board";
+import { Board } from "../../Board";
+import { Frame, Item, Line, Mbr, Point, RichText } from "../../Items";
+import { DrawingContext } from "../../Items/DrawingContext";
+import { Tool } from "../Tool";
 import {
-	Frame,
-	Item,
-	Line,
-	Mbr,
-	Point,
-	RichText,
-	TransformationOperation,
-} from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Tool } from "Board/Tools/Tool";
-import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
+	SELECTION_BACKGROUND,
+	SELECTION_COLOR,
+} from "../../../View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
-import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import createCanvasDrawer from "Board/drawMbrOnCanvas";
-import { ImageItem } from "Board/Items/Image";
-import { Drawing } from "Board/Items/Drawing";
+import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
+import createCanvasDrawer from "../../drawMbrOnCanvas";
+import { ImageItem } from "../../Items/Image";
+import { Drawing } from "../../Items/Drawing";
+import { createDebounceUpdater } from "../DebounceUpdater";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -38,6 +34,7 @@ export class Select extends Tool {
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
+	debounceUpd = createDebounceUpdater();
 
 	constructor(private board: Board) {
 		super();
@@ -62,6 +59,7 @@ export class Select extends Tool {
 		this.beginTimeStamp = Date.now();
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
+		this.debounceUpd.setFalse();
 	}
 
 	leftButtonDown(): boolean {
@@ -177,12 +175,58 @@ export class Select extends Tool {
 		}
 		if (this.isDraggingSelection) {
 			const { selection } = this.board;
+			const selectionMbr = selection.getMbr();
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				!this.debounceUpd.shouldUpd() &&
+				JSON.stringify(
+					this.canvasDrawer.getLastTranslationKeys()?.sort(),
+				) ===
+					JSON.stringify(
+						selection
+							.list()
+							.map(item => item.getId())
+							.sort(),
+					)
+			) {
+				this.canvasDrawer.translateCanvasBy(x, y);
+				return false;
+			}
+			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
+				this.canvasDrawer.translateCanvasBy(x, y);
+				const translation = this.handleMultipleItemsTranslate(
+					this.canvasDrawer.getMatrix().translateX,
+					this.canvasDrawer.getMatrix().translateY,
+				);
+				this.board.selection.transformMany(
+					translation,
+					this.beginTimeStamp,
+				);
+				this.canvasDrawer.clearCanvasAndKeys();
+				this.debounceUpd.setFalse();
+			} else {
+				const translation = this.handleMultipleItemsTranslate(x, y);
+				selection.transformMany(translation, this.beginTimeStamp);
+
+				if (Object.keys(translation).length > 1) {
+					const sumMbr = this.canvasDrawer.countSumMbr(translation);
+					if (sumMbr) {
+						this.canvasDrawer.updateCanvasAndKeys(
+							sumMbr,
+							translation,
+						);
+						this.debounceUpd.setFalse();
+						this.debounceUpd.setTimeoutUpdate(1000);
+					}
+				}
+			}
+
 			const frames = this.board.items
 				.getEnclosedOrCrossed(
-					selection.getMbr()!.left,
-					selection.getMbr()!.top,
-					selection.getMbr()!.right,
-					selection.getMbr()!.bottom,
+					selectionMbr!.left,
+					selectionMbr!.top,
+					selectionMbr!.right,
+					selectionMbr!.bottom,
 				)
 				.filter(item => item instanceof Frame)
 				.filter(frame => !selection.items.list().includes(frame));
@@ -190,40 +234,6 @@ export class Select extends Tool {
 				.list()
 				.filter(item => item instanceof Frame)
 				.map(frame => frame.getId());
-			const translation: TransformManyItems = {};
-			selection.list().forEach(selectedItem => {
-				translation[selectedItem.getId()] = {
-					class: "Transformation",
-					method: "scaleByTranslateBy",
-					item: [selectedItem.getId()],
-					scale: { x: 1, y: 1 },
-					translate: { x, y },
-				};
-			});
-			selection.list().forEach(item => {
-				if (item instanceof Frame) {
-					item.getChildrenIds().forEach(childId => {
-						if (!(childId in translation)) {
-							translation[childId] = {
-								class: "Transformation",
-								method: "scaleByTranslateBy",
-								item: [childId],
-								scale: { x: 1, y: 1 },
-								translate: { x, y },
-							};
-						}
-					});
-				}
-			});
-			selection.transformMany(translation, this.beginTimeStamp);
-
-			if (Object.keys(translation).length > 1) {
-				const sumMbr = this.canvasDrawer.countSumMbr(translation);
-				if (sumMbr) {
-					this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation);
-				}
-			}
-
 			selection.list().forEach(item => {
 				if (
 					!(item instanceof Frame) &&
@@ -370,6 +380,16 @@ export class Select extends Tool {
 			return false;
 		}
 		// this.board.selection.removeAll();
+		if (this.canvasDrawer.getLastCreatedCanvas()) {
+			const translation = this.handleMultipleItemsTranslate(
+				this.canvasDrawer.getMatrix().translateX,
+				this.canvasDrawer.getMatrix().translateY,
+			);
+			this.board.selection.transformMany(
+				translation,
+				this.beginTimeStamp,
+			);
+		}
 		this.clear();
 		this.board.tools.publish();
 		return false;
@@ -420,6 +440,36 @@ export class Select extends Tool {
 		}
 		this.board.selection.editText();
 		return false;
+	}
+
+	handleMultipleItemsTranslate(x: number, y: number): TransformManyItems {
+		const translation: TransformManyItems = {};
+
+		this.board.selection.list().forEach(selectedItem => {
+			translation[selectedItem.getId()] = {
+				class: "Transformation",
+				method: "scaleByTranslateBy",
+				item: [selectedItem.getId()],
+				scale: { x: 1, y: 1 },
+				translate: { x, y },
+			};
+		});
+		this.board.selection.list().forEach(item => {
+			if (item instanceof Frame) {
+				item.getChildrenIds().forEach(childId => {
+					if (!(childId in translation)) {
+						translation[childId] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [childId],
+							scale: { x: 1, y: 1 },
+							translate: { x, y },
+						};
+					}
+				});
+			}
+		});
+		return translation;
 	}
 
 	render(context: DrawingContext): void {

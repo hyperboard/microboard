@@ -1007,7 +1007,7 @@ export class Selection {
 			for (const item of this.items.list()) {
 				this.renderItemMbr(context, item);
 			}
+			this.tool.render(context);
 		}
-		this.tool.render(context);
 	}
 }

@@ -7,13 +7,14 @@ import {
 	Shape,
 	TransformationOperation,
 	RichText,
+	Matrix,
 } from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
 import { getResizeType, ResizeType } from "./getResizeType";
 import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getProportionalResize, getResize } from "./getResizeMatrix";
+import { getProportionalResize } from "./getResizeMatrix";
 import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
@@ -23,6 +24,7 @@ import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import createCanvasDrawer from "Board/drawMbrOnCanvas";
+import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -35,6 +37,7 @@ export class Transformer extends Tool {
 	private toDrawBorders = new NestingHighlighter();
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
+	debounceUpd = createDebounceUpdater();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -92,6 +95,33 @@ export class Transformer extends Tool {
 	}
 
 	leftButtonUp(): boolean {
+		if (
+			this.canvasDrawer.getLastCreatedCanvas() &&
+			this.clickedOn &&
+			this.mbr &&
+			this.oppositePoint
+		) {
+			const isWidth =
+				this.clickedOn === "left" || this.clickedOn === "right";
+			const isHeight =
+				this.clickedOn === "top" || this.clickedOn === "bottom";
+			const resize = getProportionalResize(
+				this.clickedOn,
+				this.board.pointer.point,
+				this.mbr,
+				this.oppositePoint,
+			);
+			const translation = this.handleMultipleItemsResize(
+				resize,
+				this.mbr,
+				isWidth,
+				isHeight,
+			);
+			this.selection.transformMany(translation, this.beginTimeStamp);
+			this.mbr = resize.mbr;
+			this.debounceUpd.setFalse();
+		}
+
 		this.updateAnchorType();
 		const wasResising = this.resizeType !== undefined;
 		this.resizeType = undefined;
@@ -177,114 +207,57 @@ export class Transformer extends Tool {
 				mbr,
 				this.oppositePoint,
 			);
-			const matrix = resize.matrix;
-			const translation: TransformManyItems = {};
-			for (const item of list) {
-				const itemMbr = item.getMbr();
-				const deltaX = itemMbr.left - mbr.left;
-				const translateX =
-					deltaX * matrix.scaleX - deltaX + matrix.translateX;
-				const deltaY = itemMbr.top - mbr.top;
-				const translateY =
-					deltaY * matrix.scaleY - deltaY + matrix.translateY;
-
-				if (item instanceof RichText) {
-					if (isWidth) {
-						item.editor.setMaxWidth(
-							(item.getWidth() /
-								item.transformation.getScale().x) *
-								matrix.scaleX,
-						);
-						translation[item.getId()] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [item.getId()],
-							translate: { x: matrix.translateX, y: 0 },
-							scale: { x: 1, y: 1 },
-						};
-					} else if (isHeight) {
-						translation[item.getId()] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [item.getId()],
-							translate: { x: translateX, y: translateY },
-							scale: { x: 1, y: 1 },
-						};
-					} else {
-						// TODO fix RichText transformation
-						item.transformation.translateBy(
-							matrix.translateX,
-							matrix.translateY,
-							this.beginTimeStamp,
-						);
-						item.transformation.scaleBy(
-							matrix.scaleX,
-							matrix.scaleY,
-							this.beginTimeStamp,
-						);
-						// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
-						translation[item.getId()] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [item.getId()],
-							translate: { x: 0, y: 0 },
-							scale: { x: 1, y: 1 },
-						};
-						// translation[item.getId()] = {
-						// 	class: "Transformation",
-						// 	method: "scaleByTranslateBy",
-						// 	item: [item.getId()],
-						// 	translate: { x: translateX, y: translateY },
-						// 	scale: { x: matrix.scaleX, y: matrix.scaleY },
-						// };
-					}
-				} else if (item instanceof Frame) {
-					if (!item.getCanChangeRatio()) {
-						if (
-							this.clickedOn === "leftBottom" ||
-							this.clickedOn === "leftTop" ||
-							this.clickedOn === "rightBottom" ||
-							this.clickedOn === "rightTop"
-						) {
-							translation[item.getId()] = {
-								class: "Transformation",
-								method: "scaleByTranslateBy",
-								item: [item.getId()],
-								translate: { x: translateX, y: translateY },
-								scale: { x: matrix.scaleX, y: matrix.scaleY },
-							};
-						}
-					} else {
-						translation[item.getId()] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [item.getId()],
-							translate: { x: translateX, y: translateY },
-							scale: { x: matrix.scaleX, y: matrix.scaleY },
-						};
-					}
-				} else {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale:
-							item instanceof Sticker
-								? { x: 1, y: 1 }
-								: { x: matrix.scaleX, y: matrix.scaleY },
-					};
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				!this.debounceUpd.shouldUpd() &&
+				JSON.stringify(
+					this.canvasDrawer.getLastTranslationKeys()?.sort(),
+				) ===
+					JSON.stringify(
+						this.selection
+							.list()
+							.map(item => item.getId())
+							.sort(),
+					)
+			) {
+				this.canvasDrawer.recoordinateCanvas(resize.mbr);
+				this.canvasDrawer.scaleCanvasTo(
+					resize.matrix.scaleX,
+					resize.matrix.scaleY,
+				);
+				return false;
+			}
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				this.debounceUpd.shouldUpd()
+			) {
+				const translation = this.handleMultipleItemsResize(
+					resize,
+					mbr,
+					isWidth,
+					isHeight,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+				this.canvasDrawer.clearCanvasAndKeys();
+				this.mbr = resize.mbr;
+			} else {
+				const translation = this.handleMultipleItemsResize(
+					resize,
+					mbr,
+					isWidth,
+					isHeight,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+				if (Object.keys(translation).length > 50) {
+					this.canvasDrawer.updateCanvasAndKeys(
+						resize.mbr,
+						translation,
+						resize.matrix,
+					);
+					this.debounceUpd.setFalse();
+					this.debounceUpd.setTimeoutUpdate(1000);
 				}
 			}
-			this.selection.transformMany(translation, this.beginTimeStamp);
-			if (Object.keys(translation).length > 50) {
-				this.canvasDrawer.updateCanvasAndKeys(
-					resize.mbr,
-					translation,
-					resize.matrix,
-				);
-			}
-
 			this.mbr = resize.mbr;
 		}
 
@@ -357,6 +330,114 @@ export class Transformer extends Tool {
 
 	handleSelectionUpdate(_items: SelectionItems): void {
 		// do nothing
+	}
+
+	handleMultipleItemsResize(
+		resize: { matrix: Matrix; mbr: Mbr },
+		initMbr: Mbr,
+		isWidth: boolean,
+		isHeight: boolean,
+	): TransformManyItems {
+		const { matrix } = resize;
+		const translation: TransformManyItems = {};
+		for (const item of this.selection.items.list()) {
+			const itemMbr = item.getMbr();
+			const deltaX = itemMbr.left - initMbr.left;
+			const translateX =
+				deltaX * matrix.scaleX - deltaX + matrix.translateX;
+			const deltaY = itemMbr.top - initMbr.top;
+			const translateY =
+				deltaY * matrix.scaleY - deltaY + matrix.translateY;
+
+			if (item instanceof RichText) {
+				if (isWidth) {
+					item.editor.setMaxWidth(
+						(item.getWidth() / item.transformation.getScale().x) *
+							matrix.scaleX,
+					);
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: matrix.translateX, y: 0 },
+						scale: { x: 1, y: 1 },
+					};
+				} else if (isHeight) {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: 1, y: 1 },
+					};
+				} else {
+					// TODO fix RichText transformation
+					item.transformation.translateBy(
+						matrix.translateX,
+						matrix.translateY,
+						this.beginTimeStamp,
+					);
+					item.transformation.scaleBy(
+						matrix.scaleX,
+						matrix.scaleY,
+						this.beginTimeStamp,
+					);
+					// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: 0, y: 0 },
+						scale: { x: 1, y: 1 },
+					};
+					// translation[item.getId()] = {
+					// 	class: "Transformation",
+					// 	method: "scaleByTranslateBy",
+					// 	item: [item.getId()],
+					// 	translate: { x: translateX, y: translateY },
+					// 	scale: { x: matrix.scaleX, y: matrix.scaleY },
+					// };
+				}
+			} else if (item instanceof Frame) {
+				if (!item.getCanChangeRatio()) {
+					if (
+						this.clickedOn === "leftBottom" ||
+						this.clickedOn === "leftTop" ||
+						this.clickedOn === "rightBottom" ||
+						this.clickedOn === "rightTop"
+					) {
+						translation[item.getId()] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [item.getId()],
+							translate: { x: translateX, y: translateY },
+							scale: { x: matrix.scaleX, y: matrix.scaleY },
+						};
+					}
+				} else {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: matrix.scaleX, y: matrix.scaleY },
+					};
+				}
+			} else {
+				translation[item.getId()] = {
+					class: "Transformation",
+					method: "scaleByTranslateBy",
+					item: [item.getId()],
+					translate: { x: translateX, y: translateY },
+					scale:
+						item instanceof Sticker
+							? { x: 1, y: 1 }
+							: { x: matrix.scaleX, y: matrix.scaleY },
+				};
+			}
+		}
+
+		return translation;
 	}
 
 	calcAnchors(): Geometry[] {
