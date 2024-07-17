@@ -168,19 +168,16 @@ export class Transformer extends Tool {
 				this.beginTimeStamp,
 			).mbr;
 		} else if (single instanceof RichText) {
-			const matrix = getProportionalResize(
+			const { matrix, mbr: resizedMbr } = getProportionalResize(
 				this.resizeType,
 				this.board.pointer.point,
 				mbr,
 				this.oppositePoint,
-			).matrix;
+			);
 
 			// TODO fix RichText transformation
 			if (isWidth) {
-				single.editor.setMaxWidth(
-					(single.getWidth() / single.transformation.getScale().x) *
-						matrix.scaleX,
-				);
+				single.editor.setMaxWidth(resizedMbr.getWidth());
 				single.transformation.translateBy(matrix.translateX, 0);
 			} else {
 				// single.transformation.translateBy(

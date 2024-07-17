@@ -478,18 +478,11 @@ export class RichText extends Mbr implements Geometry {
 		if (op.class === "Transformation") {
 			this.transformation.apply(op);
 		} else if (op.class === "RichText") {
-			if (
-				op.method === "edit" ||
-				op.method === "setSelectionFontStyle" ||
-				op.method === "setSelectionFontColor" ||
-				op.method === "setSelectionFontHighlight"
-			) {
-				this.editor.applyRichTextOp(op);
-				this.updateElement();
-			} /* if (this.maxCapableChartsInSticker(op)) */ else {
-				this.editor.applyRichTextOp(op);
-				this.updateElement();
+			if (op.method === "setMaxWidth") {
+				this.setMaxWidth(op.maxWidth);
 			}
+			this.editor.applyRichTextOp(op);
+			this.updateElement();
 		} else {
 			return;
 		}

@@ -15,7 +15,7 @@ import { Subject } from "Subject";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
-import { DefaultTextStyles } from "./RichText";
+import { DefaultTextStyles, RichText } from "./RichText";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import {
 	RichTextOperation,
@@ -55,7 +55,7 @@ export class EditorContainer {
 		private emitWithoutApplying: (op: RichTextOperation) => void,
 		undo: () => void,
 		redo: () => void,
-		private getScale: () => number, // private richText: RichText, // TODO bd-695
+		private getScale: () => number,
 		horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
 	) {
