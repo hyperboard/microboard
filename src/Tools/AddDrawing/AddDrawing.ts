@@ -26,13 +26,15 @@ export class AddDrawing extends BoardTool {
 		super(board);
 		this.setCursor();
 
-		const drawingSettings = localStorage.getItem(DRAWING_SETTINGS_KEY);
-		if (drawingSettings) {
-			const { strokeWidth, strokeColor, strokeStyle } =
-				JSON.parse(drawingSettings);
-			this.strokeWidth = strokeWidth;
-			this.strokeColor = strokeColor;
-			this.strokeStyle = strokeStyle;
+		if (DRAWING_SETTINGS_KEY) {
+			const drawingSettings = localStorage.getItem(DRAWING_SETTINGS_KEY);
+			if (drawingSettings) {
+				const { strokeWidth, strokeColor, strokeStyle } =
+					JSON.parse(drawingSettings);
+				this.strokeWidth = strokeWidth;
+				this.strokeColor = strokeColor;
+				this.strokeStyle = strokeStyle;
+			}
 		}
 	}
 
