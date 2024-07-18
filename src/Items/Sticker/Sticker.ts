@@ -18,6 +18,8 @@ import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
 import { StickerCommand } from "./StickerCommand";
 import { StickerData, StickerOperation } from "./StickerOperation";
+import { isDarkColor } from "lib/isDarkColor";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export const stickerColors = {
 	"Sky Blue": "rgb(174, 212, 250)",
@@ -82,7 +84,7 @@ export class Sticker implements Geometry {
 	private stickerPath = StickerShape.stickerPath.copy();
 	private shadowPath = StickerShape.shadowPath.copy();
 	private textContainer = StickerShape.textBounds.copy();
-	readonly text = new RichText(
+	text = new RichText(
 		this.textContainer,
 		this.id,
 		this.events,
@@ -210,6 +212,32 @@ export class Sticker implements Geometry {
 	private applyBackgroundColor(backgroundColor: string): void {
 		this.backgroundColor = backgroundColor;
 		this.stickerPath.setBackgroundColor(backgroundColor);
+
+		if (this.text.isEmpty()) {
+			this.text = new RichText(
+				this.textContainer,
+				this.id,
+				this.events,
+				this.transformation,
+				"\u00A0",
+				false,
+				true,
+				this.itemType,
+				{
+					...DEFAULT_TEXT_STYLES,
+					fontColor: isDarkColor(backgroundColor)
+						? "rgb(255,255,255)"
+						: "rgb(20, 21, 26)",
+				},
+			);
+		} else {
+			this.text.editor.selectWholeText();
+			this.text.editor.setSelectionFontColor(
+				isDarkColor(backgroundColor)
+					? "rgb(255,255,255)"
+					: "rgb(20, 21, 26)",
+			);
+		}
 	}
 
 	setBackgroundColor(backgroundColor: string): void {

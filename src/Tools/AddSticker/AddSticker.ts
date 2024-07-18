@@ -2,6 +2,7 @@ import { Board } from "Board/Board";
 import { Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Sticker } from "Board/Items/Sticker";
+import { isDarkColor } from "lib/isDarkColor";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
@@ -29,10 +30,6 @@ export class AddSticker extends BoardTool {
 	setBackgroundColor(color: string): void {
 		this.sticker.setBackgroundColor(color);
 		this.board.tools.publish();
-	}
-
-	getBackgroundColor(): string {
-		return this.sticker.getBackgroundColor();
 	}
 
 	getBackgroundColor(): string {
