@@ -36,7 +36,14 @@ export const defaultCursors = [
 	"no-drop",
 	"none",
 	"progress",
-	// 	| "url(.cur),auto"
+	"sticker-blue",
+	"sticker-yellow",
+	"sticker-green",
+	"sticker-red",
+	"sticker-purple",
+	"sticker-light-blue",
+	"sticker-gray",
+	"sticker-black",
 ] as const;
 
 export const customCursors = ["pen"] as const;

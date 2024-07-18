@@ -2,9 +2,10 @@ import { Board } from "Board/Board";
 import { Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Sticker } from "Board/Items/Sticker";
-import { isDarkColor } from "lib/isDarkColor";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
+import { STICKER_COLOR_NAMES, STICKER_COLORS } from "View/Tools/AddSticker";
+import { CursorName } from "Board/Pointer/Cursor";
 
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
@@ -24,20 +25,31 @@ export class AddSticker extends BoardTool {
 			lastSticker?.backgroundColor,
 		);
 
-		this.setCursor();
+		this.setCursor(this.sticker.getBackgroundColor());
+	}
+
+	setCursor(color: string) {
+		if (STICKER_COLOR_NAMES) {
+			const colorName =
+				STICKER_COLOR_NAMES[STICKER_COLORS.indexOf(color)];
+			this.board.pointer.setCursor(
+				colorName
+					? (`sticker-${colorName}` as CursorName)
+					: "crosshair",
+			);
+		} else {
+			this.board.pointer.setCursor("crosshair");
+		}
 	}
 
 	setBackgroundColor(color: string): void {
 		this.sticker.setBackgroundColor(color);
+		this.setCursor(color);
 		this.board.tools.publish();
 	}
 
 	getBackgroundColor(): string {
 		return this.sticker.getBackgroundColor();
-	}
-
-	setCursor(): void {
-		this.board.pointer.setCursor("crosshair");
 	}
 
 	leftButtonDown(): boolean {
