@@ -43,6 +43,7 @@ export class Selection {
 	isOn = true;
 	private context: SelectionContext = "None";
 	readonly items = new SelectionItems();
+	shouldPublish = true;
 
 	readonly tool = new SelectionTransformer(this.board, this);
 
@@ -95,7 +96,10 @@ export class Selection {
 		requestAnimationFrame(this.updateScheduledObservers);
 	};
 
-	private itemObserver = (item: Item) => {
+	private itemObserver = (item: Item): void => {
+		if (!this.shouldPublish) {
+			return;
+		}
 		this.subject.publish(this);
 		this.itemSubject.publish(item);
 	};
@@ -612,12 +616,14 @@ export class Selection {
 		items: { [key: string]: TransformationOperation },
 		timeStamp?: number,
 	): void {
+		this.shouldPublish = false;
 		this.emit({
 			class: "Transformation",
 			method: "transformMany",
 			items,
 			timeStamp,
 		});
+		this.shouldPublish = true;
 	}
 
 	setStrokeStyle(borderStyle: BorderStyle): void {

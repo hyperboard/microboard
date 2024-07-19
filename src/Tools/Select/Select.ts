@@ -198,16 +198,12 @@ export class Select extends Tool {
 					this.canvasDrawer.getMatrix().translateX,
 					this.canvasDrawer.getMatrix().translateY,
 				);
-				this.board.selection.transformMany(
-					translation,
-					this.beginTimeStamp,
-				);
+				selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.debounceUpd.setFalse();
 			} else {
 				const translation = this.handleMultipleItemsTranslate(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
-
 				if (Object.keys(translation).length > 1) {
 					const sumMbr = this.canvasDrawer.countSumMbr(translation);
 					if (sumMbr) {

@@ -131,6 +131,7 @@ export class Transformer extends Tool {
 		this.toDrawBorders.clear();
 		this.beginTimeStamp = Date.now();
 		this.canvasDrawer.clearCanvasAndKeys();
+		this.board.selection.subject.publish(this.board.selection);
 		return wasResising;
 	}
 

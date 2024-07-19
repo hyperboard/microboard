@@ -34,7 +34,7 @@ export default function createCanvasDrawer(board: Board): {
 		return matrix;
 	}
 
-	function translateCanvasBy(x: number, y: number) {
+	function translateCanvasBy(x: number, y: number): void {
 		if (lastCreatedCanvas) {
 			matrix.translate(x, y);
 			const currentLeft = parseFloat(lastCreatedCanvas.style.left || "0");
@@ -48,7 +48,7 @@ export default function createCanvasDrawer(board: Board): {
 		}
 	}
 
-	function recoordinateCanvas(sumMbr: Mbr) {
+	function recoordinateCanvas(sumMbr: Mbr): void {
 		if (lastCreatedCanvas) {
 			lastCreatedCanvas.style.left = `${
 				(sumMbr.left - board.camera.getMbr().left) *
@@ -62,7 +62,7 @@ export default function createCanvasDrawer(board: Board): {
 		}
 	}
 
-	function scaleCanvasBy(scaleX: number, scaleY: number) {
+	function scaleCanvasBy(scaleX: number, scaleY: number): void {
 		if (lastCreatedCanvas) {
 			matrix.scale(scaleX, scaleY);
 			lastCreatedCanvas.style.transformOrigin = "top left";
@@ -70,7 +70,7 @@ export default function createCanvasDrawer(board: Board): {
 		}
 	}
 
-	function scaleCanvasTo(scaleX: number, scaleY: number) {
+	function scaleCanvasTo(scaleX: number, scaleY: number): void {
 		if (lastCreatedCanvas) {
 			matrix.scaleX = scaleX;
 			matrix.scaleY = scaleY;
@@ -85,6 +85,7 @@ export default function createCanvasDrawer(board: Board): {
 			lastCreatedCanvas = undefined;
 		}
 		if (lastTranslationKeys) {
+			board.selection.shouldPublish = false;
 			lastTranslationKeys.forEach(id => {
 				const item = board.items.getById(id);
 				if (item) {
@@ -93,8 +94,10 @@ export default function createCanvasDrawer(board: Board): {
 				}
 			});
 			lastTranslationKeys = undefined;
+			board.selection.shouldPublish = true;
 		}
 		board.selection.transformationRenderBlock = undefined;
+		board.selection.subject.publish(board.selection);
 		matrix = new Matrix();
 	}
 
@@ -137,6 +140,7 @@ export default function createCanvasDrawer(board: Board): {
 					}
 				});
 				board.selection.transformationRenderBlock = true;
+				board.selection.subject.publish(board.selection);
 			}
 		}
 	}
