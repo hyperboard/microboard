@@ -16,7 +16,7 @@ export const uploadToTheStorage = async (
 
 		const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
 		const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
-
+		console.log("prepareImage", "totalChunks", totalChunks);
 		for (let i = 0; i < totalChunks; i++) {
 			const start = i * CHUNK_SIZE;
 			const end = Math.min(start + CHUNK_SIZE, blob.size);
