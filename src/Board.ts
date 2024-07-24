@@ -149,7 +149,7 @@ export class Board {
 				return this.applyRemoveOperation(op);
 			}
 			case "paste": {
-				return this.applyPasteOperation(op.itemsMap);
+				return this.applyPasteOperation(op.itemsMap, op.select);
 			}
 			case "duplicate": {
 				return this.applyPasteOperation(op.itemsMap);
@@ -483,7 +483,7 @@ export class Board {
 		}
 	}
 
-	paste(itemsMap: { [key: string]: ItemData }): void {
+	paste(itemsMap: { [key: string]: ItemData }, select = true): void {
 		const newItemIdMap: { [key: string]: string } = {};
 
 		for (const itemId in itemsMap) {
@@ -592,6 +592,7 @@ export class Board {
 			class: "Board",
 			method: "paste",
 			itemsMap: newMap,
+			select,
 		});
 
 		return;
@@ -712,16 +713,24 @@ export class Board {
 		});
 	}
 
-	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
+	applyPasteOperation(
+		itemsMap: { [key: string]: ItemData },
+		select = true,
+	): void {
 		const context = this.selection.getContext();
 		const items: Item[] = [];
 
-		const pasteItem = (itemId: string): void => {
-			const itemData = itemsMap[itemId];
-			if (!itemData) {
+		const sortedItemsMap = Object.entries(itemsMap).sort(
+			([_, dataA], [__, dataB]) => {
+				return dataA.zIndex - dataB.zIndex;
+			},
+		);
+
+		const pasteItem = (itemId: string, data: unknown) => {
+			if (!data) {
 				throw new Error("Pasting itemId doesn't exist in itemsMap");
 			}
-			const item = this.createItem(itemId, itemData);
+			const item = this.createItem(itemId, data);
 			this.index.insert(item);
 			if (
 				item instanceof Frame &&
@@ -732,22 +741,25 @@ export class Board {
 			items.push(item);
 		};
 
-		for (const itemId in itemsMap) {
-			if (itemsMap[itemId].itemType === "Connector") {
-				continue;
+		sortedItemsMap.forEach(([id, data]) => {
+			if (data.itemType === "Connector") {
+				return;
 			}
-			pasteItem(itemId);
-		}
 
-		for (const itemId in itemsMap) {
-			if (itemsMap[itemId].itemType === "Connector") {
-				pasteItem(itemId);
+			pasteItem(id, data);
+		});
+
+		sortedItemsMap.forEach(([id, data]) => {
+			if (data.itemType === "Connector") {
+				pasteItem(id, data);
 			}
-		}
+		});
 
 		this.selection.removeAll();
-		this.selection.add(items);
-		this.selection.setContext(context);
+		if (select) {
+			this.selection.add(items);
+			this.selection.setContext(context);
+		}
 	}
 
 	isOnBoard(item: Item): boolean {

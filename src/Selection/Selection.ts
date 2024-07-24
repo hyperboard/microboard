@@ -416,6 +416,7 @@ export class Selection {
 		const copiedItemsMap: { [key: string]: ItemData } = {};
 		this.list().forEach(item => {
 			const serializedData = item.serialize();
+			const zIndex = this.board.items.index.getZIndex(item);
 			// If the item is a Connector and the connected items are not part of selection,
 			// change the control points to BoardPoint.
 			if (item.itemType === "Connector") {
@@ -447,7 +448,7 @@ export class Selection {
 					).serialize();
 				}
 			}
-			copiedItemsMap[item.getId()] = serializedData;
+			copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 		});
 		return copiedItemsMap;
 	}

@@ -858,7 +858,6 @@ export class RichText extends Mbr implements Geometry {
 		}
 		if (data.maxWidth) {
 			this.editor.applyMaxWidth(data.maxWidth);
-			// this.editor.setMaxWidth(data.maxWidth);
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);

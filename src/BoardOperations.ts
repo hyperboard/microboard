@@ -59,6 +59,7 @@ interface SendToBack extends MultiItemBoardOp {
 
 interface Paste extends ItemMapBoardOp {
 	method: "paste";
+	select: boolean;
 }
 
 interface Duplicate extends ItemMapBoardOp {

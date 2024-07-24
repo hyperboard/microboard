@@ -19,6 +19,7 @@ export class FrameData {
 		public children: string[] = [],
 		public text = new DefaultRichTextData([], "top", 600),
 		public canChangeRatio = true,
+		public zIndex: number,
 	) {}
 }
 

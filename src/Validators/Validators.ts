@@ -116,7 +116,6 @@ function validateShapeData(shapeData: any): boolean {
 		typeof shapeData.borderWidth === "number" &&
 		validateTransformationData(shapeData.transformation) &&
 		validateRichTextData(shapeData.text);
-	// console.log("validateShapeData", shapeData, isValid);
 	return isValid;
 }
 
@@ -145,7 +144,6 @@ function validateTransformationData(transformationData: any): boolean {
 		typeof transformationData.scaleX === "number" &&
 		typeof transformationData.scaleY === "number" &&
 		typeof transformationData.rotate === "number";
-	// console.log("validateTransformationData", transformationData, isValid);
 	return isValid;
 }
 
@@ -159,13 +157,12 @@ export function validateRichTextData(richTextData: any): boolean {
 		typeof richTextData.verticalAlignment === "string" &&
 		(typeof richTextData.maxWidth === "number" ||
 			richTextData.maxWidth === undefined);
-	// console.log("validateRichTextData", richTextData, isValid);
 	return isValid;
 }
 
 function validateConnectorData(connectorData: any): boolean {
 	// Validate the presence and types of properties in ConnectorData
-	return (
+	const isValid =
 		connectorData.hasOwnProperty("startPoint") &&
 		connectorData.hasOwnProperty("endPoint") &&
 		connectorData.hasOwnProperty("startPointerStyle") &&
@@ -181,8 +178,8 @@ function validateConnectorData(connectorData: any): boolean {
 		typeof connectorData.lineStyle === "string" &&
 		typeof connectorData.lineColor === "string" &&
 		typeof connectorData.lineWidth === "number" &&
-		validateTransformationData(connectorData.transformation)
-	);
+		validateTransformationData(connectorData.transformation);
+	return isValid;
 }
 
 function validateChildren(children: any): children is Descendant[] {
@@ -192,7 +189,6 @@ function validateChildren(children: any): children is Descendant[] {
 
 	for (const child of children) {
 		const isValidDescendant = validateDescendant(child);
-		// console.log("validateChildren", child, isValidDescendant);
 		if (!isValidDescendant) {
 			return false;
 		}
@@ -304,13 +300,13 @@ function validateTextNode(node: any): node is TextNode {
 }
 
 function validateImageItemData(data: any): data is ImageItemData {
-	return (
+	const isValid =
 		data.hasOwnProperty("transformation") &&
 		data.hasOwnProperty("dataUrl") &&
 		typeof data.transformation === "object" &&
 		typeof data.dataUrl === "string" &&
-		validateTransformationData(data.transformation)
-	);
+		validateTransformationData(data.transformation);
+	return isValid;
 }
 
 function validateDrawingData(data: any): data is DrawingData {

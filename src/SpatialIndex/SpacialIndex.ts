@@ -95,14 +95,17 @@ export class SpatialIndex {
 	}
 
 	copy(): Record<string, ItemData> {
-		const items = this.itemsArray.reduce((accumulator, item) => {
-			accumulator[item.getId()] = item.serialize();
+		const items = this.itemsArray.reduce((accumulator, item, i) => {
+			accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
 			return accumulator;
 		}, {} as Record<string, ItemData>);
-		const itemsAndFrames = this.framesArray.reduce((accumulator, item) => {
-			accumulator[item.getId()] = item.serialize();
-			return accumulator;
-		}, items as Record<string, ItemData>);
+		const itemsAndFrames = this.framesArray.reduce(
+			(accumulator, item, i) => {
+				accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
+				return accumulator;
+			},
+			items as Record<string, ItemData>,
+		);
 		return itemsAndFrames;
 	}
 
