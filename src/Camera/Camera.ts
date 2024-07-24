@@ -112,7 +112,7 @@ export class Camera {
 
 	getMatrixSnapshot(): Matrix | undefined {
 		try {
-			const snap = localStorage.getItem(`${this.boardId}_camera`);
+			const snap = localStorage.getItem(`camera_${this.boardId}`);
 			if (snap) {
 				const matrix = JSON.parse(snap);
 				if (
@@ -135,7 +135,7 @@ export class Camera {
 	saveMatrixSnapshot(): void {
 		if (this.boardId) {
 			localStorage.setItem(
-				`${this.boardId}_camera`,
+				`camera_${this.boardId}`,
 				JSON.stringify(this.getMatrix()),
 			);
 		}

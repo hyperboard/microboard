@@ -419,16 +419,55 @@ export class Board {
 	}
 
 	saveSnapshot(snapshot?: BoardSnapshot): void {
+		const saveSnapshotToLocalStorage = (snapshot: BoardSnapshot): void => {
+			try {
+				localStorage.setItem(
+					`lastVisit_${this.getBoardId()}`,
+					JSON.stringify(Date.now()),
+				);
+				localStorage.setItem(
+					`board_${this.getBoardId()}`,
+					JSON.stringify(snapshot),
+				);
+			} catch {
+				const firstVisit = Array.from(
+					{ length: localStorage.length },
+					(_, i) => i,
+				).reduce((acc, i) => {
+					const key = localStorage.key(i);
+					if (key && key.startsWith("lastVisit")) {
+						const curr = +(localStorage.getItem(key) || "");
+						const currId = key.split("_")[1];
+						if (!acc || curr < acc.minVal) {
+							return {
+								minVal: curr,
+								minId: currId,
+							};
+						}
+						return acc;
+					}
+					return acc;
+				}, undefined as { minVal: number; minId: string } | undefined);
+				if (firstVisit && firstVisit.minId !== this.getBoardId()) {
+					localStorage.removeItem(`lastVisit_${firstVisit.minId}`);
+					localStorage.removeItem(`camera_${firstVisit.minId}`);
+					localStorage.removeItem(`board_${firstVisit.minId}`);
+					saveSnapshotToLocalStorage(snapshot);
+				} else if (
+					firstVisit &&
+					firstVisit.minId === this.getBoardId()
+				) {
+					console.error(
+						`Not enough place in localStorage for ${this.getBoardId()} snapshot`,
+					);
+				}
+			}
+		};
+
 		if (snapshot) {
-			localStorage.setItem(
-				`board_${this.getBoardId()}`,
-				JSON.stringify(snapshot),
-			);
+			saveSnapshotToLocalStorage(snapshot);
 		} else {
-			localStorage.setItem(
-				`board_${this.getBoardId()}`,
-				JSON.stringify(this.getSnapshot()),
-			);
+			saveSnapshotToLocalStorage(this.getSnapshot());
 		}
 	}
 
