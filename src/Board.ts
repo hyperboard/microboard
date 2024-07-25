@@ -22,7 +22,7 @@ export class Board {
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
-	readonly camera = new Camera(this.pointer);
+	readonly camera = new Camera(this.pointer, this.getCameraSnapshot());
 	private index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
@@ -34,10 +34,10 @@ export class Board {
 	}
 
 	/* Connect to the server to recieve the events*/
-	connect(connection: Connection): void {
+	async connect(connection: Connection): Promise<void> {
 		this.events = createEvents(this, connection);
 		this.selection.events = this.events;
-		const snapshot = this.getSnapshotFromCache();
+		const snapshot = await this.getSnapshotFromCache();
 		if (snapshot && this.getSnapshot().lastIndex === 0) {
 			this.deserialize(snapshot);
 		}
@@ -405,30 +405,108 @@ export class Board {
 		this.events?.deserialize(events);
 	}
 
-	getSnapshotFromCache(): BoardSnapshot | undefined {
-		const snapshotString = localStorage.getItem(
-			`board_${this.getBoardId()}`,
-		);
-		if (snapshotString) {
-			try {
-				const snapshot = JSON.parse(snapshotString);
-				return snapshot;
-			} catch {}
+	getCameraSnapshot(): Matrix | undefined {
+		try {
+			const snap = localStorage.getItem(`camera_${this.boardId}`);
+			if (snap) {
+				const matrix = JSON.parse(snap);
+				if (
+					"translateX" in matrix &&
+					"translateY" in matrix &&
+					"scaleX" in matrix &&
+					"scaleY" in matrix &&
+					"shearX" in matrix &&
+					"shearY" in matrix
+				) {
+					return matrix as Matrix;
+				}
+			}
+			throw new Error();
+		} catch {
+			return undefined;
 		}
-		return undefined;
+	}
+
+	getSnapshotFromCache(): Promise<BoardSnapshot | undefined> {
+		return new Promise((resolve, reject) => {
+			const dbRequest = indexedDB.open("BoardDatabase", 1);
+
+			dbRequest.onsuccess = event => {
+				const db = (event.target as IDBOpenDBRequest).result;
+				const transaction = db.transaction("snapshots", "readonly");
+				const store = transaction.objectStore("snapshots");
+				const getRequest = store.get(this.getBoardId());
+
+				getRequest.onsuccess = () => {
+					if (getRequest.result) {
+						resolve(getRequest.result.data);
+					} else {
+						resolve(undefined);
+					}
+				};
+
+				getRequest.onerror = () => reject(getRequest.error);
+			};
+
+			dbRequest.onerror = () => reject(dbRequest.error);
+		});
+	}
+
+	private async saveSnapshotToIndexedDB(
+		snapshot: BoardSnapshot,
+	): Promise<void> {
+		const dbRequest = indexedDB.open("BoardDatabase", 1);
+
+		dbRequest.onupgradeneeded = event => {
+			const db = (event.target as IDBOpenDBRequest).result;
+			if (!db.objectStoreNames.contains("snapshots")) {
+				db.createObjectStore("snapshots", { keyPath: "boardId" });
+			}
+		};
+
+		return new Promise((resolve, reject) => {
+			dbRequest.onsuccess = event => {
+				const db = (event.target as IDBOpenDBRequest).result;
+				const transaction = db.transaction("snapshots", "readwrite");
+				const store = transaction.objectStore("snapshots");
+				store.put({ boardId: this.getBoardId(), data: snapshot });
+
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = () => reject(transaction.error);
+			};
+
+			dbRequest.onerror = () => reject(dbRequest.error);
+		});
+	}
+
+	private async removeSnapshotFromIndexedDB(boardId: string): Promise<void> {
+		const dbRequest = indexedDB.open("BoardDatabase", 1);
+
+		return new Promise((resolve, reject) => {
+			dbRequest.onsuccess = event => {
+				const db = (event.target as IDBOpenDBRequest).result;
+				const transaction = db.transaction("snapshots", "readwrite");
+				const store = transaction.objectStore("snapshots");
+				store.delete(boardId);
+
+				transaction.oncomplete = () => resolve();
+				transaction.onerror = () => reject(transaction.error);
+			};
+
+			dbRequest.onerror = () => reject(dbRequest.error);
+		});
 	}
 
 	saveSnapshot(snapshot?: BoardSnapshot): void {
-		const saveSnapshotToLocalStorage = (snapshot: BoardSnapshot): void => {
+		const actualSaveSnapshot = async (
+			snapshot: BoardSnapshot,
+		): Promise<void> => {
 			try {
 				localStorage.setItem(
 					`lastVisit_${this.getBoardId()}`,
 					JSON.stringify(Date.now()),
 				);
-				localStorage.setItem(
-					`board_${this.getBoardId()}`,
-					JSON.stringify(snapshot),
-				);
+				await this.saveSnapshotToIndexedDB(snapshot);
 			} catch {
 				const firstVisit = Array.from(
 					{ length: localStorage.length },
@@ -451,8 +529,8 @@ export class Board {
 				if (firstVisit && firstVisit.minId !== this.getBoardId()) {
 					localStorage.removeItem(`lastVisit_${firstVisit.minId}`);
 					localStorage.removeItem(`camera_${firstVisit.minId}`);
-					localStorage.removeItem(`board_${firstVisit.minId}`);
-					saveSnapshotToLocalStorage(snapshot);
+					await this.removeSnapshotFromIndexedDB(firstVisit.minId);
+					await actualSaveSnapshot(snapshot);
 				} else if (
 					firstVisit &&
 					firstVisit.minId === this.getBoardId()
@@ -465,9 +543,9 @@ export class Board {
 		};
 
 		if (snapshot) {
-			saveSnapshotToLocalStorage(snapshot);
+			actualSaveSnapshot(snapshot).catch(console.error);
 		} else {
-			saveSnapshotToLocalStorage(this.getSnapshot());
+			actualSaveSnapshot(this.getSnapshot()).catch(console.error);
 		}
 	}
 
