@@ -148,6 +148,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 		const event = { order: 0, body };
 		const record = { event, command };
 		log.push(record);
+		console.log(log.getList());
 		setLatestUserEvent(operation, userId);
 		connection.publishBoardEvent(board.getBoardId(), event);
 		subject.publish(event);
