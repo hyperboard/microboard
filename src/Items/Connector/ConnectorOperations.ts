@@ -22,6 +22,7 @@ interface SetStartPoint {
 	method: "setStartPoint";
 	item: string[];
 	startPointData: ControlPointData;
+	timestamp?: number;
 }
 
 interface SetEndPoint {
@@ -29,6 +30,7 @@ interface SetEndPoint {
 	method: "setEndPoint";
 	item: string[];
 	endPointData: ControlPointData;
+	timestamp?: number;
 }
 
 interface SetStartPointerStyle {

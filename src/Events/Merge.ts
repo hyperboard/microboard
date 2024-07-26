@@ -364,6 +364,17 @@ function mergeConnectorOperations(
 	if (!areItemsTheSame(opA, opB)) {
 		return;
 	}
+
+	if (
+		((opA.method === "setStartPoint" && opB.method === "setStartPoint") ||
+			(opA.method === "setEndPoint" && opB.method === "setEndPoint")) &&
+		opA.timestamp &&
+		opB.timestamp &&
+		opA.timestamp !== opB.timestamp
+	) {
+		return;
+	}
+
 	if (opA.method === "setStartPoint" && opB.method === "setStartPoint") {
 		return {
 			...opB,

@@ -205,7 +205,7 @@ export class ConnectorSnap {
 
 	setAnchors(item: Item): void {
 		const points = item.getSnapAnchorPoints();
-		const anchors = [];
+		const anchors: Anchor[] = [];
 		for (const { x, y } of points) {
 			anchors.push(
 				new Anchor(

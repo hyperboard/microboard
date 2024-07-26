@@ -236,12 +236,13 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	setStartPoint(point: ControlPoint): void {
+	setStartPoint(point: ControlPoint, timestamp?: number): void {
 		this.emit({
 			class: "Connector",
 			method: "setStartPoint",
 			item: [this.id],
 			startPointData: point.serialize(),
+			timestamp,
 		});
 	}
 
@@ -272,12 +273,13 @@ export class Connector {
 		}
 	}
 
-	setEndPoint(point: ControlPoint): void {
+	setEndPoint(point: ControlPoint, timestamp?: number): void {
 		this.emit({
 			class: "Connector",
 			method: "setEndPoint",
 			item: [this.id],
 			endPointData: point.serialize(),
+			timestamp,
 		});
 	}
 

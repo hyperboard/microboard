@@ -22,6 +22,7 @@ export class ConnectorTransformer extends Tool {
 
 	private snap = new ConnectorSnap(this.board);
 	private connector: Connector | null = null;
+	beginTimeStamp = Date.now();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -50,6 +51,7 @@ export class ConnectorTransformer extends Tool {
 			this.statePointer = "end";
 			this.state = "grabbing";
 		}
+		this.beginTimeStamp = Date.now();
 		return this.state !== "default";
 	}
 
@@ -58,6 +60,7 @@ export class ConnectorTransformer extends Tool {
 		const oldValue = this.state;
 		this.statePointer = "none";
 		this.state = "default";
+		this.beginTimeStamp = Date.now();
 		this.board.tools.publish();
 		return oldValue !== "default";
 	}
@@ -99,11 +102,11 @@ export class ConnectorTransformer extends Tool {
 			const point = this.snap.getControlPoint();
 			switch (this.statePointer) {
 				case "start":
-					connector.setStartPoint(point);
+					connector.setStartPoint(point, this.beginTimeStamp);
 					this.selection.subject.publish(this.selection);
 					break;
 				case "end":
-					connector.setEndPoint(point);
+					connector.setEndPoint(point, this.beginTimeStamp);
 					this.selection.subject.publish(this.selection);
 					break;
 			}
