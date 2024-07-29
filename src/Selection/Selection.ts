@@ -1,14 +1,14 @@
 import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
-import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
 import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
-import { SELECTION_COLOR } from "View/Tools/Selection";
 import { toFiniteNumber } from "utils";
+import { SELECTION_COLOR } from "View/Tools/Selection";
 import { createCommand } from "../Events/Command";
 import {
 	Connector,
@@ -25,7 +25,6 @@ import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
-import { FrameType } from "Board/Items/Frame/Basic";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -468,6 +467,10 @@ export class Selection {
 			"Frame",
 		])[0];
 		return item instanceof RichText ? item : item?.text;
+	}
+
+	isTextEmpty(): boolean {
+		return this.getText()?.isEmpty() || false;
 	}
 
 	getAutosize(): boolean {
@@ -1114,12 +1117,14 @@ export class Selection {
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
 		const isSingleConnector = single && single.itemType === "Connector";
+
+		if (isSingleConnector) {
+			this.tool.render(context);
+			return;
+		}
+
 		const isSelectionTooBig = this.items.getSize() > 100;
-		if (
-			!isSingleConnector &&
-			!isSelectionTooBig &&
-			!this.transformationRenderBlock
-		) {
+		if (!isSelectionTooBig && !this.transformationRenderBlock) {
 			for (const item of this.items.list()) {
 				this.renderItemMbr(context, item);
 			}

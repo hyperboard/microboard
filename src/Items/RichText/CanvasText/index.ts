@@ -45,7 +45,6 @@ export function getBlockNodes(
 		}
 	}
 	alignNodes(maxWidth);
-
 	return {
 		nodes,
 		maxWidth,

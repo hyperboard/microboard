@@ -4,6 +4,7 @@ import {
 	ANCHOR_BORDER_COLOR,
 	ANCHOR_STROKE_WIDTH,
 	renderAnchor,
+	renderCircleAnchor,
 } from "View/Items/Anchor";
 import { Mbr, Point } from "..";
 
@@ -41,19 +42,38 @@ export class Anchor extends Mbr {
 		return new Point(this.x, this.y);
 	}
 
-	render(context: DrawingContext): void {
+	render(
+		context: DrawingContext,
+		type: "rect" | "circle" = "rect",
+		active = false,
+	): void {
 		const center = this.getCenter();
 		const { ctx } = context;
 		const scale = context.getCameraScale();
 
-		renderAnchor(
-			ctx,
-			center,
-			this.getWidth(),
-			this.borderColor,
-			this.backgroundColor,
-			this.strokeWidth,
-			scale,
-		);
+		switch (type) {
+			case "rect":
+				renderAnchor(
+					ctx,
+					center,
+					this.getWidth(),
+					this.borderColor,
+					this.backgroundColor,
+					this.strokeWidth,
+					scale,
+				);
+				break;
+			case "circle":
+				renderCircleAnchor(
+					ctx,
+					center,
+					this.radius,
+					this.borderColor,
+					active ? this.borderColor : this.backgroundColor,
+					this.strokeWidth,
+					scale,
+				);
+				break;
+		}
 	}
 }

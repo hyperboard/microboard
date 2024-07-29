@@ -23,6 +23,7 @@ import { Point } from "../Point";
 import { CubicBezier } from "../Curve";
 import {
 	CONNECTOR_COLOR,
+	CONNECTOR_LINE_CAP,
 	CONNECTOR_LINE_WIDTH,
 	DEFAULT_END_POINTER,
 	DRAW_TEXT_BORDER,
@@ -30,6 +31,7 @@ import {
 } from "View/Items/Connector";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
+import { t } from "i18next";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -74,7 +76,9 @@ export class Connector {
 		this.id,
 		this.events,
 		new Transformation(),
-		"\u00A0",
+		t("connector.textPlaceholder", {
+			ns: "default",
+		}),
 		true,
 	);
 	transformationRenderBlock?: boolean = undefined;
@@ -118,7 +122,6 @@ export class Connector {
 			maxWidth: 300,
 		});
 		this.text.setClipPath();
-
 		this.updateTitle();
 		/*
         const { x, y } = this.getMiddlePoint();
@@ -509,18 +512,40 @@ export class Connector {
 		if (this.transformationRenderBlock) {
 			return;
 		}
+		if (CONNECTOR_LINE_CAP === "round") {
+			context.ctx.lineCap = "round";
+			context.ctx.lineJoin = "round";
+		}
 		this.clipText(context);
 		this.text.render(context);
-		this.startPointer.path.render(context);
-		this.endPointer.path.render(context);
+
+		if (this.startPointerStyle !== "None") {
+			this.startPointer.path.render(context);
+		}
+		if (this.endPointerStyle !== "None") {
+			this.endPointer.path.render(context);
+		}
 	}
 
 	clipText(context: DrawingContext): void {
-		if (DRAW_TEXT_BORDER) {
-			this.lines.setBorderWidth(this.lineWidth);
-			this.lines.setBorderColor(this.lineColor);
+		const selectionContext = this.board.selection.getContext();
+		if (
+			this.text.isEmpty() &&
+			!this.board.selection.items.list().includes(this)
+		) {
+			this.text.disableRender();
+			this.lines.render(context);
+			return;
 		}
-		if (this.text.isEmpty()) {
+
+		if (
+			this.text.isEmpty() &&
+			this.board.selection.items.list().includes(this) &&
+			(selectionContext === "SelectUnderPointer" ||
+				selectionContext === "EditUnderPointer" ||
+				selectionContext === "SelectByRect")
+		) {
+			this.text.disableRender();
 			this.lines.render(context);
 			return;
 		}
@@ -571,40 +596,32 @@ export class Connector {
 		// Restore the context to remove the clipping region
 		ctx.restore();
 
+		// Render text in the center of the connector
+		const { x, y } = this.getMiddlePoint();
+		const textWidth = this.text.getWidth();
+		const textHeight = this.text.getHeight();
+		this.text.transformation.applyTranslateTo(
+			x - textWidth / 2,
+			y - textHeight / 2,
+		);
+
+		this.text.render(context);
+
 		if (
 			DRAW_TEXT_BORDER &&
-			(this.board.selection.getContext() === "EditUnderPointer" ||
-				this.board.selection.getContext() === "EditTextUnderPointer") &&
+			(selectionContext === "EditUnderPointer" ||
+				selectionContext === "EditTextUnderPointer") &&
 			this.board.selection.items.list().includes(this)
 		) {
 			ctx.strokeStyle = SELECTION_COLOR;
+			ctx.lineWidth = 1;
 			ctx.beginPath();
-			// Cover the entire canvas area with the rectangle path
-			const cameraMbr = context.camera.getMbr();
+			// Draw border around the text only
 			ctx.rect(
-				cameraMbr.left,
-				cameraMbr.top,
-				cameraMbr.getWidth(),
-				cameraMbr.getHeight(),
-			);
-
-			// Remove the text rectangle area from the path to create the exclusion/clipping area
-			// This assumes a clockwise definition of the canvas rectangle and an anti-clockwise definition of the inner rectangle
-			ctx.moveTo(
 				textMbr.left - TEXT_BORDER_PADDING,
 				textMbr.top - TEXT_BORDER_PADDING,
-			);
-			ctx.lineTo(
-				textMbr.left - TEXT_BORDER_PADDING,
-				textMbr.bottom + TEXT_BORDER_PADDING,
-			);
-			ctx.lineTo(
-				textMbr.right + TEXT_BORDER_PADDING,
-				textMbr.bottom + TEXT_BORDER_PADDING,
-			);
-			ctx.lineTo(
-				textMbr.right + TEXT_BORDER_PADDING,
-				textMbr.top - TEXT_BORDER_PADDING,
+				textMbr.getWidth() + TEXT_BORDER_PADDING * 2,
+				textMbr.getHeight() + TEXT_BORDER_PADDING * 2,
 			);
 			ctx.closePath();
 			ctx.stroke();
@@ -676,10 +693,6 @@ export class Connector {
 		if (!this.text) {
 			return;
 		}
-		// if (this.animationFrameId) { return; }
-		if (this.text!.isEmpty()) {
-			return;
-		}
 		const { x, y } = this.getMiddlePoint();
 		const height = this.text!.getHeight();
 		const width = this.text!.getWidth();
@@ -689,6 +702,7 @@ export class Connector {
 			y - height / 2,
 		);
 		this.text.transformCanvas();
+		this.text.updateElement();
 
 		// this.animationFrameId = 0;
 	}
@@ -719,13 +733,13 @@ export class Connector {
 	private updatePaths(): void {
 		const startPoint = this.startPoint;
 		const endPoint = this.endPoint;
-
 		this.lines = getLine(
 			this.lineStyle,
 			startPoint,
 			endPoint,
 			this.middlePoints,
 		).addConnectedItemType(this.itemType);
+
 		this.startPointer = getStartPointer(
 			startPoint,
 			this.startPointerStyle,
@@ -746,6 +760,9 @@ export class Connector {
 		this.endPointer.path.setBackgroundColor(this.lineColor);
 
 		this.offsetLines();
+
+		this.lines.setBorderWidth(this.lineWidth);
+		this.lines.setBorderColor(this.lineColor);
 
 		this.updateTitle();
 	}
