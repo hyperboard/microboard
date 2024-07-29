@@ -21,9 +21,9 @@ export function getPointer(style: string): Pointer {
 const Pointers = {
 	None: {
 		name: "None",
-		path: new Path([new Line(new Point(70, 50), new Point(99, 50))]),
-		start: new Point(70, 50),
-		end: new Point(99, 50),
+		path: new Path([new Line(new Point(99, 50), new Point(128, 50))]),
+		start: new Point(99, 50),
+		end: new Point(128, 50),
 	},
 	Angle: {
 		name: "Angle",
@@ -130,7 +130,7 @@ const Pointers = {
 				new Line(new Point(95, 50), new Point(80, 65)),
 				new Line(new Point(80, 65), new Point(65, 50)),
 			],
-			false,
+			true,
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
@@ -192,7 +192,7 @@ const Pointers = {
 						new Point(34.5, 29.5),
 					),
 				],
-				true,
+				false,
 			),
 		]),
 		start: new Point(34.5, 49.5),
@@ -256,7 +256,7 @@ const Pointers = {
 						new Point(34.5, 29.5),
 					),
 				],
-				true,
+				false,
 			),
 		]),
 		start: new Point(34.5, 49.5),
@@ -276,7 +276,20 @@ const Pointers = {
 		end: new Point(95, 50),
 	},
 	TriangleFilled: {
-		name: "TriangleEmpty",
+		name: "TriangleFilled",
+		path: new Path(
+			[
+				new Line(new Point(65, 35), new Point(95, 50)),
+				new Line(new Point(95, 50), new Point(65, 65)),
+				new Line(new Point(65, 65), new Point(65, 35)),
+			],
+			true,
+		),
+		start: new Point(65, 50),
+		end: new Point(95, 50),
+	},
+	TriangleFilledTalk: {
+		name: "TriangleFilledTalk",
 		path: new Path(
 			[
 				new Line(new Point(65, 35), new Point(95, 50)),
