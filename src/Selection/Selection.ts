@@ -774,16 +774,21 @@ export class Selection {
 	}
 
 	setFrameType(frameType: FrameType): void {
-		const frames = this.items.getIdsByItemTypes(["Frame"]);
-		if (frames.length) {
-			this.emit({
-				class: "Frame",
-				method: "setFrameType",
-				item: frames,
-				shapeType: frameType,
-				prevShapeType: this.getFrameType(),
-				board: this.board,
-			});
+		// const frames = this.items.getIdsByItemTypes(["Frame"]);
+		// if (frames.length) {
+		// this.emit({
+		// 	class: "Frame",
+		// 	method: "setFrameType",
+		// 	item: frames,
+		// 	shapeType: frameType,
+		// 	prevShapeType: this.getFrameType(),
+		// });
+		// }
+
+		const frame = this.items.getSingle();
+
+		if (frame instanceof Frame) {
+			frame.setFrameType(frameType);
 		}
 	}
 

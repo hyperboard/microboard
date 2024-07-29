@@ -4,6 +4,7 @@ import { Board } from "Board/Board";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { FRAME_BORDER_COLOR, FRAME_FILL_COLOR } from "View/Items/Frame";
+import { Mbr } from "../Mbr";
 
 export class FrameData {
 	readonly itemType = "Frame";
@@ -43,7 +44,7 @@ interface SetFrameType {
 	item: string[];
 	shapeType: FrameType;
 	prevShapeType: FrameType;
-	board?: Board;
+	prevMbr: Record<"left" | "right" | "top" | "bottom", number>;
 }
 
 interface AddChild {

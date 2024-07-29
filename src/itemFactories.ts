@@ -97,7 +97,10 @@ function createFrame(id: string, data: ItemData, board: Board): Frame {
 	if (!isFrameData(data)) {
 		throw new Error("Invalid data for Drawing");
 	}
-	const frame = new Frame(board.events).setId(id).deserialize(data);
+	const frame = new Frame(board.events)
+		.setId(id)
+		.setBoard(board)
+		.deserialize(data);
 	return frame;
 }
 
