@@ -816,9 +816,11 @@ export class Selection {
 			} else if (
 				single instanceof Shape ||
 				single instanceof Sticker ||
-				single instanceof Frame ||
-				single instanceof Connector
+				single instanceof Frame
 			) {
+				single.text.setSelectionFontSize(fontSize, this.getContext());
+			} else if (single instanceof Connector) {
+				localStorage.setItem("lastConnectorTextSize", `${fontSize}`);
 				single.text.setSelectionFontSize(fontSize, this.getContext());
 			}
 		} else if (this.items.isItemTypes(["Sticker"])) {
@@ -865,12 +867,17 @@ export class Selection {
 			if (
 				item.itemType === "Shape" ||
 				item.itemType === "Sticker" ||
-				item.itemType === "Connector" ||
 				item.itemType === "Frame"
 			) {
-				(
-					item as Shape | Sticker | Connector | Frame
-				).text.setSelectionFontColor(fontColor, this.context);
+				(item as Shape | Sticker | Frame).text.setSelectionFontColor(
+					fontColor,
+					this.context,
+				);
+				return;
+			}
+			if (item instanceof Connector) {
+				localStorage.setItem("lastConnectorTextColor", fontColor);
+				item.text.setSelectionFontColor(fontColor, this.context);
 				return;
 			}
 		}

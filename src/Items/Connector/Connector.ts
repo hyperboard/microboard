@@ -32,6 +32,7 @@ import {
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { t } from "i18next";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -80,6 +81,17 @@ export class Connector {
 			ns: "default",
 		}),
 		true,
+		false,
+		undefined,
+		{
+			...DEFAULT_TEXT_STYLES,
+			fontSize:
+				Number(localStorage.getItem("lastConnectorTextSize")) ??
+				DEFAULT_TEXT_STYLES.fontSize,
+			fontColor:
+				localStorage.getItem("lastConnectorTextColor") ??
+				DEFAULT_TEXT_STYLES.fontColor,
+		},
 	);
 	transformationRenderBlock?: boolean = undefined;
 
