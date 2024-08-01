@@ -64,6 +64,7 @@ export function mergeOperations(
 	if (
 		opA.class === "Board" &&
 		opA.method === "add" &&
+		opA.data.itemType === "RichText" &&
 		opB.method === "edit" &&
 		opB.class === "RichText"
 	) {
