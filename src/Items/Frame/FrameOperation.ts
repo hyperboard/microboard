@@ -44,7 +44,6 @@ interface SetFrameType {
 	item: string[];
 	shapeType: FrameType;
 	prevShapeType: FrameType;
-	prevMbr: Record<"left" | "right" | "top" | "bottom", number>;
 }
 
 interface AddChild {

@@ -456,7 +456,7 @@ export class Frame implements Geometry {
 				} else if (op.method === "setCanChangeRatio") {
 					this.applyCanChangeRatio(op.canChangeRatio);
 				} else if (op.method === "setFrameType") {
-					this.applyFrameType(op.shapeType, op.width, op.height);
+					this.applyFrameType(op.shapeType);
 				} else if (op.method === "addChild") {
 					this.applyAddChild(op.childId);
 				} else if (op.method === "removeChild") {
@@ -541,18 +541,20 @@ export class Frame implements Geometry {
 		return this.shapeType;
 	}
 
-	private applyFrameType(shapeType: FrameType, prevMbr?: Mbr): void {
+	private applyFrameType(shapeType: FrameType): void {
 		this.shapeType = shapeType;
-		this.transformPath(true);
-		if (prevMbr) {
-			this.mbr.left = prevMbr.left;
-			this.mbr.right = prevMbr.right;
-			this.mbr.top = prevMbr.top;
-			this.mbr.bottom = prevMbr.bottom;
-		} else if (this.newShape === "Custom") {
+		if (shapeType !== 'Custom') {
+			this.setLastFrameScale();
+		}
+	 if (this.newShape === "Custom" || shapeType === 'Custom') {
 			const scale = this.getLastFrameScale();
 			this.transformation.applyScaleTo(scale.x, scale.y);
+			this.transformPath(false);
+		} else {
+			this.transformPath(true);
 		}
+
+
 		if (this.board) {
 			this.getChildrenIds().forEach(childId => {
 				const child = this.board.items.getById(childId);
