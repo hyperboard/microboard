@@ -91,7 +91,6 @@ export class ImageItem extends Mbr {
 		} else {
 			this.image.src = storageLink;
 		}
-		console.log("imageItem", "image.src", this.image.src);
 		this.transformation.subject.subscribe(this.onTransform);
 	}
 
@@ -111,8 +110,7 @@ export class ImageItem extends Mbr {
 		this.shootLoadCallbacks();
 	};
 
-	onError = (error): void => {
-		console.log("imageItem", "onError", error);
+	onError = (_error): void => {
 		this.image = getPlaceholderImage();
 		this.updateMbr();
 		this.subject.publish(this);
