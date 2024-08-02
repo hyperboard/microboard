@@ -123,11 +123,11 @@ function calculatePoint(
 	const distance = Math.sqrt(
 		(point.x - prevPoint.x) ** 2 + (point.y - prevPoint.y) ** 2,
 	);
-	let distanceMultiplier = distance / 100;
+	let distanceMultiplier = distance / 25;
 
 	// Apply min and max constraints to the multiplier
 	const minMultiplier = 1; // Minimum multiplier value
-	const maxMultiplier = 3.0; // Maximum multiplier value
+	const maxMultiplier = 5; // Maximum multiplier value
 	distanceMultiplier = Math.max(
 		minMultiplier,
 		Math.min(maxMultiplier, distanceMultiplier),
