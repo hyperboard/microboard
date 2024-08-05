@@ -421,6 +421,7 @@ export class EditorContainer {
 		} else {
 			Editor.addMark(editor, "fontColor", format);
 		}
+		ReactEditor.focus(editor);
 		this.emitMethodOps();
 	}
 
@@ -493,6 +494,7 @@ export class EditorContainer {
 		}
 		this.recordMethodOps("setSelectionFontSize");
 		Editor.addMark(editor, "fontSize", size);
+		ReactEditor.focus(editor);
 		this.emitMethodOps();
 	}
 
@@ -513,6 +515,7 @@ export class EditorContainer {
 		} else {
 			Editor.addMark(editor, "fontHighlight", format);
 		}
+		ReactEditor.focus(editor);
 		this.emitMethodOps();
 	}
 
