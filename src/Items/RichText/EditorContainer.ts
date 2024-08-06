@@ -426,6 +426,7 @@ export class EditorContainer {
 	}
 
 	setSelectionFontStyle(style: TextStyle | TextStyle[]): void {
+		console.log("selectionFontStyle");
 		const editor = this.editor;
 		const styleList = Array.isArray(style) ? style : [style];
 		const marks = this.getSelectionMarks();
@@ -434,7 +435,6 @@ export class EditorContainer {
 		}
 		this.recordMethodOps("setSelectionFontStyle");
 
-		const styles = marks.styles ? marks.styles.slice() : [];
 		styleList.forEach(style => {
 			const currentStyles = this.getSelectionStyles() ?? [];
 			if (currentStyles.includes(style)) {
@@ -594,7 +594,8 @@ export class EditorContainer {
 					node.type === "paragraph",
 			}),
 		);
-		const styles = nodes
+
+		const styles: Set<TextStyle> = nodes
 			.flatMap(nodeEntry => {
 				const [node, path] = nodeEntry;
 				const { children } = node;
@@ -608,16 +609,14 @@ export class EditorContainer {
 			.map(textNode => {
 				return textNode.styles;
 			})
-			.reduce(
-				(acc: string[], currStyles) => {
-					if (!currStyles) {
-						return [];
-					}
-					return acc.filter(style => currStyles.includes(style));
-				},
-				["bold", "italic", "underline", "line-through"],
-			);
-		return styles;
+			.reduce((acc: Set<TextStyle>, currStyles: TextStyle[]) => {
+				if (!currStyles) {
+					return acc;
+				}
+				currStyles.forEach(style => acc.add(style));
+				return acc;
+			}, new Set());
+		return Array.from(styles);
 	}
 
 	getSelectedBlockNode(): BlockNode | null {
