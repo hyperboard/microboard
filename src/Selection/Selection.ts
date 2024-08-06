@@ -839,19 +839,41 @@ export class Selection {
 		}
 	}
 
-	setFontStyle(fontStyleList: TextStyle[]): void {
+	setFontStyle(fontStyle: TextStyle): void {
 		const single = this.items.getSingle();
 		if (single) {
 			if (single instanceof RichText) {
-				single.setSelectionFontStyle(fontStyleList, this.context);
+				single.setSelectionFontStyle(fontStyle, this.context);
 			} else if ("text" in single) {
-				single.text.setSelectionFontStyle(fontStyleList, this.context);
+				single.text.setSelectionFontStyle(fontStyle, this.context);
 			}
 		} else {
+			const filteredItems = this.items
+				.list()
+				.filter(
+					item =>
+						item.itemType === "RichText" ||
+						item.itemType === "Shape" ||
+						item.itemType === "Sticker" ||
+						item.itemType === "Connector" ||
+						item.itemType === "Frame",
+				);
+
+			const changedIds = filteredItems
+				.filter(item => {
+					if (item instanceof RichText) {
+						return !item.getFontStyles().includes(fontStyle);
+					}
+					return !item.text.getFontStyles().includes(fontStyle);
+				})
+				.map(item => item.getId());
 			this.emit({
 				class: "RichText",
 				method: "setFontStyle",
-				item: filteredItems.map(item => item.getId()),
+				item:
+					changedIds.length === 0
+						? filteredItems.map(item => item.getId())
+						: changedIds,
 				fontStyleList: [fontStyle],
 			});
 		}
