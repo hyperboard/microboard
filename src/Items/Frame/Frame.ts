@@ -543,17 +543,16 @@ export class Frame implements Geometry {
 
 	private applyFrameType(shapeType: FrameType): void {
 		this.shapeType = shapeType;
-		if (shapeType !== 'Custom') {
+		if (shapeType !== "Custom") {
 			this.setLastFrameScale();
 		}
-	 if (this.newShape === "Custom" || shapeType === 'Custom') {
+		if (this.newShape === "Custom" || shapeType === "Custom") {
 			const scale = this.getLastFrameScale();
 			this.transformation.applyScaleTo(scale.x, scale.y);
 			this.transformPath(false);
 		} else {
 			this.transformPath(true);
 		}
-
 
 		if (this.board) {
 			this.getChildrenIds().forEach(childId => {
