@@ -85,9 +85,9 @@ export class Connector {
 		undefined,
 		{
 			...DEFAULT_TEXT_STYLES,
-			fontSize:
-				Number(localStorage.getItem("lastConnectorTextSize")) ??
-				DEFAULT_TEXT_STYLES.fontSize,
+			fontSize: localStorage.getItem("lastConnectorTextSize")
+				? Number(localStorage.getItem("lastConnectorTextSize"))
+				: DEFAULT_TEXT_STYLES.fontSize,
 			fontColor:
 				localStorage.getItem("lastConnectorTextColor") ??
 				DEFAULT_TEXT_STYLES.fontColor,
