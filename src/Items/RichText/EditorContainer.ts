@@ -1,4 +1,5 @@
 import { validateItemsMap } from "Board/Validators";
+import { findCommonStrings } from "lib/findCommonStrings";
 import {
 	BaseEditor,
 	createEditor,
@@ -426,7 +427,6 @@ export class EditorContainer {
 	}
 
 	setSelectionFontStyle(style: TextStyle | TextStyle[]): void {
-		console.log("selectionFontStyle");
 		const editor = this.editor;
 		const styleList = Array.isArray(style) ? style : [style];
 		const marks = this.getSelectionMarks();
@@ -595,7 +595,7 @@ export class EditorContainer {
 			}),
 		);
 
-		const styles: Set<TextStyle> = nodes
+		const styles: TextStyle[][] = nodes
 			.flatMap(nodeEntry => {
 				const [node, path] = nodeEntry;
 				const { children } = node;
@@ -609,14 +609,15 @@ export class EditorContainer {
 			.map(textNode => {
 				return textNode.styles;
 			})
-			.reduce((acc: Set<TextStyle>, currStyles: TextStyle[]) => {
+			.reduce((acc: TextStyle[][], currStyles: TextStyle[]) => {
 				if (!currStyles) {
 					return acc;
 				}
-				currStyles.forEach(style => acc.add(style));
+				acc.push(currStyles);
 				return acc;
-			}, new Set());
-		return Array.from(styles);
+			}, []);
+
+		return findCommonStrings(styles);
 	}
 
 	getSelectedBlockNode(): BlockNode | null {
