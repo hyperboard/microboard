@@ -120,8 +120,6 @@ export class EditorContainer {
 						this.subject.publish(this);
 					}
 				}
-			} else {
-				this.decorated.apply(operation);
 			}
 		};
 		// Disable editor's native undo/redo
