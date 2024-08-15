@@ -117,7 +117,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 			board.camera.zoomToFit(mbr);
 		}
 		board.camera.setBoardId(board.getBoardId());
-		board.camera.useSavedSnapshot();
 	}
 
 	function addEvent(event: BoardEvent): void {

@@ -29,10 +29,13 @@ export class Camera {
 	private previous: "pinch" | "pan" | null = null;
 	boardId = "";
 
-	constructor(private boardPointer = new Pointer()) {
+	constructor(private boardPointer = new Pointer(), matrixSnapshot?: Matrix) {
 		this.subject.subscribe((_camera: Camera) => {
 			this.saveMatrixSnapshot();
 		});
+		if (matrixSnapshot) {
+			this.useSavedSnapshot(matrixSnapshot);
+		}
 	}
 
 	getMbr(): Mbr {
@@ -145,20 +148,29 @@ export class Camera {
 		this.boardId = id;
 	}
 
+	private applyMatrix(matrix: Matrix): void {
+		this.matrix = new Matrix(
+			matrix.translateX,
+			matrix.translateY,
+			matrix.scaleX,
+			matrix.scaleY,
+			matrix.shearX,
+			matrix.shearY,
+		);
+		this.subject.publish(this);
+	}
+
 	/** Returns true if found and used saved snapshot, false otherwise */
-	useSavedSnapshot(): boolean {
-		const cachedCameraMatrix = this.getMatrixSnapshot();
-		if (cachedCameraMatrix) {
-			this.matrix = new Matrix(
-				cachedCameraMatrix.translateX,
-				cachedCameraMatrix.translateY,
-				cachedCameraMatrix.scaleX,
-				cachedCameraMatrix.scaleY,
-				cachedCameraMatrix.shearX,
-				cachedCameraMatrix.shearY,
-			);
-			this.subject.publish(this);
+	useSavedSnapshot(optionalMatrix?: Matrix): boolean {
+		if (optionalMatrix) {
+			this.applyMatrix(optionalMatrix);
 			return true;
+		} else {
+			const cachedCameraMatrix = this.getMatrixSnapshot();
+			if (cachedCameraMatrix) {
+				this.applyMatrix(cachedCameraMatrix);
+				return true;
+			}
 		}
 		return false;
 	}
