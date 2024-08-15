@@ -1,14 +1,14 @@
 import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
-import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
 import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
-import { SELECTION_COLOR } from "View/Tools/Selection";
 import { toFiniteNumber } from "utils";
+import { SELECTION_COLOR } from "View/Tools/Selection";
 import { createCommand } from "../Events/Command";
 import {
 	Connector,
@@ -25,7 +25,6 @@ import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
-import { FrameType } from "Board/Items/Frame/Basic";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -470,6 +469,10 @@ export class Selection {
 		return item instanceof RichText ? item : item?.text;
 	}
 
+	isTextEmpty(): boolean {
+		return this.getText()?.isEmpty() || false;
+	}
+
 	getAutosize(): boolean {
 		const sticker = this.items.getItemsByItemTypes(["Sticker"])[0];
 		return sticker?.text.getAutosize() || false;
@@ -771,16 +774,21 @@ export class Selection {
 	}
 
 	setFrameType(frameType: FrameType): void {
-		const frames = this.items.getIdsByItemTypes(["Frame"]);
-		if (frames.length) {
-			this.emit({
-				class: "Frame",
-				method: "setFrameType",
-				item: frames,
-				shapeType: frameType,
-				prevShapeType: this.getFrameType(),
-				board: this.board,
-			});
+		// const frames = this.items.getIdsByItemTypes(["Frame"]);
+		// if (frames.length) {
+		// this.emit({
+		// 	class: "Frame",
+		// 	method: "setFrameType",
+		// 	item: frames,
+		// 	shapeType: frameType,
+		// 	prevShapeType: this.getFrameType(),
+		// });
+		// }
+
+		const frame = this.items.getSingle();
+
+		if (frame instanceof Frame) {
+			frame.setFrameType(frameType);
 		}
 	}
 
@@ -808,9 +816,11 @@ export class Selection {
 			} else if (
 				single instanceof Shape ||
 				single instanceof Sticker ||
-				single instanceof Frame ||
-				single instanceof Connector
+				single instanceof Frame
 			) {
+				single.text.setSelectionFontSize(fontSize, this.getContext());
+			} else if (single instanceof Connector) {
+				localStorage.setItem("lastConnectorTextSize", `${fontSize}`);
 				single.text.setSelectionFontSize(fontSize, this.getContext());
 			}
 		} else if (this.items.isItemTypes(["Sticker"])) {
@@ -829,19 +839,41 @@ export class Selection {
 		}
 	}
 
-	setFontStyle(fontStyleList: TextStyle[]): void {
+	setFontStyle(fontStyle: TextStyle): void {
 		const single = this.items.getSingle();
 		if (single) {
 			if (single instanceof RichText) {
-				single.setSelectionFontStyle(fontStyleList, this.context);
+				single.setSelectionFontStyle(fontStyle, this.context);
 			} else if ("text" in single) {
-				single.text.setSelectionFontStyle(fontStyleList, this.context);
+				single.text.setSelectionFontStyle(fontStyle, this.context);
 			}
 		} else {
+			const filteredItems = this.items
+				.list()
+				.filter(
+					item =>
+						item.itemType === "RichText" ||
+						item.itemType === "Shape" ||
+						item.itemType === "Sticker" ||
+						item.itemType === "Connector" ||
+						item.itemType === "Frame",
+				);
+
+			const changedIds = filteredItems
+				.filter(item => {
+					if (item instanceof RichText) {
+						return !item.getFontStyles().includes(fontStyle);
+					}
+					return !item.text.getFontStyles().includes(fontStyle);
+				})
+				.map(item => item.getId());
 			this.emit({
 				class: "RichText",
 				method: "setFontStyle",
-				item: filteredItems.map(item => item.getId()),
+				item:
+					changedIds.length === 0
+						? filteredItems.map(item => item.getId())
+						: changedIds,
 				fontStyleList: [fontStyle],
 			});
 		}
@@ -857,12 +889,17 @@ export class Selection {
 			if (
 				item.itemType === "Shape" ||
 				item.itemType === "Sticker" ||
-				item.itemType === "Connector" ||
 				item.itemType === "Frame"
 			) {
-				(
-					item as Shape | Sticker | Connector | Frame
-				).text.setSelectionFontColor(fontColor, this.context);
+				(item as Shape | Sticker | Frame).text.setSelectionFontColor(
+					fontColor,
+					this.context,
+				);
+				return;
+			}
+			if (item instanceof Connector) {
+				localStorage.setItem("lastConnectorTextColor", fontColor);
+				item.text.setSelectionFontColor(fontColor, this.context);
 				return;
 			}
 		}
@@ -1114,12 +1151,14 @@ export class Selection {
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
 		const isSingleConnector = single && single.itemType === "Connector";
+
+		if (isSingleConnector) {
+			this.tool.render(context);
+			return;
+		}
+
 		const isSelectionTooBig = this.items.getSize() > 100;
-		if (
-			!isSingleConnector &&
-			!isSelectionTooBig &&
-			!this.transformationRenderBlock
-		) {
+		if (!isSelectionTooBig && !this.transformationRenderBlock) {
 			for (const item of this.items.list()) {
 				this.renderItemMbr(context, item);
 			}

@@ -105,7 +105,10 @@ export class Select extends Tool {
 			this.downOnItem = hover[hover.length - 1];
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			// TODO API Dirty Check
-			if (this.downOnItem.itemType === "Connector") {
+			if (
+				this.downOnItem.itemType === "Connector" &&
+				!this.board.keyboard.isCtrl
+			) {
 				this.board.selection.editUnderPointer();
 				this.board.tools.publish();
 				this.clear();

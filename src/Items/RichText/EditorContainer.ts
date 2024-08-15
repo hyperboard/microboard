@@ -1,4 +1,5 @@
 import { validateItemsMap } from "Board/Validators";
+import { findCommonStrings } from "lib/findCommonStrings";
 import {
 	BaseEditor,
 	createEditor,
@@ -119,8 +120,6 @@ export class EditorContainer {
 						this.subject.publish(this);
 					}
 				}
-			} else {
-				this.decorated.apply(operation);
 			}
 		};
 		// Disable editor's native undo/redo
@@ -421,6 +420,7 @@ export class EditorContainer {
 		} else {
 			Editor.addMark(editor, "fontColor", format);
 		}
+		ReactEditor.focus(editor);
 		this.emitMethodOps();
 	}
 
@@ -433,7 +433,6 @@ export class EditorContainer {
 		}
 		this.recordMethodOps("setSelectionFontStyle");
 
-		const styles = marks.styles ? marks.styles.slice() : [];
 		styleList.forEach(style => {
 			const currentStyles = this.getSelectionStyles() ?? [];
 			if (currentStyles.includes(style)) {
@@ -493,6 +492,7 @@ export class EditorContainer {
 		}
 		this.recordMethodOps("setSelectionFontSize");
 		Editor.addMark(editor, "fontSize", size);
+		ReactEditor.focus(editor);
 		this.emitMethodOps();
 	}
 
@@ -513,6 +513,7 @@ export class EditorContainer {
 		} else {
 			Editor.addMark(editor, "fontHighlight", format);
 		}
+		ReactEditor.focus(editor);
 		this.emitMethodOps();
 	}
 
@@ -591,7 +592,8 @@ export class EditorContainer {
 					node.type === "paragraph",
 			}),
 		);
-		const styles = nodes
+
+		const styles: TextStyle[][] = nodes
 			.flatMap(nodeEntry => {
 				const [node, path] = nodeEntry;
 				const { children } = node;
@@ -605,16 +607,15 @@ export class EditorContainer {
 			.map(textNode => {
 				return textNode.styles;
 			})
-			.reduce(
-				(acc: string[], currStyles) => {
-					if (!currStyles) {
-						return [];
-					}
-					return acc.filter(style => currStyles.includes(style));
-				},
-				["bold", "italic", "underline", "line-through"],
-			);
-		return styles;
+			.reduce((acc: TextStyle[][], currStyles: TextStyle[]) => {
+				if (!currStyles) {
+					return acc;
+				}
+				acc.push(currStyles);
+				return acc;
+			}, []);
+
+		return findCommonStrings(styles);
 	}
 
 	getSelectedBlockNode(): BlockNode | null {

@@ -7,7 +7,10 @@ import { DrawingContext } from "../../Items/DrawingContext";
 import { Cursor } from "../../Pointer";
 import { Anchor } from "Board/Items/Anchor";
 import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
-import { CONNECTOR_ANCHOR_COLOR } from "View/Items/Connector";
+import {
+	CONNECTOR_ANCHOR_COLOR,
+	CONNECTOR_ANCHOR_TYPE,
+} from "View/Items/Connector";
 
 const config = {
 	anchorDistance: 5,
@@ -22,6 +25,7 @@ export class ConnectorTransformer extends Tool {
 
 	private snap = new ConnectorSnap(this.board);
 	private connector: Connector | null = null;
+	beginTimeStamp = Date.now();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -50,6 +54,7 @@ export class ConnectorTransformer extends Tool {
 			this.statePointer = "end";
 			this.state = "grabbing";
 		}
+		this.beginTimeStamp = Date.now();
 		return this.state !== "default";
 	}
 
@@ -58,6 +63,7 @@ export class ConnectorTransformer extends Tool {
 		const oldValue = this.state;
 		this.statePointer = "none";
 		this.state = "default";
+		this.beginTimeStamp = Date.now();
 		this.board.tools.publish();
 		return oldValue !== "default";
 	}
@@ -83,10 +89,14 @@ export class ConnectorTransformer extends Tool {
 
 		this.calculateAnchors();
 
-		if (this.startPointerAnchor) {
+		if (this.snap.snap.anchor) {
+			this.snap.snap.anchor.render(context, CONNECTOR_ANCHOR_TYPE, true);
+		}
+
+		if (this.statePointer !== "start" && this.startPointerAnchor) {
 			this.startPointerAnchor.render(context);
 		}
-		if (this.endPointerAnchor) {
+		if (this.statePointer !== "end" && this.endPointerAnchor) {
 			this.endPointerAnchor.render(context);
 		}
 	}
@@ -99,11 +109,11 @@ export class ConnectorTransformer extends Tool {
 			const point = this.snap.getControlPoint();
 			switch (this.statePointer) {
 				case "start":
-					connector.setStartPoint(point);
+					connector.setStartPoint(point, this.beginTimeStamp);
 					this.selection.subject.publish(this.selection);
 					break;
 				case "end":
-					connector.setEndPoint(point);
+					connector.setEndPoint(point, this.beginTimeStamp);
 					this.selection.subject.publish(this.selection);
 					break;
 			}

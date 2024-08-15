@@ -12,7 +12,10 @@ import { DrawingContext } from "../DrawingContext";
 import { Anchor } from "../Anchor";
 import { Path, Paths } from "../Path";
 import { Connector } from "./Connector";
-import { CONNECTOR_ANCHOR_COLOR } from "View/Items/Connector";
+import {
+	CONNECTOR_ANCHOR_COLOR,
+	CONNECTOR_ANCHOR_TYPE,
+} from "View/Items/Connector";
 
 function getFixedPoint(
 	item: Item,
@@ -205,7 +208,7 @@ export class ConnectorSnap {
 
 	setAnchors(item: Item): void {
 		const points = item.getSnapAnchorPoints();
-		const anchors = [];
+		const anchors: Anchor[] = [];
 		for (const { x, y } of points) {
 			anchors.push(
 				new Anchor(
@@ -285,15 +288,19 @@ export class ConnectorSnap {
 	}
 
 	render(context: DrawingContext): void {
-		const { path, anchors, point } = this.snap;
+		const { path, anchors, point, anchor } = this.snap;
 		if (path) {
 			path.render(context);
 		}
 		for (const anchor of anchors) {
-			anchor.render(context);
+			anchor.render(context, CONNECTOR_ANCHOR_TYPE);
 		}
 		if (point) {
-			point.render(context);
+			point.render(context, CONNECTOR_ANCHOR_TYPE);
 		}
+
+		// if (anchor) {
+		// 	anchor.render(context, CONNECTOR_ANCHOR_TYPE, true);
+		// }
 	}
 }

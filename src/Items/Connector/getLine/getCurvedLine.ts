@@ -21,7 +21,7 @@ import { Point } from "../../Point";
 const config = {
 	controlPointOffsetRate: 0.75,
 	minLengthForBorder: 50,
-	normalControlLength: 150,
+	normalControlLength: 50,
 	flip: false,
 };
 
@@ -120,12 +120,28 @@ function calculatePoint(
 		}
 	}
 
+	const distance = Math.sqrt(
+		(point.x - prevPoint.x) ** 2 + (point.y - prevPoint.y) ** 2,
+	);
+	let distanceMultiplier = distance / 25;
+
+	// Apply min and max constraints to the multiplier
+	const minMultiplier = 1; // Minimum multiplier value
+	const maxMultiplier = 5; // Maximum multiplier value
+	distanceMultiplier = Math.max(
+		minMultiplier,
+		Math.min(maxMultiplier, distanceMultiplier),
+	);
+
+	const adjustedControlLength =
+		config.normalControlLength * distanceMultiplier;
+
 	return {
 		control: new Point(
 			normal.projectionPoint.x -
-				normal.normalPoint.x * config.normalControlLength * invertCoff,
+				normal.normalPoint.x * adjustedControlLength * invertCoff,
 			normal.projectionPoint.y -
-				normal.normalPoint.y * config.normalControlLength * invertCoff,
+				normal.normalPoint.y * adjustedControlLength * invertCoff,
 		),
 		point: new Point(
 			normal.projectionPoint.x - normal.normalPoint.x * invertCoff,

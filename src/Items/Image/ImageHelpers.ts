@@ -14,37 +14,27 @@ export const uploadToTheStorage = async (
 		const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
 		const blob = new Blob([bytes], { type: mimeType });
 
-		const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-		const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
-		console.log("prepareImage", "totalChunks", totalChunks);
-		for (let i = 0; i < totalChunks; i++) {
-			const start = i * CHUNK_SIZE;
-			const end = Math.min(start + CHUNK_SIZE, blob.size);
-			const chunk = blob.slice(start, end);
-
-			fetch(storageURL, {
-				method: "POST",
-				headers: {
-					"Content-Type": mimeType,
-					"X-Image-Id": hash,
-					"Transfer-Encoding": "chunked",
-				},
-				body: chunk,
+		fetch(storageURL, {
+			method: "POST",
+			headers: {
+				"Content-Type": mimeType,
+				"X-Image-Id": hash,
+			},
+			body: blob,
+		})
+			.then(response => {
+				if (response.status !== 200) {
+					throw new Error(`HTTP status: ${response.status}`);
+				}
+				return response.json();
 			})
-				.then(response => {
-					if (response.status !== 200) {
-						throw new Error(`HTTP status: ${response.status}`);
-					}
-					return response.json();
-				})
-				.then(data => {
-					resolve(data.src);
-				})
-				.catch(error => {
-					console.error("Media storage error:", error);
-					reject(error);
-				});
-		}
+			.then(data => {
+				resolve(data.src);
+			})
+			.catch(error => {
+				console.error("Media storage error:", error);
+				reject(error);
+			});
 	});
 };
 
@@ -101,7 +91,7 @@ export const resizeAndConvertToPng = async (
 				canvas.height = canvasHeight;
 				context.drawImage(image, 0, 0, canvasWidth, canvasHeight);
 
-				const dataURL = canvas.toDataURL("image/png");
+				const dataURL = canvas.toDataURL("image/webp");
 				sha256(dataURL)
 					.then(hash => {
 						resolve({

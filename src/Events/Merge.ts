@@ -61,9 +61,15 @@ export function mergeOperations(
 	opA: Operation,
 	opB: Operation,
 ): Operation | undefined {
-	// if (opA.class === "Board" && opB.class === "RichText") {
-	// 	mergeRichTextCreation(opA, opB);
-	// }
+	if (
+		opA.class === "Board" &&
+		opA.method === "add" &&
+		opA.data.itemType === "RichText" &&
+		opB.method === "edit" &&
+		opB.class === "RichText"
+	) {
+		return mergeRichTextCreation(opA, opB);
+	}
 
 	if (opA.class !== opB.class) {
 		return;
@@ -342,20 +348,35 @@ function mergeRichTextOperations(
 	return;
 }
 
-// function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation): void {
-// 	// if (!areItemsTheSame(opA, opB)) {
-// 	// 	return;
-// 	// }
-// 	console.log(opA, opB);
-// 	if (
-// 		opA.method === "add" &&
-// 		opB.method === "edit" &&
-// 		opA.item === opB.item[0] &&
-// 		opB.ops[0].type === "insert_text"
-// 	) {
-// 		console.log("merged");
-// 	}
-// }
+function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
+	if (
+		opA.method === "add" &&
+		opB.method === "edit" &&
+		opA.item === opB.item[0] &&
+		opB.ops[0].type === "insert_text"
+	) {
+		const op = {
+			...opA,
+			data: {
+				...opA.data,
+				children: [
+					{
+						...opA.data.children[0],
+						children: [
+							{
+								...opA.data.children[0].children[0],
+								text:
+									opA.data.children[0].children[0].text +
+									opB.ops[0].text,
+							},
+						],
+					},
+				],
+			},
+		};
+		return op;
+	}
+}
 
 function mergeConnectorOperations(
 	opA: ConnectorOperation,
@@ -364,6 +385,17 @@ function mergeConnectorOperations(
 	if (!areItemsTheSame(opA, opB)) {
 		return;
 	}
+
+	if (
+		((opA.method === "setStartPoint" && opB.method === "setStartPoint") ||
+			(opA.method === "setEndPoint" && opB.method === "setEndPoint")) &&
+		opA.timestamp &&
+		opB.timestamp &&
+		opA.timestamp !== opB.timestamp
+	) {
+		return;
+	}
+
 	if (opA.method === "setStartPoint" && opB.method === "setStartPoint") {
 		return {
 			...opB,

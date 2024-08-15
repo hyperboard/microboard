@@ -1,12 +1,11 @@
-import { Tool } from "../Tools/Tool";
 import { Board } from "../Board";
-import { Transformer } from "./Transformer";
-import { ConnectorTransformer } from "./ConnectorTransformer";
-import { SelectionItems } from "./SelectionItems";
-import { Selection } from "./Selection";
 import { DrawingContext } from "../Items/DrawingContext";
+import { Tool } from "../Tools/Tool";
+import { ConnectorTransformer } from "./ConnectorTransformer";
 import { ItemsHighlighter } from "./ItemsHighlighter/ItemsHightlighter";
-import { RichText } from "Board/Items";
+import { Selection } from "./Selection";
+import { SelectionItems } from "./SelectionItems";
+import { Transformer } from "./Transformer";
 
 export class SelectionTransformer extends Tool {
 	private readonly defaultTransformerTool: Transformer;

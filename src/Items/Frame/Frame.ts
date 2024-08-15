@@ -44,6 +44,7 @@ export class Frame implements Geometry {
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
 	transformationRenderBlock?: boolean = undefined;
+	private board?: Board;
 
 	constructor(
 		private events?: Events,
@@ -79,6 +80,12 @@ export class Frame implements Geometry {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
+	}
+
+	setBoard(board: Board) {
+		this.board = board;
+
+		return this;
 	}
 
 	/**
@@ -449,7 +456,7 @@ export class Frame implements Geometry {
 				} else if (op.method === "setCanChangeRatio") {
 					this.applyCanChangeRatio(op.canChangeRatio);
 				} else if (op.method === "setFrameType") {
-					this.applyFrameType(op.shapeType, op.board);
+					this.applyFrameType(op.shapeType);
 				} else if (op.method === "addChild") {
 					this.applyAddChild(op.childId);
 				} else if (op.method === "removeChild") {
@@ -534,21 +541,27 @@ export class Frame implements Geometry {
 		return this.shapeType;
 	}
 
-	private applyFrameType(shapeType: FrameType, board?: Board): void {
+	private applyFrameType(shapeType: FrameType): void {
 		this.shapeType = shapeType;
-		this.transformPath(true);
-		if (this.newShape === "Custom") {
+		if (shapeType !== "Custom") {
+			this.setLastFrameScale();
+		}
+		if (this.newShape === "Custom" || shapeType === "Custom") {
 			const scale = this.getLastFrameScale();
 			this.transformation.applyScaleTo(scale.x, scale.y);
+			this.transformPath(false);
+		} else {
+			this.transformPath(true);
 		}
-		if (board) {
+
+		if (this.board) {
 			this.getChildrenIds().forEach(childId => {
-				const child = board.items.getById(childId);
+				const child = this.board.items.getById(childId);
 				if (child) {
 					this.handleNesting(child);
 				}
 			});
-			board.items
+			this.board.items
 				.getEnclosedOrCrossed(
 					this.getMbr().left,
 					this.getMbr().top,
@@ -560,18 +573,18 @@ export class Frame implements Geometry {
 						this.handleNesting(item);
 					}
 				});
-			this.fitFrameInView(board);
+			this.fitFrameInView(this.board);
 		}
 		this.updateMbr();
 	}
 
-	setFrameType(shapeType: FrameType, board?: Board): void {
+	setFrameType(shapeType: FrameType): void {
 		this.emit({
 			class: "Frame",
 			method: "setFrameType",
 			item: [this.getId()],
 			shapeType,
-			board,
+			prevShapeType: this.getFrameType(),
 		});
 	}
 

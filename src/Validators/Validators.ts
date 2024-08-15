@@ -38,7 +38,16 @@ export function validateItemsMap(parsedObject: any): parsedObject is ItemsMap {
 	return true;
 }
 
-// TODO API Switch to Map
+const itemValidators: Record<string, (data: any) => boolean> = {
+	Sticker: validateStickerData,
+	Shape: validateShapeData,
+	RichText: validateRichTextData,
+	Connector: validateConnectorData,
+	Image: validateImageItemData,
+	Drawing: validateDrawingData,
+	Frame: validateFrameData,
+};
+
 function validateItemData(itemData: any): boolean {
 	// Check if the itemData has a valid itemType property
 	if (
@@ -48,25 +57,8 @@ function validateItemData(itemData: any): boolean {
 		return false;
 	}
 
-	// Validate based on the itemType
-	switch (itemData.itemType) {
-		case "Sticker":
-			return validateStickerData(itemData);
-		case "Shape":
-			return validateShapeData(itemData);
-		case "RichText":
-			return validateRichTextData(itemData);
-		case "Connector":
-			return validateConnectorData(itemData);
-		case "Image":
-			return validateImageItemData(itemData);
-		case "Drawing":
-			return validateDrawingData(itemData);
-		case "Frame":
-			return validateFrameData(itemData);
-		default:
-			return false;
-	}
+	const validator = itemValidators[itemData.itemType];
+	return validator ? validator(itemData) : false;
 }
 
 function validateFrameData(frameData: FrameData): boolean {
@@ -302,9 +294,9 @@ function validateTextNode(node: any): node is TextNode {
 function validateImageItemData(data: any): data is ImageItemData {
 	const isValid =
 		data.hasOwnProperty("transformation") &&
-		data.hasOwnProperty("dataUrl") &&
+		data.hasOwnProperty("storageLink") &&
 		typeof data.transformation === "object" &&
-		typeof data.dataUrl === "string" &&
+		typeof data.storageLink === "string" &&
 		validateTransformationData(data.transformation);
 	return isValid;
 }
