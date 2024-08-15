@@ -655,7 +655,10 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
+		this.editor.setSelectionHorisontalAlignment(
+			horisontalAlignment,
+			selectionContext,
+		);
 		this.updateElement();
 	}
 

@@ -16,7 +16,7 @@ import { Subject } from "Subject";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
-import { DefaultTextStyles, RichText } from "./RichText";
+import { DefaultTextStyles } from "./RichText";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import {
 	RichTextOperation,
@@ -190,6 +190,7 @@ export class EditorContainer {
 					this.applySelectionEdit(op);
 					break;
 				case "setVerticalAlignment":
+					ReactEditor.focus(this.editor);
 					this.verticalAlignment = op.verticalAlignment;
 					break;
 				case "setSelectionBlockType":
@@ -408,7 +409,7 @@ export class EditorContainer {
 		});
 	}
 
-	setSelectionFontColor(format: string): void {
+	setSelectionFontColor(format: string, selectionContext?: string): void {
 		const editor = this.editor;
 		const marks = this.getSelectionMarks();
 		if (!marks) {
@@ -420,7 +421,11 @@ export class EditorContainer {
 		} else {
 			Editor.addMark(editor, "fontColor", format);
 		}
-		ReactEditor.focus(editor);
+
+		if (selectionContext === "EditTextUnderPointer") {
+			ReactEditor.focus(editor);
+		}
+
 		this.emitMethodOps();
 	}
 
@@ -468,7 +473,7 @@ export class EditorContainer {
 		this.emitMethodOps();
 	}
 
-	setSelectionFontSize(fontSize: number): void {
+	setSelectionFontSize(fontSize: number, selectionContext?: string): void {
 		const size = fontSize;
 		const editor = this.editor;
 		const selection = editor.selection;
@@ -492,11 +497,15 @@ export class EditorContainer {
 		}
 		this.recordMethodOps("setSelectionFontSize");
 		Editor.addMark(editor, "fontSize", size);
-		ReactEditor.focus(editor);
+
+		if (selectionContext === "EditTextUnderPointer") {
+			ReactEditor.focus(editor);
+		}
+
 		this.emitMethodOps();
 	}
 
-	setSelectionFontHighlight(format: string): void {
+	setSelectionFontHighlight(format: string, selectionContext?: string): void {
 		const editor = this.editor;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
@@ -513,12 +522,17 @@ export class EditorContainer {
 		} else {
 			Editor.addMark(editor, "fontHighlight", format);
 		}
-		ReactEditor.focus(editor);
+
+		if (selectionContext === "EditTextUnderPointer") {
+			ReactEditor.focus(editor);
+		}
+
 		this.emitMethodOps();
 	}
 
 	setSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
+		selectionContext?: string,
 	): void {
 		const editor = this.editor;
 		if (!editor) {
@@ -540,6 +554,10 @@ export class EditorContainer {
 				);
 			},
 		});
+
+		if (selectionContext === "EditTextUnderPointer") {
+			ReactEditor.focus(editor);
+		}
 
 		Transforms.setNodes(editor, {
 			horisontalAlignment: horisontalAlignment,
