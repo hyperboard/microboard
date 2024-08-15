@@ -117,6 +117,15 @@ export class Sticker implements Geometry {
 					} else {
 						this.text.handleInshapeScale();
 					}
+				} else if (op.method === "transformMany") {
+					const transformOp = op.items[this.id];
+					if (transformOp.method === "scaleByTranslateBy") {
+						this.text.scaleAutoSizeScale(
+							Math.min(transformOp.scale.x, transformOp.scale.y),
+						);
+						this.text.recoordinate();
+						this.text.transformCanvas();
+					}
 				}
 				this.subject.publish(this);
 			},

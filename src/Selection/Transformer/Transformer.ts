@@ -199,6 +199,14 @@ export class Transformer extends Tool {
 			}
 			this.mbr = single.getMbr();
 		} else {
+			const items = this.selection.items.list();
+			const containsStickerOrText = items.some(
+				item =>
+					item.itemType === "Sticker" || item.itemType === "RichText",
+			);
+			if (containsStickerOrText && (isWidth || isHeight)) {
+				return false;
+			}
 			const resize = getProportionalResize(
 				this.resizeType,
 				this.board.pointer.point,
@@ -338,7 +346,9 @@ export class Transformer extends Tool {
 	): TransformManyItems {
 		const { matrix } = resize;
 		const translation: TransformManyItems = {};
-		for (const item of this.selection.items.list()) {
+		const items = this.selection.items.list();
+
+		for (const item of items) {
 			const itemMbr = item.getMbr();
 			const deltaX = itemMbr.left - initMbr.left;
 			const translateX =
@@ -370,23 +380,23 @@ export class Transformer extends Tool {
 					};
 				} else {
 					// TODO fix RichText transformation
-					item.transformation.translateBy(
-						matrix.translateX,
-						matrix.translateY,
-						this.beginTimeStamp,
-					);
-					item.transformation.scaleBy(
-						matrix.scaleX,
-						matrix.scaleY,
-						this.beginTimeStamp,
-					);
+					// item.transformation.translateBy(
+					// 	translateX,
+					// 	translateY,
+					// 	this.beginTimeStamp,
+					// );
+					// item.transformation.scaleBy(
+					// 	matrix.scaleX,
+					// 	matrix.scaleY,
+					// 	this.beginTimeStamp,
+					// );
 					// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
 					translation[item.getId()] = {
 						class: "Transformation",
 						method: "scaleByTranslateBy",
 						item: [item.getId()],
-						translate: { x: 0, y: 0 },
-						scale: { x: 1, y: 1 },
+						translate: { x: translateX, y: translateY },
+						scale: { x: matrix.scaleX, y: matrix.scaleX },
 					};
 					// translation[item.getId()] = {
 					// 	class: "Transformation",
@@ -422,16 +432,23 @@ export class Transformer extends Tool {
 					};
 				}
 			} else {
-				translation[item.getId()] = {
-					class: "Transformation",
-					method: "scaleByTranslateBy",
-					item: [item.getId()],
-					translate: { x: translateX, y: translateY },
-					scale:
-						item instanceof Sticker
-							? { x: 1, y: 1 }
-							: { x: matrix.scaleX, y: matrix.scaleY },
-				};
+				if (item instanceof Sticker && (isWidth || isHeight)) {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: 1, y: 1 },
+					};
+				} else {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: matrix.scaleX, y: matrix.scaleY },
+					};
+				}
 			}
 		}
 
