@@ -190,7 +190,6 @@ export class EditorContainer {
 					this.applySelectionEdit(op);
 					break;
 				case "setVerticalAlignment":
-					ReactEditor.focus(this.editor);
 					this.verticalAlignment = op.verticalAlignment;
 					break;
 				case "setSelectionBlockType":
