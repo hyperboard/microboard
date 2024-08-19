@@ -426,15 +426,24 @@ export class Items {
 		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getUnderPointer(size = 16): Item[] {
+	getUnderPointer(size?: number): Item[] {
+		const isDefault = size === undefined;
+		size = size ?? 16;
+
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
-		return this.index.getEnclosedOrCrossed(
+		const underPointer = this.index.getEnclosedOrCrossed(
 			x - size,
 			y - size,
 			x + size,
 			y + size,
 		);
+		if (!isDefault) {
+			return underPointer;
+		}
+		return underPointer.length === 1
+			? underPointer
+			: this.index.getEnclosedOrCrossed(x, y, x, y);
 	}
 
 	getNearPointer(

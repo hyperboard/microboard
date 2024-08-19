@@ -71,6 +71,7 @@ export class Select extends Tool {
 		const { items, selection, pointer } = this.board;
 
 		const hover = items.getUnderPointer();
+
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
@@ -302,8 +303,9 @@ export class Select extends Tool {
 		}
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
+			const hovered = this.board.items.getUnderPointer();
 			if (isCtrl || isShift) {
-				const underPointer = this.board.items.getUnderPointer()[0];
+				const underPointer = hovered[0];
 				const isEmptySelection =
 					this.board.selection.items.list().length === 0;
 				if (!underPointer && !isEmptySelection && isShift) {
@@ -331,7 +333,7 @@ export class Select extends Tool {
 				this.board.tools.publish();
 				return false;
 			} else {
-				const topItem = this.board.items.getUnderPointer().pop();
+				const topItem = hovered.pop();
 				const curr = this.board.selection.items.getSingle();
 				if (
 					this.board.selection.getContext() === "EditUnderPointer" &&
