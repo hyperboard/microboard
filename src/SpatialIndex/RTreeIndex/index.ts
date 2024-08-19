@@ -113,6 +113,18 @@ export class RTreeIndex {
 		*/
 	}
 
+	getUnderPoint(point: Point, tolerance = 5): Item[] {
+		return this.tree
+			.search({
+				minX: point.x,
+				minY: point.y,
+				maxX: point.x,
+				maxY: point.y,
+			})
+			.filter(container => container.item.isUnderPoint(point, tolerance))
+			.map(container => container.item);
+	}
+
 	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		return this.tree
 			.search({

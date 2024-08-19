@@ -351,11 +351,22 @@ export class Shape implements Geometry {
 		return point.getDistance(nearest);
 	}
 
-	isUnderPoint(point: Point): boolean {
-		return (
-			this.textContainer.isUnderPoint(point) ||
-			this.path.isUnderPoint(point)
-		);
+	isUnderPoint(point: Point, tolerance = 5): boolean {
+		if (
+			this.text.isEmpty() &&
+			(this.backgroundOpacity === 0 ||
+				this.backgroundColor === "none" ||
+				this.backgroundColor === "")
+		) {
+			// If there's no text and no background (opacity 0 or color is 'none' or empty string), check only the path edges
+			return this.path.isPointOverEdges(point, tolerance);
+		} else {
+			// Otherwise, use the original logic
+			return (
+				this.textContainer.isUnderPoint(point) ||
+				this.path.isUnderPoint(point)
+			);
+		}
 	}
 
 	isNearPoint(point: Point, distance: number): boolean {

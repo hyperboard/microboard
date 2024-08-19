@@ -134,6 +134,14 @@ export class Paths implements Geometry {
 		return is;
 	}
 
+	isPointOverEdges(point: Point, tolerance = 5): boolean {
+		let isOver = false;
+		for (const path of this.paths) {
+			isOver = isOver || path.isPointOverEdges(point, tolerance);
+		}
+		return isOver;
+	}
+
 	isNearPoint(point: Point, distance: number): boolean {
 		return distance > this.getDistanceToPoint(point);
 	}

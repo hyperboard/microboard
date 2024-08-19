@@ -75,9 +75,23 @@ export class Select extends Tool {
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
-		this.isDownOnSelection =
+		this.isDownOnSelection = false;
+		if (
 			selectionMbr !== undefined &&
-			selectionMbr.isUnderPoint(pointer.point);
+			selectionMbr.isUnderPoint(pointer.point)
+		) {
+			const itemsUnderPointer = this.board.items.getUnderPointer();
+			if (itemsUnderPointer.length > 0) {
+				const selectedItems = this.board.selection.items.list();
+				const isAnySelectedItemUnderPointer = selectedItems.some(item =>
+					item.isUnderPoint(pointer.point),
+				);
+				this.isDownOnSelection = isAnySelectedItemUnderPointer;
+			} else {
+				this.isDownOnSelection = true;
+			}
+		}
+
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
 			this.board.selection.transformationRenderBlock = true;

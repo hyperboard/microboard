@@ -32,6 +32,12 @@ export class BaseCurve {
 		return new Point(x, y);
 	}
 
+	getDistance(point: Point): number {
+		const projection: Projection = this.curve.project(point);
+		const nearestPoint = new Point(projection.x, projection.y);
+		return point.getDistance(nearestPoint);
+	}
+
 	private getIntersectionCurveRectangle(bounds: Mbr): Point[] {
 		let points: Point[] = [];
 		for (const line of bounds.getLines()) {

@@ -48,6 +48,17 @@ export class LayeredIndex {
 		return items;
 	}
 
+	getUnderPoint(point: Point, tolerance = 5): Item[] {
+		let items: Item[] = [];
+		for (const layer of this.layers.array) {
+			const layerItems = layer.getUnderPoint(point, tolerance);
+			if (layerItems.length > 0) {
+				items = items.concat(layerItems);
+			}
+		}
+		return items;
+	}
+
 	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		const items: Container[] = [];
 		const minMax = {

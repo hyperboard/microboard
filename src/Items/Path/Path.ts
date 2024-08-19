@@ -233,6 +233,16 @@ export class Path implements Geometry, PathStylize {
 		);
 	}
 
+	isPointOverEdges(point: Point, tolerance = 5): boolean {
+		for (const segment of this.segments) {
+			const distance = segment.getDistance(point);
+			if (distance <= tolerance) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	isNearPoint(point: Point, distance: number): boolean {
 		return distance > this.getDistanceToPoint(point);
 	}

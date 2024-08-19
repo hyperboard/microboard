@@ -253,6 +253,12 @@ export class SpatialIndex {
 		return enclosedOrCrossedFrames.concat(enclosedOrCrossedItems);
 	}
 
+	getUnderPoint(point: Point): Item[] {
+		const itemsUnderPoint = this.itemsIndex.getUnderPoint(point);
+		const framesUnderPoint = this.framesIndex.getUnderPoint(point);
+		return [...framesUnderPoint, ...itemsUnderPoint];
+	}
+
 	getRectsEnclosedOrCrossed(
 		left: number,
 		top: number,
@@ -407,6 +413,10 @@ export class Items {
 		return this.index.getEnclosedOrCrossed(left, top, right, bottom);
 	}
 
+	getUnderPoint(point: Point, tolerance = 5): Item[] {
+		return this.index.getUnderPoint(point, tolerance);
+	}
+
 	getMbr(): Mbr {
 		return this.index.getMbr();
 	}
@@ -426,24 +436,13 @@ export class Items {
 		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getUnderPointer(size?: number): Item[] {
-		const isDefault = size === undefined;
-		size = size ?? 16;
-
+	getUnderPointer(size = 16): Item[] {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
-		const underPointer = this.index.getEnclosedOrCrossed(
-			x - size,
-			y - size,
-			x + size,
-			y + size,
-		);
-		if (!isDefault) {
-			return underPointer;
-		}
+		const underPointer = this.getUnderPoint(new Point(x, y), size);
 		return underPointer.length === 1
 			? underPointer
-			: this.index.getEnclosedOrCrossed(x, y, x, y);
+			: this.getUnderPoint(new Point(x, y));
 	}
 
 	getNearPointer(
