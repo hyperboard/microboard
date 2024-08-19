@@ -887,9 +887,10 @@ export class Selection {
 				return;
 			}
 			if (
-				item.itemType === "Shape" ||
-				item.itemType === "Sticker" ||
-				item.itemType === "Frame"
+				item &&
+				(item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Frame")
 			) {
 				(item as Shape | Sticker | Frame).text.setSelectionFontColor(
 					fontColor,
@@ -951,10 +952,11 @@ export class Selection {
 				return;
 			}
 			if (
-				item.itemType === "Shape" ||
-				item.itemType === "Sticker" ||
-				item.itemType === "Connector" ||
-				item.itemType === "Frame"
+				item &&
+				(item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Connector" ||
+					item.itemType === "Frame")
 			) {
 				(
 					item as Shape | Sticker | Connector | Frame
@@ -1013,10 +1015,11 @@ export class Selection {
 				return;
 			}
 			if (
-				item.itemType === "Shape" ||
-				item.itemType === "Sticker" ||
-				item.itemType === "Connector" ||
-				item.itemType === "Frame"
+				item &&
+				(item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Connector" ||
+					item.itemType === "Frame")
 			) {
 				(
 					item as Shape | Sticker | Connector | Frame

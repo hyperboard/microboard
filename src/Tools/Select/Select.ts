@@ -79,6 +79,7 @@ export class Select extends Tool {
 			selectionMbr.isUnderPoint(pointer.point);
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
+			this.board.selection.transformationRenderBlock = true;
 			return false;
 		}
 
