@@ -5,8 +5,8 @@ import {
 	createEditor,
 	Descendant,
 	Editor,
-	Element,
 	Operation as EditorOperation,
+	Element,
 	Range,
 	Transforms,
 } from "slate";
@@ -626,6 +626,7 @@ export class EditorContainer {
 			})
 			.reduce((acc: TextStyle[][], currStyles: TextStyle[]) => {
 				if (!currStyles) {
+					acc.push([]);
 					return acc;
 				}
 				acc.push(currStyles);
