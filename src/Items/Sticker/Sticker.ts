@@ -1,25 +1,25 @@
+import { Events, Operation } from "Board/Events";
+import { isDarkColor } from "lib/isDarkColor";
+import { Subject } from "Subject";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
-	Mbr,
 	Line,
-	Point,
-	Transformation,
+	Matrix,
+	Mbr,
 	Path,
 	Paths,
-	Matrix,
+	Point,
+	Transformation,
 	TransformationOperation,
 } from "..";
-import { Subject } from "Subject";
-import { RichText } from "../RichText";
-import { Geometry } from "../Geometry";
-import { DrawingContext } from "../DrawingContext";
-import { Events, Operation } from "Board/Events";
-import { GeometricNormal } from "../GeometricNormal";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
+import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { DrawingContext } from "../DrawingContext";
+import { GeometricNormal } from "../GeometricNormal";
+import { Geometry } from "../Geometry";
+import { RichText } from "../RichText";
 import { StickerCommand } from "./StickerCommand";
 import { StickerData, StickerOperation } from "./StickerOperation";
-import { isDarkColor } from "lib/isDarkColor";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export const stickerColors = {
 	"Sky Blue": "rgb(174, 212, 250)",
@@ -120,11 +120,18 @@ export class Sticker implements Geometry {
 				} else if (op.method === "transformMany") {
 					const transformOp = op.items[this.id];
 					if (transformOp.method === "scaleByTranslateBy") {
-						this.text.scaleAutoSizeScale(
-							Math.min(transformOp.scale.x, transformOp.scale.y),
-						);
-						this.text.recoordinate();
-						this.text.transformCanvas();
+						if (this.text.getAutosize()) {
+							this.text.scaleAutoSizeScale(
+								Math.min(
+									transformOp.scale.x,
+									transformOp.scale.y,
+								),
+							);
+							this.text.recoordinate();
+							this.text.transformCanvas();
+						} else {
+							this.text.handleInshapeScale();
+						}
 					}
 				}
 				this.subject.publish(this);
