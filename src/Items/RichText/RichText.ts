@@ -122,7 +122,11 @@ export class RichText extends Mbr implements Geometry {
 					op.method === "transformMany"
 				) {
 					this.transformCanvas();
-				} else if (op.method === "scaleTo" || op.method === "scaleBy") {
+				} else if (
+					op.method === "scaleTo" ||
+					op.method === "scaleBy" ||
+					op.method === "scaleByTranslateBy"
+				) {
 					if (!this.isInShape) {
 						this.transformCanvas();
 					} else {

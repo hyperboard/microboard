@@ -176,26 +176,17 @@ export class Transformer extends Tool {
 				this.oppositePoint,
 			);
 
-			// TODO fix RichText transformation
 			if (isWidth) {
-				single.editor.setMaxWidth(resizedMbr.getWidth());
+				single.editor.setMaxWidth(
+					(resizedMbr.getWidth() / single.getFontSize()) * 14,
+				);
 				single.transformation.translateBy(matrix.translateX, 0);
 			} else {
-				// single.transformation.translateBy(
-				// 	matrix.translateX,
-				// 	matrix.translateY,
-				// 	this.beginTimeStamp,
-				// );
-				single.transformation.scaleBy(
-					matrix.scaleX,
-					matrix.scaleY,
+				single.transformation.scaleByTranslateBy(
+					{ x: matrix.scaleX, y: matrix.scaleY },
+					{ x: matrix.translateX, y: matrix.translateY },
 					this.beginTimeStamp,
 				);
-				// single.transformation.scaleByTranslateBy(
-				// 	{ x: matrix.scaleX, y: matrix.scaleY },
-				// 	{ x: matrix.translateX, y: matrix.translateY },
-				// 	this.beginTimeStamp,
-				// );
 			}
 			this.mbr = single.getMbr();
 		} else {
@@ -379,18 +370,6 @@ export class Transformer extends Tool {
 						scale: { x: 1, y: 1 },
 					};
 				} else {
-					// TODO fix RichText transformation
-					// item.transformation.translateBy(
-					// 	translateX,
-					// 	translateY,
-					// 	this.beginTimeStamp,
-					// );
-					// item.transformation.scaleBy(
-					// 	matrix.scaleX,
-					// 	matrix.scaleY,
-					// 	this.beginTimeStamp,
-					// );
-					// scaleByTranslateBy !== translateByScaleBy, but new op translateByScaleBy didnt help
 					translation[item.getId()] = {
 						class: "Transformation",
 						method: "scaleByTranslateBy",
@@ -398,13 +377,6 @@ export class Transformer extends Tool {
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
 					};
-					// translation[item.getId()] = {
-					// 	class: "Transformation",
-					// 	method: "scaleByTranslateBy",
-					// 	item: [item.getId()],
-					// 	translate: { x: translateX, y: translateY },
-					// 	scale: { x: matrix.scaleX, y: matrix.scaleY },
-					// };
 				}
 			} else if (item instanceof Frame) {
 				if (!item.getCanChangeRatio()) {
