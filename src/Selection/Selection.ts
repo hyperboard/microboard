@@ -859,23 +859,35 @@ export class Selection {
 						item.itemType === "Frame",
 				);
 
-			const changedIds = filteredItems
-				.filter(item => {
-					if (item instanceof RichText) {
-						return !item.getFontStyles().includes(fontStyle);
-					}
-					return !item.text.getFontStyles().includes(fontStyle);
-				})
-				.map(item => item.getId());
-			this.emit({
-				class: "RichText",
-				method: "setFontStyle",
-				item:
-					changedIds.length === 0
-						? filteredItems.map(item => item.getId())
-						: changedIds,
-				fontStyleList: [fontStyle],
+			const changedItems = filteredItems.filter(item => {
+				if (item instanceof RichText) {
+					return !item.getFontStyles().includes(fontStyle);
+				}
+				return !item.text.getFontStyles().includes(fontStyle);
 			});
+			if (changedItems.length > 0) {
+				changedItems.forEach(item => {
+					if (item instanceof RichText) {
+						item.setSelectionFontStyle(fontStyle, this.context);
+					} else {
+						item.text.setSelectionFontStyle(
+							fontStyle,
+							this.context,
+						);
+					}
+				});
+			} else {
+				filteredItems.forEach(item => {
+					if (item instanceof RichText) {
+						item.setSelectionFontStyle(fontStyle, this.context);
+					} else {
+						item.text.setSelectionFontStyle(
+							fontStyle,
+							this.context,
+						);
+					}
+				});
+			}
 		}
 	}
 

@@ -154,7 +154,26 @@ function getTextStyle(data: TextNode): LeafStyle {
 		fontFamily: data.fontFamily ?? "Arial",
 	};
 
-	const styles = data.styles ? data.styles : [];
+	const styles = [];
+
+	if (data.bold) {
+		styles.push("bold");
+	}
+	if (data.italic) {
+		styles.push("italic");
+	}
+	if (data.underline) {
+		styles.push("underline");
+	}
+	if (data["line-through"]) {
+		styles.push("line-through");
+	}
+	if (data.sub) {
+		styles.push("subscript");
+	}
+	if (data.super) {
+		styles.push("superscript");
+	}
 
 	for (const style of styles) {
 		switch (style) {

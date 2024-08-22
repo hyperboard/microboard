@@ -5,8 +5,8 @@ import {
 	createEditor,
 	Descendant,
 	Editor,
-	Operation as EditorOperation,
 	Element,
+	Operation as EditorOperation,
 	Range,
 	Transforms,
 } from "slate";
@@ -24,7 +24,6 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -428,28 +427,25 @@ export class EditorContainer {
 		this.emitMethodOps();
 	}
 
-	setSelectionFontStyle(style: TextStyle | TextStyle[]): void {
-		const editor = this.editor;
-		const styleList = Array.isArray(style) ? style : [style];
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			return;
-		}
-		this.recordMethodOps("setSelectionFontStyle");
+	isMarkActive = (format: string) => {
+		const marks = Editor.marks(this.editor);
+		return marks ? marks[format] === true : false;
+	};
 
+	toggleMark = (format: string) => {
+		const isActive = this.isMarkActive(format);
+		if (isActive) {
+			Editor.removeMark(this.editor, format);
+		} else {
+			Editor.addMark(this.editor, format, true);
+		}
+	};
+
+	setSelectionFontStyle(style: TextStyle | TextStyle[]): void {
+		this.recordMethodOps("setSelectionFontStyle");
+		const styleList = Array.isArray(style) ? style : [style];
 		styleList.forEach(style => {
-			const currentStyles = this.getSelectionStyles() ?? [];
-			if (currentStyles.includes(style)) {
-				const updatedStyles = currentStyles.filter(s => s !== style);
-				Editor.removeMark(editor, "styles");
-				Editor.addMark(editor, "styles", updatedStyles);
-			} else {
-				Editor.addMark(editor, "styles", [
-					...currentStyles,
-					...styleList,
-				]);
-			}
-			ReactEditor.focus(editor);
+			this.toggleMark(style);
 		});
 		this.emitMethodOps();
 	}
@@ -621,15 +617,24 @@ export class EditorContainer {
 				});
 				return filteredChildren;
 			})
-			.map(textNode => {
-				return textNode.styles;
-			})
-			.reduce((acc: TextStyle[][], currStyles: TextStyle[]) => {
-				if (!currStyles) {
-					acc.push([]);
-					return acc;
+			.reduce((acc: TextStyle[][], node: TextNode) => {
+				const styles: TextStyle[] = [];
+				if (node.bold) {
+					styles.push("bold");
 				}
-				acc.push(currStyles);
+
+				if (node.italic) {
+					styles.push("italic");
+				}
+
+				if (node.underline) {
+					styles.push("underline");
+				}
+
+				if (node["line-through"]) {
+					styles.push("line-through");
+				}
+				acc.push(styles);
 				return acc;
 			}, []);
 

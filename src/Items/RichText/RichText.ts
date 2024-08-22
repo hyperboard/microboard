@@ -2,33 +2,33 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { Element, Descendant, Editor, Transforms, Node, Range } from "slate";
+import { Descendant, Editor, Transforms } from "slate";
+import { ReactEditor } from "slate-react";
+import { DOMPoint } from "slate-react/dist/utils/dom";
+import { Subject } from "Subject";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
 	Line,
 	Mbr,
 	Path,
 	Paths,
 	Point,
+	RichTextData,
 	Transformation,
 	TransformationOperation,
 } from "..";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
+import { LayoutBlockNodes } from "./CanvasText";
 import { BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { isTextEmpty } from "./isTextEmpty";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
-import { RichTextOperation } from "./RichTextOperations";
-import { RichTextData } from "..";
-import { DOMPoint } from "slate-react/dist/utils/dom";
-import { LayoutBlockNodes } from "./CanvasText";
-import { Subject } from "Subject";
-import { ReactEditor } from "slate-react";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
+import { RichTextOperation } from "./RichTextOperations";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -158,9 +158,15 @@ export class RichText extends Mbr implements Geometry {
 					children: [
 						{
 							type: "text",
-							styles: this.getFontStyles().includes("bold")
-								? "bold"
-								: "",
+							// styles: this.getFontStyles().includes("bold")
+							// 	? "bold"
+							// 	: "",
+							bold: this.getFontStyles().includes("bold"),
+							italic: this.getFontStyles().includes("italic"),
+							underline:
+								this.getFontStyles().includes("underline"),
+							"line-through":
+								this.getFontStyles().includes("line-through"),
 							fontColor: this.getFontColor(),
 							fontHighlight: "",
 							fontSize: this.getFontSize(),
@@ -613,9 +619,6 @@ export class RichText extends Mbr implements Geometry {
 		style: TextStyle | TextStyle[],
 		selectionContext?: SelectionContext,
 	): void {
-		if (selectionContext === "EditUnderPointer") {
-			this.selectWholeText();
-		}
 		this.editor.setSelectionFontStyle(style);
 		this.updateElement();
 	}
@@ -680,13 +683,6 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	getFontStyles(): TextStyle[] {
-		const marks = this.editor.getSelectionMarks();
-		const editor = this.editor.editor;
-		const { selection } = editor;
-		const isCollapsed = selection ? Range.isCollapsed(selection) : true;
-		if (isCollapsed || !selection) {
-			return marks?.styles ?? [];
-		}
 		const styles = this.editor.getSelectionStyles();
 		return styles ?? [];
 	}
