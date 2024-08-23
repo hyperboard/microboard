@@ -3,7 +3,7 @@ import { Matrix, Mbr } from "./Items";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
 export default function createCanvasDrawer(board: Board): {
-	getLastCreatedCanvas: () => HTMLCanvasElement | undefined;
+	getLastCreatedCanvas: () => HTMLDivElement | undefined;
 	getLastTranslationKeys: () => string[] | undefined;
 	getMatrix: () => Matrix;
 	translateCanvasBy: (x: number, y: number) => void;
@@ -18,11 +18,11 @@ export default function createCanvasDrawer(board: Board): {
 	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
 } {
-	let lastCreatedCanvas: HTMLCanvasElement | undefined = undefined;
+	let lastCreatedCanvas: HTMLDivElement | undefined = undefined;
 	let lastTranslationKeys: string[] | undefined = undefined;
 	let matrix = new Matrix();
 
-	function getLastCreatedCanvas(): HTMLCanvasElement | undefined {
+	function getLastCreatedCanvas(): HTMLDivElement | undefined {
 		return lastCreatedCanvas;
 	}
 

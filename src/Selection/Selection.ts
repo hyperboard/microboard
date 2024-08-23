@@ -1156,9 +1156,15 @@ export class Selection {
 		}
 	}
 
-	renderItemMbr(context: DrawingContext, item: Item): void {
+	renderItemMbr(
+		context: DrawingContext,
+		item: Item,
+		customScale?: number,
+	): void {
 		const mbr = item.getMbr();
-		mbr.strokeWidth = 1 / context.matrix.scaleX;
+		mbr.strokeWidth = !customScale
+			? 1 / context.matrix.scaleX
+			: 1 / customScale;
 		mbr.borderColor = SELECTION_COLOR;
 		mbr.render(context);
 	}
@@ -1172,8 +1178,7 @@ export class Selection {
 			return;
 		}
 
-		const isSelectionTooBig = this.items.getSize() > 100;
-		if (!isSelectionTooBig && !this.transformationRenderBlock) {
+		if (!this.transformationRenderBlock) {
 			for (const item of this.items.list()) {
 				this.renderItemMbr(context, item);
 			}

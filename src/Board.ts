@@ -16,6 +16,12 @@ import { BoardEvent, createEvents } from "./Events/Events";
 import { v4 as uuidv4 } from "uuid";
 import { itemFactories } from "./itemFactories";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
+import {
+	SELECTION_ANCHOR_COLOR,
+	SELECTION_ANCHOR_RADIUS,
+	SELECTION_ANCHOR_WIDTH,
+	SELECTION_COLOR,
+} from "View/Tools/Selection";
 
 export class Board {
 	events: Events | undefined;
@@ -220,12 +226,54 @@ export class Board {
 	drawMbrOnCanvas(
 		mbr: Mbr,
 		translation: TransformManyItems,
-	): HTMLCanvasElement | undefined {
+	): HTMLDivElement | undefined {
 		const canvas = document.createElement("canvas");
-		const width = mbr.getWidth() + 100;
-		const height = mbr.getHeight() + 100;
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
 		canvas.width = width * this.camera.getMatrix().scaleX;
 		canvas.height = height * this.camera.getMatrix().scaleY;
+
+		canvas.style.border = `1px solid ${SELECTION_COLOR}`;
+		canvas.style.boxSizing = "border-box";
+
+		const container = document.createElement("div");
+		container.style.position = "relative";
+		container.style.width = `${canvas.width}px`;
+		container.style.height = `${canvas.height}px`;
+		container.appendChild(canvas);
+
+		const createAnchorDiv = (
+			left: string,
+			top: string,
+			radius: number,
+		): HTMLDivElement => {
+			const anchorDiv = document.createElement("div");
+			anchorDiv.style.position = "absolute";
+			anchorDiv.style.width = `${2 * radius}px`;
+			anchorDiv.style.height = `${2 * radius}px`;
+			anchorDiv.style.backgroundColor = `${SELECTION_ANCHOR_COLOR}`;
+			anchorDiv.style.border = `${SELECTION_ANCHOR_WIDTH}px solid ${SELECTION_COLOR}`;
+			anchorDiv.style.borderRadius = "2px";
+			anchorDiv.style.left = `calc(${left} - ${radius}px)`;
+			anchorDiv.style.top = `calc(${top} - ${radius}px)`;
+			anchorDiv.style.zIndex = "10";
+			return anchorDiv;
+		};
+
+		const anchors = [
+			createAnchorDiv("0%", "0%", SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv("100% + 1px", "0%", SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv("0%", "100% + 1px", SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv(
+				"100% + 1px",
+				"100% + 1px",
+				SELECTION_ANCHOR_RADIUS,
+			),
+		];
+
+		for (const anchor of anchors) {
+			container.appendChild(anchor);
+		}
 
 		const ctx = canvas.getContext("2d");
 		if (!ctx) {
@@ -261,12 +309,15 @@ export class Board {
 			const item = this.items.getById(id);
 			if (item) {
 				item.render(context);
-				this.selection.renderItemMbr(context, item);
-				this.selection.tool.render(context);
+				this.selection.renderItemMbr(
+					context,
+					item,
+					this.camera.getMatrix().scaleX,
+				);
 			}
 		});
 
-		return canvas;
+		return container;
 	}
 
 	createItem(id: string, data: ItemData): Item {
