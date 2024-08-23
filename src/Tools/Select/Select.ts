@@ -84,7 +84,7 @@ export class Select extends Tool {
 			if (itemsUnderPointer.length > 0) {
 				const selectedItems = this.board.selection.items.list();
 				const isAnySelectedItemUnderPointer = selectedItems.some(item =>
-					item.isUnderPoint(pointer.point),
+					itemsUnderPointer.includes(item),
 				);
 				this.isDownOnSelection = isAnySelectedItemUnderPointer;
 			} else {
