@@ -3,7 +3,6 @@ import { Item } from "Board/Items";
 import { Layers } from "./Layers";
 import { getContainersSortedByZIndex } from "./getContainersSortedByZIndex";
 import { RTreeIndex } from "../RTreeIndex";
-
 export class Container extends Mbr {
 	constructor(
 		public id: string,

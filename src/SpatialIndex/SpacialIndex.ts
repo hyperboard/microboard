@@ -253,9 +253,12 @@ export class SpatialIndex {
 		return enclosedOrCrossedFrames.concat(enclosedOrCrossedItems);
 	}
 
-	getUnderPoint(point: Point): Item[] {
-		const itemsUnderPoint = this.itemsIndex.getUnderPoint(point);
-		const framesUnderPoint = this.framesIndex.getUnderPoint(point);
+	getUnderPoint(point: Point, tolerace = 5): Item[] {
+		const itemsUnderPoint = this.itemsIndex.getUnderPoint(point, tolerace);
+		const framesUnderPoint = this.framesIndex.getUnderPoint(
+			point,
+			tolerace,
+		);
 		return [...framesUnderPoint, ...itemsUnderPoint];
 	}
 
@@ -440,6 +443,36 @@ export class Items {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
 		const underPointer = this.getUnderPoint(new Point(x, y), size);
+		if (underPointer.length === 0) {
+			const tolerated = this.index.getEnclosedOrCrossed(
+				x - size,
+				y - size,
+				x + size,
+				y + size,
+			);
+			const enclosed =
+				tolerated.length <= 1
+					? tolerated
+					: this.index.getEnclosedOrCrossed(x, y, x, y);
+			const { nearest } = enclosed.reduce(
+				(acc, item) => {
+					const distances = item
+						.getMbr()
+						.getLines()
+						.map(line => line.getDistance(this.pointer.point));
+					const minDistance = Math.min(...distances);
+					if (minDistance < acc.distance) {
+						return { nearest: item, distance: minDistance };
+					}
+					return acc;
+				},
+				{ nearest: undefined, distance: Infinity } as {
+					nearest?: Item;
+					distance: number;
+				},
+			);
+			return nearest ? [nearest] : [];
+		}
 		return underPointer.length === 1
 			? underPointer
 			: this.getUnderPoint(new Point(x, y));
