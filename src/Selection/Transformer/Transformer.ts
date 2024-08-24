@@ -183,7 +183,7 @@ export class Transformer extends Tool {
 
 			if (isWidth) {
 				single.editor.setMaxWidth(
-					(resizedMbr.getWidth() / single.getFontSize()) * 14,
+					resizedMbr.getWidth() / single.getScale(),
 				);
 				single.transformation.translateBy(matrix.translateX, 0);
 			} else {
