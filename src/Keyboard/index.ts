@@ -23,9 +23,10 @@ export class Keyboard {
 		this.isShift = event.shiftKey;
 		this.isAlt = event.altKey;
 		this.isCtrl = event.ctrlKey;
-		this.isCmd = event.metaKey || event.key === "Meta";
-		if (navigator.platform.match("Mac") && !this.isCmd) {
+		this.isCmd = event.metaKey;
+		if (!this.isCmd || event.key === "Meta") {
 			this.isCtrl = false;
+			this.isCmd = false;
 		}
 	}
 }
