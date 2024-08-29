@@ -338,6 +338,19 @@ export class Selection {
 			this.textToEdit = undefined;
 			return;
 		}
+		if (item instanceof Connector && item.text.isEmpty()) {
+			item.text.selectWholeText();
+			const textColor = localStorage.getItem("lastConnectorTextColor");
+			const textSize = Number(
+				localStorage.getItem("lastConnectorTextSize"),
+			);
+			if (textColor) {
+				item.text.setSelectionFontColor(textColor);
+			}
+			if (textSize && !Number.isNaN(textSize)) {
+				item.text.setSelectionFontSize(textSize);
+			}
+		}
 		const text = item instanceof RichText ? item : item.text;
 		this.textToEdit = text;
 		text.selectWholeText();

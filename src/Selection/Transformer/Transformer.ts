@@ -8,6 +8,7 @@ import {
 	TransformationOperation,
 	RichText,
 	Matrix,
+	Connector,
 } from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
@@ -243,6 +244,7 @@ export class Transformer extends Tool {
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
 			} else {
+				console.log("multiple resize");
 				const translation = this.handleMultipleItemsResize(
 					resize,
 					mbr,
@@ -408,6 +410,16 @@ export class Transformer extends Tool {
 						scale: { x: matrix.scaleX, y: matrix.scaleY },
 					};
 				}
+			} else if (item instanceof Connector) {
+				console.log("connector instance");
+				translation[item.getId()] = {
+					class: "Transformation",
+					method: "scaleByTranslateBy",
+					item: [item.getId()],
+					translate: { x: matrix.translateX, y: matrix.translateY },
+					scale: { x: matrix.scaleX, y: matrix.scaleY },
+					resizeType: this.resizeType,
+				};
 			} else {
 				if (item instanceof Sticker && (isWidth || isHeight)) {
 					translation[item.getId()] = {
