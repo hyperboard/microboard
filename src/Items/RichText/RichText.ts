@@ -62,7 +62,7 @@ export class RichText extends Mbr implements Geometry {
 	readonly editorEditor = Editor;
 
 	private isContainerSet = false;
-	private isRenderEnabled = true;
+	isRenderEnabled = true;
 	private blockNodes: LayoutBlockNodes;
 	private clipPath: Path2D | undefined;
 	private updateRequired = false;

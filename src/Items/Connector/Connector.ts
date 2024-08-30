@@ -8,10 +8,12 @@ import { Transformation } from "../Transformation";
 import { Subject } from "Subject";
 import { Events, Operation } from "../../Events";
 import { getLine } from "./getLine/getLine";
+import { getResize } from "../../Selection/Transformer/getResizeMatrix";
 import {
 	BoardPoint,
 	ControlPoint,
 	ControlPointData,
+	FixedPoint,
 	getControlPoint,
 } from "./ControlPoint";
 import { ConnectorCommand } from "./ConnectorCommand";
@@ -33,6 +35,7 @@ import { SELECTION_COLOR } from "View/Tools/Selection";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { t } from "i18next";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
+import { ResizeType } from "../../Selection/Transformer/getResizeType";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -101,8 +104,15 @@ export class Connector {
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
 	) {
-		this.transformation.subject.subscribe(() => {
-			this.transformBoardPoints();
+		this.transformation.subject.subscribe((_, op) => {
+			if (op.method === "transformMany") {
+				const itemOp = op.items[this.id];
+				if (itemOp.method === "scaleByTranslateBy") {
+					this.transformBoardPoints(itemOp.resizeType);
+				}
+			} else {
+				this.transformBoardPoints();
+			}
 			this.updatePaths();
 			this.subject.publish(this);
 		});
@@ -529,8 +539,12 @@ export class Connector {
 			context.ctx.lineJoin = "round";
 		}
 		this.clipText(context);
-		this.text.render(context);
-
+		if (
+			!this.text.isRenderEnabled &&
+			this.board.selection.getContext() !== "EditTextUnderPointer"
+		) {
+			this.lines.render(context);
+		}
 		if (this.startPointerStyle !== "None") {
 			this.startPointer.path.render(context);
 		}
@@ -559,6 +573,7 @@ export class Connector {
 		) {
 			this.text.disableRender();
 			this.lines.render(context);
+
 			return;
 		}
 		const ctx = context.ctx;
@@ -685,6 +700,10 @@ export class Connector {
 		}
 		if (data.text) {
 			this.text.deserialize(data.text);
+
+			if (this.text.isEmpty()) {
+				this.text.disableRender();
+			}
 		}
 		this.startPointerStyle =
 			data.startPointerStyle ?? this.startPointerStyle;
@@ -719,27 +738,55 @@ export class Connector {
 		// this.animationFrameId = 0;
 	}
 
-	private transformBoardPoints(): void {
-		if (
-			this.startPoint.pointType !== "Board" ||
-			this.endPoint.pointType !== "Board"
-		) {
-			return;
-		}
-
+	private transformBoardPoints(resizeType?: ResizeType): void {
 		const previous = this.transformation.previous.copy();
 		previous.invert();
 		const delta = previous.multiplyByMatrix(
 			this.transformation.matrix.copy(),
 		);
 
-		const startPoint = new BoardPoint(this.startPoint.x, this.startPoint.y);
-		startPoint.transform(delta);
-		this.startPoint = startPoint;
+		if (
+			this.endPoint.pointType === "Board" &&
+			this.startPoint.pointType === "Board"
+		) {
+			const leftPoint =
+				this.startPoint.x > this.endPoint.x
+					? this.endPoint
+					: this.startPoint;
+			const rightPoint =
+				this.startPoint.x > this.endPoint.x
+					? this.startPoint
+					: this.endPoint;
+			const topPoint =
+				this.startPoint.y > this.endPoint.y
+					? this.endPoint
+					: this.startPoint;
+			const bottomPoint =
+				this.startPoint.y > this.endPoint.y
+					? this.startPoint
+					: this.endPoint;
+			if (resizeType === "left") {
+				delta.invert();
+				leftPoint.transform(delta);
+			}
 
-		const endPoint = new BoardPoint(this.endPoint.x, this.endPoint.y);
-		endPoint.transform(delta);
-		this.endPoint = endPoint;
+			if (resizeType === "right") {
+				rightPoint.transform(delta);
+			}
+
+			if (resizeType === "top") {
+				delta.invert();
+				topPoint.transform(delta);
+			}
+
+			if (resizeType === "bottom") {
+				bottomPoint.transform(delta);
+			}
+			return;
+		}
+
+		this.startPoint.transform(delta);
+		this.endPoint.transform(delta);
 	}
 
 	private updatePaths(): void {
