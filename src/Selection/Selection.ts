@@ -843,11 +843,17 @@ export class Selection {
 					x.text.setSelectionFontSize(fontSize, this.getContext()),
 				);
 		} else {
-			this.emit({
-				class: "RichText",
-				method: "setFontSize",
-				item: this.items.ids(),
-				fontSize,
+			// this.emit({
+			// 	class: "RichText",
+			// 	method: "setFontSize",
+			// 	item: this.items.ids(),
+			// 	fontSize,
+			// });
+
+			this.items.list().forEach(item => {
+				if (item instanceof RichText) {
+					item.setSelectionFontSize(fontSize);
+				}
 			});
 		}
 	}
