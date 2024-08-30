@@ -573,7 +573,6 @@ export class Connector {
 		) {
 			this.text.disableRender();
 			this.lines.render(context);
-			console.log(1);
 
 			return;
 		}

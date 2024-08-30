@@ -244,7 +244,6 @@ export class Transformer extends Tool {
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
 			} else {
-				console.log("multiple resize");
 				const translation = this.handleMultipleItemsResize(
 					resize,
 					mbr,
@@ -411,7 +410,6 @@ export class Transformer extends Tool {
 					};
 				}
 			} else if (item instanceof Connector) {
-				console.log("connector instance");
 				translation[item.getId()] = {
 					class: "Transformation",
 					method: "scaleByTranslateBy",

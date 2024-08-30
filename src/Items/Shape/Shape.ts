@@ -436,7 +436,6 @@ export class Shape implements Geometry {
 		console.log("delta", delta);
 		this.path.transform(delta);
 		*/
-		console.log("transformPath");
 		this.path.transform(this.transformation.matrix);
 
 		this.path.setBackgroundColor(this.backgroundColor);
@@ -468,7 +467,6 @@ export class Shape implements Geometry {
 		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getResize(resizeType, pointer, mbr, opposite);
-		console.log("doResize");
 
 		this.transformation.scaleByTranslateBy(
 			{
