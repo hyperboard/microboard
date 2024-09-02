@@ -445,6 +445,23 @@ export class EditorContainer {
 		this.recordMethodOps("setSelectionFontStyle");
 		const styleList = Array.isArray(style) ? style : [style];
 		styleList.forEach(style => {
+			const selectionStyles = this.getEachNodeInSelectionStyles();
+			const isAllNodesContainStyle = selectionStyles.every(styleArr =>
+				styleArr.includes(style),
+			);
+			const isSomeNodeContainStyle = selectionStyles.some(styleArr =>
+				styleArr.includes(style),
+			);
+
+			if (isAllNodesContainStyle) {
+				Editor.removeMark(this.editor, style);
+				return;
+			}
+			if (isSomeNodeContainStyle) {
+				Editor.addMark(this.editor, style, true);
+				return;
+			}
+
 			this.toggleMark(style);
 		});
 		this.emitMethodOps();
@@ -590,33 +607,73 @@ export class EditorContainer {
 		return Editor.marks(this.editor);
 	}
 
+	getAllTextNodesInSelection(): TextNode[] {
+		const { selection } = this.editor;
+		if (!selection) {
+			return [];
+		}
+
+		const textNodes: TextNode[] = [];
+		for (const [node, path] of Editor.nodes(this.editor, {
+			at: selection,
+			match: n => n.type === "text",
+		})) {
+			textNodes.push(node as TextNode);
+		}
+
+		return textNodes;
+	}
+
+	getEachNodeInSelectionStyles() {
+		return this.getAllTextNodesInSelection().map(n => {
+			const styles: TextStyle[] = [];
+			if (n.bold) {
+				styles.push("bold");
+			}
+
+			if (n.italic) {
+				styles.push("italic");
+			}
+
+			if (n.underline) {
+				styles.push("underline");
+			}
+
+			if (n["line-through"]) {
+				styles.push("line-through");
+			}
+			return styles;
+		});
+	}
+
 	getSelectionStyles(): string[] | undefined {
 		const editor = this.editor;
 		const { selection } = editor;
 		if (!selection) {
 			return;
 		}
-		const nodes = Array.from(
-			Editor.nodes(editor, {
-				at: Editor.unhangRange(editor, selection),
-				match: node =>
-					!Editor.isEditor(node) &&
-					Element.isElement(node) &&
-					node.type === "paragraph",
-			}),
-		);
-
+		console.log(this.getEachNodeInSelectionStyles(), "textNodes");
+		// const nodes = Array.from(
+		// 	Editor.nodes(editor, {
+		// 		at: Editor.unhangRange(editor, selection),
+		// 		match: node =>
+		// 			!Editor.isEditor(node) &&
+		// 			Element.isElement(node) &&
+		// 			node.type === "paragraph",
+		// 	}),
+		// );
+		const nodes = this.getAllTextNodesInSelection();
 		const styles: TextStyle[][] = nodes
-			.flatMap(nodeEntry => {
-				const [node, path] = nodeEntry;
-				const { children } = node;
-				const filteredChildren = children.filter((child, index) => {
-					const childPath = path.concat(index);
-					const childRange = Editor.range(editor, childPath);
-					return Range.intersection(selection, childRange) !== null;
-				});
-				return filteredChildren;
-			})
+			// .flatMap(nodeEntry => {
+			// 	const [node, path] = nodeEntry;
+			// 	const { children } = node;
+			// 	const filteredChildren = children.filter((child, index) => {
+			// 		const childPath = path.concat(index);
+			// 		const childRange = Editor.range(editor, childPath);
+			// 		return Range.intersection(selection, childRange) !== null;
+			// 	});
+			// 	return filteredChildren;
+			// })
 			.reduce((acc: TextStyle[][], node: TextNode) => {
 				const styles: TextStyle[] = [];
 				if (node.bold) {
