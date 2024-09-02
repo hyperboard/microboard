@@ -336,25 +336,6 @@ export class Frame implements Geometry {
 		);
 	}
 
-	fitFrameInView(board: Board): void {
-		const mbrCopy = this.getMbr();
-		const wasEnclosed = mbrCopy.isEnclosedBy(board.camera.getMbr());
-		while (!mbrCopy.isEnclosedBy(board.camera.getMbr())) {
-			board.camera.zoomRelativeToPointBy(
-				0.99,
-				board.camera.getMbr().getCenter().x,
-				board.camera.getMbr().getCenter().y,
-			);
-		}
-		if (!wasEnclosed) {
-			board.camera.zoomRelativeToPointBy(
-				0.95,
-				board.camera.getMbr().getCenter().x,
-				board.camera.getMbr().getCenter().y,
-			);
-		}
-	}
-
 	serialize(): FrameData {
 		return {
 			itemType: "Frame",
@@ -390,7 +371,7 @@ export class Frame implements Geometry {
 		}
 		if (data.children) {
 			data.children.forEach(child => {
-				this.addChild(child);
+				this.applyAddChild(child);
 			});
 		}
 		if (data.text) {
@@ -573,7 +554,7 @@ export class Frame implements Geometry {
 						this.handleNesting(item);
 					}
 				});
-			this.fitFrameInView(this.board);
+			this.board.fitMbrInView(this.getMbr());
 		}
 		this.updateMbr();
 	}

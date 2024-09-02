@@ -317,7 +317,7 @@ export class Sticker implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		this.shadowPath.render(context);
+		// this.shadowPath.render(context);
 		this.stickerPath.render(context);
 		this.text.render(context);
 	}

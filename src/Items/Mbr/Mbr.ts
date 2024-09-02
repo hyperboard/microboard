@@ -210,6 +210,17 @@ export class Mbr implements Geometry {
 		return x >= left && x <= right && y >= top && y <= bottom;
 	}
 
+	isAlmostInside(point: Point, diff: number): boolean {
+		const { x, y } = point;
+		const { left, top, right, bottom } = this;
+		return (
+			x + diff >= left &&
+			x - diff <= right &&
+			y + diff >= top &&
+			y - diff <= bottom
+		);
+	}
+
 	isEqual(mbr: Mbr): boolean {
 		return (
 			this.left === mbr.left &&

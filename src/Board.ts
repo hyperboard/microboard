@@ -340,6 +340,7 @@ export class Board {
 		if (!newItem) {
 			throw new Error("Add item. Item was not created.");
 		}
+		this.handleNesting(newItem);
 		return newItem as T;
 	}
 
@@ -893,6 +894,25 @@ export class Board {
 
 	isOnBoard(item: Item): boolean {
 		return this.items.findById(item.getId()) !== undefined;
+	}
+
+	/** zoomOutRelative to camera center until mbr can be viewed fully */
+	fitMbrInView(mbr: Mbr): void {
+		const wasEnclosed = mbr.isEnclosedBy(this.camera.getMbr());
+		while (!mbr.isEnclosedBy(this.camera.getMbr())) {
+			this.camera.zoomRelativeToPointBy(
+				0.99,
+				this.camera.getMbr().getCenter().x,
+				this.camera.getMbr().getCenter().y,
+			);
+		}
+		if (!wasEnclosed) {
+			this.camera.zoomRelativeToPointBy(
+				0.95,
+				this.camera.getMbr().getCenter().x,
+				this.camera.getMbr().getCenter().y,
+			);
+		}
 	}
 }
 

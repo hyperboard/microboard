@@ -1,6 +1,10 @@
 import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
-import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
+import {
+	BoardPoint,
+	ConnectorData,
+	ConnectorLineStyle,
+} from "Board/Items/Connector";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
@@ -15,7 +19,9 @@ import {
 	Frame,
 	Item,
 	ItemData,
+	Matrix,
 	Mbr,
+	Point,
 	RichText,
 	Shape,
 	TransformationOperation,
@@ -25,6 +31,8 @@ import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
+import { ControlPointData } from "Board/Items/Connector/ControlPoint";
+import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -43,11 +51,11 @@ export class Selection {
 	private context: SelectionContext = "None";
 	readonly items = new SelectionItems();
 	shouldPublish = true;
-
 	readonly tool = new SelectionTransformer(this.board, this);
-
 	textToEdit: RichText | undefined;
 	transformationRenderBlock?: boolean = undefined;
+
+	quickAddButtons: QuickAddButtons = getQuickAddButtons(this, this.board);
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
@@ -99,6 +107,7 @@ export class Selection {
 		if (!this.shouldPublish) {
 			return;
 		}
+		this.quickAddButtons.clear();
 		this.subject.publish(this);
 		this.itemSubject.publish(item);
 	};
@@ -190,6 +199,9 @@ export class Selection {
 		this.context = context;
 		if (context !== "EditTextUnderPointer") {
 			this.setTextToEdit(undefined);
+		}
+		if (context === "None") {
+			this.quickAddButtons.clear();
 		}
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
@@ -1202,6 +1214,7 @@ export class Selection {
 				this.renderItemMbr(context, item);
 			}
 			this.tool.render(context);
+			this.quickAddButtons.render(context);
 		}
 	}
 }

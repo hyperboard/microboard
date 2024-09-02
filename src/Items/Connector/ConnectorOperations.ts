@@ -1,4 +1,4 @@
-import { BoardPoint, ControlPointData } from "./ControlPoint";
+import { BoardPoint, ControlPointData, FindItemFn } from "./ControlPoint";
 import { ConnectionLineWidth, ConnectorLineStyle } from "./Connector";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
@@ -15,6 +15,7 @@ export class ConnectorData {
 	lineWidth: ConnectionLineWidth = 1;
 	transformation = new DefaultTransformationData();
 	text = new DefaultRichTextData([], "center", undefined);
+	optionalFindItemFn?: FindItemFn;
 }
 
 interface SetStartPoint {

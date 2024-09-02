@@ -167,9 +167,11 @@ export type ControlPoint =
 	| FixedPoint
 	| FixedConnectorPoint;
 
+export type FindItemFn = (id: string) => Item | undefined;
+
 export function getControlPoint(
 	data: ControlPointData,
-	findItem: (id: string) => Item | undefined,
+	findItem: FindItemFn,
 ): ControlPoint {
 	if (data.pointType === "Board") {
 		return new BoardPoint(Math.round(data.x), Math.round(data.y));

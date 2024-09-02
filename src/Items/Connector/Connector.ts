@@ -4,7 +4,7 @@ import { Mbr } from "../Mbr";
 import { DrawingContext } from "../DrawingContext";
 import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
 import { Path, Paths } from "../Path";
-import { Transformation } from "../Transformation";
+import { Matrix, Transformation } from "../Transformation";
 import { Subject } from "Subject";
 import { Events, Operation } from "../../Events";
 import { getLine } from "./getLine/getLine";
@@ -13,6 +13,7 @@ import {
 	BoardPoint,
 	ControlPoint,
 	ControlPointData,
+	FindItemFn,
 	FixedPoint,
 	getControlPoint,
 } from "./ControlPoint";
@@ -97,6 +98,7 @@ export class Connector {
 		},
 	);
 	transformationRenderBlock?: boolean = undefined;
+	private optionalFindItemFn?: FindItemFn;
 
 	constructor(
 		private board: Board,
@@ -313,8 +315,12 @@ export class Connector {
 		updatePath = true,
 	): void {
 		this.unsubscribeFromItem(this.endPoint, this.observerEndPointItem);
-		this.endPoint = getControlPoint(pointData, itemId =>
-			this.board.items.findById(itemId),
+		const optionalFn = this.getOptionalFindFn();
+		this.endPoint = getControlPoint(
+			pointData,
+			optionalFn
+				? optionalFn
+				: itemId => this.board.items.findById(itemId),
 		);
 		this.subscribeToItem(this.endPoint, this.observerEndPointItem);
 		if (updatePath) {
@@ -432,6 +438,15 @@ export class Connector {
 	}
 
 	getMiddlePoint(): { x: number; y: number } {
+		if (this.lineStyle === "orthogonal") {
+			const segments = this.lines.getSegments();
+			const middle = segments[Math.floor(segments.length / 2)];
+			return {
+				x: (middle.start.x + middle.end.x) / 2,
+				y: (middle.start.y + middle.end.y) / 2,
+			};
+		}
+
 		const line = this.lines.getSegments()[0];
 		let x = 0;
 		let y = 0;
@@ -579,7 +594,6 @@ export class Connector {
 		const ctx = context.ctx;
 
 		const textMbr = this.text.getClipMbr();
-
 		// Save the current context state
 		ctx.save();
 
@@ -691,6 +705,9 @@ export class Connector {
 	deserialize(data: Partial<ConnectorData>): this {
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
+		}
+		if (data.optionalFindItemFn) {
+			this.setOptionalFindFn(data.optionalFindItemFn);
 		}
 		if (data.startPoint) {
 			this.applyStartPoint(data.startPoint, false);
@@ -827,8 +844,34 @@ export class Connector {
 	}
 
 	private offsetLines(): void {
-		const line = this.lines.getSegments()[0];
-		if (line instanceof Line) {
+		const segments = this.lines.getSegments();
+		const line = segments[0];
+		if (this.lineStyle === "orthogonal") {
+			if (this.startPoint.pointType !== "Board") {
+				this.lines = new Path([
+					new Line(this.startPointer.start, line.start),
+					...segments,
+				]).addConnectedItemType(this.itemType);
+			} else {
+				this.lines = new Path([
+					new Line(this.startPointer.start, line.end),
+					...segments.slice(1),
+				]).addConnectedItemType(this.itemType);
+			}
+			const updated = this.lines.getSegments();
+			const lastLine = updated[segments.length - 1];
+			if (this.endPoint.pointType !== "Board") {
+				this.lines = new Path([
+					...updated,
+					new Line(lastLine.end, this.endPointer.start),
+				]).addConnectedItemType(this.itemType);
+			} else {
+				this.lines = new Path([
+					...updated.slice(0, updated.length - 1),
+					new Line(lastLine.start, this.endPointer.start),
+				]).addConnectedItemType(this.itemType);
+			}
+		} else if (line instanceof Line) {
 			this.lines = new Path([
 				new Line(this.startPointer.start, this.endPointer.start),
 			]).addConnectedItemType(this.itemType);
@@ -854,5 +897,13 @@ export class Connector {
 			points.push(line.getCenterPoint());
 		}
 		return points;
+	}
+
+	getOptionalFindFn(): FindItemFn | undefined {
+		return this.optionalFindItemFn;
+	}
+
+	setOptionalFindFn(value: FindItemFn | undefined): void {
+		this.optionalFindItemFn = value;
 	}
 }
