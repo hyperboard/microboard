@@ -443,7 +443,9 @@ export class Items {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
 		const underPointer = this.getUnderPoint(new Point(x, y), size);
-		if (underPointer.length === 0) {
+		if (
+			underPointer.filter(item => item.itemType !== "Frame").length === 0
+		) {
 			const tolerated = this.index.getEnclosedOrCrossed(
 				x - size,
 				y - size,
@@ -451,7 +453,7 @@ export class Items {
 				y + size,
 			);
 			const enclosed =
-				tolerated.length <= 1
+				tolerated.filter(item => item.itemType !== "Frame").length <= 1
 					? tolerated
 					: this.index.getEnclosedOrCrossed(x, y, x, y);
 			const { nearest } = enclosed.reduce(
