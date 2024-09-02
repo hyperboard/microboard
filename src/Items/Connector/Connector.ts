@@ -1,29 +1,6 @@
 import { RichText } from "Board/Items";
-import { Line } from "../Line";
-import { Mbr } from "../Mbr";
-import { DrawingContext } from "../DrawingContext";
-import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
-import { Path, Paths } from "../Path";
-import { Matrix, Transformation } from "../Transformation";
+import { t } from "i18next";
 import { Subject } from "Subject";
-import { Events, Operation } from "../../Events";
-import { getLine } from "./getLine/getLine";
-import { getResize } from "../../Selection/Transformer/getResizeMatrix";
-import {
-	BoardPoint,
-	ControlPoint,
-	ControlPointData,
-	FindItemFn,
-	FixedPoint,
-	getControlPoint,
-} from "./ControlPoint";
-import { ConnectorCommand } from "./ConnectorCommand";
-import { Item } from "../Item";
-import { Board } from "../../Board";
-import { GeometricNormal } from "../GeometricNormal";
-import { getStartPointer, getEndPointer } from "./Pointers";
-import { Point } from "../Point";
-import { CubicBezier } from "../Curve";
 import {
 	CONNECTOR_COLOR,
 	CONNECTOR_LINE_CAP,
@@ -32,11 +9,32 @@ import {
 	DRAW_TEXT_BORDER,
 	TEXT_BORDER_PADDING,
 } from "View/Items/Connector";
-import { SELECTION_COLOR } from "View/Tools/Selection";
-import { ConnectorPointerStyle } from "./Pointers/Pointers";
-import { t } from "i18next";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { SELECTION_COLOR } from "View/Tools/Selection";
+import { Board } from "../../Board";
+import { Events, Operation } from "../../Events";
+import { CubicBezier } from "../Curve";
+import { DrawingContext } from "../DrawingContext";
+import { GeometricNormal } from "../GeometricNormal";
+import { Item } from "../Item";
+import { Line } from "../Line";
+import { Mbr } from "../Mbr";
+import { Path, Paths } from "../Path";
+import { Point } from "../Point";
+import { Transformation } from "../Transformation";
+import { ConnectorCommand } from "./ConnectorCommand";
+import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
+import {
+	BoardPoint,
+	ControlPoint,
+	ControlPointData,
+	FindItemFn,
+	FixedPoint,
+	getControlPoint,
+} from "./ControlPoint";
+import { getLine } from "./getLine/getLine";
+import { getEndPointer, getStartPointer } from "./Pointers";
+import { ConnectorPointerStyle } from "./Pointers/Pointers";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -110,11 +108,14 @@ export class Connector {
 			if (op.method === "transformMany") {
 				const itemOp = op.items[this.id];
 				if (itemOp.method === "scaleByTranslateBy") {
-					this.transformBoardPoints(itemOp.resizeType);
+					this.transformation.applyScaleTo(
+						itemOp.scale.x,
+						-itemOp.scale.y,
+					);
 				}
-			} else {
-				this.transformBoardPoints();
 			}
+
+			this.transformBoardPoints();
 			this.updatePaths();
 			this.subject.publish(this);
 		});
@@ -252,6 +253,9 @@ export class Connector {
 						break;
 				}
 				break;
+			// case "Transformation":
+			// 	this.transformation.apply(operation);
+			// 	break;
 			default:
 				return;
 		}
@@ -553,6 +557,11 @@ export class Connector {
 			context.ctx.lineCap = "round";
 			context.ctx.lineJoin = "round";
 		}
+		const mbr = this.getMbr();
+		mbr.borderColor = "red";
+		mbr.strokeWidth = 3;
+		mbr.borderStyle = "solid";
+		// mbr.render(context)
 		this.clipText(context);
 		if (
 			!this.text.isRenderEnabled &&
@@ -755,55 +764,36 @@ export class Connector {
 		// this.animationFrameId = 0;
 	}
 
-	private transformBoardPoints(resizeType?: ResizeType): void {
-		const previous = this.transformation.previous.copy();
-		previous.invert();
-		const delta = previous.multiplyByMatrix(
-			this.transformation.matrix.copy(),
-		);
+	private transformBoardPoints(): void {
+		// if (
+		// 	this.startPoint.pointType !== "Board" ||
+		// 	this.endPoint.pointType !== "Board"
+		// ) {
+		// 	return;
+		// }
 
-		if (
-			this.endPoint.pointType === "Board" &&
-			this.startPoint.pointType === "Board"
-		) {
-			const leftPoint =
-				this.startPoint.x > this.endPoint.x
-					? this.endPoint
-					: this.startPoint;
-			const rightPoint =
-				this.startPoint.x > this.endPoint.x
-					? this.startPoint
-					: this.endPoint;
-			const topPoint =
-				this.startPoint.y > this.endPoint.y
-					? this.endPoint
-					: this.startPoint;
-			const bottomPoint =
-				this.startPoint.y > this.endPoint.y
-					? this.startPoint
-					: this.endPoint;
-			if (resizeType === "left") {
-				delta.invert();
-				leftPoint.transform(delta);
-			}
+		const deltaX = this.endPoint.x - this.startPoint.x;
+		const deltaY = this.endPoint.y - this.startPoint.y;
 
-			if (resizeType === "right") {
-				rightPoint.transform(delta);
-			}
+		// if (this.startPoint.pointType === "Board") {
+		this.startPoint = new BoardPoint();
+		this.startPoint.transform(this.transformation.matrix);
+		// } else if (this.startPoint instanceof FixedPoint) {
+		// 	const oldPoint = this.startPoint;
+		// 	this.startPoint = new BoardPoint();
+		// 	this.startPoint.transform(this.transformation.matrix);
+		// 	this.startPoint = new FixedPoint(oldPoint.item, oldPoint.relativePoint.copy())
+		// }
 
-			if (resizeType === "top") {
-				delta.invert();
-				topPoint.transform(delta);
-			}
-
-			if (resizeType === "bottom") {
-				bottomPoint.transform(delta);
-			}
-			return;
-		}
-
-		this.startPoint.transform(delta);
-		this.endPoint.transform(delta);
+		// if (this.endPoint.pointType === "Board") {
+		this.endPoint = new BoardPoint(deltaX, deltaY);
+		this.endPoint.transform(this.transformation.matrix);
+		// } else if (this.endPoint instanceof FixedPoint) {
+		// 	const oldPoint = this.endPoint;
+		// 	this.endPoint = new BoardPoint();
+		// 	this.endPoint.transform(this.transformation.matrix);
+		// 	this.endPoint = new FixedPoint(oldPoint.item, oldPoint.relativePoint.copy())
+		// }
 	}
 
 	private updatePaths(): void {

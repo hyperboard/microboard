@@ -409,15 +409,6 @@ export class Transformer extends Tool {
 						scale: { x: matrix.scaleX, y: matrix.scaleY },
 					};
 				}
-			} else if (item instanceof Connector) {
-				translation[item.getId()] = {
-					class: "Transformation",
-					method: "scaleByTranslateBy",
-					item: [item.getId()],
-					translate: { x: matrix.translateX, y: matrix.translateY },
-					scale: { x: matrix.scaleX, y: matrix.scaleY },
-					resizeType: this.resizeType,
-				};
 			} else {
 				if (item instanceof Sticker && (isWidth || isHeight)) {
 					translation[item.getId()] = {
