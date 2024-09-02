@@ -24,7 +24,7 @@ export class Keyboard {
 		this.isAlt = event.altKey;
 		this.isCtrl = event.ctrlKey;
 		this.isCmd = event.metaKey;
-		if (!this.isCmd || event.key === "Meta") {
+		if (!this.isCmd || event.key === "Meta" || event.key === "Control") {
 			this.isCtrl = false;
 			this.isCmd = false;
 		}
