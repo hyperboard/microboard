@@ -19,9 +19,9 @@ import { Point } from "../../Point";
 
 // by proto-arrows https://github.com/krismuniz/proto-arrows/blob/cdfd0a1ef35342362f619c8f21e385aa3d67725e/src/path.ts
 const config = {
-	controlPointOffsetRate: 0.75,
-	minLengthForBorder: 50,
-	normalControlLength: 50,
+	controlPointOffsetRate: 0.6,
+	minLengthForBorder: 30,
+	normalControlLength: 100,
 	flip: false,
 };
 
@@ -120,28 +120,12 @@ function calculatePoint(
 		}
 	}
 
-	const distance = Math.sqrt(
-		(point.x - prevPoint.x) ** 2 + (point.y - prevPoint.y) ** 2,
-	);
-	let distanceMultiplier = distance / 25;
-
-	// Apply min and max constraints to the multiplier
-	const minMultiplier = 1; // Minimum multiplier value
-	const maxMultiplier = 5; // Maximum multiplier value
-	distanceMultiplier = Math.max(
-		minMultiplier,
-		Math.min(maxMultiplier, distanceMultiplier),
-	);
-
-	const adjustedControlLength =
-		config.normalControlLength * distanceMultiplier;
-
 	return {
 		control: new Point(
 			normal.projectionPoint.x -
-				normal.normalPoint.x * adjustedControlLength * invertCoff,
+				normal.normalPoint.x * config.normalControlLength * invertCoff,
 			normal.projectionPoint.y -
-				normal.normalPoint.y * adjustedControlLength * invertCoff,
+				normal.normalPoint.y * config.normalControlLength * invertCoff,
 		),
 		point: new Point(
 			normal.projectionPoint.x - normal.normalPoint.x * invertCoff,
