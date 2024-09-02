@@ -30,4 +30,12 @@ export class Point {
 	equal(point: Point): boolean {
 		return this.x === point.x && this.y === point.y;
 	}
+
+	barelyEqual(point: Point): boolean {
+		return (
+			this.equal(point) ||
+			(Math.abs(this.x - point.x) < 0.01 &&
+				Math.abs(this.y - point.y) < 0.01)
+		);
+	}
 }

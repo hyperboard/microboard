@@ -38,7 +38,6 @@ function createSticker(id: string, data: ItemData, board: Board): Sticker {
 		throw new Error("Invalid data for Sticker");
 	}
 	const sticker = new Sticker(board.events).setId(id).deserialize(data);
-	board.handleNesting(sticker);
 	return sticker;
 }
 
@@ -47,7 +46,6 @@ function createShape(id: string, data: ItemData, board: Board): Shape {
 		throw new Error("Invalid data for Shape");
 	}
 	const shape = new Shape(board.events).setId(id).deserialize(data);
-	board.handleNesting(shape);
 	return shape;
 }
 
@@ -58,7 +56,6 @@ function createRichText(id: string, data: ItemData, board: Board): RichText {
 	const richText = new RichText(new Mbr(), id, board.events)
 		.setId(id)
 		.deserialize(data);
-	board.handleNesting(richText);
 	return richText;
 }
 
@@ -69,7 +66,6 @@ function createConnector(id: string, data: ItemData, board: Board): Connector {
 	const connector = new Connector(board, board.events)
 		.setId(id)
 		.deserialize(data);
-	board.handleNesting(connector);
 	return connector;
 }
 
@@ -80,7 +76,6 @@ function createImage(id: string, data: ItemData, board: Board): ImageItem {
 	const image = new ImageItem(data, board.events, id)
 		.setId(id)
 		.deserialize(data);
-	board.handleNesting(image);
 	return image;
 }
 
@@ -89,7 +84,6 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
 		throw new Error("Invalid data for Drawing");
 	}
 	const drawing = new Drawing([], board.events).setId(id).deserialize(data);
-	board.handleNesting(drawing);
 	return drawing;
 }
 

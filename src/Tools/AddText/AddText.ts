@@ -61,7 +61,6 @@ export class AddText extends BoardTool {
 			richText.editor.setSelectionHorisontalAlignment("left");
 			richText.insideOf = richText.itemType;
 			const text = board.add(richText);
-
 			this.board.selection.removeAll();
 			this.board.selection.add(text);
 			this.board.selection.editText();

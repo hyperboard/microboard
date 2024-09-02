@@ -4,6 +4,7 @@ import { getStraightLine } from "./getStraightLine";
 import { getCurvedLine } from "./getCurvedLine";
 import { getOrthogonalLine } from "./getOrthogonalLine";
 import { ConnectorLineStyle } from "../Connector";
+import { Pointer } from "../Pointers/Pointers";
 
 export function getLine(
 	lineStyle: ConnectorLineStyle,

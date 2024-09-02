@@ -3,8 +3,8 @@ import { Line } from "Board/Items/Line";
 import { Path, Paths } from "Board/Items/Path";
 import { Point } from "Board/Items/Point";
 
-interface Pointer {
-	name: string;
+export interface Pointer {
+	name: ConnectorPointerStyle;
 	path: Path | Paths;
 	start: Point;
 	end: Point;
