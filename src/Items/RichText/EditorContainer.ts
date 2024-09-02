@@ -652,29 +652,10 @@ export class EditorContainer {
 		if (!selection) {
 			return;
 		}
-		console.log(this.getEachNodeInSelectionStyles(), "textNodes");
-		// const nodes = Array.from(
-		// 	Editor.nodes(editor, {
-		// 		at: Editor.unhangRange(editor, selection),
-		// 		match: node =>
-		// 			!Editor.isEditor(node) &&
-		// 			Element.isElement(node) &&
-		// 			node.type === "paragraph",
-		// 	}),
-		// );
+
 		const nodes = this.getAllTextNodesInSelection();
-		const styles: TextStyle[][] = nodes
-			// .flatMap(nodeEntry => {
-			// 	const [node, path] = nodeEntry;
-			// 	const { children } = node;
-			// 	const filteredChildren = children.filter((child, index) => {
-			// 		const childPath = path.concat(index);
-			// 		const childRange = Editor.range(editor, childPath);
-			// 		return Range.intersection(selection, childRange) !== null;
-			// 	});
-			// 	return filteredChildren;
-			// })
-			.reduce((acc: TextStyle[][], node: TextNode) => {
+		const styles: TextStyle[][] = nodes.reduce(
+			(acc: TextStyle[][], node: TextNode) => {
 				const styles: TextStyle[] = [];
 				if (node.bold) {
 					styles.push("bold");
@@ -693,7 +674,9 @@ export class EditorContainer {
 				}
 				acc.push(styles);
 				return acc;
-			}, []);
+			},
+			[],
+		);
 
 		return findCommonStrings(styles);
 	}
