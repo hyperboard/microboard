@@ -2,6 +2,9 @@ import { Board } from "Board/Board";
 import { ImageItem } from "./Image";
 import { calculatePosition } from "./calculatePosition";
 import { prepareImage } from "./ImageHelpers";
+import * as PDFJS from "pdfjs-dist";
+PDFJS.GlobalWorkerOptions.workerSrc =
+	"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs";
 
 export function uploadImage(file: File, board: Board) {
 	const reader = new FileReader();
@@ -11,7 +14,7 @@ export function uploadImage(file: File, board: Board) {
 			const typedarray = new Uint8Array(
 				event.target?.result as ArrayBufferLike,
 			);
-			pdfjsLib.getDocument({ data: typedarray }).promise.then(
+			PDFJS.getDocument({ data: typedarray }).promise.then(
 				pdf => {
 					const maxPages = pdf.numPages;
 					let pagesRendered = 0;
