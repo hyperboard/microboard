@@ -95,6 +95,7 @@ export class Select extends Tool {
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
 			this.board.selection.transformationRenderBlock = true;
+			this.board.selection.quickAddButtons.clear();
 			return false;
 		}
 
