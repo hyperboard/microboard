@@ -462,6 +462,8 @@ export class EditorContainer {
 				return;
 			}
 
+			ReactEditor.focus(this.editor);
+
 			this.toggleMark(style);
 		});
 		this.emitMethodOps();
@@ -574,6 +576,17 @@ export class EditorContainer {
 		Transforms.setNodes(editor, {
 			horisontalAlignment: horisontalAlignment,
 		});
+	}
+
+	setSelectionVerticalAlignment(selectionContext?: string): void {
+		const editor = this.editor;
+		if (!editor) {
+			throw new Error("Editor is not initialized");
+		}
+
+		if (selectionContext === "EditTextUnderPointer") {
+			ReactEditor.focus(editor);
+		}
 	}
 
 	isBlockActive(format: BlockType): boolean {

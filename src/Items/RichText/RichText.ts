@@ -611,7 +611,7 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionFontColor(format);
+		this.editor.setSelectionFontColor(format, selectionContext);
 		this.updateElement();
 	}
 
@@ -636,10 +636,10 @@ export class RichText extends Mbr implements Geometry {
 			this.selectWholeText();
 		}
 		if (this.isInShape) {
-			this.editor.setSelectionFontSize(fontSize);
+			this.editor.setSelectionFontSize(fontSize, selectionContext);
 		} else {
 			const scaledFontSize = fontSize / this.getScale();
-			this.editor.setSelectionFontSize(scaledFontSize);
+			this.editor.setSelectionFontSize(scaledFontSize, selectionContext);
 		}
 		this.updateElement();
 	}
@@ -651,8 +651,12 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionFontHighlight(format);
+		this.editor.setSelectionFontHighlight(format, selectionContext);
 		this.updateElement();
+	}
+
+	setSelectionVerticalAlignment(selectionContext?: SelectionContext): void {
+		this.editor.setSelectionVerticalAlignment(selectionContext);
 	}
 
 	setSelectionHorisontalAlignment(

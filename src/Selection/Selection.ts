@@ -1124,6 +1124,24 @@ export class Selection {
 			item: this.items.ids(),
 			verticalAlignment,
 		});
+
+		if (this.items.isSingle()) {
+			const item = this.items.getSingle();
+			if (item instanceof RichText) {
+				item.setSelectionVerticalAlignment(this.context);
+			}
+			if (
+				item &&
+				(item.itemType === "Shape" ||
+					item.itemType === "Sticker" ||
+					item.itemType === "Connector" ||
+					item.itemType === "Frame")
+			) {
+				(
+					item as Shape | Sticker | Connector | Frame
+				).text.setSelectionVerticalAlignment(this.context);
+			}
+		}
 	}
 
 	autosizeEnable(): void {
