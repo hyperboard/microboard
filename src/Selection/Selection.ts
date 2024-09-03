@@ -858,43 +858,15 @@ export class Selection {
 		});
 	}
 
-	setFontSize(size: number): void {
-		const fontSize = toFiniteNumber(size);
-		const single = this.items.getSingle();
-		if (single) {
-			// TODO add getTextEditor method to each item to avoid instanceof checks
-			if (single instanceof RichText) {
-				single.setSelectionFontSize(fontSize, this.getContext());
-			} else if (
-				single instanceof Shape ||
-				single instanceof Sticker ||
-				single instanceof Frame
-			) {
-				single.text.setSelectionFontSize(fontSize, this.getContext());
-			} else if (single instanceof Connector) {
-				localStorage.setItem("lastConnectorTextSize", `${fontSize}`);
-				single.text.setSelectionFontSize(fontSize, this.getContext());
-			}
-		} else if (this.items.isItemTypes(["Sticker"])) {
-			this.items
-				.list()
-				.forEach(x =>
-					x.text.setSelectionFontSize(fontSize, this.getContext()),
-				);
-		} else {
-			// this.emit({
-			// 	class: "RichText",
-			// 	method: "setFontSize",
-			// 	item: this.items.ids(),
-			// 	fontSize,
-			// });
-
-			this.items.list().forEach(item => {
-				if (item instanceof RichText) {
-					item.setSelectionFontSize(fontSize);
-				}
-			});
-		}
+	setFontSize(size: number | "auto"): void {
+		const fontSize = size === "auto" ? size : toFiniteNumber(size);
+		this.emit({
+			class: "RichText",
+			method: "setFontSize",
+			item: this.items.ids(),
+			fontSize,
+			context: this.getContext(),
+		});
 	}
 
 	setFontStyle(fontStyle: TextStyle): void {
@@ -1169,20 +1141,6 @@ export class Selection {
 				).text.setEditorFocus(this.context);
 			}
 		}
-	}
-
-	autosizeEnable(): void {
-		this.items
-			.getItemsByItemTypes(["Sticker"])
-			.forEach(sticker => sticker.text.autosizeEnable());
-	}
-
-	autosizeDisable(): void {
-		this.items.getItemsByItemTypes(["Sticker"]).forEach(sticker => {
-			if (sticker.text.getAutosize()) {
-				sticker.text.autosizeDisable();
-			}
-		});
 	}
 
 	removeFromBoard(): void {

@@ -490,8 +490,16 @@ export class RichText extends Mbr implements Geometry {
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
 				this.setMaxWidth(op.maxWidth);
+			} else if (op.method === "setFontSize") {
+				if (op.fontSize === "auto") {
+					this.autosizeEnable();
+				} else {
+					this.autosizeDisable();
+					this.setSelectionFontSize(op.fontSize, op.context);
+				}
+			} else {
+				this.editor.applyRichTextOp(op);
 			}
-			this.editor.applyRichTextOp(op);
 			this.updateElement();
 		} else {
 			return;
@@ -964,15 +972,11 @@ export class RichText extends Mbr implements Geometry {
 	autosizeEnable(): void {
 		this.autoSize = true;
 		this.isInShape = false;
-		this.updateElement();
-		this.subject.publish(this);
 	}
 
 	autosizeDisable(): void {
 		this.autoSize = false;
 		this.isInShape = true;
-		this.updateElement();
-		this.subject.publish(this);
 	}
 
 	getAutosize(): boolean {
