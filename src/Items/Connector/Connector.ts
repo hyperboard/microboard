@@ -97,7 +97,6 @@ export class Connector {
 	);
 	transformationRenderBlock?: boolean = undefined;
 	private optionalFindItemFn?: FindItemFn;
-
 	constructor(
 		private board: Board,
 		private events?: Events,
@@ -105,16 +104,6 @@ export class Connector {
 		private endPoint: ControlPoint = new BoardPoint(),
 	) {
 		this.transformation.subject.subscribe((_, op) => {
-			if (op.method === "transformMany") {
-				const itemOp = op.items[this.id];
-				if (itemOp.method === "scaleByTranslateBy") {
-					this.transformation.applyScaleTo(
-						itemOp.scale.x,
-						-itemOp.scale.y,
-					);
-				}
-			}
-
 			this.transformBoardPoints();
 			this.updatePaths();
 			this.subject.publish(this);
@@ -765,35 +754,14 @@ export class Connector {
 	}
 
 	private transformBoardPoints(): void {
-		// if (
-		// 	this.startPoint.pointType !== "Board" ||
-		// 	this.endPoint.pointType !== "Board"
-		// ) {
-		// 	return;
-		// }
+		const previous = this.transformation.previous.copy();
+		previous.invert();
+		const delta = previous.multiplyByMatrix(
+			this.transformation.matrix.copy(),
+		);
 
-		const deltaX = this.endPoint.x - this.startPoint.x;
-		const deltaY = this.endPoint.y - this.startPoint.y;
-
-		// if (this.startPoint.pointType === "Board") {
-		this.startPoint = new BoardPoint();
-		this.startPoint.transform(this.transformation.matrix);
-		// } else if (this.startPoint instanceof FixedPoint) {
-		// 	const oldPoint = this.startPoint;
-		// 	this.startPoint = new BoardPoint();
-		// 	this.startPoint.transform(this.transformation.matrix);
-		// 	this.startPoint = new FixedPoint(oldPoint.item, oldPoint.relativePoint.copy())
-		// }
-
-		// if (this.endPoint.pointType === "Board") {
-		this.endPoint = new BoardPoint(deltaX, deltaY);
-		this.endPoint.transform(this.transformation.matrix);
-		// } else if (this.endPoint instanceof FixedPoint) {
-		// 	const oldPoint = this.endPoint;
-		// 	this.endPoint = new BoardPoint();
-		// 	this.endPoint.transform(this.transformation.matrix);
-		// 	this.endPoint = new FixedPoint(oldPoint.item, oldPoint.relativePoint.copy())
-		// }
+		this.startPoint.transform(delta);
+		this.endPoint.transform(delta);
 	}
 
 	private updatePaths(): void {
