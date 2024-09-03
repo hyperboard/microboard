@@ -229,7 +229,6 @@ export class RichText extends Mbr implements Geometry {
 		if (this.autoSize) {
 			this.calcAutoSize();
 		} else {
-			// this.calcAutoSize(false);
 			this.blockNodes = getBlockNodes(
 				this.getTextForNodes(),
 				this.getMaxWidth(),
@@ -261,6 +260,9 @@ export class RichText extends Mbr implements Geometry {
 		const containerHeight = container.getHeight();
 		const width = this.container.getWidth();
 		const maxWidth = width;
+		console.log("unscaled", this.getFontSizeUnscaled());
+		console.log("scaled", this.getFontSize());
+		console.log("autoscale < 1", this.autoSizeScale < 1);
 		const blockNodes =
 			this.insideOf !== "Sticker"
 				? getBlockNodes(text, maxWidth, this.insideOf)
@@ -269,6 +271,8 @@ export class RichText extends Mbr implements Geometry {
 						text,
 						containerWidth / this.autoSizeScale,
 						this.insideOf,
+						containerWidth,
+						containerHeight,
 				  )
 				: getBlockNodes(
 						text,
@@ -490,8 +494,16 @@ export class RichText extends Mbr implements Geometry {
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
 				this.setMaxWidth(op.maxWidth);
+			} else if (op.method === "setFontSize") {
+				if (op.fontSize === "auto") {
+					this.autosizeEnable();
+				} else {
+					this.autosizeDisable();
+					this.setSelectionFontSize(op.fontSize, op.context);
+				}
+			} else {
+				this.editor.applyRichTextOp(op);
 			}
-			this.editor.applyRichTextOp(op);
 			this.updateElement();
 		} else {
 			return;
@@ -718,6 +730,12 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	getFontSizeUnscaled(): number {
+		const marks = this.editor.getSelectionMarks();
+		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
+		return fontSize;
+	}
+
 	getFontHighlight(): string {
 		const marks = this.editor.getSelectionMarks();
 		return marks?.fontHighlight ?? this.initialTextStyles.fontHighlight;
@@ -903,12 +921,16 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
+				console.log("r", this.autoSizeScale);
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();
 		}
+		const container = this.getTransformedContainer().getMbr();
+		container.borderColor = "red";
+		container.render(context);
 	}
 
 	clearText(): void {
@@ -964,15 +986,11 @@ export class RichText extends Mbr implements Geometry {
 	autosizeEnable(): void {
 		this.autoSize = true;
 		this.isInShape = false;
-		this.updateElement();
-		this.subject.publish(this);
 	}
 
 	autosizeDisable(): void {
 		this.autoSize = false;
 		this.isInShape = true;
-		this.updateElement();
-		this.subject.publish(this);
 	}
 
 	getAutosize(): boolean {
