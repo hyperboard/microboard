@@ -1155,7 +1155,7 @@ export class Selection {
 		if (this.items.isSingle()) {
 			const item = this.items.getSingle();
 			if (item instanceof RichText) {
-				item.setSelectionVerticalAlignment(this.context);
+				item.setEditorFocus(this.context);
 			}
 			if (
 				item &&
@@ -1166,7 +1166,7 @@ export class Selection {
 			) {
 				(
 					item as Shape | Sticker | Connector | Frame
-				).text.setSelectionVerticalAlignment(this.context);
+				).text.setEditorFocus(this.context);
 			}
 		}
 	}

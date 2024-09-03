@@ -655,8 +655,8 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
-	setSelectionVerticalAlignment(selectionContext?: SelectionContext): void {
-		this.editor.setSelectionVerticalAlignment(selectionContext);
+	setEditorFocus(selectionContext?: SelectionContext): void {
+		this.editor.setEditorFocus(selectionContext);
 	}
 
 	setSelectionHorisontalAlignment(

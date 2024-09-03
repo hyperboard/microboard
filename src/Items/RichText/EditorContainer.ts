@@ -578,7 +578,7 @@ export class EditorContainer {
 		});
 	}
 
-	setSelectionVerticalAlignment(selectionContext?: string): void {
+	setEditorFocus(selectionContext?: string): void {
 		const editor = this.editor;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
