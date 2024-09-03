@@ -193,25 +193,6 @@ export class Frame implements Geometry {
 		return this.path instanceof Path && this.path.isClosed();
 	}
 
-	// setNameSerial(existingFrames: Frame[]): void {
-	// 	this.text.clearText();
-	// 	this.text.editorTransforms.insertText(
-	// 		this.text.editor.editor,
-	// 		`Frame ${this.getMaxNumber(existingFrames) + 1}`,
-	// 	);
-	// }
-
-	static getMaxNumber(existingFrames: Frame[]) {
-		const existingNames = existingFrames.map(frame =>
-			frame.text.getTextString(),
-		);
-		return existingNames
-			.map(name => name.match(/^Frame (\d+)$/))
-			.filter(match => match !== null)
-			.map(match => parseInt(match[1], 10))
-			.reduce((max, num) => Math.max(max, num), 0);
-	}
-
 	setId(id: string): this {
 		this.id = id;
 		this.text.setId(id);

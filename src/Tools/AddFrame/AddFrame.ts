@@ -11,7 +11,7 @@ export class AddFrame extends BoardTool {
 	frame = new Frame(
 		undefined,
 		"",
-		`Frame ${Frame.getMaxNumber(this.board.items.listFrames()) + 1}`,
+		`Frame ${this.board.getMaxFrameSerial() + 1}`,
 	);
 	mbr = new Mbr();
 	isDown = false;

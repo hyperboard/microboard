@@ -436,44 +436,71 @@ export class Selection {
 		);
 	}
 
+	private handleItemCopy(
+		item: Item,
+		copiedItemsMap: { [key: string]: ItemData },
+	): void {
+		const serializedData = item.serialize();
+		const zIndex = this.board.items.index.getZIndex(item);
+		// If the item is a Connector and the connected items are not part of selection,
+		// change the control points to BoardPoint.
+		if (item.itemType === "Connector") {
+			const connector = item as Connector;
+			const startPoint = connector.getStartPoint();
+			const endPoint = connector.getEndPoint();
+
+			// If the start or end point items are not in the selection,
+			// change them to BoardPoints with the current absolute position.
+			if (
+				startPoint.pointType !== "Board" &&
+				!this.items.findById(startPoint.item.getId())
+			) {
+				const newStartPointPos = connector.getStartPoint();
+				serializedData.startPoint = new BoardPoint(
+					newStartPointPos.x,
+					newStartPointPos.y,
+				).serialize();
+			}
+
+			if (
+				endPoint.pointType !== "Board" &&
+				!this.items.findById(endPoint.item.getId())
+			) {
+				const newEndPointPos = connector.getEndPoint();
+				serializedData.endPoint = new BoardPoint(
+					newEndPointPos.x,
+					newEndPointPos.y,
+				).serialize();
+			}
+		}
+		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
+	}
+
 	copy(): { [key: string]: ItemData } {
 		const copiedItemsMap: { [key: string]: ItemData } = {};
 		this.list().forEach(item => {
-			const serializedData = item.serialize();
-			const zIndex = this.board.items.index.getZIndex(item);
-			// If the item is a Connector and the connected items are not part of selection,
-			// change the control points to BoardPoint.
-			if (item.itemType === "Connector") {
-				const connector = item as Connector;
-				const startPoint = connector.getStartPoint();
-				const endPoint = connector.getEndPoint();
-
-				// If the start or end point items are not in the selection,
-				// change them to BoardPoints with the current absolute position.
-				if (
-					startPoint.pointType !== "Board" &&
-					!this.items.findById(startPoint.item.getId())
-				) {
-					const newStartPointPos = connector.getStartPoint();
-					serializedData.startPoint = new BoardPoint(
-						newStartPointPos.x,
-						newStartPointPos.y,
-					).serialize();
-				}
-
-				if (
-					endPoint.pointType !== "Board" &&
-					!this.items.findById(endPoint.item.getId())
-				) {
-					const newEndPointPos = connector.getEndPoint();
-					serializedData.endPoint = new BoardPoint(
-						newEndPointPos.x,
-						newEndPointPos.y,
-					).serialize();
-				}
-			}
-			copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
+			this.handleItemCopy(item, copiedItemsMap);
 		});
+
+		this.list()
+			.flatMap(item => {
+				if (item instanceof Frame) {
+					return item.getChildrenIds();
+				}
+				return [];
+			})
+			.forEach(id => {
+				if (!(id in copiedItemsMap)) {
+					const childItem = this.board.items.getById(id);
+					if (!childItem) {
+						throw new Error(
+							`Didn't find item with ${id} while copying`,
+						);
+					}
+					this.handleItemCopy(childItem, copiedItemsMap);
+				}
+			});
+
 		return copiedItemsMap;
 	}
 

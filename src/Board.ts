@@ -1,4 +1,12 @@
-import { Frame, Item, ItemData, Matrix, Mbr, ConnectorData } from "./Items";
+import {
+	Frame,
+	Item,
+	ItemData,
+	Matrix,
+	Mbr,
+	ConnectorData,
+	RichText,
+} from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
@@ -620,16 +628,6 @@ export class Board {
 			// Generate new IDs for all the items being pasted
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
-			if (itemsMap[itemId].itemType === "Frame") {
-				itemsMap[itemId].children.forEach(childId => {
-					if (!(childId in itemsMap)) {
-						const child = this.items.getById(childId);
-						itemsMap[childId] = child!.serialize();
-						const newChildId = this.getNewItemId();
-						newItemIdMap[childId] = newChildId;
-					}
-				});
-			}
 		}
 
 		// Replace connector
@@ -703,17 +701,12 @@ export class Board {
 			} else if (itemData.transformation) {
 				itemData.transformation.translateX = translateX - minX + x;
 				itemData.transformation.translateY = translateY - minY + y;
-				if (itemData.itemType === "Frame") {
-					// handle new id for children
-					itemData.children = itemData.children
-						.map(childId =>
-							// newItemIdMap[childId]
-							newItemIdMap[childId] !== undefined
-								? newItemIdMap[childId]
-								: "",
-						)
-						.filter(childId => childId !== "");
-				}
+			}
+			if (itemData.itemType === "Frame") {
+				// handle new id for children
+				itemData.children = itemData.children.map(
+					childId => newItemIdMap[childId],
+				);
 			}
 			newMap[newItemId] = itemData;
 		}
@@ -746,16 +739,6 @@ export class Board {
 		for (const itemId in itemsMap) {
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
-			if (itemsMap[itemId].itemType === "Frame") {
-				itemsMap[itemId].children.forEach(childId => {
-					if (!(childId in itemsMap)) {
-						const child = this.items.getById(childId);
-						itemsMap[childId] = child!.serialize();
-						const newChildId = this.getNewItemId();
-						newItemIdMap[childId] = newChildId;
-					}
-				});
-			}
 		}
 
 		for (const itemId in itemsMap) {
@@ -821,16 +804,12 @@ export class Board {
 				itemData.transformation.translateX =
 					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
-				if (itemData.itemType === "Frame") {
-					// handle new id for children
-					itemData.children = itemData.children
-						.map(childId =>
-							newItemIdMap[childId] !== undefined
-								? newItemIdMap[childId]
-								: "",
-						)
-						.filter(childId => childId !== "");
-				}
+			}
+			if (itemData.itemType === "Frame") {
+				// handle new id for children
+				itemData.children = itemData.children.map(
+					childId => newItemIdMap[childId],
+				);
 			}
 
 			newMap[newItemId] = itemData;
@@ -860,14 +839,14 @@ export class Board {
 			if (!data) {
 				throw new Error("Pasting itemId doesn't exist in itemsMap");
 			}
+			if (data.itemType === "Frame") {
+				data.text.placeholderText = `Frame ${
+					this.getMaxFrameSerial() + 1
+				}`;
+			}
+
 			const item = this.createItem(itemId, data);
 			this.index.insert(item);
-			if (
-				item instanceof Frame &&
-				item.text.getTextString().match(/^Frame (\d+)$/)
-			) {
-				item.setNameSerial(this.items.listFrames());
-			}
 			items.push(item);
 		};
 
@@ -885,6 +864,7 @@ export class Board {
 			}
 		});
 
+		items.forEach(item => this.handleNesting(item));
 		this.selection.removeAll();
 		if (select) {
 			this.selection.add(items);
@@ -913,6 +893,21 @@ export class Board {
 				this.camera.getMbr().getCenter().y,
 			);
 		}
+	}
+
+	getMaxFrameSerial(): number {
+		const existingNames = this.items
+			.listFrames()
+			.map(frame =>
+				frame.text.getTextString().length === 0
+					? frame.text.placeholderText
+					: frame.text.getTextString(),
+			);
+		return existingNames
+			.map(name => name.match(/^Frame (\d+)$/))
+			.filter(match => match !== null)
+			.map(match => parseInt(match[1], 10))
+			.reduce((max, num) => Math.max(max, num), 0);
 	}
 }
 
