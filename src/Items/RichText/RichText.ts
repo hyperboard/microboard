@@ -1005,7 +1005,7 @@ export class RichText extends Mbr implements Geometry {
 	autosizeDisable(): void {
 		this.autoSize = false;
 		this.autoSizeScale = 1;
-		if (this.insideOf !== "RichText") {
+		if (this.insideOf && this.insideOf !== "RichText") {
 			this.isInShape = true;
 		}
 	}
