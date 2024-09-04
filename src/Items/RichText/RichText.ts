@@ -883,6 +883,7 @@ export class RichText extends Mbr implements Geometry {
 					? undefined
 					: this.transformation.serialize(),
 			insideOf: this.insideOf ? this.insideOf : this.itemType,
+			realSize: this.autoSize ? "auto" : this.getFontSize(),
 		};
 	}
 
@@ -904,6 +905,11 @@ export class RichText extends Mbr implements Geometry {
 		}
 		if (data.placeholderText) {
 			this.placeholderText = data.placeholderText;
+		}
+		if (data.realSize === "auto") {
+			this.autosizeEnable();
+		} else {
+			this.autosizeDisable();
 		}
 		this.insideOf = data.insideOf;
 		this.updateElement();
