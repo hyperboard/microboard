@@ -493,6 +493,7 @@ export class RichText extends Mbr implements Geometry {
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
 					this.autosizeEnable();
+					this.setSelectionFontSize(14, op.context);
 				} else {
 					this.autosizeDisable();
 					this.setSelectionFontSize(op.fontSize, op.context);
@@ -976,6 +977,7 @@ export class RichText extends Mbr implements Geometry {
 
 	autosizeDisable(): void {
 		this.autoSize = false;
+		this.autoSizeScale = 1;
 		this.isInShape = true;
 	}
 
