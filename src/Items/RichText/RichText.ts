@@ -493,10 +493,10 @@ export class RichText extends Mbr implements Geometry {
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
 					this.autosizeEnable();
-					this.setSelectionFontSize(14, op.context);
+					this.applySelectionFontSize(14, op.context);
 				} else {
 					this.autosizeDisable();
-					this.setSelectionFontSize(op.fontSize, op.context);
+					this.applySelectionFontSize(op.fontSize, op.context);
 				}
 			} else {
 				this.editor.applyRichTextOp(op);
@@ -634,6 +634,27 @@ export class RichText extends Mbr implements Geometry {
 
 	setSelectionFontFamily(fontFamily: string): void {
 		this.editor.setSelectionFontFamily(fontFamily);
+		this.updateElement();
+	}
+
+	applySelectionFontSize(
+		fontSize: number,
+		selectionContext?: SelectionContext,
+	): void {
+		if (selectionContext === "EditUnderPointer") {
+			this.selectWholeText();
+		}
+		this.shouldEmit = false;
+		if (this.isInShape) {
+			this.editor.applySelectionFontSize(fontSize, selectionContext);
+		} else {
+			const scaledFontSize = fontSize / this.getScale();
+			this.editor.applySelectionFontSize(
+				scaledFontSize,
+				selectionContext,
+			);
+		}
+		this.shouldEmit = true;
 		this.updateElement();
 	}
 
@@ -978,7 +999,9 @@ export class RichText extends Mbr implements Geometry {
 	autosizeDisable(): void {
 		this.autoSize = false;
 		this.autoSizeScale = 1;
-		this.isInShape = true;
+		if (this.insideOf !== "RichText") {
+			this.isInShape = true;
+		}
 	}
 
 	getAutosize(): boolean {
