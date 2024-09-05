@@ -103,7 +103,7 @@ export class Connector {
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
 	) {
-		this.transformation.subject.subscribe((_, op) => {
+		this.transformation.subject.subscribe(() => {
 			this.transformBoardPoints();
 			this.updatePaths();
 			this.subject.publish(this);
@@ -754,14 +754,26 @@ export class Connector {
 	}
 
 	private transformBoardPoints(): void {
+		if (
+			this.startPoint.pointType !== "Board" ||
+			this.endPoint.pointType !== "Board"
+		) {
+			return;
+		}
+
 		const previous = this.transformation.previous.copy();
 		previous.invert();
 		const delta = previous.multiplyByMatrix(
 			this.transformation.matrix.copy(),
 		);
 
-		this.startPoint.transform(delta);
-		this.endPoint.transform(delta);
+		const startPoint = new BoardPoint(this.startPoint.x, this.startPoint.y);
+		startPoint.transform(delta);
+		this.startPoint = startPoint;
+
+		const endPoint = new BoardPoint(this.endPoint.x, this.endPoint.y);
+		endPoint.transform(delta);
+		this.endPoint = endPoint;
 	}
 
 	private updatePaths(): void {
