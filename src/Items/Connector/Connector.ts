@@ -538,6 +538,13 @@ export class Connector {
 		return this.lines.getNormal(point);
 	}
 
+	isConnected() {
+		return (
+			this.startPoint.pointType !== "Board" &&
+			this.endPoint.pointType !== "Board"
+		);
+	}
+
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;

@@ -117,14 +117,25 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
-		this.items.add(value);
-		if (Array.isArray(value)) {
-			for (const item of value) {
-				item.subject.subscribe(this.itemObserver);
+		const items = Array.isArray(value) ? value : [value];
+
+		const filteredItems = items.filter(i => {
+			if (!(i instanceof Connector)) {
+				return true;
 			}
-		} else {
-			value.subject.subscribe(this.itemObserver);
+
+			if (i instanceof Connector && items.length === 1) {
+				return true;
+			}
+
+			return i.isConnected();
+		});
+
+		this.items.add(filteredItems);
+		for (const item of filteredItems) {
+			item.subject.subscribe(this.itemObserver);
 		}
+
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
 	}
