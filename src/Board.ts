@@ -864,7 +864,6 @@ export class Board {
 			}
 		});
 
-		items.forEach(item => this.handleNesting(item));
 		this.selection.removeAll();
 		if (select) {
 			this.selection.add(items);
