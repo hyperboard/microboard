@@ -1,10 +1,6 @@
 import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
-import {
-	BoardPoint,
-	ConnectorData,
-	ConnectorLineStyle,
-} from "Board/Items/Connector";
+import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
@@ -19,9 +15,7 @@ import {
 	Frame,
 	Item,
 	ItemData,
-	Matrix,
 	Mbr,
-	Point,
 	RichText,
 	Shape,
 	TransformationOperation,
@@ -29,10 +23,9 @@ import {
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
+import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
-import { ControlPointData } from "Board/Items/Connector/ControlPoint";
-import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -117,25 +110,14 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
-		const items = Array.isArray(value) ? value : [value];
-
-		const filteredItems = items.filter(i => {
-			if (!(i instanceof Connector)) {
-				return true;
+		this.items.add(value);
+		if (Array.isArray(value)) {
+			for (const item of value) {
+				item.subject.subscribe(this.itemObserver);
 			}
-
-			if (i instanceof Connector && items.length === 1) {
-				return true;
-			}
-
-			return i.isConnected();
-		});
-
-		this.items.add(filteredItems);
-		for (const item of filteredItems) {
-			item.subject.subscribe(this.itemObserver);
+		} else {
+			value.subject.subscribe(this.itemObserver);
 		}
-
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
 	}
