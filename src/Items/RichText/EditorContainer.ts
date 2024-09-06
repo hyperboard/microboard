@@ -449,22 +449,23 @@ export class EditorContainer {
 			const isAllNodesContainStyle = selectionStyles.every(styleArr =>
 				styleArr.includes(style),
 			);
+
 			const isSomeNodeContainStyle = selectionStyles.some(styleArr =>
 				styleArr.includes(style),
 			);
 
+			const isAllNodesNotContainStyle = selectionStyles.every(
+				styleArr => !styleArr.includes(style),
+			);
+
 			if (isAllNodesContainStyle) {
-				Editor.removeMark(this.editor, style);
+				Editor.addMark(this.editor, style, false);
 				return;
 			}
-			if (isSomeNodeContainStyle) {
+			if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
 				Editor.addMark(this.editor, style, true);
 				return;
 			}
-
-			ReactEditor.focus(this.editor);
-
-			this.toggleMark(style);
 		});
 		this.emitMethodOps();
 	}
