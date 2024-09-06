@@ -446,17 +446,13 @@ export class Items {
 		if (
 			underPointer.filter(item => item.itemType !== "Frame").length === 0
 		) {
-			const tolerated = this.index.getEnclosedOrCrossed(
-				x - size,
-				y - size,
-				x + size,
-				y + size,
+			const enclosed = this.index.getEnclosedOrCrossed(x, y, x, y);
+			const filteredEnclosed = enclosed.filter(
+				item => item.itemType !== "Frame",
 			);
-			const enclosed =
-				tolerated.filter(item => item.itemType !== "Frame").length <= 1
-					? tolerated
-					: this.index.getEnclosedOrCrossed(x, y, x, y);
-			const { nearest } = enclosed.reduce(
+			const newEnclosed =
+				filteredEnclosed.length > 0 ? filteredEnclosed : enclosed;
+			const { nearest } = newEnclosed.reduce(
 				(acc, item) => {
 					const distances = item
 						.getMbr()
@@ -475,9 +471,8 @@ export class Items {
 			);
 			return nearest ? [nearest] : [];
 		}
-		return underPointer.length === 1
-			? underPointer
-			: this.getUnderPoint(new Point(x, y));
+
+		return underPointer;
 	}
 
 	getNearPointer(
