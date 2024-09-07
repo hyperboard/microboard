@@ -92,7 +92,11 @@ export class ConnectorSnap {
 
 		if (this.isNearBorder(nearest)) {
 			this.snap.item = nearest;
-		} else if (hover && hover !== this.connector) {
+		} else if (
+			hover &&
+			hover !== this.connector &&
+			hover.itemType !== "Frame"
+		) {
 			this.snap.item = hover;
 		} else {
 			this.snap.item = null;
