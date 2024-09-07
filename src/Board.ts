@@ -31,6 +31,8 @@ import {
 	SELECTION_COLOR,
 } from "View/Tools/Selection";
 
+export type InterfaceType = "edit" | "view";
+
 export class Board {
 	events: Events | undefined;
 	readonly selection: Selection;
@@ -41,6 +43,7 @@ export class Board {
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
+	interfaceType: InterfaceType = "edit";
 
 	constructor(private boardId = "") {
 		this.selection = new Selection(this, this.events);
