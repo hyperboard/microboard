@@ -34,7 +34,7 @@ function isChangingDirection(
 	neighbor: Node,
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint,
-): boolean {
+): number {
 	const dirMap: Record<ConnectedPointerDirection, Direction> = {
 		top: "vertical",
 		bottom: "vertical",
@@ -46,17 +46,19 @@ function isChangingDirection(
 		newStart && current.point.barelyEqual(newStart)
 			? dirMap[getPointerDirection(newStart)!]
 			: getDirection(current.point, current.parent?.point);
-	const goingDirection =
-		newEnd && neighbor.point.barelyEqual(newEnd)
-			? dirMap[getPointerDirection(newEnd)!]
-			: getDirection(current.point, neighbor.point);
+	const goingDirection = getDirection(current.point, neighbor.point);
+	if (newEnd && neighbor.point.barelyEqual(newEnd)) {
+		const endDir = dirMap[getPointerDirection(newEnd)!];
+		if (goingDirection && endDir !== goingDirection) {
+			return 1 + isChangingDirection(current, neighbor, newStart);
+		}
+	}
 
-	return (
-		(comingDirection &&
-			goingDirection &&
-			comingDirection !== goingDirection) ||
-		false
-	);
+	return comingDirection &&
+		goingDirection &&
+		comingDirection !== goingDirection
+		? 1
+		: 0;
 }
 
 function heuristic(start: Node, end: Node): number {
@@ -710,9 +712,7 @@ function findPath(
 				neighbor,
 				newStart,
 				newEnd,
-			)
-				? 1
-				: 0;
+			);
 			const tentativeCost = current.costSoFar + 1;
 
 			if (
