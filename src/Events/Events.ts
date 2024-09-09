@@ -63,10 +63,8 @@ export function createEvents(board: Board, connection: Connection): Events {
 	function handleNewMessage(message: SocketMessage): void {
 		switch (message.type) {
 			case "ViewMode":
-				console.log("ENFORCE VIEW MODE", board, board.getBoardId());
 				board.interfaceType = "view";
 				board.tools.publish();
-
 				break;
 			case "BoardEvent":
 				addEvent(message.event);

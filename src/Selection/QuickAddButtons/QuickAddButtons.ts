@@ -221,7 +221,7 @@ export function getQuickAddButtons(
 	}
 
 	function renderQuickAddButtons(): void {
-		if (!isMicroboard()) {
+		if (!isMicroboard() || board.interfaceType === "view") {
 			clear();
 			return;
 		}
