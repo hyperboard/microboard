@@ -290,6 +290,11 @@ export function getQuickAddButtons(
 					}
 					button.resetState();
 				};
+				button.ontouchmove = () => {
+					if (button.onmouseleave) {
+						button.onmouseleave(new MouseEvent("mouseleave"));
+					}
+				};
 
 				button.onmouseenter = () => {
 					const selectedItem = selection.items.getSingle();
@@ -306,6 +311,11 @@ export function getQuickAddButtons(
 
 				button.onmousedown = () => {
 					button.isMouseDown = true;
+				};
+				button.ontouchstart = () => {
+					if (button.onmousedown) {
+						button.onmousedown(new MouseEvent("mousedown"));
+					}
 				};
 
 				button.onclick = () => {
