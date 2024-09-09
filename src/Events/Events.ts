@@ -79,6 +79,14 @@ export function createEvents(board: Board, connection: Connection): Events {
 					log.insertEvents(events);
 					subject.publish(events);
 					latestServerOrder = events[events.length - 1].order;
+					if (
+						!board.camera.useSavedSnapshot(
+							board.getCameraSnapshot(),
+						)
+					) {
+						const itemsMbr = board.items.getMbr();
+						board.camera.zoomToFit(itemsMbr);
+					}
 				} else {
 					for (const event of events) {
 						addEvent(event);

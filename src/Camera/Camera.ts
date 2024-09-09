@@ -1,3 +1,4 @@
+import { Board } from "Board/Board";
 import { Matrix, Mbr, Point } from "Board/Items";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
@@ -29,13 +30,10 @@ export class Camera {
 	private previous: "pinch" | "pan" | null = null;
 	boardId = "";
 
-	constructor(private boardPointer = new Pointer(), matrixSnapshot?: Matrix) {
+	constructor(private boardPointer = new Pointer()) {
 		this.subject.subscribe((_camera: Camera) => {
 			this.saveMatrixSnapshot();
 		});
-		if (matrixSnapshot) {
-			this.useSavedSnapshot(matrixSnapshot);
-		}
 	}
 
 	getMbr(): Mbr {
@@ -144,8 +142,9 @@ export class Camera {
 		}
 	}
 
-	setBoardId(id: string): void {
+	setBoardId(id: string) {
 		this.boardId = id;
+		return this;
 	}
 
 	private applyMatrix(matrix: Matrix): void {

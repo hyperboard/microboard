@@ -38,7 +38,7 @@ export class Board {
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
-	readonly camera = new Camera(this.pointer, this.getCameraSnapshot());
+	readonly camera: Camera = new Camera(this.pointer);
 	private index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
@@ -488,6 +488,16 @@ export class Board {
 		} catch {
 			return undefined;
 		}
+	}
+
+	getItemsMbr() {
+		const items = this.items.listAll();
+		console.log("fitScreen", items.length);
+		if (items.length > 0) {
+			const rect = this.items.getMbr();
+			return rect;
+		}
+		return new Mbr();
 	}
 
 	getSnapshotFromCache(): Promise<BoardSnapshot | undefined> {
