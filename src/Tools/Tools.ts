@@ -13,6 +13,8 @@ import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
+import { Item, Point } from "Board/Items";
+import { ConnectedPointerDirection } from "Board/Items/Connector/Pointers";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -127,7 +129,11 @@ export class Tools extends ToolContext {
 		return this.tool instanceof AddText ? this.tool : undefined;
 	}
 
-	addConnector(clearSelection = false): void {
+	addConnector(
+		clearSelection = false,
+		itemToStart?: Item,
+		position?: Point,
+	): void {
 		if (this.board.interfaceType === "view") {
 			this.tool = new Navigate(this.board);
 			return;
@@ -135,7 +141,7 @@ export class Tools extends ToolContext {
 		if (this.getAddConnector() && !isIframe()) {
 			this.cancel();
 		} else {
-			this.tool = new AddConnector(this.board);
+			this.tool = new AddConnector(this.board, itemToStart, position);
 			if (clearSelection) {
 				this.board.selection.removeAll();
 			}

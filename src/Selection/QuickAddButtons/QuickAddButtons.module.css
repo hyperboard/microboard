@@ -1,0 +1,14 @@
+.quickAddButton {
+	position: absolute;
+	transform-origin: center center;
+	transform: translate(-50%, -50%);
+	z-index: 25;
+	padding: 3px;
+	background-color: rgb(71, 120, 245);
+	border-radius: 50%;
+	transition: transform 0.2s;
+}
+
+.quickAddButton:hover {
+	transform: translate(-50%, -50%) scale(2);
+}

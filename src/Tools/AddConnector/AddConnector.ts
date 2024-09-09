@@ -3,6 +3,7 @@ import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { BoardTool } from "../BoardTool";
 import { Board } from "Board/Board";
+import { Item, Point } from "Board/Items";
 
 export class AddConnector extends BoardTool {
 	connector: Connector | null = null;
@@ -14,9 +15,24 @@ export class AddConnector extends BoardTool {
 	isDoneSecondPoint = false;
 	isDown = false;
 
-	constructor(board: Board) {
+	constructor(board: Board, itemToStart?: Item, position?: Point) {
 		super(board);
 		this.setCursor();
+		if (itemToStart && position) {
+			this.isDown = true;
+			const closestPoint = this.snap.getClosestPointOnItem(
+				itemToStart,
+				position,
+			);
+			(this.lineStyle = "orthogonal"),
+				(this.connector = new Connector(
+					this.board,
+					undefined,
+					closestPoint,
+					closestPoint,
+					this.lineStyle,
+				));
+		}
 	}
 
 	setCursor(): void {

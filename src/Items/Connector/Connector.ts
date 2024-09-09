@@ -57,7 +57,6 @@ export class Connector {
 	private startPointerStyle: ConnectorPointerStyle = "None";
 	private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER;
 	private lineColor = CONNECTOR_COLOR;
-	private lineStyle: ConnectorLineStyle = "straight";
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
@@ -102,6 +101,7 @@ export class Connector {
 		private events?: Events,
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
+		private lineStyle: ConnectorLineStyle = "straight",
 	) {
 		this.transformation.subject.subscribe(() => {
 			this.transformBoardPoints();

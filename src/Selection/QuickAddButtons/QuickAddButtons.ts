@@ -4,6 +4,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "..";
 import { Board } from "Board/Board";
 import { isMicroboard } from "lib/isMicroboard";
+import styles from "./QuickAddButtons.module.css";
 
 export interface QuickAddButtons {
 	calculateQuickAddPosition: (
@@ -12,7 +13,9 @@ export interface QuickAddButtons {
 		connectorStartPoint: Point,
 	) => { newItem: Item; connectorData: ConnectorData };
 	clear: () => void;
-	getQuickButtonsPositions: (customMbr?: Mbr) => Point[] | undefined;
+	getQuickButtonsPositions: (
+		customMbr?: Mbr,
+	) => { positions: Point[]; item: Item } | undefined;
 	render: (context: DrawingContext) => void;
 	htmlButtons?: HTMLButtonElement[];
 	quickAddItems?: QuickAddItems;
@@ -24,12 +27,16 @@ export interface QuickAddItems {
 	connectorStartPoint: Point;
 	connectorEndPoint: Point;
 }
+export interface HTMLQuickAddButton extends HTMLButtonElement {
+	isMouseDown: boolean;
+	resetState: () => void;
+}
 
 export function getQuickAddButtons(
 	selection: Selection,
 	board: Board,
 ): QuickAddButtons {
-	let htmlButtons: HTMLButtonElement[] | undefined = undefined;
+	let htmlButtons: HTMLQuickAddButton[] | undefined = undefined;
 	let quickAddItems: QuickAddItems | undefined = undefined;
 
 	function calculateQuickAddPosition(
@@ -67,11 +74,14 @@ export function getQuickAddButtons(
 				new Matrix(adjustment.translateX, adjustment.translateY),
 			);
 
-		const boardItems = board.items.listAll();
 		let step = 1;
-
 		while (
-			boardItems.some(item => item.getMbr().isEnclosedOrCrossedBy(newMbr))
+			board.items.getEnclosedOrCrossed(
+				newMbr.left,
+				newMbr.top,
+				newMbr.right,
+				newMbr.bottom,
+			).length > 0
 		) {
 			const direction = step % 2 === 0 ? -1 : 1;
 			newMbr.transform(
@@ -90,7 +100,7 @@ export function getQuickAddButtons(
 		const endPoints = getQuickButtonsPositions(newMbr);
 		const reverseIndexMap = { 0: 1, 1: 0, 2: 3, 3: 2 };
 		const connectorEndPoint =
-			endPoints?.[reverseIndexMap[index]] || new Point();
+			endPoints?.positions[reverseIndexMap[index]] || new Point();
 		const newItem = board.createItem(board.getNewItemId(), newItemData);
 
 		const connectorData = new ConnectorData();
@@ -156,6 +166,8 @@ export function getQuickAddButtons(
 				button.onclick = null;
 				button.onmouseenter = null;
 				button.onmouseleave = null;
+				button.onmousedown = null;
+				button.resetState = () => {};
 				button.remove();
 			});
 			htmlButtons = undefined;
@@ -163,7 +175,10 @@ export function getQuickAddButtons(
 		}
 	}
 
-	function getQuickButtonsPositions(customMbr?: Mbr): Point[] | undefined {
+	/** @returns positions of left, right, top, bottom points */
+	function getQuickButtonsPositions(
+		customMbr?: Mbr,
+	): { positions: Point[]; item: Item } | undefined {
 		const single = selection.items.getSingle();
 		const itemMbr = customMbr ? customMbr : single?.getMbr();
 		if (
@@ -182,7 +197,10 @@ export function getQuickAddButtons(
 			new Point(center.x, center.y - height / 2),
 			new Point(center.x, center.y + height / 2),
 		];
-		return positions;
+		return {
+			positions,
+			item: single,
+		};
 	}
 
 	function renderQuickAddItems(context: DrawingContext): void {
@@ -207,11 +225,12 @@ export function getQuickAddButtons(
 			clear();
 			return;
 		}
-		const positions = getQuickButtonsPositions();
-		if (!positions) {
+		const position = getQuickButtonsPositions();
+		if (!position) {
 			clear();
 			return;
 		}
+		const { positions, item } = position;
 
 		const cameraMatrix = board.camera.getMatrix();
 		const cameraMbr = board.camera.getMbr();
@@ -244,10 +263,10 @@ export function getQuickAddButtons(
 					left: 0,
 					top: 0,
 				};
-				const button = document.createElement("button");
-				button.style.position = "absolute";
-				button.style.transformOrigin = "left top";
-				button.style.transform = `translate(-50%, -50%)`;
+				const button = document.createElement(
+					"button",
+				) as HTMLQuickAddButton;
+				button.classList.add(styles.quickAddButton);
 				button.style.left = `${
 					(pos.x - cameraMbr.left) * cameraMatrix.scaleX +
 					adjustment.left
@@ -256,14 +275,20 @@ export function getQuickAddButtons(
 					(pos.y - cameraMbr.top) * cameraMatrix.scaleY +
 					adjustment.top
 				}px`;
-				button.style.zIndex = "25";
-				button.style.padding = "3px";
-				button.style.backgroundColor = "rgb(71, 120, 245)";
-				button.style.borderRadius = "50%";
+
+				button.resetState = () => {
+					button.isMouseDown = false;
+				};
+				button.resetState();
 
 				button.onmouseleave = () => {
-					quickAddItems = undefined;
-					selection.subject.publish(selection);
+					if (button.isMouseDown) {
+						board.tools.addConnector(true, item, pos);
+					} else {
+						quickAddItems = undefined;
+						selection.subject.publish(selection);
+					}
+					button.resetState();
 				};
 
 				button.onmouseenter = () => {
@@ -279,8 +304,13 @@ export function getQuickAddButtons(
 					selection.subject.publish(selection);
 				};
 
+				button.onmousedown = () => {
+					button.isMouseDown = true;
+				};
+
 				button.onclick = () => {
 					if (!quickAddItems) {
+						button.resetState();
 						return;
 					}
 					const { newItem, connectorData } = quickAddItems;
@@ -298,6 +328,7 @@ export function getQuickAddButtons(
 					selection.add(addedItem);
 					board.selection.editText();
 					board.fitMbrInView(addedItem.getMbr());
+					button.resetState();
 				};
 
 				return document.body.appendChild(button);

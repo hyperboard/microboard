@@ -179,6 +179,11 @@ export class ConnectorSnap {
 		return nearest;
 	}
 
+	getClosestPointOnItem(item: Item, position: Point): ControlPoint {
+		const nearestEdgePoint = item.getNearestEdgePointTo(position);
+		return getFixedPoint(item, nearestEdgePoint);
+	}
+
 	isNearBorder(item: Item | null): boolean {
 		if (!item) {
 			return false;
