@@ -19,10 +19,11 @@ export function getBlockNodes(
 	insideOf?: string,
 	containerWidth?: number,
 	containerHeight?: number,
+	isFrame?: boolean,
 ): LayoutBlockNodes {
 	const nodes: LayoutBlockNode[] = [];
 	for (const node of data) {
-		nodes.push(getBlockNode(node, maxWidth));
+		nodes.push(getBlockNode(node, maxWidth, isFrame));
 	}
 	setBlockNodesCoordinates(nodes);
 	let width = 0;
@@ -87,7 +88,38 @@ interface LayoutBlockNode {
 	height: number;
 }
 
-function getBlockNode(data: BlockNode, maxWidth: number): LayoutBlockNode {
+const sliceTextByWidth = (
+	textChild: TextNode,
+	maxWidth: number,
+): LayoutTextNode => {
+	const textNode = getTextNode(textChild);
+	const text = textNode.text;
+	const textStyle = getTextStyle(textChild).font;
+	let currentText = "";
+	let currentWidth = 0;
+
+	for (let i = 0; i < text.length; i++) {
+		const nextText = currentText + text[i];
+		const nextWidth = measureText(nextText + "...", textStyle).width;
+		currentWidth = nextWidth;
+
+		if (nextWidth > maxWidth) {
+			break;
+		}
+
+		currentText = nextText;
+	}
+
+	textNode.text =
+		currentWidth > maxWidth - 5 ? currentText + "..." : currentText;
+	return textNode;
+};
+
+function getBlockNode(
+	data: BlockNode,
+	maxWidth: number,
+	isFrame?: boolean,
+): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
 		lineHeight: 1.4,
@@ -105,9 +137,13 @@ function getBlockNode(data: BlockNode, maxWidth: number): LayoutBlockNode {
 				getBlockNode(child, maxWidth); // TODO lists
 				break;
 			case "text":
-				node.children.push(getTextNode(child));
+				const newChild = isFrame
+					? sliceTextByWidth(child, maxWidth)
+					: getTextNode(child);
+				node.children.push(newChild);
 		}
 	}
+
 	layoutBlockNode(node, maxWidth);
 
 	return node;
@@ -142,6 +178,7 @@ interface LeafStyle {
 	crossed?: "line-through";
 	verticalAlign?: "super" | "sub";
 	font?: string;
+	whiteSpace?: string;
 }
 
 function getTextStyle(data: TextNode): LeafStyle {

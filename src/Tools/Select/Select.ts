@@ -76,19 +76,27 @@ export class Select extends Tool {
 
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection = false;
-		if (
-			selectionMbr !== undefined &&
-			selectionMbr.isUnderPoint(pointer.point)
-		) {
+
+		if (selectionMbr !== undefined) {
 			const itemsUnderPointer = this.board.items.getUnderPointer();
-			if (itemsUnderPointer.length > 0) {
-				const selectedItems = this.board.selection.items.list();
-				const isAnySelectedItemUnderPointer = selectedItems.some(item =>
-					itemsUnderPointer.includes(item),
-				);
-				this.isDownOnSelection = isAnySelectedItemUnderPointer;
-			} else {
+			const isFrame = itemsUnderPointer.some(
+				item => item.itemType === "Frame",
+			);
+
+			if (isFrame) {
 				this.isDownOnSelection = true;
+			}
+
+			if (selectionMbr.isUnderPoint(pointer.point)) {
+				if (itemsUnderPointer.length > 0) {
+					const selectedItems = this.board.selection.items.list();
+					const isAnySelectedItemUnderPointer = selectedItems.some(
+						item => itemsUnderPointer.includes(item),
+					);
+					this.isDownOnSelection = isAnySelectedItemUnderPointer;
+				} else {
+					this.isDownOnSelection = true;
+				}
 			}
 		}
 

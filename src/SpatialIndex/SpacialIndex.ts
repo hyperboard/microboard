@@ -446,12 +446,23 @@ export class Items {
 		if (
 			underPointer.filter(item => item.itemType !== "Frame").length === 0
 		) {
-			const tolerated = this.index.getEnclosedOrCrossed(
+			let tolerated = this.index.getEnclosedOrCrossed(
 				x - size,
 				y - size,
 				x + size,
 				y + size,
 			);
+
+			if (tolerated.length === 0) {
+				const frameSize = size * 2;
+				tolerated = this.index.getEnclosedOrCrossed(
+					x - size,
+					y - frameSize,
+					x + size,
+					y + frameSize,
+				);
+			}
+
 			const enclosed =
 				tolerated.filter(item => item.itemType !== "Frame").length <= 1
 					? tolerated

@@ -72,6 +72,7 @@ export class RichText extends Mbr implements Geometry {
 	maxHeight: number;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
+	frameMbr?: Mbr;
 
 	constructor(
 		public container: Mbr,
@@ -141,6 +142,9 @@ export class RichText extends Mbr implements Geometry {
 			this.getTextForNodes(),
 			this.getMaxWidth(),
 			this.insideOf,
+			undefined,
+			undefined,
+			this.frameMbr,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -234,6 +238,9 @@ export class RichText extends Mbr implements Geometry {
 				this.getTextForNodes(),
 				this.getMaxWidth(),
 				this.insideOf,
+				undefined,
+				undefined,
+				this.frameMbr,
 			);
 			if (
 				this.containerMaxWidth &&
@@ -366,6 +373,10 @@ export class RichText extends Mbr implements Geometry {
 			top = container.top;
 		}
 
+		if (this.frameMbr) {
+			top = this.frameMbr.top - height - 8;
+		}
+
 		return {
 			point: new Point(left, top),
 			width,
@@ -421,6 +432,12 @@ export class RichText extends Mbr implements Geometry {
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
 		this.bottom = top + height;
+
+		if (this.frameMbr) {
+			this.top = this.frameMbr.top - height - 8;
+			this.bottom = this.frameMbr.top - 8;
+		}
+
 		if (this.insideOf === "Sticker" || this.insideOf === "Shape") {
 			this.left = rect.left;
 			this.right = rect.right;
@@ -437,9 +454,10 @@ export class RichText extends Mbr implements Geometry {
 	/**
 	 * Set the container that would be used to align the CanvasDocument.
 	 */
-	setContainer(container: Mbr): void {
+	setContainer(container: Mbr, frameMbr?: Mbr): void {
 		this.isContainerSet = true;
 		this.container = container;
+		this.frameMbr = frameMbr;
 		this.alignInRectangle(
 			this.getTransformedContainer(),
 			this.editor.verticalAlignment,
