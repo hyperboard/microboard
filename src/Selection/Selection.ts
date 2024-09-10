@@ -124,7 +124,9 @@ export class Selection {
 
 	addAll() {
 		const items = this.board.items.listAll();
+		const frames = this.board.items.listFrames();
 		this.add(items);
+		this.add(frames);
 		this.setContext("SelectByRect");
 	}
 
