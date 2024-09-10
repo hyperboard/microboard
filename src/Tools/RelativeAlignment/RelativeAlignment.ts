@@ -8,7 +8,7 @@ const ALIGNMENT_LINES = {
 	vertical: "vertical",
 };
 
-const RelativeAlignment: React.FC = () => {
+export const RelativeAlignment: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const [items, setItems] = useState<Item[]>([]);
 	const [alignmentLines, setAlignmentLines] = useState<
@@ -17,10 +17,14 @@ const RelativeAlignment: React.FC = () => {
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
-		if (!canvas) return;
+		if (!canvas) {
+			return;
+		}
 
 		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
+		if (!ctx) {
+			return;
+		}
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -118,5 +122,3 @@ const RelativeAlignment: React.FC = () => {
 
 	return null;
 };
-
-export default RelativeAlignment;
