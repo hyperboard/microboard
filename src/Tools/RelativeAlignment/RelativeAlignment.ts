@@ -110,13 +110,13 @@ const RelativeAlignment: React.FC = () => {
 	};
 
 	// Просто заглушка для обработки перемещения
-	const handleItemMove = (item: Item) => {
-		const updatedItems = items.map(i => (i.id === item.id ? item : i));
-		setItems(updatedItems);
-		checkAlignment(updatedItems, item);
-	};
+	// const handleItemMove = (item: Item) => {
+	// 	const updatedItems = items.map(i => (i.id === item.id ? item : i));
+	// 	setItems(updatedItems);
+	// 	checkAlignment(updatedItems, item);
+	// };
 
-	return <canvas ref={canvasRef} width={800} height={600} />;
+	return null;
 };
 
-export default Board;
+export default RelativeAlignment;
