@@ -178,7 +178,6 @@ interface LeafStyle {
 	crossed?: "line-through";
 	verticalAlign?: "super" | "sub";
 	font?: string;
-	whiteSpace?: string;
 }
 
 function getTextStyle(data: TextNode): LeafStyle {
