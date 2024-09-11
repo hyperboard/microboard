@@ -314,7 +314,6 @@ export class Camera {
 	}
 
 	viewRectangle(mbr: Mbr): void {
-		// Calculate the width and height of the Mbr
 		const mbrWidth = mbr.getWidth();
 		const mbrHeight = mbr.getHeight();
 
@@ -323,35 +322,31 @@ export class Camera {
 		const scaleY = this.window.height / mbrHeight;
 
 		// Choose the smaller scale value to maintain the aspect ratio
-		const scale = Math.min(scaleX, scaleY);
+		let scale = Math.min(scaleX, scaleY);
 
-		// Calculate the translation values to center the Mbr in the view
-		const translationX =
-			this.window.width / 2 - (mbr.left + mbrWidth / 2) * scale;
-		const translationY =
-			this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
+		// Ensure the scale is not less than the minimum scale
+		scale = Math.max(scale, this.minScale);
+
+		// Calculate the translation values
+		let translationX, translationY;
+		if (mbrWidth > this.window.width || mbrHeight > this.window.height) {
+			// If the rectangle is bigger than the window, scale to the top-left corner
+			translationX = -mbr.left * scale;
+			translationY =
+				this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
+		} else {
+			// Center the Mbr in the view
+			translationX =
+				this.window.width / 2 - (mbr.left + mbrWidth / 2) * scale;
+			translationY =
+				this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
+		}
 
 		this.matrix.translateX = translationX;
 		this.matrix.translateY = translationY;
 		this.matrix.scaleX = scale;
 		this.matrix.scaleY = scale;
-		/*
-        const width = mbr.getWidth();
-        const height = mbr.getHeight();
-        const scale = Math.min(
-            (this.getMbr().getWidth() * 0.9) / width,
-            (this.getMbr().getHeight() * 0.9) / height,
-        );
-        const copy = mbr.getTransformed(new Matrix(0, 0, scale, scale));
-        const center = copy.getCenter();
 
-        // move board so that the bounds center is in the view center
-        const viewCenter = this.getMbr().getCenter();
-        this.matrix.translateX = viewCenter.x - center.x;
-        this.matrix.translateY = viewCenter.y - center.y;
-        this.matrix.scaleX = scale;
-        this.matrix.scaleY = scale;
-        */
 		this.subject.publish(this);
 	}
 

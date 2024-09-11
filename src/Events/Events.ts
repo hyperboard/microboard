@@ -82,8 +82,10 @@ export function createEvents(board: Board, connection: Connection): Events {
 							board.getCameraSnapshot(),
 						)
 					) {
-						const itemsMbr = board.items.getMbr();
-						board.camera.zoomToFit(itemsMbr);
+						if (board.items.listAll().length > 0) {
+							const itemsMbr = board.items.getMbr();
+							board.camera.zoomToFit(itemsMbr);
+						}
 					}
 				} else {
 					for (const event of events) {
