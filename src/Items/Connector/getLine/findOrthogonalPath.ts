@@ -433,8 +433,8 @@ function createGrid(
 
 	const possibleStepX = Math.abs(gridEnd.x - gridStart.x) / 10;
 	const possibleStepY = Math.abs(gridEnd.y - gridStart.y) / 10;
-	const stepX = possibleStepX < minStep ? minStep : possibleStepX;
-	const stepY = possibleStepY < minStep ? minStep : possibleStepY;
+	const stepX = possibleStepX === 0 ? minStep : possibleStepX;
+	const stepY = possibleStepY === 0 ? minStep : possibleStepY;
 
 	for (let x = gridStart.x; x <= gridEnd.x + stepX; x += stepX) {
 		const row: Point[] = [];

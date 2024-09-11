@@ -68,42 +68,49 @@ export function quickAddItem(
 	itemData.transformation.translateY = endPoint.y;
 	const lines = connector.lines.getSegments();
 	const lastLine = lines[lines.length - 1];
-	const dir = getDirection(lastLine.start, lastLine.end);
-	if (dir) {
-		let dirIndex = -1;
-		if (dir === "vertical") {
-			if (lines[0].start.y > lastLine.end.y) {
-				// to bottom
-				itemData.transformation.translateX -= itemMbr.getWidth() / 2;
-				itemData.transformation.translateY -= itemMbr.getHeight();
-				dirIndex = 3;
-			} else {
-				// to top
-				itemData.transformation.translateX -= itemMbr.getWidth() / 2;
-				dirIndex = 2;
-			}
-		} else {
-			if (lines[0].start.x > lastLine.end.x) {
-				// to right
-				itemData.transformation.translateX -= itemMbr.getWidth();
-				itemData.transformation.translateY -= itemMbr.getHeight() / 2;
-				dirIndex = 1;
-			} else {
-				// to left
-				itemData.transformation.translateY -= itemMbr.getHeight() / 2;
-				dirIndex = 0;
-			}
-		}
-
-		const newItem = board.createItem("", itemData);
-		const added = board.add(newItem);
-		const pointData = getControlPointData(added, dirIndex);
-		const newEndPoint = getControlPoint(pointData, itemId =>
-			board.items.findById(itemId),
-		);
-		connector.setEndPoint(newEndPoint);
-		board.selection.removeAll();
-		board.selection.add(added);
-		board.selection.setContext("EditUnderPointer");
+	let dir = getDirection(lastLine.start, lastLine.end);
+	if (!dir) {
+		const firstLine = lines[0];
+		const xDiff = Math.abs(firstLine.start.x - lastLine.end.x);
+		const yDiff = Math.abs(firstLine.start.y - lastLine.end.y);
+		dir = xDiff > yDiff ? "horizontal" : "vertical";
 	}
+
+	let dirIndex = -1;
+	if (dir === "vertical") {
+		if (lines[0].start.y > lastLine.end.y) {
+			// to bottom
+			itemData.transformation.translateX -= itemMbr.getWidth() / 2;
+			itemData.transformation.translateY -= itemMbr.getHeight();
+			dirIndex = 3;
+		} else {
+			// to top
+			itemData.transformation.translateX -= itemMbr.getWidth() / 2;
+			dirIndex = 2;
+		}
+	} else if (dir === "horizontal") {
+		if (lines[0].start.x > lastLine.end.x) {
+			// to right
+			itemData.transformation.translateX -= itemMbr.getWidth();
+			itemData.transformation.translateY -= itemMbr.getHeight() / 2;
+			dirIndex = 1;
+		} else {
+			// to left
+			itemData.transformation.translateY -= itemMbr.getHeight() / 2;
+			dirIndex = 0;
+		}
+	} else {
+		throw new Error("New item connection direction now found");
+	}
+
+	const newItem = board.createItem("", itemData);
+	const added = board.add(newItem);
+	const pointData = getControlPointData(added, dirIndex);
+	const newEndPoint = getControlPoint(pointData, itemId =>
+		board.items.findById(itemId),
+	);
+	connector.setEndPoint(newEndPoint);
+	board.selection.removeAll();
+	board.selection.add(added);
+	board.selection.setContext("EditUnderPointer");
 }

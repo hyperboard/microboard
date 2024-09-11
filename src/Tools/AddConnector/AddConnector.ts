@@ -4,6 +4,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { BoardTool } from "../BoardTool";
 import { Board } from "Board/Board";
 import { Item, Point } from "Board/Items";
+import { Storage } from "App/Storage";
 
 export class AddConnector extends BoardTool {
 	connector: Connector | null = null;
@@ -19,6 +20,10 @@ export class AddConnector extends BoardTool {
 	constructor(board: Board, itemToStart?: Item, position?: Point) {
 		super(board);
 		this.setCursor();
+		const savedStyle = new Storage().getConnectorLineStyle();
+		if (savedStyle) {
+			this.lineStyle = savedStyle;
+		}
 		if (itemToStart && position) {
 			this.isDown = true;
 			this.isQuickAdd = true;
@@ -26,14 +31,13 @@ export class AddConnector extends BoardTool {
 				itemToStart,
 				position,
 			);
-			(this.lineStyle = "orthogonal"),
-				(this.connector = new Connector(
-					this.board,
-					undefined,
-					closestPoint,
-					closestPoint,
-					this.lineStyle,
-				));
+			this.connector = new Connector(
+				this.board,
+				undefined,
+				closestPoint,
+				closestPoint,
+				this.lineStyle,
+			);
 		}
 	}
 
@@ -45,8 +49,13 @@ export class AddConnector extends BoardTool {
 		this.isDown = true;
 		const point = this.snap.getControlPoint();
 		if (!this.connector) {
-			this.connector = new Connector(this.board, undefined, point, point);
-			this.connector.setLineStyle(this.lineStyle);
+			this.connector = new Connector(
+				this.board,
+				undefined,
+				point,
+				point,
+				this.lineStyle,
+			);
 		} else {
 			this.connector.setEndPoint(point);
 			this.isDoneSecondPoint = true;
