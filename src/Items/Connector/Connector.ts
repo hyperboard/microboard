@@ -54,8 +54,6 @@ export class Connector {
 	private id = "";
 	readonly transformation = new Transformation(this.id, this.events);
 	private middlePoints: BoardPoint[] = [];
-	private startPointerStyle: ConnectorPointerStyle = "None";
-	private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER;
 	private lineColor = CONNECTOR_COLOR;
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
 	readonly subject = new Subject<Connector>();
@@ -102,6 +100,8 @@ export class Connector {
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
 		private lineStyle: ConnectorLineStyle = "straight",
+		private startPointerStyle: ConnectorPointerStyle = "None",
+		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
 	) {
 		this.transformation.subject.subscribe(() => {
 			this.transformBoardPoints();

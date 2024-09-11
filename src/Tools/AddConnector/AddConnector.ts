@@ -5,10 +5,13 @@ import { BoardTool } from "../BoardTool";
 import { Board } from "Board/Board";
 import { Item, Point } from "Board/Items";
 import { Storage } from "App/Storage";
+import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 
 export class AddConnector extends BoardTool {
 	connector: Connector | null = null;
 	lineStyle: ConnectorLineStyle = "curved";
+	startPoitner?: ConnectorPointerStyle;
+	endPointer?: ConnectorPointerStyle;
 
 	snap = new ConnectorSnap(this.board);
 
@@ -20,10 +23,20 @@ export class AddConnector extends BoardTool {
 	constructor(board: Board, itemToStart?: Item, position?: Point) {
 		super(board);
 		this.setCursor();
+
 		const savedStyle = new Storage().getConnectorLineStyle();
 		if (savedStyle) {
 			this.lineStyle = savedStyle;
 		}
+		const savedStart = new Storage().getConnectorPointer("start");
+		if (savedStart) {
+			this.startPoitner = savedStart;
+		}
+		const savedEnd = new Storage().getConnectorPointer("end");
+		if (savedEnd) {
+			this.endPointer = savedEnd;
+		}
+
 		if (itemToStart && position) {
 			this.isDown = true;
 			this.isQuickAdd = true;
@@ -37,6 +50,8 @@ export class AddConnector extends BoardTool {
 				closestPoint,
 				closestPoint,
 				this.lineStyle,
+				this.startPoitner,
+				this.endPointer,
 			);
 		}
 	}
@@ -55,6 +70,8 @@ export class AddConnector extends BoardTool {
 				point,
 				point,
 				this.lineStyle,
+				this.startPoitner,
+				this.endPointer,
 			);
 		} else {
 			this.connector.setEndPoint(point);

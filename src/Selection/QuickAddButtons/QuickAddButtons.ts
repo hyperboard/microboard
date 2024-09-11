@@ -1,10 +1,19 @@
-import { ConnectorData, Matrix, RichText, Mbr, Item, Point } from "Board/Items";
+import {
+	ConnectorData,
+	Matrix,
+	RichText,
+	Mbr,
+	Item,
+	Point,
+	Connector,
+} from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "..";
 import { Board } from "Board/Board";
 import { isMicroboard } from "lib/isMicroboard";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
+import { Storage } from "App/Storage";
 
 export interface QuickAddButtons {
 	calculateQuickAddPosition: (
@@ -103,8 +112,18 @@ export function getQuickAddButtons(
 			endPoints?.positions[reverseIndexMap[index]] || new Point();
 		const newItem = board.createItem(board.getNewItemId(), newItemData);
 
-		const connectorData = new ConnectorData();
+		const defaultConnector = new Connector(board);
+		const connectorData = defaultConnector.serialize();
 		connectorData.lineStyle = "orthogonal";
+
+		const savedStart = new Storage().getConnectorPointer("start");
+		if (savedStart) {
+			connectorData.startPointerStyle = savedStart;
+		}
+		const savedEnd = new Storage().getConnectorPointer("end");
+		if (savedEnd) {
+			connectorData.endPointerStyle = savedEnd;
+		}
 
 		const startPointData = getControlPointData(selectedItem, index);
 		const endPointData = getControlPointData(

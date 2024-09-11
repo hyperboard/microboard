@@ -7,7 +7,7 @@ import { Point } from "Board/Items/Point";
 import { getPointer, Pointer } from "./Pointers";
 
 export type ConnectedPointerDirection = "top" | "bottom" | "right" | "left";
-type ConnectorEdge = "start" | "end";
+export type ConnectorEdge = "start" | "end";
 
 interface GetRotationParams {
 	point: ControlPoint;

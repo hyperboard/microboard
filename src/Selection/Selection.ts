@@ -26,6 +26,7 @@ import { ShapeType } from "../Items/Shape/Basic";
 import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
+import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -568,14 +569,14 @@ export class Selection {
 		return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
 	}
 
-	getStartPointerStyle(): string {
+	getStartPointerStyle(): ConnectorPointerStyle {
 		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getStartPointerStyle() || "none";
+		return pointer?.getStartPointerStyle() || "None";
 	}
 
-	getEndPointerStyle(): string {
+	getEndPointerStyle(): ConnectorPointerStyle {
 		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getEndPointerStyle() || "none";
+		return pointer?.getEndPointerStyle() || "None";
 	}
 
 	setStartPointerStyle(style: string): void {
