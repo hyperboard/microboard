@@ -836,7 +836,7 @@ export class Connector {
 				]).addConnectedItemType(this.itemType);
 			}
 			const updated = this.lines.getSegments();
-			const lastLine = updated[segments.length - 1];
+			const lastLine = updated[updated.length - 1];
 			if (this.endPoint.pointType !== "Board") {
 				this.lines = new Path([
 					...updated,

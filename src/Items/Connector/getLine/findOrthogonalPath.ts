@@ -17,7 +17,7 @@ type Direction = "vertical" | "horizontal";
 
 const ITEM_OFFSET = 25;
 
-function getDirection(from: Point, to?: Point): Direction | null {
+export function getDirection(from: Point, to?: Point): Direction | null {
 	if (!to) {
 		return null;
 	}

@@ -220,6 +220,16 @@ export class Tools extends ToolContext {
 		this.publish();
 	}
 
+	confirm(): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
+		this.tool.onConfirm();
+		this.tool = new Select(this.board);
+		this.publish();
+	}
+
 	publish(): void {
 		this.subject.publish(this);
 	}

@@ -38,5 +38,6 @@ export class Tool {
 		return false;
 	}
 	onCancel(): void {}
+	onConfirm(): void {}
 	render(_context: DrawingContext): void {}
 }

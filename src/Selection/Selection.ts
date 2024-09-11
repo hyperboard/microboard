@@ -49,6 +49,7 @@ export class Selection {
 	transformationRenderBlock?: boolean = undefined;
 
 	quickAddButtons: QuickAddButtons = getQuickAddButtons(this, this.board);
+	showQuickAddPanel = false;
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
@@ -198,6 +199,7 @@ export class Selection {
 		if (context === "None") {
 			this.quickAddButtons.clear();
 		}
+		this.showQuickAddPanel = false;
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
 	}

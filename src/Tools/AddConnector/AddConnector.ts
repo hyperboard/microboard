@@ -14,12 +14,14 @@ export class AddConnector extends BoardTool {
 	isDraggingFromFirstToSecond = false;
 	isDoneSecondPoint = false;
 	isDown = false;
+	isQuickAdd = false;
 
 	constructor(board: Board, itemToStart?: Item, position?: Point) {
 		super(board);
 		this.setCursor();
 		if (itemToStart && position) {
 			this.isDown = true;
+			this.isQuickAdd = true;
 			const closestPoint = this.snap.getClosestPointOnItem(
 				itemToStart,
 				position,
@@ -76,8 +78,14 @@ export class AddConnector extends BoardTool {
 			this.board.add(this.connector);
 			this.board.tools.select();
 		} else if (this.isDraggingFromFirstToSecond) {
-			this.board.add(this.connector);
+			const addedConnector = this.board.add(this.connector);
+			const endPoint = this.connector.getEndPoint();
 			this.board.tools.select();
+			if (this.isQuickAdd && endPoint.pointType === "Board") {
+				this.board.selection.add(addedConnector);
+				this.board.selection.setContext("EditUnderPointer");
+				this.board.selection.showQuickAddPanel = true;
+			}
 		}
 		this.board.tools.publish();
 		return true;

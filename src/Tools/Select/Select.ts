@@ -12,6 +12,7 @@ import createCanvasDrawer from "../../drawMbrOnCanvas";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
+import { quickAddItem } from "Board/Selection/QuickAddButtons";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -69,7 +70,7 @@ export class Select extends Tool {
 		this.clear();
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
-
+		selection.showQuickAddPanel = false;
 		const hover = items.getUnderPointer();
 
 		this.beginTimeStamp = Date.now();
@@ -495,6 +496,24 @@ export class Select extends Tool {
 			}
 		});
 		return translation;
+	}
+
+	onCancel(): void {
+		if (this.board.selection.showQuickAddPanel) {
+			this.board.selection.showQuickAddPanel = false;
+			this.board.selection.subject.publish(this.board.selection);
+		}
+	}
+
+	onConfirm(): void {
+		const single = this.board.selection.items.getSingle();
+		if (
+			this.board.selection.showQuickAddPanel &&
+			single &&
+			single.itemType === "Connector"
+		) {
+			quickAddItem(this.board, "copy", single);
+		}
 	}
 
 	render(context: DrawingContext): void {

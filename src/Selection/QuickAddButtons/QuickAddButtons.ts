@@ -1,9 +1,9 @@
 import { ConnectorData, Matrix, RichText, Mbr, Item, Point } from "Board/Items";
-import { ControlPointData } from "Board/Items/Connector/ControlPoint";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "..";
 import { Board } from "Board/Board";
 import { isMicroboard } from "lib/isMicroboard";
+import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
 
 export interface QuickAddButtons {
@@ -106,44 +106,11 @@ export function getQuickAddButtons(
 		const connectorData = new ConnectorData();
 		connectorData.lineStyle = "orthogonal";
 
-		const selectedItemScale = selectedItem.transformation.getScale();
-		const adjMapScaled = {
-			0: { x: 0, y: height / 2 / selectedItemScale.y },
-			1: {
-				x: width / selectedItemScale.x,
-				y: height / 2 / selectedItemScale.y,
-			},
-			2: { x: width / 2 / selectedItemScale.x, y: 0 },
-			3: {
-				x: width / 2 / selectedItemScale.x,
-				y: height / selectedItemScale.y,
-			},
-		};
-
-		const startPointData: ControlPointData = {
-			pointType: "Fixed",
-			itemId: selectedItem.getId(),
-			relativeX:
-				newItem.itemType === "Shape"
-					? adjMapScaled[index].x
-					: adjMapScaled[index].x / 2,
-			relativeY:
-				newItem.itemType === "Shape"
-					? adjMapScaled[index].y
-					: adjMapScaled[index].y / 2,
-		};
-		const endPointData: ControlPointData = {
-			pointType: "Fixed",
-			itemId: newItem.getId(),
-			relativeX:
-				newItem.itemType === "Shape"
-					? adjMapScaled[reverseIndexMap[index]].x
-					: adjMapScaled[reverseIndexMap[index]].x / 2,
-			relativeY:
-				newItem.itemType === "Shape"
-					? adjMapScaled[reverseIndexMap[index]].y
-					: adjMapScaled[reverseIndexMap[index]].y / 2,
-		};
+		const startPointData = getControlPointData(selectedItem, index);
+		const endPointData = getControlPointData(
+			newItem,
+			reverseIndexMap[index],
+		);
 		connectorData.startPoint = startPointData;
 		connectorData.endPoint = endPointData;
 		connectorData.text = new RichText(new Mbr()).serialize();

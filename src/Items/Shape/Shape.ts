@@ -89,6 +89,7 @@ export class Shape implements Geometry {
 			this.subject.publish(this);
 		});
 		this.text.insideOf = this.itemType;
+		this.updateMbr();
 	}
 
 	emit(operation: ShapeOperation): void {
