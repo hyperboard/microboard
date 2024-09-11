@@ -529,6 +529,7 @@ export class Select extends Tool {
 
 	render(context: DrawingContext): void {
 		if (this.isDrawingRectangle && this.rect) {
+			this.rect.strokeWidth = 1 / this.board.camera.getScale();
 			this.rect.render(context);
 		} else {
 			this.toHighlight.render(context);
