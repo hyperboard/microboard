@@ -240,7 +240,7 @@ export class Selection {
 		this.board.tools.select();
 	}
 
-	editText(shouldReplace?: string): void {
+	editText(shouldReplace?: string, moveCursorToEnd = false): void {
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -258,10 +258,12 @@ export class Selection {
 			item instanceof RichText ||
 			item instanceof Frame
 		) {
+			const text = item instanceof RichText ? item : item.text;
 			if (shouldReplace) {
-				const text = item instanceof RichText ? item : item.text;
 				text.clearText();
 				text.editor.editor.insertText(shouldReplace);
+			}
+			if (shouldReplace || moveCursorToEnd) {
 				text.moveCursorToEnd();
 			}
 			this.setTextToEdit(item);

@@ -502,6 +502,12 @@ export class Select extends Tool {
 		if (this.board.selection.showQuickAddPanel) {
 			this.board.selection.showQuickAddPanel = false;
 			this.board.selection.subject.publish(this.board.selection);
+		} else if (
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			this.board.selection.setContext("EditUnderPointer");
+		} else if (this.board.selection.items.list().length > 0) {
+			this.board.selection.removeAll();
 		}
 	}
 
@@ -513,6 +519,11 @@ export class Select extends Tool {
 			single.itemType === "Connector"
 		) {
 			quickAddItem(this.board, "copy", single);
+		} else if (
+			single &&
+			this.board.selection.getContext() !== "EditTextUnderPointer"
+		) {
+			this.board.selection.editText(undefined, true);
 		}
 	}
 
