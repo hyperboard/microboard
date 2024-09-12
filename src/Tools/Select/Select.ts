@@ -13,6 +13,7 @@ import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
+import { isSafari } from "App/isSafari";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -524,6 +525,18 @@ export class Select extends Tool {
 			this.board.selection.getContext() !== "EditTextUnderPointer"
 		) {
 			this.board.selection.editText(undefined, true);
+		} else if (
+			isSafari() &&
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			if (
+				(single && "text" in single) ||
+				single?.itemType === "RichText"
+			) {
+				const text =
+					single.itemType === "RichText" ? single : single.text;
+				text.splitNode();
+			}
 		}
 	}
 
