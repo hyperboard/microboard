@@ -642,15 +642,9 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
-	applySelectionFontColor(
-		fontColor: string,
-		selectionContext?: SelectionContext,
-	): void {
-		if (selectionContext === "EditUnderPointer") {
-			this.selectWholeText();
-		}
+	applySelectionFontColor(fontColor: string): void {
 		this.shouldEmit = false;
-		this.editor.applySelectionFontColor(fontColor, selectionContext);
+		this.editor.applySelectionFontColor(fontColor);
 		this.shouldEmit = true;
 		this.updateElement();
 	}
@@ -934,6 +928,8 @@ export class RichText extends Mbr implements Geometry {
 	restoreSelection(selection?: BaseSelection): void {
 		if (selection) {
 			Transforms.select(this.editor.editor, selection);
+		} else {
+			Transforms.deselect(this.editor.editor);
 		}
 	}
 

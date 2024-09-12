@@ -264,49 +264,49 @@ export class EditorContainer {
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
 		/* TODO bd-695
-        if (this.richText.getAutosize()
-            && (op.ops[0].type === "insert_text"
-            || op.ops[0].type === "split_node")
-        ) {
-            console.log("text len", this.textLength);
-            console.log("w", this.richText.getWidth());
-            if (this.richText.getFontSize() > 14) { // 14 - defaultSize
-                console.log("BEFORE", this.richText.getFontSize());
-                if (op.ops[0].type === "split_node"
-                || op.ops[0].text.length === 1) {
-                    this.decorated.apply(op.ops[0]);
-                    setTimeout(() => {
-                        if (this.richText.getFontSize() < 14) {
-                            console.log("overflowed");
-                            // Clear all / remove last one
-                            const removeOp = {
-                                type: "remove_text",
-                                path: op.ops[0].path,
-                                offset: op.ops[0].offset + op.ops[0].text.length - 1,
-                                text: op.ops[0].text.slice(-1)
-                            };
-                            this.richText.clearText();
-                            this.decorated.apply(removeOp);
-                        }
-                    }, 5);
-                } else {
-                    op.ops[0].text.split("").forEach((letter, index) => {
-                        const newOp = {
-                            ...op,
-                            ops: [{
-                                ...op.ops[0],
-                                text: letter,
-                                offset: op.ops[0].offset + index
-                            }]
-                        };
-                        this.applySelectionEdit(newOp);
-                    })
-                }
-            }
-        } else {
-            this.decorated.apply(op.ops[0]);
-        }
-        */
+				if (this.richText.getAutosize()
+						&& (op.ops[0].type === "insert_text"
+						|| op.ops[0].type === "split_node")
+				) {
+						console.log("text len", this.textLength);
+						console.log("w", this.richText.getWidth());
+						if (this.richText.getFontSize() > 14) { // 14 - defaultSize
+								console.log("BEFORE", this.richText.getFontSize());
+								if (op.ops[0].type === "split_node"
+								|| op.ops[0].text.length === 1) {
+										this.decorated.apply(op.ops[0]);
+										setTimeout(() => {
+												if (this.richText.getFontSize() < 14) {
+														console.log("overflowed");
+														// Clear all / remove last one
+														const removeOp = {
+																type: "remove_text",
+																path: op.ops[0].path,
+																offset: op.ops[0].offset + op.ops[0].text.length - 1,
+																text: op.ops[0].text.slice(-1)
+														};
+														this.richText.clearText();
+														this.decorated.apply(removeOp);
+												}
+										}, 5);
+								} else {
+										op.ops[0].text.split("").forEach((letter, index) => {
+												const newOp = {
+														...op,
+														ops: [{
+																...op.ops[0],
+																text: letter,
+																offset: op.ops[0].offset + index
+														}]
+												};
+												this.applySelectionEdit(newOp);
+										})
+								}
+						}
+				} else {
+						this.decorated.apply(op.ops[0]);
+				}
+				*/
 		for (const operation of op.ops) {
 			this.decorated.apply(operation);
 		}
@@ -488,12 +488,8 @@ export class EditorContainer {
 		this.emitMethodOps();
 	}
 
-	applySelectionFontColor(
-		fontColor: string,
-		selectionContext?: string,
-	): void {
+	applySelectionFontColor(fontColor: string): void {
 		const editor = this.editor;
-		const selection = editor.selection;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
 		}
@@ -502,21 +498,7 @@ export class EditorContainer {
 		if (!marks) {
 			return;
 		}
-
-		if (
-			JSON.stringify(selection?.anchor) ===
-			JSON.stringify(selection?.focus)
-		) {
-			Transforms.select(this.editor, {
-				anchor: Editor.start(this.editor, []),
-				focus: Editor.end(this.editor, []),
-			});
-		}
 		Editor.addMark(editor, "fontColor", fontColor);
-
-		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
-		}
 	}
 
 	applySelectionFontSize(fontSize: number, selectionContext?: string): void {
