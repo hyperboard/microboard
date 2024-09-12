@@ -42,7 +42,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 	const subject = new Subject<BoardEvent>();
 
 	connection.subscribe(board.getBoardId(), handleNewMessage);
-	setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
+	// setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
 
 	function serialize(): BoardEvent[] {
 		return log.serialize();
