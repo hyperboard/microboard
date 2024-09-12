@@ -247,8 +247,13 @@ export class Sticker implements Geometry {
 				},
 			);
 		} else {
-			this.text.editor.selectWholeText();
-			this.text.editor.setSelectionFontColor(
+			this.text.applySelectionFontColor(
+				isDarkColor(backgroundColor)
+					? "rgb(255,255,255)"
+					: "rgb(20, 21, 26)",
+			);
+			console.log(
+				"applyStickerTextColor",
 				isDarkColor(backgroundColor)
 					? "rgb(255,255,255)"
 					: "rgb(20, 21, 26)",

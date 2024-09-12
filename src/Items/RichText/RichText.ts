@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { Descendant, Editor, Transforms } from "slate";
+import { BaseSelection, Descendant, Editor, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
@@ -286,19 +286,19 @@ export class RichText extends Mbr implements Geometry {
 				  );
 		/*
 
-        if (blockNodes.height / blockNodes.width < (1 / 7)) {
+				if (blockNodes.height / blockNodes.width < (1 / 7)) {
 
-            maxWidth = blockNodes.width / 3
-            if (maxWidth > width) {
-                maxWidth = width;
-            }
-            blockNodes = getBlockNodes(text, maxWidth);
-            if (blockNodes.width < blockNodes.height) {
-                maxWidth = blockNodes.height;
-                blockNodes = getBlockNodes(text, maxWidth);
-            }
-        }
-        */
+						maxWidth = blockNodes.width / 3
+						if (maxWidth > width) {
+								maxWidth = width;
+						}
+						blockNodes = getBlockNodes(text, maxWidth);
+						if (blockNodes.width < blockNodes.height) {
+								maxWidth = blockNodes.height;
+								blockNodes = getBlockNodes(text, maxWidth);
+						}
+				}
+				*/
 
 		if (shouldUpdate) {
 			this.blockNodes = blockNodes;
@@ -642,6 +642,19 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
+	applySelectionFontColor(
+		fontColor: string,
+		selectionContext?: SelectionContext,
+	): void {
+		if (selectionContext === "EditUnderPointer") {
+			this.selectWholeText();
+		}
+		this.shouldEmit = false;
+		this.editor.applySelectionFontColor(fontColor, selectionContext);
+		this.shouldEmit = true;
+		this.updateElement();
+	}
+
 	setSelectionFontStyle(
 		style: TextStyle | TextStyle[],
 		selectionContext?: SelectionContext,
@@ -909,6 +922,19 @@ export class RichText extends Mbr implements Geometry {
 			insideOf: this.insideOf ? this.insideOf : this.itemType,
 			realSize: this.autoSize ? "auto" : this.getFontSize(),
 		};
+	}
+
+	getCurrentSelection(): BaseSelection | undefined {
+		const { selection } = this.editor.editor;
+		if (selection) {
+			return JSON.parse(JSON.stringify(selection)) as BaseSelection;
+		}
+	}
+
+	restoreSelection(selection?: BaseSelection): void {
+		if (selection) {
+			Transforms.select(this.editor.editor, selection);
+		}
 	}
 
 	deserialize(data: Partial<RichTextData>): this {

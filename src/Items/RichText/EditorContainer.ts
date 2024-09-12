@@ -488,6 +488,37 @@ export class EditorContainer {
 		this.emitMethodOps();
 	}
 
+	applySelectionFontColor(
+		fontColor: string,
+		selectionContext?: string,
+	): void {
+		const editor = this.editor;
+		const selection = editor.selection;
+		if (!editor) {
+			throw new Error("Editor is not initialized");
+		}
+
+		const marks = this.getSelectionMarks();
+		if (!marks) {
+			return;
+		}
+
+		if (
+			JSON.stringify(selection?.anchor) ===
+			JSON.stringify(selection?.focus)
+		) {
+			Transforms.select(this.editor, {
+				anchor: Editor.start(this.editor, []),
+				focus: Editor.end(this.editor, []),
+			});
+		}
+		Editor.addMark(editor, "fontColor", fontColor);
+
+		if (selectionContext === "EditTextUnderPointer") {
+			ReactEditor.focus(editor);
+		}
+	}
+
 	applySelectionFontSize(fontSize: number, selectionContext?: string): void {
 		const size = fontSize;
 		const editor = this.editor;
