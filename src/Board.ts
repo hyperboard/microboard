@@ -835,11 +835,7 @@ export class Board {
 		});
 	}
 
-	applyPasteOperation(
-		itemsMap: { [key: string]: ItemData },
-		select = true,
-	): void {
-		const context = this.selection.getContext();
+	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const items: Item[] = [];
 
 		const sortedItemsMap = Object.entries(itemsMap).sort(
@@ -876,12 +872,6 @@ export class Board {
 				pasteItem(id, data);
 			}
 		});
-
-		this.selection.removeAll();
-		if (select) {
-			this.selection.add(items);
-			this.selection.setContext(context);
-		}
 	}
 
 	isOnBoard(item: Item): boolean {
