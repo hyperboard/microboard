@@ -21,7 +21,7 @@ import { Line } from "../Line";
 import { Mbr } from "../Mbr";
 import { Path, Paths } from "../Path";
 import { Point } from "../Point";
-import { Transformation } from "../Transformation";
+import { Matrix, Transformation } from "../Transformation";
 import { ConnectorCommand } from "./ConnectorCommand";
 import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
 import {
@@ -33,7 +33,7 @@ import {
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
-import { getEndPointer, getStartPointer } from "./Pointers";
+import { ConnectorEdge, getEndPointer, getStartPointer } from "./Pointers";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 
 export const ConnectorLineStyles = [
@@ -103,8 +103,17 @@ export class Connector {
 		private startPointerStyle: ConnectorPointerStyle = "None",
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
 	) {
-		this.transformation.subject.subscribe(() => {
-			this.transformBoardPoints();
+		this.transformation.subject.subscribe((_sub, op) => {
+			if (op.method === "transformMany") {
+				const operation = op.items[this.getId()];
+				if (
+					operation.method === "scaleByTranslateBy" &&
+					(operation.scale.x !== 1 || operation.scale.y !== 1)
+				) {
+					this.scalePoints();
+				}
+			}
+			this.translatePoints();
 			this.updatePaths();
 			this.subject.publish(this);
 		});
@@ -736,7 +745,7 @@ export class Connector {
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
-		this.transformBoardPoints();
+		this.translatePoints();
 		this.updatePaths();
 		this.subject.publish(this);
 		return this;
@@ -760,27 +769,71 @@ export class Connector {
 		// this.animationFrameId = 0;
 	}
 
-	private transformBoardPoints(): void {
-		if (
-			this.startPoint.pointType !== "Board" ||
-			this.endPoint.pointType !== "Board"
-		) {
+	private scalePoints(): void {
+		const origin = new Point(this.getMbr().left, this.getMbr().top);
+		const previous = this.transformation.previous.copy();
+		previous.translateX = 0;
+		previous.translateY = 0;
+		previous.invert();
+		const currUnscaled = this.transformation.matrix.copy();
+		currUnscaled.translateX = 0;
+		currUnscaled.translateY = 0;
+		const delta = previous.multiplyByMatrix(currUnscaled);
+		this.scalePoint(this.startPoint, origin, delta, "start");
+		this.scalePoint(this.endPoint, origin, delta, "end");
+	}
+
+	private scalePoint(
+		point: ControlPoint,
+		origin: Point,
+		scaleMatrix: Matrix,
+		edge: ConnectorEdge,
+	): void {
+		if (point.pointType !== "Board") {
 			return;
 		}
+		const deltaX = point.x - origin.x;
+		const deltaY = point.y - origin.y;
+		// need to replace with getProportionalResize or fix connector transformation in getProportionalResize
+		const scaledX = origin.x + deltaX * scaleMatrix.scaleX;
+		const scaledY = origin.y + deltaY * scaleMatrix.scaleY;
 
+		const newPoint = new BoardPoint(scaledX, scaledY);
+		if (edge === "start") {
+			this.startPoint = newPoint;
+		} else {
+			this.endPoint = newPoint;
+		}
+	}
+
+	private translatePoints(): void {
 		const previous = this.transformation.previous.copy();
+		previous.scaleX = 1;
+		previous.scaleY = 1;
 		previous.invert();
-		const delta = previous.multiplyByMatrix(
-			this.transformation.matrix.copy(),
-		);
+		const currUnscaled = this.transformation.matrix.copy();
+		currUnscaled.scaleX = 1;
+		currUnscaled.scaleY = 1;
+		const delta = previous.multiplyByMatrix(currUnscaled);
+		this.translatePoint(this.startPoint, delta, "start");
+		this.translatePoint(this.endPoint, delta, "end");
+	}
 
-		const startPoint = new BoardPoint(this.startPoint.x, this.startPoint.y);
-		startPoint.transform(delta);
-		this.startPoint = startPoint;
-
-		const endPoint = new BoardPoint(this.endPoint.x, this.endPoint.y);
-		endPoint.transform(delta);
-		this.endPoint = endPoint;
+	private translatePoint(
+		point: ControlPoint,
+		delta: Matrix,
+		edge: ConnectorEdge,
+	): void {
+		if (point.pointType !== "Board") {
+			return;
+		}
+		const newPoint = new BoardPoint(point.x, point.y);
+		newPoint.transform(delta);
+		if (edge === "start") {
+			this.startPoint = newPoint;
+		} else {
+			this.endPoint = newPoint;
+		}
 	}
 
 	private updatePaths(): void {
