@@ -45,6 +45,7 @@ export class Frame implements Geometry {
 	newShape: FrameType | null = null;
 	transformationRenderBlock?: boolean = undefined;
 	private board?: Board;
+	isLocked = false;
 
 	constructor(
 		private events?: Events,
@@ -224,7 +225,12 @@ export class Frame implements Geometry {
 		opposite: Point,
 		startMbr: Mbr,
 		timeStamp: number,
-	): { matrix: Matrix; mbr: Mbr } {
+	): { matrix: Matrix; mbr: Mbr } | boolean {
+		if (this.isLocked) {
+			this.board?.pointer.setCursor("default");
+			return false;
+		}
+
 		if (this.getCanChangeRatio()) {
 			const res = getResize(resizeType, pointer, mbr, opposite);
 			this.transformation.scaleByTranslateBy(
@@ -673,5 +679,9 @@ export class Frame implements Geometry {
 			nMbr.backgroundColor = "rgba(173, 216, 230, 0.25)";
 			nMbr.render(context);
 		}
+	}
+
+	setIsLocked(isLocked: boolean): void {
+		this.isLocked = isLocked;
 	}
 }

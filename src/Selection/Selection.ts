@@ -8,7 +8,7 @@ import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
-import { SELECTION_COLOR } from "View/Tools/Selection";
+import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "View/Tools/Selection";
 import { createCommand } from "../Events/Command";
 import {
 	Connector,
@@ -112,6 +112,10 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
+		const newValue = Array.isArray(value)
+			? value.filter(item => !(item instanceof Frame && item.isLocked))
+			: (value as Frame).isLocked;
+
 		this.items.add(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
@@ -126,7 +130,9 @@ export class Selection {
 
 	addAll() {
 		const items = this.board.items.listAll();
-		const frames = this.board.items.listFrames();
+		const frames = this.board.items
+			.listFrames()
+			.filter(item => !item.isLocked);
 		this.add(items);
 		this.add(frames);
 		this.setContext("SelectByRect");
@@ -1153,6 +1159,16 @@ export class Selection {
 		this.setContext("None");
 	}
 
+	getIsLockedSelection(): boolean {
+		const items = this.list();
+		const isFrame = items.some(item => item.itemType === "Frame");
+		const isFrameLocked = items.some(
+			item => item.itemType === "Frame" && item.isLocked,
+		);
+
+		return isFrame && isFrameLocked;
+	}
+
 	isLocked(): boolean {
 		return false;
 	}
@@ -1199,7 +1215,12 @@ export class Selection {
 		mbr.strokeWidth = !customScale
 			? 1 / context.matrix.scaleX
 			: 1 / customScale;
-		mbr.borderColor = SELECTION_COLOR;
+
+		const selectionColor =
+			item.itemType === "Frame" && item.isLocked
+				? SELECTION_LOCKED_COLOR
+				: SELECTION_COLOR;
+		mbr.borderColor = selectionColor;
 		mbr.render(context);
 	}
 

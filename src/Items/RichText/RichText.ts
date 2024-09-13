@@ -1071,4 +1071,8 @@ export class RichText extends Mbr implements Geometry {
 		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
 		return fontSize * this.autoSizeScale;
 	}
+
+	splitNode(): void {
+		Transforms.splitNodes(this.editor.editor, { always: true });
+	}
 }

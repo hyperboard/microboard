@@ -25,6 +25,7 @@ import {
 	SELECTION_ANCHOR_RADIUS,
 	SELECTION_ANCHOR_WIDTH,
 	SELECTION_COLOR,
+	SELECTION_LOCKED_COLOR,
 } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
@@ -87,6 +88,11 @@ export class Transformer extends Tool {
 	}
 
 	leftButtonDown(): boolean {
+		const isLockedItems = this.selection.getIsLockedSelection();
+		if (isLockedItems) {
+			return false;
+		}
+
 		this.updateAnchorType();
 		const mbr = this.selection.getMbr();
 		this.resizeType = this.getResizeType();
@@ -142,6 +148,11 @@ export class Transformer extends Tool {
 	}
 
 	pointerMoveBy(_x: number, _y: number): boolean {
+		const isLockedItems = this.selection.getIsLockedSelection();
+		if (isLockedItems) {
+			return false;
+		}
+
 		this.updateAnchorType();
 		if (!this.resizeType) {
 			return false;
@@ -317,15 +328,23 @@ export class Transformer extends Tool {
 
 	render(context: DrawingContext): void {
 		const mbr = this.mbr;
+		const isLockedItems = this.selection.getIsLockedSelection();
+
 		if (mbr) {
 			mbr.strokeWidth = 1 / context.matrix.scaleX;
-			mbr.borderColor = SELECTION_COLOR;
+
+			const selectionColor = isLockedItems
+				? SELECTION_LOCKED_COLOR
+				: SELECTION_COLOR;
+			mbr.borderColor = selectionColor;
 			mbr.render(context);
 		}
 
-		const anchors = this.calcAnchors();
-		for (const anchor of anchors) {
-			anchor.render(context);
+		if (!isLockedItems) {
+			const anchors = this.calcAnchors();
+			for (const anchor of anchors) {
+				anchor.render(context);
+			}
 		}
 
 		this.toDrawBorders.render(context);
@@ -340,7 +359,7 @@ export class Transformer extends Tool {
 		initMbr: Mbr,
 		isWidth: boolean,
 		isHeight: boolean,
-	): TransformManyItems {
+	): TransformManyItems | boolean {
 		const { matrix } = resize;
 		const translation: TransformManyItems = {};
 		const items = this.selection.items.list();
