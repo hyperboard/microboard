@@ -24,6 +24,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+import { SelectionContext } from "Board/Selection/Selection";
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -457,6 +458,8 @@ export class EditorContainer {
 			const isAllNodesNotContainStyle = selectionStyles.every(
 				styleArr => !styleArr.includes(style),
 			);
+
+			ReactEditor.focus(this.editor);
 
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
