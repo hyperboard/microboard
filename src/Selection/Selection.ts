@@ -223,6 +223,9 @@ export class Selection {
 	}
 
 	editSelected(): void {
+		if (this.board.interfaceType === "view") {
+			return;
+		}
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -242,6 +245,9 @@ export class Selection {
 	}
 
 	editText(shouldReplace?: string, moveCursorToEnd = false): void {
+		if (this.board.interfaceType === "view") {
+			return;
+		}
 		if (this.items.isEmpty()) {
 			return;
 		}

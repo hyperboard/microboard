@@ -455,6 +455,9 @@ export class Select extends Tool {
 	}
 
 	leftButtonDouble(): boolean {
+		if (this.board.interfaceType === "view") {
+			return false;
+		}
 		this.board.selection.editTextUnderPointer();
 		const toEdit = this.board.selection.items.getSingle();
 		if (
