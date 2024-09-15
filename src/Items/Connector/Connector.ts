@@ -606,7 +606,7 @@ export class Connector {
 			return;
 		}
 		const ctx = context.ctx;
-
+		this.text.enableRender();
 		const textMbr = this.text.getClipMbr();
 		// Save the current context state
 		ctx.save();
@@ -731,10 +731,6 @@ export class Connector {
 		}
 		if (data.text) {
 			this.text.deserialize(data.text);
-
-			if (this.text.isEmpty()) {
-				this.text.disableRender();
-			}
 		}
 		this.startPointerStyle =
 			data.startPointerStyle ?? this.startPointerStyle;
