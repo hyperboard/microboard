@@ -197,7 +197,7 @@ export function getQuickAddButtons(
 
 			const floatingConnector = board.createItem("", connectorData);
 			const originalAlpha = context.ctx.globalAlpha;
-			context.ctx.globalAlpha = 0.33;
+			context.ctx.globalAlpha = 0.6;
 
 			newItem.render(context);
 			floatingConnector.render(context);
@@ -221,10 +221,10 @@ export function getQuickAddButtons(
 		const cameraMatrix = board.camera.getMatrix();
 		const cameraMbr = board.camera.getMbr();
 		const positionAdjustments = {
-			0: { left: -10, top: 0 },
-			1: { left: 10, top: 0 },
-			2: { left: 0, top: -10 },
-			3: { left: 0, top: 10 },
+			0: { left: -20, top: 0, rotate: "left" },
+			1: { left: 20, top: 0, rotate: "right" },
+			2: { left: 0, top: -20, rotate: "top" },
+			3: { left: 0, top: 20, rotate: "bottom" },
 		};
 
 		const existingButtons = htmlButtons;
@@ -248,11 +248,13 @@ export function getQuickAddButtons(
 				const adjustment = positionAdjustments[index] || {
 					left: 0,
 					top: 0,
+					rotate: "right",
 				};
 				const button = document.createElement(
 					"button",
 				) as HTMLQuickAddButton;
 				button.classList.add(styles.quickAddButton);
+				button.classList.add(styles[adjustment.rotate]);
 				button.style.left = `${
 					(pos.x - cameraMbr.left) * cameraMatrix.scaleX +
 					adjustment.left
