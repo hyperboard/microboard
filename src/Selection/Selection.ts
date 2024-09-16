@@ -145,19 +145,6 @@ export class Selection {
 	}
 
 	remove(value: Item | Item[]): void {
-		console.log("delete");
-		const isLocked =
-			value instanceof Frame && value.transformation.isLocked;
-		const isLockedFrame = Array.isArray(value)
-			? value.some(
-					item =>
-						item instanceof Frame && item.transformation.isLocked,
-			  )
-			: isLocked;
-		if (isLockedFrame) {
-			return;
-		}
-
 		this.items.remove(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
@@ -429,7 +416,9 @@ export class Selection {
 		this.removeAll();
 		const enclosedFrames = this.board.items
 			.getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
-			.filter(item => item instanceof Frame);
+			.filter(
+				item => item instanceof Frame && !item.transformation.isLocked,
+			);
 		const list = this.board.items
 			.getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
 			.filter(
