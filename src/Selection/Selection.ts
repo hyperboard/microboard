@@ -1169,9 +1169,11 @@ export class Selection {
 	}
 
 	removeFromBoard(): void {
-		const isLockedFrame = [...this.items.values()].some(
-			item => item instanceof Frame && item.transformation.isLocked,
-		);
+		const isLockedFrame = this.items
+			.list()
+			.some(
+				item => item instanceof Frame && item.transformation.isLocked,
+			);
 
 		if (isLockedFrame) {
 			return;
