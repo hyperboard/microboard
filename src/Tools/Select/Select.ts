@@ -14,6 +14,7 @@ import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
+import { Frames } from "Board/Items/Frame/Basic";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -277,6 +278,11 @@ export class Select extends Tool {
 							}
 						}
 					});
+				} else if (item instanceof Frame) {
+					item.text.setContainer(
+						Frames[item.getFrameType()].textBounds.copy(),
+						item.getMbr(),
+					);
 				}
 			});
 
