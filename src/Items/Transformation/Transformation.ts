@@ -19,6 +19,7 @@ export class Transformation {
 	matrix = new Matrix();
 	previous = new Matrix();
 	private rotate = defaultData.rotate;
+	isLocked = false;
 
 	constructor(private id = "", private events?: Events) {}
 
@@ -361,5 +362,9 @@ export class Transformation {
 			point,
 			timeStamp,
 		});
+	}
+
+	setIsLocked(isLocked: boolean): void {
+		this.isLocked = isLocked;
 	}
 }

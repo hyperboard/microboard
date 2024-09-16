@@ -45,7 +45,6 @@ export class Frame implements Geometry {
 	newShape: FrameType | null = null;
 	transformationRenderBlock?: boolean = undefined;
 	private board?: Board;
-	isLocked = false;
 
 	constructor(
 		private events?: Events,
@@ -226,7 +225,7 @@ export class Frame implements Geometry {
 		startMbr: Mbr,
 		timeStamp: number,
 	): { matrix: Matrix; mbr: Mbr } | boolean {
-		if (this.isLocked) {
+		if (this.transformation.isLocked) {
 			this.board?.pointer.setCursor("default");
 			return false;
 		}
@@ -679,9 +678,5 @@ export class Frame implements Geometry {
 			nMbr.backgroundColor = "rgba(173, 216, 230, 0.25)";
 			nMbr.render(context);
 		}
-	}
-
-	setIsLocked(isLocked: boolean): void {
-		this.isLocked = isLocked;
 	}
 }

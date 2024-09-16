@@ -113,8 +113,14 @@ export class Selection {
 
 	add(value: Item | Item[]): void {
 		const newValue = Array.isArray(value)
-			? value.filter(item => !(item instanceof Frame && item.isLocked))
-			: (value as Frame).isLocked;
+			? value.filter(
+					item =>
+						!(
+							item instanceof Frame &&
+							item.transformation.isLocked
+						),
+			  )
+			: (value as Frame).transformation.isLocked;
 
 		this.items.add(value);
 		if (Array.isArray(value)) {
@@ -132,13 +138,26 @@ export class Selection {
 		const items = this.board.items.listAll();
 		const frames = this.board.items
 			.listFrames()
-			.filter(item => !item.isLocked);
+			.filter(item => !item.transformation.isLocked);
 		this.add(items);
 		this.add(frames);
 		this.setContext("SelectByRect");
 	}
 
 	remove(value: Item | Item[]): void {
+		console.log("delete");
+		const isLocked =
+			value instanceof Frame && value.transformation.isLocked;
+		const isLockedFrame = Array.isArray(value)
+			? value.some(
+					item =>
+						item instanceof Frame && item.transformation.isLocked,
+			  )
+			: isLocked;
+		if (isLockedFrame) {
+			return;
+		}
+
 		this.items.remove(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
@@ -1150,6 +1169,13 @@ export class Selection {
 	}
 
 	removeFromBoard(): void {
+		const isLockedFrame = [...this.items.values()].some(
+			item => item instanceof Frame && item.transformation.isLocked,
+		);
+
+		if (isLockedFrame) {
+			return;
+		}
 		this.emit({
 			class: "Board",
 			method: "remove",
@@ -1163,7 +1189,7 @@ export class Selection {
 		const items = this.list();
 		const isFrame = items.some(item => item.itemType === "Frame");
 		const isFrameLocked = items.some(
-			item => item.itemType === "Frame" && item.isLocked,
+			item => item.itemType === "Frame" && item.transformation.isLocked,
 		);
 
 		return isFrame && isFrameLocked;
@@ -1217,7 +1243,7 @@ export class Selection {
 			: 1 / customScale;
 
 		const selectionColor =
-			item.itemType === "Frame" && item.isLocked
+			item.itemType === "Frame" && item.transformation.isLocked
 				? SELECTION_LOCKED_COLOR
 				: SELECTION_COLOR;
 		mbr.borderColor = selectionColor;
