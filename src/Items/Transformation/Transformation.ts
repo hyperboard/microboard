@@ -119,6 +119,12 @@ export class Transformation {
 			case "transformMany":
 				this.applyTransformMany(op.items[this.id]);
 				break;
+			case "locked":
+				this.applyLocked(op.locked);
+				break;
+			case "unlocked":
+				this.applyLocked(op.locked);
+				break;
 			default:
 				return;
 		}
@@ -207,6 +213,14 @@ export class Transformation {
 
 	applyRotateBy(degree: number): void {
 		this.rotateTo(this.rotate + degree);
+	}
+
+	applyLocked(locked: boolean): void {
+		this.isLocked = locked;
+	}
+
+	applyUnlocked(locked: boolean): void {
+		this.isLocked = locked;
 	}
 
 	getTranslation(): { x: number; y: number } {
@@ -364,7 +378,23 @@ export class Transformation {
 		});
 	}
 
-	setIsLocked(isLocked: boolean): void {
-		this.isLocked = isLocked;
+	setIsLocked(isLocked: boolean, timestamp?: number): void {
+		if (isLocked) {
+			this.emit({
+				class: "Transformation",
+				method: "locked",
+				item: [this.id],
+				locked: true,
+				timestamp,
+			});
+		} else {
+			this.emit({
+				class: "Transformation",
+				method: "unlocked",
+				item: [this.id],
+				locked: false,
+				timestamp,
+			});
+		}
 	}
 }
