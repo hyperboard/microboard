@@ -229,34 +229,36 @@ export class Sticker implements Geometry {
 		this.backgroundColor = backgroundColor;
 		this.stickerPath.setBackgroundColor(backgroundColor);
 
-		if (this.text.isEmpty()) {
-			this.text = new RichText(
-				this.textContainer,
-				this.id,
-				this.events,
-				this.transformation,
-				"\u00A0",
-				false,
-				true,
-				this.itemType,
-				{
-					...DEFAULT_TEXT_STYLES,
-					fontColor: isDarkColor(backgroundColor)
+		if (import.meta.env.INTEGRATION_UI === "microboard") {
+			if (this.text.isEmpty()) {
+				this.text = new RichText(
+					this.textContainer,
+					this.id,
+					this.events,
+					this.transformation,
+					"\u00A0",
+					false,
+					true,
+					this.itemType,
+					{
+						...DEFAULT_TEXT_STYLES,
+						fontColor: isDarkColor(backgroundColor)
+							? "rgb(255,255,255)"
+							: "rgb(20, 21, 26)",
+					},
+				);
+			} else {
+				const selection = this.text.getCurrentSelection();
+				if (selection) {
+					this.text.selectWholeText();
+				}
+				this.text.applySelectionFontColor(
+					isDarkColor(backgroundColor)
 						? "rgb(255,255,255)"
 						: "rgb(20, 21, 26)",
-				},
-			);
-		} else {
-			const selection = this.text.getCurrentSelection();
-			if (selection) {
-				this.text.selectWholeText();
+				);
+				this.text.restoreSelection(selection);
 			}
-			this.text.applySelectionFontColor(
-				isDarkColor(backgroundColor)
-					? "rgb(255,255,255)"
-					: "rgb(20, 21, 26)",
-			);
-			this.text.restoreSelection(selection);
 		}
 	}
 
