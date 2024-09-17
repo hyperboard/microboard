@@ -275,10 +275,7 @@ export class Connector {
 		});
 	}
 
-	private applyStartPoint(
-		pointData: ControlPointData,
-		updatePath = true,
-	): void {
+	applyStartPoint(pointData: ControlPointData, updatePath = true): void {
 		if (
 			pointData.pointType !== "Board" &&
 			this.startPoint.pointType !== "Board" &&
@@ -312,10 +309,7 @@ export class Connector {
 		});
 	}
 
-	private applyEndPoint(
-		pointData: ControlPointData,
-		updatePath = true,
-	): void {
+	applyEndPoint(pointData: ControlPointData, updatePath = true): void {
 		this.unsubscribeFromItem(this.endPoint, this.observerEndPointItem);
 		const optionalFn = this.getOptionalFindFn();
 		this.endPoint = getControlPoint(
