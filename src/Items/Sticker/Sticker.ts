@@ -36,23 +36,6 @@ const height = 200;
 
 export const StickerShape = {
 	textBounds: new Mbr(6.67, 6.67, width - 6.67, height - 6.67),
-	shadowPath: new Path(
-		[
-			new Line(new Point(2, 2), new Point(width, 2)),
-			new Line(new Point(width, 2), new Point(width, height)),
-			new Line(new Point(width, height), new Point(2, height)),
-			new Line(new Point(2, height), new Point(2, 2)),
-		],
-		true,
-		"rgba(255,255,255,0.1)",
-		"transparent",
-		"solid",
-		0,
-		0,
-		0,
-		"black",
-		15,
-	),
 	stickerPath: new Path(
 		[
 			new Line(new Point(0, 0), new Point(width, 0)),
@@ -82,7 +65,6 @@ export class Sticker implements Geometry {
 	readonly itemType = "Sticker";
 	readonly transformation = new Transformation(this.id, this.events);
 	private stickerPath = StickerShape.stickerPath.copy();
-	private shadowPath = StickerShape.shadowPath.copy();
 	private textContainer = StickerShape.textBounds.copy();
 	text = new RichText(
 		this.textContainer,
@@ -178,11 +160,9 @@ export class Sticker implements Geometry {
 
 	private transformPath(): void {
 		this.stickerPath = StickerShape.stickerPath.copy();
-		this.shadowPath = StickerShape.shadowPath.copy();
 		this.textContainer = StickerShape.textBounds.copy();
 		const matrix = this.transformation.matrix;
 		this.stickerPath.transform(matrix);
-		this.shadowPath.transform(matrix);
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);
 		// this.text.setContainer(this.textContainer);
@@ -323,9 +303,32 @@ export class Sticker implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		// this.shadowPath.render(context);
+		this.renderShadow(context);
 		this.stickerPath.render(context);
 		this.text.render(context);
+	}
+
+	renderShadow(context: DrawingContext): void {
+		const mbr = this.getMbr();
+		const shadowOffset = 6;
+		const shadowBlur = 15;
+		const shadowColor = "rgba(0, 0, 0, 0.5)";
+		const { ctx } = context;
+
+		ctx.save();
+		ctx.shadowOffsetX =
+			shadowOffset *
+			context.getCameraScale() *
+			this.transformation.getScale().x;
+		ctx.shadowOffsetY =
+			shadowOffset *
+			context.getCameraScale() *
+			this.transformation.getScale().y;
+		ctx.shadowColor = shadowColor;
+		ctx.shadowBlur = shadowBlur;
+		ctx.fillStyle = shadowColor;
+		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
+		ctx.restore();
 	}
 
 	getPaths(): Path | Paths {
@@ -450,7 +453,6 @@ export class Sticker implements Geometry {
 				id: this.id,
 				itemType: this.itemType,
 				parent: this.parent,
-				shadowPath: this.shadowPath,
 				stickerPath: this.stickerPath,
 			}),
 		);
