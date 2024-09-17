@@ -245,6 +245,10 @@ export class Frame implements Geometry {
 			);
 			this.setLastFrameScale();
 			res.mbr = this.getMbr();
+			this.text.setContainer(
+				Frames[this.shapeType].textBounds.copy(),
+				this.getMbr(),
+			);
 			return res;
 		} else {
 			if (

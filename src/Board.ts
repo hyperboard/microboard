@@ -6,6 +6,7 @@ import {
 	Mbr,
 	ConnectorData,
 	RichText,
+	Connector,
 } from "./Items";
 import { Keyboard } from "./Keyboard";
 import { Pointer } from "./Pointer";
@@ -16,7 +17,11 @@ import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
 import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { BoardCommand } from "./BoardCommand";
-import { ControlPointData } from "./Items/Connector/ControlPoint";
+import {
+	BoardPoint,
+	ControlPoint,
+	ControlPointData,
+} from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
 import { DrawingContext } from "./Items/DrawingContext";
 import { Connection } from "App/Connection";
@@ -30,6 +35,7 @@ import {
 	SELECTION_ANCHOR_WIDTH,
 	SELECTION_COLOR,
 } from "View/Tools/Selection";
+import { ConnectorEdge } from "./Items/Connector/Pointers";
 
 export type InterfaceType = "edit" | "view";
 
@@ -175,10 +181,44 @@ export class Board {
 	}
 
 	private applyRemoveOperation(op: RemoveItem): void {
+		const removedItems: Item[] = [];
 		this.findItemAndApply(op.item, item => {
 			this.index.remove(item);
 			this.selection.remove(item);
+			removedItems.push(item);
 		});
+		this.items.listAll().forEach(item => {
+			if (item.itemType === "Connector") {
+				this.replaceConnectorEdges(item, removedItems);
+			}
+		});
+	}
+
+	private replaceConnectorEdges(
+		connector: Connector,
+		removedItems: Item[],
+	): void {
+		const replaceConnectorEdge = (
+			point: ControlPoint,
+			edge: ConnectorEdge,
+		): void => {
+			if (point.pointType !== "Board") {
+				const pointData = new BoardPoint(point.x, point.y);
+				const item = removedItems.find(
+					item => item.getId() === point.item.getId(),
+				);
+				if (item) {
+					if (edge === "start") {
+						connector.applyStartPoint(pointData);
+					} else {
+						connector.applyEndPoint(pointData);
+					}
+				}
+			}
+		};
+
+		replaceConnectorEdge(connector.getStartPoint(), "start");
+		replaceConnectorEdge(connector.getEndPoint(), "end");
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
@@ -835,11 +875,7 @@ export class Board {
 		});
 	}
 
-	applyPasteOperation(
-		itemsMap: { [key: string]: ItemData },
-		select = true,
-	): void {
-		const context = this.selection.getContext();
+	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const items: Item[] = [];
 
 		const sortedItemsMap = Object.entries(itemsMap).sort(
@@ -876,12 +912,6 @@ export class Board {
 				pasteItem(id, data);
 			}
 		});
-
-		this.selection.removeAll();
-		if (select) {
-			this.selection.add(items);
-			this.selection.setContext(context);
-		}
 	}
 
 	isOnBoard(item: Item): boolean {

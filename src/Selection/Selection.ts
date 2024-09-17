@@ -27,6 +27,7 @@ import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
+import { t } from "i18next";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -235,6 +236,9 @@ export class Selection {
 	}
 
 	editSelected(): void {
+		if (this.board.interfaceType === "view") {
+			return;
+		}
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -254,6 +258,9 @@ export class Selection {
 	}
 
 	editText(shouldReplace?: string, moveCursorToEnd = false): void {
+		if (this.board.interfaceType === "view") {
+			return;
+		}
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -486,6 +493,18 @@ export class Selection {
 					newEndPointPos.y,
 				).serialize();
 			}
+		}
+
+		if (item.itemType === "Frame") {
+			const textItem = item.text.getTextString();
+			const copyText = t("frame.copy");
+			const copiedFrameText =
+				copyText + (textItem || serializedData.text.placeholderText);
+			item.text.clearText();
+			item.text.addText(copiedFrameText);
+			serializedData.text = item.text.serialize();
+			item.text.clearText();
+			item.text.addText(textItem);
 		}
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}

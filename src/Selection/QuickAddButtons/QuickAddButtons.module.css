@@ -1,14 +1,51 @@
 .quickAddButton {
 	position: absolute;
-	transform-origin: center center;
+	transform-origin: center;
 	transform: translate(-50%, -50%);
-	z-index: 25;
-	padding: 3px;
-	background-color: rgb(71, 120, 245);
+	z-index: 0;
+	padding: 3.5px;
+	background-color: #93aff6;
 	border-radius: 50%;
+	border: 1px solid #ffffff;
 	transition: transform 0.2s;
 }
 
 .quickAddButton:hover {
-	transform: translate(-50%, -50%) scale(2);
+	transform: translate(-50%, -50%) scale(4);
+	background-color: #924fe8;
+}
+
+.quickAddButton::before {
+	content: "";
+	position: absolute;
+	--quick-add-button-width: 4.25px;
+	--quick-add-button-height: 2.5px;
+	width: var(--quick-add-button-width);
+	height: var(--quick-add-button-height);
+	background: url('data:image/svg+xml;utf8,<svg width="var(--quick-add-button-width)" height="var(--quick-add-button-height)" viewBox="0 0 17 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.7593 5.00009L10.5339 9.58329L9.68819 8.30677L12.9245 5.83329H0.0415039V4.16663H12.9241L9.68819 1.69341L10.5339 0.416626L16.7593 5.00009Z" fill="white"/></svg>')
+		no-repeat;
+	opacity: 0;
+	transition: opacity 0.2s;
+	left: 20%;
+	top: 35%;
+}
+
+.quickAddButton:hover::before {
+	opacity: 1;
+}
+
+.quickAddButton.left::before {
+	rotate: 180deg;
+}
+
+.quickAddButton.right::before {
+	rotate: 0deg;
+}
+
+.quickAddButton.top::before {
+	rotate: 270deg;
+}
+
+.quickAddButton.bottom::before {
+	rotate: 90deg;
 }
