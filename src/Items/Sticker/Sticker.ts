@@ -310,24 +310,31 @@ export class Sticker implements Geometry {
 
 	renderShadow(context: DrawingContext): void {
 		const mbr = this.getMbr();
-		const shadowOffset = 6;
-		const shadowBlur = 15;
-		const shadowColor = "rgba(0, 0, 0, 0.5)";
 		const { ctx } = context;
 
 		ctx.save();
-		ctx.shadowOffsetX =
-			shadowOffset *
-			context.getCameraScale() *
-			this.transformation.getScale().x;
+		// First shadow
+		ctx.shadowOffsetX = 0;
 		ctx.shadowOffsetY =
-			shadowOffset *
+			(18 - 5) *
 			context.getCameraScale() *
 			this.transformation.getScale().y;
-		ctx.shadowColor = shadowColor;
-		ctx.shadowBlur = shadowBlur;
-		ctx.fillStyle = shadowColor;
+		ctx.shadowColor = "rgba(20, 21, 26, 0.25)";
+		ctx.shadowBlur = 24;
+		ctx.fillStyle = "rgba(20, 21, 26, 0.25)";
 		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
+
+		// Second shadow
+		ctx.shadowOffsetX = 0;
+		ctx.shadowOffsetY =
+			(8 - 5) *
+			context.getCameraScale() *
+			this.transformation.getScale().y;
+		ctx.shadowColor = "rgba(20, 21, 26, 0.125)";
+		ctx.shadowBlur = 8;
+		ctx.fillStyle = "rgba(20, 21, 26, 0.125)";
+		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
+
 		ctx.restore();
 	}
 
