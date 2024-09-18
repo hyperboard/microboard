@@ -2,7 +2,7 @@ import { Item } from "Board/Items";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold: number = 5;
+	private alignThreshold = 5;
 
 	constructor(private spatialIndex: SpatialIndex) {}
 
@@ -22,7 +22,9 @@ export class AlignmentHelper {
 		const horizontalLines: number[] = [];
 
 		nearbyItems.forEach(item => {
-			if (item === movingItem) return;
+			if (item === movingItem) {
+				return;
+			}
 			const itemMBR = item.getMbr();
 
 			if (Math.abs(itemMBR.left - movingMBR.left) < this.alignThreshold) {
