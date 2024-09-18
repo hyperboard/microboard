@@ -21,7 +21,6 @@ export interface Events {
 	redo(): void;
 	canUndo(): boolean;
 	canRedo(): boolean;
-	addEvent(event: BoardEvent): void;
 }
 
 export interface BoardEvent {
@@ -317,7 +316,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 		redo,
 		canUndo,
 		canRedo,
-		addEvent,
 	};
 
 	return instance;

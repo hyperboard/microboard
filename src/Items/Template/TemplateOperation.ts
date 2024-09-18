@@ -1,6 +1,6 @@
-import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { ItemOperation } from "../../Events";
 
-export class TemplateData {
+export class TemplateOperation {
 	readonly itemType = "Template";
-	constructor(public transformation = new DefaultTransformationData()) {}
+	constructor(public operations: ItemOperation[] = []) {}
 }
