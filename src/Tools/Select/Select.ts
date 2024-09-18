@@ -12,6 +12,7 @@ import createCanvasDrawer from "../../drawMbrOnCanvas";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
+import AlignmentHelper from "../RelativeAlignment";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -36,8 +37,13 @@ export class Select extends Tool {
 	canvasDrawer = createCanvasDrawer(this.board);
 	debounceUpd = createDebounceUpdater();
 
+	private alignmentHelper: AlignmentHelper; // Добавляем экземпляр AlignmentHelper
+	private verticalLines: number[] = [];
+	private horizontalLines: number[] = [];
+
 	constructor(private board: Board) {
 		super();
+		this.alignmentHelper = new AlignmentHelper(board.index); // Инициализируем AlignmentHelper
 	}
 
 	clear(): void {
@@ -60,6 +66,8 @@ export class Select extends Tool {
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.debounceUpd.setFalse();
+		this.verticalLines = [];
+		this.horizontalLines = [];
 	}
 
 	leftButtonDown(): boolean {
@@ -270,6 +278,16 @@ export class Select extends Tool {
 				}
 			});
 
+			// Вызываем checkAlignment для проверки выравнивания, если элемент выбран
+			const selectedItem = selection.items.getSingle();
+			if (selectedItem) {
+				console.log("Мы в selectedItem ");
+				const { verticalLines, horizontalLines } =
+					this.alignmentHelper.checkAlignment(selectedItem);
+				this.verticalLines = verticalLines;
+				this.horizontalLines = horizontalLines;
+			}
+
 			return false;
 		}
 		if (
@@ -297,6 +315,13 @@ export class Select extends Tool {
 					this.toHighlight.remove([draggingItem, frame]);
 				}
 			});
+
+			// Вызываем checkAlignment для проверки выравнивания
+			const { verticalLines, horizontalLines } =
+				this.alignmentHelper.checkAlignment(draggingItem);
+			console.log("KBYBBBBBBB", verticalLines, horizontalLines);
+			this.verticalLines = verticalLines;
+			this.horizontalLines = horizontalLines;
 
 			return false;
 		}
@@ -495,5 +520,31 @@ export class Select extends Tool {
 		} else {
 			this.toHighlight.render(context);
 		}
+
+		const scale = context.getCameraScale();
+		const cameraOffset = this.board.camera.getTranslation();
+
+		this.verticalLines.forEach(x => {
+			const adjustedX = x * scale;
+			context.ctx.beginPath();
+			context.ctx.moveTo(adjustedX, -100 * scale);
+			context.ctx.lineTo(adjustedX, 100 * scale);
+			context.ctx.strokeStyle = "rgba(0, 0, 1, 1)";
+			context.ctx.lineWidth = 2;
+			context.ctx.stroke();
+		});
+
+		this.horizontalLines.forEach(y => {
+			const adjustedY = y * scale;
+			context.ctx.beginPath();
+			context.ctx.moveTo(-100 * scale, adjustedY);
+			context.ctx.lineTo(100 * scale, adjustedY);
+			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+			context.ctx.lineWidth = 2;
+			context.ctx.stroke();
+		});
+
+		console.log("Линии", this.horizontalLines, this.verticalLines);
+		console.log("HFHFHFHFHFH");
 	}
 }

@@ -37,10 +37,10 @@ export class Board {
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
 	readonly camera = new Camera(this.pointer, this.getCameraSnapshot());
-	private index = new SpatialIndex(this.camera, this.pointer);
+	index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
-	private drawingContext: DrawingContext | null = null;
+	drawingContext: DrawingContext | null = null;
 
 	constructor(private boardId = "") {
 		this.selection = new Selection(this, this.events);

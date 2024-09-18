@@ -1,1 +1,3 @@
-export { RelativeAlignment } from "./RelativeAlignment";
+import { AlignmentHelper } from "./RelativeAlignment";
+
+export default AlignmentHelper;
