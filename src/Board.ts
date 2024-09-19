@@ -874,13 +874,21 @@ export class Board {
 			}
 
 			newMap[newItemId] = itemData;
-		}
 
-		this.emit({
-			class: "Board",
-			method: "duplicate",
-			itemsMap: newMap,
-		});
+			this.emit({
+				class: "Board",
+				method: "duplicate",
+				itemsMap: newMap,
+			});
+
+			const items = Object.keys(newMap)
+				.map(id => this.items.getById(id))
+				.filter(item => typeof item !== "undefined");
+			this.selection.removeAll();
+			if (itemsMap) {
+				this.selection.add(Object.values(items) as Item[]);
+			}
+		}
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
