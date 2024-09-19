@@ -173,7 +173,7 @@ export class Frame implements Geometry {
 	private initPath(): void {
 		this.path = Frames[this.shapeType].path.copy();
 		this.textContainer = Frames[this.shapeType].textBounds.copy();
-		this.text.setContainer(this.textContainer.copy());
+		this.text.setContainer(this.textContainer.copy(), this.getMbr());
 		this.text.updateElement();
 	}
 
@@ -240,6 +240,10 @@ export class Frame implements Geometry {
 			);
 			this.setLastFrameScale();
 			res.mbr = this.getMbr();
+			this.text.setContainer(
+				Frames[this.shapeType].textBounds.copy(),
+				this.getMbr(),
+			);
 			return res;
 		} else {
 			if (
@@ -402,6 +406,10 @@ export class Frame implements Geometry {
 		// console.log(this.transformation.getScale().y);
 		// this.text.setContainer(Frames[this.shapeType].textBounds.copy().getTransformed(textMatrix));
 
+		this.text.setContainer(
+			Frames[this.shapeType].textBounds.copy(),
+			this.getMbr(),
+		);
 		this.path.setBackgroundColor(this.backgroundColor);
 		this.path.setBackgroundOpacity(this.backgroundOpacity);
 		this.path.setBorderColor(this.borderColor);

@@ -92,7 +92,11 @@ export class ConnectorSnap {
 
 		if (this.isNearBorder(nearest)) {
 			this.snap.item = nearest;
-		} else if (hover && hover !== this.connector) {
+		} else if (
+			hover &&
+			hover !== this.connector &&
+			hover.itemType !== "Frame"
+		) {
 			this.snap.item = hover;
 		} else {
 			this.snap.item = null;
@@ -173,6 +177,11 @@ export class ConnectorSnap {
 		}
 
 		return nearest;
+	}
+
+	getClosestPointOnItem(item: Item, position: Point): ControlPoint {
+		const nearestEdgePoint = item.getNearestEdgePointTo(position);
+		return getFixedPoint(item, nearestEdgePoint);
 	}
 
 	isNearBorder(item: Item | null): boolean {

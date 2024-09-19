@@ -1,5 +1,5 @@
 import { Camera } from "Board/Camera";
-import { Frame, Item, ItemData, Mbr, Point } from "Board/Items";
+import { Connector, Frame, Item, ItemData, Mbr, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
@@ -442,42 +442,53 @@ export class Items {
 	getUnderPointer(size = 16): Item[] {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
-		const underPointer = this.getUnderPoint(new Point(x, y), size);
-		if (
-			underPointer.filter(item => item.itemType !== "Frame").length === 0
-		) {
-			const tolerated = this.index.getEnclosedOrCrossed(
-				x - size,
-				y - size,
-				x + size,
-				y + size,
-			);
-			const enclosed =
-				tolerated.filter(item => item.itemType !== "Frame").length <= 1
-					? tolerated
-					: this.index.getEnclosedOrCrossed(x, y, x, y);
-			const { nearest } = enclosed.reduce(
-				(acc, item) => {
-					const distances = item
-						.getMbr()
-						.getLines()
-						.map(line => line.getDistance(this.pointer.point));
-					const minDistance = Math.min(...distances);
-					if (minDistance < acc.distance) {
-						return { nearest: item, distance: minDistance };
-					}
-					return acc;
-				},
-				{ nearest: undefined, distance: Infinity } as {
-					nearest?: Item;
-					distance: number;
-				},
-			);
-			return nearest ? [nearest] : [];
+		const frameSize = size * 2;
+		const tolerated = this.index.getEnclosedOrCrossed(
+			x - size,
+			y - frameSize,
+			x + size,
+			y + frameSize,
+		);
+
+		let enclosed =
+			tolerated.filter(
+				item => !(item instanceof Frame || item instanceof Connector),
+			).length <= 1
+				? tolerated
+				: this.index.getEnclosedOrCrossed(x, y, x, y);
+
+		if (enclosed.length === 0) {
+			const underPointer = this.getUnderPoint(new Point(x, y), size);
+			enclosed = underPointer;
 		}
-		return underPointer.length === 1
-			? underPointer
-			: this.getUnderPoint(new Point(x, y));
+
+		const { nearest } = enclosed.reduce(
+			(acc, item) => {
+				const area =
+					item.getMbr().getHeight() * item.getMbr().getWidth();
+				const isItemTransparent =
+					item?.itemType === "Shape" &&
+					item?.getBackgroundColor() === "none";
+				const itemZIndex = this.getZIndex(item);
+				const accZIndex = this.getZIndex(acc.nearest!);
+
+				if (
+					(itemZIndex > accZIndex &&
+						(!isItemTransparent || area === acc.area)) ||
+					area < acc.area
+				) {
+					return { nearest: item, area };
+				}
+
+				return acc;
+			},
+			{ nearest: undefined, area: Infinity } as {
+				nearest?: Item;
+				area: number;
+			},
+		);
+
+		return nearest ? [nearest] : [];
 	}
 
 	getNearPointer(

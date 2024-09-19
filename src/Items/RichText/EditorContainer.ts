@@ -24,6 +24,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+import { SelectionContext } from "Board/Selection/Selection";
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -264,49 +265,49 @@ export class EditorContainer {
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
 		/* TODO bd-695
-        if (this.richText.getAutosize()
-            && (op.ops[0].type === "insert_text"
-            || op.ops[0].type === "split_node")
-        ) {
-            console.log("text len", this.textLength);
-            console.log("w", this.richText.getWidth());
-            if (this.richText.getFontSize() > 14) { // 14 - defaultSize
-                console.log("BEFORE", this.richText.getFontSize());
-                if (op.ops[0].type === "split_node"
-                || op.ops[0].text.length === 1) {
-                    this.decorated.apply(op.ops[0]);
-                    setTimeout(() => {
-                        if (this.richText.getFontSize() < 14) {
-                            console.log("overflowed");
-                            // Clear all / remove last one
-                            const removeOp = {
-                                type: "remove_text",
-                                path: op.ops[0].path,
-                                offset: op.ops[0].offset + op.ops[0].text.length - 1,
-                                text: op.ops[0].text.slice(-1)
-                            };
-                            this.richText.clearText();
-                            this.decorated.apply(removeOp);
-                        }
-                    }, 5);
-                } else {
-                    op.ops[0].text.split("").forEach((letter, index) => {
-                        const newOp = {
-                            ...op,
-                            ops: [{
-                                ...op.ops[0],
-                                text: letter,
-                                offset: op.ops[0].offset + index
-                            }]
-                        };
-                        this.applySelectionEdit(newOp);
-                    })
-                }
-            }
-        } else {
-            this.decorated.apply(op.ops[0]);
-        }
-        */
+				if (this.richText.getAutosize()
+						&& (op.ops[0].type === "insert_text"
+						|| op.ops[0].type === "split_node")
+				) {
+						console.log("text len", this.textLength);
+						console.log("w", this.richText.getWidth());
+						if (this.richText.getFontSize() > 14) { // 14 - defaultSize
+								console.log("BEFORE", this.richText.getFontSize());
+								if (op.ops[0].type === "split_node"
+								|| op.ops[0].text.length === 1) {
+										this.decorated.apply(op.ops[0]);
+										setTimeout(() => {
+												if (this.richText.getFontSize() < 14) {
+														console.log("overflowed");
+														// Clear all / remove last one
+														const removeOp = {
+																type: "remove_text",
+																path: op.ops[0].path,
+																offset: op.ops[0].offset + op.ops[0].text.length - 1,
+																text: op.ops[0].text.slice(-1)
+														};
+														this.richText.clearText();
+														this.decorated.apply(removeOp);
+												}
+										}, 5);
+								} else {
+										op.ops[0].text.split("").forEach((letter, index) => {
+												const newOp = {
+														...op,
+														ops: [{
+																...op.ops[0],
+																text: letter,
+																offset: op.ops[0].offset + index
+														}]
+												};
+												this.applySelectionEdit(newOp);
+										})
+								}
+						}
+				} else {
+						this.decorated.apply(op.ops[0]);
+				}
+				*/
 		for (const operation of op.ops) {
 			this.decorated.apply(operation);
 		}
@@ -449,22 +450,25 @@ export class EditorContainer {
 			const isAllNodesContainStyle = selectionStyles.every(styleArr =>
 				styleArr.includes(style),
 			);
+
 			const isSomeNodeContainStyle = selectionStyles.some(styleArr =>
 				styleArr.includes(style),
 			);
 
-			if (isAllNodesContainStyle) {
-				Editor.removeMark(this.editor, style);
-				return;
-			}
-			if (isSomeNodeContainStyle) {
-				Editor.addMark(this.editor, style, true);
-				return;
-			}
+			const isAllNodesNotContainStyle = selectionStyles.every(
+				styleArr => !styleArr.includes(style),
+			);
 
 			ReactEditor.focus(this.editor);
 
-			this.toggleMark(style);
+			if (isAllNodesContainStyle) {
+				Editor.addMark(this.editor, style, false);
+				return;
+			}
+			if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
+				Editor.addMark(this.editor, style, true);
+				return;
+			}
 		});
 		this.emitMethodOps();
 	}
@@ -485,6 +489,19 @@ export class EditorContainer {
 			Editor.addMark(editor, "fontFamily", fontFamily);
 		}
 		this.emitMethodOps();
+	}
+
+	applySelectionFontColor(fontColor: string): void {
+		const editor = this.editor;
+		if (!editor) {
+			throw new Error("Editor is not initialized");
+		}
+
+		const marks = this.getSelectionMarks();
+		if (!marks) {
+			return;
+		}
+		Editor.addMark(editor, "fontColor", fontColor);
 	}
 
 	applySelectionFontSize(fontSize: number, selectionContext?: string): void {

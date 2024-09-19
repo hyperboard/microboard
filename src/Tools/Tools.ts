@@ -13,6 +13,8 @@ import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
+import { Item, Point } from "Board/Items";
+import { ConnectedPointerDirection } from "Board/Items/Connector/Pointers";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -22,11 +24,19 @@ export class Tools extends ToolContext {
 	}
 
 	setTool(tool: BoardTool): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		this.tool = tool;
 		this.publish();
 	}
 
 	navigate(): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getNavigate()) {
 			this.cancel();
 		} else {
@@ -40,6 +50,10 @@ export class Tools extends ToolContext {
 	}
 
 	select(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getSelect()) {
 			this.navigate();
 		} else {
@@ -56,6 +70,10 @@ export class Tools extends ToolContext {
 	}
 
 	addSticker(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getAddSticker() && !isIframe()) {
 			this.cancel();
 		} else {
@@ -68,6 +86,10 @@ export class Tools extends ToolContext {
 	}
 
 	addShape(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getAddShape() && !isIframe()) {
 			this.cancel();
 		} else {
@@ -88,6 +110,10 @@ export class Tools extends ToolContext {
 	}
 
 	addText(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getAddText() && !isIframe()) {
 			this.cancel();
 		} else {
@@ -103,11 +129,19 @@ export class Tools extends ToolContext {
 		return this.tool instanceof AddText ? this.tool : undefined;
 	}
 
-	addConnector(clearSelection = false): void {
+	addConnector(
+		clearSelection = false,
+		itemToStart?: Item,
+		position?: Point,
+	): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getAddConnector() && !isIframe()) {
 			this.cancel();
 		} else {
-			this.tool = new AddConnector(this.board);
+			this.tool = new AddConnector(this.board, itemToStart, position);
 			if (clearSelection) {
 				this.board.selection.removeAll();
 			}
@@ -120,6 +154,10 @@ export class Tools extends ToolContext {
 	}
 
 	addDrawing(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getAddDrawing()) {
 			this.cancel();
 		} else {
@@ -136,6 +174,10 @@ export class Tools extends ToolContext {
 	}
 
 	export(): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getExport()) {
 			this.cancel();
 		} else {
@@ -149,6 +191,10 @@ export class Tools extends ToolContext {
 	}
 
 	addFrame(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		if (this.getAddFrame() && !isIframe()) {
 			this.cancel();
 		} else {
@@ -165,7 +211,21 @@ export class Tools extends ToolContext {
 	}
 
 	cancel(): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
 		this.tool.onCancel();
+		this.tool = new Select(this.board);
+		this.publish();
+	}
+
+	confirm(): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
+		this.tool.onConfirm();
 		this.tool = new Select(this.board);
 		this.publish();
 	}

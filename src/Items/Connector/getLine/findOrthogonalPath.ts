@@ -17,7 +17,7 @@ type Direction = "vertical" | "horizontal";
 
 const ITEM_OFFSET = 25;
 
-function getDirection(from: Point, to?: Point): Direction | null {
+export function getDirection(from: Point, to?: Point): Direction | null {
 	if (!to) {
 		return null;
 	}
@@ -34,7 +34,7 @@ function isChangingDirection(
 	neighbor: Node,
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint,
-): boolean {
+): number {
 	const dirMap: Record<ConnectedPointerDirection, Direction> = {
 		top: "vertical",
 		bottom: "vertical",
@@ -46,17 +46,19 @@ function isChangingDirection(
 		newStart && current.point.barelyEqual(newStart)
 			? dirMap[getPointerDirection(newStart)!]
 			: getDirection(current.point, current.parent?.point);
-	const goingDirection =
-		newEnd && neighbor.point.barelyEqual(newEnd)
-			? dirMap[getPointerDirection(newEnd)!]
-			: getDirection(current.point, neighbor.point);
+	const goingDirection = getDirection(current.point, neighbor.point);
+	if (newEnd && neighbor.point.barelyEqual(newEnd)) {
+		const endDir = dirMap[getPointerDirection(newEnd)!];
+		if (goingDirection && endDir !== goingDirection) {
+			return 1 + isChangingDirection(current, neighbor, newStart);
+		}
+	}
 
-	return (
-		(comingDirection &&
-			goingDirection &&
-			comingDirection !== goingDirection) ||
-		false
-	);
+	return comingDirection &&
+		goingDirection &&
+		comingDirection !== goingDirection
+		? 1
+		: 0;
 }
 
 function heuristic(start: Node, end: Node): number {
@@ -431,8 +433,8 @@ function createGrid(
 
 	const possibleStepX = Math.abs(gridEnd.x - gridStart.x) / 10;
 	const possibleStepY = Math.abs(gridEnd.y - gridStart.y) / 10;
-	const stepX = possibleStepX < minStep ? minStep : possibleStepX;
-	const stepY = possibleStepY < minStep ? minStep : possibleStepY;
+	const stepX = possibleStepX === 0 ? minStep : possibleStepX;
+	const stepY = possibleStepY === 0 ? minStep : possibleStepY;
 
 	for (let x = gridStart.x; x <= gridEnd.x + stepX; x += stepX) {
 		const row: Point[] = [];
@@ -710,9 +712,7 @@ function findPath(
 				neighbor,
 				newStart,
 				newEnd,
-			)
-				? 1
-				: 0;
+			);
 			const tentativeCost = current.costSoFar + 1;
 
 			if (

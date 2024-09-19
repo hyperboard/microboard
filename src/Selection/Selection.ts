@@ -1,10 +1,6 @@
 import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
-import {
-	BoardPoint,
-	ConnectorData,
-	ConnectorLineStyle,
-} from "Board/Items/Connector";
+import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
@@ -19,9 +15,7 @@ import {
 	Frame,
 	Item,
 	ItemData,
-	Matrix,
 	Mbr,
-	Point,
 	RichText,
 	Shape,
 	TransformationOperation,
@@ -29,10 +23,11 @@ import {
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape/Basic";
+import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
-import { ControlPointData } from "Board/Items/Connector/ControlPoint";
-import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
+import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
+import { t } from "i18next";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -56,6 +51,7 @@ export class Selection {
 	transformationRenderBlock?: boolean = undefined;
 
 	quickAddButtons: QuickAddButtons = getQuickAddButtons(this, this.board);
+	showQuickAddPanel = false;
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
@@ -117,32 +113,23 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
-		const items = Array.isArray(value) ? value : [value];
-
-		const filteredItems = items.filter(i => {
-			if (!(i instanceof Connector)) {
-				return true;
+		this.items.add(value);
+		if (Array.isArray(value)) {
+			for (const item of value) {
+				item.subject.subscribe(this.itemObserver);
 			}
-
-			if (i instanceof Connector && items.length === 1) {
-				return true;
-			}
-
-			return i.isConnected();
-		});
-
-		this.items.add(filteredItems);
-		for (const item of filteredItems) {
-			item.subject.subscribe(this.itemObserver);
+		} else {
+			value.subject.subscribe(this.itemObserver);
 		}
-
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
 	}
 
 	addAll() {
 		const items = this.board.items.listAll();
+		const frames = this.board.items.listFrames();
 		this.add(items);
+		this.add(frames);
 		this.setContext("SelectByRect");
 	}
 
@@ -214,6 +201,7 @@ export class Selection {
 		if (context === "None") {
 			this.quickAddButtons.clear();
 		}
+		this.showQuickAddPanel = false;
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
 	}
@@ -236,6 +224,9 @@ export class Selection {
 	}
 
 	editSelected(): void {
+		if (this.board.interfaceType === "view") {
+			return;
+		}
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -254,7 +245,10 @@ export class Selection {
 		this.board.tools.select();
 	}
 
-	editText(shouldReplace?: string): void {
+	editText(shouldReplace?: string, moveCursorToEnd = false): void {
+		if (this.board.interfaceType === "view") {
+			return;
+		}
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -272,10 +266,12 @@ export class Selection {
 			item instanceof RichText ||
 			item instanceof Frame
 		) {
+			const text = item instanceof RichText ? item : item.text;
 			if (shouldReplace) {
-				const text = item instanceof RichText ? item : item.text;
 				text.clearText();
 				text.editor.editor.insertText(shouldReplace);
+			}
+			if (shouldReplace || moveCursorToEnd) {
 				text.moveCursorToEnd();
 			}
 			this.setTextToEdit(item);
@@ -484,6 +480,18 @@ export class Selection {
 				).serialize();
 			}
 		}
+
+		if (item.itemType === "Frame") {
+			const textItem = item.text.getTextString();
+			const copyText = t("frame.copy");
+			const copiedFrameText =
+				copyText + (textItem || serializedData.text.placeholderText);
+			item.text.clearText();
+			item.text.addText(copiedFrameText);
+			serializedData.text = item.text.serialize();
+			item.text.clearText();
+			item.text.addText(textItem);
+		}
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}
 
@@ -580,14 +588,14 @@ export class Selection {
 		return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
 	}
 
-	getStartPointerStyle(): string {
+	getStartPointerStyle(): ConnectorPointerStyle {
 		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getStartPointerStyle() || "none";
+		return pointer?.getStartPointerStyle() || "None";
 	}
 
-	getEndPointerStyle(): string {
+	getEndPointerStyle(): ConnectorPointerStyle {
 		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getEndPointerStyle() || "none";
+		return pointer?.getEndPointerStyle() || "None";
 	}
 
 	setStartPointerStyle(style: string): void {

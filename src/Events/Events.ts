@@ -42,7 +42,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 	const subject = new Subject<BoardEvent>();
 
 	connection.subscribe(board.getBoardId(), handleNewMessage);
-	setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
+	// setInterval(republishEvents, EVENTS_REPUBLISH_INTERVAL);
 
 	function serialize(): BoardEvent[] {
 		return log.serialize();
@@ -62,6 +62,10 @@ export function createEvents(board: Board, connection: Connection): Events {
 
 	function handleNewMessage(message: SocketMessage): void {
 		switch (message.type) {
+			case "ViewMode":
+				board.interfaceType = "view";
+				board.tools.publish();
+				break;
 			case "BoardEvent":
 				addEvent(message.event);
 				break;
@@ -73,6 +77,16 @@ export function createEvents(board: Board, connection: Connection): Events {
 					log.insertEvents(events);
 					subject.publish(events);
 					latestServerOrder = events[events.length - 1].order;
+					if (
+						!board.camera.useSavedSnapshot(
+							board.getCameraSnapshot(),
+						)
+					) {
+						if (board.items.listAll().length > 0) {
+							const itemsMbr = board.items.getMbr();
+							board.camera.zoomToFit(itemsMbr);
+						}
+					}
 				} else {
 					for (const event of events) {
 						addEvent(event);

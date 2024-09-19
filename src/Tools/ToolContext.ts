@@ -52,5 +52,13 @@ export class ToolContext implements Tool {
 		return this.tool.pointerMoveBy(x, y);
 	}
 
+	onCancel(): void {
+		return this.tool.onCancel();
+	}
+
+	onConfirm(): void {
+		return this.tool.onConfirm();
+	}
+
 	render(_context: DrawingContext): void {}
 }

@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { Descendant, Editor, Transforms } from "slate";
+import { BaseSelection, Descendant, Editor, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
@@ -72,6 +72,7 @@ export class RichText extends Mbr implements Geometry {
 	maxHeight: number;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
+	frameMbr?: Mbr;
 
 	constructor(
 		public container: Mbr,
@@ -141,6 +142,9 @@ export class RichText extends Mbr implements Geometry {
 			this.getTextForNodes(),
 			this.getMaxWidth(),
 			this.insideOf,
+			undefined,
+			undefined,
+			this.frameMbr,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -234,6 +238,9 @@ export class RichText extends Mbr implements Geometry {
 				this.getTextForNodes(),
 				this.getMaxWidth(),
 				this.insideOf,
+				undefined,
+				undefined,
+				this.frameMbr,
 			);
 			if (
 				this.containerMaxWidth &&
@@ -279,19 +286,19 @@ export class RichText extends Mbr implements Geometry {
 				  );
 		/*
 
-        if (blockNodes.height / blockNodes.width < (1 / 7)) {
+				if (blockNodes.height / blockNodes.width < (1 / 7)) {
 
-            maxWidth = blockNodes.width / 3
-            if (maxWidth > width) {
-                maxWidth = width;
-            }
-            blockNodes = getBlockNodes(text, maxWidth);
-            if (blockNodes.width < blockNodes.height) {
-                maxWidth = blockNodes.height;
-                blockNodes = getBlockNodes(text, maxWidth);
-            }
-        }
-        */
+						maxWidth = blockNodes.width / 3
+						if (maxWidth > width) {
+								maxWidth = width;
+						}
+						blockNodes = getBlockNodes(text, maxWidth);
+						if (blockNodes.width < blockNodes.height) {
+								maxWidth = blockNodes.height;
+								blockNodes = getBlockNodes(text, maxWidth);
+						}
+				}
+				*/
 
 		if (shouldUpdate) {
 			this.blockNodes = blockNodes;
@@ -366,6 +373,10 @@ export class RichText extends Mbr implements Geometry {
 			top = container.top;
 		}
 
+		if (this.frameMbr) {
+			top = this.frameMbr.top - height - 8;
+		}
+
 		return {
 			point: new Point(left, top),
 			width,
@@ -421,6 +432,12 @@ export class RichText extends Mbr implements Geometry {
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
 		this.bottom = top + height;
+
+		if (this.frameMbr) {
+			this.top = this.frameMbr.top - height - 8;
+			this.bottom = this.frameMbr.top - 8;
+		}
+
 		if (this.insideOf === "Sticker" || this.insideOf === "Shape") {
 			this.left = rect.left;
 			this.right = rect.right;
@@ -437,9 +454,10 @@ export class RichText extends Mbr implements Geometry {
 	/**
 	 * Set the container that would be used to align the CanvasDocument.
 	 */
-	setContainer(container: Mbr): void {
+	setContainer(container: Mbr, frameMbr?: Mbr): void {
 		this.isContainerSet = true;
 		this.container = container;
+		this.frameMbr = frameMbr;
 		this.alignInRectangle(
 			this.getTransformedContainer(),
 			this.editor.verticalAlignment,
@@ -624,10 +642,23 @@ export class RichText extends Mbr implements Geometry {
 		this.updateElement();
 	}
 
+	applySelectionFontColor(fontColor: string): void {
+		this.shouldEmit = false;
+		this.editor.applySelectionFontColor(fontColor);
+		this.shouldEmit = true;
+		this.updateElement();
+	}
+
 	setSelectionFontStyle(
 		style: TextStyle | TextStyle[],
 		selectionContext?: SelectionContext,
 	): void {
+		if (
+			selectionContext === "EditUnderPointer" ||
+			selectionContext === "SelectByRect"
+		) {
+			this.selectWholeText();
+		}
 		this.editor.setSelectionFontStyle(style);
 		this.updateElement();
 	}
@@ -887,6 +918,21 @@ export class RichText extends Mbr implements Geometry {
 		};
 	}
 
+	getCurrentSelection(): BaseSelection | undefined {
+		const { selection } = this.editor.editor;
+		if (selection) {
+			return JSON.parse(JSON.stringify(selection)) as BaseSelection;
+		}
+	}
+
+	restoreSelection(selection?: BaseSelection): void {
+		if (selection) {
+			Transforms.select(this.editor.editor, selection);
+		} else {
+			Transforms.deselect(this.editor.editor);
+		}
+	}
+
 	deserialize(data: Partial<RichTextData>): this {
 		if (data.children) {
 			this.editor.editor.children = data.children;
@@ -1046,5 +1092,9 @@ export class RichText extends Mbr implements Geometry {
 		const marks = this.editor.getSelectionMarks();
 		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
 		return fontSize * this.autoSizeScale;
+	}
+
+	splitNode(): void {
+		Transforms.splitNodes(this.editor.editor, { always: true });
 	}
 }

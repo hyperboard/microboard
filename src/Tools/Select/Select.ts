@@ -12,7 +12,9 @@ import createCanvasDrawer from "../../drawMbrOnCanvas";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
-import AlignmentHelper from "../RelativeAlignment";
+import { quickAddItem } from "Board/Selection/QuickAddButtons";
+import { isSafari } from "App/isSafari";
+import { Frames } from "Board/Items/Frame/Basic";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -77,26 +79,34 @@ export class Select extends Tool {
 		this.clear();
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
-
+		selection.showQuickAddPanel = false;
 		const hover = items.getUnderPointer();
 
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
 		this.isDownOnSelection = false;
-		if (
-			selectionMbr !== undefined &&
-			selectionMbr.isUnderPoint(pointer.point)
-		) {
+
+		if (selectionMbr !== undefined) {
 			const itemsUnderPointer = this.board.items.getUnderPointer();
-			if (itemsUnderPointer.length > 0) {
-				const selectedItems = this.board.selection.items.list();
-				const isAnySelectedItemUnderPointer = selectedItems.some(item =>
-					itemsUnderPointer.includes(item),
-				);
-				this.isDownOnSelection = isAnySelectedItemUnderPointer;
-			} else {
+			const isFrame = itemsUnderPointer.some(
+				item => item.itemType === "Frame",
+			);
+
+			if (isFrame) {
 				this.isDownOnSelection = true;
+			}
+
+			if (selectionMbr.isUnderPoint(pointer.point)) {
+				if (itemsUnderPointer.length > 0) {
+					const selectedItems = this.board.selection.items.list();
+					const isAnySelectedItemUnderPointer = selectedItems.some(
+						item => itemsUnderPointer.includes(item),
+					);
+					this.isDownOnSelection = isAnySelectedItemUnderPointer;
+				} else {
+					this.isDownOnSelection = true;
+				}
 			}
 		}
 
@@ -275,6 +285,11 @@ export class Select extends Tool {
 							}
 						}
 					});
+				} else if (item instanceof Frame) {
+					item.text.setContainer(
+						Frames[item.getFrameType()].textBounds.copy(),
+						item.getMbr(),
+					);
 				}
 			});
 
@@ -470,6 +485,9 @@ export class Select extends Tool {
 	}
 
 	leftButtonDouble(): boolean {
+		if (this.board.interfaceType === "view") {
+			return false;
+		}
 		this.board.selection.editTextUnderPointer();
 		const toEdit = this.board.selection.items.getSingle();
 		if (
@@ -514,8 +532,50 @@ export class Select extends Tool {
 		return translation;
 	}
 
+	onCancel(): void {
+		if (this.board.selection.showQuickAddPanel) {
+			this.board.selection.showQuickAddPanel = false;
+			this.board.selection.subject.publish(this.board.selection);
+		} else if (
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			this.board.selection.setContext("EditUnderPointer");
+		} else if (this.board.selection.items.list().length > 0) {
+			this.board.selection.removeAll();
+		}
+	}
+
+	onConfirm(): void {
+		const single = this.board.selection.items.getSingle();
+		if (
+			this.board.selection.showQuickAddPanel &&
+			single &&
+			single.itemType === "Connector"
+		) {
+			quickAddItem(this.board, "copy", single);
+		} else if (
+			single &&
+			this.board.selection.getContext() !== "EditTextUnderPointer"
+		) {
+			this.board.selection.editText(undefined, true);
+		} else if (
+			isSafari() &&
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			if (
+				(single && "text" in single) ||
+				single?.itemType === "RichText"
+			) {
+				const text =
+					single.itemType === "RichText" ? single : single.text;
+				text.splitNode();
+			}
+		}
+	}
+
 	render(context: DrawingContext): void {
 		if (this.isDrawingRectangle && this.rect) {
+			this.rect.strokeWidth = 1 / this.board.camera.getScale();
 			this.rect.render(context);
 		} else {
 			this.toHighlight.render(context);
