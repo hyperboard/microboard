@@ -92,6 +92,21 @@ export class Shape implements Geometry {
 		this.updateMbr();
 	}
 
+	private saveShapeData() {
+		sessionStorage.setItem(
+			"lastShapeData",
+			JSON.stringify({
+				shapeType: this.shapeType,
+				backgroundColor: this.backgroundColor,
+				backgroundOpacity: this.backgroundOpacity,
+				borderColor: this.borderColor,
+				borderOpacity: this.borderOpacity,
+				borderStyle: this.borderStyle,
+				borderWidth: this.borderWidth,
+			}),
+		);
+	}
+
 	emit(operation: ShapeOperation): void {
 		if (this.events) {
 			const command = new ShapeCommand([this], operation);
@@ -194,6 +209,7 @@ export class Shape implements Geometry {
 				this.applyShapeType(op.shapeType);
 				break;
 		}
+		this.saveShapeData();
 	}
 
 	getShapeType(): ShapeType {
