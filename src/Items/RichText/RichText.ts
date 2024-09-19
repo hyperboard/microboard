@@ -36,6 +36,10 @@ export type DefaultTextStyles = {
 	fontColor: string;
 	fontHighlight: string;
 	lineHeight: number;
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	"line-through": boolean;
 };
 
 let isEditInProcessValue = false;

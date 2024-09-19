@@ -82,15 +82,6 @@ export class Connector {
 		true,
 		false,
 		undefined,
-		{
-			...DEFAULT_TEXT_STYLES,
-			fontSize: localStorage.getItem("lastConnectorTextSize")
-				? Number(localStorage.getItem("lastConnectorTextSize"))
-				: DEFAULT_TEXT_STYLES.fontSize,
-			fontColor:
-				localStorage.getItem("lastConnectorTextColor") ??
-				DEFAULT_TEXT_STYLES.fontColor,
-		},
 	);
 	transformationRenderBlock?: boolean = undefined;
 	private optionalFindItemFn?: FindItemFn;

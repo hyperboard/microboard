@@ -459,8 +459,6 @@ export class EditorContainer {
 				styleArr => !styleArr.includes(style),
 			);
 
-			ReactEditor.focus(this.editor);
-
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
 				return;
