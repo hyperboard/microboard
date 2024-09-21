@@ -527,7 +527,7 @@ export class EditorContainer {
 		Editor.addMark(editor, "fontSize", size);
 
 		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
+			// ReactEditor.focus(editor);
 		}
 	}
 
