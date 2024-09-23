@@ -1,5 +1,5 @@
 import { Shape } from "./Shape";
-import { ShapeOperation } from "./ShapeOperation";
+import { SetBorderWidth, ShapeOperation } from "./ShapeOperation";
 import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
@@ -60,10 +60,11 @@ export class ShapeCommand implements Command {
 					};
 				});
 			case "setBorderWidth":
-				return mapItemsByOperation(shape, shape => {
+				return mapItemsByOperation(shape, _shape => {
 					return {
 						...this.operation,
-						borderWidth: this.operation.prevBorderWidth,
+						borderWidth: (this.operation as SetBorderWidth)
+							.prevBorderWidth,
 					};
 				});
 			case "setShapeType":
