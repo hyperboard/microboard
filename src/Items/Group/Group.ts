@@ -8,7 +8,6 @@ import { Mbr } from "../Mbr";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { Board } from "../../Board";
-import { Events } from "Board/Events";
 import { TransformationData } from "../Transformation/TransformationData";
 
 export interface GroupData {
@@ -28,7 +27,6 @@ export class Group implements Geometry {
 		private children: Item[],
 		private id = "",
 		private board: Board,
-		private events?: Events,
 	) {
 		for (const child of children) {
 			child.parent = this.id;
