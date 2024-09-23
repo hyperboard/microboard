@@ -1,10 +1,9 @@
 import { Path } from "../../Path";
-import { ControlPoint, BoardPoint } from "../ControlPoint";
-import { getStraightLine } from "./getStraightLine";
+import { ConnectorLineStyle } from "../Connector";
+import { BoardPoint, ControlPoint } from "../ControlPoint";
 import { getCurvedLine } from "./getCurvedLine";
 import { getOrthogonalLine } from "./getOrthogonalLine";
-import { ConnectorLineStyle } from "../Connector";
-import { Pointer } from "../Pointers/Pointers";
+import { getStraightLine } from "./getStraightLine";
 
 export function getLine(
 	lineStyle: ConnectorLineStyle,

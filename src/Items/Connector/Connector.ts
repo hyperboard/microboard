@@ -9,7 +9,6 @@ import {
 	DRAW_TEXT_BORDER,
 	TEXT_BORDER_PADDING,
 } from "View/Items/Connector";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { Board } from "../../Board";
 import { Events, Operation } from "../../Events";
@@ -29,7 +28,6 @@ import {
 	ControlPoint,
 	ControlPointData,
 	FindItemFn,
-	FixedPoint,
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";

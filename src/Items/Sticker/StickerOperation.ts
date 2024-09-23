@@ -7,7 +7,7 @@ export class StickerData {
 	constructor(
 		public backgroundColor = stickerColors["Sky Blue"],
 		public transformation = new DefaultTransformationData(),
-		public text = new DefaultRichTextData(),
+		public text = new DefaultRichTextData([], "center", undefined),
 	) {}
 }
 

@@ -19,6 +19,11 @@ export const validator = new Ajv();
 
 type ItemsMap = Record<string, Item>;
 
+type PointData = {
+	x: number;
+	y: number;
+};
+
 export function validateItemsMap(parsedObject: any): parsedObject is ItemsMap {
 	// Validate the presence and structure of the serialized ItemsMap object
 	if (typeof parsedObject !== "object" || parsedObject === null) {
