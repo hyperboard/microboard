@@ -14,8 +14,6 @@ import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { Item, Point } from "Board/Items";
-import { AddTemplate } from "./AddTemplate";
-import { ConnectedPointerDirection } from "Board/Items/Connector/Pointers";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -86,22 +84,6 @@ export class Tools extends ToolContext {
 		this.publish();
 	}
 
-	addTemplate(events, clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
-			this.tool = new Navigate(this.board);
-			return;
-		}
-		if (this.getAddTemplate() && !isIframe()) {
-			this.cancel();
-		} else {
-			this.tool = new AddTemplate(this.board);
-			if (clearSelection) {
-				this.board.selection.removeAll();
-			}
-		}
-		this.publish();
-	}
-
 	addShape(clearSelection = false): void {
 		if (this.board.interfaceType === "view") {
 			this.tool = new Navigate(this.board);
@@ -124,10 +106,6 @@ export class Tools extends ToolContext {
 
 	getAddSticker(): AddSticker | undefined {
 		return this.tool instanceof AddSticker ? this.tool : undefined;
-	}
-
-	getAddTemplate(): AddTemplate | undefined {
-		return this.tool instanceof AddTemplate ? this.tool : undefined;
 	}
 
 	addText(clearSelection = false): void {
