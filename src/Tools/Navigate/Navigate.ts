@@ -73,9 +73,11 @@ export class Navigate extends BoardTool {
 		return true;
 	}
 
-	keyDown(key: string): void {
+	keyDown(key: string): boolean {
 		if (key === "Shift") {
 			this.board.tools.select();
+			return true;
 		}
+		return false;
 	}
 }

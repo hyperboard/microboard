@@ -15,23 +15,23 @@ export class AddSticker extends BoardTool {
 	static defaultWidth?: number = undefined;
 	sticker = new Sticker(undefined, undefined);
 	isDown = false;
-	sticker: Sticker;
 	constructor(board: Board) {
 		super(board);
 		const lastSticker = this.getLastSticker();
 		this.sticker = new Sticker(
 			undefined,
 			undefined,
-			lastSticker?.backgroundColor,
+			lastSticker?.getBackgroundColor(),
 		);
 
 		this.setCursor(this.sticker.getBackgroundColor());
 	}
 
-	setCursor(color: string) {
+	setCursor(color?: string) {
 		if (STICKER_COLOR_NAMES) {
-			const colorName =
-				STICKER_COLOR_NAMES[STICKER_COLORS.indexOf(color)];
+			const colorName = color
+				? STICKER_COLOR_NAMES[STICKER_COLORS.indexOf(color)]
+				: undefined;
 			this.board.pointer.setCursor(
 				colorName
 					? (`sticker-${colorName}` as CursorName)
@@ -81,7 +81,7 @@ export class AddSticker extends BoardTool {
 		const lastSticker = this.getLastSticker();
 		if (lastSticker) {
 			try {
-				AddSticker.defaultWidth = +lastSticker.stickerPath.width;
+				AddSticker.defaultWidth = +lastSticker.getWidth();
 			} catch (err) {
 				console.error("Failed to set AddSticker.defaultWidth", err);
 			}
