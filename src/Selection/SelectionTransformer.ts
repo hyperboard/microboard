@@ -2,7 +2,6 @@ import { Board } from "../Board";
 import { DrawingContext } from "../Items/DrawingContext";
 import { Tool } from "../Tools/Tool";
 import { ConnectorTransformer } from "./ConnectorTransformer";
-import { ItemsHighlighter } from "./ItemsHighlighter/ItemsHightlighter";
 import { Selection } from "./Selection";
 import { SelectionItems } from "./SelectionItems";
 import { Transformer } from "./Transformer";
@@ -10,9 +9,8 @@ import { Transformer } from "./Transformer";
 export class SelectionTransformer extends Tool {
 	private readonly defaultTransformerTool: Transformer;
 	private readonly connectorTransformerTool: ConnectorTransformer;
-	private readonly itemsHighlighter: ItemsHighlighter;
 
-	private tool: Transformer | ConnectorTransformer | ItemsHighlighter;
+	private tool: Transformer | ConnectorTransformer;
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -22,7 +20,6 @@ export class SelectionTransformer extends Tool {
 			this.board,
 			selection,
 		);
-		this.itemsHighlighter = new ItemsHighlighter(selection);
 		this.tool = this.defaultTransformerTool;
 
 		selection.subject.subscribe(selection => {
@@ -41,7 +38,6 @@ export class SelectionTransformer extends Tool {
 
 	updateTool(): void {
 		if (this.selection.getContext() === "SelectUnderPointer") {
-			this.tool = this.itemsHighlighter;
 			return;
 		}
 		if (this.selection.items.isSingle()) {
@@ -59,7 +55,7 @@ export class SelectionTransformer extends Tool {
 		}
 	}
 
-	getTool(): Transformer | ConnectorTransformer | ItemsHighlighter {
+	getTool(): Transformer | ConnectorTransformer {
 		return this.tool;
 	}
 
