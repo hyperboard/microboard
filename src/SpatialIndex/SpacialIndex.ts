@@ -6,15 +6,15 @@ import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 
+type ItemWoFrames = Exclude<Item, Frame>;
+
 export class SpatialIndex {
 	subject = new Subject<Items>();
-	private itemsArray: Exclude<Item, Frame>[] = [];
+	private itemsArray: ItemWoFrames[] = [];
 	private framesArray: Frame[] = [];
-	private itemsIndex = new LayeredIndex(
-		(item: Exclude<Item, Frame>): number => {
-			return this.itemsArray.indexOf(item);
-		},
-	);
+	private itemsIndex = new LayeredIndex((item: ItemWoFrames): number => {
+		return this.itemsArray.indexOf(item);
+	});
 	private framesIndex = new LayeredIndex((item: Frame): number => {
 		return this.framesArray.indexOf(item);
 	});
@@ -28,10 +28,10 @@ export class SpatialIndex {
 	clear(): void {
 		this.itemsArray = [];
 		this.framesArray = [];
-		this.itemsIndex = new LayeredIndex((item: Item): number => {
+		this.itemsIndex = new LayeredIndex((item: ItemWoFrames): number => {
 			return this.itemsArray.indexOf(item);
 		});
-		this.framesIndex = new LayeredIndex((item: Item): number => {
+		this.framesIndex = new LayeredIndex((item: Frame): number => {
 			return this.framesArray.indexOf(item);
 		});
 		this.Mbr = new Mbr();
@@ -131,7 +131,7 @@ export class SpatialIndex {
 		// const newItems: Item[] = [];
 		for (let i = 0; i < zIndex.length; i++) {
 			const index = zIndex[i];
-			this.itemsArray[index] = items[i] as Item;
+			this.itemsArray[index] = items[i] as ItemWoFrames;
 		}
 
 		this.itemsArray.forEach(this.change.bind(this));
@@ -154,8 +154,8 @@ export class SpatialIndex {
 		}
 	}
 
-	sendManyToBack(items: Item[]): void {
-		const newItems: Item[] = [...items];
+	sendManyToBack(items: ItemWoFrames[]): void {
+		const newItems: ItemWoFrames[] = [...items];
 		this.itemsArray.forEach(item => {
 			if (!items.includes(item)) {
 				newItems.push(item);
@@ -182,8 +182,8 @@ export class SpatialIndex {
 		}
 	}
 
-	bringManyToFront(items: Item[]) {
-		const newItems: Item[] = [];
+	bringManyToFront(items: ItemWoFrames[]): void {
+		const newItems: ItemWoFrames[] = [];
 		this.itemsArray.forEach(item => {
 			if (!items.includes(item)) {
 				newItems.push(item);
@@ -194,7 +194,7 @@ export class SpatialIndex {
 		this.itemsArray.forEach(this.change.bind(this));
 	}
 	// TODO Item could be frame
-	moveSecondAfterFirst(first: Item, second: Item): void {
+	moveSecondAfterFirst(first: ItemWoFrames, second: ItemWoFrames): void {
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
 		const firstIndex = this.itemsArray.indexOf(first);
@@ -204,7 +204,7 @@ export class SpatialIndex {
 		this.subject.publish(this.items);
 	}
 	// TODO Item could be frame
-	moveSecondBeforeFirst(first: Item, second: Item): void {
+	moveSecondBeforeFirst(first: ItemWoFrames, second: ItemWoFrames): void {
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
 		const firstIndex = this.itemsArray.indexOf(first);
@@ -269,10 +269,10 @@ export class SpatialIndex {
 		bottom: number,
 	): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
+		const frames = this.framesIndex.getRectsEnclosedOrCrossedBy(mbr);
+		const woFrames = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
 
-		return this.framesIndex
-			.getRectsEnclosedOrCrossedBy(mbr)
-			.concat(this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr));
+		return [...woFrames, ...frames];
 	}
 
 	getFramesEnclosedOrCrossed(
@@ -283,7 +283,7 @@ export class SpatialIndex {
 	): Frame[] {
 		return this.framesIndex.getRectsEnclosedOrCrossedBy(
 			new Mbr(left, top, right, bottom),
-		) as Frame[];
+		);
 	}
 
 	getItemsEnclosedOrCrossed(
@@ -291,7 +291,7 @@ export class SpatialIndex {
 		top: number,
 		right: number,
 		bottom: number,
-	): Item[] {
+	): ItemWoFrames[] {
 		return this.itemsIndex.getRectsEnclosedOrCrossedBy(
 			new Mbr(left, top, right, bottom),
 		);
@@ -321,9 +321,9 @@ export class SpatialIndex {
 			maxDistance,
 		);
 		const combined = nearestItems.concat(nearestFrames);
-		combined.sort((a, b) => {
-			const distA = point.getDistance(a.getMbr().getCenter());
-			const distB = point.getDistance(b.getMbr().getCenter());
+		combined.sort((aa, bb) => {
+			const distA = point.getDistance(aa.getMbr().getCenter());
+			const distB = point.getDistance(bb.getMbr().getCenter());
 			return distA - distB;
 		});
 		return combined.slice(0, maxItems);
@@ -429,7 +429,7 @@ export class Items {
 		return this.index.getRectsEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getItemsInView(): Exclude<Item, Frame>[] {
+	getItemsInView(): ItemWoFrames[] {
 		const { left, top, right, bottom } = this.view.getMbr();
 		return this.index.getItemsEnclosedOrCrossed(left, top, right, bottom);
 	}

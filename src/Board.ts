@@ -1,41 +1,32 @@
-import {
-	Frame,
-	Item,
-	ItemData,
-	Matrix,
-	Mbr,
-	ConnectorData,
-	RichText,
-	Connector,
-} from "./Items";
-import { Keyboard } from "./Keyboard";
-import { Pointer } from "./Pointer";
-import { Selection } from "./Selection";
-import { SpatialIndex } from "./SpatialIndex";
-import { Tools } from "./Tools";
-import { Camera } from "./Camera/";
-import { Events, ItemOperation, Operation } from "./Events";
-import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
-import { BoardCommand } from "./BoardCommand";
-import {
-	BoardPoint,
-	ControlPoint,
-	ControlPointData,
-} from "./Items/Connector/ControlPoint";
-// import { Group } from "./Items/Group";
-import { DrawingContext } from "./Items/DrawingContext";
 import { Connection } from "App/Connection";
-import { BoardEvent, createEvents } from "./Events/Events";
 import { v4 as uuidv4 } from "uuid";
-import { itemFactories } from "./itemFactories";
-import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 import {
 	SELECTION_ANCHOR_COLOR,
 	SELECTION_ANCHOR_RADIUS,
 	SELECTION_ANCHOR_WIDTH,
 	SELECTION_COLOR,
 } from "View/Tools/Selection";
+import { BoardCommand } from "./BoardCommand";
+import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
+import { Camera } from "./Camera/";
+import { Events, ItemOperation, Operation } from "./Events";
+import { BoardEvent, createEvents } from "./Events/Events";
+import { itemFactories } from "./itemFactories";
+import { Connector, Frame, Item, ItemData, Matrix, Mbr } from "./Items";
+import {
+	BoardPoint,
+	ControlPoint,
+	ControlPointData,
+} from "./Items/Connector/ControlPoint";
 import { ConnectorEdge } from "./Items/Connector/Pointers";
+// import { Group } from "./Items/Group";
+import { DrawingContext } from "./Items/DrawingContext";
+import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
+import { Keyboard } from "./Keyboard";
+import { Pointer } from "./Pointer";
+import { Selection } from "./Selection";
+import { SpatialIndex } from "./SpatialIndex";
+import { Tools } from "./Tools";
 
 export type InterfaceType = "edit" | "view";
 
@@ -144,6 +135,7 @@ export class Board {
 				if (!first || !second) {
 					return;
 				}
+				// @ts-expect-error incorrect type
 				return this.index.moveSecondBeforeFirst(first, second);
 			}
 			case "moveSecondAfterFirst":
@@ -152,17 +144,20 @@ export class Board {
 				if (!first || !second) {
 					return;
 				}
+				// @ts-expect-error incorrect type
 				return this.index.moveSecondAfterFirst(first, second);
 			case "bringToFront": {
 				const items = op.item
 					.map(item => this.items.getById(item))
 					.filter((item): item is Item => item !== undefined);
+				// @ts-expect-error incorrect type
 				return this.index.bringManyToFront(items);
 			}
 			case "sendToBack": {
 				const items = op.item
 					.map(item => this.items.getById(item))
 					.filter((item): item is Item => item !== undefined);
+				// @ts-expect-error incorrect type
 				return this.index.sendManyToBack(items);
 			}
 			case "add":
@@ -172,7 +167,7 @@ export class Board {
 				return this.applyRemoveOperation(op);
 			}
 			case "paste": {
-				return this.applyPasteOperation(op.itemsMap, op.select);
+				return this.applyPasteOperation(op.itemsMap);
 			}
 			case "duplicate": {
 				return this.applyPasteOperation(op.itemsMap);
@@ -222,6 +217,7 @@ export class Board {
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
+		// @ts-expect-error incorrect type
 		this.findItemAndApply(op.item, item => {
 			item.apply(op);
 		});
@@ -496,7 +492,7 @@ export class Board {
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {
-		const { items, events } = snapshot;
+		const { events } = snapshot;
 		/*
 		this.index.clear();
 		for (const key in items) {
@@ -874,20 +870,28 @@ export class Board {
 			}
 
 			newMap[newItemId] = itemData;
-		}
 
-		this.emit({
-			class: "Board",
-			method: "duplicate",
-			itemsMap: newMap,
-		});
+			this.emit({
+				class: "Board",
+				method: "duplicate",
+				itemsMap: newMap,
+			});
+
+			const items = Object.keys(newMap)
+				.map(id => this.items.getById(id))
+				.filter(item => typeof item !== "undefined");
+			this.selection.removeAll();
+			if (itemsMap) {
+				this.selection.add(Object.values(items) as Item[]);
+			}
+		}
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const items: Item[] = [];
 
 		const sortedItemsMap = Object.entries(itemsMap).sort(
-			([_, dataA], [__, dataB]) => {
+			([, dataA], [, dataB]) => {
 				return dataA.zIndex - dataB.zIndex;
 			},
 		);
@@ -896,7 +900,9 @@ export class Board {
 			if (!data) {
 				throw new Error("Pasting itemId doesn't exist in itemsMap");
 			}
+			// @ts-expect-error data unknown
 			if (data.itemType === "Frame") {
+				// @ts-expect-error data unknown
 				data.text.placeholderText = `Frame ${
 					this.getMaxFrameSerial() + 1
 				}`;

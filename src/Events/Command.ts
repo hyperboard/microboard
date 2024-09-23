@@ -102,6 +102,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 					case "RichText":
 						return new RichTextCommand(
 							items.map(item =>
+								// @ts-expect-error incorrect type
 								item.itemType === "RichText" ? item : item.text,
 							),
 							operation,

@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { BaseSelection, Descendant, Editor, Transforms } from "slate";
+import { BaseSelection, Descendant, Editor, Transforms, Text } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
@@ -36,6 +36,10 @@ export type DefaultTextStyles = {
 	fontColor: string;
 	fontHighlight: string;
 	lineHeight: number;
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	"line-through": boolean;
 };
 
 let isEditInProcessValue = false;
@@ -55,6 +59,7 @@ export function toggleEdit(value: boolean): void {
 export class RichText extends Mbr implements Geometry {
 	readonly itemType = "RichText";
 	parent = "Board";
+	board!: Board;
 	readonly subject = new Subject<RichText>();
 	readonly editor: EditorContainer;
 
@@ -69,10 +74,11 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
-	maxHeight: number;
+	maxHeight: number = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	frameMbr?: Mbr;
+	initialFontColor?: string;
 
 	constructor(
 		public container: Mbr,
@@ -144,7 +150,7 @@ export class RichText extends Mbr implements Geometry {
 			this.insideOf,
 			undefined,
 			undefined,
-			this.frameMbr,
+			!!this.frameMbr,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -240,7 +246,7 @@ export class RichText extends Mbr implements Geometry {
 				this.insideOf,
 				undefined,
 				undefined,
-				this.frameMbr,
+				!!this.frameMbr,
 			);
 			if (
 				this.containerMaxWidth &&
@@ -779,6 +785,28 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	getMinFontSize(): number {
+		const textNodes = Editor.nodes(this.editor.editor, {
+			match: n => Text.isText(n),
+			at: [],
+		});
+
+		const fontSizes: number[] = [];
+		for (const [node] of textNodes) {
+			const fontSize =
+				node.fontSize || (node.marks && node.marks.fontSize);
+			if (fontSize) {
+				fontSizes.push(parseFloat(fontSize));
+			}
+		}
+
+		if (fontSizes.length > 0) {
+			return Math.min(...fontSizes);
+		}
+
+		return this.initialTextStyles.fontSize;
+	}
+
 	getFontHighlight(): string {
 		const marks = this.editor.getSelectionMarks();
 		return marks?.fontHighlight ?? this.initialTextStyles.fontHighlight;
@@ -985,8 +1013,10 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
+				// @ts-ignore
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
+				// @ts-ignore
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();

@@ -1,9 +1,9 @@
 import { CubicBezier } from "Board/Items/Curve";
-import { Path, Paths } from "Board/Items/Path";
+import { Path } from "Board/Items/Path";
+import { Point } from "Board/Items/Point";
 import { Matrix } from "Board/Items/Transformation";
 import { ConnectorLineStyle } from "../Connector";
 import { ControlPoint } from "../ControlPoint";
-import { Point } from "Board/Items/Point";
 import { getPointer, Pointer } from "./Pointers";
 
 export type ConnectedPointerDirection = "top" | "bottom" | "right" | "left";

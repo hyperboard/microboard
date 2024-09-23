@@ -190,7 +190,7 @@ function getTextStyle(data: TextNode): LeafStyle {
 		fontFamily: data.fontFamily ?? "Arial",
 	};
 
-	const styles = [];
+	const styles: string[] = [];
 
 	if (data.bold) {
 		styles.push("bold");
@@ -204,10 +204,10 @@ function getTextStyle(data: TextNode): LeafStyle {
 	if (data["line-through"]) {
 		styles.push("line-through");
 	}
-	if (data.sub) {
+	if (data.subscript) {
 		styles.push("subscript");
 	}
-	if (data.super) {
+	if (data.superscript) {
 		styles.push("superscript");
 	}
 

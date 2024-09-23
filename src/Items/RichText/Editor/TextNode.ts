@@ -16,7 +16,7 @@ export type TextStyle = typeof TextStyles[number];
 export type TextNode = {
 	type: "text";
 	text: string;
-	// styles?: TextStyle[];
+	styles?: TextStyle[];
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;

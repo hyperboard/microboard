@@ -24,7 +24,6 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { SelectionContext } from "Board/Selection/Selection";
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -208,6 +207,7 @@ export class EditorContainer {
 				case "setFontSize":
 				case "setFontHighlight":
 				case "setHorisontalAlignment":
+					console.log(this.id);
 					this.applyWholeTextOp(op);
 					break;
 				case "setMaxWidth":
@@ -335,7 +335,6 @@ export class EditorContainer {
 	private applyWholeTextOp(op: WholeTextOp): void {
 		const selection = this.editor.selection;
 		this.selectWholeText();
-		this.shouldEmit = false;
 		switch (op.method) {
 			case "setBlockType":
 				this.setSelectionBlockType(op.type);
@@ -368,7 +367,6 @@ export class EditorContainer {
 		if (selection) {
 			Transforms.select(this.editor, selection);
 		}
-		this.shouldEmit = true;
 	}
 
 	applyMaxWidth(maxWidth: number): void {
@@ -459,8 +457,6 @@ export class EditorContainer {
 				styleArr => !styleArr.includes(style),
 			);
 
-			ReactEditor.focus(this.editor);
-
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
 				return;
@@ -529,7 +525,7 @@ export class EditorContainer {
 		Editor.addMark(editor, "fontSize", size);
 
 		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
+			// ReactEditor.focus(editor);
 		}
 	}
 

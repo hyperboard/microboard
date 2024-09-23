@@ -8,7 +8,7 @@ export interface RichTextData {
 	readonly itemType: "RichText";
 	children: Descendant[];
 	verticalAlignment: VerticalAlignment;
-	maxWidth: number | undefined;
+	maxWidth?: number;
 	transformation?: TransformationData;
 	containerMaxWidth?: number;
 	insideOf?: string;
@@ -39,7 +39,7 @@ export class DefaultRichTextData implements RichTextData {
 	constructor(
 		public children: Descendant[] = [],
 		public verticalAlignment: VerticalAlignment = "center",
-		public maxWidth: number | undefined,
+		public maxWidth?: number,
 		public transformation?: TransformationData,
 		public containerMaxWidth?: number,
 		public insideOf?: string,

@@ -1,4 +1,3 @@
-import { Board } from "Board/Board";
 import { Matrix, Mbr, Point } from "Board/Items";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
@@ -27,7 +26,6 @@ export class Camera {
 	private touchEvents: Map<number, PointerEvent> = new Map();
 	private previousDistance: number | null = null;
 	private previousPositions: { point1: Point; point2: Point } | null = null;
-	private previous: "pinch" | "pan" | null = null;
 	boardId = "";
 
 	constructor(private boardPointer = new Pointer()) {
@@ -213,13 +211,13 @@ export class Camera {
 
 	isPinch(): boolean {
 		/*
-        const threshold = this.previous === "pinch" ? 0.2 : 10;
-        const distance = this.calculateDistance();
-        const is =
-            this.previousDistance !== null &&
-            Math.abs(distance - this.previousDistance) > threshold;
-        this.previous = is ? "pinch" : "pan";
-        */
+				const threshold = this.previous === "pinch" ? 0.2 : 10;
+				const distance = this.calculateDistance();
+				const is =
+						this.previousDistance !== null &&
+						Math.abs(distance - this.previousDistance) > threshold;
+				this.previous = is ? "pinch" : "pan";
+				*/
 		const previous = this.previousPositions;
 		if (!previous) {
 			return false;
@@ -267,7 +265,7 @@ export class Camera {
 		if (this.previousPositions === null) {
 			return { x: 0, y: 0 };
 		}
-		const [touch1, touch2] = Array.from(this.touchEvents.values());
+		const [touch1] = Array.from(this.touchEvents.values());
 		const delta1 = {
 			x:
 				(touch1.pageX - this.previousPositions.point1.x) /
@@ -275,10 +273,6 @@ export class Camera {
 			y:
 				(touch1.pageY - this.previousPositions.point1.y) /
 				this.matrix.scaleX,
-		};
-		const delta2 = {
-			x: touch2.pageX - this.previousPositions.point2.x,
-			y: touch2.pageY - this.previousPositions.point2.y,
 		};
 		const delta = delta1;
 		return delta;

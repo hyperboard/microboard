@@ -2,11 +2,8 @@ import { Board } from "Board/Board";
 import { Line, Mbr, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape/Basic";
-import {
-	ADD_TO_SELECTION,
-	DEFAULT_SHAPE,
-	SHAPE_LAST_TYPE_KEY,
-} from "View/Tools/AddShape";
+import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
@@ -14,16 +11,29 @@ export class AddShape extends BoardTool {
 	line: Line | undefined;
 	bounds = new Mbr();
 	type: ShapeType | "None" = DEFAULT_SHAPE;
-	shape = new Shape();
+	shape: Shape;
 	isDown = false;
 
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
-
-		const lastShapeType = localStorage.getItem(SHAPE_LAST_TYPE_KEY);
-		if (lastShapeType) {
-			this.type = lastShapeType as ShapeType;
+		const savedShapeData = sessionStorage.getItem("lastShapeData");
+		if (savedShapeData) {
+			const data = JSON.parse(savedShapeData) as DefaultShapeData;
+			this.shape = new Shape(
+				undefined,
+				"",
+				data.shapeType,
+				data.backgroundColor,
+				data.backgroundOpacity,
+				data.borderColor,
+				data.borderOpacity,
+				data.borderStyle,
+				data.borderWidth,
+			);
+			this.setShapeType(data.shapeType);
+		} else {
+			this.shape = new Shape();
 		}
 	}
 
@@ -33,7 +43,6 @@ export class AddShape extends BoardTool {
 
 	setShapeType(type: ShapeType): void {
 		this.type = type;
-		localStorage.setItem(SHAPE_LAST_TYPE_KEY, type);
 		this.board.tools.publish();
 	}
 

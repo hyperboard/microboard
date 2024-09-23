@@ -4,9 +4,12 @@ import { DEFAULT_STROKE_COLOR } from "View/Tools/AddShape";
 import { BorderStyle, BorderWidth } from "../Path";
 import { RichTextData } from "../RichText";
 import { DefaultRichTextData } from "../RichText/RichTextData";
-import { TransformationData } from "../Transformation";
-import { DefaultTransformationData } from "../Transformation/TransformationData";
+import {
+	TransformationData,
+	DefaultTransformationData,
+} from "../Transformation";
 import { ShapeType } from "./Basic";
+import { RequiredMembers } from "ajv/dist/types/json-schema";
 
 export interface ShapeData {
 	readonly itemType: "Shape";
@@ -50,9 +53,9 @@ const shapeDataSchema: JSONSchemaType<ShapeData> = {
 		"borderWidth",
 		"transformation",
 		"text",
-	],
+	] as RequiredMembers<ShapeData>[],
 	additionalProperties: false,
-};
+} as const;
 
 validator.addSchema(shapeDataSchema, "shapeDataSchema");
 

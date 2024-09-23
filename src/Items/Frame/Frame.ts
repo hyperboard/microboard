@@ -483,7 +483,7 @@ export class Frame implements Geometry {
 
 	getSnapAnchorPoints(): Point[] {
 		const anchorPoints = Frames[this.shapeType].anchorPoints;
-		const points = [];
+		const points: Point[] = [];
 		for (const anchorPoint of anchorPoints) {
 			points.push(anchorPoint.getTransformed(this.transformation.matrix));
 		}
@@ -526,7 +526,7 @@ export class Frame implements Geometry {
 
 		if (this.board) {
 			this.getChildrenIds().forEach(childId => {
-				const child = this.board.items.getById(childId);
+				const child = this.board?.items.getById(childId);
 				if (child) {
 					this.handleNesting(child);
 				}

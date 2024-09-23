@@ -171,7 +171,7 @@ export class Transformer extends Tool {
 				this.board.pointer.point,
 				mbr,
 				this.oppositePoint,
-				this.startMbr,
+				this.startMbr || new Mbr(),
 				this.beginTimeStamp,
 			).mbr;
 		} else if (single instanceof RichText) {
