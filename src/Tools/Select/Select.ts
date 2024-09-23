@@ -15,6 +15,7 @@ import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import { Frames } from "Board/Items/Frame/Basic";
+import AlignmentHelper from "../RelativeAlignment";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -39,13 +40,13 @@ export class Select extends Tool {
 	canvasDrawer = createCanvasDrawer(this.board);
 	debounceUpd = createDebounceUpdater();
 
-	private alignmentHelper: AlignmentHelper; // Добавляем экземпляр AlignmentHelper
-	private verticalLines: number[] = [];
-	private horizontalLines: number[] = [];
+	private alignmentHelper: AlignmentHelper;
+    private snapLines: { verticalLines: Line[], horizontalLines: Line[] } = { verticalLines: [], horizontalLines: [] };
+
 
 	constructor(private board: Board) {
 		super();
-		this.alignmentHelper = new AlignmentHelper(board.index); // Инициализируем AlignmentHelper
+		this.alignmentHelper = new AlignmentHelper(board.index); 
 	}
 
 	clear(): void {
@@ -68,8 +69,7 @@ export class Select extends Tool {
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.debounceUpd.setFalse();
-		this.verticalLines = [];
-		this.horizontalLines = [];
+		this.snapLines = { verticalLines: [], horizontalLines: [] };
 	}
 
 	leftButtonDown(): boolean {
@@ -211,6 +211,14 @@ export class Select extends Tool {
 			this.board.camera.translateBy(x, y);
 			return false;
 		}
+
+		const draggingItem = this.downOnItem;
+        if (draggingItem) {
+            this.snapLines = this.alignmentHelper.checkAlignment(draggingItem);
+        } else {
+            this.snapLines = { verticalLines: [], horizontalLines: [] };
+        }
+
 		if (this.isDraggingSelection) {
 			const { selection } = this.board;
 			const selectionMbr = selection.getMbr();
@@ -293,16 +301,6 @@ export class Select extends Tool {
 				}
 			});
 
-			// Вызываем checkAlignment для проверки выравнивания, если элемент выбран
-			const selectedItem = selection.items.getSingle();
-			if (selectedItem) {
-				console.log("Мы в selectedItem ");
-				const { verticalLines, horizontalLines } =
-					this.alignmentHelper.checkAlignment(selectedItem);
-				this.verticalLines = verticalLines;
-				this.horizontalLines = horizontalLines;
-			}
-
 			return false;
 		}
 		if (
@@ -330,13 +328,6 @@ export class Select extends Tool {
 					this.toHighlight.remove([draggingItem, frame]);
 				}
 			});
-
-			// Вызываем checkAlignment для проверки выравнивания
-			const { verticalLines, horizontalLines } =
-				this.alignmentHelper.checkAlignment(draggingItem);
-			console.log("KBYBBBBBBB", verticalLines, horizontalLines);
-			this.verticalLines = verticalLines;
-			this.horizontalLines = horizontalLines;
 
 			return false;
 		}
@@ -581,30 +572,25 @@ export class Select extends Tool {
 			this.toHighlight.render(context);
 		}
 
-		const scale = context.getCameraScale();
-		const cameraOffset = this.board.camera.getTranslation();
+		context.ctx.save();
+        context.ctx.strokeStyle = 'rgba(0, 0, 255, 1)'; 
+        context.ctx.lineWidth = 1 / this.board.camera.getScale();
+		console.log("this.snapLines", this.snapLines);
+        this.snapLines.verticalLines.forEach(line => {
+            context.ctx.beginPath();
+            context.ctx.moveTo(line.start.x, line.start.y);
+            context.ctx.lineTo(line.end.x, line.end.y);
+            context.ctx.stroke();
+        });
 
-		this.verticalLines.forEach(x => {
-			const adjustedX = x * scale;
-			context.ctx.beginPath();
-			context.ctx.moveTo(adjustedX, -100 * scale);
-			context.ctx.lineTo(adjustedX, 100 * scale);
-			context.ctx.strokeStyle = "rgba(0, 0, 1, 1)";
-			context.ctx.lineWidth = 2;
-			context.ctx.stroke();
-		});
+        this.snapLines.horizontalLines.forEach(line => {
+            context.ctx.beginPath();
+            context.ctx.moveTo(line.start.x, line.start.y);
+            context.ctx.lineTo(line.end.x, line.end.y);
+            context.ctx.stroke();
+        });
 
-		this.horizontalLines.forEach(y => {
-			const adjustedY = y * scale;
-			context.ctx.beginPath();
-			context.ctx.moveTo(-100 * scale, adjustedY);
-			context.ctx.lineTo(100 * scale, adjustedY);
-			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
-			context.ctx.lineWidth = 2;
-			context.ctx.stroke();
-		});
+        context.ctx.restore();
 
-		console.log("Линии", this.horizontalLines, this.verticalLines);
-		console.log("HFHFHFHFHFH");
 	}
 }

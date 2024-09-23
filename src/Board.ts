@@ -45,7 +45,7 @@ export class Board {
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
 	readonly camera: Camera = new Camera(this.pointer);
-	private index = new SpatialIndex(this.camera, this.pointer);
+	index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;

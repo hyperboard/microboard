@@ -1,4 +1,4 @@
-import { Item } from "Board/Items";
+import { Item, Line, Point } from "Board/Items";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
@@ -7,8 +7,8 @@ export class AlignmentHelper {
 	constructor(private spatialIndex: SpatialIndex) {}
 
 	checkAlignment(movingItem: Item): {
-		verticalLines: number[];
-		horizontalLines: number[];
+		verticalLines: Line[];
+		horizontalLines: Line[];
 	} {
 		const movingMBR = movingItem.getMbr();
 		const nearbyItems = this.spatialIndex.getNearestTo(
@@ -18,52 +18,32 @@ export class AlignmentHelper {
 			1000,
 		);
 
-		const verticalLines: number[] = [];
-		const horizontalLines: number[] = [];
+		const verticalLines: Line[] = [];
+		const horizontalLines: Line[] = [];
 
 		nearbyItems.forEach(item => {
 			if (item === movingItem) {
 				return;
 			}
 			const itemMBR = item.getMbr();
+			const itemLines = itemMBR.getLines();
+			const movingLines = movingMBR.getLines();
 
-			if (Math.abs(itemMBR.left - movingMBR.left) < this.alignThreshold) {
-				verticalLines.push(itemMBR.left);
-			}
+			itemLines.forEach((line, index) => {
+				const movingLine = movingLines[index];
 
-			if (
-				Math.abs(itemMBR.right - movingMBR.right) < this.alignThreshold
-			) {
-				verticalLines.push(itemMBR.right);
-			}
-
-			const movingCenterX = (movingMBR.left + movingMBR.right) / 2;
-			const itemCenterX = (itemMBR.left + itemMBR.right) / 2;
-
-			if (Math.abs(movingCenterX - itemCenterX) < this.alignThreshold) {
-				verticalLines.push(itemCenterX);
-			}
-
-			if (Math.abs(itemMBR.top - movingMBR.top) < this.alignThreshold) {
-				horizontalLines.push(itemMBR.top);
-			}
-
-			if (
-				Math.abs(itemMBR.bottom - movingMBR.bottom) <
-				this.alignThreshold
-			) {
-				horizontalLines.push(itemMBR.bottom);
-			}
-
-			const movingCenterY = (movingMBR.top + movingMBR.bottom) / 2;
-			const itemCenterY = (itemMBR.top + itemMBR.bottom) / 2;
-
-			if (Math.abs(movingCenterY - itemCenterY) < this.alignThreshold) {
-				horizontalLines.push(itemCenterY);
-			}
+				if (index < 2) { 
+					if (Math.abs(line.start.y - movingLine.start.y) < this.alignThreshold) {
+						horizontalLines.push(new Line(new Point(movingLine.start.x, line.start.y), new Point(movingLine.end.x, line.start.y)));
+					}
+				} else { 
+					if (Math.abs(line.start.x - movingLine.start.x) < this.alignThreshold) {
+						verticalLines.push(new Line(new Point(line.start.x, movingLine.start.y), new Point(line.start.x, movingLine.end.y)));
+					}
+				}
+			});
 		});
 
-		console.log("Линии в классе", verticalLines, horizontalLines);
 		return { verticalLines, horizontalLines };
 	}
 }
