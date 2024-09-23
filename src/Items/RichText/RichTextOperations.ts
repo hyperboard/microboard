@@ -79,8 +79,8 @@ export type WholeTextOp =
 	| SetHorisontalAligment
 	| SetVerticalAlignment
 	| SetMaxWidth
-	| AddFontStyle
-	| RemoveFontStyle;
+	// | AddFontStyle
+	// | RemoveFontStyle;
 
 export type WholeTextMethod = WholeTextOp["method"];
 
