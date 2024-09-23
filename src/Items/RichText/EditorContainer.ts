@@ -208,6 +208,7 @@ export class EditorContainer {
 				case "setFontSize":
 				case "setFontHighlight":
 				case "setHorisontalAlignment":
+					console.log(this.id);
 					this.applyWholeTextOp(op);
 					break;
 				case "setMaxWidth":
@@ -335,7 +336,6 @@ export class EditorContainer {
 	private applyWholeTextOp(op: WholeTextOp): void {
 		const selection = this.editor.selection;
 		this.selectWholeText();
-		this.shouldEmit = false;
 		switch (op.method) {
 			case "setBlockType":
 				this.setSelectionBlockType(op.type);
@@ -368,7 +368,6 @@ export class EditorContainer {
 		if (selection) {
 			Transforms.select(this.editor, selection);
 		}
-		this.shouldEmit = true;
 	}
 
 	applyMaxWidth(maxWidth: number): void {

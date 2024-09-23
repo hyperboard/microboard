@@ -981,26 +981,11 @@ export class Selection {
 				return !item.text.getFontStyles().includes(fontStyle);
 			});
 			if (changedItems.length > 0) {
-				changedItems.forEach(item => {
-					if (item instanceof RichText) {
-						item.setSelectionFontStyle(fontStyle, this.context);
-					} else {
-						item.text.setSelectionFontStyle(
-							fontStyle,
-							this.context,
-						);
-					}
-				});
-			} else {
-				filteredItems.forEach(item => {
-					if (item instanceof RichText) {
-						item.setSelectionFontStyle(fontStyle, this.context);
-					} else {
-						item.text.setSelectionFontStyle(
-							fontStyle,
-							this.context,
-						);
-					}
+				this.emit({
+					class: "RichText",
+					method: "setFontStyle",
+					item: changedItems.map(i => i.getId()),
+					fontStyleList: fontStyle,
 				});
 			}
 		}
@@ -1211,7 +1196,7 @@ export class Selection {
 				);
 			})
 			.map(item => item.getId());
-
+		console.log(changedIds);
 		if (changedIds.length > 0) {
 			this.emit({
 				class: "RichText",
