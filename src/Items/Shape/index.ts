@@ -1,3 +1,4 @@
 export { Shape } from "./Shape";
 export { ShapeCommand } from "./ShapeCommand";
-export { ShapeData, ShapeOperation } from "./ShapeOperation";
+export { ShapeOperation } from "./ShapeOperation";
+export { ShapeData, DefaultShapeData } from "./ShapeData";

@@ -205,10 +205,15 @@ export class Sticker implements Geometry {
 		return this.backgroundColor;
 	}
 
+	getWidth() {
+		return this.stickerPath.getWidth();
+	}
+
 	private applyBackgroundColor(backgroundColor: string): void {
 		this.backgroundColor = backgroundColor;
 		this.stickerPath.setBackgroundColor(backgroundColor);
 
+		// @ts-expect-error
 		if (import.meta.env.INTEGRATION_UI === "microboard") {
 			if (this.text.isEmpty()) {
 				this.text = new RichText(

@@ -4,7 +4,6 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 
-const minWidth = 100;
 const height = 16;
 
 export class AddText extends BoardTool {
@@ -47,8 +46,6 @@ export class AddText extends BoardTool {
 
 	leftButtonUp(): boolean {
 		if (this.line) {
-			const maxWidth = this.bounds.getWidth();
-
 			const board = this.board;
 
 			const richText = new RichText(new Mbr());

@@ -41,6 +41,8 @@ export class FrameCommand implements Command {
 				return mapItemsByOperation(frame, frame => {
 					return {
 						...this.operation,
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-expect-error
 						shapeType: this.operation.prevShapeType,
 					};
 				});

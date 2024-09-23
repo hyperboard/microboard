@@ -67,7 +67,7 @@ export class RTreeIndex {
 
 	list(): Item[] {
 		const containers = this.tree.all();
-		const items = [];
+		const items: Item[] = [];
 		for (const container of containers) {
 			items.push(container.item);
 		}

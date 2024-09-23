@@ -2,7 +2,7 @@ import { Board } from "Board/Board";
 import { Point } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { strokeStyle } from "Board/Items/Path";
+import { BorderStyle } from "Board/Items/Path";
 import {
 	DEFAULT_PEN_COLOR,
 	DRAWING_SETTINGS_KEY,
@@ -20,7 +20,7 @@ export class AddDrawing extends BoardTool {
 	isDown = false;
 	strokeWidth = INITIAL_DRAWING_STROKE_WIDTH;
 	strokeColor = DEFAULT_PEN_COLOR;
-	strokeStyle: strokeStyle = DRAWING_STROKE_STYLE;
+	strokeStyle: BorderStyle = DRAWING_STROKE_STYLE;
 
 	constructor(board: Board) {
 		super(board);
@@ -123,7 +123,7 @@ export class AddDrawing extends BoardTool {
 		drawing.setStrokeColor(this.strokeColor);
 		drawing.setStrokeWidth(this.strokeWidth);
 		drawing.setBorderStyle(this.strokeStyle);
-		const boarddrawing = this.board.add(drawing);
+		this.board.add(drawing);
 		this.board.selection.removeAll();
 		this.drawing = new Drawing([]);
 		this.board.tools.publish();

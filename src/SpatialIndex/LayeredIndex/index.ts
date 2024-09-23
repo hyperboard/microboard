@@ -15,15 +15,21 @@ export class Container extends Mbr {
 	}
 }
 
-export class LayeredIndex {
+export class LayeredIndex<T extends Item> {
+	// export class LayeredIndex {
 	map = new Map<string, Container>();
 	layers = new Layers(() => {
 		return new RTreeIndex();
 	});
 
-	constructor(private getZIndex: (item: Item) => number) {
+	constructor(private getZIndex: (item: T) => number) {
+		// constructor(private getZIndex: (item: Item) => number) {
 		this.getZIndex = this.getZIndex.bind(this);
 		this.layers.newOnTop();
+	}
+
+	private isT(item: Item): item is T {
+		return true;
 	}
 
 	findById(id: string): Item | undefined {
@@ -58,7 +64,7 @@ export class LayeredIndex {
 		return items;
 	}
 
-	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
+	getRectsEnclosedOrCrossedBy(rect: Mbr): T[] {
 		const items: Container[] = [];
 		const minMax = {
 			minX: rect.left,
@@ -72,7 +78,7 @@ export class LayeredIndex {
 				Array.prototype.push.apply(items, layerRects);
 			}
 		}
-		return items.map(container => container.item);
+		return items.map(container => container.item as T);
 		/*
 		const items: Item[] = [];
 
@@ -144,14 +150,20 @@ export class LayeredIndex {
 	}
 
 	shiftContainerAbove(container: Container, layer: number): void {
+		if (!this.isT(container.item)) {
+			return;
+		}
 		const bounds = container.item.getMbr();
 		this.remove(container.item);
 		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
-		const containersAbove = [];
+		const containersAbove: Container[] = [];
 		const containerZIndex = this.getZIndex(container.item);
 		for (const one of containersInBounds) {
-			if (this.getZIndex(one.item) > containerZIndex) {
+			if (
+				this.isT(one.item) &&
+				this.getZIndex(one.item) > containerZIndex
+			) {
 				containersAbove.push(one);
 			}
 		}
@@ -170,14 +182,20 @@ export class LayeredIndex {
 	}
 
 	shiftContainerBelow(container: Container, layer: number): void {
+		if (!this.isT(container.item)) {
+			return;
+		}
 		const bounds = container.item.getMbr();
 		this.remove(container.item);
 		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
-		const containersBelow = [];
+		const containersBelow: Container[] = [];
 		const containerZIndex = this.getZIndex(container.item);
 		for (const one of containersInBounds) {
-			if (this.getZIndex(one.item) < containerZIndex) {
+			if (
+				this.isT(one.item) &&
+				this.getZIndex(one.item) < containerZIndex
+			) {
 				containersBelow.push(one);
 			}
 		}
@@ -195,7 +213,7 @@ export class LayeredIndex {
 		}
 	}
 
-	insert(item: Item): void {
+	insert(item: T): void {
 		const toInsert = new Container(
 			item.getId(),
 			item,
@@ -210,7 +228,7 @@ export class LayeredIndex {
 		}
 
 		const containersInBounds = this.getContainersFromItems(inBounds);
-		const containersInBoundsCopy = [];
+		const containersInBoundsCopy: Container[] = [];
 		for (const one of containersInBounds) {
 			containersInBoundsCopy.push(
 				new Container(one.id, one.item, one.layer, one.zIndex),
@@ -276,7 +294,7 @@ export class LayeredIndex {
 		}
 	}
 
-	change(item: Item): void {
+	change(item: T): void {
 		const id = item.getId();
 		const container = this.map.get(id);
 		if (container) {
@@ -301,30 +319,30 @@ export class LayeredIndex {
 		}
 	}
 
-	get(id: string): Item | undefined {
+	get(id: string): T | undefined {
 		const container = this.map.get(id);
 		if (container) {
-			return container.item;
+			return container.item as T;
 		} else {
 			return undefined;
 		}
 	}
 
-	list(): Item[] {
-		const items = [];
+	list(): T[] {
+		const items: T[] = [];
 		for (const record of this.map) {
-			items.push(record[1].item);
+			items.push(record[1].item as T);
 		}
 		return items;
 	}
 
-	batchInsert(items: Item[]): void {
+	batchInsert(items: T[]): void {
 		for (const item of items) {
 			this.insert(item);
 		}
 	}
 
-	batchChange(items: Item[]): void {
+	batchChange(items: T[]): void {
 		for (const item of items) {
 			this.change(item);
 		}

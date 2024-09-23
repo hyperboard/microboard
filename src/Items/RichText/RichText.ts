@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { BaseSelection, Descendant, Editor, Transforms } from "slate";
+import { BaseSelection, Descendant, Editor, Transforms, Text } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
@@ -36,6 +36,10 @@ export type DefaultTextStyles = {
 	fontColor: string;
 	fontHighlight: string;
 	lineHeight: number;
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	"line-through": boolean;
 };
 
 let isEditInProcessValue = false;
@@ -777,6 +781,28 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			return fontSize * this.transformation.getScale().x;
 		}
+	}
+
+	getMinFontSize(): number {
+		const textNodes = Editor.nodes(this.editor.editor, {
+			match: n => Text.isText(n),
+			at: [],
+		});
+
+		const fontSizes = [];
+		for (const [node] of textNodes) {
+			const fontSize =
+				node.fontSize || (node.marks && node.marks.fontSize);
+			if (fontSize) {
+				fontSizes.push(parseFloat(fontSize));
+			}
+		}
+
+		if (fontSizes.length > 0) {
+			return Math.min(...fontSizes);
+		}
+
+		return this.initialTextStyles.fontSize;
 	}
 
 	getFontHighlight(): string {
