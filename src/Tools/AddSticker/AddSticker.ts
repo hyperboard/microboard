@@ -21,7 +21,7 @@ export class AddSticker extends BoardTool {
 		this.sticker = new Sticker(
 			undefined,
 			undefined,
-			lastSticker?.getBackgroundColor(),
+			lastSticker ? lastSticker.getBackgroundColor() : undefined,
 		);
 
 		this.setCursor(this.sticker.getBackgroundColor());
@@ -154,7 +154,7 @@ export class AddSticker extends BoardTool {
 	private getLastSticker(): Sticker | null {
 		const lastSticker = sessionStorage.getItem("lastSticker");
 		if (lastSticker) {
-			return JSON.parse(lastSticker);
+			return new Sticker().deserialize(JSON.parse(lastSticker));
 		} else {
 			return null;
 		}
