@@ -24,7 +24,6 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { SelectionContext } from "Board/Selection/Selection";
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 

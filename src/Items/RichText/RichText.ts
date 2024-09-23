@@ -59,6 +59,7 @@ export function toggleEdit(value: boolean): void {
 export class RichText extends Mbr implements Geometry {
 	readonly itemType = "RichText";
 	parent = "Board";
+	board!: Board;
 	readonly subject = new Subject<RichText>();
 	readonly editor: EditorContainer;
 
@@ -73,10 +74,11 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
-	maxHeight: number;
+	maxHeight: number = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	frameMbr?: Mbr;
+	initialFontColor?: string;
 
 	constructor(
 		public container: Mbr,
@@ -148,7 +150,7 @@ export class RichText extends Mbr implements Geometry {
 			this.insideOf,
 			undefined,
 			undefined,
-			this.frameMbr,
+			!!this.frameMbr,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -244,7 +246,7 @@ export class RichText extends Mbr implements Geometry {
 				this.insideOf,
 				undefined,
 				undefined,
-				this.frameMbr,
+				!!this.frameMbr,
 			);
 			if (
 				this.containerMaxWidth &&
@@ -789,7 +791,7 @@ export class RichText extends Mbr implements Geometry {
 			at: [],
 		});
 
-		const fontSizes = [];
+		const fontSizes:number[] = [];
 		for (const [node] of textNodes) {
 			const fontSize =
 				node.fontSize || (node.marks && node.marks.fontSize);
@@ -1011,8 +1013,10 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
+				// @ts-ignore
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
+				// @ts-ignore
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();
