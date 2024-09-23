@@ -48,7 +48,7 @@ export class Drawing extends Mbr implements Geometry {
 
 	serialize(): DrawingData {
 		this.optimizePoints();
-		const points = [];
+		const points: { x: number; y: number }[] = [];
 		for (const point of this.points) {
 			points.push({ x: point.x, y: point.y });
 		}
@@ -256,7 +256,7 @@ export class Drawing extends Mbr implements Geometry {
 
 	emit(operation: DrawingOperation): void {
 		if (this.events) {
-			const command = new DrawingCommand(this, operation);
+			const command = new DrawingCommand([this], operation);
 			command.apply();
 			this.events.emit(operation, command);
 		} else {
@@ -345,6 +345,7 @@ export class Drawing extends Mbr implements Geometry {
 			method: "setStrokeWidth",
 			item: [this.id],
 			width,
+			prevWidth: this.strokeWidth,
 		});
 		return this;
 	}
@@ -397,42 +398,6 @@ function douglasPeucker(points: Point[], epsilon: number): Point[] {
 		// if (leftSubPoints[leftSubPoints.length - 1] !== rightSubPoints[0]) {
 		// 	leftRecursiveResult.push(rightSubPoints[0]);
 		// }
-		return leftRecursiveResult.slice(0, -1).concat(rightRecursiveResult);
-	} else {
-		return [start, end];
-	}
-}
-
-function rdpWithDistanceThreshold(points: Point[], threshold: number): Point[] {
-	// Base case: if the line segment has only two points, return the points
-	if (points.length < 3) {
-		return points;
-	}
-
-	const start = points[0];
-	const end = points[points.length - 1];
-	let maxDistance = 0;
-	let maxIndex = 0;
-
-	for (let i = 1; i < points.length - 1; i++) {
-		const distance = getPerpendicularDistance(points[i], start, end);
-		if (distance > maxDistance) {
-			maxDistance = distance;
-			maxIndex = i;
-		}
-	}
-
-	if (maxDistance > threshold) {
-		const leftSubPoints = points.slice(0, maxIndex + 1);
-		const rightSubPoints = points.slice(maxIndex);
-		const leftRecursiveResult = rdpWithDistanceThreshold(
-			leftSubPoints,
-			threshold,
-		);
-		const rightRecursiveResult = rdpWithDistanceThreshold(
-			rightSubPoints,
-			threshold,
-		);
 		return leftRecursiveResult.slice(0, -1).concat(rightRecursiveResult);
 	} else {
 		return [start, end];
