@@ -15,6 +15,7 @@ export function logHotkey(
 	status: HotkeyStatus,
 	context: SelectionContext,
 ): void {
+	// @ts-expect-error import.meta object didn't exists in common-js modules
 	if (!import.meta.env.LOG_HOTKEYS) {
 		return;
 	}

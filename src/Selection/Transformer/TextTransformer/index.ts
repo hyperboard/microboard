@@ -1,1 +1,1 @@
-export { TextTransformer } from "./TextTransformer";
+export { getTextResizeType } from "./getTextResizeType";

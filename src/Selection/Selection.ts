@@ -66,9 +66,9 @@ export class Selection {
 		const selectedItems: string[] = JSON.parse(serializedData);
 		this.removeAll();
 		selectedItems.forEach(itemId => {
-			const item = this.board.items.find(item => item.getId() === itemId);
+			const item = this.board.items.getById(itemId);
 			if (item) {
-				this.items.push(item);
+				this.items.add(item);
 			}
 		});
 	}
@@ -83,12 +83,14 @@ export class Selection {
 
 	updateQueue: Set<() => void> = new Set();
 
-	decorateObserverToScheduleUpdate(observer: () => void): () => void {
-		return () => {
+	decorateObserverToScheduleUpdate<T extends (...args: any[]) => void>(
+		observer: T,
+	): T {
+		return ((...args: Parameters<T>) => {
 			if (!this.updateQueue.has(observer)) {
-				this.updateQueue.add(observer);
+				this.updateQueue.add(() => observer(...args));
 			}
-		};
+		}) as T;
 	}
 
 	updateScheduledObservers = (): void => {
@@ -125,7 +127,7 @@ export class Selection {
 		this.itemsSubject.publish([]);
 	}
 
-	addAll() {
+	addAll(): void {
 		const items = this.board.items.listAll();
 		const frames = this.board.items.listFrames();
 		this.add(items);
@@ -164,7 +166,7 @@ export class Selection {
 		return this.context;
 	}
 
-	timeoutID: number | null = null;
+	timeoutID: NodeJS.Timeout | null = null;
 
 	on = (): void => {
 		// Cancel any existing timeout when on is explicitly called
@@ -280,7 +282,7 @@ export class Selection {
 		}
 	}
 
-	async appendText(appendedText: string) {
+	async appendText(appendedText: string): Promise<void> {
 		if (this.items.isEmpty()) {
 			return;
 		}

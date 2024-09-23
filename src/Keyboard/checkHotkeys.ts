@@ -37,7 +37,16 @@ export function checkHotkeys(
 			if (
 				allItemsType?.length &&
 				!allItemsType.some(itemType =>
-					board.selection.items.isAllItemsType(itemType),
+					board.selection.items.isAllItemsType(
+						itemType as
+							| "Shape"
+							| "Sticker"
+							| "Frame"
+							| "Connector"
+							| "Image"
+							| "RichText"
+							| "Drawing",
+					),
 				)
 			) {
 				logHotkey(
