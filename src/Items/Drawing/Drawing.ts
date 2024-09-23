@@ -26,8 +26,8 @@ export class Drawing extends Mbr implements Geometry {
 	readonly subject = new Subject<Drawing>();
 	untransformedMbr = new Mbr();
 	private lines: Line[] = [];
-	private strokeWidth: BorderWidth = 1;
-	private borderStyle: BorderStyle = "solid";
+	strokeWidth: BorderWidth = 1;
+	borderStyle: BorderStyle = "solid";
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 	private borderOpacity = 1;
 	transformationRenderBlock?: boolean = undefined;
