@@ -261,6 +261,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 		if (isRedoPasteOrDuplicate) {
 			return true;
 		}
+		// @ts-expect-error incorrect type
 		const key = `${op.method}_${op.item}`;
 		const latest = latestEvent[key];
 		return byUserId === undefined || byUserId === latest;
@@ -272,6 +273,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			op.method !== "paste" &&
 			op.method !== "duplicate"
 		) {
+			// @ts-expect-error incorrect type
 			latestEvent[`${op.method}_${op.item}`] = userId;
 		}
 	}

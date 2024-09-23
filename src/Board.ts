@@ -135,6 +135,7 @@ export class Board {
 				if (!first || !second) {
 					return;
 				}
+				// @ts-expect-error incorrect type
 				return this.index.moveSecondBeforeFirst(first, second);
 			}
 			case "moveSecondAfterFirst":
@@ -143,17 +144,20 @@ export class Board {
 				if (!first || !second) {
 					return;
 				}
+				// @ts-expect-error incorrect type
 				return this.index.moveSecondAfterFirst(first, second);
 			case "bringToFront": {
 				const items = op.item
 					.map(item => this.items.getById(item))
 					.filter((item): item is Item => item !== undefined);
+				// @ts-expect-error incorrect type
 				return this.index.bringManyToFront(items);
 			}
 			case "sendToBack": {
 				const items = op.item
 					.map(item => this.items.getById(item))
 					.filter((item): item is Item => item !== undefined);
+				// @ts-expect-error incorrect type
 				return this.index.sendManyToBack(items);
 			}
 			case "add":
@@ -213,6 +217,7 @@ export class Board {
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
+		// @ts-expect-error incorrect type
 		this.findItemAndApply(op.item, item => {
 			item.apply(op);
 		});

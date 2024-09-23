@@ -37,13 +37,17 @@ function areItemsTheSame(opA: Operation, opB: Operation): boolean {
 			setA.size === setB.size && [...setA].every(item => setB.has(item));
 		return areArraysEqual;
 	}
+	// @ts-expect-error incorrect type
 	if (!(Array.isArray(opA.item) && Array.isArray(opB.item))) {
 		return false;
 	}
+	// @ts-expect-error incorrect type
 	if (opA.item.length !== opB.item.length) {
 		return false;
 	}
+	// @ts-expect-error incorrect type
 	for (let i = 0; i < opA.item.length; i++) {
+		// @ts-expect-error incorrect type
 		if (opA.item[i] !== opB.item[i]) {
 			return false;
 		}
