@@ -74,7 +74,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
-	maxHeight: number = 0;
+	maxHeight = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	frameMbr?: Mbr;
@@ -1013,10 +1013,10 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
-				// @ts-ignore
+				// @ts-expect-error
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
-				// @ts-ignore
+				// @ts-expect-error
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();
