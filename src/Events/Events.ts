@@ -7,8 +7,6 @@ import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
 import { EventsOperation, Operation } from "./EventsOperations";
 
-const EVENTS_REPUBLISH_INTERVAL = 5000;
-
 export interface Events {
 	subject: Subject<BoardEvent>;
 	serialize(): BoardEvent[];
@@ -75,6 +73,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 					log.getList().length === 0 && events.length > 0;
 				if (isFirstBatchOfEvents) {
 					log.insertEvents(events);
+					// @ts-expect-error events is array
 					subject.publish(events);
 					latestServerOrder = events[events.length - 1].order;
 					if (
@@ -162,15 +161,10 @@ export function createEvents(board: Board, connection: Connection): Events {
 		const record = { event, command };
 		log.push(record);
 		setLatestUserEvent(operation, userId);
+
+		// @ts-expect-error wrong event type
 		connection.publishBoardEvent(board.getBoardId(), event);
 		subject.publish(event);
-	}
-
-	function republishEvents(): void {
-		const unordered = log.getUnorderedRecords();
-		for (const record of unordered) {
-			connection.publishBoardEvent(board.getBoardId(), record.event);
-		}
 	}
 
 	function apply(operation: EventsOperation): void | false {

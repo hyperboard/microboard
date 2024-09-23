@@ -116,7 +116,7 @@ export class BoardCommand implements Command {
 			}
 			case "duplicate":
 			case "paste": {
-				const item = [];
+				const item: string[] = [];
 				const map = operation.itemsMap;
 				// iterate over map and add items to array
 				for (const key in map) {

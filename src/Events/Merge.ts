@@ -5,12 +5,6 @@ import {
 } from "Board/Items";
 import { Path } from "slate";
 import { Operation } from "./EventsOperations";
-import {
-	TranslateBy,
-	ScaleBy,
-	ScaleByTranslateBy,
-	TransformMany,
-} from "Board/Items/Transformation/TransformationOperations";
 import { type ShapeOperation } from "Board/Items/Shape";
 import { DrawingOperation } from "Board/Items/Drawing/DrawingCommand";
 import { BoardOps } from "Board/BoardOperations";
@@ -113,6 +107,9 @@ function mergeTransformationOperations(
 	const method = opA.method;
 	switch (method) {
 		case "translateBy":
+			if (opB.method !== method) {
+				return;
+			}
 			return {
 				class: "Transformation",
 				method: "translateBy",
@@ -122,6 +119,9 @@ function mergeTransformationOperations(
 				timeStamp: opB.timeStamp,
 			};
 		case "scaleBy":
+			if (opB.method !== method) {
+				return;
+			}
 			return {
 				class: "Transformation",
 				method: "scaleBy",
@@ -131,6 +131,9 @@ function mergeTransformationOperations(
 				timeStamp: opB.timeStamp,
 			};
 		case "rotateBy":
+			if (opB.method !== method) {
+				return;
+			}
 			return {
 				class: "Transformation",
 				method: "rotateBy",
@@ -139,6 +142,9 @@ function mergeTransformationOperations(
 				timeStamp: opB.timeStamp,
 			};
 		case "scaleByTranslateBy":
+			if (opB.method !== method) {
+				return;
+			}
 			return {
 				class: "Transformation",
 				method: "scaleByTranslateBy",
@@ -155,9 +161,13 @@ function mergeTransformationOperations(
 			};
 		case "transformMany":
 			const items = mergeItems(opA, opB);
+			if (opB.method !== method) {
+				return;
+			}
 			return {
 				class: "Transformation",
 				method: "transformMany",
+				// @ts-expect-error wrong items type
 				items,
 				timeStamp: opB.timeStamp,
 			};
@@ -169,17 +179,17 @@ function mergeTransformationOperations(
 function mergeItems(
 	opA: TransformationOperation,
 	opB: TransformationOperation,
-): { [key: string]: TranslateBy | ScaleBy | ScaleByTranslateBy } {
+): { [key: string]: TransformationOperation } | undefined {
 	if (opA.method === "transformMany" && opB.method === "transformMany") {
 		interface Transformer {
 			x: number;
 			y: number;
 		}
 		const resolve = (
-			currScale?: Transformer,
-			currTranslate?: Transformer,
+			currScale: Transformer,
+			currTranslate: Transformer | undefined,
 			opB: TransformationOperation,
-		): { scale: Transformer; translate: Transformer } => {
+		): { scale: Transformer; translate: Transformer } | undefined => {
 			switch (opB.method) {
 				case "scaleByTranslateBy":
 					return {
@@ -223,8 +233,9 @@ function mergeItems(
 						},
 					};
 			}
+			return;
 		};
-		const items: { [key: string]: ScaleByTranslateBy } = {};
+		const items: { [key: string]: TransformationOperation } = {};
 		Object.keys(opB.items).forEach(itemId => {
 			if (opA.items[itemId] !== undefined) {
 				if (opA.items[itemId].method === "scaleByTranslateBy") {
@@ -237,8 +248,11 @@ function mergeItems(
 						class: "Transformation",
 						method: "scaleByTranslateBy",
 						item: [itemId],
-						scale: newTransformation.scale,
-						translate: newTransformation.translate,
+						scale: newTransformation?.scale ?? { x: 0, y: 0 },
+						translate: newTransformation?.translate ?? {
+							x: 0,
+							y: 0,
+						},
 					};
 				} else if (opA.items[itemId].method === "scaleBy") {
 					const newTransformation = resolve(
@@ -250,11 +264,14 @@ function mergeItems(
 						class: "Transformation",
 						method: "scaleByTranslateBy",
 						item: [itemId],
+						// @ts-expect-error wrong type
 						scale: newTransformation.scale,
+						// @ts-expect-error wrong type
 						translate: newTransformation.translate,
 					};
 				} else if (opA.items[itemId].method === "translateBy") {
 					const newTransformation = resolve(
+						// @ts-expect-error wrong type
 						undefined,
 						{ x: opA.items[itemId].x, y: opA.items[itemId].y },
 						opB.items[itemId],
@@ -263,7 +280,9 @@ function mergeItems(
 						class: "Transformation",
 						method: "scaleByTranslateBy",
 						item: [itemId],
+						// @ts-expect-error wrong type
 						scale: newTransformation.scale,
+						// @ts-expect-error wrong type
 						translate: newTransformation.translate,
 					};
 				}
@@ -273,6 +292,7 @@ function mergeItems(
 		});
 		return items;
 	}
+	return;
 }
 
 function mergeRichTextOperations(
@@ -376,6 +396,7 @@ function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
 		};
 		return op;
 	}
+	return;
 }
 
 function mergeConnectorOperations(

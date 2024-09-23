@@ -128,6 +128,7 @@ export function createEventsLog(board: Board): EventsLog {
 		const mergedEvent = createMergedEvent(record.event, merge);
 		const command = createCommand(board, mergedEvent.body.operation);
 		if (record.event.body.operation.class === "Connector") {
+			// @ts-expect-error reverse didn't exists
 			command.reverse = last.command.reverse;
 		}
 		const mergedRecord = {
