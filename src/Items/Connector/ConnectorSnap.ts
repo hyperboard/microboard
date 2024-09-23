@@ -297,7 +297,7 @@ export class ConnectorSnap {
 	}
 
 	render(context: DrawingContext): void {
-		const { path, anchors, point, anchor } = this.snap;
+		const { path, anchors, point } = this.snap;
 		if (path) {
 			path.render(context);
 		}
