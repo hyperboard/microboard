@@ -13,6 +13,7 @@ export interface RichTextData {
 	containerMaxWidth?: number;
 	insideOf?: string;
 	color?: string;
+	placeholderText: string;
 }
 
 const richTextDataSchema: JSONSchemaType<RichTextData> = {
@@ -44,5 +45,6 @@ export class DefaultRichTextData implements RichTextData {
 		public containerMaxWidth?: number,
 		public insideOf?: string,
 		public color?: string,
+		public placeholderText = "",
 	) {}
 }

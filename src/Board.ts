@@ -27,6 +27,7 @@ import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
+import { ItemsMap } from "./Validators";
 
 export type InterfaceType = "edit" | "view";
 
@@ -670,7 +671,7 @@ export class Board {
 		}
 	}
 
-	paste(itemsMap: { [key: string]: ItemData }, select = true): void {
+	paste(itemsMap: ItemsMap, select = true): void {
 		const newItemIdMap: { [key: string]: string } = {};
 
 		for (const itemId in itemsMap) {

@@ -6,6 +6,7 @@ import {
 	Item,
 	Point,
 	Connector,
+	ItemData,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "..";
@@ -55,7 +56,10 @@ export function getQuickAddButtons(
 	): { newItem: Item; connectorData: ConnectorData } {
 		const currMbr = selectedItem.getMbr();
 		const itemData = selectedItem.serialize();
-		delete itemData.text;
+		const guarded = itemData as Partial<ItemData>;
+		if ("text" in guarded) {
+			delete guarded.text;
+		}
 		const width = currMbr.getWidth();
 		const height = currMbr.getHeight();
 
@@ -75,8 +79,10 @@ export function getQuickAddButtons(
 
 		const adjustment = baseAdjustments[index];
 		const newItemData = { ...itemData };
-		newItemData.transformation.translateX += adjustment.translateX;
-		newItemData.transformation.translateY += adjustment.translateY;
+		if (newItemData.transformation) {
+			newItemData.transformation.translateX += adjustment.translateX;
+			newItemData.transformation.translateY += adjustment.translateY;
+		}
 		const newMbr = currMbr
 			.copy()
 			.getTransformed(
@@ -99,10 +105,12 @@ export function getQuickAddButtons(
 					iterAdjustment[index].y * direction * step,
 				),
 			);
-			newItemData.transformation.translateX +=
-				iterAdjustment[index].x * direction * step;
-			newItemData.transformation.translateY +=
-				iterAdjustment[index].y * direction * step;
+			if (newItemData.transformation) {
+				newItemData.transformation.translateX +=
+					iterAdjustment[index].x * direction * step;
+				newItemData.transformation.translateY +=
+					iterAdjustment[index].y * direction * step;
+			}
 			step += 1;
 		}
 

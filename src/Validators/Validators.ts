@@ -17,7 +17,7 @@ import Ajv from "ajv";
 
 export const validator = new Ajv();
 
-type ItemsMap = Record<string, Item>;
+export type ItemsMap = Record<string, Item>;
 
 type PointData = {
 	x: number;

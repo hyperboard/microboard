@@ -4,7 +4,7 @@ import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
-import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { DefaultShapeData, ShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
@@ -28,6 +28,8 @@ import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { t } from "i18next";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -493,7 +495,10 @@ export class Selection {
 		const zIndex = this.board.items.index.getZIndex(item);
 		// If the item is a Connector and the connected items are not part of selection,
 		// change the control points to BoardPoint.
-		if (item.itemType === "Connector") {
+		if (
+			item.itemType === "Connector" &&
+			serializedData.itemType === "Connector"
+		) {
 			const connector = item as Connector;
 			const startPoint = connector.getStartPoint();
 			const endPoint = connector.getEndPoint();
@@ -523,7 +528,7 @@ export class Selection {
 			}
 		}
 
-		if (item.itemType === "Frame") {
+		if (item.itemType === "Frame" && serializedData.itemType === "Frame") {
 			const textItem = item.text.getTextString();
 			const copyText = t("frame.copy");
 			const copiedFrameText =
@@ -640,7 +645,7 @@ export class Selection {
 		return pointer?.getEndPointerStyle() || "None";
 	}
 
-	setStartPointerStyle(style: string): void {
+	setStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setStartPointerStyle",
@@ -649,7 +654,7 @@ export class Selection {
 		});
 	}
 
-	setEndPointerStyle(style: string): void {
+	setEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setEndPointerStyle",
@@ -729,10 +734,7 @@ export class Selection {
 
 	// TODO all the other transformations are redundant, use this one for everything
 	// Instead of TransformationOperation just put matrix in it
-	transformMany(
-		items: { [key: string]: TransformationOperation },
-		timeStamp?: number,
-	): void {
+	transformMany(items: TransformManyItems, timeStamp?: number): void {
 		this.shouldPublish = false;
 		this.emit({
 			class: "Transformation",
@@ -805,7 +807,7 @@ export class Selection {
 		}
 	}
 
-	setStrokeWidth(width: number): void {
+	setStrokeWidth(width: ConnectionLineWidth): void {
 		// TODO make single operation to set strokeWidth on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
