@@ -573,24 +573,24 @@ export class Select extends Tool {
 		}
 
 		context.ctx.save();
-        context.ctx.strokeStyle = 'rgba(0, 0, 255, 1)'; 
-        context.ctx.lineWidth = 1 / this.board.camera.getScale();
-		console.log("this.snapLines", this.snapLines);
-        this.snapLines.verticalLines.forEach(line => {
-            context.ctx.beginPath();
-            context.ctx.moveTo(line.start.x, line.start.y);
-            context.ctx.lineTo(line.end.x, line.end.y);
-            context.ctx.stroke();
-        });
-
-        this.snapLines.horizontalLines.forEach(line => {
-            context.ctx.beginPath();
-            context.ctx.moveTo(line.start.x, line.start.y);
-            context.ctx.lineTo(line.end.x, line.end.y);
-            context.ctx.stroke();
-        });
-
-        context.ctx.restore();
+		context.ctx.strokeStyle = 'rgba(0, 0, 255, 1)'; 
+		context.ctx.lineWidth = 1 / this.board.camera.getScale();
+	
+		this.snapLines.verticalLines.forEach(line => {
+			context.ctx.beginPath();
+			context.ctx.moveTo(line.start.x, line.start.y);
+			context.ctx.lineTo(line.end.x, line.end.y);
+			context.ctx.stroke();
+		});
+	
+		this.snapLines.horizontalLines.forEach(line => {
+			context.ctx.beginPath();
+			context.ctx.moveTo(line.start.x, line.start.y);
+			context.ctx.lineTo(line.end.x, line.end.y);
+			context.ctx.stroke();
+		});
+	
+		context.ctx.restore();
 
 	}
 }
