@@ -72,6 +72,10 @@ export class EditorContainer {
 						type: "text",
 						text: "",
 						...initialTextStyles,
+						overline: false,
+						lineThrough: false,
+						subscript: false,
+						superscript: false,
 					},
 				],
 			},
@@ -197,7 +201,7 @@ export class EditorContainer {
 				case "setSelectionFontSize":
 				case "setSelectionFontHighlight":
 				case "setSelectionFontStyle":
-				case "setSelectionHorisontalAlignment":
+				case "setSelectionHorizontalAlignment":
 					this.applySelectionOp(op);
 					break;
 				case "setBlockType":
@@ -211,7 +215,7 @@ export class EditorContainer {
 					this.applyWholeTextOp(op);
 					break;
 				case "setMaxWidth":
-					this.applyMaxWidth(op.maxWidth);
+					this.applyMaxWidth(op.maxWidth ?? 0);
 					break;
 			}
 		} catch (error) {
@@ -350,7 +354,7 @@ export class EditorContainer {
 				break;
 			case "setFontSize":
 				this.textScale =
-					op.fontSize /
+					Number(op.fontSize) /
 					this.getScale() /
 					this.initialTextStyles.fontSize;
 				break;
@@ -361,7 +365,7 @@ export class EditorContainer {
 				this.setSelectionHorisontalAlignment(op.horisontalAlignment);
 				break;
 			case "setMaxWidth":
-				this.applyMaxWidth(op.maxWidth);
+				this.applyMaxWidth(op.maxWidth ?? 0);
 				break;
 		}
 		if (selection) {
@@ -671,6 +675,7 @@ export class EditorContainer {
 		const textNodes: TextNode[] = [];
 		for (const [node, path] of Editor.nodes(this.editor, {
 			at: selection,
+			//@ts-ignore
 			match: n => n.type === "text",
 		})) {
 			textNodes.push(node as TextNode);
@@ -766,7 +771,7 @@ export class EditorContainer {
 
 	hasTextInSelection(): boolean {
 		const { selection } = this.editor;
-		if (!selection || Range.isCollapsed(this.editor, selection)) {
+		if (!selection || Range.isCollapsed(selection)) {
 			return false;
 		}
 

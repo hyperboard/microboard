@@ -21,7 +21,7 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
 import { LayoutBlockNodes } from "./CanvasText";
-import { BlockType } from "./Editor/BlockNode";
+import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { isTextEmpty } from "./isTextEmpty";
@@ -145,7 +145,7 @@ export class RichText extends Mbr implements Geometry {
 			},
 		);
 		this.blockNodes = getBlockNodes(
-			this.getTextForNodes(),
+			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
 			this.insideOf,
 			undefined,
@@ -241,7 +241,7 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			// this.calcAutoSize(false);
 			this.blockNodes = getBlockNodes(
-				this.getTextForNodes(),
+				this.getTextForNodes() as BlockNode[],
 				this.getMaxWidth(),
 				this.insideOf,
 				undefined,
@@ -276,15 +276,15 @@ export class RichText extends Mbr implements Geometry {
 		const maxWidth = width;
 		const blockNodes =
 			this.insideOf !== "Sticker"
-				? getBlockNodes(text, maxWidth, this.insideOf)
+				? getBlockNodes(text as BlockNode[], maxWidth, this.insideOf)
 				: this.autoSizeScale < 1
 				? getBlockNodes(
-						text,
+						text as BlockNode[],
 						containerWidth / this.autoSizeScale,
 						this.insideOf,
 				  )
 				: getBlockNodes(
-						text,
+						text as BlockNode[],
 						containerWidth,
 						this.insideOf,
 						containerWidth,
@@ -513,7 +513,7 @@ export class RichText extends Mbr implements Geometry {
 			this.transformation.apply(op);
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
-				this.setMaxWidth(op.maxWidth);
+				this.setMaxWidth(op.maxWidth ?? 0);
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
 					this.autosizeEnable();
@@ -533,12 +533,13 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	maxCapableChartsInSticker(op: Operation): boolean {
-		const fontSize = this.getText()[0]?.children[0].fontSize;
+		const text = this.getText();
+		//@ts-ignore
+		const fontSize =text[0]?.children[0].fontSize;
 		const height = this.getMaxHeight();
 		const width = this.getMaxWidth();
 		const lineHeight = fontSize * 1.4;
 		const maxLine = Math.round((height || 0) / lineHeight);
-		const text = this.getText();
 		const getWidthOfString = (text: string): number => {
 			const span = document.createElement("span");
 			span.textContent = text;
@@ -565,10 +566,12 @@ export class RichText extends Mbr implements Geometry {
 				return count + 1;
 			}
 		}, 0);
-
+		
 		if (
-			op.ops?.[0]?.type === "split_node" ||
-			op.ops?.[0]?.type === "insert_text"
+			//@ts-ignore
+			op.method === "split_node" ||
+			//@ts-ignore
+			op.method === "insert_text"
 		) {
 			return !(lineCount + 1 > maxLine);
 		} else {
@@ -794,9 +797,9 @@ export class RichText extends Mbr implements Geometry {
 		const fontSizes:number[] = [];
 		for (const [node] of textNodes) {
 			const fontSize =
-				node.fontSize || (node.marks && node.marks.fontSize);
+				node.fontSize || (node && node.fontSize);
 			if (fontSize) {
-				fontSizes.push(parseFloat(fontSize));
+				fontSizes.push(fontSize);
 			}
 		}
 
