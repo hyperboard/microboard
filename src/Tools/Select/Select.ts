@@ -213,11 +213,43 @@ export class Select extends Tool {
 		}
 
 		const draggingItem = this.downOnItem;
-        if (draggingItem) {
-            this.snapLines = this.alignmentHelper.checkAlignment(draggingItem);
-        } else {
-            this.snapLines = { verticalLines: [], horizontalLines: [] };
-        }
+		if (draggingItem) {
+			
+			const snapThreshold = 10; 
+			const itemMbr = draggingItem.getMbr();
+			const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
+			const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
+	
+			const snapToLine = (line: Line) => {
+				if (Math.abs(itemMbr.top - line.start.y) < snapThreshold) {
+					draggingItem.transformation.translateBy(0, line.start.y - itemMbr.top, this.beginTimeStamp);
+				} else if (Math.abs(itemMbr.bottom - line.start.y) < snapThreshold) {
+					draggingItem.transformation.translateBy(0, line.start.y - itemMbr.bottom, this.beginTimeStamp);
+				} else if (Math.abs(itemCenterY - line.start.y) < snapThreshold) {
+					draggingItem.transformation.translateBy(0, line.start.y - itemCenterY, this.beginTimeStamp);
+				} else if (Math.abs(itemCenterY - line.end.y) < snapThreshold) {
+					draggingItem.transformation.translateBy(0, line.end.y - itemCenterY, this.beginTimeStamp);
+				}
+	
+			
+				if (Math.abs(itemMbr.left - line.start.x) < snapThreshold) {
+					draggingItem.transformation.translateBy(line.start.x - itemMbr.left, 0, this.beginTimeStamp);
+				} else if (Math.abs(itemMbr.right - line.start.x) < snapThreshold) {
+					draggingItem.transformation.translateBy(line.start.x - itemMbr.right, 0, this.beginTimeStamp);
+				} else if (Math.abs(itemCenterX - line.start.x) < snapThreshold) {
+					draggingItem.transformation.translateBy(line.start.x - itemCenterX, 0, this.beginTimeStamp);
+				} else if (Math.abs(itemCenterX - line.end.x) < snapThreshold) {
+					draggingItem.transformation.translateBy(line.end.x - itemCenterX, 0, this.beginTimeStamp);
+				}
+			};
+	
+			this.snapLines.verticalLines.forEach(snapToLine);
+			this.snapLines.horizontalLines.forEach(snapToLine);
+	
+			this.snapLines = this.alignmentHelper.checkAlignment(draggingItem);
+		} else {
+			this.snapLines = { verticalLines: [], horizontalLines: [] };
+		}
 
 		if (this.isDraggingSelection) {
 			const { selection } = this.board;
