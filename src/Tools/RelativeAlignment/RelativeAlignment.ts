@@ -73,6 +73,30 @@ export class AlignmentHelper {
 					new Point(Math.max(itemMbr.right, movingMBR.right), itemMbr.bottom) 
 				));
 			}
+			if (Math.abs(itemMbr.left - movingMBR.right) < this.alignThreshold) {
+				verticalLines.push(new Line(
+					new Point(itemMbr.left, Math.min(itemMbr.top, movingMBR.top)), 
+					new Point(itemMbr.left, Math.max(itemMbr.bottom, movingMBR.bottom))
+				));
+			}
+			if (Math.abs(itemMbr.right - movingMBR.left) < this.alignThreshold) {
+				verticalLines.push(new Line(
+					new Point(itemMbr.right, Math.min(itemMbr.top, movingMBR.top)), 
+					new Point(itemMbr.right, Math.max(itemMbr.bottom, movingMBR.bottom))
+				));
+			}
+			if (Math.abs(itemMbr.top - movingMBR.bottom) < this.alignThreshold) {
+				horizontalLines.push(new Line(
+					new Point(Math.min(itemMbr.left, movingMBR.left), itemMbr.top), 
+					new Point(Math.max(itemMbr.right, movingMBR.right), itemMbr.top)
+				));
+			}
+			if (Math.abs(itemMbr.bottom - movingMBR.top) < this.alignThreshold) {
+				horizontalLines.push(new Line(
+					new Point(Math.min(itemMbr.left, movingMBR.left), itemMbr.bottom), 
+					new Point(Math.max(itemMbr.right, movingMBR.right), itemMbr.bottom)
+				));
+			}
 		});
 		return { verticalLines, horizontalLines };
 	}

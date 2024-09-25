@@ -215,7 +215,7 @@ export class Select extends Tool {
 		const draggingItem = this.downOnItem;
 		if (draggingItem) {
 			
-			const snapThreshold = 10; 
+			const snapThreshold = 7; 
 			const itemMbr = draggingItem.getMbr();
 			const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
 			const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
@@ -607,6 +607,7 @@ export class Select extends Tool {
 		context.ctx.save();
 		context.ctx.strokeStyle = 'rgba(0, 0, 255, 1)'; 
 		context.ctx.lineWidth = 1 / this.board.camera.getScale();
+		context.ctx.setLineDash([5, 5]);
 	
 		this.snapLines.verticalLines.forEach(line => {
 			context.ctx.beginPath();
