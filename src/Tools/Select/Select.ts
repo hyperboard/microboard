@@ -42,7 +42,8 @@ export class Select extends Tool {
 
 	private alignmentHelper: AlignmentHelper;
     private snapLines: { verticalLines: Line[], horizontalLines: Line[] } = { verticalLines: [], horizontalLines: [] };
-
+	private isSnapped = false;
+    private snapCursorPos: Point | null = null;
 
 	constructor(private board: Board) {
 		super();
@@ -214,43 +215,11 @@ export class Select extends Tool {
 
 		const draggingItem = this.downOnItem;
 		if (draggingItem) {
-			
-			const snapThreshold = 7; 
-			const itemMbr = draggingItem.getMbr();
-			const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
-			const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
-	
-			const snapToLine = (line: Line) => {
-				if (Math.abs(itemMbr.top - line.start.y) < snapThreshold) {
-					draggingItem.transformation.translateBy(0, line.start.y - itemMbr.top, this.beginTimeStamp);
-				} else if (Math.abs(itemMbr.bottom - line.start.y) < snapThreshold) {
-					draggingItem.transformation.translateBy(0, line.start.y - itemMbr.bottom, this.beginTimeStamp);
-				} else if (Math.abs(itemCenterY - line.start.y) < snapThreshold) {
-					draggingItem.transformation.translateBy(0, line.start.y - itemCenterY, this.beginTimeStamp);
-				} else if (Math.abs(itemCenterY - line.end.y) < snapThreshold) {
-					draggingItem.transformation.translateBy(0, line.end.y - itemCenterY, this.beginTimeStamp);
-				}
-	
-			
-				if (Math.abs(itemMbr.left - line.start.x) < snapThreshold) {
-					draggingItem.transformation.translateBy(line.start.x - itemMbr.left, 0, this.beginTimeStamp);
-				} else if (Math.abs(itemMbr.right - line.start.x) < snapThreshold) {
-					draggingItem.transformation.translateBy(line.start.x - itemMbr.right, 0, this.beginTimeStamp);
-				} else if (Math.abs(itemCenterX - line.start.x) < snapThreshold) {
-					draggingItem.transformation.translateBy(line.start.x - itemCenterX, 0, this.beginTimeStamp);
-				} else if (Math.abs(itemCenterX - line.end.x) < snapThreshold) {
-					draggingItem.transformation.translateBy(line.end.x - itemCenterX, 0, this.beginTimeStamp);
-				}
-			};
-	
-			this.snapLines.verticalLines.forEach(snapToLine);
-			this.snapLines.horizontalLines.forEach(snapToLine);
-	
 			this.snapLines = this.alignmentHelper.checkAlignment(draggingItem);
-		} else {
-			this.snapLines = { verticalLines: [], horizontalLines: [] };
-		}
-
+        } else {
+            this.snapLines = { verticalLines: [], horizontalLines: [] };
+        }
+		
 		if (this.isDraggingSelection) {
 			const { selection } = this.board;
 			const selectionMbr = selection.getMbr();
@@ -341,10 +310,90 @@ export class Select extends Tool {
 			this.downOnItem.itemType !== "Connector"
 		) {
 			// translate item without selection
-
 			const { downOnItem: draggingItem } = this;
 			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
 
+			const snapThreshold = 3;
+            const itemMbr = draggingItem.getMbr();
+            const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
+            const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
+
+            const findClosestLine = (lines: Line[], getDistance: (line: Line) => number) => {
+                let closestLine: Line | null = null;
+                let minDistance = snapThreshold;
+
+                lines.forEach(line => {
+                    const distance = getDistance(line);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestLine = line;
+                    }
+                });
+
+                return closestLine;
+            };
+
+            const closestVerticalLine = findClosestLine(this.snapLines.verticalLines, line => {
+                return Math.min(
+                    Math.abs(itemMbr.left - line.start.x),
+                    Math.abs(itemMbr.right - line.start.x),
+                    Math.abs(itemCenterX - line.start.x),
+                    Math.abs(itemCenterX - line.end.x)
+                );
+            });
+
+            const closestHorizontalLine = findClosestLine(this.snapLines.horizontalLines, line => {
+                return Math.min(
+                    Math.abs(itemMbr.top - line.start.y),
+                    Math.abs(itemMbr.bottom - line.start.y),
+                    Math.abs(itemCenterY - line.start.y),
+                    Math.abs(itemCenterY - line.end.y)
+                );
+            });
+
+            const snapToLine = (line: Line | null, isVertical: boolean) => {
+                if (!line) return;
+
+                if (isVertical) {
+                    if (Math.abs(itemMbr.left - line.start.x) < snapThreshold) {
+                        draggingItem.transformation.translateBy(line.start.x - itemMbr.left, 0, this.beginTimeStamp);
+                    } else if (Math.abs(itemMbr.right - line.start.x) < snapThreshold) {
+                        draggingItem.transformation.translateBy(line.start.x - itemMbr.right, 0, this.beginTimeStamp);
+                    } else if (Math.abs(itemCenterX - line.start.x) < snapThreshold) {
+                        draggingItem.transformation.translateBy(line.start.x - itemCenterX, 0, this.beginTimeStamp);
+                    } else if (Math.abs(itemCenterX - line.end.x) < snapThreshold) {
+                        draggingItem.transformation.translateBy(line.end.x - itemCenterX, 0, this.beginTimeStamp);
+                    }
+                } else {
+                    if (Math.abs(itemMbr.top - line.start.y) < snapThreshold) {
+                        draggingItem.transformation.translateBy(0, line.start.y - itemMbr.top, this.beginTimeStamp);
+                    } else if (Math.abs(itemMbr.bottom - line.start.y) < snapThreshold) {
+                        draggingItem.transformation.translateBy(0, line.start.y - itemMbr.bottom, this.beginTimeStamp);
+                    } else if (Math.abs(itemCenterY - line.start.y) < snapThreshold) {
+                        draggingItem.transformation.translateBy(0, line.start.y - itemCenterY, this.beginTimeStamp);
+                    } else if (Math.abs(itemCenterY - line.end.y) < snapThreshold) {
+                        draggingItem.transformation.translateBy(0, line.end.y - itemCenterY, this.beginTimeStamp);
+                    }
+                }
+
+                this.isSnapped = true;
+                this.snapCursorPos = this.board.pointer.point.copy();
+            };
+
+            snapToLine(closestVerticalLine, true);
+            snapToLine(closestHorizontalLine, false);
+
+            if (this.isSnapped && this.snapCursorPos) {
+                const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
+                const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
+                if (cursorDiffX > snapThreshold || cursorDiffY > snapThreshold) {
+                    this.isSnapped = false;
+                    this.snapCursorPos = null;
+                } else {
+                    return false;
+                }
+            }
+      
 			const frames = this.board.items
 				.getEnclosedOrCrossed(
 					draggingItem.getMbr().left,
@@ -362,7 +411,7 @@ export class Select extends Tool {
 			});
 
 			return false;
-		}
+		} 
 		if (this.isDrawingRectangle && this.line && this.rect) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
