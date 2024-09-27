@@ -541,8 +541,19 @@ export class Board {
 		return new Promise((resolve, reject) => {
 			const dbRequest = indexedDB.open("BoardDatabase", 1);
 
+			dbRequest.onupgradeneeded = event => {
+				const db = (event.target as IDBOpenDBRequest).result;
+				if (!db.objectStoreNames.contains("snapshots")) {
+					db.createObjectStore("snapshots", { keyPath: "boardId" });
+				}
+			};
+
 			dbRequest.onsuccess = event => {
 				const db = (event.target as IDBOpenDBRequest).result;
+				if (!db.objectStoreNames.contains("snapshots")) {
+					resolve(undefined);
+					return;
+				}
 				const transaction = db.transaction("snapshots", "readonly");
 				const store = transaction.objectStore("snapshots");
 				const getRequest = store.get(this.getBoardId());
@@ -591,6 +602,13 @@ export class Board {
 
 	private async removeSnapshotFromIndexedDB(boardId: string): Promise<void> {
 		const dbRequest = indexedDB.open("BoardDatabase", 1);
+
+		dbRequest.onupgradeneeded = event => {
+			const db = (event.target as IDBOpenDBRequest).result;
+			if (!db.objectStoreNames.contains("snapshots")) {
+				db.createObjectStore("snapshots", { keyPath: "boardId" });
+			}
+		};
 
 		return new Promise((resolve, reject) => {
 			dbRequest.onsuccess = event => {
