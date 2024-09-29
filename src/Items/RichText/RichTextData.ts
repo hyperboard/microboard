@@ -15,7 +15,7 @@ export interface RichTextData {
 	color?: string;
 	placeholderText: string;
 }
-//@ts-ignore
+// @ts-expect-error
 const richTextDataSchema: JSONSchemaType<RichTextData> = {
 	type: "object",
 	properties: {

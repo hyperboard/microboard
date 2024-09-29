@@ -93,10 +93,24 @@ export class AddShape extends BoardTool {
 		let width = this.bounds.getWidth();
 		let height = this.bounds.getHeight();
 		if (width < 2) {
-			width = 100;
+			const savedWidth = sessionStorage.getItem("shapeWidth");
+			if (savedWidth) {
+				width = JSON.parse(savedWidth);
+			} else {
+				width = 100;
+			}
+		} else {
+			sessionStorage.setItem("shapeWidth", JSON.stringify(width));
 		}
 		if (height < 2) {
-			height = 100;
+			const savedHeight = sessionStorage.getItem("shapeHeight");
+			if (savedHeight) {
+				height = JSON.parse(savedHeight);
+			} else {
+				height = 100;
+			}
+		} else {
+			sessionStorage.setItem("shapeHeight", JSON.stringify(height));
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);

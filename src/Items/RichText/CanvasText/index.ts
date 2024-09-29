@@ -190,7 +190,7 @@ function getTextStyle(data: TextNode): LeafStyle {
 		fontFamily: data.fontFamily ?? "Arial",
 	};
 
-	const styles:string[] = [];
+	const styles: string[] = [];
 
 	if (data.bold) {
 		styles.push("bold");
