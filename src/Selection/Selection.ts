@@ -369,7 +369,6 @@ export class Selection {
 		) {
 			const text = item instanceof RichText ? item : item.text;
 			if (text.isEmpty()) {
-				text.selectWholeText();
 				const textColor = sessionStorage.getItem(
 					`fontColor_${item.itemType}`,
 				);
@@ -391,7 +390,11 @@ export class Selection {
 				if (textColor) {
 					text.setSelectionFontColor(JSON.parse(textColor), "None");
 				}
-				if (textSize && !Number.isNaN(textSize)) {
+				if (
+					textSize &&
+					!Number.isNaN(textSize) &&
+					!(item instanceof Sticker)
+				) {
 					text.setSelectionFontSize(textSize, "None");
 				}
 				if (highlightColor) {
@@ -404,12 +407,12 @@ export class Selection {
 					const stylesArr = JSON.parse(styles);
 					text.setSelectionFontStyle(stylesArr, "None");
 				}
-				if (horizontalAlignment) {
+				if (horizontalAlignment && !(item instanceof Sticker)) {
 					text.setSelectionHorisontalAlignment(
 						JSON.parse(horizontalAlignment),
 					);
 				}
-				if (verticalAlignment) {
+				if (verticalAlignment && !(item instanceof Sticker)) {
 					this.setVerticalAlignment(JSON.parse(verticalAlignment));
 				}
 			}
@@ -1009,7 +1012,6 @@ export class Selection {
 					JSON.stringify(fontColor),
 				);
 			}
-			console.log(fontColor);
 			if (item instanceof RichText) {
 				item.setSelectionFontColor(fontColor, this.context);
 				return;
@@ -1200,7 +1202,6 @@ export class Selection {
 				);
 			})
 			.map(item => item.getId());
-		console.log(changedIds);
 		if (changedIds.length > 0) {
 			this.emit({
 				class: "RichText",

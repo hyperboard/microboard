@@ -74,7 +74,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
-	maxHeight: number = 0;
+	maxHeight = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	frameMbr?: Mbr;
@@ -534,8 +534,8 @@ export class RichText extends Mbr implements Geometry {
 
 	maxCapableChartsInSticker(op: Operation): boolean {
 		const text = this.getText();
-		//@ts-ignore
-		const fontSize =text[0]?.children[0].fontSize;
+		// @ts-expect-error
+		const fontSize = text[0]?.children[0].fontSize;
 		const height = this.getMaxHeight();
 		const width = this.getMaxWidth();
 		const lineHeight = fontSize * 1.4;
@@ -566,11 +566,11 @@ export class RichText extends Mbr implements Geometry {
 				return count + 1;
 			}
 		}, 0);
-		
+
 		if (
-			//@ts-ignore
+			// @ts-expect-error
 			op.method === "split_node" ||
-			//@ts-ignore
+			// @ts-expect-error
 			op.method === "insert_text"
 		) {
 			return !(lineCount + 1 > maxLine);
@@ -794,10 +794,9 @@ export class RichText extends Mbr implements Geometry {
 			at: [],
 		});
 
-		const fontSizes:number[] = [];
+		const fontSizes: number[] = [];
 		for (const [node] of textNodes) {
-			const fontSize =
-				node.fontSize || (node && node.fontSize);
+			const fontSize = node.fontSize || (node && node.fontSize);
 			if (fontSize) {
 				fontSizes.push(fontSize);
 			}
@@ -1016,10 +1015,10 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
-				// @ts-ignore
+				// @ts-expect-error
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
-				// @ts-ignore
+				// @ts-expect-error
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();

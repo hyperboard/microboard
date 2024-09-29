@@ -45,7 +45,9 @@ export const StickerShape = {
 		],
 		true,
 		stickerColors["Sky Blue"],
-		"none",
+		"transparent",
+		"solid",
+		0,
 	),
 	anchorPoints: [
 		new Point(width / 2, 0),
