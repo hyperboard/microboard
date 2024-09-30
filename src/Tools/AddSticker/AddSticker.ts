@@ -17,11 +17,12 @@ export class AddSticker extends BoardTool {
 	isDown = false;
 	constructor(board: Board) {
 		super(board);
-		const lastSticker = this.getLastSticker();
+		const bgColor = sessionStorage.getItem("lastStickerBg");
+
 		this.sticker = new Sticker(
 			undefined,
 			undefined,
-			lastSticker ? lastSticker.getBackgroundColor() : undefined,
+			bgColor ? JSON.parse(bgColor) : undefined,
 		);
 
 		this.setCursor(this.sticker.getBackgroundColor());
@@ -78,20 +79,21 @@ export class AddSticker extends BoardTool {
 	}
 
 	leftButtonUp(): boolean {
-		const lastSticker = this.getLastSticker();
-		if (lastSticker) {
-			try {
-				AddSticker.defaultWidth = +lastSticker.getWidth();
-			} catch (err) {
-				console.error("Failed to set AddSticker.defaultWidth", err);
-			}
-		}
 		const width = this.bounds.getWidth();
 		const height = this.bounds.getHeight();
 		if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
+			let width = sessionStorage.getItem("lastStickerWidth");
+			let height = sessionStorage.getItem("lastStickerHeight");
+			if (width) {
+				width = JSON.parse(width);
+			}
+			if (height) {
+				height = JSON.parse(height);
+			}
 			this.sticker.transformToCenter(
 				this.board.pointer.point.copy(),
-				AddSticker.defaultWidth,
+				width ? +width : AddSticker.defaultWidth,
+				height ? +height : undefined,
 			);
 		}
 		const sticker = this.board.add(this.sticker);
@@ -106,7 +108,6 @@ export class AddSticker extends BoardTool {
 			AddSticker.defaultWidth = mbr.getWidth();
 		}
 
-		this.setLastSticker(this.sticker);
 		return true;
 	}
 
@@ -149,18 +150,5 @@ export class AddSticker extends BoardTool {
 		if (this.isDown) {
 			this.bounds.render(context);
 		}
-	}
-
-	private getLastSticker(): Sticker | null {
-		const lastSticker = sessionStorage.getItem("lastSticker");
-		if (lastSticker) {
-			return new Sticker().deserialize(JSON.parse(lastSticker));
-		} else {
-			return null;
-		}
-	}
-
-	private setLastSticker(lastSticker: Sticker): void {
-		sessionStorage.setItem("lastSticker", JSON.stringify(lastSticker));
 	}
 }
