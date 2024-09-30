@@ -876,6 +876,9 @@ export class Board {
 					itemData.endPoint.x += -minX + right + width;
 					itemData.endPoint.y += -minY + top;
 				}
+			} else if (itemData.itemType === "Drawing" && width === 0) {
+				itemData.transformation.translateX = translateX + 10;
+				itemData.transformation.translateY = translateY;
 			} else if (itemData.transformation) {
 				itemData.transformation.translateX =
 					translateX - minX + right + width;
