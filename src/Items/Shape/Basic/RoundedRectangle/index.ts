@@ -43,3 +43,120 @@ export const RoundedRectangle = {
 		new Point(50, 100),
 	],
 };
+
+export const createRoundedRectanglePath = (w: number, h: number) => {
+	let ratio = w / h;
+	const convexity = 2;
+	const nearBreakpoint = 10;
+	const farBreakpoint = 20;
+
+	if (ratio >= 1) {
+		const quotientFarBreakpoint = farBreakpoint / ratio;
+		const quotientNearBreakpoint = nearBreakpoint / ratio;
+		const quotientConvexity = convexity / ratio;
+		return new Path(
+			[
+				new CubicBezier(
+					new Point(0, farBreakpoint),
+					new Point(0, nearBreakpoint - convexity),
+					new Point(quotientFarBreakpoint, 0),
+					new Point(quotientNearBreakpoint - quotientConvexity, 0),
+				),
+				new Line(
+					new Point(quotientFarBreakpoint, 0),
+					new Point(100 - quotientFarBreakpoint, 0),
+				),
+				new CubicBezier(
+					new Point(100 - quotientFarBreakpoint, 0),
+					new Point(
+						100 - quotientNearBreakpoint + quotientConvexity,
+						0,
+					),
+					new Point(100, farBreakpoint),
+					new Point(100, nearBreakpoint - convexity),
+				),
+				new Line(
+					new Point(100, farBreakpoint),
+					new Point(100, 100 - farBreakpoint),
+				),
+				new CubicBezier(
+					new Point(100, 100 - farBreakpoint),
+					new Point(100, 100 - nearBreakpoint - convexity),
+					new Point(100 - quotientFarBreakpoint, 100),
+					new Point(
+						100 - quotientNearBreakpoint + quotientConvexity,
+						100,
+					),
+				),
+				new Line(
+					new Point(100 - quotientFarBreakpoint, 100),
+					new Point(quotientFarBreakpoint, 100),
+				),
+				new CubicBezier(
+					new Point(quotientFarBreakpoint, 100),
+					new Point(quotientNearBreakpoint - quotientConvexity, 100),
+					new Point(0, 100 - farBreakpoint),
+					new Point(0, 100 - nearBreakpoint - convexity),
+				),
+				new Line(
+					new Point(0, 100 - farBreakpoint),
+					new Point(0, farBreakpoint),
+				),
+			],
+			true,
+		);
+	}
+
+	ratio = h / w;
+	const quotientFarBreakpoint = farBreakpoint / ratio;
+	const quotientNearBreakpoint = nearBreakpoint / ratio;
+	const quotientConvexity = convexity / ratio;
+	return new Path(
+		[
+			new CubicBezier(
+				new Point(0, quotientFarBreakpoint),
+				new Point(0, quotientNearBreakpoint - quotientConvexity),
+				new Point(farBreakpoint, 0),
+				new Point(nearBreakpoint - convexity, 0),
+			),
+			new Line(
+				new Point(farBreakpoint, 0),
+				new Point(100 - farBreakpoint, 0),
+			),
+			new CubicBezier(
+				new Point(100 - farBreakpoint, 0),
+				new Point(100 - nearBreakpoint + convexity, 0),
+				new Point(100, quotientFarBreakpoint),
+				new Point(100, quotientNearBreakpoint - quotientConvexity),
+			),
+			new Line(
+				new Point(100, quotientFarBreakpoint),
+				new Point(100, 100 - quotientFarBreakpoint),
+			),
+			new CubicBezier(
+				new Point(100, 100 - quotientFarBreakpoint),
+				new Point(
+					100,
+					100 - quotientNearBreakpoint - quotientConvexity,
+				),
+				new Point(100 - farBreakpoint, 100),
+				new Point(100 - nearBreakpoint + convexity, 100),
+			),
+			new Line(
+				new Point(100 - farBreakpoint, 100),
+				new Point(farBreakpoint, 100),
+			),
+			new CubicBezier(
+				new Point(farBreakpoint, 100),
+				new Point(nearBreakpoint - convexity, 100),
+				new Point(0, 100 - quotientFarBreakpoint),
+				new Point(0, 100 - quotientNearBreakpoint - quotientConvexity),
+			),
+			new Line(
+				new Point(0, 100 - quotientFarBreakpoint),
+				new Point(0, quotientFarBreakpoint),
+			),
+		],
+		true,
+	);
+};

@@ -46,3 +46,124 @@ export const SpeachBubble = {
 		new Point(50, 100),
 	],
 };
+
+export const createSpeachBubblePath = (w: number, h: number) => {
+	const rectangleHeight = h - h * 0.1;
+	let ratio = w / rectangleHeight;
+	const convexity = 2;
+	const nearBreakpoint = 10;
+	const farBreakpoint = 20;
+
+	if (ratio >= 1) {
+		const quotientFarBreakpoint = farBreakpoint / ratio;
+		const quotientNearBreakpoint = nearBreakpoint / ratio;
+		const quotientConvexity = convexity / ratio;
+		return new Path(
+			[
+				new CubicBezier(
+					new Point(0, farBreakpoint),
+					new Point(0, nearBreakpoint - convexity),
+					new Point(quotientFarBreakpoint, 0),
+					new Point(quotientNearBreakpoint - quotientConvexity, 0),
+				),
+				new Line(
+					new Point(quotientFarBreakpoint, 0),
+					new Point(100 - quotientFarBreakpoint, 0),
+				),
+				new CubicBezier(
+					new Point(100 - quotientFarBreakpoint, 0),
+					new Point(
+						100 - quotientNearBreakpoint + quotientConvexity,
+						0,
+					),
+					new Point(100, farBreakpoint),
+					new Point(100, nearBreakpoint - convexity),
+				),
+				new Line(
+					new Point(100, farBreakpoint),
+					new Point(100, 90 - farBreakpoint),
+				),
+				new CubicBezier(
+					new Point(100, 90 - farBreakpoint),
+					new Point(100, 90 - nearBreakpoint - convexity),
+					new Point(100 - quotientFarBreakpoint, 90),
+					new Point(
+						100 - quotientNearBreakpoint + quotientConvexity,
+						90,
+					),
+				),
+				new Line(
+					new Point(100 - quotientFarBreakpoint, 90),
+					new Point(30, 90),
+				),
+				new Line(new Point(30, 90), new Point(20, 100)),
+				new Line(new Point(20, 100), new Point(20, 90)),
+				new Line(
+					new Point(20, 90),
+					new Point(quotientFarBreakpoint, 90),
+				),
+				new CubicBezier(
+					new Point(quotientFarBreakpoint, 90),
+					new Point(quotientNearBreakpoint - quotientConvexity, 90),
+					new Point(0, 90 - farBreakpoint),
+					new Point(0, 90 - nearBreakpoint - convexity),
+				),
+				new Line(
+					new Point(0, 90 - farBreakpoint),
+					new Point(0, farBreakpoint),
+				),
+			],
+			true,
+		);
+	}
+
+	ratio = rectangleHeight / w;
+	const quotientFarBreakpoint = farBreakpoint / ratio;
+	const quotientNearBreakpoint = nearBreakpoint / ratio;
+	const quotientConvexity = convexity / ratio;
+	return new Path(
+		[
+			new CubicBezier(
+				new Point(0, quotientFarBreakpoint),
+				new Point(0, quotientNearBreakpoint - quotientConvexity),
+				new Point(farBreakpoint, 0),
+				new Point(nearBreakpoint - convexity, 0),
+			),
+			new Line(
+				new Point(farBreakpoint, 0),
+				new Point(100 - farBreakpoint, 0),
+			),
+			new CubicBezier(
+				new Point(100 - farBreakpoint, 0),
+				new Point(100 - nearBreakpoint + convexity, 0),
+				new Point(100, quotientFarBreakpoint),
+				new Point(100, quotientNearBreakpoint - quotientConvexity),
+			),
+			new Line(
+				new Point(100, quotientFarBreakpoint),
+				new Point(100, 90 - quotientFarBreakpoint),
+			),
+			new CubicBezier(
+				new Point(100, 90 - quotientFarBreakpoint),
+				new Point(100, 90 - quotientNearBreakpoint - quotientConvexity),
+				new Point(100 - farBreakpoint, 90),
+				new Point(100 - nearBreakpoint + convexity, 90),
+			),
+			new Line(new Point(100 - farBreakpoint, 90), new Point(30, 90)),
+			new Line(new Point(30, 90), new Point(20, 100)),
+			new Line(new Point(20, 100), new Point(20, 90)),
+			new Line(new Point(20, 90), new Point(farBreakpoint, 90)),
+			new CubicBezier(
+				new Point(farBreakpoint, 90),
+				new Point(nearBreakpoint - convexity, 90),
+				new Point(0, 90 - quotientFarBreakpoint),
+				new Point(0, 90 - quotientNearBreakpoint - quotientConvexity),
+			),
+			new Line(
+				new Point(0, 90 - quotientFarBreakpoint),
+				new Point(0, quotientFarBreakpoint),
+			),
+		],
+		true,
+	);
+};
