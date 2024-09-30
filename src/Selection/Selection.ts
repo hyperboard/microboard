@@ -388,14 +388,17 @@ export class Selection {
 					`verticalAlignment_${item.itemType}`,
 				);
 				if (textColor) {
+					console.log(textColor);
 					text.setSelectionFontColor(JSON.parse(textColor), "None");
 				}
-				if (
-					textSize &&
-					!Number.isNaN(textSize) &&
-					!(item instanceof Sticker)
-				) {
-					text.setSelectionFontSize(textSize, "None");
+				if (textSize) {
+					this.emit({
+						class: "RichText",
+						method: "setFontSize",
+						item: [item.getId()],
+						fontSize: textSize,
+						context: this.getContext(),
+					});
 				}
 				if (highlightColor) {
 					text.setSelectionFontHighlight(
