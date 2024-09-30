@@ -230,8 +230,10 @@ export class Select extends Tool {
 		}
 
 		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
-			console.log('Мы сюда попали')
             this.snapLines = this.alignmentHelper.checkAlignment(this.downOnItem);
+        } else if (this.isDraggingSelection && this.board.selection.items.list().length === 1) {
+            const singleItem = this.board.selection.items.list()[0];
+            this.snapLines = this.alignmentHelper.checkAlignment(singleItem);
         } else {
             this.snapLines = { verticalLines: [], horizontalLines: [] };
         }
