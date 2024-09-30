@@ -228,7 +228,10 @@ export class Select extends Tool {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				return false;
 			}
-			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				this.debounceUpd.shouldUpd()
+			) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const translation = this.handleMultipleItemsTranslate(
 					this.canvasDrawer.getMatrix().translateX,
@@ -248,7 +251,8 @@ export class Select extends Tool {
 							translation,
 						);
 						this.debounceUpd.setFalse();
-						this.debounceUpd.setTimeoutUpdate(1000);
+						this.canvasDrawer.clearCanvasAndKeys();
+						// this.debounceUpd.setTimeoutUpdate(10000);
 					}
 				}
 			}
@@ -284,6 +288,7 @@ export class Select extends Tool {
 						}
 					});
 				} else if (item instanceof Frame) {
+					console.log("frame");
 					item.text.setContainer(
 						Frames[item.getFrameType()].textBounds.copy(),
 						item.getMbr(),
