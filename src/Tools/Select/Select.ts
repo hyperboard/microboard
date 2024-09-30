@@ -288,7 +288,6 @@ export class Select extends Tool {
 						}
 					});
 				} else if (item instanceof Frame) {
-					console.log("frame");
 					item.text.setContainer(
 						Frames[item.getFrameType()].textBounds.copy(),
 						item.getMbr(),

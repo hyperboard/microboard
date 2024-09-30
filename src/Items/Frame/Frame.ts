@@ -649,11 +649,11 @@ export class Frame implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		this.text.render(context);
 		this.text.setContainer(
 			Frames[this.shapeType].textBounds.copy(),
 			this.getMbr(),
 		);
+		this.text.render(context);
 	}
 
 	renderBorders(context: DrawingContext): void {
