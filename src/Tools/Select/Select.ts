@@ -73,6 +73,22 @@ export class Select extends Tool {
 		this.snapLines = { verticalLines: [], horizontalLines: [] };
 	}
 
+	private handleSnapping(item: Item): boolean {
+        this.isSnapped = this.alignmentHelper.snapToClosestLine(item, this.snapLines, this.beginTimeStamp);
+
+        if (this.isSnapped && this.snapCursorPos) {
+            const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
+            const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
+            if (cursorDiffX > this.alignmentHelper.snapThreshold || cursorDiffY > this.alignmentHelper.snapThreshold) {
+                this.isSnapped = false;
+                this.snapCursorPos = null;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
 	leftButtonDown(): boolean {
 		if (this.isRightDown || this.isMiddleDown) {
 			return false;
@@ -213,9 +229,9 @@ export class Select extends Tool {
 			return false;
 		}
 
-		const draggingItem = this.downOnItem;
-		if (draggingItem) {
-			this.snapLines = this.alignmentHelper.checkAlignment(draggingItem);
+		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
+			console.log('Мы сюда попали')
+            this.snapLines = this.alignmentHelper.checkAlignment(this.downOnItem);
         } else {
             this.snapLines = { verticalLines: [], horizontalLines: [] };
         }
@@ -223,6 +239,13 @@ export class Select extends Tool {
 		if (this.isDraggingSelection) {
 			const { selection } = this.board;
 			const selectionMbr = selection.getMbr();
+			if (selection.items.list().length === 1) {
+                const singleItem = selection.items.list()[0];
+                if (this.handleSnapping(singleItem)) {
+                    return false;
+                }
+            }
+
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
 				!this.debounceUpd.shouldUpd() &&
@@ -313,85 +336,8 @@ export class Select extends Tool {
 			const { downOnItem: draggingItem } = this;
 			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
 
-			const snapThreshold = 3;
-            const itemMbr = draggingItem.getMbr();
-            const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
-            const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
-
-            const findClosestLine = (lines: Line[], getDistance: (line: Line) => number) => {
-                let closestLine: Line | null = null;
-                let minDistance = snapThreshold;
-
-                lines.forEach(line => {
-                    const distance = getDistance(line);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestLine = line;
-                    }
-                });
-
-                return closestLine;
-            };
-
-            const closestVerticalLine = findClosestLine(this.snapLines.verticalLines, line => {
-                return Math.min(
-                    Math.abs(itemMbr.left - line.start.x),
-                    Math.abs(itemMbr.right - line.start.x),
-                    Math.abs(itemCenterX - line.start.x),
-                    Math.abs(itemCenterX - line.end.x)
-                );
-            });
-
-            const closestHorizontalLine = findClosestLine(this.snapLines.horizontalLines, line => {
-                return Math.min(
-                    Math.abs(itemMbr.top - line.start.y),
-                    Math.abs(itemMbr.bottom - line.start.y),
-                    Math.abs(itemCenterY - line.start.y),
-                    Math.abs(itemCenterY - line.end.y)
-                );
-            });
-
-            const snapToLine = (line: Line | null, isVertical: boolean) => {
-                if (!line) return;
-
-                if (isVertical) {
-                    if (Math.abs(itemMbr.left - line.start.x) < snapThreshold) {
-                        draggingItem.transformation.translateBy(line.start.x - itemMbr.left, 0, this.beginTimeStamp);
-                    } else if (Math.abs(itemMbr.right - line.start.x) < snapThreshold) {
-                        draggingItem.transformation.translateBy(line.start.x - itemMbr.right, 0, this.beginTimeStamp);
-                    } else if (Math.abs(itemCenterX - line.start.x) < snapThreshold) {
-                        draggingItem.transformation.translateBy(line.start.x - itemCenterX, 0, this.beginTimeStamp);
-                    } else if (Math.abs(itemCenterX - line.end.x) < snapThreshold) {
-                        draggingItem.transformation.translateBy(line.end.x - itemCenterX, 0, this.beginTimeStamp);
-                    }
-                } else {
-                    if (Math.abs(itemMbr.top - line.start.y) < snapThreshold) {
-                        draggingItem.transformation.translateBy(0, line.start.y - itemMbr.top, this.beginTimeStamp);
-                    } else if (Math.abs(itemMbr.bottom - line.start.y) < snapThreshold) {
-                        draggingItem.transformation.translateBy(0, line.start.y - itemMbr.bottom, this.beginTimeStamp);
-                    } else if (Math.abs(itemCenterY - line.start.y) < snapThreshold) {
-                        draggingItem.transformation.translateBy(0, line.start.y - itemCenterY, this.beginTimeStamp);
-                    } else if (Math.abs(itemCenterY - line.end.y) < snapThreshold) {
-                        draggingItem.transformation.translateBy(0, line.end.y - itemCenterY, this.beginTimeStamp);
-                    }
-                }
-
-                this.isSnapped = true;
-                this.snapCursorPos = this.board.pointer.point.copy();
-            };
-
-            snapToLine(closestVerticalLine, true);
-            snapToLine(closestHorizontalLine, false);
-
-            if (this.isSnapped && this.snapCursorPos) {
-                const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
-                const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
-                if (cursorDiffX > snapThreshold || cursorDiffY > snapThreshold) {
-                    this.isSnapped = false;
-                    this.snapCursorPos = null;
-                } else {
-                    return false;
-                }
+            if (this.handleSnapping(this.downOnItem)) {
+                return false;
             }
       
 			const frames = this.board.items
@@ -653,26 +599,6 @@ export class Select extends Tool {
 			this.toHighlight.render(context);
 		}
 
-		context.ctx.save();
-		context.ctx.strokeStyle = 'rgba(0, 0, 255, 1)'; 
-		context.ctx.lineWidth = 1 / this.board.camera.getScale();
-		context.ctx.setLineDash([5, 5]);
-	
-		this.snapLines.verticalLines.forEach(line => {
-			context.ctx.beginPath();
-			context.ctx.moveTo(line.start.x, line.start.y);
-			context.ctx.lineTo(line.end.x, line.end.y);
-			context.ctx.stroke();
-		});
-	
-		this.snapLines.horizontalLines.forEach(line => {
-			context.ctx.beginPath();
-			context.ctx.moveTo(line.start.x, line.start.y);
-			context.ctx.lineTo(line.end.x, line.end.y);
-			context.ctx.stroke();
-		});
-	
-		context.ctx.restore();
-
+		this.alignmentHelper.renderSnapLines(context, this.snapLines, this.board.camera.getScale());
 	}
 }
