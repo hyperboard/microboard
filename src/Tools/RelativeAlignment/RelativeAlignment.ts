@@ -3,8 +3,8 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-    private alignThreshold = 3;
-    snapThreshold = 5;
+    private alignThreshold = 4;
+    snapThreshold = 3;
 
     constructor(private spatialIndex: SpatialIndex) {}
 
@@ -22,7 +22,7 @@ export class AlignmentHelper {
 
         const verticalLines: Line[] = [];
         const horizontalLines: Line[] = [];
-        
+
         nearbyItems.forEach(item => {
             if (item === movingItem) {
                 return;
@@ -86,7 +86,19 @@ export class AlignmentHelper {
                     new Point(itemMbr.right, Math.max(itemMbr.bottom, movingMBR.bottom))
                 ));
             }
-            if (Math.abs(centerXMoving - itemMbr.left) < this.alignThreshold) {
+            if (Math.abs(itemMbr.top - movingMBR.bottom) < this.alignThreshold) {
+                horizontalLines.push(new Line(
+                    new Point(Math.min(itemMbr.left, movingMBR.left), itemMbr.top), 
+                    new Point(Math.max(itemMbr.right, movingMBR.right), itemMbr.top)
+                ));
+            }
+            if (Math.abs(itemMbr.bottom - movingMBR.top) < this.alignThreshold) {
+                horizontalLines.push(new Line(
+                    new Point(Math.min(itemMbr.left, movingMBR.left), itemMbr.bottom), 
+                    new Point(Math.max(itemMbr.right, movingMBR.right), itemMbr.bottom)
+                ));
+            }
+			if (Math.abs(centerXMoving - itemMbr.left) < this.alignThreshold) {
                 verticalLines.push(new Line(
                     new Point(itemMbr.left, Math.min(itemMbr.top, movingMBR.top)), 
                     new Point(itemMbr.left, Math.max(itemMbr.bottom, movingMBR.bottom))
@@ -108,6 +120,30 @@ export class AlignmentHelper {
                 horizontalLines.push(new Line(
                     new Point(Math.min(itemMbr.left, movingMBR.left), itemMbr.bottom), 
                     new Point(Math.max(itemMbr.right, movingMBR.right), itemMbr.bottom)
+                ));
+            }
+			if (Math.abs(movingMBR.top - centerYItem) < this.alignThreshold) {
+                horizontalLines.push(new Line(
+                    new Point(Math.min(itemMbr.left, movingMBR.left), centerYItem), 
+                    new Point(Math.max(itemMbr.right, movingMBR.right), centerYItem)
+                ));
+            }
+            if (Math.abs(movingMBR.bottom - centerYItem) < this.alignThreshold) {
+                horizontalLines.push(new Line(
+                    new Point(Math.min(itemMbr.left, movingMBR.left), centerYItem), 
+                    new Point(Math.max(itemMbr.right, movingMBR.right), centerYItem)
+                ));
+            }
+            if (Math.abs(movingMBR.left - centerXItem) < this.alignThreshold) {
+                verticalLines.push(new Line(
+                    new Point(centerXItem, Math.min(itemMbr.top, movingMBR.top)), 
+                    new Point(centerXItem, Math.max(itemMbr.bottom, movingMBR.bottom))
+                ));
+            }
+            if (Math.abs(movingMBR.right - centerXItem) < this.alignThreshold) {
+                verticalLines.push(new Line(
+                    new Point(centerXItem, Math.min(itemMbr.top, movingMBR.top)), 
+                    new Point(centerXItem, Math.max(itemMbr.bottom, movingMBR.bottom))
                 ));
             }
         });
