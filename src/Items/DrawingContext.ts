@@ -10,7 +10,9 @@ export class DrawingContext {
 
 	constructor(
 		public camera: Camera,
-		public ctx: CanvasRenderingContext2D,
+		public ctx:
+			| CanvasRenderingContext2D
+			| OffscreenCanvasRenderingContext2D,
 		public matrix = new Matrix(),
 	) {
 		this.setCamera(camera);

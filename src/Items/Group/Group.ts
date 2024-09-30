@@ -6,9 +6,9 @@ import { Item } from "../Item";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
 import { Point } from "../Point";
-import { Transformation, TransformationData } from "../Transformation";
+import { Transformation } from "../Transformation";
 import { Board } from "../../Board";
-import { Events } from "Board/Events";
+import { TransformationData } from "../Transformation/TransformationData";
 
 export interface GroupData {
 	itemType: "Group";
@@ -27,10 +27,11 @@ export class Group implements Geometry {
 		private children: Item[],
 		private id = "",
 		private board: Board,
-		private events?: Events,
 	) {
 		for (const child of children) {
 			child.parent = this.id;
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-expect-error
 			child.subject.publish(child);
 		}
 	}
@@ -40,7 +41,7 @@ export class Group implements Geometry {
 	}
 
 	serialize(): GroupData {
-		const children = [];
+		const children: string[] = [];
 		for (const child of this.children) {
 			children.push(child.getId());
 		}
@@ -59,6 +60,8 @@ export class Group implements Geometry {
 			const child = this.board.items.getById(id);
 			if (child) {
 				child.parent = this.id;
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-expect-error
 				child.subject.publish(child);
 				this.children.push(child);
 			}

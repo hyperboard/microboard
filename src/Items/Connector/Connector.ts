@@ -9,7 +9,6 @@ import {
 	DRAW_TEXT_BORDER,
 	TEXT_BORDER_PADDING,
 } from "View/Items/Connector";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { Board } from "../../Board";
 import { Events, Operation } from "../../Events";
@@ -29,7 +28,6 @@ import {
 	ControlPoint,
 	ControlPointData,
 	FindItemFn,
-	FixedPoint,
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
@@ -82,15 +80,6 @@ export class Connector {
 		true,
 		false,
 		undefined,
-		{
-			...DEFAULT_TEXT_STYLES,
-			fontSize: localStorage.getItem("lastConnectorTextSize")
-				? Number(localStorage.getItem("lastConnectorTextSize"))
-				: DEFAULT_TEXT_STYLES.fontSize,
-			fontColor:
-				localStorage.getItem("lastConnectorTextColor") ??
-				DEFAULT_TEXT_STYLES.fontColor,
-		},
 	);
 	transformationRenderBlock?: boolean = undefined;
 	private optionalFindItemFn?: FindItemFn;

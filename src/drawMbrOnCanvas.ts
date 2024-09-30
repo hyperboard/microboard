@@ -90,6 +90,7 @@ export default function createCanvasDrawer(board: Board): {
 				const item = board.items.getById(id);
 				if (item) {
 					item.transformationRenderBlock = undefined;
+					// @ts-expect-error different types of items output the type never
 					item.subject.publish(item);
 				}
 			});

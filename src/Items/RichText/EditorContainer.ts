@@ -24,7 +24,6 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { SelectionContext } from "Board/Selection/Selection";
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -73,6 +72,10 @@ export class EditorContainer {
 						type: "text",
 						text: "",
 						...initialTextStyles,
+						overline: false,
+						lineThrough: false,
+						subscript: false,
+						superscript: false,
 					},
 				],
 			},
@@ -198,7 +201,7 @@ export class EditorContainer {
 				case "setSelectionFontSize":
 				case "setSelectionFontHighlight":
 				case "setSelectionFontStyle":
-				case "setSelectionHorisontalAlignment":
+				case "setSelectionHorizontalAlignment":
 					this.applySelectionOp(op);
 					break;
 				case "setBlockType":
@@ -208,10 +211,11 @@ export class EditorContainer {
 				case "setFontSize":
 				case "setFontHighlight":
 				case "setHorisontalAlignment":
+					console.log(this.id);
 					this.applyWholeTextOp(op);
 					break;
 				case "setMaxWidth":
-					this.applyMaxWidth(op.maxWidth);
+					this.applyMaxWidth(op.maxWidth ?? 0);
 					break;
 			}
 		} catch (error) {
@@ -335,7 +339,6 @@ export class EditorContainer {
 	private applyWholeTextOp(op: WholeTextOp): void {
 		const selection = this.editor.selection;
 		this.selectWholeText();
-		this.shouldEmit = false;
 		switch (op.method) {
 			case "setBlockType":
 				this.setSelectionBlockType(op.type);
@@ -351,7 +354,7 @@ export class EditorContainer {
 				break;
 			case "setFontSize":
 				this.textScale =
-					op.fontSize /
+					Number(op.fontSize) /
 					this.getScale() /
 					this.initialTextStyles.fontSize;
 				break;
@@ -362,13 +365,12 @@ export class EditorContainer {
 				this.setSelectionHorisontalAlignment(op.horisontalAlignment);
 				break;
 			case "setMaxWidth":
-				this.applyMaxWidth(op.maxWidth);
+				this.applyMaxWidth(op.maxWidth ?? 0);
 				break;
 		}
 		if (selection) {
 			Transforms.select(this.editor, selection);
 		}
-		this.shouldEmit = true;
 	}
 
 	applyMaxWidth(maxWidth: number): void {
@@ -459,8 +461,6 @@ export class EditorContainer {
 				styleArr => !styleArr.includes(style),
 			);
 
-			ReactEditor.focus(this.editor);
-
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
 				return;
@@ -529,7 +529,7 @@ export class EditorContainer {
 		Editor.addMark(editor, "fontSize", size);
 
 		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
+			// ReactEditor.focus(editor);
 		}
 	}
 
@@ -675,6 +675,7 @@ export class EditorContainer {
 		const textNodes: TextNode[] = [];
 		for (const [node, path] of Editor.nodes(this.editor, {
 			at: selection,
+			//@ts-ignore
 			match: n => n.type === "text",
 		})) {
 			textNodes.push(node as TextNode);
@@ -770,7 +771,7 @@ export class EditorContainer {
 
 	hasTextInSelection(): boolean {
 		const { selection } = this.editor;
-		if (!selection || Range.isCollapsed(this.editor, selection)) {
+		if (!selection || Range.isCollapsed(selection)) {
 			return false;
 		}
 

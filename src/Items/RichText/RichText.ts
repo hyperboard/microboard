@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { BaseSelection, Descendant, Editor, Transforms } from "slate";
+import { BaseSelection, Descendant, Editor, Transforms, Text } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
@@ -21,7 +21,7 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
 import { LayoutBlockNodes } from "./CanvasText";
-import { BlockType } from "./Editor/BlockNode";
+import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { isTextEmpty } from "./isTextEmpty";
@@ -36,6 +36,10 @@ export type DefaultTextStyles = {
 	fontColor: string;
 	fontHighlight: string;
 	lineHeight: number;
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	"line-through": boolean;
 };
 
 let isEditInProcessValue = false;
@@ -55,6 +59,7 @@ export function toggleEdit(value: boolean): void {
 export class RichText extends Mbr implements Geometry {
 	readonly itemType = "RichText";
 	parent = "Board";
+	board!: Board;
 	readonly subject = new Subject<RichText>();
 	readonly editor: EditorContainer;
 
@@ -69,10 +74,11 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
-	maxHeight: number;
+	maxHeight: number = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	frameMbr?: Mbr;
+	initialFontColor?: string;
 
 	constructor(
 		public container: Mbr,
@@ -139,12 +145,12 @@ export class RichText extends Mbr implements Geometry {
 			},
 		);
 		this.blockNodes = getBlockNodes(
-			this.getTextForNodes(),
+			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
 			this.insideOf,
 			undefined,
 			undefined,
-			this.frameMbr,
+			!!this.frameMbr,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -235,12 +241,12 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			// this.calcAutoSize(false);
 			this.blockNodes = getBlockNodes(
-				this.getTextForNodes(),
+				this.getTextForNodes() as BlockNode[],
 				this.getMaxWidth(),
 				this.insideOf,
 				undefined,
 				undefined,
-				this.frameMbr,
+				!!this.frameMbr,
 			);
 			if (
 				this.containerMaxWidth &&
@@ -270,15 +276,15 @@ export class RichText extends Mbr implements Geometry {
 		const maxWidth = width;
 		const blockNodes =
 			this.insideOf !== "Sticker"
-				? getBlockNodes(text, maxWidth, this.insideOf)
+				? getBlockNodes(text as BlockNode[], maxWidth, this.insideOf)
 				: this.autoSizeScale < 1
 				? getBlockNodes(
-						text,
+						text as BlockNode[],
 						containerWidth / this.autoSizeScale,
 						this.insideOf,
 				  )
 				: getBlockNodes(
-						text,
+						text as BlockNode[],
 						containerWidth,
 						this.insideOf,
 						containerWidth,
@@ -507,7 +513,7 @@ export class RichText extends Mbr implements Geometry {
 			this.transformation.apply(op);
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
-				this.setMaxWidth(op.maxWidth);
+				this.setMaxWidth(op.maxWidth ?? 0);
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
 					this.autosizeEnable();
@@ -527,12 +533,13 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	maxCapableChartsInSticker(op: Operation): boolean {
-		const fontSize = this.getText()[0]?.children[0].fontSize;
+		const text = this.getText();
+		//@ts-ignore
+		const fontSize = text[0]?.children[0].fontSize;
 		const height = this.getMaxHeight();
 		const width = this.getMaxWidth();
 		const lineHeight = fontSize * 1.4;
 		const maxLine = Math.round((height || 0) / lineHeight);
-		const text = this.getText();
 		const getWidthOfString = (text: string): number => {
 			const span = document.createElement("span");
 			span.textContent = text;
@@ -561,8 +568,10 @@ export class RichText extends Mbr implements Geometry {
 		}, 0);
 
 		if (
-			op.ops?.[0]?.type === "split_node" ||
-			op.ops?.[0]?.type === "insert_text"
+			//@ts-ignore
+			op.method === "split_node" ||
+			//@ts-ignore
+			op.method === "insert_text"
 		) {
 			return !(lineCount + 1 > maxLine);
 		} else {
@@ -779,6 +788,27 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	getMinFontSize(): number {
+		const textNodes = Editor.nodes(this.editor.editor, {
+			match: n => Text.isText(n),
+			at: [],
+		});
+
+		const fontSizes: number[] = [];
+		for (const [node] of textNodes) {
+			const fontSize = node.fontSize || (node && node.fontSize);
+			if (fontSize) {
+				fontSizes.push(fontSize);
+			}
+		}
+
+		if (fontSizes.length > 0) {
+			return Math.min(...fontSizes);
+		}
+
+		return this.initialTextStyles.fontSize;
+	}
+
 	getFontHighlight(): string {
 		const marks = this.editor.getSelectionMarks();
 		return marks?.fontHighlight ?? this.initialTextStyles.fontHighlight;
@@ -985,8 +1015,10 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
+				// @ts-ignore
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
+				// @ts-ignore
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();

@@ -29,6 +29,7 @@ export class Shape implements Geometry {
 	parent = "Board";
 	readonly transformation = new Transformation(this.id, this.events);
 	private path = Shapes[this.shapeType].path.copy();
+	private mbr = Shapes[this.shapeType].path.getMbr().copy();
 	private textContainer = Shapes[this.shapeType].textBounds.copy();
 	readonly text = new RichText(
 		this.textContainer,
@@ -64,9 +65,13 @@ export class Shape implements Geometry {
 				) {
 					this.text.transformCanvas();
 				} else if (op.method === "transformMany") {
+					const currItemOp = op.items[this.getId()];
 					if (
-						op.items[this.getId()].scale.x === 1 &&
-						op.items[this.getId()].scale.y === 1
+						currItemOp.method === "translateBy" ||
+						currItemOp.method === "translateTo" ||
+						(currItemOp.method === "scaleByTranslateBy" &&
+							currItemOp.scale.x === 1 &&
+							currItemOp.scale.y === 1)
 					) {
 						// translating
 						this.text.transformCanvas();
@@ -90,6 +95,21 @@ export class Shape implements Geometry {
 		});
 		this.text.insideOf = this.itemType;
 		this.updateMbr();
+	}
+
+	private saveShapeData(): void {
+		sessionStorage.setItem(
+			"lastShapeData",
+			JSON.stringify({
+				shapeType: this.shapeType,
+				backgroundColor: this.backgroundColor,
+				backgroundOpacity: this.backgroundOpacity,
+				borderColor: this.borderColor,
+				borderOpacity: this.borderOpacity,
+				borderStyle: this.borderStyle,
+				borderWidth: this.borderWidth,
+			}),
+		);
 	}
 
 	emit(operation: ShapeOperation): void {
@@ -194,6 +214,7 @@ export class Shape implements Geometry {
 				this.applyShapeType(op.shapeType);
 				break;
 		}
+		this.saveShapeData();
 	}
 
 	getShapeType(): ShapeType {
@@ -320,6 +341,7 @@ export class Shape implements Geometry {
 			method: "setBorderWidth",
 			item: [this.getId()],
 			borderWidth,
+			prevBorderWidth: this.borderWidth,
 		});
 	}
 
@@ -337,6 +359,7 @@ export class Shape implements Geometry {
 		const textRect = this.textContainer.getMbr();
 		rect.combine([textRect]);
 		this.mbr = rect;
+		return rect;
 	}
 
 	getMbr(): Mbr {
@@ -453,7 +476,7 @@ export class Shape implements Geometry {
 
 	getSnapAnchorPoints(): Point[] {
 		const anchorPoints = Shapes[this.shapeType].anchorPoints;
-		const points = [];
+		const points: Point[] = [];
 		for (const anchorPoint of anchorPoints) {
 			points.push(anchorPoint.getTransformed(this.transformation.matrix));
 		}

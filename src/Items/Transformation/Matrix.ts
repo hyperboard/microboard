@@ -141,7 +141,9 @@ export class Matrix {
 		point.y = this.shearY * x + this.scaleY * y + this.translateY;
 	}
 
-	applyToContext(ctx: CanvasRenderingContext2D): void {
+	applyToContext(
+		ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+	): void {
 		ctx.transform(
 			this.scaleX,
 			this.shearY,

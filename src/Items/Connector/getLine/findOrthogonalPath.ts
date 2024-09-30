@@ -1,6 +1,6 @@
-import { ControlPoint, BoardPoint } from "../ControlPoint";
+import { Line, Mbr } from "Board/Items";
 import { Point } from "../../Point";
-import { Mbr, Line, Path } from "Board/Items";
+import { ControlPoint } from "../ControlPoint";
 import { ConnectedPointerDirection, getPointerDirection } from "../Pointers";
 
 interface Node {
@@ -770,7 +770,7 @@ function findPathPoints(
 /**
  * Removes points from centerLine that will probably be visited twice or lengthen the path
  */
-function removeUnnecessaryPoints(
+export function removeUnnecessaryPoints(
 	pathToCenterLine: Point[],
 	centerLine: Point[],
 	fromStart: boolean,

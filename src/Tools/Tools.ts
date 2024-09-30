@@ -14,7 +14,6 @@ import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { Item, Point } from "Board/Items";
-import { ConnectedPointerDirection } from "Board/Items/Connector/Pointers";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();

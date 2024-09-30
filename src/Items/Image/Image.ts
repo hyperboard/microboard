@@ -84,6 +84,7 @@ export class ImageItem extends Mbr {
 		this.transformation = new Transformation(id, events);
 
 		this.image = new Image();
+		this.image.crossOrigin = "anonymous";
 		this.image.onload = this.onLoad;
 		this.image.onerror = this.onError;
 		if (typeof base64 === "string") {

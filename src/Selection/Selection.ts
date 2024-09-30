@@ -4,7 +4,7 @@ import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { FrameType } from "Board/Items/Frame/Basic";
 import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
-import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { DefaultShapeData, ShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
@@ -28,6 +28,8 @@ import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { t } from "i18next";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -66,9 +68,9 @@ export class Selection {
 		const selectedItems: string[] = JSON.parse(serializedData);
 		this.removeAll();
 		selectedItems.forEach(itemId => {
-			const item = this.board.items.find(item => item.getId() === itemId);
+			const item = this.board.items.getById(itemId);
 			if (item) {
-				this.items.push(item);
+				this.items.add(item);
 			}
 		});
 	}
@@ -83,12 +85,14 @@ export class Selection {
 
 	updateQueue: Set<() => void> = new Set();
 
-	decorateObserverToScheduleUpdate(observer: () => void): () => void {
-		return () => {
+	decorateObserverToScheduleUpdate<T extends (...args: any[]) => void>(
+		observer: T,
+	): T {
+		return ((...args: Parameters<T>) => {
 			if (!this.updateQueue.has(observer)) {
-				this.updateQueue.add(observer);
+				this.updateQueue.add(() => observer(...args));
 			}
-		};
+		}) as T;
 	}
 
 	updateScheduledObservers = (): void => {
@@ -135,7 +139,7 @@ export class Selection {
 		this.itemsSubject.publish([]);
 	}
 
-	addAll() {
+	addAll(): void {
 		const items = this.board.items.listAll();
 		const frames = this.board.items
 			.listFrames()
@@ -176,7 +180,7 @@ export class Selection {
 		return this.context;
 	}
 
-	timeoutID: number | null = null;
+	timeoutID: NodeJS.Timeout | null = null;
 
 	on = (): void => {
 		// Cancel any existing timeout when on is explicitly called
@@ -292,7 +296,7 @@ export class Selection {
 		}
 	}
 
-	async appendText(appendedText: string) {
+	async appendText(appendedText: string): Promise<void> {
 		if (this.items.isEmpty()) {
 			return;
 		}
@@ -369,17 +373,57 @@ export class Selection {
 			this.textToEdit = undefined;
 			return;
 		}
-		if (item instanceof Connector && item.text.isEmpty()) {
-			item.text.selectWholeText();
-			const textColor = localStorage.getItem("lastConnectorTextColor");
-			const textSize = Number(
-				localStorage.getItem("lastConnectorTextSize"),
-			);
-			if (textColor) {
-				item.text.setSelectionFontColor(textColor);
-			}
-			if (textSize && !Number.isNaN(textSize)) {
-				item.text.setSelectionFontSize(textSize);
+		if (
+			item instanceof Connector ||
+			item instanceof Sticker ||
+			item instanceof Shape ||
+			item instanceof RichText
+		) {
+			const text = item instanceof RichText ? item : item.text;
+			if (text.isEmpty()) {
+				text.selectWholeText();
+				const textColor = sessionStorage.getItem(
+					`fontColor_${item.itemType}`,
+				);
+				const textSize = Number(
+					sessionStorage.getItem(`fontSize_${item.itemType}`),
+				);
+				const highlightColor = sessionStorage.getItem(
+					`fontHighlight_${item.itemType}`,
+				);
+				const styles = sessionStorage.getItem(
+					`fontStyles_${item.itemType}`,
+				);
+				const horizontalAlignment = sessionStorage.getItem(
+					`horisontalAlignment_${item.itemType}`,
+				);
+				const verticalAlignment = sessionStorage.getItem(
+					`verticalAlignment_${item.itemType}`,
+				);
+				if (textColor) {
+					text.setSelectionFontColor(JSON.parse(textColor), "None");
+				}
+				if (textSize && !Number.isNaN(textSize)) {
+					text.setSelectionFontSize(textSize, "None");
+				}
+				if (highlightColor) {
+					text.setSelectionFontHighlight(
+						JSON.parse(highlightColor),
+						"None",
+					);
+				}
+				if (styles) {
+					const stylesArr = JSON.parse(styles);
+					text.setSelectionFontStyle(stylesArr, "None");
+				}
+				if (horizontalAlignment) {
+					text.setSelectionHorisontalAlignment(
+						JSON.parse(horizontalAlignment),
+					);
+				}
+				if (verticalAlignment) {
+					this.setVerticalAlignment(JSON.parse(verticalAlignment));
+				}
 			}
 		}
 		const text = item instanceof RichText ? item : item.text;
@@ -465,7 +509,10 @@ export class Selection {
 		const zIndex = this.board.items.index.getZIndex(item);
 		// If the item is a Connector and the connected items are not part of selection,
 		// change the control points to BoardPoint.
-		if (item.itemType === "Connector") {
+		if (
+			item.itemType === "Connector" &&
+			serializedData.itemType === "Connector"
+		) {
 			const connector = item as Connector;
 			const startPoint = connector.getStartPoint();
 			const endPoint = connector.getEndPoint();
@@ -495,7 +542,7 @@ export class Selection {
 			}
 		}
 
-		if (item.itemType === "Frame") {
+		if (item.itemType === "Frame" && serializedData.itemType === "Frame") {
 			const textItem = item.text.getTextString();
 			const copyText = t("frame.copy");
 			const copiedFrameText =
@@ -612,7 +659,7 @@ export class Selection {
 		return pointer?.getEndPointerStyle() || "None";
 	}
 
-	setStartPointerStyle(style: string): void {
+	setStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setStartPointerStyle",
@@ -621,7 +668,7 @@ export class Selection {
 		});
 	}
 
-	setEndPointerStyle(style: string): void {
+	setEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setEndPointerStyle",
@@ -701,10 +748,7 @@ export class Selection {
 
 	// TODO all the other transformations are redundant, use this one for everything
 	// Instead of TransformationOperation just put matrix in it
-	transformMany(
-		items: { [key: string]: TransformationOperation },
-		timeStamp?: number,
-	): void {
+	transformMany(items: TransformManyItems, timeStamp?: number): void {
 		this.shouldPublish = false;
 		this.emit({
 			class: "Transformation",
@@ -777,7 +821,7 @@ export class Selection {
 		}
 	}
 
-	setStrokeWidth(width: number): void {
+	setStrokeWidth(width: ConnectionLineWidth): void {
 		// TODO make single operation to set strokeWidth on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
@@ -893,6 +937,20 @@ export class Selection {
 
 	setFontSize(size: number | "auto"): void {
 		const fontSize = size === "auto" ? size : toFiniteNumber(size);
+		const single = this.items.getSingle();
+		if (single) {
+			if (
+				single.itemType === "Connector" ||
+				single.itemType === "RichText" ||
+				single.itemType === "Shape" ||
+				single.itemType === "Sticker"
+			) {
+				sessionStorage.setItem(
+					`fontSize_${single.itemType}`,
+					JSON.stringify(fontSize),
+				);
+			}
+		}
 		this.emit({
 			class: "RichText",
 			method: "setFontSize",
@@ -909,6 +967,18 @@ export class Selection {
 				single.setSelectionFontStyle(fontStyle, this.context);
 			} else if ("text" in single) {
 				single.text.setSelectionFontStyle(fontStyle, this.context);
+			}
+			if (
+				single.itemType === "Connector" ||
+				single.itemType === "RichText" ||
+				single.itemType === "Shape" ||
+				single.itemType === "Sticker"
+			) {
+				const text = single instanceof RichText ? single : single.text;
+				sessionStorage.setItem(
+					`fontStyles_${single.itemType}`,
+					JSON.stringify(text.getFontStyles()),
+				);
 			}
 		} else {
 			const filteredItems = this.items
@@ -929,26 +999,11 @@ export class Selection {
 				return !item.text.getFontStyles().includes(fontStyle);
 			});
 			if (changedItems.length > 0) {
-				changedItems.forEach(item => {
-					if (item instanceof RichText) {
-						item.setSelectionFontStyle(fontStyle, this.context);
-					} else {
-						item.text.setSelectionFontStyle(
-							fontStyle,
-							this.context,
-						);
-					}
-				});
-			} else {
-				filteredItems.forEach(item => {
-					if (item instanceof RichText) {
-						item.setSelectionFontStyle(fontStyle, this.context);
-					} else {
-						item.text.setSelectionFontStyle(
-							fontStyle,
-							this.context,
-						);
-					}
+				this.emit({
+					class: "RichText",
+					method: "setFontStyle",
+					item: changedItems.map(i => i.getId()),
+					fontStyleList: fontStyle,
 				});
 			}
 		}
@@ -957,6 +1012,18 @@ export class Selection {
 	setFontColor(fontColor: string): void {
 		if (this.items.isSingle()) {
 			const item = this.items.getSingle();
+			if (
+				item?.itemType === "Connector" ||
+				item?.itemType === "RichText" ||
+				item?.itemType === "Shape" ||
+				item?.itemType === "Sticker"
+			) {
+				sessionStorage.setItem(
+					`fontColor_${item.itemType}`,
+					JSON.stringify(fontColor),
+				);
+			}
+			console.log(fontColor);
 			if (item instanceof RichText) {
 				item.setSelectionFontColor(fontColor, this.context);
 				return;
@@ -965,17 +1032,13 @@ export class Selection {
 				item &&
 				(item.itemType === "Shape" ||
 					item.itemType === "Sticker" ||
-					item.itemType === "Frame")
+					item.itemType === "Frame" ||
+					item.itemType === "Connector")
 			) {
 				(item as Shape | Sticker | Frame).text.setSelectionFontColor(
 					fontColor,
 					this.context,
 				);
-				return;
-			}
-			if (item instanceof Connector) {
-				localStorage.setItem("lastConnectorTextColor", fontColor);
-				item.text.setSelectionFontColor(fontColor, this.context);
 				return;
 			}
 		}
@@ -1022,6 +1085,17 @@ export class Selection {
 	setFontHighlight(fontHighlight: string): void {
 		if (this.items.isSingle()) {
 			const item = this.items.getSingle();
+			if (
+				item?.itemType === "Connector" ||
+				item?.itemType === "RichText" ||
+				item?.itemType === "Shape" ||
+				item?.itemType === "Sticker"
+			) {
+				sessionStorage.setItem(
+					`fontHighlight_${item.itemType}`,
+					JSON.stringify(fontHighlight),
+				);
+			}
 			if (item instanceof RichText) {
 				item.setSelectionFontHighlight(fontHighlight, this.context);
 				return;
@@ -1082,6 +1156,17 @@ export class Selection {
 	setHorisontalAlignment(horisontalAlignment: HorisontalAlignment): void {
 		if (this.items.isSingle()) {
 			const item = this.items.getSingle();
+			if (
+				item?.itemType === "Connector" ||
+				item?.itemType === "RichText" ||
+				item?.itemType === "Shape" ||
+				item?.itemType === "Sticker"
+			) {
+				sessionStorage.setItem(
+					`horisontalAlignment_${item.itemType}`,
+					JSON.stringify(horisontalAlignment),
+				);
+			}
 			if (item instanceof RichText) {
 				item.setSelectionHorisontalAlignment(
 					horisontalAlignment,
@@ -1129,7 +1214,7 @@ export class Selection {
 				);
 			})
 			.map(item => item.getId());
-
+		console.log(changedIds);
 		if (changedIds.length > 0) {
 			this.emit({
 				class: "RichText",
@@ -1159,6 +1244,17 @@ export class Selection {
 
 		if (this.items.isSingle()) {
 			const item = this.items.getSingle();
+			if (
+				item?.itemType === "Connector" ||
+				item?.itemType === "RichText" ||
+				item?.itemType === "Shape" ||
+				item?.itemType === "Sticker"
+			) {
+				sessionStorage.setItem(
+					`verticalAlignment_${item.itemType}`,
+					JSON.stringify(verticalAlignment),
+				);
+			}
 			if (item instanceof RichText) {
 				item.setEditorFocus(this.context);
 			}

@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Connector, Item, Shape, ShapeData } from "Board/Items";
+import { Connector, Item, ItemData, Shape, ShapeData } from "Board/Items";
 import {
 	ControlPointData,
 	getControlPoint,
@@ -61,9 +61,12 @@ export function quickAddItem(
 			: optionalShape.getMbr();
 	const itemData: ShapeData =
 		type === "copy" && startPoint.pointType !== "Board"
-			? startPoint.item.serialize()
-			: optionalShape.serialize();
-	delete itemData.text;
+			? (startPoint.item.serialize() as ShapeData)
+			: (optionalShape.serialize() as ShapeData);
+	const guarded = itemData as Partial<ItemData>;
+	if ("text" in guarded) {
+		delete guarded.text;
+	}
 	itemData.transformation.translateX = endPoint.x;
 	itemData.transformation.translateY = endPoint.y;
 	const lines = connector.lines.getSegments();

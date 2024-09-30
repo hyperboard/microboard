@@ -1,15 +1,6 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import {
-	Frame,
-	Mbr,
-	Point,
-	Shape,
-	TransformationOperation,
-	RichText,
-	Matrix,
-	Connector,
-} from "Board/Items";
+import { Frame, Mbr, Point, Shape, RichText, Matrix } from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
@@ -182,7 +173,7 @@ export class Transformer extends Tool {
 				this.board.pointer.point,
 				mbr,
 				this.oppositePoint,
-				this.startMbr,
+				this.startMbr || new Mbr(),
 				this.beginTimeStamp,
 			).mbr;
 		} else if (single instanceof RichText) {
@@ -308,12 +299,14 @@ export class Transformer extends Tool {
 				});
 			} else {
 				frames.forEach(frame => {
-					if (!frame.handleNesting(item, { onlyForOut: true })) {
-						if (
-							this.toDrawBorders.listAll().includes(frame) &&
-							this.toDrawBorders.listAll().includes(item)
-						) {
-							this.toDrawBorders.remove([frame, item]);
+					if (frame instanceof Frame) {
+						if (!frame.handleNesting(item, { onlyForOut: true })) {
+							if (
+								this.toDrawBorders.listAll().includes(frame) &&
+								this.toDrawBorders.listAll().includes(item)
+							) {
+								this.toDrawBorders.remove([frame, item]);
+							}
 						}
 					}
 				});
