@@ -74,6 +74,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
+	private selection?: BaseSelection;
 	maxHeight = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
@@ -227,10 +228,17 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	handleBlur = (): void => {
+		this.selection = this.getCurrentSelection(); // Save current selection
 		isEditInProcessValue = false;
+		if (this.selection) {
+			ReactEditor.focus(this.editor.editor);
+		}
 	};
 
 	updateElement(): void {
+		if (this.selection) {
+			Transforms.select(this.editor.editor, this.selection);
+		}
 		if (this.updateRequired) {
 			return;
 		}
@@ -951,7 +959,7 @@ export class RichText extends Mbr implements Geometry {
 	getCurrentSelection(): BaseSelection | undefined {
 		const { selection } = this.editor.editor;
 		if (selection) {
-			return JSON.parse(JSON.stringify(selection)) as BaseSelection;
+			return selection;
 		}
 	}
 
@@ -997,6 +1005,7 @@ export class RichText extends Mbr implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
+		this.selection = null;
 		if (this.isRenderEnabled) {
 			const { ctx } = context;
 			ctx.save();
