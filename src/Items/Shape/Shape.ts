@@ -442,38 +442,14 @@ export class Shape implements Geometry {
 	}
 
 	private initPath(): void {
-		if (this.shapeType === "RoundedRectangle") {
-			this.path = createRoundedRectanglePath(
-				this.mbr.getWidth(),
-				this.mbr.getHeight(),
-			).copy();
-		} else if (this.shapeType === "SpeachBubble") {
-			this.path = createSpeachBubblePath(
-				this.mbr.getWidth(),
-				this.mbr.getHeight(),
-			).copy();
-		} else {
-			this.path = Shapes[this.shapeType].path.copy();
-		}
+		this.path = Shapes[this.shapeType].createPath(this.mbr);
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
 		this.text.updateElement();
 	}
 
 	private transformPath(): void {
-		if (this.shapeType === "RoundedRectangle") {
-			this.path = createRoundedRectanglePath(
-				this.mbr.getWidth(),
-				this.mbr.getHeight(),
-			).copy();
-		} else if (this.shapeType === "SpeachBubble") {
-			this.path = createSpeachBubblePath(
-				this.mbr.getWidth(),
-				this.mbr.getHeight(),
-			).copy();
-		} else {
-			this.path = Shapes[this.shapeType].path.copy();
-		}
+		this.path = Shapes[this.shapeType].createPath(this.mbr);
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);

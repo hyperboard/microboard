@@ -19,4 +19,5 @@ export const Triangle = {
 		new Point(100, 100),
 		new Point(50, 100),
 	],
+	createPath: (mbr: Mbr) => Triangle.path.copy(),
 };

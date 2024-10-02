@@ -1,4 +1,5 @@
 import { Mbr, CubicBezier, Line, Path, Point } from "Board/Items";
+import { createRoundedRectanglePath } from "../RoundedRectangle";
 
 export const SpeachBubble = {
 	name: "SpeachBubble",
@@ -45,13 +46,16 @@ export const SpeachBubble = {
 		new Point(50, 0),
 		new Point(50, 100),
 	],
+	createPath: (mbr: Mbr) => createSpeachBubblePath(mbr).copy(),
 };
 
 const convexity = 2;
 const nearBreakpoint = 10;
 const farBreakpoint = 20;
 
-export const createSpeachBubblePath = (w: number, h: number) => {
+export const createSpeachBubblePath = (mbr: Mbr) => {
+	const h = mbr.getHeight();
+	const w = mbr.getWidth();
 	const rectangleHeight = h - h * 0.1;
 	let ratio = w / rectangleHeight;
 

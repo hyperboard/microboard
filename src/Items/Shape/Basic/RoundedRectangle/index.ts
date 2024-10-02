@@ -42,14 +42,15 @@ export const RoundedRectangle = {
 		new Point(50, 0),
 		new Point(50, 100),
 	],
+	createPath: (mbr: Mbr) => createRoundedRectanglePath(mbr).copy(),
 };
 
 const convexity = 2;
 const nearBreakpoint = 10;
 const farBreakpoint = 20;
 
-export const createRoundedRectanglePath = (w: number, h: number) => {
-	let ratio = w / h;
+export const createRoundedRectanglePath = (mbr: Mbr) => {
+	let ratio = mbr.getWidth() / mbr.getHeight();
 
 	if (ratio >= 1) {
 		const quotientFarBreakpoint = farBreakpoint / ratio;
@@ -108,7 +109,7 @@ export const createRoundedRectanglePath = (w: number, h: number) => {
 		);
 	}
 
-	ratio = h / w;
+	ratio = mbr.getHeight() / mbr.getWidth();
 	const quotientFarBreakpoint = farBreakpoint / ratio;
 	const quotientNearBreakpoint = nearBreakpoint / ratio;
 	const quotientConvexity = convexity / ratio;

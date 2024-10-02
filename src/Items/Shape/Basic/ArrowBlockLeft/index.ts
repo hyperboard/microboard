@@ -1,4 +1,5 @@
 import { Mbr, Path, Line, Point } from "Board/Items";
+import { createRoundedRectanglePath } from "../RoundedRectangle";
 
 export const ArrowBlockLeft = {
 	name: "ArrowBlockLeft",
@@ -28,4 +29,5 @@ export const ArrowBlockLeft = {
 		new Point(90, 75),
 		new Point(80, 50),
 	],
+	createPath: (mbr: Mbr) => ArrowBlockLeft.path.copy(),
 };
