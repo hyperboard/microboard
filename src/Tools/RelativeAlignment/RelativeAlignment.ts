@@ -3,11 +3,9 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-    private alignThreshold = 4;
+    private alignThreshold = 3;
     snapThreshold = 3;
-
     constructor(private spatialIndex: SpatialIndex) {}
-
     checkAlignment(movingItem: Item): {
         verticalLines: Line[];
         horizontalLines: Line[];
@@ -15,9 +13,9 @@ export class AlignmentHelper {
         const movingMBR = movingItem.getMbr();
         const nearbyItems = this.spatialIndex.getNearestTo(
             movingMBR.getCenter(),
-            10,
+            6,
             (otherItem: Item) => otherItem !== movingMBR,
-            1000,
+            2000,
         );
 
         const verticalLines: Line[] = [];
