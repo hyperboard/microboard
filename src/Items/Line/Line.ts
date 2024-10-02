@@ -163,7 +163,7 @@ export class Line {
 		}
 	}
 
-	hasIntersectionPoint(segment: Line): Boolean {
+	hasIntersectionPoint(segment: Line): boolean {
 		const ccw = (p1: Point, p2: Point, p3: Point) => {
 			return (
 				(p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x)

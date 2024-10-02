@@ -14,7 +14,7 @@ import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { Item, Point } from "Board/Items";
-import { AddEraser } from "./AddEraser/AddEraser";
+import { Eraser } from "./Eraser";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -197,13 +197,13 @@ export class Tools extends ToolContext {
 			: undefined;
 	}
 
-	addEraser(clearSelection = false): void {
+	eraser(clearSelection = false): void {
 		if (this.board.interfaceType === "view") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
-		if (!this.getAddEraser()) {
-			this.tool = new AddEraser(this.board);
+		if (!this.getEraser()) {
+			this.tool = new Eraser(this.board);
 			if (clearSelection) {
 				this.board.selection.removeAll();
 			}
@@ -211,8 +211,8 @@ export class Tools extends ToolContext {
 		this.publish();
 	}
 
-	getAddEraser(): AddEraser | undefined {
-		return this.tool instanceof AddEraser ? this.tool : undefined;
+	getEraser(): Eraser | undefined {
+		return this.tool instanceof Eraser ? this.tool : undefined;
 	}
 
 	export(): void {
