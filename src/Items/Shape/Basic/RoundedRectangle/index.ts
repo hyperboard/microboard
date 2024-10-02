@@ -44,11 +44,12 @@ export const RoundedRectangle = {
 	],
 };
 
+const convexity = 2;
+const nearBreakpoint = 10;
+const farBreakpoint = 20;
+
 export const createRoundedRectanglePath = (w: number, h: number) => {
 	let ratio = w / h;
-	const convexity = 2;
-	const nearBreakpoint = 10;
-	const farBreakpoint = 20;
 
 	if (ratio >= 1) {
 		const quotientFarBreakpoint = farBreakpoint / ratio;

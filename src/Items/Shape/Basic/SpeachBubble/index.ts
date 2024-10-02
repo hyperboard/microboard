@@ -47,12 +47,13 @@ export const SpeachBubble = {
 	],
 };
 
+const convexity = 2;
+const nearBreakpoint = 10;
+const farBreakpoint = 20;
+
 export const createSpeachBubblePath = (w: number, h: number) => {
 	const rectangleHeight = h - h * 0.1;
 	let ratio = w / rectangleHeight;
-	const convexity = 2;
-	const nearBreakpoint = 10;
-	const farBreakpoint = 20;
 
 	if (ratio >= 1) {
 		const quotientFarBreakpoint = farBreakpoint / ratio;
