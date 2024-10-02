@@ -5,6 +5,7 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
+import { Drawing } from "../Items/Drawing";
 
 type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -447,7 +448,7 @@ export class Items {
 			x - size,
 			y - frameSize,
 			x + size,
-			y + frameSize,
+			y + size,
 		);
 
 		let enclosed =
@@ -457,9 +458,13 @@ export class Items {
 				? tolerated
 				: this.index.getEnclosedOrCrossed(x, y, x, y);
 
+		const underPointer = this.getUnderPoint(new Point(x, y), size);
 		if (enclosed.length === 0) {
-			const underPointer = this.getUnderPoint(new Point(x, y), size);
 			enclosed = underPointer;
+		}
+
+		if (underPointer.some(item => item instanceof Drawing)) {
+			enclosed = [...underPointer, ...enclosed];
 		}
 
 		const { nearest } = enclosed.reduce(

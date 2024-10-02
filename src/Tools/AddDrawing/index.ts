@@ -1,1 +1,2 @@
-export * from "./AddDrawing";
+export { AddDrawing } from "./AddDrawing";
+export { AddHighlighter } from "./AddHighlighter";
