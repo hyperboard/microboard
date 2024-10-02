@@ -35,6 +35,7 @@ export class Transformer extends Tool {
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
 	debounceUpd = createDebounceUpdater();
+	isShiftPressed = false;
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -44,6 +45,9 @@ export class Transformer extends Tool {
 				this.mbr = this.selection.getMbr();
 			}
 		});
+
+		window.addEventListener('keydown', this.handleKeyDown.bind(this));
+		window.addEventListener('keyup', this.handleKeyUp.bind(this));
 	}
 
 	updateAnchorType(): void {
@@ -52,6 +56,18 @@ export class Transformer extends Tool {
 		const anchorType = getAnchorFromResizeType(resizeType);
 		pointer.setCursor(anchorType);
 		this.anchorType = anchorType;
+	}
+
+	handleKeyDown(event: KeyboardEvent){
+		if (event.key === 'Shift'){
+			this.isShiftPressed = true;
+		}
+	}
+
+	handleKeyUp(event: KeyboardEvent){
+		if (event.key === 'Shift'){
+			this.isShiftPressed = false;
+		}
 	}
 
 	getResizeType(): ResizeType | undefined {
@@ -157,14 +173,31 @@ export class Transformer extends Tool {
 			single instanceof Sticker ||
 			single instanceof Frame
 		) {
-			this.mbr = single.doResize(
-				this.resizeType,
-				this.board.pointer.point,
-				mbr,
-				this.oppositePoint,
-				this.startMbr || new Mbr(),
-				this.beginTimeStamp,
-			).mbr;
+			if (this.isShiftPressed) {
+				const { matrix, mbr: resizedMbr } = getProportionalResize(
+					this.resizeType,
+					this.board.pointer.point,
+					mbr,
+					this.oppositePoint,
+				);
+				this.mbr = resizedMbr;
+				const translation = this.handleMultipleItemsResize(
+					{ matrix, mbr: resizedMbr },
+					mbr,
+					isWidth,
+					isHeight,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+			} else {
+				this.mbr = single.doResize(
+					this.resizeType,
+					this.board.pointer.point,
+					mbr,
+					this.oppositePoint,
+					this.startMbr || new Mbr(),
+					this.beginTimeStamp,
+				).mbr;
+			}
 		} else if (single instanceof RichText) {
 			const { matrix, mbr: resizedMbr } = getProportionalResize(
 				this.resizeType,
