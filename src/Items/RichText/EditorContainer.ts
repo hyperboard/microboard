@@ -675,7 +675,7 @@ export class EditorContainer {
 		const textNodes: TextNode[] = [];
 		for (const [node, path] of Editor.nodes(this.editor, {
 			at: selection,
-			//@ts-ignore
+			// @ts-expect-error
 			match: n => n.type === "text",
 		})) {
 			textNodes.push(node as TextNode);

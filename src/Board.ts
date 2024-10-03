@@ -529,7 +529,6 @@ export class Board {
 
 	getItemsMbr() {
 		const items = this.items.listAll();
-		console.log("fitScreen", items.length);
 		if (items.length > 0) {
 			const rect = this.items.getMbr();
 			return rect;

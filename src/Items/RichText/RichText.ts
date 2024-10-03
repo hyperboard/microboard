@@ -75,7 +75,8 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
-	maxHeight: number = 0;
+	private selection?: BaseSelection;
+	maxHeight = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	initialFontColor?: string;
@@ -226,10 +227,17 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	handleBlur = (): void => {
+		this.selection = this.getCurrentSelection(); // Save current selection
 		isEditInProcessValue = false;
+		if (this.selection) {
+			ReactEditor.focus(this.editor.editor);
+		}
 	};
 
 	updateElement(): void {
+		if (this.selection) {
+			Transforms.select(this.editor.editor, this.selection);
+		}
 		if (this.updateRequired) {
 			return;
 		}
@@ -531,7 +539,7 @@ export class RichText extends Mbr implements Geometry {
 
 	maxCapableChartsInSticker(op: Operation): boolean {
 		const text = this.getText();
-		//@ts-ignore
+		// @ts-expect-error
 		const fontSize = text[0]?.children[0].fontSize;
 		const height = this.getMaxHeight();
 		const width = this.getMaxWidth();
@@ -565,9 +573,9 @@ export class RichText extends Mbr implements Geometry {
 		}, 0);
 
 		if (
-			//@ts-ignore
+			// @ts-expect-error
 			op.method === "split_node" ||
-			//@ts-ignore
+			// @ts-expect-error
 			op.method === "insert_text"
 		) {
 			return !(lineCount + 1 > maxLine);
@@ -948,7 +956,7 @@ export class RichText extends Mbr implements Geometry {
 	getCurrentSelection(): BaseSelection | undefined {
 		const { selection } = this.editor.editor;
 		if (selection) {
-			return JSON.parse(JSON.stringify(selection)) as BaseSelection;
+			return selection;
 		}
 	}
 
@@ -994,6 +1002,7 @@ export class RichText extends Mbr implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
+		this.selection = null;
 		if (this.isRenderEnabled) {
 			const { ctx } = context;
 			ctx.save();
@@ -1012,10 +1021,10 @@ export class RichText extends Mbr implements Geometry {
 				ctx.clip(this.clipPath);
 			}
 			if (this.autoSize) {
-				// @ts-ignore
+				// @ts-expect-error
 				this.blockNodes.render(ctx, this.autoSizeScale);
 			} else {
-				// @ts-ignore
+				// @ts-expect-error
 				this.blockNodes.render(ctx);
 			}
 			ctx.restore();

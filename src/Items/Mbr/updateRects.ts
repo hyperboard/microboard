@@ -7,7 +7,8 @@ export function updateRects(
 	board: Board,
 	ref: RefObject<HTMLElement>,
 	mbr?: Mbr,
-	offset?: number,
+	verticalOffset?: number,
+	horizontalOffset?: number,
 ): Mbr | null {
 	const { selection, camera } = board;
 	const panel = ref.current;
@@ -24,7 +25,8 @@ export function updateRects(
 			selectionMbr.getTransformed(camera.getMatrix()),
 			camera.window.getMbr(),
 			Mbr.fromDomRect(panel.getBoundingClientRect()),
-			offset,
+			verticalOffset,
+			horizontalOffset,
 			richTextSelection,
 		);
 		return panelRect;

@@ -381,7 +381,6 @@ export class Selection {
 		) {
 			const text = item instanceof RichText ? item : item.text;
 			if (text.isEmpty()) {
-				text.selectWholeText();
 				const textColor = sessionStorage.getItem(
 					`fontColor_${item.itemType}`,
 				);
@@ -401,10 +400,17 @@ export class Selection {
 					`verticalAlignment_${item.itemType}`,
 				);
 				if (textColor) {
+					console.log(textColor);
 					text.setSelectionFontColor(JSON.parse(textColor), "None");
 				}
-				if (textSize && !Number.isNaN(textSize)) {
-					text.setSelectionFontSize(textSize, "None");
+				if (textSize) {
+					this.emit({
+						class: "RichText",
+						method: "setFontSize",
+						item: [item.getId()],
+						fontSize: textSize,
+						context: this.getContext(),
+					});
 				}
 				if (highlightColor) {
 					text.setSelectionFontHighlight(
@@ -416,12 +422,12 @@ export class Selection {
 					const stylesArr = JSON.parse(styles);
 					text.setSelectionFontStyle(stylesArr, "None");
 				}
-				if (horizontalAlignment) {
+				if (horizontalAlignment && !(item instanceof Sticker)) {
 					text.setSelectionHorisontalAlignment(
 						JSON.parse(horizontalAlignment),
 					);
 				}
-				if (verticalAlignment) {
+				if (verticalAlignment && !(item instanceof Sticker)) {
 					this.setVerticalAlignment(JSON.parse(verticalAlignment));
 				}
 			}
@@ -867,6 +873,10 @@ export class Selection {
 		}
 		const stickers = this.items.getIdsByItemTypes(["Sticker"]);
 		if (stickers.length) {
+			sessionStorage.setItem(
+				"lastStickerBg",
+				JSON.stringify(backgroundColor),
+			);
 			this.emit({
 				class: "Sticker",
 				method: "setBackgroundColor",
@@ -1023,7 +1033,6 @@ export class Selection {
 					JSON.stringify(fontColor),
 				);
 			}
-			console.log(fontColor);
 			if (item instanceof RichText) {
 				item.setSelectionFontColor(fontColor, this.context);
 				return;
@@ -1214,7 +1223,6 @@ export class Selection {
 				);
 			})
 			.map(item => item.getId());
-		console.log(changedIds);
 		if (changedIds.length > 0) {
 			this.emit({
 				class: "RichText",
