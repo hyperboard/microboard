@@ -32,7 +32,14 @@ export class Transformation {
 		};
 	}
 
-	deserialize(data: TransformationData): this {
+	deserialize(
+		data: TransformationData & {
+			dimension?: {
+				width: number;
+				height: number;
+			};
+		},
+	): this {
 		this.previous = this.matrix.copy();
 		if (data.translateX) {
 			this.matrix.translateX = data.translateX;
@@ -48,7 +55,18 @@ export class Transformation {
 		}
 		if (data.rotate) {
 			// TODO to rotate to a degree calculate rotation by
-			this.matrix.rotateBy(data.rotate);
+			if (data.dimension) {
+				this.matrix.rotateByObjectCenter(
+					data.rotate,
+					{
+						width: data.dimension.width,
+						height: data.dimension.height,
+					},
+					{ x: data.scaleX, y: data.scaleY },
+				);
+			} else {
+				this.matrix.rotateBy(data.rotate);
+			}
 		}
 		this.subject.publish(this, {
 			class: "Transformation",
