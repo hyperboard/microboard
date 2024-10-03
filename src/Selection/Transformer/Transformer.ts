@@ -154,7 +154,6 @@ export class Transformer extends Tool {
 			return false;
 		}
 
-		// const mbr = this.mbr;
 		const mbr = this.mbr;
 		const list = this.selection.items.list();
 
