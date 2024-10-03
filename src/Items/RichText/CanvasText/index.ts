@@ -19,11 +19,10 @@ export function getBlockNodes(
 	insideOf?: string,
 	containerWidth?: number,
 	containerHeight?: number,
-	isFrame?: boolean,
 ): LayoutBlockNodes {
 	const nodes: LayoutBlockNode[] = [];
 	for (const node of data) {
-		nodes.push(getBlockNode(node, maxWidth, isFrame));
+		nodes.push(getBlockNode(node, maxWidth, insideOf === "Frame"));
 	}
 	setBlockNodesCoordinates(nodes);
 	let width = 0;
