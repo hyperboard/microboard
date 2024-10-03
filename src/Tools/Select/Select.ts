@@ -345,18 +345,7 @@ export class Select extends Tool {
 				const underPointer = hovered[0];
 				const isEmptySelection =
 					this.board.selection.items.list().length === 0;
-				const isHoverLocked = hovered.map(
-					item => item.transformation.isLocked,
-				);
-				const isSelectionLocked =
-					this.board.selection.getIsLockedSelection();
-				if (
-					!underPointer &&
-					!isEmptySelection &&
-					isShift &&
-					!isSelectionLocked &&
-					!isHoverLocked
-				) {
+				if (!underPointer && !isEmptySelection && isShift) {
 					this.board.selection.add(this.board.selection.items.list());
 					this.clear();
 					this.board.tools.publish();
@@ -371,7 +360,7 @@ export class Select extends Tool {
 					this.board.selection.items.findById(
 						underPointer.getId(),
 					) === null;
-				if (isNotInSelection && !isSelectionLocked && !isHoverLocked) {
+				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
 					this.board.selection.setContext("EditUnderPointer");
 				} else {
