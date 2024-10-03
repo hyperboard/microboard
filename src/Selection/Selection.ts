@@ -859,10 +859,6 @@ export class Selection {
 		}
 		const stickers = this.items.getIdsByItemTypes(["Sticker"]);
 		if (stickers.length) {
-			sessionStorage.setItem(
-				"lastStickerBg",
-				JSON.stringify(backgroundColor),
-			);
 			this.emit({
 				class: "Sticker",
 				method: "setBackgroundColor",

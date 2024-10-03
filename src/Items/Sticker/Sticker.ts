@@ -124,8 +124,6 @@ export class Sticker implements Geometry {
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
-
-		this.applyBackgroundColor(backgroundColor);
 		this.text.updateElement();
 	}
 
@@ -252,10 +250,6 @@ export class Sticker implements Geometry {
 	}
 
 	setBackgroundColor(backgroundColor: string): void {
-		sessionStorage.setItem(
-			"lastStickerBg",
-			JSON.stringify(backgroundColor),
-		);
 		this.emit({
 			class: "Sticker",
 			method: "setBackgroundColor",
@@ -375,7 +369,6 @@ export class Sticker implements Geometry {
 	}
 
 	setDiagonal(line: Line) {
-		console.log("line", line);
 		const l = line.getLength() / _hypotenuse;
 		let x = line.start.x;
 		let y = line.start.y;
@@ -387,19 +380,9 @@ export class Sticker implements Geometry {
 		}
 		this.transformation.translateTo(x, y);
 		this.transformation.scaleTo(l, l);
-		this.saveSize();
 	}
-	transformToCenter(pt: Point, newWidth?: number, newHeight?: number) {
-		if (newWidth && newHeight) {
-			const scaleX = newWidth / width;
-			const scaleY = newHeight / height;
-
-			const w = width * scaleX;
-			const h = height * scaleY;
-
-			this.transformation.translateTo(pt.x - w / 2, pt.y - h / 2);
-			this.transformation.scaleTo(scaleX, scaleY);
-		} else if (newWidth) {
+	transformToCenter(pt: Point, newWidth?: number) {
+		if (newWidth) {
 			const scale = newWidth / width;
 
 			const w = width * scale;
@@ -476,19 +459,18 @@ export class Sticker implements Geometry {
 			);
 		}
 		res.mbr = this.getMbr();
-		this.saveSize();
-		return res;
-	}
 
-	private saveSize() {
-		const mbr = this.getMbr();
 		sessionStorage.setItem(
-			"lastStickerWidth",
-			JSON.stringify(mbr.getWidth()),
+			"lastSticker",
+			JSON.stringify({
+				backgroundColor: this.backgroundColor,
+				id: this.id,
+				itemType: this.itemType,
+				parent: this.parent,
+				stickerPath: this.stickerPath,
+			}),
 		);
-		sessionStorage.setItem(
-			"lastStickerHeight",
-			JSON.stringify(mbr.getHeight()),
-		);
+
+		return res;
 	}
 }
