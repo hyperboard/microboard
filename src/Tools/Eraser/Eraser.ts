@@ -6,7 +6,6 @@ import {
 	DEFAULT_ERASER_COLOR,
 	ERASER_STROKE_WIDTH,
 	MAX_ERASER_LINE_LENGTH,
-	RENDER_POINTER_CIRCLE,
 } from "View/Tools/AddDrawing";
 import {
 	DRAWING_POINTER_CIRCLE_COLOR,
@@ -29,17 +28,8 @@ export class Eraser extends BoardTool {
 		this.setCursor();
 	}
 
-	renderPointerCircle(point: Point, context: DrawingContext) {
-		const ctx = context.ctx;
-		ctx.beginPath();
-		ctx.arc(point.x, point.y, this.strokeWidth / 2, 0, 2 * Math.PI, false);
-		ctx.lineWidth = 1;
-		ctx.strokeStyle = DRAWING_POINTER_CIRCLE_COLOR;
-		ctx.stroke();
-	}
-
 	setCursor(): void {
-		this.board.pointer.setCursor("pen");
+		this.board.pointer.setCursor("eraser");
 	}
 
 	leftButtonDown(): boolean {
@@ -125,8 +115,5 @@ export class Eraser extends BoardTool {
 		drawing.setStrokeWidth(this.strokeWidth);
 		drawing.setBorderStyle(this.strokeStyle);
 		drawing.render(context);
-		if (RENDER_POINTER_CIRCLE) {
-			this.renderPointerCircle(this.board.pointer.point, context);
-		}
 	}
 }
