@@ -231,7 +231,10 @@ export class RichText extends Mbr implements Geometry {
 		this.selection = this.getCurrentSelection(); // Save current selection
 		isEditInProcessValue = false;
 		if (this.selection) {
-			ReactEditor.focus(this.editor.editor);
+			// TODO: Что-нибудь с этим сделать...
+			try {
+				ReactEditor.focus(this.editor.editor);
+			} catch {}
 		}
 	};
 
@@ -531,6 +534,7 @@ export class RichText extends Mbr implements Geometry {
 					this.applySelectionFontSize(op.fontSize, op.context);
 				}
 			} else {
+				this.selection = null;
 				this.editor.applyRichTextOp(op);
 			}
 			this.updateElement();
