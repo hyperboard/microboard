@@ -18,4 +18,5 @@ export const ReversedParallelogram = {
 		new Point(95, 50),
 		new Point(55, 100),
 	],
+	createPath: (mbr: Mbr) => ReversedParallelogram.path.copy(),
 };

@@ -28,4 +28,5 @@ export const ArrowLeftRight = {
 		new Point(50, 75),
 		new Point(25, 100),
 	],
+	createPath: (mbr: Mbr) => ArrowLeftRight.path.copy(),
 };
