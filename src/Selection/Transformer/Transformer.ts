@@ -45,9 +45,6 @@ export class Transformer extends Tool {
 				this.mbr = this.selection.getMbr();
 			}
 		});
-
-		window.addEventListener('keydown', this.handleKeyDown.bind(this));
-		window.addEventListener('keyup', this.handleKeyUp.bind(this));
 	}
 
 	updateAnchorType(): void {
@@ -58,17 +55,21 @@ export class Transformer extends Tool {
 		this.anchorType = anchorType;
 	}
 
-	handleKeyDown(event: KeyboardEvent){
-		if (event.key === 'Shift'){
-			this.isShiftPressed = true;
-		}
-	}
+	keyDown(key: string): boolean {
+        if (key === 'Shift') {
+            this.isShiftPressed = true;
+            return true;
+        }
+        return false;
+    }
 
-	handleKeyUp(event: KeyboardEvent){
-		if (event.key === 'Shift'){
-			this.isShiftPressed = false;
-		}
-	}
+    keyUp(key: string): boolean {
+        if (key === 'Shift') {
+            this.isShiftPressed = false;
+            return true;
+        }
+        return false;
+    }
 
 	getResizeType(): ResizeType | undefined {
 		const mbr = this.selection.getMbr();

@@ -16,6 +16,9 @@ export class AddShape extends BoardTool {
 	shape: Shape;
 	isDown = false;
 	isShiftPressed = false;
+	
+	private handleKeyDownBound: (event: KeyboardEvent) => void;
+    private handleKeyUpBound: (event: KeyboardEvent) => void;
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
@@ -38,8 +41,11 @@ export class AddShape extends BoardTool {
 			this.shape = new Shape();
 		}
 
-		window.addEventListener('keydown', this.handleKeyDown.bind(this));
-		window.addEventListener('keyup', this.handleKeyUp.bind(this));
+		this.handleKeyDownBound = this.handleKeyDown.bind(this);
+        this.handleKeyUpBound = this.handleKeyUp.bind(this);
+
+        window.addEventListener('keydown', this.handleKeyDownBound);
+        window.addEventListener('keyup', this.handleKeyUpBound);
 	}
 
 	handleKeyDown(event: KeyboardEvent) {
@@ -148,6 +154,9 @@ export class AddShape extends BoardTool {
 			this.board.tools.select();
 		}
 		this.board.tools.publish();
+
+		window.removeEventListener('keydown', this.handleKeyDownBound);
+        window.removeEventListener('keyup', this.handleKeyUpBound);
 		return true;
 	}
 
