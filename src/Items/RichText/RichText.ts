@@ -1010,7 +1010,7 @@ export class RichText extends Mbr implements Geometry {
 			return;
 		}
 		this.selection = null;
-		if (this.isRenderEnabled) {
+		if (this.isRenderEnabled && this.getTextString().length > 0) {
 			const { ctx } = context;
 			ctx.save();
 			ctx.translate(this.left, this.top);
