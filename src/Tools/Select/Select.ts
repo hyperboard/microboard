@@ -41,13 +41,16 @@ export class Select extends Tool {
 	debounceUpd = createDebounceUpdater();
 
 	private alignmentHelper: AlignmentHelper;
-    private snapLines: { verticalLines: Line[], horizontalLines: Line[] } = { verticalLines: [], horizontalLines: [] };
+	private snapLines: { verticalLines: Line[]; horizontalLines: Line[] } = {
+		verticalLines: [],
+		horizontalLines: [],
+	};
 	private isSnapped = false;
-    private snapCursorPos: Point | null = null;
+	private snapCursorPos: Point | null = null;
 
 	constructor(private board: Board) {
 		super();
-		this.alignmentHelper = new AlignmentHelper(board.index); 
+		this.alignmentHelper = new AlignmentHelper(board.index);
 	}
 
 	clear(): void {
@@ -74,20 +77,31 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
-        this.isSnapped = this.alignmentHelper.snapToClosestLine(item, this.snapLines, this.beginTimeStamp);
+		this.isSnapped = this.alignmentHelper.snapToClosestLine(
+			item,
+			this.snapLines,
+			this.beginTimeStamp,
+		);
 
-        if (this.isSnapped && this.snapCursorPos) {
-            const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
-            const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
-            if (cursorDiffX > this.alignmentHelper.snapThreshold || cursorDiffY > this.alignmentHelper.snapThreshold) {
-                this.isSnapped = false;
-                this.snapCursorPos = null;
-            } else {
-                return true;
-            }
-        }
-        return false;
-    }
+		if (this.isSnapped && this.snapCursorPos) {
+			const cursorDiffX = Math.abs(
+				this.board.pointer.point.x - this.snapCursorPos.x,
+			);
+			const cursorDiffY = Math.abs(
+				this.board.pointer.point.y - this.snapCursorPos.y,
+			);
+			if (
+				cursorDiffX > this.alignmentHelper.snapThreshold ||
+				cursorDiffY > this.alignmentHelper.snapThreshold
+			) {
+				this.isSnapped = false;
+				this.snapCursorPos = null;
+			} else {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	leftButtonDown(): boolean {
 		if (this.isRightDown || this.isMiddleDown) {
@@ -230,23 +244,28 @@ export class Select extends Tool {
 		}
 
 		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
-            this.snapLines = this.alignmentHelper.checkAlignment(this.downOnItem);
-        } else if (this.isDraggingSelection && this.board.selection.items.list().length === 1) {
-            const singleItem = this.board.selection.items.list()[0];
-            this.snapLines = this.alignmentHelper.checkAlignment(singleItem);
-        } else {
-            this.snapLines = { verticalLines: [], horizontalLines: [] };
-        }
-		
+			this.snapLines = this.alignmentHelper.checkAlignment(
+				this.downOnItem,
+			);
+		} else if (
+			this.isDraggingSelection &&
+			this.board.selection.items.list().length === 1
+		) {
+			const singleItem = this.board.selection.items.list()[0];
+			this.snapLines = this.alignmentHelper.checkAlignment(singleItem);
+		} else {
+			this.snapLines = { verticalLines: [], horizontalLines: [] };
+		}
+
 		if (this.isDraggingSelection) {
 			const { selection } = this.board;
 			const selectionMbr = selection.getMbr();
 			if (selection.items.list().length === 1) {
-                const singleItem = selection.items.list()[0];
-                if (this.handleSnapping(singleItem)) {
-                    return false;
-                }
-            }
+				const singleItem = selection.items.list()[0];
+				if (this.handleSnapping(singleItem)) {
+					return false;
+				}
+			}
 
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
@@ -338,10 +357,10 @@ export class Select extends Tool {
 			const { downOnItem: draggingItem } = this;
 			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
 
-            if (this.handleSnapping(this.downOnItem)) {
-                return false;
-            }
-      
+			if (this.handleSnapping(this.downOnItem)) {
+				return false;
+			}
+
 			const frames = this.board.items
 				.getEnclosedOrCrossed(
 					draggingItem.getMbr().left,
@@ -359,7 +378,7 @@ export class Select extends Tool {
 			});
 
 			return false;
-		} 
+		}
 		if (this.isDrawingRectangle && this.line && this.rect) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
@@ -601,6 +620,10 @@ export class Select extends Tool {
 			this.toHighlight.render(context);
 		}
 
-		this.alignmentHelper.renderSnapLines(context, this.snapLines, this.board.camera.getScale());
+		this.alignmentHelper.renderSnapLines(
+			context,
+			this.snapLines,
+			this.board.camera.getScale(),
+		);
 	}
 }
