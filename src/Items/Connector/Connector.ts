@@ -69,6 +69,7 @@ export class Connector {
 		this.endPointerStyle,
 		this.lineStyle,
 		this.lines,
+		this.lineWidth * 0.1 + 0.3,
 	);
 	animationFrameId?: number;
 	readonly text: RichText = new RichText(
@@ -833,6 +834,7 @@ export class Connector {
 			this.startPointerStyle,
 			this.lineStyle,
 			this.lines,
+			this.lineWidth * 0.1 + 0.2,
 		);
 		this.startPointer.path.setBorderColor(this.lineColor);
 		this.startPointer.path.setBorderWidth(this.lineWidth);
@@ -842,6 +844,7 @@ export class Connector {
 			this.endPointerStyle,
 			this.lineStyle,
 			this.lines,
+			this.lineWidth * 0.1 + 0.2,
 		);
 		this.endPointer.path.setBorderColor(this.lineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
@@ -917,5 +920,9 @@ export class Connector {
 
 	setOptionalFindFn(value: FindItemFn | undefined): void {
 		this.optionalFindItemFn = value;
+	}
+
+	hasText(): Boolean {
+		return !this.text.isEmpty();
 	}
 }
