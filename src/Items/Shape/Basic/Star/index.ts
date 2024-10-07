@@ -30,4 +30,5 @@ export const Star = {
 		new Point(20, 75),
 		new Point(20, 50),
 	],
+	createPath: (mbr: Mbr) => Star.path.copy(),
 };

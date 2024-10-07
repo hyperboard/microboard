@@ -185,7 +185,20 @@ export class Paths implements Geometry {
 		);
 	}
 
+	updateMaxDimension(scale?: number) {
+		const mbr = this.getMbr();
+		if (scale) {
+			this.maxDimension = Math.max(
+				mbr.getWidth() * scale,
+				mbr.getHeight() * scale,
+			);
+		} else {
+			this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
+		}
+	}
+
 	render(context: DrawingContext): void {
+		this.updateMaxDimension();
 		if (this.maxDimension < context.rectangleVisibilyTreshold) {
 			return;
 		}

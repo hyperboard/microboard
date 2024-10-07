@@ -36,6 +36,7 @@ export class Transformer extends Tool {
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
 	debounceUpd = createDebounceUpdater();
+	isShiftPressed = false;
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -53,6 +54,22 @@ export class Transformer extends Tool {
 		const anchorType = getAnchorFromResizeType(resizeType);
 		pointer.setCursor(anchorType);
 		this.anchorType = anchorType;
+	}
+
+	keyDown(key: string): boolean {
+		if (key === "Shift") {
+			this.isShiftPressed = true;
+			return true;
+		}
+		return false;
+	}
+
+	keyUp(key: string): boolean {
+		if (key === "Shift") {
+			this.isShiftPressed = false;
+			return true;
+		}
+		return false;
 	}
 
 	getResizeType(): ResizeType | undefined {
@@ -149,7 +166,6 @@ export class Transformer extends Tool {
 			return false;
 		}
 
-		// const mbr = this.mbr;
 		const mbr = this.mbr;
 		const list = this.selection.items.list();
 
@@ -168,14 +184,31 @@ export class Transformer extends Tool {
 			single instanceof Sticker ||
 			single instanceof Frame
 		) {
-			this.mbr = single.doResize(
-				this.resizeType,
-				this.board.pointer.point,
-				mbr,
-				this.oppositePoint,
-				this.startMbr || new Mbr(),
-				this.beginTimeStamp,
-			).mbr;
+			if (this.isShiftPressed) {
+				const { matrix, mbr: resizedMbr } = getProportionalResize(
+					this.resizeType,
+					this.board.pointer.point,
+					mbr,
+					this.oppositePoint,
+				);
+				this.mbr = resizedMbr;
+				const translation = this.handleMultipleItemsResize(
+					{ matrix, mbr: resizedMbr },
+					mbr,
+					isWidth,
+					isHeight,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+			} else {
+				this.mbr = single.doResize(
+					this.resizeType,
+					this.board.pointer.point,
+					mbr,
+					this.oppositePoint,
+					this.startMbr || new Mbr(),
+					this.beginTimeStamp,
+				).mbr;
+			}
 		} else if (single instanceof RichText) {
 			const { matrix, mbr: resizedMbr } = getProportionalResize(
 				this.resizeType,

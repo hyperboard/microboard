@@ -15,6 +15,7 @@ import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import { Frames } from "Board/Items/Frame/Basic";
+import AlignmentHelper from "../RelativeAlignment";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -39,8 +40,17 @@ export class Select extends Tool {
 	canvasDrawer = createCanvasDrawer(this.board);
 	debounceUpd = createDebounceUpdater();
 
+	private alignmentHelper: AlignmentHelper;
+	private snapLines: { verticalLines: Line[]; horizontalLines: Line[] } = {
+		verticalLines: [],
+		horizontalLines: [],
+	};
+	private isSnapped = false;
+	private snapCursorPos: Point | null = null;
+
 	constructor(private board: Board) {
 		super();
+		this.alignmentHelper = new AlignmentHelper(board.index);
 	}
 
 	clear(): void {
@@ -63,6 +73,34 @@ export class Select extends Tool {
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.debounceUpd.setFalse();
+		this.snapLines = { verticalLines: [], horizontalLines: [] };
+	}
+
+	private handleSnapping(item: Item): boolean {
+		this.isSnapped = this.alignmentHelper.snapToClosestLine(
+			item,
+			this.snapLines,
+			this.beginTimeStamp,
+		);
+
+		if (this.isSnapped && this.snapCursorPos) {
+			const cursorDiffX = Math.abs(
+				this.board.pointer.point.x - this.snapCursorPos.x,
+			);
+			const cursorDiffY = Math.abs(
+				this.board.pointer.point.y - this.snapCursorPos.y,
+			);
+			if (
+				cursorDiffX > this.alignmentHelper.snapThreshold ||
+				cursorDiffY > this.alignmentHelper.snapThreshold
+			) {
+				this.isSnapped = false;
+				this.snapCursorPos = null;
+			} else {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	leftButtonDown(): boolean {
@@ -210,8 +248,30 @@ export class Select extends Tool {
 			this.board.camera.translateBy(x, y);
 			return false;
 		}
+
+		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
+			this.snapLines = this.alignmentHelper.checkAlignment(
+				this.downOnItem,
+			);
+		} else if (
+			this.isDraggingSelection &&
+			this.board.selection.items.list().length === 1
+		) {
+			const singleItem = this.board.selection.items.list()[0];
+			this.snapLines = this.alignmentHelper.checkAlignment(singleItem);
+		} else {
+			this.snapLines = { verticalLines: [], horizontalLines: [] };
+		}
+
 		if (this.isDraggingSelection) {
 			const selectionMbr = selection.getMbr();
+			if (selection.items.list().length === 1) {
+				const singleItem = selection.items.list()[0];
+				if (this.handleSnapping(singleItem)) {
+					return false;
+				}
+			}
+
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
 				!this.debounceUpd.shouldUpd() &&
@@ -300,9 +360,12 @@ export class Select extends Tool {
 			this.downOnItem.itemType !== "Connector"
 		) {
 			// translate item without selection
-
 			const { downOnItem: draggingItem } = this;
 			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
+
+			if (this.handleSnapping(this.downOnItem)) {
+				return false;
+			}
 
 			const frames = this.board.items
 				.getEnclosedOrCrossed(
@@ -570,5 +633,11 @@ export class Select extends Tool {
 		} else {
 			this.toHighlight.render(context);
 		}
+
+		this.alignmentHelper.renderSnapLines(
+			context,
+			this.snapLines,
+			this.board.camera.getScale(),
+		);
 	}
 }

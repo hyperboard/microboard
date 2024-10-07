@@ -25,4 +25,5 @@ export const BracesRight = {
 		false,
 	),
 	anchorPoints: [],
+	createPath: (mbr: Mbr) => BracesRight.path.copy(),
 };

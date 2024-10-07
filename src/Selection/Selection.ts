@@ -30,6 +30,7 @@ import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { t } from "i18next";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
+import { CONNECTOR_COLOR } from "../../View/Items/Connector";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -655,6 +656,16 @@ export class Selection {
 		return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
 	}
 
+	getConnectorLineWidth(): number {
+		const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+		return connector?.getLineWidth() || 1;
+	}
+
+	getConnectorLineColor(): string {
+		const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+		return connector?.getLineColor() || CONNECTOR_COLOR;
+	}
+
 	getStartPointerStyle(): ConnectorPointerStyle {
 		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
 		return pointer?.getStartPointerStyle() || "None";
@@ -690,6 +701,7 @@ export class Selection {
 			item: this.items.ids(),
 		});
 	}
+
 	setConnectorLineStyle(style: ConnectorLineStyle): void {
 		this.emit({
 			class: "Connector",
@@ -811,7 +823,7 @@ export class Selection {
 		if (connectors.length > 0) {
 			this.emit({
 				class: "Connector",
-				method: "setLineStyle",
+				method: "setLineColor",
 				item: connectors,
 				lineColor: borderColor,
 			});
@@ -873,10 +885,6 @@ export class Selection {
 		}
 		const stickers = this.items.getIdsByItemTypes(["Sticker"]);
 		if (stickers.length) {
-			sessionStorage.setItem(
-				"lastStickerBg",
-				JSON.stringify(backgroundColor),
-			);
 			this.emit({
 				class: "Sticker",
 				method: "setBackgroundColor",
