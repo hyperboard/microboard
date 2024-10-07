@@ -922,7 +922,7 @@ export class Connector {
 		this.optionalFindItemFn = value;
 	}
 
-	hasText(): Boolean {
+	hasText(): boolean {
 		return !this.text.isEmpty();
 	}
 }

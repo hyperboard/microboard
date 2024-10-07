@@ -151,7 +151,7 @@ export function getEndPointer(
 function getPointerMatrix(
 	point: ControlPoint,
 	angleRadians: number,
-	scale: number = 0.3,
+	scale = 0.3,
 ): Matrix {
 	const matrix = new Matrix(point.x, point.y, scale, scale);
 	matrix.rotateByRadian(angleRadians);
