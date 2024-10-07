@@ -12,7 +12,7 @@ export type Segment = Line | QuadraticBezier | CubicBezier;
 
 export const LinePatterns = {
 	solid: [] as number[],
-	dot: [1, 1],
+	dot: [1, 2],
 	dash: [10, 10],
 	longDash: [20, 5],
 	dotDash: [15, 3, 3, 3],
@@ -320,8 +320,22 @@ export class Path implements Geometry, PathStylize {
 		return bestCandidate || new GeometricNormal(point, point, point);
 	}
 
+	updateMaxDimension(scale?: number) {
+		const mbr = this.getMbr();
+		if (scale) {
+			this.maxDimension = Math.max(
+				mbr.getWidth() * scale,
+				mbr.getHeight() * scale,
+			);
+		} else {
+			this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
+		}
+	}
+
 	render(context: DrawingContext): void {
 		// TODO use background and border opacity
+		const scale = context.getCameraScale();
+		this.updateMaxDimension(scale);
 		if (this.maxDimension < context.rectangleVisibilyTreshold) {
 			return;
 		}
@@ -351,8 +365,15 @@ export class Path implements Geometry, PathStylize {
 			} else {
 				ctx.shadowColor = "transparent";
 			}
-
-			ctx.strokeStyle = this.borderColor;
+			if (
+				this.borderColor === "transparent" ||
+				this.borderColor === "none" ||
+				!this.borderColor
+			) {
+				ctx.strokeStyle = "transparent";
+			} else {
+				ctx.strokeStyle = this.borderColor;
+			}
 			ctx.lineWidth = this.borderWidth;
 			ctx.setLineDash(this.linePattern);
 			if (shouldFillBackground) {
