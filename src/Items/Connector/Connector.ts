@@ -42,7 +42,9 @@ export const ConnectorLineStyles = [
 
 export type ConnectorLineStyle = typeof ConnectorLineStyles[number];
 
-export const ConnectionLineWidths = [1, 2, 3, 4, 5, 8, 12, 16, 20, 24] as const;
+export const ConnectionLineWidths = [
+	1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24,
+] as const;
 
 export type ConnectionLineWidth = typeof ConnectionLineWidths[number];
 
@@ -67,6 +69,7 @@ export class Connector {
 		this.endPointerStyle,
 		this.lineStyle,
 		this.lines,
+		this.lineWidth * 0.1 + 0.3,
 	);
 	animationFrameId?: number;
 	readonly text: RichText = new RichText(
@@ -380,6 +383,7 @@ export class Connector {
 
 	private applyLineColor(color: string): void {
 		this.lineColor = color;
+		this.updatePaths();
 	}
 
 	setLineStyle(style: ConnectorLineStyle): void {
@@ -830,6 +834,7 @@ export class Connector {
 			this.startPointerStyle,
 			this.lineStyle,
 			this.lines,
+			this.lineWidth * 0.1 + 0.2,
 		);
 		this.startPointer.path.setBorderColor(this.lineColor);
 		this.startPointer.path.setBorderWidth(this.lineWidth);
@@ -839,6 +844,7 @@ export class Connector {
 			this.endPointerStyle,
 			this.lineStyle,
 			this.lines,
+			this.lineWidth * 0.1 + 0.2,
 		);
 		this.endPointer.path.setBorderColor(this.lineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
@@ -914,5 +920,9 @@ export class Connector {
 
 	setOptionalFindFn(value: FindItemFn | undefined): void {
 		this.optionalFindItemFn = value;
+	}
+
+	hasText(): boolean {
+		return !this.text.isEmpty();
 	}
 }

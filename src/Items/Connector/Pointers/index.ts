@@ -117,9 +117,10 @@ export function getStartPointer(
 	pointerStyle: string,
 	lineStyle: ConnectorLineStyle,
 	lines: Path,
+	scale: number,
 ): Pointer {
 	const angleRadians = getPointerRotation(point, lineStyle, lines, "start");
-	const matrix = getPointerMatrix(point, angleRadians);
+	const matrix = getPointerMatrix(point, angleRadians, scale);
 	const pointer = getPointer(pointerStyle);
 	return {
 		path: pointer.path.getTransformed(matrix),
@@ -134,9 +135,10 @@ export function getEndPointer(
 	pointerStyle: string,
 	lineStyle: ConnectorLineStyle,
 	lines: Path,
+	scale: number,
 ): Pointer {
 	const angleRadians = getPointerRotation(point, lineStyle, lines, "end");
-	const matrix = getPointerMatrix(point, angleRadians);
+	const matrix = getPointerMatrix(point, angleRadians, scale);
 	const pointer = getPointer(pointerStyle);
 	return {
 		path: pointer.path.getTransformed(matrix),
@@ -146,8 +148,11 @@ export function getEndPointer(
 	};
 }
 
-function getPointerMatrix(point: ControlPoint, angleRadians: number): Matrix {
-	const scale = 0.3;
+function getPointerMatrix(
+	point: ControlPoint,
+	angleRadians: number,
+	scale = 0.3,
+): Matrix {
 	const matrix = new Matrix(point.x, point.y, scale, scale);
 	matrix.rotateByRadian(angleRadians);
 	const anchor = new Point(100, 50);
