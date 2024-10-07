@@ -23,8 +23,8 @@ export class DrawingContext {
 		this.matrix = camera.getMatrix();
 		const scale = this.matrix.scaleX;
 		this.isBorderInvisible = 4 * scale < 0.1;
-		this.shapeVisibilityTreshold = 4 / scale;
-		this.rectangleVisibilyTreshold = 2 / scale;
+		this.shapeVisibilityTreshold = 6;
+		this.rectangleVisibilyTreshold = 4;
 	}
 
 	clear(): void {

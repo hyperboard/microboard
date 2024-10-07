@@ -3,9 +3,16 @@ import type { Hotkey, HotkeyName } from "./types";
 import { isMacos } from "App/isMacos";
 
 export function getHotkeyLabel(hotkey: HotkeyName) {
-	if (isMacos()) {
-		return (hotkeys[hotkey] as Hotkey).label.mac;
+	const hotkeyLabel = (hotkeys[hotkey] as Hotkey).label;
+	switch (import.meta.env.FORCE_HOTKEYS || "auto") {
+		case "windows":
+			return hotkeyLabel.windows;
+		case "macos":
+			return hotkeyLabel.mac;
+		default:
+			if (isMacos()) {
+				return hotkeyLabel.mac;
+			}
+			return hotkeyLabel.windows;
 	}
-
-	return (hotkeys[hotkey] as Hotkey).label.windows;
 }
