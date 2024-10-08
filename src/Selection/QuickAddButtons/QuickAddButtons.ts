@@ -1,20 +1,20 @@
+import { Board } from "Board/Board";
 import {
+	Connector,
 	ConnectorData,
-	Matrix,
-	RichText,
-	Mbr,
 	Item,
+	Matrix,
+	Mbr,
 	Point,
 	Connector,
 	ItemData,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Selection } from "..";
-import { Board } from "Board/Board";
 import { isMicroboard } from "lib/isMicroboard";
+import { Selection } from "..";
+import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
-import { Storage } from "App/Storage";
 
 export interface QuickAddButtons {
 	calculateQuickAddPosition: (
@@ -54,6 +54,7 @@ export function getQuickAddButtons(
 		selectedItem: Item,
 		connectorStartPoint: Point,
 	): { newItem: Item; connectorData: ConnectorData } {
+		const connectorStorage = new SessionStorage();
 		const currMbr = selectedItem.getMbr();
 		const itemData = selectedItem.serialize();
 		const guarded = itemData as Partial<ItemData>;
@@ -124,11 +125,11 @@ export function getQuickAddButtons(
 		const connectorData = defaultConnector.serialize();
 		connectorData.lineStyle = "orthogonal";
 
-		const savedStart = new Storage().getConnectorPointer("start");
+		const savedStart = connectorStorage.getConnectorPointer("start");
 		if (savedStart) {
 			connectorData.startPointerStyle = savedStart;
 		}
-		const savedEnd = new Storage().getConnectorPointer("end");
+		const savedEnd = connectorStorage.getConnectorPointer("end");
 		if (savedEnd) {
 			connectorData.endPointerStyle = savedEnd;
 		}
