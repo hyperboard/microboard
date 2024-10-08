@@ -859,6 +859,8 @@ export class Board {
 		const isSelectedItemsMinWidth = selectedItems.some(
 			item => item.getMbr().getWidth() === 0,
 		);
+
+		console.log("isSelectedItemsMinWidth", isSelectedItemsMinWidth);
 		const right = mbr ? mbr.right : 0;
 		const top = mbr ? mbr.top : 0;
 		const width = mbr ? mbr.getWidth() / 10 : 10;
@@ -882,7 +884,7 @@ export class Board {
 				}
 			} else if (itemData.transformation) {
 				itemData.transformation.translateX =
-					translateX - minY + right + width;
+					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
 
 				if (itemData.itemType === "Drawing") {
