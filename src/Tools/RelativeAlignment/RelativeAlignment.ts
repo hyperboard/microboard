@@ -3,8 +3,8 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold = 2;
-	snapThreshold = 2;
+	private alignThreshold = 3;
+	snapThreshold = 3;
 	constructor(private spatialIndex: SpatialIndex) {}
 	checkAlignment(movingItem: Item): {
 		verticalLines: Line[];
