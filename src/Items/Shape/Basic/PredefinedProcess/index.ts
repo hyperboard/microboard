@@ -22,4 +22,5 @@ export const PredefinedProcess = {
 		new Point(50, 0),
 		new Point(50, 100),
 	],
+	createPath: (mbr: Mbr) => PredefinedProcess.path.copy(),
 };

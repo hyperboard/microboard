@@ -18,4 +18,5 @@ export const Rectangle = {
 		new Point(50, 0),
 		new Point(50, 100),
 	],
+	createPath: (mbr: Mbr) => Rectangle.path.copy(),
 };

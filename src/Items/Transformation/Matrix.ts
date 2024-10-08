@@ -117,6 +117,28 @@ export class Matrix {
 		this.rotateByRadian(radian);
 	}
 
+	rotateByObjectCenter(
+		degree: number,
+		size: { width: number; height: number },
+		scale: {
+			x: number;
+			y: number;
+		},
+	): void {
+		const angle = degree * (Math.PI / 180);
+		const width = size.width * scale.x;
+		const height = size.height * scale.y;
+		const centerX = width / 2;
+		const centerY = height / 2;
+
+		const x =
+			centerX - (centerX * Math.cos(angle) - centerY * Math.sin(angle));
+		const y =
+			centerY - (centerX * Math.sin(angle) + centerY * Math.cos(angle));
+		this.rotateBy(degree);
+		this.translate(x, y);
+	}
+
 	// Rotate by degree relative to a point
 	rotateByRelativeTo(degree: number, x: number, y: number): void {
 		this.translateX += x;

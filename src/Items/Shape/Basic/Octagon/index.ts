@@ -26,4 +26,5 @@ export const Octagon = {
 		new Point(50, 100),
 		new Point(12, 88),
 	],
+	createPath: (mbr: Mbr) => Octagon.path.copy(),
 };

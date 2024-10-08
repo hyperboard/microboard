@@ -21,6 +21,11 @@ import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
+import {
+	createRoundedRectanglePath,
+	RoundedRectangle,
+} from "./Basic/RoundedRectangle";
+import { createSpeachBubblePath } from "./Basic/SpeachBubble";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -437,14 +442,14 @@ export class Shape implements Geometry {
 	}
 
 	private initPath(): void {
-		this.path = Shapes[this.shapeType].path.copy();
+		this.path = Shapes[this.shapeType].createPath(this.mbr);
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
 		this.text.updateElement();
 	}
 
 	private transformPath(): void {
-		this.path = Shapes[this.shapeType].path.copy();
+		this.path = Shapes[this.shapeType].createPath(this.mbr);
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);

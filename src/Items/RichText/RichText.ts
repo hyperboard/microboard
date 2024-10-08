@@ -74,6 +74,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
+	private selection?: BaseSelection;
 	maxHeight = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
@@ -227,10 +228,20 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	handleBlur = (): void => {
+		this.selection = this.getCurrentSelection(); // Save current selection
 		isEditInProcessValue = false;
+		if (this.selection) {
+			// TODO: Что-нибудь с этим сделать...
+			try {
+				ReactEditor.focus(this.editor.editor);
+			} catch {}
+		}
 	};
 
 	updateElement(): void {
+		if (this.selection) {
+			Transforms.select(this.editor.editor, this.selection);
+		}
 		if (this.updateRequired) {
 			return;
 		}
@@ -523,6 +534,7 @@ export class RichText extends Mbr implements Geometry {
 					this.applySelectionFontSize(op.fontSize, op.context);
 				}
 			} else {
+				this.selection = null;
 				this.editor.applyRichTextOp(op);
 			}
 			this.updateElement();
@@ -951,7 +963,7 @@ export class RichText extends Mbr implements Geometry {
 	getCurrentSelection(): BaseSelection | undefined {
 		const { selection } = this.editor.editor;
 		if (selection) {
-			return JSON.parse(JSON.stringify(selection)) as BaseSelection;
+			return selection;
 		}
 	}
 
@@ -997,7 +1009,8 @@ export class RichText extends Mbr implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		if (this.isRenderEnabled) {
+		this.selection = null;
+		if (this.isRenderEnabled && this.getTextString().length > 0) {
 			const { ctx } = context;
 			ctx.save();
 			ctx.translate(this.left, this.top);

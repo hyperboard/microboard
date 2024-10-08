@@ -6,14 +6,19 @@ import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
+import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;
+	resizeType: ResizeType = 'leftBottom';
 	bounds = new Mbr();
 	type: ShapeType | "None" = DEFAULT_SHAPE;
 	shape: Shape;
 	isDown = false;
-
+	isShiftPressed = false;
+	
+	private handleKeyDownBound: (event: KeyboardEvent) => void;
+    private handleKeyUpBound: (event: KeyboardEvent) => void;
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
@@ -34,6 +39,24 @@ export class AddShape extends BoardTool {
 			this.setShapeType(data.shapeType);
 		} else {
 			this.shape = new Shape();
+		}
+
+		this.handleKeyDownBound = this.handleKeyDown.bind(this);
+        this.handleKeyUpBound = this.handleKeyUp.bind(this);
+
+        window.addEventListener('keydown', this.handleKeyDownBound);
+        window.addEventListener('keyup', this.handleKeyUpBound);
+	}
+
+	handleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Shift') {
+			this.isShiftPressed = true;
+		}
+	}
+
+	handleKeyUp(event: KeyboardEvent) {
+		if (event.key === 'Shift') {
+			this.isShiftPressed = false;
 		}
 	}
 
@@ -73,16 +96,25 @@ export class AddShape extends BoardTool {
 
 	pointerMoveBy(_x: number, _y: number): boolean {
 		if (this.line) {
-			this.line = new Line(
-				this.line.start.copy(),
-				this.board.pointer.point.copy(),
-			);
+			const startPoint = this.line.start.copy();
+			const endPoint = this.board.pointer.point.copy();
+	
+			if (this.isShiftPressed) {
+				const deltaX = endPoint.x - startPoint.x;
+				const deltaY = endPoint.y - startPoint.y;
+				const maxDelta = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+				endPoint.x = startPoint.x + Math.sign(deltaX) * maxDelta;
+				endPoint.y = startPoint.y + Math.sign(deltaY) * maxDelta;
+			}
+	
+			this.line = new Line(startPoint, endPoint);
 			this.bounds = this.line.getMbr();
 			this.bounds.borderColor = SELECTION_COLOR;
 			this.initTransformation();
 			this.board.tools.publish();
 			return true;
 		}
+	
 		return false;
 	}
 
@@ -122,6 +154,9 @@ export class AddShape extends BoardTool {
 			this.board.tools.select();
 		}
 		this.board.tools.publish();
+
+		window.removeEventListener('keydown', this.handleKeyDownBound);
+        window.removeEventListener('keyup', this.handleKeyUpBound);
 		return true;
 	}
 
