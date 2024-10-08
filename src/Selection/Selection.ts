@@ -389,7 +389,6 @@ export class Selection {
 					`verticalAlignment_${item.itemType}`,
 				);
 				if (textColor) {
-					console.log(textColor);
 					text.setSelectionFontColor(JSON.parse(textColor), "None");
 				}
 				if (textSize) {

@@ -1,11 +1,11 @@
-import { Connector, ConnectorLineStyle } from "Board/Items/Connector";
-import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { BoardTool } from "../BoardTool";
+import { SessionStorage } from "App/SessionStorage";
 import { Board } from "Board/Board";
 import { Item, Point } from "Board/Items";
-import { Storage } from "App/Storage";
+import { Connector, ConnectorLineStyle } from "Board/Items/Connector";
+import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { BoardTool } from "../BoardTool";
 
 export class AddConnector extends BoardTool {
 	connector: Connector | null = null;
@@ -24,15 +24,16 @@ export class AddConnector extends BoardTool {
 		super(board);
 		this.setCursor();
 
-		const savedStyle = new Storage().getConnectorLineStyle();
+		const storage = new SessionStorage();
+		const savedStyle = storage.getConnectorLineStyle();
 		if (savedStyle) {
 			this.lineStyle = savedStyle;
 		}
-		const savedStart = new Storage().getConnectorPointer("start");
+		const savedStart = storage.getConnectorPointer("start");
 		if (savedStart) {
 			this.startPoitner = savedStart;
 		}
-		const savedEnd = new Storage().getConnectorPointer("end");
+		const savedEnd = storage.getConnectorPointer("end");
 		if (savedEnd) {
 			this.endPointer = savedEnd;
 		}
