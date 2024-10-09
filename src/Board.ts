@@ -855,6 +855,11 @@ export class Board {
 		}
 
 		const mbr = this.selection.getMbr();
+		const selectedItems = this.selection.items.list();
+		const isSelectedItemsMinWidth = selectedItems.some(
+			item => item.getMbr().getWidth() === 0,
+		);
+
 		const right = mbr ? mbr.right : 0;
 		const top = mbr ? mbr.top : 0;
 		const width = mbr ? mbr.getWidth() / 10 : 10;
@@ -885,8 +890,8 @@ export class Board {
 					itemData.transformation.translateY = translateY;
 				}
 
-				if (height === 0) {
-					itemData.transformation.translateX = translateX + 10;
+				if (height === 0 || isSelectedItemsMinWidth) {
+					itemData.transformation.translateX = translateX + width * 10 + 10;
 				}
 			}
 			if (itemData.itemType === "Frame") {
