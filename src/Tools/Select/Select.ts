@@ -228,6 +228,12 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
+		const { selection } = this.board;
+		const isLockedItemsFrames = selection.getIsLockedSelection();
+		if (isLockedItemsFrames) {
+			return false;
+		}
+
 		const throttleTime = 10;
 		const timeDiff =
 			this.lastPointerMoveEventTime + throttleTime - Date.now();
@@ -258,7 +264,6 @@ export class Select extends Tool {
 		}
 
 		if (this.isDraggingSelection) {
-			const { selection } = this.board;
 			const selectionMbr = selection.getMbr();
 			if (selection.items.list().length === 1) {
 				const singleItem = selection.items.list()[0];
@@ -303,6 +308,7 @@ export class Select extends Tool {
 							translation,
 						);
 						this.debounceUpd.setFalse();
+						this.canvasDrawer.clearCanvasAndKeys();
 						this.debounceUpd.setTimeoutUpdate(1000);
 					}
 				}
@@ -432,7 +438,8 @@ export class Select extends Tool {
 				if (
 					this.board.selection.getContext() === "EditUnderPointer" &&
 					curr &&
-					topItem === curr
+					topItem === curr &&
+					!this.board.selection.getIsLockedSelection()
 				) {
 					if (
 						!(curr instanceof ImageItem) &&
@@ -529,6 +536,11 @@ export class Select extends Tool {
 		}
 		this.board.selection.editTextUnderPointer();
 		const toEdit = this.board.selection.items.getSingle();
+
+		if (this.board.selection.getIsLockedSelection()) {
+			return false;
+		}
+
 		if (
 			toEdit &&
 			!(toEdit instanceof ImageItem) &&
@@ -594,12 +606,14 @@ export class Select extends Tool {
 			quickAddItem(this.board, "copy", single);
 		} else if (
 			single &&
-			this.board.selection.getContext() !== "EditTextUnderPointer"
+			this.board.selection.getContext() !== "EditTextUnderPointer" &&
+			!this.board.selection.getIsLockedSelection()
 		) {
 			this.board.selection.editText(undefined, true);
 		} else if (
 			isSafari() &&
-			this.board.selection.getContext() === "EditTextUnderPointer"
+			this.board.selection.getContext() === "EditTextUnderPointer" &&
+			!this.board.selection.getIsLockedSelection()
 		) {
 			if (
 				(single && "text" in single) ||

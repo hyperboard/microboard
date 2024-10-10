@@ -47,6 +47,16 @@ interface DeserializeOperation extends TransformationBase {
 	timeStamp?: number;
 }
 
+interface Locked extends TransformationBase {
+	method: "locked";
+	locked: boolean;
+}
+
+interface Unlocked extends TransformationBase {
+	method: "unlocked";
+	locked: boolean;
+}
+
 export interface TransformManyItems {
 	[key: string]:
 		| ScaleByTranslateByOperation
@@ -68,4 +78,6 @@ export type TransformationOperation =
 	| ScaleRelativeToOperation
 	| ScaleByTranslateByOperation
 	| DeserializeOperation
-	| TransformMany;
+	| TransformMany
+	| Locked
+	| Unlocked;

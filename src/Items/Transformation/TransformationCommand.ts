@@ -124,15 +124,19 @@ export class TransformationCommand implements Command {
 				const { operation, transformation } = this;
 				return transformation.map(currTrans => {
 					const currOp = operation.items[currTrans.getId()];
-					if (currOp.method === "scaleByTranslateBy"){
+					if (currOp.method === "scaleByTranslateBy") {
 						const op = {
-						...currOp,
-						scale: { x: 1 / currOp.scale.x, y: 1 / currOp.scale.y },
-						translate: {
-							x: -currOp.translate.x,
-							y: -currOp.translate.y,
-						},
-					};} 
+							...currOp,
+							scale: {
+								x: 1 / currOp.scale.x,
+								y: 1 / currOp.scale.y,
+							},
+							translate: {
+								x: -currOp.translate.x,
+								y: -currOp.translate.y,
+							},
+						};
+					}
 					return { item: currTrans, operation: op };
 				});
 			}
