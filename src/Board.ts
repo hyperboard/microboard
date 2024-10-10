@@ -538,17 +538,17 @@ export class Board {
 
 	getSnapshotFromCache(): Promise<BoardSnapshot | undefined> {
 		return new Promise((resolve, reject) => {
-			const dbRequest = indexedDB.open("BoardDatabase", 1);
+			const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-			dbRequest.onupgradeneeded = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onupgradeneeded = _event => {
+				const db = dbRequest.result;
 				if (!db.objectStoreNames.contains("snapshots")) {
 					db.createObjectStore("snapshots", { keyPath: "boardId" });
 				}
 			};
 
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				if (!db.objectStoreNames.contains("snapshots")) {
 					resolve(undefined);
 					return;
@@ -575,18 +575,18 @@ export class Board {
 	private async saveSnapshotToIndexedDB(
 		snapshot: BoardSnapshot,
 	): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 1);
+		const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-		dbRequest.onupgradeneeded = event => {
-			const db = (event.target as IDBOpenDBRequest).result;
+		dbRequest.onupgradeneeded = _event => {
+			const db = dbRequest.result;
 			if (!db.objectStoreNames.contains("snapshots")) {
 				db.createObjectStore("snapshots", { keyPath: "boardId" });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				const transaction = db.transaction("snapshots", "readwrite");
 				const store = transaction.objectStore("snapshots");
 				store.put({ boardId: this.getBoardId(), data: snapshot });
@@ -600,18 +600,18 @@ export class Board {
 	}
 
 	private async removeSnapshotFromIndexedDB(boardId: string): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 1);
+		const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-		dbRequest.onupgradeneeded = event => {
-			const db = (event.target as IDBOpenDBRequest).result;
+		dbRequest.onupgradeneeded = _event => {
+			const db = dbRequest.result;
 			if (!db.objectStoreNames.contains("snapshots")) {
 				db.createObjectStore("snapshots", { keyPath: "boardId" });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				const transaction = db.transaction("snapshots", "readwrite");
 				const store = transaction.objectStore("snapshots");
 				store.delete(boardId);
@@ -891,7 +891,8 @@ export class Board {
 				}
 
 				if (height === 0 || isSelectedItemsMinWidth) {
-					itemData.transformation.translateX = translateX + width * 10 + 10;
+					itemData.transformation.translateX =
+						translateX + width * 10 + 10;
 				}
 			}
 			if (itemData.itemType === "Frame") {
