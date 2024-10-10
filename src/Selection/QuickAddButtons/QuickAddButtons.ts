@@ -6,7 +6,7 @@ import {
 	Matrix,
 	Mbr,
 	Point,
-	Connector,
+	RichText,
 	ItemData,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
