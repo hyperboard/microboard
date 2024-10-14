@@ -443,18 +443,31 @@ export class Items {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
 		const frameSize = size * 2;
-		const tolerated = this.index.getEnclosedOrCrossed(
+		const toleratedFrames = this.index.getEnclosedOrCrossed(
 			x - size,
-			y - frameSize,
+			y - size,
 			x + size,
 			y + frameSize,
 		);
+		const toleratedConnectors = this.index.getEnclosedOrCrossed(
+			x - size,
+			y - size,
+			x + size,
+			y + size,
+		);
 
 		let enclosed =
-			tolerated.filter(
-				item => !(item instanceof Frame || item instanceof Connector),
-			).length <= 1
-				? tolerated
+			toleratedFrames.filter(item => !(item instanceof Frame)).length ===
+			0
+				? toleratedFrames
+				: toleratedConnectors.filter(
+						item =>
+							!(
+								item instanceof Connector ||
+								item instanceof Frame
+							),
+				  ).length === 0
+				? toleratedConnectors
 				: this.index.getEnclosedOrCrossed(x, y, x, y);
 
 		if (enclosed.length === 0) {
