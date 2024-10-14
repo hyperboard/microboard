@@ -171,15 +171,15 @@ export class Select extends Tool {
 			this.downOnItem = hover[hover.length - 1];
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			// TODO API Dirty Check
-			if (
-				this.downOnItem.itemType === "Connector" &&
-				!this.board.keyboard.isCtrl
-			) {
-				this.board.selection.editUnderPointer();
-				this.board.tools.publish();
-				this.clear();
-				return this.board.selection.tool.getTool().leftButtonDown();
-			}
+			// if (
+			// 	this.downOnItem.itemType === "Connector" &&
+			// 	!this.board.keyboard.isCtrl
+			// ) {
+			// 	this.board.selection.editUnderPointer();
+			// 	this.board.tools.publish();
+			// 	this.clear();
+			// 	return this.board.selection.tool.getTool().leftButtonDown();
+			// }
 			return false;
 		}
 		return false;
@@ -354,11 +354,7 @@ export class Select extends Tool {
 
 			return false;
 		}
-		if (
-			this.isDraggingUnselectedItem &&
-			this.downOnItem &&
-			this.downOnItem.itemType !== "Connector"
-		) {
+		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
 			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
