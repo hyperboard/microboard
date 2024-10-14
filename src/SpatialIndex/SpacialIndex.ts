@@ -5,6 +5,7 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
+import { Drawing } from "Board/Items/Drawing";
 
 type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -449,7 +450,7 @@ export class Items {
 			x + size,
 			y + frameSize,
 		);
-		const toleratedConnectors = this.index.getEnclosedOrCrossed(
+		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
 			y - size,
 			x + size,
@@ -460,14 +461,13 @@ export class Items {
 			toleratedFrames.filter(item => !(item instanceof Frame)).length ===
 			0
 				? toleratedFrames
-				: toleratedConnectors.filter(
+				: tolerated.some(
 						item =>
-							!(
-								item instanceof Connector ||
-								item instanceof Frame
-							),
-				  ).length === 0
-				? toleratedConnectors
+							item instanceof Connector ||
+							item instanceof Frame ||
+							item instanceof Drawing,
+				  )
+				? tolerated
 				: this.index.getEnclosedOrCrossed(x, y, x, y);
 
 		if (enclosed.length === 0) {
