@@ -10,6 +10,7 @@ import { DrawingCommand } from "./DrawingCommand";
 import { DrawingOperation } from "./DrawingOperation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Geometry } from "../Geometry";
+import { isSafari } from "App/isSafari";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -120,12 +121,16 @@ export class Drawing extends Mbr implements Geometry {
 				context.quadraticCurveTo(points[j].x, points[j].y, cx, cy);
 			}
 
-			context.quadraticCurveTo(
-				points[j].x,
-				points[j].y,
-				points[j + 1].x,
-				points[j + 1].y,
-			);
+			const x =
+				points[j].x === points[j + 1].x && isSafari()
+					? points[j + 1].x + 0.01
+					: points[j + 1].x;
+			const y =
+				points[j].y === points[j + 1].y && isSafari()
+					? points[j + 1].y + 0.01
+					: points[j + 1].y;
+
+			context.quadraticCurveTo(points[j].x, points[j].y, x, y);
 		}
 
 		let left = Number.MAX_SAFE_INTEGER;
