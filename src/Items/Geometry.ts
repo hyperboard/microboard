@@ -3,6 +3,7 @@ import { Point } from "./Point";
 import { Line } from "./Line";
 import { DrawingContext } from "./DrawingContext";
 import { GeometricNormal } from "./GeometricNormal";
+import { RichText } from "./RichText";
 
 /**
  * Methods that define the geometry of an item.
@@ -30,4 +31,6 @@ export interface Geometry {
 	getNormal(point: Point): GeometricNormal;
 	/** Render the item on a Drawing Context */
 	render(context: DrawingContext): void;
+	/** Get RichText handle if exists */
+	getRichText(): RichText | null;
 }

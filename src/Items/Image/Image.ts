@@ -260,4 +260,8 @@ export class ImageItem extends Mbr {
 	isClosed(): boolean {
 		return true;
 	}
+
+	getRichText(): null {
+		return null;
+	}
 }

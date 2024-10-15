@@ -3,7 +3,7 @@ import { ShapeOperation } from "../Items/Shape";
 import { RichTextOperation } from "../Items";
 import { BoardOps } from "../BoardOperations";
 import { ConnectorOperation } from "../Items/Connector";
-import { DrawingOperation } from "Board/Items/Drawing/DrawingCommand";
+import { DrawingOperation } from "Board/Items/Drawing/DrawingOperation";
 import { StickerOperation } from "../Items/Sticker/StickerOperation";
 import { FrameOperation } from "../Items/Frame";
 

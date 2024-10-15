@@ -106,8 +106,8 @@ export class SelectionItems {
 		return ids;
 	}
 
-	getSingle(): Item | undefined {
-		return this.isSingle() ? this.items.values().next().value : undefined;
+	getSingle(): Item | null {
+		return this.isSingle() ? this.items.values().next().value : null;
 	}
 
 	listByIds(itemIdList: string[]): Item[] {

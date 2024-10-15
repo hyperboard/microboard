@@ -6,7 +6,8 @@ import { Mbr } from "../Mbr";
 import { BorderStyle, BorderWidth, Path, Paths, scalePatterns } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
-import { DrawingOperation, DrawingCommand } from "./DrawingCommand";
+import { DrawingCommand } from "./DrawingCommand";
+import { DrawingOperation } from "./DrawingOperation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Geometry } from "../Geometry";
 
@@ -352,6 +353,10 @@ export class Drawing extends Mbr implements Geometry {
 
 	getStrokeWidth(): number {
 		return this.strokeWidth;
+	}
+
+	getRichText(): null {
+		return null;
 	}
 }
 
