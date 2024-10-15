@@ -675,4 +675,8 @@ export class Frame implements Geometry {
 			nMbr.render(context);
 		}
 	}
+
+	getRichText(): RichText {
+		return this.text;
+	}
 }

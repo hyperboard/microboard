@@ -473,4 +473,8 @@ export class Sticker implements Geometry {
 
 		return res;
 	}
+
+	getRichText(): RichText {
+		return this.text;
+	}
 }

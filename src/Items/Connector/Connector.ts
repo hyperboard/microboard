@@ -925,4 +925,8 @@ export class Connector {
 	hasText(): boolean {
 		return !this.text.isEmpty();
 	}
+
+	getRichText(): RichText {
+		return this.text;
+	}
 }

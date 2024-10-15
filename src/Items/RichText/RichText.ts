@@ -2,7 +2,14 @@ import { Board } from "Board";
 import { Events, Operation } from "Board/Events";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
-import { BaseSelection, Descendant, Editor, Transforms, Text } from "slate";
+import {
+	BaseSelection,
+	Descendant,
+	Editor,
+	Transforms,
+	Text,
+	Operation as SlateOp,
+} from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
@@ -522,6 +529,7 @@ export class RichText extends Mbr implements Geometry {
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
 				this.setMaxWidth(op.maxWidth ?? 0);
+				this.setMaxWidth(op.maxWidth ?? 0);
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
 					this.autosizeEnable();
@@ -652,12 +660,13 @@ export class RichText extends Mbr implements Geometry {
 	setSelectionFontColor(
 		format: string,
 		selectionContext?: SelectionContext,
-	): void {
+	): SlateOp[] {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionFontColor(format, selectionContext);
+		const ops = this.editor.setSelectionFontColor(format, selectionContext);
 		this.updateElement();
+		return ops;
 	}
 
 	applySelectionFontColor(fontColor: string): void {
@@ -670,15 +679,16 @@ export class RichText extends Mbr implements Geometry {
 	setSelectionFontStyle(
 		style: TextStyle | TextStyle[],
 		selectionContext?: SelectionContext,
-	): void {
+	): SlateOp[] {
 		if (
 			selectionContext === "EditUnderPointer" ||
 			selectionContext === "SelectByRect"
 		) {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionFontStyle(style);
+		const ops = this.editor.setSelectionFontStyle(style);
 		this.updateElement();
+		return ops;
 	}
 
 	setSelectionFontFamily(fontFamily: string): void {
@@ -708,30 +718,37 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	setSelectionFontSize(
-		fontSize: number,
+		fontSize: number | "auto",
 		selectionContext?: SelectionContext,
-	): void {
+	): SlateOp[] {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		if (this.isInShape) {
-			this.editor.setSelectionFontSize(fontSize, selectionContext);
-		} else {
-			const scaledFontSize = fontSize / this.getScale();
-			this.editor.setSelectionFontSize(scaledFontSize, selectionContext);
-		}
+		const scaledFontSize =
+			!this.isInShape && fontSize !== "auto"
+				? fontSize / this.getScale()
+				: fontSize;
+		const ops = this.editor.setSelectionFontSize(
+			scaledFontSize,
+			selectionContext,
+		);
 		this.updateElement();
+		return ops;
 	}
 
 	setSelectionFontHighlight(
 		format: string,
 		selectionContext?: SelectionContext,
-	): void {
+	): SlateOp[] {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionFontHighlight(format, selectionContext);
+		const ops = this.editor.setSelectionFontHighlight(
+			format,
+			selectionContext,
+		);
 		this.updateElement();
+		return ops;
 	}
 
 	setEditorFocus(selectionContext?: SelectionContext): void {
@@ -741,15 +758,16 @@ export class RichText extends Mbr implements Geometry {
 	setSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
 		selectionContext?: SelectionContext,
-	): void {
+	): SlateOp[] {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.editor.setSelectionHorisontalAlignment(
+		const ops = this.editor.setSelectionHorisontalAlignment(
 			horisontalAlignment,
 			selectionContext,
 		);
 		this.updateElement();
+		return ops;
 	}
 
 	applySetSelectionHorisontalAlignment(
@@ -1141,5 +1159,9 @@ export class RichText extends Mbr implements Geometry {
 
 	splitNode(): void {
 		Transforms.splitNodes(this.editor.editor, { always: true });
+	}
+
+	getRichText(): RichText {
+		return this;
 	}
 }

@@ -288,6 +288,7 @@ export class Select extends Tool {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				return false;
 			}
+
 			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const translation = this.handleMultipleItemsTranslate(
