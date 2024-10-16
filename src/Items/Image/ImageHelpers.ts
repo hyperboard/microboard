@@ -48,7 +48,7 @@ export const resizeAndConvertToPng = async (
 }> => {
 	return new Promise((resolve, reject) => {
 		if (typeof inp !== "string") {
-			return reject("Can't resize such input");
+			return reject("Can't process such input");
 		}
 		const base64String = inp;
 		const image = new Image();
@@ -59,10 +59,39 @@ export const resizeAndConvertToPng = async (
 
 		if (base64String.startsWith("data:image/svg+xml")) {
 			image.onload = async () => {
-				sha256(base64String)
+				const parser = new DOMParser();
+				const svgDoc = parser.parseFromString(
+					atob(base64String.split(",")[1]),
+					"image/svg+xml",
+				);
+				const svgElement = svgDoc.documentElement;
+
+				svgElement.removeAttribute("width");
+				svgElement.removeAttribute("height");
+
+				if (!svgElement.getAttribute("viewBox")) {
+					svgElement.setAttribute(
+						"viewBox",
+						`0 0 ${image.width} ${image.height}`,
+					);
+				}
+
+				svgElement.setAttribute("width", `${image.width}`);
+				svgElement.setAttribute("height", `${image.height}`);
+
+				svgElement.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+				const newSvgString = new XMLSerializer().serializeToString(
+					svgElement,
+				);
+				const newBase64 = `data:image/svg+xml;base64,${btoa(
+					newSvgString,
+				)}`;
+
+				sha256(newBase64)
 					.then(hash => {
 						resolve({
-							dataURL: base64String,
+							dataURL: newBase64,
 							width: image.width,
 							height: image.height,
 							hash: `${hash}.svg`,
