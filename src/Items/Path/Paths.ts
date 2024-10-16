@@ -58,6 +58,14 @@ export class Paths implements Geometry {
 	}
 
 	_setter<T extends keyof PathStylize>(p: any, method: T, v: any): void {
+		if (method === "setBorderStyle") {
+			const firstPathBorderStyle = this.paths[0].getBorderStyle();
+			for (const path of this.paths) {
+				if (path.getBorderStyle() !== firstPathBorderStyle) {
+					return;
+				}
+			}
+		}
 		this.paths
 			.filter((p, i) => this.setterFilter(method, v, p, i))
 			.forEach(path => path[method].call<Path, any, void>(path, v));
@@ -261,5 +269,15 @@ export class Paths implements Geometry {
 
 	copyPaths(): Path[] {
 		return this.paths.map(path => path.copy());
+	}
+
+	isClosed(): boolean {
+		let isAllPathsOpened = true;
+		this.paths.forEach(path => {
+			if (path.isClosed()) {
+				return (isAllPathsOpened = false);
+			}
+		});
+		return !isAllPathsOpened;
 	}
 }

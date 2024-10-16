@@ -8,7 +8,8 @@ import {
 	Matrix,
 	TransformationOperation,
 } from "..";
-import { Shapes, ShapeType } from "./Basic";
+import { BasicShapes } from "./Basic";
+import { ShapeType } from "./index";
 import { BorderStyle, BorderWidth } from "../Path";
 import { Subject } from "Subject";
 import { RichText } from "../RichText";
@@ -21,13 +22,11 @@ import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
-import {
-	createRoundedRectanglePath,
-	RoundedRectangle,
-} from "./Basic/RoundedRectangle";
-import { createSpeachBubblePath } from "./Basic/SpeachBubble";
+import { BPMN } from "./BPMN";
 
 const defaultShapeData = new DefaultShapeData();
+
+const Shapes = { ...BasicShapes, ...BPMN };
 
 export class Shape implements Geometry {
 	readonly itemType = "Shape";
@@ -443,6 +442,17 @@ export class Shape implements Geometry {
 
 	private initPath(): void {
 		this.path = Shapes[this.shapeType].createPath(this.mbr);
+		if (this.shapeType.split("_").length > 1) {
+			this.borderWidth = this.path.getBorderWidth() || this.borderWidth;
+			this.borderStyle = this.path.getBorderStyle() || this.borderStyle;
+			this.backgroundColor =
+				this.path.getBackgroundColor() || this.backgroundColor;
+			this.backgroundOpacity =
+				this.path.getBackgroundOpacity() || this.backgroundOpacity;
+			this.borderColor = this.path.getBorderColor() || this.borderColor;
+			this.borderOpacity =
+				this.path.getBorderOpacity() || this.borderOpacity;
+		}
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
 		this.text.updateElement();
@@ -514,5 +524,20 @@ export class Shape implements Geometry {
 
 	getRichText(): RichText {
 		return this.text;
+	}
+
+	getIsShapeWithText(): boolean {
+		return !(
+			this.textContainer.top === this.textContainer.bottom &&
+			this.textContainer.right === this.textContainer.left
+		);
+	}
+
+	getIsBorderStyleEditable(): boolean {
+		switch (this.shapeType.split("_")[0]) {
+			case "BPMN":
+				return false;
+		}
+		return true;
 	}
 }

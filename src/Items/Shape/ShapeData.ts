@@ -8,7 +8,7 @@ import {
 	TransformationData,
 	DefaultTransformationData,
 } from "../Transformation";
-import { ShapeType } from "./Basic";
+import { ShapeType } from "./index";
 import { RequiredMembers } from "ajv/dist/types/json-schema";
 
 export interface ShapeData {

@@ -21,7 +21,7 @@ import {
 } from "../Items";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
-import { ShapeType } from "../Items/Shape/Basic";
+import { ShapeType } from "../Items/Shape";
 import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";

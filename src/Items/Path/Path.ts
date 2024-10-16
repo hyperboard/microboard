@@ -5,14 +5,14 @@ import { Line } from "../Line";
 import { CubicBezier, QuadraticBezier } from "../Curve";
 import { Point } from "../Point";
 import { Mbr } from "../Mbr";
-import { Matrix } from "..";
+import { Arc, Matrix } from "..";
 import { GeometricNormal } from "../GeometricNormal";
 
-export type Segment = Line | QuadraticBezier | CubicBezier;
+export type Segment = Line | QuadraticBezier | CubicBezier | Arc;
 
 export const LinePatterns = {
 	solid: [] as number[],
-	dot: [1, 1],
+	dot: [1, 2],
 	dash: [10, 10],
 	longDash: [20, 5],
 	dotDash: [15, 3, 3, 3],

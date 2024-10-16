@@ -24,7 +24,7 @@ import { ReversedParallelogram } from "./ReversedParallelogram";
 import { ArrowBlockLeft } from "./ArrowBlockLeft";
 import { ArrowBlockRight } from "./ArrowBlockRigth";
 
-export const Shapes = {
+export const BasicShapes = {
 	Rectangle,
 	Triangle,
 	ReversedTriangle,
@@ -51,5 +51,3 @@ export const Shapes = {
 	Star,
 	Trapezoid,
 } as const;
-
-export type ShapeType = keyof typeof Shapes;
