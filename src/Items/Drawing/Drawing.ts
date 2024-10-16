@@ -363,6 +363,12 @@ export class Drawing extends Mbr implements Geometry {
 	getRichText(): null {
 		return null;
 	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
 }
 
 function getPerpendicularDistance(

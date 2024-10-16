@@ -1164,4 +1164,10 @@ export class RichText extends Mbr implements Geometry {
 	getRichText(): RichText {
 		return this;
 	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
 }

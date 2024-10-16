@@ -8,7 +8,8 @@ export type ShapeOperation =
 	| SetBorderOpacity
 	| SetBorderStyle
 	| SetBorderWidth
-	| SetShapeType;
+	| SetShapeType
+	| SetLinkTo;
 
 interface BaseShapeOperation {
 	class: "Shape";
@@ -49,4 +50,9 @@ export interface SetBorderWidth extends BaseShapeOperation {
 interface SetShapeType extends BaseShapeOperation {
 	method: "setShapeType";
 	shapeType: ShapeType;
+}
+
+interface SetLinkTo extends BaseShapeOperation {
+	method: "setLinkTo";
+	link: string;
 }

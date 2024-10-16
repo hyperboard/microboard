@@ -264,4 +264,10 @@ export class ImageItem extends Mbr {
 	getRichText(): null {
 		return null;
 	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
 }

@@ -477,4 +477,10 @@ export class Sticker implements Geometry {
 	getRichText(): RichText {
 		return this.text;
 	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
 }

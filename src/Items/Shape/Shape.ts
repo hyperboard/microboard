@@ -36,6 +36,7 @@ export class Shape implements Geometry {
 	private path = Shapes[this.shapeType].path.copy();
 	private mbr = Shapes[this.shapeType].path.getMbr().copy();
 	private textContainer = Shapes[this.shapeType].textBounds.copy();
+	private linkTo?: string;
 	readonly text = new RichText(
 		this.textContainer,
 		this.id,
@@ -139,6 +140,7 @@ export class Shape implements Geometry {
 			borderWidth: this.borderWidth,
 			transformation: this.transformation.serialize(),
 			text: this.text.serialize(),
+			linkTo: this.linkTo,
 		};
 	}
 
@@ -147,6 +149,7 @@ export class Shape implements Geometry {
 			this.shapeType = data.shapeType ?? this.shapeType;
 			this.initPath();
 		}
+		this.linkTo = data.linkTo;
 		this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
 		this.backgroundOpacity =
 			data.backgroundOpacity ?? this.backgroundOpacity;
@@ -218,12 +221,34 @@ export class Shape implements Geometry {
 			case "setShapeType":
 				this.applyShapeType(op.shapeType);
 				break;
+			case "setLinkTo":
+				this.applyLinkTo(op.link);
+				break;
 		}
 		this.saveShapeData();
 	}
 
 	getShapeType(): ShapeType {
 		return this.shapeType;
+	}
+
+	private applyLinkTo(link: string): void {
+		this.linkTo = link;
+		this.initPath();
+		this.transformPath();
+	}
+
+	setLinkTo(link: string): void {
+		this.emit({
+			class: "Shape",
+			method: "setLinkTo",
+			item: [this.getId()],
+			link,
+		});
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo;
 	}
 
 	private applyShapeType(shapeType: ShapeType): void {
@@ -514,5 +539,10 @@ export class Shape implements Geometry {
 
 	getRichText(): RichText {
 		return this.text;
+	}
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
 	}
 }
