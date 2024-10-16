@@ -17,18 +17,8 @@ import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
 
 export interface QuickAddButtons {
-	calculateQuickAddPosition: (
-		index: number,
-		selectedItem: Item,
-		connectorStartPoint: Point,
-	) => { newItem: Item; connectorData: ConnectorData };
 	clear: () => void;
-	getQuickButtonsPositions: (
-		customMbr?: Mbr,
-	) => { positions: Point[]; item: Item } | undefined;
 	render: (context: DrawingContext) => void;
-	htmlButtons?: HTMLButtonElement[];
-	quickAddItems?: QuickAddItems;
 }
 
 export interface QuickAddItems {
@@ -344,18 +334,10 @@ export function getQuickAddButtons(
 	}
 
 	return {
-		calculateQuickAddPosition,
 		clear,
-		getQuickButtonsPositions,
 		render: (context: DrawingContext) => {
 			renderQuickAddItems(context);
 			renderQuickAddButtons();
-		},
-		get htmlButtons() {
-			return htmlButtons;
-		},
-		get quickAddItems() {
-			return quickAddItems;
 		},
 	};
 }
