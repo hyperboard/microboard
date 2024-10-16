@@ -26,7 +26,8 @@ export type TextNode = {
 	superscript: boolean;
 	fontFamily?: string;
 	fontColor?: string;
-	fontSize?: number;
+	fontSize?: number | "auto";
 	fontHighlight?: string;
+	enableAuto?: boolean;
 	horisontalAlignment?: HorisontalAlignment;
 };

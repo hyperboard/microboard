@@ -125,6 +125,10 @@ export class RichText extends Mbr implements Geometry {
 			this.getScale,
 			this.getDefaultHorizontalAlignment(),
 			initialTextStyles,
+			this.getAutosize.bind(this),
+			this.isEmpty.bind(this),
+			this.autosizeEnable.bind(this),
+			this.autosizeDisable.bind(this),
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -724,12 +728,8 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		const scaledFontSize =
-			!this.isInShape && fontSize !== "auto"
-				? fontSize / this.getScale()
-				: fontSize;
 		const ops = this.editor.setSelectionFontSize(
-			scaledFontSize,
+			fontSize,
 			selectionContext,
 		);
 		this.updateElement();

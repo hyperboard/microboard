@@ -25,6 +25,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -59,6 +60,10 @@ export class EditorContainer {
 		private getScale: () => number,
 		horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
+		private getAutosize: () => boolean,
+		private isEmpty: () => boolean,
+		private autosizeEnable: () => void,
+		private autosizeDisable: () => void,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -85,6 +90,16 @@ export class EditorContainer {
 		this.decorated = {
 			realapply: editor.apply,
 			apply: op => {
+				if (
+					op.type === "set_node" &&
+					"enableAuto" in op.newProperties
+				) {
+					if (op.newProperties.enableAuto) {
+						this.autosizeEnable();
+					} else if (op.newProperties.enableAuto === false) {
+						this.autosizeDisable();
+					}
+				}
 				this.decorated.realapply(op);
 			},
 			undo: editor.undo,
@@ -95,6 +110,23 @@ export class EditorContainer {
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
+						if (
+							operation.type === "set_node" &&
+							"fontSize" in operation.newProperties &&
+							"fontSize" in operation.properties
+						) {
+							if (operation.newProperties.fontSize === "auto") {
+								operation.newProperties.fontSize = 14;
+								operation.newProperties.enableAuto = true;
+								operation.properties.enableAuto = false;
+							} else {
+								operation.newProperties.enableAuto = false;
+								if (this.getAutosize()) {
+									operation.properties.enableAuto = true;
+								}
+							}
+						}
+
 						this.recordedSelectionOp.ops.push(operation);
 						this.decorated.apply(operation);
 						this.subject.publish(this);
@@ -565,7 +597,16 @@ export class EditorContainer {
 			});
 		}
 		this.recordMethodOps("setSelectionFontSize");
-		Editor.addMark(editor, "fontSize", size);
+
+		// changing empty Sticker fontSize type (number->auto / auto->number) leads to undefined behaviour
+		// next line doenst allow empty text to change fontSize type --- TODO fix
+		if (!this.isEmpty() || (size !== "auto" && !this.getAutosize())) {
+			if (size === 14 && this.getAutosize()) {
+				// autoSize is based on 14 => need to disable autoSizing in decorated.apply
+				Editor.addMark(editor, "fontSize", 1);
+			}
+			Editor.addMark(editor, "fontSize", size);
+		}
 
 		if (selectionContext === "EditTextUnderPointer") {
 			ReactEditor.focus(editor);
