@@ -26,6 +26,7 @@ import {
 	RoundedRectangle,
 } from "./Basic/RoundedRectangle";
 import { createSpeachBubblePath } from "./Basic/SpeachBubble";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -36,12 +37,13 @@ export class Shape implements Geometry {
 	private path = Shapes[this.shapeType].path.copy();
 	private mbr = Shapes[this.shapeType].path.getMbr().copy();
 	private textContainer = Shapes[this.shapeType].textBounds.copy();
-	private linkTo?: string;
+	readonly linkTo = new LinkTo(this.id, this.events);
 	readonly text = new RichText(
 		this.textContainer,
 		this.id,
 		this.events,
 		this.transformation,
+		this.linkTo,
 		"\u00A0",
 		true,
 		false,
@@ -99,6 +101,10 @@ export class Shape implements Geometry {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
+		this.linkTo.subject.subscribe(() => {
+			this.updateMbr();
+			this.subject.publish(this);
+		});
 		this.text.insideOf = this.itemType;
 		this.updateMbr();
 	}
@@ -140,7 +146,7 @@ export class Shape implements Geometry {
 			borderWidth: this.borderWidth,
 			transformation: this.transformation.serialize(),
 			text: this.text.serialize(),
-			linkTo: this.linkTo,
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -149,7 +155,9 @@ export class Shape implements Geometry {
 			this.shapeType = data.shapeType ?? this.shapeType;
 			this.initPath();
 		}
-		this.linkTo = data.linkTo;
+		if (data.linkTo) {
+			this.linkTo.deserialize(data.linkTo);
+		}
 		this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
 		this.backgroundOpacity =
 			data.backgroundOpacity ?? this.backgroundOpacity;
@@ -172,6 +180,7 @@ export class Shape implements Geometry {
 		this.id = id;
 		this.text.setId(id);
 		this.transformation.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -191,6 +200,9 @@ export class Shape implements Geometry {
 			case "Transformation":
 				this.transformation.apply(op);
 				// this.text.setContainer(this.text.container);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
 				break;
 			default:
 				return;
@@ -221,9 +233,6 @@ export class Shape implements Geometry {
 			case "setShapeType":
 				this.applyShapeType(op.shapeType);
 				break;
-			case "setLinkTo":
-				this.applyLinkTo(op.link);
-				break;
 		}
 		this.saveShapeData();
 	}
@@ -232,23 +241,8 @@ export class Shape implements Geometry {
 		return this.shapeType;
 	}
 
-	private applyLinkTo(link: string): void {
-		this.linkTo = link;
-		this.initPath();
-		this.transformPath();
-	}
-
-	setLinkTo(link: string): void {
-		this.emit({
-			class: "Shape",
-			method: "setLinkTo",
-			item: [this.getId()],
-			link,
-		});
-	}
-
 	getLinkTo(): string | undefined {
-		return this.linkTo;
+		return this.linkTo.link;
 	}
 
 	private applyShapeType(shapeType: ShapeType): void {
@@ -479,17 +473,17 @@ export class Shape implements Geometry {
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);
 		/*
-		const previous = this.transformation.previous.copy();
-		console.log("previous", previous);
-		previous.invert();
-		console.log("inverted", previous);
-		const delta = previous.multiplyByMatrix(
-			this.transformation.matrix.copy(),
-		);
-		console.log("matrix", this.transformation.matrix);
-		console.log("delta", delta);
-		this.path.transform(delta);
-		*/
+        const previous = this.transformation.previous.copy();
+        console.log("previous", previous);
+        previous.invert();
+        console.log("inverted", previous);
+        const delta = previous.multiplyByMatrix(
+            this.transformation.matrix.copy(),
+        );
+        console.log("matrix", this.transformation.matrix);
+        console.log("delta", delta);
+        this.path.transform(delta);
+        */
 		this.path.transform(this.transformation.matrix);
 
 		this.path.setBackgroundColor(this.backgroundColor);
@@ -512,6 +506,7 @@ export class Shape implements Geometry {
 		}
 		return points;
 	}
+
 	doResize(
 		resizeType: ResizeType,
 		pointer: Point,
@@ -540,6 +535,7 @@ export class Shape implements Geometry {
 	getRichText(): RichText {
 		return this.text;
 	}
+
 	getLink() {
 		return `${window.location.origin}${
 			window.location.pathname

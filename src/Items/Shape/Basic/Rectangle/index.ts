@@ -3,7 +3,6 @@ import { Mbr, Line, Path, Point } from "Board/Items";
 export const Rectangle = {
 	name: "Rectangle",
 	textBounds: new Mbr(5, 5, 95, 95),
-	linkBounds: new Mbr(95, 0, 100, 5),
 	path: new Path(
 		[
 			new Line(new Point(0, 0), new Point(100, 0)),

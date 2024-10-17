@@ -20,6 +20,7 @@ import { Geometry } from "../Geometry";
 import { RichText } from "../RichText";
 import { StickerCommand } from "./StickerCommand";
 import { StickerData, StickerOperation } from "./StickerOperation";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export const stickerColors = {
 	"Sky Blue": "rgb(174, 212, 250)",
@@ -66,6 +67,7 @@ export class Sticker implements Geometry {
 	parent = "Board";
 	readonly itemType = "Sticker";
 	readonly transformation = new Transformation(this.id, this.events);
+	readonly linkTo = new LinkTo(this.id, this.events);
 	private stickerPath = StickerShape.stickerPath.copy();
 	private textContainer = StickerShape.textBounds.copy();
 	text = new RichText(
@@ -73,6 +75,7 @@ export class Sticker implements Geometry {
 		this.id,
 		this.events,
 		this.transformation,
+		this.linkTo,
 		"\u00A0",
 		false,
 		true,
@@ -124,6 +127,10 @@ export class Sticker implements Geometry {
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
+		this.linkTo.subject.subscribe(() => {
+			this.transformPath();
+			this.subject.publish(this);
+		});
 		this.text.updateElement();
 	}
 
@@ -143,6 +150,7 @@ export class Sticker implements Geometry {
 			backgroundColor: this.backgroundColor,
 			transformation: this.transformation.serialize(),
 			text: this.text.serialize(),
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -155,6 +163,7 @@ export class Sticker implements Geometry {
 			this.text.deserialize(data.text);
 		}
 		this.text.updateElement();
+		this.linkTo.deserialize(data.linkTo?.link);
 		// this.transformPath();
 		this.subject.publish(this);
 		return this;
@@ -174,6 +183,7 @@ export class Sticker implements Geometry {
 	setId(id: string): this {
 		this.id = id;
 		this.text.setId(id);
+		this.linkTo.setId(id);
 		this.transformation.setId(id);
 		return this;
 	}
@@ -196,6 +206,9 @@ export class Sticker implements Geometry {
 				break;
 			case "Transformation":
 				this.transformation.apply(op);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
 				break;
 			default:
 				return;
@@ -482,5 +495,9 @@ export class Sticker implements Geometry {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 }

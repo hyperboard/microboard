@@ -33,6 +33,7 @@ import {
 import { getLine } from "./getLine/getLine";
 import { ConnectorEdge, getEndPointer, getStartPointer } from "./Pointers";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -63,6 +64,7 @@ export class Connector {
 		this.startPointerStyle,
 		this.lineStyle,
 		this.lines,
+		this.lineWidth * 0.1 + 0.3,
 	);
 	endPointer = getEndPointer(
 		this.endPoint,
@@ -77,6 +79,7 @@ export class Connector {
 		this.id,
 		this.events,
 		new Transformation(),
+		new LinkTo(),
 		t("connector.textPlaceholder", {
 			ns: "default",
 		}),
@@ -934,5 +937,9 @@ export class Connector {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;
+	}
+
+	getLinkTo() {
+		return undefined;
 	}
 }

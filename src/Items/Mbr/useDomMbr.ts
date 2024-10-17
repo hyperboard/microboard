@@ -14,6 +14,7 @@ type Params = {
 	targetMbr?: Mbr;
 	verticalOffset?: number;
 	horizontalOffset?: number;
+	fit?: "contextPanel" | "linkToBtn";
 };
 
 export function useDomMbr({
@@ -24,6 +25,7 @@ export function useDomMbr({
 	targetMbr,
 	horizontalOffset,
 	verticalOffset,
+	fit = "contextPanel",
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
@@ -41,6 +43,7 @@ export function useDomMbr({
 			targetMbr,
 			verticalOffset,
 			horizontalOffset,
+			fit,
 		);
 		if (newMbr && !newMbr?.isEqual(mbr)) {
 			setMbr(newMbr);

@@ -74,13 +74,6 @@ export class ShapeCommand implements Command {
 						shapeType: shape.getShapeType(),
 					};
 				});
-			case "setLinkTo":
-				return mapItemsByOperation(shape, shape => {
-					return {
-						...this.operation,
-						link: shape.getLinkTo(),
-					};
-				});
 		}
 	}
 }

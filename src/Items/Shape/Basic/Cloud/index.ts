@@ -3,7 +3,6 @@ import { Mbr, CubicBezier, Path, Point } from "Board/Items";
 export const Cloud = {
 	name: "Cloud",
 	textBounds: new Mbr(20, 20, 80, 80),
-	linkBounds: new Mbr(95, 0, 100, 5),
 	path: new Path(
 		[
 			new CubicBezier(

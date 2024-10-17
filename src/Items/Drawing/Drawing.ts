@@ -11,6 +11,7 @@ import { DrawingOperation } from "./DrawingOperation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Geometry } from "../Geometry";
 import { isSafari } from "App/isSafari";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -18,6 +19,7 @@ export interface DrawingData {
 	transformation: TransformationData;
 	strokeStyle: string;
 	strokeWidth: number;
+	linkTo?: string;
 }
 
 export class Drawing extends Mbr implements Geometry {
@@ -28,6 +30,7 @@ export class Drawing extends Mbr implements Geometry {
 	readonly subject = new Subject<Drawing>();
 	untransformedMbr = new Mbr();
 	private lines: Line[] = [];
+	readonly linkTo = new LinkTo(this.id, this.events);
 	strokeWidth: BorderWidth = 1;
 	borderStyle: BorderStyle = "solid";
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
@@ -41,6 +44,11 @@ export class Drawing extends Mbr implements Geometry {
 	) {
 		super();
 		this.transformation.subject.subscribe(() => {
+			this.updateMbr();
+			this.updateLines();
+			this.subject.publish(this);
+		});
+		this.linkTo.subject.subscribe(() => {
 			this.updateMbr();
 			this.updateLines();
 			this.subject.publish(this);
@@ -60,6 +68,7 @@ export class Drawing extends Mbr implements Geometry {
 			transformation: this.transformation.serialize(),
 			strokeStyle: this.borderColor,
 			strokeWidth: this.strokeWidth,
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -68,6 +77,7 @@ export class Drawing extends Mbr implements Geometry {
 		for (const point of data.points) {
 			this.points.push(new Point(point.x, point.y));
 		}
+		this.linkTo.deserialize(data.linkTo);
 		this.optimizePoints();
 		this.updateGeometry();
 		this.transformation.deserialize(data.transformation);
@@ -196,6 +206,7 @@ export class Drawing extends Mbr implements Geometry {
 	setId(id: string): this {
 		this.id = id;
 		this.transformation.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -297,6 +308,9 @@ export class Drawing extends Mbr implements Geometry {
 			case "Transformation":
 				this.transformation.apply(op);
 				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
+				break;
 			default:
 				return;
 		}
@@ -354,6 +368,10 @@ export class Drawing extends Mbr implements Geometry {
 			prevWidth: this.strokeWidth,
 		});
 		return this;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 
 	getStrokeWidth(): number {

@@ -37,6 +37,7 @@ import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextOperation } from "./RichTextOperations";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -93,6 +94,7 @@ export class RichText extends Mbr implements Geometry {
 		private id = "",
 		private events?: Events,
 		readonly transformation = new Transformation(id, events),
+		readonly linkTo = new LinkTo(id, events),
 		public placeholderText = i18next.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
@@ -152,6 +154,10 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 		);
+		this.linkTo.subject.subscribe(() => {
+			this.updateElement();
+			this.subject.publish(this);
+		});
 		this.blockNodes = getBlockNodes(
 			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
@@ -526,6 +532,8 @@ export class RichText extends Mbr implements Geometry {
 	apply(op: Operation): void {
 		if (op.class === "Transformation") {
 			this.transformation.apply(op);
+		} else if (op.class === "LinkTo") {
+			this.linkTo.apply(op);
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
 				this.setMaxWidth(op.maxWidth ?? 0);
@@ -631,6 +639,7 @@ export class RichText extends Mbr implements Geometry {
 	setId(id: string): this {
 		this.id = id;
 		this.editor.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -972,6 +981,7 @@ export class RichText extends Mbr implements Geometry {
 					: this.transformation.serialize(),
 			insideOf: this.insideOf ? this.insideOf : this.itemType,
 			realSize: this.autoSize ? "auto" : this.getFontSize(),
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -1014,6 +1024,7 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			this.autosizeDisable();
 		}
+		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
 		this.updateElement();
 		this.subject.publish(this);
@@ -1169,5 +1180,9 @@ export class RichText extends Mbr implements Geometry {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 }

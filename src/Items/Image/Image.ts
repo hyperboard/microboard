@@ -8,12 +8,14 @@ import { Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export interface ImageItemData {
 	itemType: "Image";
 	storageLink: string;
 	imageDimension: Dimension;
 	transformation: TransformationData;
+	linkTo?: string;
 }
 
 export interface Dimension {
@@ -66,6 +68,7 @@ export class ImageItem extends Mbr {
 	parent = "Board";
 	image: HTMLImageElement;
 	readonly transformation: Transformation;
+	private linkTo: LinkTo;
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
@@ -82,7 +85,7 @@ export class ImageItem extends Mbr {
 		this.storageLink = storageLink;
 		this.imageDimension = imageDimension;
 		this.transformation = new Transformation(id, events);
-
+		this.linkTo = new LinkTo(this.id, events);
 		this.image = new Image();
 		this.image.crossOrigin = "anonymous";
 		this.image.onload = this.onLoad;
@@ -92,6 +95,10 @@ export class ImageItem extends Mbr {
 		} else {
 			this.image.src = storageLink;
 		}
+		this.linkTo.subject.subscribe(() => {
+			this.updateMbr();
+			this.subject.publish(this);
+		});
 		this.transformation.subject.subscribe(this.onTransform);
 	}
 
@@ -143,6 +150,7 @@ export class ImageItem extends Mbr {
 	setId(id: string): this {
 		this.id = id;
 		this.transformation.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -156,6 +164,7 @@ export class ImageItem extends Mbr {
 			storageLink: this.storageLink,
 			imageDimension: this.imageDimension,
 			transformation: this.transformation.serialize(),
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -183,6 +192,7 @@ export class ImageItem extends Mbr {
 
 	deserialize(data: ImageItemData): ImageItem {
 		this.transformation.deserialize(data.transformation);
+		this.linkTo.deserialize(data.linkTo);
 		this.image.onload = () => {
 			this.setCoordinates();
 			this.shootLoadCallbacks();
@@ -213,6 +223,9 @@ export class ImageItem extends Mbr {
 		switch (op.class) {
 			case "Transformation":
 				this.transformation.apply(op);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
 				break;
 		}
 	}
@@ -269,5 +282,9 @@ export class ImageItem extends Mbr {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 }
