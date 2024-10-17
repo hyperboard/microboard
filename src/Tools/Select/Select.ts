@@ -23,6 +23,7 @@ export class Select extends Tool {
 	rect: null | Mbr = null;
 	downOnItem: null | Item = null;
 
+	isHoverUnselectedItem = false;
 	isDrawingRectangle = false;
 	isDraggingBoard = false;
 	isDraggingSelection = false;
@@ -229,7 +230,7 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
-		const { selection } = this.board;
+		const { selection, items } = this.board;
 		const isLockedItemsFrames = selection.getIsLockedSelection();
 		if (isLockedItemsFrames) {
 			return false;
@@ -392,6 +393,23 @@ export class Select extends Tool {
 			this.board.tools.publish();
 			return false;
 		}
+
+		const hover = items.getUnderPointer();
+		this.isHoverUnselectedItem =
+			hover.filter(item => item.itemType === "Placeholder").length === 1;
+
+		if (
+			this.isHoverUnselectedItem &&
+			this.board.selection.getContext() === "None"
+		) {
+			this.board.selection.setContext("HoverUnderPointer");
+			return false;
+		}
+
+		if (!this.isHoverUnselectedItem) {
+			this.board.selection.setContext("None");
+		}
+
 		return false;
 	}
 

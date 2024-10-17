@@ -36,6 +36,7 @@ const defaultShapeData = new DefaultShapeData();
 
 export type SelectionContext =
 	| "SelectUnderPointer"
+	| "HoverUnderPointer"
 	| "EditUnderPointer"
 	| "EditTextUnderPointer"
 	| "SelectByRect"
