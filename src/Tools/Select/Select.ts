@@ -16,6 +16,7 @@ import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import { Frames } from "Board/Items/Frame/Basic";
 import AlignmentHelper from "../RelativeAlignment";
+import { Placeholder } from "Board/Items/Placeholder";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -440,7 +441,8 @@ export class Select extends Tool {
 				) {
 					if (
 						!(curr instanceof ImageItem) &&
-						!(curr instanceof Drawing)
+						!(curr instanceof Drawing) &&
+						!(curr instanceof Placeholder)
 					) {
 						const text =
 							curr instanceof RichText ? curr : curr.text;

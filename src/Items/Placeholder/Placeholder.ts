@@ -26,7 +26,7 @@ export class Placeholder {
 	readonly itemType = "Placeholder";
 	parent = "Board";
 	readonly transformation = new Transformation(this.id, this.events);
-	path = Shapes["RoundedRectangle"].path.copy();
+	private path = Shapes["RoundedRectangle"].path.copy();
 	private mbr = Shapes["RoundedRectangle"].path.getMbr().copy();
 	readonly subject = new Subject<Placeholder>();
 	transformationRenderBlock?: boolean = undefined;
@@ -278,42 +278,12 @@ export class Placeholder {
 		this.path = Shapes["RoundedRectangle"].createPath(this.mbr);
 		this.path.transform(this.transformation.matrix);
 		this.path.setBackgroundColor(this.backgroundColor);
+		this.path.setBorderColor(this.backgroundColor);
 	}
 
 	private initPath(): void {
 		this.path = Shapes["RoundedRectangle"].createPath(this.mbr);
 	}
-
-	// render(context: DrawingContext): void {
-	// super.render(context);
-	// this.drawIcon();
-
-	// if (this.imagePattern) {
-	// 	context.ctx.fillStyle = this.imagePattern;
-	// 	this.path.fill(context.ctx);
-	// }
-	// }
-
-	// private drawIcon(): void {
-	// 	const canvas = document.getElementsByTagName("canvas")[0];
-	// 	const context = canvas.getContext("2d");
-	// 	if (!context) {
-	// 		return;
-	// 	}
-
-	// 	const imageSrc = PlaceholderImg?.toString().replace(".", "") || '';
-	// 	const img = new Image();
-	// 	img.src = imageSrc;
-
-	// 	img.onload = () => {
-	// 		this.imagePattern = context.createPattern(img, "repeat");
-	// 		this.subject.publish(this);
-	// 	};
-
-	// 	img.onerror = () => {
-	// 		console.error(`Error loading image: ${imageSrc}`);
-	// 	};
-	// }
 
 	private loadIconImage(): void {
 		this.iconImage = new Image();
