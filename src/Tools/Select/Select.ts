@@ -45,7 +45,7 @@ export class Select extends Tool {
 		verticalLines: [],
 		horizontalLines: [],
 	};
-	private isSnapped = false;
+	private isSnapped: boolean | undefined = false;
 	private snapCursorPos: Point | null = null;
 
 	constructor(private board: Board) {
