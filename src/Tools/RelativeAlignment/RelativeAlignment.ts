@@ -14,7 +14,8 @@ export class AlignmentHelper {
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
 			6,
-			(otherItem: Item) => otherItem !== movingMBR,
+			(otherItem: Item) =>
+				otherItem !== movingMBR && otherItem.itemType !== "Connector",
 			2000,
 		);
 
