@@ -12,7 +12,7 @@ export type Segment = Line | QuadraticBezier | CubicBezier;
 
 export const LinePatterns = {
 	solid: [] as number[],
-	dot: [1, 1],
+	dot: [1, 2],
 	dash: [10, 10],
 	longDash: [20, 5],
 	dotDash: [15, 3, 3, 3],

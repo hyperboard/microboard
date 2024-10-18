@@ -21,11 +21,6 @@ import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
-import {
-	createRoundedRectanglePath,
-	RoundedRectangle,
-} from "./Basic/RoundedRectangle";
-import { createSpeachBubblePath } from "./Basic/SpeachBubble";
 
 const defaultShapeData = new DefaultShapeData();
 
