@@ -538,17 +538,17 @@ export class Board {
 
 	getSnapshotFromCache(): Promise<BoardSnapshot | undefined> {
 		return new Promise((resolve, reject) => {
-			const dbRequest = indexedDB.open("BoardDatabase", 1);
+			const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-			dbRequest.onupgradeneeded = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onupgradeneeded = _event => {
+				const db = dbRequest.result;
 				if (!db.objectStoreNames.contains("snapshots")) {
 					db.createObjectStore("snapshots", { keyPath: "boardId" });
 				}
 			};
 
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				if (!db.objectStoreNames.contains("snapshots")) {
 					resolve(undefined);
 					return;
@@ -575,18 +575,18 @@ export class Board {
 	private async saveSnapshotToIndexedDB(
 		snapshot: BoardSnapshot,
 	): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 1);
+		const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-		dbRequest.onupgradeneeded = event => {
-			const db = (event.target as IDBOpenDBRequest).result;
+		dbRequest.onupgradeneeded = _event => {
+			const db = dbRequest.result;
 			if (!db.objectStoreNames.contains("snapshots")) {
 				db.createObjectStore("snapshots", { keyPath: "boardId" });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				const transaction = db.transaction("snapshots", "readwrite");
 				const store = transaction.objectStore("snapshots");
 				store.put({ boardId: this.getBoardId(), data: snapshot });
@@ -600,18 +600,18 @@ export class Board {
 	}
 
 	private async removeSnapshotFromIndexedDB(boardId: string): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 1);
+		const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-		dbRequest.onupgradeneeded = event => {
-			const db = (event.target as IDBOpenDBRequest).result;
+		dbRequest.onupgradeneeded = _event => {
+			const db = dbRequest.result;
 			if (!db.objectStoreNames.contains("snapshots")) {
 				db.createObjectStore("snapshots", { keyPath: "boardId" });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				const transaction = db.transaction("snapshots", "readwrite");
 				const store = transaction.objectStore("snapshots");
 				store.delete(boardId);
@@ -789,9 +789,8 @@ export class Board {
 			.map(id => this.items.getById(id))
 			.filter(item => typeof item !== "undefined");
 		this.selection.removeAll();
-		if (itemsMap) {
-			this.selection.add(Object.values(items) as Item[]);
-		}
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 
 		return;
 	}
@@ -859,6 +858,7 @@ export class Board {
 		const isSelectedItemsMinWidth = selectedItems.some(
 			item => item.getMbr().getWidth() === 0,
 		);
+
 		const right = mbr ? mbr.right : 0;
 		const top = mbr ? mbr.top : 0;
 		const width = mbr ? mbr.getWidth() / 10 : 10;
@@ -882,7 +882,7 @@ export class Board {
 				}
 			} else if (itemData.transformation) {
 				itemData.transformation.translateX =
-					translateX - minY + right + width;
+					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
 
 				if (itemData.itemType === "Drawing") {
@@ -902,21 +902,20 @@ export class Board {
 			}
 
 			newMap[newItemId] = itemData;
-
-			this.emit({
-				class: "Board",
-				method: "duplicate",
-				itemsMap: newMap,
-			});
-
-			const items = Object.keys(newMap)
-				.map(id => this.items.getById(id))
-				.filter(item => typeof item !== "undefined");
-			this.selection.removeAll();
-			if (itemsMap) {
-				this.selection.add(Object.values(items) as Item[]);
-			}
 		}
+
+		this.emit({
+			class: "Board",
+			method: "duplicate",
+			itemsMap: newMap,
+		});
+
+		const items = Object.keys(newMap)
+			.map(id => this.items.getById(id))
+			.filter(item => typeof item !== "undefined");
+		this.selection.removeAll();
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {

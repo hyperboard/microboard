@@ -16,12 +16,14 @@ import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import { Frames } from "Board/Items/Frame/Basic";
 import AlignmentHelper from "../RelativeAlignment";
+import { Placeholder } from "Board/Items/Placeholder";
 
 export class Select extends Tool {
 	line: null | Line = null;
 	rect: null | Mbr = null;
 	downOnItem: null | Item = null;
 
+	isHoverUnselectedItem = false;
 	isDrawingRectangle = false;
 	isDraggingBoard = false;
 	isDraggingSelection = false;
@@ -45,7 +47,7 @@ export class Select extends Tool {
 		verticalLines: [],
 		horizontalLines: [],
 	};
-	private isSnapped = false;
+	private isSnapped: boolean | undefined = false;
 	private snapCursorPos: Point | null = null;
 
 	constructor(private board: Board) {
@@ -116,30 +118,15 @@ export class Select extends Tool {
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
-		this.isDownOnSelection = false;
-
-		if (selectionMbr !== undefined) {
-			const itemsUnderPointer = this.board.items.getUnderPointer();
-			const isFrame = itemsUnderPointer.some(
-				item => item.itemType === "Frame",
+		const selectionItems = selection.list();
+		this.isDownOnSelection =
+			selectionMbr !== undefined &&
+			selectionMbr.isUnderPoint(pointer.point) &&
+			hover.every(hovered =>
+				selectionItems.some(
+					selected => selected.getId() === hovered.getId(),
+				),
 			);
-
-			if (isFrame) {
-				this.isDownOnSelection = true;
-			}
-
-			if (selectionMbr.isUnderPoint(pointer.point)) {
-				if (itemsUnderPointer.length > 0) {
-					const selectedItems = this.board.selection.items.list();
-					const isAnySelectedItemUnderPointer = selectedItems.some(
-						item => itemsUnderPointer.includes(item),
-					);
-					this.isDownOnSelection = isAnySelectedItemUnderPointer;
-				} else {
-					this.isDownOnSelection = true;
-				}
-			}
-		}
 
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
@@ -150,7 +137,12 @@ export class Select extends Tool {
 
 		this.isDownOnBoard = hover.length === 0;
 		this.isDrawingRectangle =
-			hover.filter(item => !(item instanceof Frame)).length === 0;
+			hover.filter(item => !(item instanceof Frame)).length === 0 &&
+			hover
+				.filter(item => item instanceof Frame)
+				.filter(frame => frame.isTextUnderPoint(pointer.point))
+				.length === 0;
+
 		if (this.isDrawingRectangle) {
 			const { x, y } = pointer.point;
 			this.line = new Line(new Point(x, y), new Point(x, y));
@@ -171,15 +163,15 @@ export class Select extends Tool {
 			this.downOnItem = hover[hover.length - 1];
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			// TODO API Dirty Check
-			if (
-				this.downOnItem.itemType === "Connector" &&
-				!this.board.keyboard.isCtrl
-			) {
-				this.board.selection.editUnderPointer();
-				this.board.tools.publish();
-				this.clear();
-				return this.board.selection.tool.getTool().leftButtonDown();
-			}
+			// if (
+			// 	this.downOnItem.itemType === "Connector" &&
+			// 	!this.board.keyboard.isCtrl
+			// ) {
+			// 	this.board.selection.editUnderPointer();
+			// 	this.board.tools.publish();
+			// 	this.clear();
+			// 	return this.board.selection.tool.getTool().leftButtonDown();
+			// }
 			return false;
 		}
 		return false;
@@ -228,6 +220,12 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
+		const { selection, items } = this.board;
+		const isLockedItemsFrames = selection.getIsLockedSelection();
+		if (isLockedItemsFrames) {
+			return false;
+		}
+
 		const throttleTime = 10;
 		const timeDiff =
 			this.lastPointerMoveEventTime + throttleTime - Date.now();
@@ -258,7 +256,6 @@ export class Select extends Tool {
 		}
 
 		if (this.isDraggingSelection) {
-			const { selection } = this.board;
 			const selectionMbr = selection.getMbr();
 			if (selection.items.list().length === 1) {
 				const singleItem = selection.items.list()[0];
@@ -283,6 +280,7 @@ export class Select extends Tool {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				return false;
 			}
+
 			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const translation = this.handleMultipleItemsTranslate(
@@ -303,6 +301,7 @@ export class Select extends Tool {
 							translation,
 						);
 						this.debounceUpd.setFalse();
+						this.canvasDrawer.clearCanvasAndKeys();
 						this.debounceUpd.setTimeoutUpdate(1000);
 					}
 				}
@@ -348,11 +347,7 @@ export class Select extends Tool {
 
 			return false;
 		}
-		if (
-			this.isDraggingUnselectedItem &&
-			this.downOnItem &&
-			this.downOnItem.itemType !== "Connector"
-		) {
+		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
 			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
@@ -376,9 +371,33 @@ export class Select extends Tool {
 					this.toHighlight.remove([draggingItem, frame]);
 				}
 			});
+		}
 
+		const hover = items.getUnderPointer();
+		this.isHoverUnselectedItem =
+			hover.filter(item => item.itemType === "Placeholder").length === 1;
+
+		if (
+			this.isHoverUnselectedItem &&
+			!this.isDraggingUnselectedItem &&
+			selection.getContext() === "None"
+		) {
+			selection.setContext("HoverUnderPointer");
 			return false;
 		}
+
+		if (
+			(!this.isHoverUnselectedItem || this.isDraggingUnselectedItem) &&
+			selection.getContext() === "HoverUnderPointer"
+		) {
+			selection.setContext("None");
+			return false;
+		}
+
+		if (this.isDraggingUnselectedItem) {
+			return false;
+		}
+
 		if (this.isDrawingRectangle && this.line && this.rect) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
@@ -388,6 +407,7 @@ export class Select extends Tool {
 			this.board.tools.publish();
 			return false;
 		}
+
 		return false;
 	}
 
@@ -432,11 +452,13 @@ export class Select extends Tool {
 				if (
 					this.board.selection.getContext() === "EditUnderPointer" &&
 					curr &&
-					topItem === curr
+					topItem === curr &&
+					!this.board.selection.getIsLockedSelection()
 				) {
 					if (
 						!(curr instanceof ImageItem) &&
-						!(curr instanceof Drawing)
+						!(curr instanceof Drawing) &&
+						!(curr instanceof Placeholder)
 					) {
 						const text =
 							curr instanceof RichText ? curr : curr.text;
@@ -529,6 +551,11 @@ export class Select extends Tool {
 		}
 		this.board.selection.editTextUnderPointer();
 		const toEdit = this.board.selection.items.getSingle();
+
+		if (this.board.selection.getIsLockedSelection()) {
+			return false;
+		}
+
 		if (
 			toEdit &&
 			!(toEdit instanceof ImageItem) &&
@@ -594,12 +621,14 @@ export class Select extends Tool {
 			quickAddItem(this.board, "copy", single);
 		} else if (
 			single &&
-			this.board.selection.getContext() !== "EditTextUnderPointer"
+			this.board.selection.getContext() !== "EditTextUnderPointer" &&
+			!this.board.selection.getIsLockedSelection()
 		) {
 			this.board.selection.editText(undefined, true);
 		} else if (
 			isSafari() &&
-			this.board.selection.getContext() === "EditTextUnderPointer"
+			this.board.selection.getContext() === "EditTextUnderPointer" &&
+			!this.board.selection.getIsLockedSelection()
 		) {
 			if (
 				(single && "text" in single) ||

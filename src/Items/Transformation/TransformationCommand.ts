@@ -123,17 +123,43 @@ export class TransformationCommand implements Command {
 			case "transformMany": {
 				const { operation, transformation } = this;
 				return transformation.map(currTrans => {
-					const currOp = operation.items[currTrans.getId()];
-					if (currOp.method === "scaleByTranslateBy"){
-						const op = {
-						...currOp,
-						scale: { x: 1 / currOp.scale.x, y: 1 / currOp.scale.y },
-						translate: {
-							x: -currOp.translate.x,
-							y: -currOp.translate.y,
-						},
-					};} 
-					return { item: currTrans, operation: op };
+					const op = operation.items[currTrans.getId()];
+					let reverseOp;
+					if (op.method === "scaleByTranslateBy") {
+						reverseOp = {
+							...op,
+							scale: { x: 1 / op.scale.x, y: 1 / op.scale.y },
+							translate: {
+								x: -op.translate.x,
+								y: -op.translate.y,
+							},
+						};
+					} else if (op.method === "translateTo") {
+						reverseOp = {
+							...op,
+							x: currTrans.getTranslation().x,
+							y: currTrans.getTranslation().y,
+						};
+					} else if (op.method === "translateBy") {
+						reverseOp = {
+							...op,
+							x: -op.x,
+							y: -op.y,
+						};
+					} else if (op.method === "scaleTo") {
+						reverseOp = {
+							...op,
+							x: currTrans.getScale().x,
+							y: currTrans.getScale().y,
+						};
+					} else if (op.method === "scaleBy") {
+						reverseOp = {
+							...op,
+							x: 1 / op.x,
+							y: 1 / op.y,
+						};
+					}
+					return { item: currTrans, operation: reverseOp };
 				});
 			}
 			default:

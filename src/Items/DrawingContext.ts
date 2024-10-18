@@ -5,7 +5,7 @@ import { Matrix } from "./Transformation/Matrix";
 export class DrawingContext {
 	DPI = window.devicePixelRatio;
 	isBorderInvisible = false;
-	shapeVisibilityTreshold = 4;
+	shapeVisibilityTreshold = 3;
 	rectangleVisibilyTreshold = 2;
 
 	constructor(
@@ -23,8 +23,6 @@ export class DrawingContext {
 		this.matrix = camera.getMatrix();
 		const scale = this.matrix.scaleX;
 		this.isBorderInvisible = 4 * scale < 0.1;
-		this.shapeVisibilityTreshold = 6;
-		this.rectangleVisibilyTreshold = 4;
 	}
 
 	clear(): void {

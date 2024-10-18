@@ -1,30 +1,51 @@
 .quickAddButton {
 	position: absolute;
 	transform-origin: center;
-	transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%) scale(0.25);
 	z-index: 0;
-	padding: 3.5px;
+	padding: 14px;
 	background-color: #93aff6;
 	border-radius: 50%;
 	border: 1px solid #ffffff;
-	transition: transform 0.2s;
+	transition: transform 0.2s, border 0s 0.2s;
+	margin: auto;
 }
 
 .quickAddButton:hover {
-	transform: translate(-50%, -50%) scale(4);
+	transform: translate(-50%, -50%) scale(1);
 	background-color: #924fe8;
+	border: none;
+}
+
+.quickAddButton::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	border-radius: 50%;
+	transform: scale(4);
+	opacity: 1;
+	transition: all 0.2s 0.2s;
+}
+
+.quickAddButton:hover::after {
+	opacity: 0;
+	transform: none;
 }
 
 .quickAddButton::before {
 	content: "";
 	position: absolute;
-	--quick-add-button-width: 4.25px;
-	--quick-add-button-height: 2.5px;
+	--quick-add-button-width: 17px;
+	--quick-add-button-height: 10px;
 	width: var(--quick-add-button-width);
 	height: var(--quick-add-button-height);
 	background: url('data:image/svg+xml;utf8,<svg width="var(--quick-add-button-width)" height="var(--quick-add-button-height)" viewBox="0 0 17 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.7593 5.00009L10.5339 9.58329L9.68819 8.30677L12.9245 5.83329H0.0415039V4.16663H12.9241L9.68819 1.69341L10.5339 0.416626L16.7593 5.00009Z" fill="white"/></svg>')
 		no-repeat;
 	opacity: 0;
+	transform-origin: center;
 	transition: opacity 0.2s;
 	left: 20%;
 	top: 35%;

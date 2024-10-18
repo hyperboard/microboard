@@ -3,8 +3,8 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold = 2;
-	snapThreshold = 2;
+	private alignThreshold = 3;
+	snapThreshold = 3;
 	constructor(private spatialIndex: SpatialIndex) {}
 	checkAlignment(movingItem: Item): {
 		verticalLines: Line[];
@@ -14,7 +14,8 @@ export class AlignmentHelper {
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
 			6,
-			(otherItem: Item) => otherItem !== movingMBR,
+			(otherItem: Item) =>
+				otherItem !== movingMBR && otherItem.itemType !== "Connector",
 			2000,
 		);
 
@@ -30,37 +31,52 @@ export class AlignmentHelper {
 			const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
 			const centerXItem = (itemMbr.left + itemMbr.right) / 2;
 
-			if (Math.abs(centerXItem - centerXMoving) < this.alignThreshold) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							centerXItem,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							centerXItem,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
-				);
-			}
-
 			const centerYMoving = (movingMBR.top + movingMBR.bottom) / 2;
 			const centerYItem = (itemMbr.top + itemMbr.bottom) / 2;
 
-			if (Math.abs(centerYItem - centerYMoving) < this.alignThreshold) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							centerYItem,
+			const isSameWidth =
+				Math.abs(itemMbr.right - itemMbr.left) ===
+				Math.abs(movingMBR.right - movingMBR.left);
+			const isSameHeight =
+				Math.abs(itemMbr.bottom - itemMbr.top) ===
+				Math.abs(movingMBR.bottom - movingMBR.top);
+
+			if (!isSameWidth) {
+				if (
+					Math.abs(centerXItem - centerXMoving) < this.alignThreshold
+				) {
+					verticalLines.push(
+						new Line(
+							new Point(
+								centerXItem,
+								Math.min(itemMbr.top, movingMBR.top),
+							),
+							new Point(
+								centerXItem,
+								Math.max(itemMbr.bottom, movingMBR.bottom),
+							),
 						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							centerYItem,
+					);
+				}
+			}
+
+			if (!isSameHeight) {
+				if (
+					Math.abs(centerYItem - centerYMoving) < this.alignThreshold
+				) {
+					horizontalLines.push(
+						new Line(
+							new Point(
+								Math.min(itemMbr.left, movingMBR.left),
+								centerYItem,
+							),
+							new Point(
+								Math.max(itemMbr.right, movingMBR.right),
+								centerYItem,
+							),
 						),
-					),
-				);
+					);
+				}
 			}
 
 			if (Math.abs(itemMbr.left - movingMBR.left) < this.alignThreshold) {
@@ -314,131 +330,102 @@ export class AlignmentHelper {
 		draggingItem: Item,
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
-	): boolean {
+	): boolean | undefined {
 		const itemMbr = draggingItem.getMbr();
 		const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 
-		const findClosestLine = (
-			lines: Line[],
-			getDistance: (line: Line) => number,
-		) => {
-			let closestLine: Line | null = null;
-			let minDistance = this.snapThreshold;
-
-			lines.forEach(line => {
-				const distance = getDistance(line);
-				if (distance < minDistance) {
-					minDistance = distance;
-					closestLine = line;
+		const snapToLine = (lines: Line[], isVertical: boolean) => {
+			for (const line of lines) {
+				if (!line) {
+					return false;
 				}
-			});
 
-			return closestLine;
+				if (isVertical) {
+					if (
+						Math.abs(itemMbr.left - line.start.x) <
+						this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							line.start.x - itemMbr.left,
+							0,
+							beginTimeStamp,
+						);
+					} else if (
+						Math.abs(itemMbr.right - line.start.x) <
+						this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							line.start.x - itemMbr.right,
+							0,
+							beginTimeStamp,
+						);
+					} else if (
+						Math.abs(itemCenterX - line.start.x) <
+						this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							line.start.x - itemCenterX,
+							0,
+							beginTimeStamp,
+						);
+					} else if (
+						Math.abs(itemCenterX - line.end.x) < this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							line.end.x - itemCenterX,
+							0,
+							beginTimeStamp,
+						);
+					}
+				} else {
+					if (
+						Math.abs(itemMbr.top - line.start.y) <
+						this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							0,
+							line.start.y - itemMbr.top,
+							beginTimeStamp,
+						);
+					} else if (
+						Math.abs(itemMbr.bottom - line.start.y) <
+						this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							0,
+							line.start.y - itemMbr.bottom,
+							beginTimeStamp,
+						);
+					} else if (
+						Math.abs(itemCenterY - line.start.y) <
+						this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							0,
+							line.start.y - itemCenterY,
+							beginTimeStamp,
+						);
+					} else if (
+						Math.abs(itemCenterY - line.end.y) < this.snapThreshold
+					) {
+						draggingItem.transformation.translateBy(
+							0,
+							line.end.y - itemCenterY,
+							beginTimeStamp,
+						);
+					}
+				}
+
+				return true;
+			}
 		};
 
-		const closestVerticalLine = findClosestLine(
-			snapLines.verticalLines,
-			line => {
-				return Math.min(
-					Math.abs(itemMbr.left - line.start.x),
-					Math.abs(itemMbr.right - line.start.x),
-					Math.abs(itemCenterX - line.start.x),
-					Math.abs(itemCenterX - line.end.x),
-				);
-			},
-		);
-
-		const closestHorizontalLine = findClosestLine(
+		const snappedToVertical = snapToLine(snapLines.verticalLines, true);
+		const snappedToHorizontal = snapToLine(
 			snapLines.horizontalLines,
-			line => {
-				return Math.min(
-					Math.abs(itemMbr.top - line.start.y),
-					Math.abs(itemMbr.bottom - line.start.y),
-					Math.abs(itemCenterY - line.start.y),
-					Math.abs(itemCenterY - line.end.y),
-				);
-			},
+			false,
 		);
-
-		const snapToLine = (line: Line | null, isVertical: boolean) => {
-			if (!line) {
-				return false;
-			}
-
-			if (isVertical) {
-				if (
-					Math.abs(itemMbr.left - line.start.x) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						line.start.x - itemMbr.left,
-						0,
-						beginTimeStamp,
-					);
-				} else if (
-					Math.abs(itemMbr.right - line.start.x) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						line.start.x - itemMbr.right,
-						0,
-						beginTimeStamp,
-					);
-				} else if (
-					Math.abs(itemCenterX - line.start.x) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						line.start.x - itemCenterX,
-						0,
-						beginTimeStamp,
-					);
-				} else if (
-					Math.abs(itemCenterX - line.end.x) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						line.end.x - itemCenterX,
-						0,
-						beginTimeStamp,
-					);
-				}
-			} else {
-				if (Math.abs(itemMbr.top - line.start.y) < this.snapThreshold) {
-					draggingItem.transformation.translateBy(
-						0,
-						line.start.y - itemMbr.top,
-						beginTimeStamp,
-					);
-				} else if (
-					Math.abs(itemMbr.bottom - line.start.y) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						0,
-						line.start.y - itemMbr.bottom,
-						beginTimeStamp,
-					);
-				} else if (
-					Math.abs(itemCenterY - line.start.y) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						0,
-						line.start.y - itemCenterY,
-						beginTimeStamp,
-					);
-				} else if (
-					Math.abs(itemCenterY - line.end.y) < this.snapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						0,
-						line.end.y - itemCenterY,
-						beginTimeStamp,
-					);
-				}
-			}
-
-			return true;
-		};
-
-		const snappedToVertical = snapToLine(closestVerticalLine, true);
-		const snappedToHorizontal = snapToLine(closestHorizontalLine, false);
 
 		return snappedToVertical || snappedToHorizontal;
 	}

@@ -5,7 +5,7 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
-import { Drawing } from "../Items/Drawing";
+import { Drawing } from "Board/Items/Drawing";
 
 type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -443,20 +443,21 @@ export class Items {
 	getUnderPointer(size = 16): Item[] {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
-		const frameSize = size * 2;
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
-			y - frameSize,
+			y - size,
 			x + size,
 			y + size,
 		);
 
-		let enclosed =
-			tolerated.filter(
-				item => !(item instanceof Frame || item instanceof Connector),
-			).length <= 1
-				? tolerated
-				: this.index.getEnclosedOrCrossed(x, y, x, y);
+		let enclosed = tolerated.some(
+			item =>
+				item instanceof Connector ||
+				item instanceof Frame ||
+				item instanceof Drawing,
+		)
+			? tolerated
+			: this.index.getEnclosedOrCrossed(x, y, x, y);
 
 		const underPointer = this.getUnderPoint(new Point(x, y), size);
 		if (enclosed.length === 0) {

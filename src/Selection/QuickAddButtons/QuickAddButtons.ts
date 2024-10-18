@@ -1,34 +1,24 @@
+import { Board } from "Board/Board";
 import {
-	ConnectorData,
-	Matrix,
-	RichText,
-	Mbr,
-	Item,
-	Point,
 	Connector,
+	ConnectorData,
+	Item,
+	Matrix,
+	Mbr,
+	Point,
+	RichText,
 	ItemData,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Selection } from "..";
-import { Board } from "Board/Board";
 import { isMicroboard } from "lib/isMicroboard";
+import { Selection } from "..";
+import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
-import { Storage } from "App/Storage";
 
 export interface QuickAddButtons {
-	calculateQuickAddPosition: (
-		index: number,
-		selectedItem: Item,
-		connectorStartPoint: Point,
-	) => { newItem: Item; connectorData: ConnectorData };
 	clear: () => void;
-	getQuickButtonsPositions: (
-		customMbr?: Mbr,
-	) => { positions: Point[]; item: Item } | undefined;
 	render: (context: DrawingContext) => void;
-	htmlButtons?: HTMLButtonElement[];
-	quickAddItems?: QuickAddItems;
 }
 
 export interface QuickAddItems {
@@ -54,6 +44,7 @@ export function getQuickAddButtons(
 		selectedItem: Item,
 		connectorStartPoint: Point,
 	): { newItem: Item; connectorData: ConnectorData } {
+		const connectorStorage = new SessionStorage();
 		const currMbr = selectedItem.getMbr();
 		const itemData = selectedItem.serialize();
 		const guarded = itemData as Partial<ItemData>;
@@ -124,11 +115,11 @@ export function getQuickAddButtons(
 		const connectorData = defaultConnector.serialize();
 		connectorData.lineStyle = "orthogonal";
 
-		const savedStart = new Storage().getConnectorPointer("start");
+		const savedStart = connectorStorage.getConnectorPointer("start");
 		if (savedStart) {
 			connectorData.startPointerStyle = savedStart;
 		}
-		const savedEnd = new Storage().getConnectorPointer("end");
+		const savedEnd = connectorStorage.getConnectorPointer("end");
 		if (savedEnd) {
 			connectorData.endPointerStyle = savedEnd;
 		}
@@ -343,18 +334,10 @@ export function getQuickAddButtons(
 	}
 
 	return {
-		calculateQuickAddPosition,
 		clear,
-		getQuickButtonsPositions,
 		render: (context: DrawingContext) => {
 			renderQuickAddItems(context);
 			renderQuickAddButtons();
-		},
-		get htmlButtons() {
-			return htmlButtons;
-		},
-		get quickAddItems() {
-			return quickAddItems;
 		},
 	};
 }
