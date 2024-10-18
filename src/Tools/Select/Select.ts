@@ -406,10 +406,6 @@ export class Select extends Tool {
 			return false;
 		}
 
-		if (!this.isHoverUnselectedItem) {
-			this.board.selection.setContext("None");
-		}
-
 		return false;
 	}
 
