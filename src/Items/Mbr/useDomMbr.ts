@@ -3,7 +3,7 @@ import { type Board } from "Board";
 import { Mbr } from "Board/Items";
 import { useAppSubscription } from "Board/useBoardSubscription";
 import { useForceUpdate } from "lib/useForceUpdate";
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useState, type RefObject, useRef } from "react";
 import { updateRects } from "./updateRects";
 
 type Params = {
@@ -29,14 +29,18 @@ export function useDomMbr({
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
+	const isMounted = useRef(true);
 
 	useAppSubscription(app, {
 		subjects,
 		observer: () => {
-			forceUpdate();
+			if (isMounted.current) {
+				forceUpdate();
+			}
 		},
 	});
 	useEffect(() => {
+		isMounted.current = true;
 		const newMbr = updateRects(
 			board,
 			ref,
@@ -48,6 +52,9 @@ export function useDomMbr({
 		if (newMbr && !newMbr?.isEqual(mbr)) {
 			setMbr(newMbr);
 		}
+		return () => {
+			isMounted.current = false;
+		};
 	});
 	return mbr;
 }

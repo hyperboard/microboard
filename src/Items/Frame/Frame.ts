@@ -65,6 +65,7 @@ export class Frame implements Geometry {
 			this.id,
 			this.events,
 			this.transformation,
+			this.linkTo,
 			this.name,
 			true,
 			false,

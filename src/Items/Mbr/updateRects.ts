@@ -1,7 +1,7 @@
 import { Board } from "Board";
 import { Mbr, RichText } from "Board/Items";
 import { RefObject } from "react";
-import { fitContextPanel, fitTR } from "View/fit";
+import { fitContextPanel, fitLinkToBtn } from "View/fit";
 
 export function updateRects(
 	board: Board,
@@ -37,7 +37,7 @@ export function updateRects(
 			if (!mbr) {
 				return null;
 			}
-			const panelRect = fitTR(
+			const panelRect = fitLinkToBtn(
 				selectionMbr.getTransformed(camera.getMatrix()),
 				camera.window.getMbr(),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
