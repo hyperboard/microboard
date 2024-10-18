@@ -506,4 +506,8 @@ export class Shape implements Geometry {
 		res.mbr = this.getMbr();
 		return res;
 	}
+
+	getRichText(): RichText {
+		return this.text;
+	}
 }

@@ -124,8 +124,6 @@ export class Sticker implements Geometry {
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
-
-		this.applyBackgroundColor(backgroundColor);
 		this.text.updateElement();
 	}
 
@@ -216,7 +214,6 @@ export class Sticker implements Geometry {
 	private applyBackgroundColor(backgroundColor: string): void {
 		this.backgroundColor = backgroundColor;
 		this.stickerPath.setBackgroundColor(backgroundColor);
-
 		// @ts-expect-error
 		if (import.meta.env.INTEGRATION_UI === "microboard") {
 			if (this.text.isEmpty()) {
@@ -232,19 +229,22 @@ export class Sticker implements Geometry {
 					{
 						...DEFAULT_TEXT_STYLES,
 						fontColor: isDarkColor(backgroundColor)
-							? "rgb(255,255,255)"
-							: "rgb(20, 21, 26)",
+							? "rgb(255, 255, 255)"
+							: DEFAULT_TEXT_STYLES.fontColor,
 					},
 				);
-			} else {
+			} else if (
+				this.text.getFontColor() === DEFAULT_TEXT_STYLES.fontColor ||
+				this.text.getFontColor() === "rgb(255, 255, 255)"
+			) {
 				const selection = this.text.getCurrentSelection();
 				if (selection) {
 					this.text.selectWholeText();
 				}
 				this.text.applySelectionFontColor(
 					isDarkColor(backgroundColor)
-						? "rgb(255,255,255)"
-						: "rgb(20, 21, 26)",
+						? "rgb(255, 255, 255)"
+						: DEFAULT_TEXT_STYLES.fontColor,
 				);
 				this.text.restoreSelection(selection);
 			}
@@ -252,10 +252,6 @@ export class Sticker implements Geometry {
 	}
 
 	setBackgroundColor(backgroundColor: string): void {
-		sessionStorage.setItem(
-			"lastStickerBg",
-			JSON.stringify(backgroundColor),
-		);
 		this.emit({
 			class: "Sticker",
 			method: "setBackgroundColor",
@@ -375,7 +371,6 @@ export class Sticker implements Geometry {
 	}
 
 	setDiagonal(line: Line) {
-		console.log("line", line);
 		const l = line.getLength() / _hypotenuse;
 		let x = line.start.x;
 		let y = line.start.y;
@@ -387,19 +382,9 @@ export class Sticker implements Geometry {
 		}
 		this.transformation.translateTo(x, y);
 		this.transformation.scaleTo(l, l);
-		this.saveSize();
 	}
-	transformToCenter(pt: Point, newWidth?: number, newHeight?: number) {
-		if (newWidth && newHeight) {
-			const scaleX = newWidth / width;
-			const scaleY = newHeight / height;
-
-			const w = width * scaleX;
-			const h = height * scaleY;
-
-			this.transformation.translateTo(pt.x - w / 2, pt.y - h / 2);
-			this.transformation.scaleTo(scaleX, scaleY);
-		} else if (newWidth) {
+	transformToCenter(pt: Point, newWidth?: number) {
+		if (newWidth) {
 			const scale = newWidth / width;
 
 			const w = width * scale;
@@ -476,19 +461,22 @@ export class Sticker implements Geometry {
 			);
 		}
 		res.mbr = this.getMbr();
-		this.saveSize();
+
+		sessionStorage.setItem(
+			"lastSticker",
+			JSON.stringify({
+				backgroundColor: this.backgroundColor,
+				id: this.id,
+				itemType: this.itemType,
+				parent: this.parent,
+				stickerPath: this.stickerPath,
+			}),
+		);
+
 		return res;
 	}
 
-	private saveSize() {
-		const mbr = this.getMbr();
-		sessionStorage.setItem(
-			"lastStickerWidth",
-			JSON.stringify(mbr.getWidth()),
-		);
-		sessionStorage.setItem(
-			"lastStickerHeight",
-			JSON.stringify(mbr.getHeight()),
-		);
+	getRichText(): RichText {
+		return this.text;
 	}
 }

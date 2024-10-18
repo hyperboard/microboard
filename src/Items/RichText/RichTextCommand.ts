@@ -1,10 +1,10 @@
 import { RichText } from "./RichText";
-import { RichTextOperation } from "./RichTextOperations";
+import { GroupEdit, RichTextOperation } from "./RichTextOperations";
 import { Command } from "Board/Events";
 import { Operation } from "slate";
 
 export class RichTextCommand implements Command {
-	private reverse = this.getReverse();
+	private reverseOps = this.getReverse();
 
 	constructor(
 		private richText: RichText[],
@@ -18,7 +18,7 @@ export class RichTextCommand implements Command {
 	}
 
 	revert(): void {
-		for (const { item, operation } of this.reverse) {
+		for (const { item, operation } of this.reverseOps) {
 			item.apply(operation);
 		}
 	}
@@ -63,6 +63,14 @@ export class RichTextCommand implements Command {
 					const operation = {
 						...this.operation,
 						type: richText.getBlockType(),
+					};
+					return { item: richText, operation };
+				});
+			case "setFontStyle":
+				return items.map(richText => {
+					const operation = {
+						...this.operation,
+						fontStyleList: richText.getFontStyles(),
 					};
 					return { item: richText, operation };
 				});
@@ -125,5 +133,68 @@ export class RichTextCommand implements Command {
 				});
 			}
 		}
+	}
+}
+
+type TextEdits = {
+	item: RichText;
+	operation: RichTextOperation;
+};
+
+export class RichTextGroupCommand implements Command {
+	private forwardOps: TextEdits[];
+	private reverseOps: TextEdits[];
+
+	constructor(private richText: RichText[], private operation: GroupEdit) {
+		this.forwardOps = this.getForward();
+		this.reverseOps = this.getReverse();
+	}
+
+	apply(): void {
+		for (const { item, operation } of this.forwardOps) {
+			item.apply(operation);
+		}
+	}
+
+	revert(): void {
+		for (const { item, operation } of this.reverseOps) {
+			item.apply(operation);
+		}
+	}
+
+	getForward(): TextEdits[] {
+		const forward: TextEdits[] = [];
+		for (let i = 0; i < this.richText.length; i++) {
+			const richText = this.richText[i];
+			const ops = this.operation.itemsOps[i].ops;
+			forward.push({
+				item: richText,
+				operation: {
+					class: "RichText",
+					method: "edit",
+					item: [richText.getId() ?? ""],
+					ops,
+				},
+			});
+		}
+		return forward;
+	}
+
+	getReverse(): TextEdits[] {
+		const reverse: TextEdits[] = [];
+		for (let i = 0; i < this.richText.length; i++) {
+			const richText = this.richText[i];
+			const ops = this.operation.itemsOps[i].ops;
+			reverse.push({
+				item: richText,
+				operation: {
+					class: "RichText",
+					method: "edit",
+					item: [richText.getId() ?? ""],
+					ops: ops.map(op => Operation.inverse(op)).reverse(),
+				},
+			});
+		}
+		return reverse;
 	}
 }

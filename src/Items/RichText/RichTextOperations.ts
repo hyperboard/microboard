@@ -86,4 +86,15 @@ export type WholeTextOp =
 
 export type WholeTextMethod = WholeTextOp["method"];
 
-export type RichTextOperation = WholeTextOp | SelectionOp;
+export interface ItemOp {
+	item: string;
+	selection: BaseSelection;
+	ops: Operation[];
+}
+export interface GroupEdit {
+	class: "RichText";
+	method: "groupEdit";
+	itemsOps: ItemOp[];
+}
+
+export type RichTextOperation = WholeTextOp | SelectionOp | GroupEdit;

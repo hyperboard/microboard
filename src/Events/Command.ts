@@ -2,13 +2,16 @@ import { Board } from "Board";
 import { ShapeCommand } from "Board/Items/Shape/ShapeCommand";
 import { BoardCommand } from "../BoardCommand";
 import { TransformationCommand } from "../Items/Transformation/TransformationCommand";
-import { RichTextCommand } from "../Items/RichText/RichTextCommand";
+import {
+	RichTextCommand,
+	RichTextGroupCommand,
+} from "../Items/RichText/RichTextCommand";
 import { EventsCommand } from "./EventsCommand";
 import { ConnectorCommand } from "Board/Items/Connector/ConnectorCommand";
 import { Operation } from "./EventsOperations";
 import { DrawingCommand } from "Board/Items/Drawing/DrawingCommand";
 import { StickerCommand } from "../Items/Sticker/StickerCommand";
-import { Connector, Frame, Item, Shape } from "Board/Items";
+import { Connector, Frame, Item, RichText, Shape } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { Sticker } from "Board/Items/Sticker";
 import { FrameCommand } from "Board/Items/Frame/FrameCommand";
@@ -100,13 +103,26 @@ export function createCommand(board: Board, operation: Operation): Command {
 							operation,
 						);
 					case "RichText":
-						return new RichTextCommand(
-							items.map(item =>
-								// @ts-expect-error incorrect type
-								item.itemType === "RichText" ? item : item.text,
-							),
-							operation,
-						);
+						if (operation.method === "groupEdit") {
+							const texts: RichText[] = [];
+							for (const { item } of operation.itemsOps) {
+								const found = board.items.findById(item);
+								const text = found?.getRichText();
+								if (text) {
+									texts.push(text);
+								}
+							}
+							return new RichTextGroupCommand(texts, operation);
+						} else {
+							return new RichTextCommand(
+								items.map(item =>
+									item.itemType === "RichText"
+										? item
+										: item.text,
+								),
+								operation,
+							);
+						}
 					case "Frame":
 						return new FrameCommand(
 							items.filter(

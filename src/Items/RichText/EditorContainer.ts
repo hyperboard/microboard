@@ -6,9 +6,10 @@ import {
 	Descendant,
 	Editor,
 	Element,
-	Operation as EditorOperation,
+	Operation as SlateOp,
 	Range,
 	Transforms,
+	BaseSelection,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
@@ -24,6 +25,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -33,9 +35,9 @@ export class EditorContainer {
 	textLength = 0;
 
 	private decorated = {
-		realapply: (_operation: EditorOperation): void => {},
+		realapply: (_operation: SlateOp): void => {},
 
-		apply: (_operation: EditorOperation): void => {},
+		apply: (_operation: SlateOp): void => {},
 
 		undo: (): void => {},
 
@@ -47,7 +49,7 @@ export class EditorContainer {
 	readonly subject = new Subject<EditorContainer>();
 
 	private insertingText = false;
-	private recordedInsertionOps: EditorOperation[] = [];
+	private recordedInsertionOps: SlateOp[] = [];
 
 	constructor(
 		private id: string,
@@ -58,6 +60,10 @@ export class EditorContainer {
 		private getScale: () => number,
 		horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
+		private getAutosize: () => boolean,
+		private isEmpty: () => boolean,
+		private autosizeEnable: () => void,
+		private autosizeDisable: () => void,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -84,16 +90,43 @@ export class EditorContainer {
 		this.decorated = {
 			realapply: editor.apply,
 			apply: op => {
+				if (
+					op.type === "set_node" &&
+					"enableAuto" in op.newProperties
+				) {
+					if (op.newProperties.enableAuto) {
+						this.autosizeEnable();
+					} else if (op.newProperties.enableAuto === false) {
+						this.autosizeDisable();
+					}
+				}
 				this.decorated.realapply(op);
 			},
 			undo: editor.undo,
 			redo: editor.redo,
 		};
 		/** We decorate methods */
-		editor.apply = (operation: EditorOperation): void => {
+		editor.apply = (operation: SlateOp): void => {
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
+						if (
+							operation.type === "set_node" &&
+							"fontSize" in operation.newProperties &&
+							"fontSize" in operation.properties
+						) {
+							if (operation.newProperties.fontSize === "auto") {
+								operation.newProperties.fontSize = 14;
+								operation.newProperties.enableAuto = true;
+								operation.properties.enableAuto = false;
+							} else {
+								operation.newProperties.enableAuto = false;
+								if (this.getAutosize()) {
+									operation.properties.enableAuto = true;
+								}
+							}
+						}
+
 						this.recordedSelectionOp.ops.push(operation);
 						this.decorated.apply(operation);
 						this.subject.publish(this);
@@ -183,6 +216,12 @@ export class EditorContainer {
 		this.recordedSelectionOp = undefined;
 	}
 
+	popRecordedOps(): SlateOp[] {
+		const op = this.recordedSelectionOp;
+		this.recordedSelectionOp = undefined;
+		return op?.ops ?? [];
+	}
+
 	applyRichTextOp(op: RichTextOperation): void {
 		if (operationsRichTextDebugEnabled) {
 			console.info("-> EditorContainer.applyRichTextOp", op);
@@ -211,7 +250,6 @@ export class EditorContainer {
 				case "setFontSize":
 				case "setFontHighlight":
 				case "setHorisontalAlignment":
-					console.log(this.id);
 					this.applyWholeTextOp(op);
 					break;
 				case "setMaxWidth":
@@ -410,11 +448,14 @@ export class EditorContainer {
 		});
 	}
 
-	setSelectionFontColor(format: string, selectionContext?: string): void {
+	setSelectionFontColor(
+		format: string,
+		selectionContext?: string,
+	): SlateOp[] {
 		const editor = this.editor;
 		const marks = this.getSelectionMarks();
 		if (!marks) {
-			return;
+			return [];
 		}
 		this.recordMethodOps("setSelectionFontColor");
 		if (marks.fontColor === format) {
@@ -427,7 +468,7 @@ export class EditorContainer {
 			ReactEditor.focus(editor);
 		}
 
-		this.emitMethodOps();
+		return this.popRecordedOps();
 	}
 
 	isMarkActive = (format: string) => {
@@ -444,10 +485,10 @@ export class EditorContainer {
 		}
 	};
 
-	setSelectionFontStyle(style: TextStyle | TextStyle[]): void {
+	setSelectionFontStyle(style: TextStyle | TextStyle[]): SlateOp[] {
 		this.recordMethodOps("setSelectionFontStyle");
 		const styleList = Array.isArray(style) ? style : [style];
-		styleList.forEach(style => {
+		for (const style of styleList) {
 			const selectionStyles = this.getEachNodeInSelectionStyles();
 			const isAllNodesContainStyle = selectionStyles.every(styleArr =>
 				styleArr.includes(style),
@@ -463,14 +504,11 @@ export class EditorContainer {
 
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
-				return;
-			}
-			if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
+			} else if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
 				Editor.addMark(this.editor, style, true);
-				return;
 			}
-		});
-		this.emitMethodOps();
+		}
+		return this.popRecordedOps();
 	}
 
 	setSelectionFontFamily(fontFamily: string): void {
@@ -533,7 +571,10 @@ export class EditorContainer {
 		}
 	}
 
-	setSelectionFontSize(fontSize: number, selectionContext?: string): void {
+	setSelectionFontSize(
+		fontSize: number | "auto",
+		selectionContext?: string,
+	): SlateOp[] {
 		const size = fontSize;
 		const editor = this.editor;
 		const selection = editor.selection;
@@ -543,7 +584,7 @@ export class EditorContainer {
 
 		const marks = this.getSelectionMarks();
 		if (!marks) {
-			return;
+			throw new Error("Editor can not get selection marks");
 		}
 
 		if (
@@ -556,16 +597,28 @@ export class EditorContainer {
 			});
 		}
 		this.recordMethodOps("setSelectionFontSize");
-		Editor.addMark(editor, "fontSize", size);
+
+		// changing empty Sticker fontSize type (number->auto / auto->number) leads to undefined behaviour
+		// next line doenst allow empty text to change fontSize type --- TODO fix
+		if (!this.isEmpty() || (size !== "auto" && !this.getAutosize())) {
+			if (size === 14 && this.getAutosize()) {
+				// autoSize is based on 14 => need to disable autoSizing in decorated.apply
+				Editor.addMark(editor, "fontSize", 1);
+			}
+			Editor.addMark(editor, "fontSize", size);
+		}
 
 		if (selectionContext === "EditTextUnderPointer") {
 			ReactEditor.focus(editor);
 		}
 
-		this.emitMethodOps();
+		return this.popRecordedOps();
 	}
 
-	setSelectionFontHighlight(format: string, selectionContext?: string): void {
+	setSelectionFontHighlight(
+		format: string,
+		selectionContext?: string,
+	): SlateOp[] {
 		const editor = this.editor;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
@@ -587,13 +640,14 @@ export class EditorContainer {
 			ReactEditor.focus(editor);
 		}
 
-		this.emitMethodOps();
+		return this.popRecordedOps();
 	}
 
 	setSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
 		selectionContext?: string,
-	): void {
+	): SlateOp[] {
+		this.recordMethodOps("setSelectionHorizontalAlignment");
 		const editor = this.editor;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
@@ -622,6 +676,7 @@ export class EditorContainer {
 		Transforms.setNodes(editor, {
 			horisontalAlignment: horisontalAlignment,
 		});
+		return this.popRecordedOps();
 	}
 
 	setEditorFocus(selectionContext?: string): void {
@@ -778,5 +833,9 @@ export class EditorContainer {
 		const [start, end] = Range.edges(selection);
 		const text = Editor.string(this.editor, { anchor: start, focus: end });
 		return text.length > 0;
+	}
+
+	getSelection(): BaseSelection {
+		return JSON.parse(JSON.stringify(this.editor.selection));
 	}
 }
