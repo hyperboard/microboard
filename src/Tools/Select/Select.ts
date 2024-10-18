@@ -394,9 +394,9 @@ export class Select extends Tool {
 			return false;
 		}
 
-		const hover = items.getUnderPointer();
-		this.isHoverUnselectedItem =
-			hover.filter(item => item.itemType === "Placeholder").length === 1;
+		// const hover = items.getUnderPointer();
+		// this.isHoverUnselectedItem =
+		// 	hover.filter(item => item.itemType === "Placeholder").length === 1;
 
 		if (
 			this.isHoverUnselectedItem &&
