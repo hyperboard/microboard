@@ -789,9 +789,8 @@ export class Board {
 			.map(id => this.items.getById(id))
 			.filter(item => typeof item !== "undefined");
 		this.selection.removeAll();
-		if (itemsMap) {
-			this.selection.add(Object.values(items) as Item[]);
-		}
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 
 		return;
 	}
@@ -903,21 +902,20 @@ export class Board {
 			}
 
 			newMap[newItemId] = itemData;
-
-			this.emit({
-				class: "Board",
-				method: "duplicate",
-				itemsMap: newMap,
-			});
-
-			const items = Object.keys(newMap)
-				.map(id => this.items.getById(id))
-				.filter(item => typeof item !== "undefined");
-			this.selection.removeAll();
-			if (itemsMap) {
-				this.selection.add(Object.values(items) as Item[]);
-			}
 		}
+
+		this.emit({
+			class: "Board",
+			method: "duplicate",
+			itemsMap: newMap,
+		});
+
+		const items = Object.keys(newMap)
+			.map(id => this.items.getById(id))
+			.filter(item => typeof item !== "undefined");
+		this.selection.removeAll();
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {

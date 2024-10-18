@@ -1139,11 +1139,7 @@ export class Selection {
 
 	duplicate(): void {
 		this.board.duplicate(this.copy());
-		if (this.items.isSingle()) {
-			this.setContext("EditUnderPointer");
-		} else {
-			this.setContext("SelectByRect");
-		}
+		this.setContext("EditUnderPointer");
 	}
 
 	renderItemMbr(

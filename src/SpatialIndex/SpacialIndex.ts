@@ -443,13 +443,6 @@ export class Items {
 	getUnderPointer(size = 16): Item[] {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
-		const frameSize = size * 2;
-		const toleratedFrames = this.index.getEnclosedOrCrossed(
-			x - size,
-			y - size,
-			x + size,
-			y + frameSize,
-		);
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
 			y - size,
@@ -457,18 +450,14 @@ export class Items {
 			y + size,
 		);
 
-		let enclosed =
-			toleratedFrames.filter(item => !(item instanceof Frame)).length ===
-			0
-				? toleratedFrames
-				: tolerated.some(
-						item =>
-							item instanceof Connector ||
-							item instanceof Frame ||
-							item instanceof Drawing,
-				  )
-				? tolerated
-				: this.index.getEnclosedOrCrossed(x, y, x, y);
+		let enclosed = tolerated.some(
+			item =>
+				item instanceof Connector ||
+				item instanceof Frame ||
+				item instanceof Drawing,
+		)
+			? tolerated
+			: this.index.getEnclosedOrCrossed(x, y, x, y);
 
 		if (enclosed.length === 0) {
 			const underPointer = this.getUnderPoint(new Point(x, y), size);
@@ -501,7 +490,13 @@ export class Items {
 			},
 		);
 
-		return nearest ? [nearest] : [];
+		if (nearest) {
+			return [nearest];
+		} else {
+			return this.index
+				.listFrames()
+				.filter(frame => frame.isTextUnderPoint(this.pointer.point));
+		}
 	}
 
 	getNearPointer(

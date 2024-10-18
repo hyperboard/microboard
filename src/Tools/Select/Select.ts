@@ -118,30 +118,15 @@ export class Select extends Tool {
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
-		this.isDownOnSelection = false;
-
-		if (selectionMbr !== undefined) {
-			const itemsUnderPointer = this.board.items.getUnderPointer();
-			const isFrame = itemsUnderPointer.some(
-				item => item.itemType === "Frame",
+		const selectionItems = selection.list();
+		this.isDownOnSelection =
+			selectionMbr !== undefined &&
+			selectionMbr.isUnderPoint(pointer.point) &&
+			hover.every(hovered =>
+				selectionItems.some(
+					selected => selected.getId() === hovered.getId(),
+				),
 			);
-
-			if (isFrame) {
-				this.isDownOnSelection = true;
-			}
-
-			if (selectionMbr.isUnderPoint(pointer.point)) {
-				if (itemsUnderPointer.length > 0) {
-					const selectedItems = this.board.selection.items.list();
-					const isAnySelectedItemUnderPointer = selectedItems.some(
-						item => itemsUnderPointer.includes(item),
-					);
-					this.isDownOnSelection = isAnySelectedItemUnderPointer;
-				} else {
-					this.isDownOnSelection = true;
-				}
-			}
-		}
 
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
@@ -152,7 +137,12 @@ export class Select extends Tool {
 
 		this.isDownOnBoard = hover.length === 0;
 		this.isDrawingRectangle =
-			hover.filter(item => !(item instanceof Frame)).length === 0;
+			hover.filter(item => !(item instanceof Frame)).length === 0 &&
+			hover
+				.filter(item => item instanceof Frame)
+				.filter(frame => frame.isTextUnderPoint(pointer.point))
+				.length === 0;
+
 		if (this.isDrawingRectangle) {
 			const { x, y } = pointer.point;
 			this.line = new Line(new Point(x, y), new Point(x, y));

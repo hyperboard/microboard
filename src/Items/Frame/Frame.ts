@@ -189,6 +189,14 @@ export class Frame implements Geometry {
 		return this.path.copy();
 	}
 
+	isTextUnderPoint(point: Point): boolean {
+		return this.text.isUnderPoint(point);
+	}
+
+	getUnderPoint(point: Point): boolean {
+		return this.path.isUnderPoint(point) || this.isTextUnderPoint(point);
+	}
+
 	isClosed(): boolean {
 		return this.path instanceof Path && this.path.isClosed();
 	}
