@@ -247,6 +247,10 @@ export class Drawing extends Mbr implements Geometry {
 		];
 	}
 
+	getLines(): Line[] {
+		return this.lines;
+	}
+
 	isClosed(): boolean {
 		return true;
 	}

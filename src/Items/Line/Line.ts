@@ -163,6 +163,24 @@ export class Line {
 		}
 	}
 
+	hasIntersectionPoint(segment: Line): boolean {
+		const ccw = (p1: Point, p2: Point, p3: Point) => {
+			return (
+				(p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x)
+			);
+		};
+
+		const intersect = (p1: Point, p2: Point, p3: Point, p4: Point) => {
+			const ccw1 = ccw(p1, p2, p3);
+			const ccw2 = ccw(p1, p2, p4);
+			const ccw3 = ccw(p3, p4, p1);
+			const ccw4 = ccw(p3, p4, p2);
+
+			return ccw1 * ccw2 < 0 && ccw3 * ccw4 < 0;
+		};
+		return intersect(segment.start, segment.end, this.start, this.end);
+	}
+
 	getNearestEdgePointTo(point: Point): Point {
 		return this.getNearestPointOnLineSegment(point);
 	}

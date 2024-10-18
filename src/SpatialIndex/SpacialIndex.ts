@@ -459,9 +459,13 @@ export class Items {
 			? tolerated
 			: this.index.getEnclosedOrCrossed(x, y, x, y);
 
+		const underPointer = this.getUnderPoint(new Point(x, y), size);
 		if (enclosed.length === 0) {
-			const underPointer = this.getUnderPoint(new Point(x, y), size);
 			enclosed = underPointer;
+		}
+
+		if (underPointer.some(item => item instanceof Drawing)) {
+			enclosed = [...underPointer, ...enclosed];
 		}
 
 		const { nearest } = enclosed.reduce(
@@ -490,13 +494,7 @@ export class Items {
 			},
 		);
 
-		if (nearest) {
-			return [nearest];
-		} else {
-			return this.index
-				.listFrames()
-				.filter(frame => frame.isTextUnderPoint(this.pointer.point));
-		}
+		return nearest ? [nearest] : [];
 	}
 
 	getNearPointer(
