@@ -151,12 +151,17 @@ export function createEvents(board: Board, connection: Connection): Events {
 	);
 
 	function handleBoardEventListMessage(message: BoardEventListMsg): void {
+		const existinglist = log.getList();
 		const isFirstBatchOfEvents =
-			log.getList().length === 0 && message.events.length > 0;
+			existinglist.length === 0 && message.events.length > 0;
 		if (isFirstBatchOfEvents) {
 			handleFirstBatchOfEvents(message.events);
 		} else {
-			const events = message.events;
+			const maxOrder = Math.max(
+				...existinglist.map(record => record.event.order),
+			);
+			const events = message.events.slice(maxOrder);
+
 			log.insertEvents(events);
 			latestServerOrder = log.getLatestOrder();
 			subject.publish(events[0]);
