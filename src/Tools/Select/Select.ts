@@ -371,9 +371,33 @@ export class Select extends Tool {
 					this.toHighlight.remove([draggingItem, frame]);
 				}
 			});
+		}
 
+		const hover = items.getUnderPointer();
+		this.isHoverUnselectedItem =
+			hover.filter(item => item.itemType === "Placeholder").length === 1;
+
+		if (
+			this.isHoverUnselectedItem &&
+			!this.isDraggingUnselectedItem &&
+			selection.getContext() === "None"
+		) {
+			selection.setContext("HoverUnderPointer");
 			return false;
 		}
+
+		if (
+			(!this.isHoverUnselectedItem || this.isDraggingUnselectedItem) &&
+			selection.getContext() === "HoverUnderPointer"
+		) {
+			selection.setContext("None");
+			return false;
+		}
+
+		if (this.isDraggingUnselectedItem) {
+			return false;
+		}
+
 		if (this.isDrawingRectangle && this.line && this.rect) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
@@ -381,18 +405,6 @@ export class Select extends Tool {
 			this.rect.borderColor = SELECTION_COLOR;
 			this.rect.backgroundColor = SELECTION_BACKGROUND;
 			this.board.tools.publish();
-			return false;
-		}
-
-		// const hover = items.getUnderPointer();
-		// this.isHoverUnselectedItem =
-		// 	hover.filter(item => item.itemType === "Placeholder").length === 1;
-
-		if (
-			this.isHoverUnselectedItem &&
-			this.board.selection.getContext() === "None"
-		) {
-			this.board.selection.setContext("HoverUnderPointer");
 			return false;
 		}
 

@@ -24,10 +24,11 @@ export interface PlaceholderData {
 
 export class Placeholder {
 	readonly itemType = "Placeholder";
+	shapeType = "Rectangle";
 	parent = "Board";
 	readonly transformation = new Transformation(this.id, this.events);
-	private path = Shapes["RoundedRectangle"].path.copy();
-	private mbr = Shapes["RoundedRectangle"].path.getMbr().copy();
+	private path = Shapes[this.shapeType].path.copy();
+	private mbr = Shapes[this.shapeType].path.getMbr().copy();
 	readonly subject = new Subject<Placeholder>();
 	transformationRenderBlock?: boolean = undefined;
 	iconImage;
@@ -241,7 +242,7 @@ export class Placeholder {
 	}
 
 	getSnapAnchorPoints(): Point[] {
-		const anchorPoints = Shapes["RoundedRectangle"].anchorPoints;
+		const anchorPoints = Shapes[this.shapeType].anchorPoints;
 		const points: Point[] = [];
 		for (const anchorPoint of anchorPoints) {
 			points.push(anchorPoint.getTransformed(this.transformation.matrix));
@@ -275,14 +276,14 @@ export class Placeholder {
 	}
 
 	private transformPath(): void {
-		this.path = Shapes["RoundedRectangle"].createPath(this.mbr);
+		this.path = Shapes[this.shapeType].createPath(this.mbr);
 		this.path.transform(this.transformation.matrix);
 		this.path.setBackgroundColor(this.backgroundColor);
-		this.path.setBorderColor(this.backgroundColor);
+		this.path.setBorderColor("transparent");
 	}
 
 	private initPath(): void {
-		this.path = Shapes["RoundedRectangle"].createPath(this.mbr);
+		this.path = Shapes[this.shapeType].createPath(this.mbr);
 	}
 
 	private loadIconImage(): void {
@@ -319,11 +320,28 @@ export class Placeholder {
 		context.ctx.drawImage(this.iconImage, iconX, iconY, iconSize, iconSize);
 	}
 
+	private renderShadowShape(context: DrawingContext): void {
+		this.path.setShadowBlur(5);
+		this.path.setShadowOffsetX(0);
+		this.path.setShadowOffsetY(1);
+		this.path.setShadowColor("rgba(20, 21, 26, 0.06)");
+		this.path.render(context);
+		context.ctx.restore();
+
+		this.path.setShadowBlur(3);
+		this.path.setShadowOffsetX(0);
+		this.path.setShadowOffsetY(1);
+		this.path.setShadowColor("rgba(20, 21, 26, 0.1)");
+		this.path.render(context);
+		context.ctx.restore();
+	}
+
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		this.path.render(context);
+
+		this.renderShadowShape(context);
 		this.renderIcon(context);
 	}
 
