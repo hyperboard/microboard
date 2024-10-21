@@ -6,6 +6,7 @@ import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 import { STICKER_COLOR_NAMES, STICKER_COLORS } from "View/Tools/AddSticker";
 import { CursorName } from "Board/Pointer/Cursor";
+import { tempStorage } from "App/SessionStorage";
 
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
@@ -152,15 +153,15 @@ export class AddSticker extends BoardTool {
 	}
 
 	private getLastSticker(): Sticker | null {
-		const lastSticker = sessionStorage.getItem("lastSticker");
+		const lastSticker = tempStorage.getStickerData();
 		if (lastSticker) {
-			return new Sticker().deserialize(JSON.parse(lastSticker));
+			return new Sticker().deserialize(lastSticker);
 		} else {
 			return null;
 		}
 	}
 
 	private setLastSticker(lastSticker: Sticker): void {
-		sessionStorage.setItem("lastSticker", JSON.stringify(lastSticker));
+		tempStorage.setStickerData(lastSticker);
 	}
 }

@@ -1,12 +1,12 @@
+import { tempStorage } from "App/SessionStorage";
 import { Board } from "Board/Board";
 import { Line, Mbr, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape/Basic";
-import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;
@@ -22,9 +22,8 @@ export class AddShape extends BoardTool {
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
-		const savedShapeData = sessionStorage.getItem("lastShapeData");
-		if (savedShapeData) {
-			const data = JSON.parse(savedShapeData) as DefaultShapeData;
+		const data = tempStorage.getShapeData();
+		if (data) {
 			this.shape = new Shape(
 				undefined,
 				"",
@@ -122,27 +121,19 @@ export class AddShape extends BoardTool {
 		if (this.type === "None") {
 			return false;
 		}
-		let width = this.bounds.getWidth();
-		let height = this.bounds.getHeight();
-		if (width < 2) {
-			const savedWidth = sessionStorage.getItem("shapeWidth");
-			if (savedWidth) {
-				width = JSON.parse(savedWidth);
-			} else {
-				width = 100;
-			}
-		} else {
-			sessionStorage.setItem("shapeWidth", JSON.stringify(width));
+		const width =
+			this.bounds.getWidth() < 2
+				? tempStorage.getShapeWidth() || 100
+				: this.bounds.getWidth();
+		const height =
+			this.bounds.getHeight() < 2
+				? tempStorage.getShapeHeight() || 100
+				: this.bounds.getHeight();
+		if (this.bounds.getWidth() > 2) {
+			tempStorage.setShapeWidth(this.bounds.getWidth());
 		}
-		if (height < 2) {
-			const savedHeight = sessionStorage.getItem("shapeHeight");
-			if (savedHeight) {
-				height = JSON.parse(savedHeight);
-			} else {
-				height = 100;
-			}
-		} else {
-			sessionStorage.setItem("shapeHeight", JSON.stringify(height));
+		if (this.bounds.getHeight() > 2) {
+			tempStorage.setShapeHeight(this.bounds.getHeight());
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);

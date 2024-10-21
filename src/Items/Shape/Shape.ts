@@ -21,6 +21,7 @@ import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
+import { tempStorage } from "App/SessionStorage";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -98,18 +99,15 @@ export class Shape implements Geometry {
 	}
 
 	private saveShapeData(): void {
-		sessionStorage.setItem(
-			"lastShapeData",
-			JSON.stringify({
-				shapeType: this.shapeType,
-				backgroundColor: this.backgroundColor,
-				backgroundOpacity: this.backgroundOpacity,
-				borderColor: this.borderColor,
-				borderOpacity: this.borderOpacity,
-				borderStyle: this.borderStyle,
-				borderWidth: this.borderWidth,
-			}),
-		);
+		tempStorage.setShapeData({
+			shapeType: this.shapeType,
+			backgroundColor: this.backgroundColor,
+			backgroundOpacity: this.backgroundOpacity,
+			borderColor: this.borderColor,
+			borderOpacity: this.borderOpacity,
+			borderStyle: this.borderStyle,
+			borderWidth: this.borderWidth,
+		});
 	}
 
 	emit(operation: ShapeOperation): void {
