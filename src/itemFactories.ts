@@ -75,7 +75,7 @@ function createImage(id: string, data: ItemData, board: Board): ImageItem {
 	if (!isImageItemData(data)) {
 		throw new Error("Invalid data for ImageItem");
 	}
-	const image = new ImageItem(data, board.events, id)
+	const image = new ImageItem(data, board, board.events, id)
 		.setId(id)
 		.deserialize(data);
 	return image;

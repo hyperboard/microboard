@@ -48,6 +48,9 @@ export function uploadImage(file: File, board: Board) {
 										.then(imageData => {
 											const image = new ImageItem(
 												imageData,
+												board,
+												undefined,
+												"",
 											);
 											const boardImage = board.add(image);
 											boardImage.doOnceOnLoad(() => {
@@ -117,7 +120,12 @@ export function uploadImage(file: File, board: Board) {
 			const base64String = event.target?.result as string;
 			prepareImage(base64String)
 				.then(imageData => {
-					const image = new ImageItem(imageData);
+					const image = new ImageItem(
+						imageData,
+						board,
+						undefined,
+						"",
+					);
 					image.doOnceBeforeOnLoad(() => {
 						const { scaleX, scaleY, translateX, translateY } =
 							calculatePosition(image, board);

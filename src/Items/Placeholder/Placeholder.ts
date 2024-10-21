@@ -19,7 +19,7 @@ export interface PlaceholderData {
 	backgroundColor: string;
 	icon: string;
 	transformation: TransformationData;
-	miroData: unknown;
+	miroData?: unknown;
 }
 
 export class Placeholder {
@@ -35,7 +35,7 @@ export class Placeholder {
 
 	constructor(
 		private events?: Events,
-		private miroData: unknown,
+		private miroData?: unknown,
 		private id = "",
 		private backgroundColor = "#E5E5EA",
 		private icon: string = PlaceholderImg?.toString() || "",
