@@ -584,7 +584,11 @@ export class Selection {
 	}
 
 	getBorderStyle(): string {
-		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
+		const shape = this.items.getItemsByItemTypes([
+			"Shape",
+			"Drawing",
+			"Connector",
+		])[0];
 		return shape?.getBorderStyle() || defaultShapeData.borderStyle;
 	}
 
@@ -737,6 +741,15 @@ export class Selection {
 				method: "setStrokeStyle",
 				item: drawings,
 				style: borderStyle,
+			});
+		}
+		const connectors = this.items.getIdsByItemTypes(["Connector"]);
+		if (connectors.length > 0) {
+			this.emit({
+				class: "Connector",
+				method: "setBorderStyle",
+				item: connectors,
+				borderStyle,
 			});
 		}
 	}

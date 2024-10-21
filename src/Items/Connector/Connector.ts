@@ -2,6 +2,7 @@ import { RichText } from "Board/Items";
 import { t } from "i18next";
 import { Subject } from "Subject";
 import {
+	CONNECTOR_BORDER_STYLE,
 	CONNECTOR_COLOR,
 	CONNECTOR_LINE_CAP,
 	CONNECTOR_LINE_WIDTH,
@@ -18,7 +19,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { Item } from "../Item";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
-import { Path, Paths } from "../Path";
+import { BorderStyle, Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Matrix, Transformation } from "../Transformation";
 import { ConnectorCommand } from "./ConnectorCommand";
@@ -56,6 +57,7 @@ export class Connector {
 	private middlePoints: BoardPoint[] = [];
 	private lineColor = CONNECTOR_COLOR;
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
+	private borderStyle: BorderStyle = CONNECTOR_BORDER_STYLE;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
 	startPointer = getStartPointer(
@@ -232,6 +234,9 @@ export class Connector {
 					case "setLineStyle":
 						this.applyLineStyle(operation.lineStyle);
 						break;
+					case "setBorderStyle":
+						this.applyBorderStyle(operation.borderStyle);
+						break;
 					case "setLineColor":
 						this.applyLineColor(operation.lineColor);
 						break;
@@ -400,6 +405,20 @@ export class Connector {
 		this.updatePaths();
 	}
 
+	private setBorderStyle(style: BorderStyle): void {
+		this.emit({
+			class: "Connector",
+			method: "setBorderStyle",
+			item: [this.id],
+			borderStyle: style,
+		});
+	}
+
+	private applyBorderStyle(style: BorderStyle): void {
+		this.borderStyle = style;
+		this.updatePaths();
+	}
+
 	setLineWidth(width: ConnectionLineWidth): void {
 		this.emit({
 			class: "Connector",
@@ -471,6 +490,10 @@ export class Connector {
 
 	getLineStyle(): ConnectorLineStyle {
 		return this.lineStyle;
+	}
+
+	getBorderStyle(): BorderStyle {
+		return this.borderStyle;
 	}
 
 	getLineWidth(): ConnectionLineWidth {
@@ -700,6 +723,7 @@ export class Connector {
 			lineColor: this.lineColor,
 			lineWidth: this.lineWidth,
 			text: text,
+			borderStyle: this.borderStyle,
 		};
 	}
 
@@ -725,6 +749,7 @@ export class Connector {
 		this.lineStyle = data.lineStyle ?? this.lineStyle;
 		this.lineColor = data.lineColor ?? this.lineColor;
 		this.lineWidth = data.lineWidth ?? this.lineWidth;
+		this.borderStyle = data.borderStyle ?? this.borderStyle;
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
@@ -854,6 +879,7 @@ export class Connector {
 
 		this.lines.setBorderWidth(this.lineWidth);
 		this.lines.setBorderColor(this.lineColor);
+		this.lines.setBorderStyle(this.borderStyle);
 
 		this.updateTitle();
 	}

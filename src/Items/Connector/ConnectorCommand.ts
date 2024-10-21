@@ -84,6 +84,17 @@ export class ConnectorCommand implements Command {
 					});
 				}
 				break;
+			case "setBorderStyle":
+				for (const connector of this.connector) {
+					reverse.push({
+						item: connector,
+						operation: {
+							...this.operation,
+							borderStyle: connector.getBorderStyle(),
+						},
+					});
+				}
+				break;
 			case "setLineWidth":
 				for (const connector of this.connector) {
 					reverse.push({
