@@ -20,4 +20,5 @@ export const Pentagon = {
 		new Point(90, 95),
 		new Point(10, 95),
 	],
+	createPath: (mbr: Mbr) => Pentagon.path.copy(),
 };

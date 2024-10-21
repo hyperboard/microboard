@@ -18,4 +18,5 @@ export const Parallelogram = {
 		new Point(95, 50),
 		new Point(45, 100),
 	],
+	createPath: (mbr: Mbr) => Parallelogram.path.copy(),
 };

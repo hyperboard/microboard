@@ -2,6 +2,7 @@ import { BaseSelection, Operation } from "slate";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
+import { SelectionContext } from "Board/Selection/Selection";
 
 interface RichTextBaseOp {
 	class: "RichText";
@@ -30,7 +31,8 @@ interface SetFontFamily extends RichTextBaseOp {
 
 interface SetFontSize extends RichTextBaseOp {
 	method: "setFontSize";
-	fontSize: number;
+	fontSize: number | "auto";
+	context?: SelectionContext;
 }
 
 interface SetFontHighlight extends RichTextBaseOp {
@@ -84,4 +86,15 @@ export type WholeTextOp =
 
 export type WholeTextMethod = WholeTextOp["method"];
 
-export type RichTextOperation = WholeTextOp | SelectionOp;
+export interface ItemOp {
+	item: string;
+	selection: BaseSelection;
+	ops: Operation[];
+}
+export interface GroupEdit {
+	class: "RichText";
+	method: "groupEdit";
+	itemsOps: ItemOp[];
+}
+
+export type RichTextOperation = WholeTextOp | SelectionOp | GroupEdit;

@@ -85,6 +85,10 @@ export class AddDrawing extends BoardTool {
 		this.board.pointer.setCursor("pen");
 	}
 
+	isHighlighter(): boolean {
+		return false;
+	}
+
 	leftButtonDown(): boolean {
 		if (this.strokeColor === "none") {
 			return false;
@@ -129,6 +133,7 @@ export class AddDrawing extends BoardTool {
 		this.board.tools.publish();
 		return true;
 	}
+
 	middleButtonDown(): boolean {
 		this.board.tools.navigate();
 		const navigate = this.board.tools.getNavigate();

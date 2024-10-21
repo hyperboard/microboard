@@ -1,7 +1,7 @@
 import { BorderStyle, BorderWidth } from "../Path";
 import { FrameType } from "./Basic";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
-import { DefaultRichTextData } from "../RichText/RichTextData";
+import { DefaultRichTextData, RichTextData } from "../RichText/RichTextData";
 import { FRAME_BORDER_COLOR, FRAME_FILL_COLOR } from "View/Items/Frame";
 
 export class FrameData {
@@ -16,7 +16,7 @@ export class FrameData {
 		public borderWidth: BorderWidth = 1,
 		public transformation = new DefaultTransformationData(),
 		public children: string[] = [],
-		public text = new DefaultRichTextData([], "top", 600),
+		public text: RichTextData = new DefaultRichTextData([], "top", 600),
 		public canChangeRatio = true,
 	) {}
 }

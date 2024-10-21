@@ -26,4 +26,5 @@ export const Circle = {
 		new Point(100, 50),
 		new Point(50, 102),
 	],
+	createPath: (mbr: Mbr) => Circle.path.copy(),
 };

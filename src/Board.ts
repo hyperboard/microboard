@@ -27,6 +27,7 @@ import { Pointer } from "./Pointer";
 import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
+import { ItemsMap } from "./Validators";
 
 export type InterfaceType = "edit" | "view";
 
@@ -36,7 +37,7 @@ export class Board {
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
 	readonly camera: Camera = new Camera(this.pointer);
-	private index = new SpatialIndex(this.camera, this.pointer);
+	index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
@@ -528,7 +529,6 @@ export class Board {
 
 	getItemsMbr() {
 		const items = this.items.listAll();
-		console.log("fitScreen", items.length);
 		if (items.length > 0) {
 			const rect = this.items.getMbr();
 			return rect;
@@ -538,10 +538,21 @@ export class Board {
 
 	getSnapshotFromCache(): Promise<BoardSnapshot | undefined> {
 		return new Promise((resolve, reject) => {
-			const dbRequest = indexedDB.open("BoardDatabase", 1);
+			const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onupgradeneeded = _event => {
+				const db = dbRequest.result;
+				if (!db.objectStoreNames.contains("snapshots")) {
+					db.createObjectStore("snapshots", { keyPath: "boardId" });
+				}
+			};
+
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
+				if (!db.objectStoreNames.contains("snapshots")) {
+					resolve(undefined);
+					return;
+				}
 				const transaction = db.transaction("snapshots", "readonly");
 				const store = transaction.objectStore("snapshots");
 				const getRequest = store.get(this.getBoardId());
@@ -564,18 +575,18 @@ export class Board {
 	private async saveSnapshotToIndexedDB(
 		snapshot: BoardSnapshot,
 	): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 1);
+		const dbRequest = indexedDB.open("BoardDatabase", 2);
 
-		dbRequest.onupgradeneeded = event => {
-			const db = (event.target as IDBOpenDBRequest).result;
+		dbRequest.onupgradeneeded = _event => {
+			const db = dbRequest.result;
 			if (!db.objectStoreNames.contains("snapshots")) {
 				db.createObjectStore("snapshots", { keyPath: "boardId" });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				const transaction = db.transaction("snapshots", "readwrite");
 				const store = transaction.objectStore("snapshots");
 				store.put({ boardId: this.getBoardId(), data: snapshot });
@@ -589,11 +600,18 @@ export class Board {
 	}
 
 	private async removeSnapshotFromIndexedDB(boardId: string): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 1);
+		const dbRequest = indexedDB.open("BoardDatabase", 2);
+
+		dbRequest.onupgradeneeded = _event => {
+			const db = dbRequest.result;
+			if (!db.objectStoreNames.contains("snapshots")) {
+				db.createObjectStore("snapshots", { keyPath: "boardId" });
+			}
+		};
 
 		return new Promise((resolve, reject) => {
-			dbRequest.onsuccess = event => {
-				const db = (event.target as IDBOpenDBRequest).result;
+			dbRequest.onsuccess = _event => {
+				const db = dbRequest.result;
 				const transaction = db.transaction("snapshots", "readwrite");
 				const store = transaction.objectStore("snapshots");
 				store.delete(boardId);
@@ -670,7 +688,7 @@ export class Board {
 		}
 	}
 
-	paste(itemsMap: { [key: string]: ItemData }, select = true): void {
+	paste(itemsMap: ItemsMap, select = true): void {
 		const newItemIdMap: { [key: string]: string } = {};
 
 		for (const itemId in itemsMap) {
@@ -771,9 +789,8 @@ export class Board {
 			.map(id => this.items.getById(id))
 			.filter(item => typeof item !== "undefined");
 		this.selection.removeAll();
-		if (itemsMap) {
-			this.selection.add(Object.values(items) as Item[]);
-		}
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 
 		return;
 	}
@@ -837,9 +854,15 @@ export class Board {
 		}
 
 		const mbr = this.selection.getMbr();
+		const selectedItems = this.selection.items.list();
+		const isSelectedItemsMinWidth = selectedItems.some(
+			item => item.getMbr().getWidth() === 0,
+		);
+
 		const right = mbr ? mbr.right : 0;
 		const top = mbr ? mbr.top : 0;
 		const width = mbr ? mbr.getWidth() / 10 : 10;
+		const height = mbr ? mbr.getHeight() / 10 : 10;
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
@@ -861,6 +884,15 @@ export class Board {
 				itemData.transformation.translateX =
 					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
+
+				if (itemData.itemType === "Drawing") {
+					itemData.transformation.translateY = translateY;
+				}
+
+				if (height === 0 || isSelectedItemsMinWidth) {
+					itemData.transformation.translateX =
+						translateX + width * 10 + 10;
+				}
 			}
 			if (itemData.itemType === "Frame") {
 				// handle new id for children
@@ -870,21 +902,20 @@ export class Board {
 			}
 
 			newMap[newItemId] = itemData;
-
-			this.emit({
-				class: "Board",
-				method: "duplicate",
-				itemsMap: newMap,
-			});
-
-			const items = Object.keys(newMap)
-				.map(id => this.items.getById(id))
-				.filter(item => typeof item !== "undefined");
-			this.selection.removeAll();
-			if (itemsMap) {
-				this.selection.add(Object.values(items) as Item[]);
-			}
 		}
+
+		this.emit({
+			class: "Board",
+			method: "duplicate",
+			itemsMap: newMap,
+		});
+
+		const items = Object.keys(newMap)
+			.map(id => this.items.getById(id))
+			.filter(item => typeof item !== "undefined");
+		this.selection.removeAll();
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {

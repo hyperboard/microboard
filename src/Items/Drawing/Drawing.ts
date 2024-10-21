@@ -6,9 +6,11 @@ import { Mbr } from "../Mbr";
 import { BorderStyle, BorderWidth, Path, Paths, scalePatterns } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
-import { DrawingOperation, DrawingCommand } from "./DrawingCommand";
+import { DrawingCommand } from "./DrawingCommand";
+import { DrawingOperation } from "./DrawingOperation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Geometry } from "../Geometry";
+import { isSafari } from "App/isSafari";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -48,7 +50,7 @@ export class Drawing extends Mbr implements Geometry {
 
 	serialize(): DrawingData {
 		this.optimizePoints();
-		const points = [];
+		const points: { x: number; y: number }[] = [];
 		for (const point of this.points) {
 			points.push({ x: point.x, y: point.y });
 		}
@@ -119,12 +121,16 @@ export class Drawing extends Mbr implements Geometry {
 				context.quadraticCurveTo(points[j].x, points[j].y, cx, cy);
 			}
 
-			context.quadraticCurveTo(
-				points[j].x,
-				points[j].y,
-				points[j + 1].x,
-				points[j + 1].y,
-			);
+			const x =
+				points[j].x === points[j + 1].x && isSafari()
+					? points[j + 1].x + 0.01
+					: points[j + 1].x;
+			const y =
+				points[j].y === points[j + 1].y && isSafari()
+					? points[j + 1].y + 0.01
+					: points[j + 1].y;
+
+			context.quadraticCurveTo(points[j].x, points[j].y, x, y);
 		}
 
 		let left = Number.MAX_SAFE_INTEGER;
@@ -241,6 +247,10 @@ export class Drawing extends Mbr implements Geometry {
 		];
 	}
 
+	getLines(): Line[] {
+		return this.lines;
+	}
+
 	isClosed(): boolean {
 		return true;
 	}
@@ -256,7 +266,7 @@ export class Drawing extends Mbr implements Geometry {
 
 	emit(operation: DrawingOperation): void {
 		if (this.events) {
-			const command = new DrawingCommand(this, operation);
+			const command = new DrawingCommand([this], operation);
 			command.apply();
 			this.events.emit(operation, command);
 		} else {
@@ -345,12 +355,17 @@ export class Drawing extends Mbr implements Geometry {
 			method: "setStrokeWidth",
 			item: [this.id],
 			width,
+			prevWidth: this.strokeWidth,
 		});
 		return this;
 	}
 
 	getStrokeWidth(): number {
 		return this.strokeWidth;
+	}
+
+	getRichText(): null {
+		return null;
 	}
 }
 
@@ -397,42 +412,6 @@ function douglasPeucker(points: Point[], epsilon: number): Point[] {
 		// if (leftSubPoints[leftSubPoints.length - 1] !== rightSubPoints[0]) {
 		// 	leftRecursiveResult.push(rightSubPoints[0]);
 		// }
-		return leftRecursiveResult.slice(0, -1).concat(rightRecursiveResult);
-	} else {
-		return [start, end];
-	}
-}
-
-function rdpWithDistanceThreshold(points: Point[], threshold: number): Point[] {
-	// Base case: if the line segment has only two points, return the points
-	if (points.length < 3) {
-		return points;
-	}
-
-	const start = points[0];
-	const end = points[points.length - 1];
-	let maxDistance = 0;
-	let maxIndex = 0;
-
-	for (let i = 1; i < points.length - 1; i++) {
-		const distance = getPerpendicularDistance(points[i], start, end);
-		if (distance > maxDistance) {
-			maxDistance = distance;
-			maxIndex = i;
-		}
-	}
-
-	if (maxDistance > threshold) {
-		const leftSubPoints = points.slice(0, maxIndex + 1);
-		const rightSubPoints = points.slice(maxIndex);
-		const leftRecursiveResult = rdpWithDistanceThreshold(
-			leftSubPoints,
-			threshold,
-		);
-		const rightRecursiveResult = rdpWithDistanceThreshold(
-			rightSubPoints,
-			threshold,
-		);
 		return leftRecursiveResult.slice(0, -1).concat(rightRecursiveResult);
 	} else {
 		return [start, end];

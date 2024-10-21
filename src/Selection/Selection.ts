@@ -8,7 +8,7 @@ import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
-import { SELECTION_COLOR } from "View/Tools/Selection";
+import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "View/Tools/Selection";
 import { createCommand } from "../Events/Command";
 import {
 	Connector,
@@ -18,7 +18,6 @@ import {
 	Mbr,
 	RichText,
 	Shape,
-	TransformationOperation,
 } from "../Items";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
@@ -28,11 +27,17 @@ import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { t } from "i18next";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
+import { CONNECTOR_COLOR } from "../../View/Items/Connector";
+import { ItemOp } from "Board/Items/RichText/RichTextOperations";
+import { tempStorage } from "App/SessionStorage";
 
 const defaultShapeData = new DefaultShapeData();
 
 export type SelectionContext =
 	| "SelectUnderPointer"
+	| "HoverUnderPointer"
 	| "EditUnderPointer"
 	| "EditTextUnderPointer"
 	| "SelectByRect"
@@ -115,6 +120,16 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
+		const newValue = Array.isArray(value)
+			? value.filter(
+					item =>
+						!(
+							item instanceof Frame &&
+							item.transformation.isLocked
+						),
+			  )
+			: (value as Frame).transformation.isLocked;
+
 		this.items.add(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
@@ -129,7 +144,9 @@ export class Selection {
 
 	addAll(): void {
 		const items = this.board.items.listAll();
-		const frames = this.board.items.listFrames();
+		const frames = this.board.items
+			.listFrames()
+			.filter(item => !item.transformation.isLocked);
 		this.add(items);
 		this.add(frames);
 		this.setContext("SelectByRect");
@@ -261,25 +278,20 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (
-			item instanceof Shape ||
-			item instanceof Sticker ||
-			item instanceof Connector ||
-			item instanceof RichText ||
-			item instanceof Frame
-		) {
-			const text = item instanceof RichText ? item : item.text;
-			if (shouldReplace) {
-				text.clearText();
-				text.editor.editor.insertText(shouldReplace);
-			}
-			if (shouldReplace || moveCursorToEnd) {
-				text.moveCursorToEnd();
-			}
-			this.setTextToEdit(item);
-			this.setContext("EditTextUnderPointer");
-			this.board.items.subject.publish(this.board.items);
+		const text = item.getRichText();
+		if (!text) {
+			return;
 		}
+		if (shouldReplace) {
+			text.clearText();
+			text.editor.editor.insertText(shouldReplace);
+		}
+		if (shouldReplace || moveCursorToEnd) {
+			text.moveCursorToEnd();
+		}
+		this.setTextToEdit(item);
+		this.setContext("EditTextUnderPointer");
+		this.board.items.subject.publish(this.board.items);
 	}
 
 	async appendText(appendedText: string): Promise<void> {
@@ -293,51 +305,31 @@ export class Selection {
 		if (!item) {
 			return;
 		}
-		if (
-			item instanceof Shape ||
-			item instanceof Sticker ||
-			item instanceof Connector ||
-			item instanceof RichText ||
-			item instanceof Frame
-		) {
-			const text = item instanceof RichText ? item : item.text;
-			await text.moveCursorToEnd(); // prob should be 20 ms
-			text.editor.appendText(appendedText);
-			this.setTextToEdit(item);
-			this.setContext("EditTextUnderPointer");
-			this.board.items.subject.publish(this.board.items);
+		const text = item.getRichText();
+		if (!text) {
+			return;
 		}
+		await text.moveCursorToEnd(); // prob should be 20 ms
+		text.editor.appendText(appendedText);
+		this.setTextToEdit(item);
+		this.setContext("EditTextUnderPointer");
+		this.board.items.subject.publish(this.board.items);
 	}
 
 	editUnderPointer(): void {
 		this.removeAll();
 		const stack = this.board.items.getUnderPointer();
-		const top = stack.pop();
-		if (top) {
-			this.add(top);
+		const item = stack.pop();
+		if (item) {
+			this.add(item);
 			this.setTextToEdit(undefined);
-			if (
-				top.itemType === "RichText" ||
-				top.itemType === "Shape" ||
-				top.itemType === "Sticker" ||
-				top.itemType === "Connector" ||
-				top.itemType === "Frame"
-			) {
-				// this.setTextToEdit(top);
-				const item = this.items.getSingle();
-				if (item) {
-					this.setTextToEdit(item);
-				}
-				this.setContext("EditUnderPointer");
-				if ("text" in top) {
-					top.text.selectWholeText();
-				} else {
-					top.selectWholeText();
-				}
+			const text = item.getRichText();
+			if (text) {
+				this.setTextToEdit(item);
+				text.selectWholeText();
 				this.board.items.subject.publish(this.board.items);
-			} else {
-				this.setContext("EditUnderPointer");
 			}
+			this.setContext("EditUnderPointer");
 		} else {
 			this.setContext("None");
 		}
@@ -348,71 +340,52 @@ export class Selection {
 			this.textToEdit.updateElement();
 			this.textToEdit.enableRender();
 		}
-		if (
-			!item ||
-			(!(item instanceof RichText) &&
-				!(item instanceof Shape) &&
-				!(item instanceof Sticker) &&
-				!(item instanceof Frame) &&
-				!(item instanceof Connector))
-		) {
+		if (!(item && item.getRichText())) {
 			this.textToEdit = undefined;
 			return;
 		}
-		if (
-			item instanceof Connector ||
-			item instanceof Sticker ||
-			item instanceof Shape ||
-			item instanceof RichText
-		) {
-			const text = item instanceof RichText ? item : item.text;
-			if (text.isEmpty()) {
-				text.selectWholeText();
-				const textColor = sessionStorage.getItem(
-					`fontColor_${item.itemType}`,
-				);
-				const textSize = Number(
-					sessionStorage.getItem(`fontSize_${item.itemType}`),
-				);
-				const highlightColor = sessionStorage.getItem(
-					`fontHighlight_${item.itemType}`,
-				);
-				const styles = sessionStorage.getItem(
-					`fontStyles_${item.itemType}`,
-				);
-				const horizontalAlignment = sessionStorage.getItem(
-					`horisontalAlignment_${item.itemType}`,
-				);
-				const verticalAlignment = sessionStorage.getItem(
-					`verticalAlignment_${item.itemType}`,
-				);
-				if (textColor) {
-					text.setSelectionFontColor(JSON.parse(textColor), "None");
-				}
-				if (textSize && !Number.isNaN(textSize)) {
-					text.setSelectionFontSize(textSize, "None");
-				}
-				if (highlightColor) {
-					text.setSelectionFontHighlight(
-						JSON.parse(highlightColor),
-						"None",
-					);
-				}
-				if (styles) {
-					const stylesArr = JSON.parse(styles);
-					text.setSelectionFontStyle(stylesArr, "None");
-				}
-				if (horizontalAlignment) {
-					text.setSelectionHorisontalAlignment(
-						JSON.parse(horizontalAlignment),
-					);
-				}
-				if (verticalAlignment) {
-					this.setVerticalAlignment(JSON.parse(verticalAlignment));
-				}
+		const text = item.getRichText();
+		if (!text) {
+			return;
+		}
+		if (text.isEmpty()) {
+			const textColor = tempStorage.getFontColor(item.itemType);
+			const textSize = tempStorage.getFontSize(item.itemType);
+			const highlightColor = tempStorage.getFontHighlight(item.itemType);
+			const styles = tempStorage.getFontStyles(item.itemType);
+			const horizontalAlignment = tempStorage.getHorizontalAlignment(
+				item.itemType,
+			);
+			const verticalAlignment = tempStorage.getVerticalAlignment(
+				item.itemType,
+			);
+			if (textColor) {
+				console.log(textColor);
+				text.setSelectionFontColor(textColor, "None");
+			}
+			if (textSize) {
+				this.emit({
+					class: "RichText",
+					method: "setFontSize",
+					item: [item.getId()],
+					fontSize: textSize,
+					context: this.getContext(),
+				});
+			}
+			if (highlightColor) {
+				text.setSelectionFontHighlight(highlightColor, "None");
+			}
+			if (styles) {
+				const stylesArr = styles;
+				text.setSelectionFontStyle(stylesArr, "None");
+			}
+			if (horizontalAlignment && !(item instanceof Sticker)) {
+				text.setSelectionHorisontalAlignment(horizontalAlignment);
+			}
+			if (verticalAlignment && !(item instanceof Sticker)) {
+				this.setVerticalAlignment(verticalAlignment);
 			}
 		}
-		const text = item instanceof RichText ? item : item.text;
 		this.textToEdit = text;
 		text.selectWholeText();
 		this.textToEdit.disableRender();
@@ -453,7 +426,9 @@ export class Selection {
 		this.removeAll();
 		const enclosedFrames = this.board.items
 			.getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
-			.filter(item => item instanceof Frame);
+			.filter(
+				item => item instanceof Frame && !item.transformation.isLocked,
+			);
 		const list = this.board.items
 			.getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
 			.filter(
@@ -473,15 +448,8 @@ export class Selection {
 	}
 
 	canChangeText(): boolean {
-		return (
-			this.items.isSingle() &&
-			this.items.isItemTypes([
-				"Shape",
-				"Sticker",
-				"Connector",
-				"Frame",
-				"RichText",
-			])
+		return Boolean(
+			this.items.isSingle() && this.items.getSingle()?.getRichText(),
 		);
 	}
 
@@ -493,7 +461,10 @@ export class Selection {
 		const zIndex = this.board.items.index.getZIndex(item);
 		// If the item is a Connector and the connected items are not part of selection,
 		// change the control points to BoardPoint.
-		if (item.itemType === "Connector") {
+		if (
+			item.itemType === "Connector" &&
+			serializedData.itemType === "Connector"
+		) {
 			const connector = item as Connector;
 			const startPoint = connector.getStartPoint();
 			const endPoint = connector.getEndPoint();
@@ -523,7 +494,7 @@ export class Selection {
 			}
 		}
 
-		if (item.itemType === "Frame") {
+		if (item.itemType === "Frame" && serializedData.itemType === "Frame") {
 			const textItem = item.text.getTextString();
 			const copyText = t("frame.copy");
 			const copiedFrameText =
@@ -571,15 +542,12 @@ export class Selection {
 		return items;
 	}
 
-	getText(): RichText | undefined {
-		const item = this.items.getItemsByItemTypes([
-			"RichText",
-			"Shape",
-			"Sticker",
-			"Connector",
-			"Frame",
-		])[0];
-		return item instanceof RichText ? item : item?.text;
+	getText(): RichText | null {
+		const item = this.items.getSingle();
+		if (!item) {
+			return null;
+		}
+		return item.getRichText();
 	}
 
 	isTextEmpty(): boolean {
@@ -630,6 +598,16 @@ export class Selection {
 		return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
 	}
 
+	getConnectorLineWidth(): number {
+		const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+		return connector?.getLineWidth() || 1;
+	}
+
+	getConnectorLineColor(): string {
+		const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+		return connector?.getLineColor() || CONNECTOR_COLOR;
+	}
+
 	getStartPointerStyle(): ConnectorPointerStyle {
 		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
 		return pointer?.getStartPointerStyle() || "None";
@@ -640,7 +618,7 @@ export class Selection {
 		return pointer?.getEndPointerStyle() || "None";
 	}
 
-	setStartPointerStyle(style: string): void {
+	setStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setStartPointerStyle",
@@ -649,7 +627,7 @@ export class Selection {
 		});
 	}
 
-	setEndPointerStyle(style: string): void {
+	setEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
 			class: "Connector",
 			method: "setEndPointerStyle",
@@ -665,6 +643,7 @@ export class Selection {
 			item: this.items.ids(),
 		});
 	}
+
 	setConnectorLineStyle(style: ConnectorLineStyle): void {
 		this.emit({
 			class: "Connector",
@@ -729,10 +708,7 @@ export class Selection {
 
 	// TODO all the other transformations are redundant, use this one for everything
 	// Instead of TransformationOperation just put matrix in it
-	transformMany(
-		items: { [key: string]: TransformationOperation },
-		timeStamp?: number,
-	): void {
+	transformMany(items: TransformManyItems, timeStamp?: number): void {
 		this.shouldPublish = false;
 		this.emit({
 			class: "Transformation",
@@ -752,15 +728,6 @@ export class Selection {
 				method: "setBorderStyle",
 				item: shapes,
 				borderStyle,
-			});
-		}
-		const connectors = this.items.getIdsByItemTypes(["Connector"]);
-		if (connectors.length > 0) {
-			this.emit({
-				class: "Connector",
-				method: "setLineStyle",
-				item: connectors,
-				lineStyle: borderStyle,
 			});
 		}
 		const drawings = this.items.getIdsByItemTypes(["Drawing"]);
@@ -789,7 +756,7 @@ export class Selection {
 		if (connectors.length > 0) {
 			this.emit({
 				class: "Connector",
-				method: "setLineStyle",
+				method: "setLineColor",
 				item: connectors,
 				lineColor: borderColor,
 			});
@@ -805,7 +772,7 @@ export class Selection {
 		}
 	}
 
-	setStrokeWidth(width: number): void {
+	setStrokeWidth(width: ConnectionLineWidth): void {
 		// TODO make single operation to set strokeWidth on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {
@@ -921,301 +888,144 @@ export class Selection {
 
 	setFontSize(size: number | "auto"): void {
 		const fontSize = size === "auto" ? size : toFiniteNumber(size);
-		const single = this.items.getSingle();
-		if (single) {
-			if (
-				single.itemType === "Connector" ||
-				single.itemType === "RichText" ||
-				single.itemType === "Shape" ||
-				single.itemType === "Sticker"
-			) {
-				sessionStorage.setItem(
-					`fontSize_${single.itemType}`,
-					JSON.stringify(fontSize),
-				);
+		const isMultiple = !this.items.isSingle();
+
+		const itemsOps: ItemOp[] = [];
+		for (const item of this.items.list()) {
+			const text = item.getRichText();
+			if (!text) {
+				continue;
 			}
+			const ops = text.setSelectionFontSize(fontSize, this.context);
+			itemsOps.push({
+				item: item.getId(),
+				selection: text.editor.getSelection(),
+				ops,
+			});
+			tempStorage.setFontSize(item.itemType, fontSize);
 		}
 		this.emit({
 			class: "RichText",
-			method: "setFontSize",
-			item: this.items.ids(),
-			fontSize,
-			context: this.getContext(),
+			method: "groupEdit",
+			itemsOps,
 		});
 	}
 
 	setFontStyle(fontStyle: TextStyle): void {
-		const single = this.items.getSingle();
-		if (single) {
-			if (single instanceof RichText) {
-				single.setSelectionFontStyle(fontStyle, this.context);
-			} else if ("text" in single) {
-				single.text.setSelectionFontStyle(fontStyle, this.context);
-			}
-			if (
-				single.itemType === "Connector" ||
-				single.itemType === "RichText" ||
-				single.itemType === "Shape" ||
-				single.itemType === "Sticker"
-			) {
-				const text = single instanceof RichText ? single : single.text;
-				sessionStorage.setItem(
-					`fontStyles_${single.itemType}`,
-					JSON.stringify(text.getFontStyles()),
-				);
-			}
-		} else {
-			const filteredItems = this.items
-				.list()
-				.filter(
-					item =>
-						item.itemType === "RichText" ||
-						item.itemType === "Shape" ||
-						item.itemType === "Sticker" ||
-						item.itemType === "Connector" ||
-						item.itemType === "Frame",
-				);
+		const isMultiple = !this.items.isSingle();
 
-			const changedItems = filteredItems.filter(item => {
-				if (item instanceof RichText) {
-					return !item.getFontStyles().includes(fontStyle);
-				}
-				return !item.text.getFontStyles().includes(fontStyle);
-			});
-			if (changedItems.length > 0) {
-				this.emit({
-					class: "RichText",
-					method: "setFontStyle",
-					item: changedItems.map(i => i.getId()),
-					fontStyleList: fontStyle,
-				});
+		const itemsOps: ItemOp[] = [];
+		for (const item of this.items.list()) {
+			const text = item.getRichText();
+			if (!text) {
+				continue;
 			}
+			if (isMultiple) {
+				text.selectWholeText();
+			}
+			const ops = text.setSelectionFontStyle(fontStyle, this.context);
+			itemsOps.push({
+				item: item.getId(),
+				selection: text.editor.getSelection(),
+				ops,
+			});
+			tempStorage.setFontStyles(item.itemType, text.getFontStyles());
 		}
+		this.emit({
+			class: "RichText",
+			method: "groupEdit",
+			itemsOps,
+		});
 	}
 
 	setFontColor(fontColor: string): void {
-		if (this.items.isSingle()) {
-			const item = this.items.getSingle();
-			if (
-				item?.itemType === "Connector" ||
-				item?.itemType === "RichText" ||
-				item?.itemType === "Shape" ||
-				item?.itemType === "Sticker"
-			) {
-				sessionStorage.setItem(
-					`fontColor_${item.itemType}`,
-					JSON.stringify(fontColor),
-				);
+		const isMultiple = !this.items.isSingle();
+		const itemsOps: ItemOp[] = [];
+		for (const item of this.items.list()) {
+			const text = item.getRichText();
+			if (!text) {
+				continue;
 			}
-			console.log(fontColor);
-			if (item instanceof RichText) {
-				item.setSelectionFontColor(fontColor, this.context);
-				return;
+			if (isMultiple) {
+				text.selectWholeText();
 			}
-			if (
-				item &&
-				(item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Frame" ||
-					item.itemType === "Connector")
-			) {
-				(item as Shape | Sticker | Frame).text.setSelectionFontColor(
-					fontColor,
-					this.context,
-				);
-				return;
-			}
-		}
-
-		const filteredItems = this.items
-			.list()
-			.filter(
-				item =>
-					item.itemType === "RichText" ||
-					item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Connector" ||
-					item.itemType === "Frame",
-			);
-
-		const changedIds = filteredItems
-			.filter(item => {
-				if (item instanceof RichText) {
-					return item.getFontColor() !== fontColor;
-				}
-				return item.text.getFontColor() !== fontColor;
-			})
-			.map(item => item.getId());
-
-		if (changedIds.length > 0) {
-			this.emit({
-				class: "RichText",
-				method: "setFontColor",
-				item: changedIds,
-				fontColor,
+			const ops = text.setSelectionFontColor(fontColor, this.context);
+			itemsOps.push({
+				item: item.getId(),
+				selection: text.editor.getSelection(),
+				ops,
 			});
+			tempStorage.setFontColor(item.itemType, fontColor);
 		}
-
-		if (changedIds.length === 0) {
-			this.emit({
-				class: "RichText",
-				method: "setFontColor",
-				item: filteredItems.map(item => item.getId()),
-				fontColor,
-			});
-		}
+		this.emit({
+			class: "RichText",
+			method: "groupEdit",
+			itemsOps,
+		});
 	}
 
 	setFontHighlight(fontHighlight: string): void {
-		if (this.items.isSingle()) {
-			const item = this.items.getSingle();
-			if (
-				item?.itemType === "Connector" ||
-				item?.itemType === "RichText" ||
-				item?.itemType === "Shape" ||
-				item?.itemType === "Sticker"
-			) {
-				sessionStorage.setItem(
-					`fontHighlight_${item.itemType}`,
-					JSON.stringify(fontHighlight),
-				);
-			}
-			if (item instanceof RichText) {
-				item.setSelectionFontHighlight(fontHighlight, this.context);
-				return;
-			}
-			if (
-				item &&
-				(item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Connector" ||
-					item.itemType === "Frame")
-			) {
-				(
-					item as Shape | Sticker | Connector | Frame
-				).text.setSelectionFontHighlight(fontHighlight, this.context);
-				return;
-			}
-		}
+		const isMultiple = !this.items.isSingle();
 
-		const filteredItems = this.items
-			.list()
-			.filter(
-				item =>
-					item.itemType === "RichText" ||
-					item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Connector" ||
-					item.itemType === "Frame",
+		const itemsOps: ItemOp[] = [];
+		for (const item of this.items.list()) {
+			const text = item.getRichText();
+			if (!text) {
+				continue;
+			}
+			if (isMultiple) {
+				text.selectWholeText();
+			}
+			const ops = text.setSelectionFontHighlight(
+				fontHighlight,
+				this.context,
 			);
-
-		const changedIds = filteredItems
-			.filter(item => {
-				if (item instanceof RichText) {
-					return item.getFontHighlight() !== fontHighlight;
-				}
-				return item.text.getFontHighlight() !== fontHighlight;
-			})
-			.map(item => item.getId());
-
-		if (changedIds.length > 0) {
-			this.emit({
-				class: "RichText",
-				method: "setFontHighlight",
-				item: changedIds,
-				fontHighlight,
+			itemsOps.push({
+				item: item.getId(),
+				selection: text.editor.getSelection(),
+				ops,
 			});
+			tempStorage.setFontHighlight(item.itemType, fontHighlight);
 		}
-
-		if (changedIds.length === 0) {
-			this.emit({
-				class: "RichText",
-				method: "setFontHighlight",
-				item: filteredItems.map(item => item.getId()),
-				fontHighlight,
-			});
-		}
+		this.emit({
+			class: "RichText",
+			method: "groupEdit",
+			itemsOps,
+		});
 	}
 
 	setHorisontalAlignment(horisontalAlignment: HorisontalAlignment): void {
-		if (this.items.isSingle()) {
-			const item = this.items.getSingle();
-			if (
-				item?.itemType === "Connector" ||
-				item?.itemType === "RichText" ||
-				item?.itemType === "Shape" ||
-				item?.itemType === "Sticker"
-			) {
-				sessionStorage.setItem(
-					`horisontalAlignment_${item.itemType}`,
-					JSON.stringify(horisontalAlignment),
-				);
-			}
-			if (item instanceof RichText) {
-				item.setSelectionHorisontalAlignment(
-					horisontalAlignment,
-					this.context,
-				);
-				return;
-			}
-			if (
-				item &&
-				(item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Connector" ||
-					item.itemType === "Frame")
-			) {
-				(
-					item as Shape | Sticker | Connector | Frame
-				).text.setSelectionHorisontalAlignment(
-					horisontalAlignment,
-					this.context,
-				);
-				return;
-			}
-		}
+		const isMultiple = !this.items.isSingle();
 
-		const filteredItems = this.items
-			.list()
-			.filter(
-				item =>
-					item.itemType === "RichText" ||
-					item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Connector" ||
-					item.itemType === "Frame",
+		const itemsOps: ItemOp[] = [];
+		for (const item of this.items.list()) {
+			const text = item.getRichText();
+			if (!text) {
+				continue;
+			}
+			if (isMultiple) {
+				text.selectWholeText();
+			}
+			const ops = text.setSelectionHorisontalAlignment(
+				horisontalAlignment,
+				this.context,
 			);
-
-		const changedIds = filteredItems
-			.filter(item => {
-				if (item instanceof RichText) {
-					return (
-						item.getHorisontalAlignment() !== horisontalAlignment
-					);
-				}
-				return (
-					item.text.getHorisontalAlignment() !== horisontalAlignment
-				);
-			})
-			.map(item => item.getId());
-		console.log(changedIds);
-		if (changedIds.length > 0) {
-			this.emit({
-				class: "RichText",
-				method: "setHorisontalAlignment",
-				item: changedIds,
-				horisontalAlignment,
+			itemsOps.push({
+				item: item.getId(),
+				selection: text.editor.getSelection(),
+				ops,
 			});
-		}
 
-		if (changedIds.length === 0) {
-			this.emit({
-				class: "RichText",
-				method: "setHorisontalAlignment",
-				item: filteredItems.map(item => item.getId()),
+			tempStorage.setHorizontalAlignment(
+				item.itemType,
 				horisontalAlignment,
-			});
+			);
 		}
+		this.emit({
+			class: "RichText",
+			method: "groupEdit",
+			itemsOps,
+		});
 	}
 
 	setVerticalAlignment(verticalAlignment: VerticalAlignment): void {
@@ -1228,35 +1038,32 @@ export class Selection {
 
 		if (this.items.isSingle()) {
 			const item = this.items.getSingle();
-			if (
-				item?.itemType === "Connector" ||
-				item?.itemType === "RichText" ||
-				item?.itemType === "Shape" ||
-				item?.itemType === "Sticker"
-			) {
-				sessionStorage.setItem(
-					`verticalAlignment_${item.itemType}`,
-					JSON.stringify(verticalAlignment),
-				);
+			if (!item) {
+				return;
 			}
+			const text = item.getRichText();
+			if (!text) {
+				return;
+			}
+
+			tempStorage.setVerticalAlignment(item.itemType, verticalAlignment);
 			if (item instanceof RichText) {
 				item.setEditorFocus(this.context);
 			}
-			if (
-				item &&
-				(item.itemType === "Shape" ||
-					item.itemType === "Sticker" ||
-					item.itemType === "Connector" ||
-					item.itemType === "Frame")
-			) {
-				(
-					item as Shape | Sticker | Connector | Frame
-				).text.setEditorFocus(this.context);
-			}
+			text.setEditorFocus(this.context);
 		}
 	}
 
 	removeFromBoard(): void {
+		const isLockedFrame = this.items
+			.list()
+			.some(
+				item => item instanceof Frame && item.transformation.isLocked,
+			);
+
+		if (isLockedFrame) {
+			return;
+		}
 		this.emit({
 			class: "Board",
 			method: "remove",
@@ -1264,6 +1071,16 @@ export class Selection {
 		});
 		this.board.tools.getSelect()?.toHighlight.clear();
 		this.setContext("None");
+	}
+
+	getIsLockedSelection(): boolean {
+		const items = this.list();
+		const isFrame = items.some(item => item.itemType === "Frame");
+		const isFrameLocked = items.some(
+			item => item.itemType === "Frame" && item.transformation.isLocked,
+		);
+
+		return isFrame && isFrameLocked;
 	}
 
 	isLocked(): boolean {
@@ -1296,11 +1113,7 @@ export class Selection {
 
 	duplicate(): void {
 		this.board.duplicate(this.copy());
-		if (this.items.isSingle()) {
-			this.setContext("EditUnderPointer");
-		} else {
-			this.setContext("SelectByRect");
-		}
+		this.setContext("EditUnderPointer");
 	}
 
 	renderItemMbr(
@@ -1312,7 +1125,12 @@ export class Selection {
 		mbr.strokeWidth = !customScale
 			? 1 / context.matrix.scaleX
 			: 1 / customScale;
-		mbr.borderColor = SELECTION_COLOR;
+
+		const selectionColor =
+			item.itemType === "Frame" && item.transformation.isLocked
+				? SELECTION_LOCKED_COLOR
+				: SELECTION_COLOR;
+		mbr.borderColor = selectionColor;
 		mbr.render(context);
 	}
 

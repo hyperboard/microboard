@@ -19,6 +19,7 @@ export class Transformation {
 	matrix = new Matrix();
 	previous = new Matrix();
 	private rotate = defaultData.rotate;
+	isLocked = false;
 
 	constructor(private id = "", private events?: Events) {}
 
@@ -32,7 +33,14 @@ export class Transformation {
 		};
 	}
 
-	deserialize(data: TransformationData): this {
+	deserialize(
+		data: TransformationData & {
+			dimension?: {
+				width: number;
+				height: number;
+			};
+		},
+	): this {
 		this.previous = this.matrix.copy();
 		if (data.translateX) {
 			this.matrix.translateX = data.translateX;
@@ -48,7 +56,18 @@ export class Transformation {
 		}
 		if (data.rotate) {
 			// TODO to rotate to a degree calculate rotation by
-			this.matrix.rotateBy(data.rotate);
+			if (data.dimension) {
+				this.matrix.rotateByObjectCenter(
+					data.rotate,
+					{
+						width: data.dimension.width,
+						height: data.dimension.height,
+					},
+					{ x: data.scaleX, y: data.scaleY },
+				);
+			} else {
+				this.matrix.rotateBy(data.rotate);
+			}
 		}
 		this.subject.publish(this, {
 			class: "Transformation",
@@ -117,6 +136,12 @@ export class Transformation {
 				break;
 			case "transformMany":
 				this.applyTransformMany(op.items[this.id]);
+				break;
+			case "locked":
+				this.applyLocked(op.locked);
+				break;
+			case "unlocked":
+				this.applyLocked(op.locked);
 				break;
 			default:
 				return;
@@ -206,6 +231,14 @@ export class Transformation {
 
 	applyRotateBy(degree: number): void {
 		this.rotateTo(this.rotate + degree);
+	}
+
+	applyLocked(locked: boolean): void {
+		this.isLocked = locked;
+	}
+
+	applyUnlocked(locked: boolean): void {
+		this.isLocked = locked;
 	}
 
 	getTranslation(): { x: number; y: number } {
@@ -361,5 +394,25 @@ export class Transformation {
 			point,
 			timeStamp,
 		});
+	}
+
+	setIsLocked(isLocked: boolean, timestamp?: number): void {
+		if (isLocked) {
+			this.emit({
+				class: "Transformation",
+				method: "locked",
+				item: [this.id],
+				locked: true,
+				timestamp,
+			});
+		} else {
+			this.emit({
+				class: "Transformation",
+				method: "unlocked",
+				item: [this.id],
+				locked: false,
+				timestamp,
+			});
+		}
 	}
 }

@@ -6,7 +6,7 @@ import {
 import { Path } from "slate";
 import { Operation } from "./EventsOperations";
 import { type ShapeOperation } from "Board/Items/Shape";
-import { DrawingOperation } from "Board/Items/Drawing/DrawingCommand";
+import { DrawingOperation } from "Board/Items/Drawing/DrawingOperation";
 import { BoardOps } from "Board/BoardOperations";
 
 // TODO API Conditional to Map

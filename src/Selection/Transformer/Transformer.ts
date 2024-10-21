@@ -1,15 +1,6 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import {
-	Frame,
-	Mbr,
-	Point,
-	Shape,
-	TransformationOperation,
-	RichText,
-	Matrix,
-	Connector,
-} from "Board/Items";
+import { Frame, Mbr, Point, Shape, RichText, Matrix } from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
@@ -25,6 +16,7 @@ import {
 	SELECTION_ANCHOR_RADIUS,
 	SELECTION_ANCHOR_WIDTH,
 	SELECTION_COLOR,
+	SELECTION_LOCKED_COLOR,
 } from "View/Tools/Selection";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
@@ -44,6 +36,7 @@ export class Transformer extends Tool {
 	beginTimeStamp = Date.now();
 	canvasDrawer = createCanvasDrawer(this.board);
 	debounceUpd = createDebounceUpdater();
+	isShiftPressed = false;
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
@@ -61,6 +54,22 @@ export class Transformer extends Tool {
 		const anchorType = getAnchorFromResizeType(resizeType);
 		pointer.setCursor(anchorType);
 		this.anchorType = anchorType;
+	}
+
+	keyDown(key: string): boolean {
+		if (key === "Shift") {
+			this.isShiftPressed = true;
+			return true;
+		}
+		return false;
+	}
+
+	keyUp(key: string): boolean {
+		if (key === "Shift") {
+			this.isShiftPressed = false;
+			return true;
+		}
+		return false;
 	}
 
 	getResizeType(): ResizeType | undefined {
@@ -87,6 +96,11 @@ export class Transformer extends Tool {
 	}
 
 	leftButtonDown(): boolean {
+		const isLockedItems = this.selection.getIsLockedSelection();
+		if (isLockedItems) {
+			return false;
+		}
+
 		this.updateAnchorType();
 		const mbr = this.selection.getMbr();
 		this.resizeType = this.getResizeType();
@@ -142,12 +156,16 @@ export class Transformer extends Tool {
 	}
 
 	pointerMoveBy(_x: number, _y: number): boolean {
+		const isLockedItems = this.selection.getIsLockedSelection();
+		if (isLockedItems) {
+			return false;
+		}
+
 		this.updateAnchorType();
 		if (!this.resizeType) {
 			return false;
 		}
 
-		// const mbr = this.mbr;
 		const mbr = this.mbr;
 		const list = this.selection.items.list();
 
@@ -166,14 +184,31 @@ export class Transformer extends Tool {
 			single instanceof Sticker ||
 			single instanceof Frame
 		) {
-			this.mbr = single.doResize(
-				this.resizeType,
-				this.board.pointer.point,
-				mbr,
-				this.oppositePoint,
-				this.startMbr || new Mbr(),
-				this.beginTimeStamp,
-			).mbr;
+			if (this.isShiftPressed) {
+				const { matrix, mbr: resizedMbr } = getProportionalResize(
+					this.resizeType,
+					this.board.pointer.point,
+					mbr,
+					this.oppositePoint,
+				);
+				this.mbr = resizedMbr;
+				const translation = this.handleMultipleItemsResize(
+					{ matrix, mbr: resizedMbr },
+					mbr,
+					isWidth,
+					isHeight,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+			} else {
+				this.mbr = single.doResize(
+					this.resizeType,
+					this.board.pointer.point,
+					mbr,
+					this.oppositePoint,
+					this.startMbr || new Mbr(),
+					this.beginTimeStamp,
+				).mbr;
+			}
 		} else if (single instanceof RichText) {
 			const { matrix, mbr: resizedMbr } = getProportionalResize(
 				this.resizeType,
@@ -297,12 +332,14 @@ export class Transformer extends Tool {
 				});
 			} else {
 				frames.forEach(frame => {
-					if (!frame.handleNesting(item, { onlyForOut: true })) {
-						if (
-							this.toDrawBorders.listAll().includes(frame) &&
-							this.toDrawBorders.listAll().includes(item)
-						) {
-							this.toDrawBorders.remove([frame, item]);
+					if (frame instanceof Frame) {
+						if (!frame.handleNesting(item, { onlyForOut: true })) {
+							if (
+								this.toDrawBorders.listAll().includes(frame) &&
+								this.toDrawBorders.listAll().includes(item)
+							) {
+								this.toDrawBorders.remove([frame, item]);
+							}
 						}
 					}
 				});
@@ -317,15 +354,23 @@ export class Transformer extends Tool {
 
 	render(context: DrawingContext): void {
 		const mbr = this.mbr;
+		const isLockedItems = this.selection.getIsLockedSelection();
+
 		if (mbr) {
 			mbr.strokeWidth = 1 / context.matrix.scaleX;
-			mbr.borderColor = SELECTION_COLOR;
+
+			const selectionColor = isLockedItems
+				? SELECTION_LOCKED_COLOR
+				: SELECTION_COLOR;
+			mbr.borderColor = selectionColor;
 			mbr.render(context);
 		}
 
-		const anchors = this.calcAnchors();
-		for (const anchor of anchors) {
-			anchor.render(context);
+		if (!isLockedItems) {
+			const anchors = this.calcAnchors();
+			for (const anchor of anchors) {
+				anchor.render(context);
+			}
 		}
 
 		this.toDrawBorders.render(context);
@@ -340,7 +385,7 @@ export class Transformer extends Tool {
 		initMbr: Mbr,
 		isWidth: boolean,
 		isHeight: boolean,
-	): TransformManyItems {
+	): TransformManyItems | boolean {
 		const { matrix } = resize;
 		const translation: TransformManyItems = {};
 		const items = this.selection.items.list();

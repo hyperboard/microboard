@@ -13,8 +13,9 @@ export interface RichTextData {
 	containerMaxWidth?: number;
 	insideOf?: string;
 	color?: string;
+	placeholderText: string;
 }
-
+// @ts-expect-error
 const richTextDataSchema: JSONSchemaType<RichTextData> = {
 	type: "object",
 	properties: {
@@ -44,5 +45,6 @@ export class DefaultRichTextData implements RichTextData {
 		public containerMaxWidth?: number,
 		public insideOf?: string,
 		public color?: string,
+		public placeholderText = "",
 	) {}
 }

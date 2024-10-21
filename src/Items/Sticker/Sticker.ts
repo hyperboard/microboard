@@ -45,7 +45,9 @@ export const StickerShape = {
 		],
 		true,
 		stickerColors["Sky Blue"],
-		"none",
+		"transparent",
+		"solid",
+		0,
 	),
 	anchorPoints: [
 		new Point(width / 2, 0),
@@ -212,7 +214,6 @@ export class Sticker implements Geometry {
 	private applyBackgroundColor(backgroundColor: string): void {
 		this.backgroundColor = backgroundColor;
 		this.stickerPath.setBackgroundColor(backgroundColor);
-
 		// @ts-expect-error
 		if (import.meta.env.INTEGRATION_UI === "microboard") {
 			if (this.text.isEmpty()) {
@@ -228,19 +229,22 @@ export class Sticker implements Geometry {
 					{
 						...DEFAULT_TEXT_STYLES,
 						fontColor: isDarkColor(backgroundColor)
-							? "rgb(255,255,255)"
-							: "rgb(20, 21, 26)",
+							? "rgb(255, 255, 255)"
+							: DEFAULT_TEXT_STYLES.fontColor,
 					},
 				);
-			} else {
+			} else if (
+				this.text.getFontColor() === DEFAULT_TEXT_STYLES.fontColor ||
+				this.text.getFontColor() === "rgb(255, 255, 255)"
+			) {
 				const selection = this.text.getCurrentSelection();
 				if (selection) {
 					this.text.selectWholeText();
 				}
 				this.text.applySelectionFontColor(
 					isDarkColor(backgroundColor)
-						? "rgb(255,255,255)"
-						: "rgb(20, 21, 26)",
+						? "rgb(255, 255, 255)"
+						: DEFAULT_TEXT_STYLES.fontColor,
 				);
 				this.text.restoreSelection(selection);
 			}
@@ -470,5 +474,9 @@ export class Sticker implements Geometry {
 		);
 
 		return res;
+	}
+
+	getRichText(): RichText {
+		return this.text;
 	}
 }
