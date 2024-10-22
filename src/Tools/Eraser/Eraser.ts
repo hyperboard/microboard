@@ -1,18 +1,14 @@
 import { Board } from "Board/Board";
-import { Point } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import {
 	DEFAULT_ERASER_COLOR,
+	DRAWING_STROKE_STYLE,
 	ERASER_STROKE_WIDTH,
 	MAX_ERASER_LINE_LENGTH,
 } from "View/Tools/AddDrawing";
-import {
-	DRAWING_POINTER_CIRCLE_COLOR,
-	DRAWING_STROKE_STYLE,
-} from "View/Tools/AddDrawing";
-import { BoardTool } from "../BoardTool";
 import { BorderStyle } from "../../Items/Path";
+import { BoardTool } from "../BoardTool";
 
 export class Eraser extends BoardTool {
 	itemType: "Eraser";
