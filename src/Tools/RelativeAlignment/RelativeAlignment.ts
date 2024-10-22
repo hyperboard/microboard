@@ -1,3 +1,4 @@
+import { Board } from "Board/Board";
 import { Item, Line, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
@@ -5,17 +6,28 @@ import { SpatialIndex } from "Board/SpatialIndex";
 export class AlignmentHelper {
 	private alignThreshold = 5;
 	snapThreshold = 5;
-	constructor(private spatialIndex: SpatialIndex) {}
+	private snapMemory: { x: number | null; y: number | null } = {
+		x: null,
+		y: null,
+	};
+	board: Board;
+
+	constructor(board: Board, private spatialIndex: SpatialIndex) {
+		this.board = board;
+	}
 	checkAlignment(movingItem: Item): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
 		const movingMBR = movingItem.getMbr();
+		const camera = this.board.camera.getMbr();
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
 			15,
 			(otherItem: Item) =>
-				otherItem !== movingMBR && otherItem.itemType !== "Connector",
+				otherItem !== movingMBR &&
+				otherItem.itemType !== "Connector" &&
+				otherItem.isInView(camera),
 			5000,
 		);
 
@@ -330,10 +342,12 @@ export class AlignmentHelper {
 		draggingItem: Item,
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
-	): boolean | undefined {
+		cursorPosition: Point,
+	): boolean {
 		const itemMbr = draggingItem.getMbr();
 		const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
+		let snapped = false;
 
 		const snapToLine = (lines: Line[], isVertical: boolean) => {
 			for (const line of lines) {
@@ -351,6 +365,9 @@ export class AlignmentHelper {
 							0,
 							beginTimeStamp,
 						);
+						this.snapMemory.x = cursorPosition.x;
+						snapped = true;
+						break;
 					} else if (
 						Math.abs(itemMbr.right - line.start.x) <
 						this.snapThreshold
@@ -360,6 +377,9 @@ export class AlignmentHelper {
 							0,
 							beginTimeStamp,
 						);
+						this.snapMemory.x = cursorPosition.x;
+						snapped = true;
+						break;
 					} else if (
 						Math.abs(itemCenterX - line.start.x) <
 						this.snapThreshold
@@ -369,6 +389,9 @@ export class AlignmentHelper {
 							0,
 							beginTimeStamp,
 						);
+						this.snapMemory.x = cursorPosition.x;
+						snapped = true;
+						break;
 					} else if (
 						Math.abs(itemCenterX - line.end.x) < this.snapThreshold
 					) {
@@ -377,6 +400,9 @@ export class AlignmentHelper {
 							0,
 							beginTimeStamp,
 						);
+						this.snapMemory.x = cursorPosition.x;
+						snapped = true;
+						break;
 					}
 				} else {
 					if (
@@ -388,6 +414,9 @@ export class AlignmentHelper {
 							line.start.y - itemMbr.top,
 							beginTimeStamp,
 						);
+						this.snapMemory.y = cursorPosition.y;
+						snapped = true;
+						break;
 					} else if (
 						Math.abs(itemMbr.bottom - line.start.y) <
 						this.snapThreshold
@@ -397,6 +426,9 @@ export class AlignmentHelper {
 							line.start.y - itemMbr.bottom,
 							beginTimeStamp,
 						);
+						this.snapMemory.y = cursorPosition.y;
+						snapped = true;
+						break;
 					} else if (
 						Math.abs(itemCenterY - line.start.y) <
 						this.snapThreshold
@@ -406,6 +438,9 @@ export class AlignmentHelper {
 							line.start.y - itemCenterY,
 							beginTimeStamp,
 						);
+						this.snapMemory.y = cursorPosition.y;
+						snapped = true;
+						break;
 					} else if (
 						Math.abs(itemCenterY - line.end.y) < this.snapThreshold
 					) {
@@ -414,11 +449,13 @@ export class AlignmentHelper {
 							line.end.y - itemCenterY,
 							beginTimeStamp,
 						);
+						this.snapMemory.y = cursorPosition.y;
+						snapped = true;
+						break;
 					}
 				}
-
-				return true;
 			}
+			return snapped;
 		};
 
 		const snappedToVertical = snapToLine(snapLines.verticalLines, true);
@@ -426,6 +463,19 @@ export class AlignmentHelper {
 			snapLines.horizontalLines,
 			false,
 		);
+
+		if (
+			this.snapMemory.x !== null &&
+			Math.abs(cursorPosition.x - this.snapMemory.x) > 10
+		) {
+			this.snapMemory.x = null;
+		}
+		if (
+			this.snapMemory.y !== null &&
+			Math.abs(cursorPosition.y - this.snapMemory.y) > 10
+		) {
+			this.snapMemory.y = null;
+		}
 
 		return snappedToVertical || snappedToHorizontal;
 	}

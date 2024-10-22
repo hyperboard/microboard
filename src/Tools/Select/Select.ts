@@ -52,7 +52,7 @@ export class Select extends Tool {
 
 	constructor(private board: Board) {
 		super();
-		this.alignmentHelper = new AlignmentHelper(board.index);
+		this.alignmentHelper = new AlignmentHelper(board, board.index);
 	}
 
 	clear(): void {
@@ -83,15 +83,24 @@ export class Select extends Tool {
 			item,
 			this.snapLines,
 			this.beginTimeStamp,
+			this.board.pointer.point,
 		);
 
-		if (this.isSnapped && this.snapCursorPos) {
+		if (this.isSnapped) {
+			if (!this.snapCursorPos) {
+				this.snapCursorPos = new Point(
+					this.board.pointer.point.x,
+					this.board.pointer.point.y,
+				);
+			}
+
 			const cursorDiffX = Math.abs(
 				this.board.pointer.point.x - this.snapCursorPos.x,
 			);
 			const cursorDiffY = Math.abs(
 				this.board.pointer.point.y - this.snapCursorPos.y,
 			);
+
 			if (
 				cursorDiffX > this.alignmentHelper.snapThreshold ||
 				cursorDiffY > this.alignmentHelper.snapThreshold
@@ -99,6 +108,12 @@ export class Select extends Tool {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 			} else {
+				if (this.snapLines.verticalLines.length > 0) {
+					this.board.pointer.point.x = this.snapCursorPos.x;
+				}
+				if (this.snapLines.horizontalLines.length > 0) {
+					this.board.pointer.point.y = this.snapCursorPos.y;
+				}
 				return true;
 			}
 		}
