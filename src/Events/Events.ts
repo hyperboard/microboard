@@ -163,19 +163,26 @@ export function createEvents(board: Board, connection: Connection): Events {
 
 	function handleBoardEventListMessage(message: BoardEventListMsg): void {
 		const existinglist = log.getList();
+
 		const isFirstBatchOfEvents =
 			existinglist.length === 0 && message.events.length > 0;
+
 		if (isFirstBatchOfEvents) {
 			handleFirstBatchOfEvents(message.events);
 		} else {
 			const maxOrder = Math.max(
 				...existinglist.map(record => record.event.order),
 			);
-			const events = message.events.slice(maxOrder);
 
-			log.insertEvents(events);
-			latestServerOrder = log.getLatestOrder();
-			subject.publish(events[0]);
+			const newEvents = message.events.filter(
+				event => event.order > maxOrder,
+			);
+
+			if (newEvents.length > 0) {
+				log.insertEvents(newEvents);
+				latestServerOrder = log.getLatestOrder();
+				subject.publish(newEvents[0]);
+			}
 		}
 		onBoardLoad();
 	}
