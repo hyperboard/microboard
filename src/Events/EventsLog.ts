@@ -4,14 +4,23 @@ import { mergeOperations } from "./Merge";
 import { Operation } from "./EventsOperations";
 import { BoardOps } from "Board/BoardOperations";
 import { BoardEvent, BoardEventPack } from "./Events";
+import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
+import { Subject } from "Subject";
 
 export interface HistoryRecord {
 	event: BoardEvent;
 	command: Command;
 }
 
+export interface RawHistoryRecords {
+	confirmedRecords: HistoryRecord[];
+	recordsToSend: HistoryRecord[];
+	newRecords: HistoryRecord[];
+}
+
 export interface EventsLog {
 	getList(): HistoryRecord[];
+	getRaw(): RawHistoryRecords;
 	insertEvents(
 		events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
 	): void;
@@ -27,6 +36,8 @@ export interface EventsLog {
 	confirmEvent(event: BoardEvent | BoardEventPack): void;
 	getLatestOrder(): number;
 	getLastConfirmed(): BoardEvent | null;
+	getSyncLog(): SyncLog;
+	syncLogSubject: SyncLogSubject;
 }
 
 interface EventsList {
@@ -42,6 +53,8 @@ interface EventsList {
 	backwardIterable(): Iterable<HistoryRecord>;
 	revertUnconfirmed(): void;
 	applyUnconfirmed(): void;
+	getSyncLog(): SyncLog;
+	syncLogSubject: SyncLogSubject;
 	clear(): void;
 }
 
@@ -49,6 +62,8 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
+
+	const { log: syncLog, subject: syncLogSubject } = createSyncLog();
 
 	function revert(records: HistoryRecord[]): void {
 		for (const record of records) {
@@ -65,6 +80,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 
 	return {
 		addConfirmedRecords(records: HistoryRecord[]): void {
+			syncLog.push({
+				msg: "confirmed",
+				records: [...records],
+			});
 			confirmedRecords.push(...records);
 		},
 
@@ -87,6 +106,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 					}
 				}
 
+				syncLog.push({
+					msg: "addedNew",
+					records: [record],
+				});
 				newRecords.push(record);
 			}
 		},
@@ -102,6 +125,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 				records[i].event.order = events[i].order;
 			}
 
+			syncLog.push({
+				msg: "confirmed",
+				records: [...records],
+			});
 			confirmedRecords.push(...records);
 			recordsToSend.splice(0, records.length);
 		},
@@ -122,8 +149,18 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			return [...confirmedRecords, ...recordsToSend, ...newRecords];
 		},
 
+		getSyncLog(): SyncLog {
+			return syncLog;
+		},
+
+		syncLogSubject,
+
 		prepareRecordsToSend(): HistoryRecord[] {
 			if (recordsToSend.length === 0 && newRecords.length > 0) {
+				syncLog.push({
+					msg: "toSend",
+					records: [...newRecords],
+				});
 				recordsToSend.push(...newRecords);
 				newRecords.length = 0;
 			}
@@ -153,11 +190,21 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		revertUnconfirmed(): void {
 			revert(newRecords.reverse());
 			revert(recordsToSend.reverse());
+
+			syncLog.push({
+				msg: "revertUnconfirmed",
+				records: [...recordsToSend, ...newRecords],
+			});
 		},
 
 		applyUnconfirmed(): void {
 			apply(recordsToSend);
 			apply(newRecords);
+
+			syncLog.push({
+				msg: "applyUnconfirmed",
+				records: [...recordsToSend, ...newRecords],
+			});
 		},
 
 		clear(): void {
@@ -178,6 +225,14 @@ export function createEventsLog(board: Board): EventsLog {
 
 	function getList(): HistoryRecord[] {
 		return list.getAllRecords();
+	}
+
+	function getRaw(): RawHistoryRecords {
+		return {
+			confirmedRecords: list.getConfirmedRecords(),
+			recordsToSend: list.getRecordsToSend(),
+			newRecords: list.getNewRecords(),
+		};
 	}
 
 	function deserialize(events: BoardEvent[]): void {
@@ -369,6 +424,9 @@ export function createEventsLog(board: Board): EventsLog {
 
 	return {
 		getList,
+		getRaw,
+		getSyncLog: list.getSyncLog,
+		syncLogSubject: list.syncLogSubject,
 		insertEvents,
 		confirmEvent,
 		push,

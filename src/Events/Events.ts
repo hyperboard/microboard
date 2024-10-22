@@ -15,6 +15,7 @@ import { Subject } from "Subject";
 import { Command } from "./Command";
 import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
+import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
 
 export interface BoardEvent {
@@ -41,10 +42,20 @@ export interface BoardEventPackBody {
 	operations: Operation[];
 }
 
+export interface RawEvents {
+	confirmedEvents: BoardEvent[];
+	eventsToSend: BoardEvent[];
+	newEvents: BoardEvent[];
+}
+
 export interface Events {
 	subject: Subject<BoardEvent>;
 	serialize(): BoardEvent[];
 	deserialize(serializedData: BoardEvent[]): void;
+	getRaw: () => RawEvents;
+	getAll: () => BoardEvent[];
+	getSyncLog: () => SyncLog;
+	syncLogSubject: SyncLogSubject;
 	getSnapshot(): BoardSnapshot;
 	disconnect(): void;
 	emit(operation: Operation, command: Command): void;
@@ -499,11 +510,26 @@ export function createEvents(board: Board, connection: Connection): Events {
 		return connection.connectionId;
 	}
 
+	function getRaw(): RawEvents {
+		const rawLog = log.getRaw();
+		return {
+			confirmedEvents: rawLog.confirmedRecords.map(
+				record => record.event,
+			),
+			eventsToSend: rawLog.recordsToSend.map(record => record.event),
+			newEvents: rawLog.newRecords.map(record => record.event),
+		};
+	}
+
 	const instance: Events = {
 		subject,
 		serialize: log.serialize,
 		deserialize: log.deserialize,
 		getSnapshot: log.getSnapshot,
+		getRaw,
+		getSyncLog: log.getSyncLog,
+		syncLogSubject: log.syncLogSubject,
+		getAll: () => log.getList().map(record => record.event),
 		disconnect,
 		emit,
 		apply,

@@ -35,3 +35,5 @@ export type ItemOperation =
 export type UndoableOperation = BoardOps | ItemOperation;
 
 export type Operation = UndoableOperation | EventsOperation;
+
+export type MethodType = Operation["method"];
