@@ -4,17 +4,23 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold = 5;
-	snapThreshold = 5;
+	private alignThreshold = 10;
 	private snapMemory: { x: number | null; y: number | null } = {
 		x: null,
 		y: null,
 	};
 	board: Board;
+	snapThreshold = 10;
 
 	constructor(board: Board, private spatialIndex: SpatialIndex) {
 		this.board = board;
 	}
+
+	calculateLineThickness(zoom: number): number {
+		const baseThickness = 1;
+		return baseThickness / (zoom / 100);
+	}
+
 	checkAlignment(movingItem: Item): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
@@ -55,39 +61,39 @@ export class AlignmentHelper {
 
 			if (!isSameWidth) {
 				if (
-					Math.abs(centerXItem - centerXMoving) < this.alignThreshold
+					Math.abs(centerXMoving - centerXItem) < this.alignThreshold
 				) {
-					verticalLines.push(
-						new Line(
-							new Point(
-								centerXItem,
-								Math.min(itemMbr.top, movingMBR.top),
-							),
-							new Point(
-								centerXItem,
-								Math.max(itemMbr.bottom, movingMBR.bottom),
-							),
+					const line = new Line(
+						new Point(
+							centerXItem,
+							Math.max(itemMbr.top, movingMBR.top),
+						),
+						new Point(
+							centerXItem,
+							Math.min(itemMbr.bottom, movingMBR.bottom),
 						),
 					);
+					line.isCenter = true;
+					verticalLines.push(line);
 				}
 			}
 
 			if (!isSameHeight) {
 				if (
-					Math.abs(centerYItem - centerYMoving) < this.alignThreshold
+					Math.abs(centerYMoving - centerYItem) < this.alignThreshold
 				) {
-					horizontalLines.push(
-						new Line(
-							new Point(
-								Math.min(itemMbr.left, movingMBR.left),
-								centerYItem,
-							),
-							new Point(
-								Math.max(itemMbr.right, movingMBR.right),
-								centerYItem,
-							),
+					const line = new Line(
+						new Point(
+							Math.max(itemMbr.left, movingMBR.left),
+							centerYItem,
+						),
+						new Point(
+							Math.min(itemMbr.right, movingMBR.right),
+							centerYItem,
 						),
 					);
+					line.isCenter = true;
+					horizontalLines.push(line);
 				}
 			}
 
@@ -486,22 +492,84 @@ export class AlignmentHelper {
 		scale: number,
 	): void {
 		context.ctx.save();
-		context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
-		context.ctx.lineWidth = 1 / scale;
-		context.ctx.setLineDash([5, 5]);
+		const zoom = scale * 100;
+		const lineWidth = this.calculateLineThickness(zoom);
+		context.ctx.lineWidth = lineWidth;
 
+		const offset = 10;
+		const perpendicularLength = 5;
 		snapLines.verticalLines.forEach(line => {
-			context.ctx.beginPath();
-			context.ctx.moveTo(line.start.x, line.start.y);
-			context.ctx.lineTo(line.end.x, line.end.y);
-			context.ctx.stroke();
+			if (line.isCenter) {
+				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+				context.ctx.setLineDash([]);
+				context.ctx.beginPath();
+				context.ctx.moveTo(line.start.x, line.start.y - offset);
+				context.ctx.lineTo(line.end.x, line.end.y + offset);
+				context.ctx.stroke();
+
+				context.ctx.beginPath();
+				context.ctx.moveTo(
+					line.start.x - perpendicularLength,
+					line.start.y - offset,
+				);
+				context.ctx.lineTo(
+					line.start.x + perpendicularLength,
+					line.start.y - offset,
+				);
+				context.ctx.moveTo(
+					line.end.x - perpendicularLength,
+					line.end.y + offset,
+				);
+				context.ctx.lineTo(
+					line.end.x + perpendicularLength,
+					line.end.y + offset,
+				);
+				context.ctx.stroke();
+			} else {
+				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+				context.ctx.setLineDash([5, 5]);
+				context.ctx.beginPath();
+				context.ctx.moveTo(line.start.x, line.start.y);
+				context.ctx.lineTo(line.end.x, line.end.y);
+				context.ctx.stroke();
+			}
 		});
 
 		snapLines.horizontalLines.forEach(line => {
-			context.ctx.beginPath();
-			context.ctx.moveTo(line.start.x, line.start.y);
-			context.ctx.lineTo(line.end.x, line.end.y);
-			context.ctx.stroke();
+			if (line.isCenter) {
+				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+				context.ctx.setLineDash([]);
+				context.ctx.beginPath();
+				context.ctx.moveTo(line.start.x - offset, line.start.y);
+				context.ctx.lineTo(line.end.x + offset, line.end.y);
+				context.ctx.stroke();
+
+				context.ctx.beginPath();
+				context.ctx.moveTo(
+					line.start.x - offset,
+					line.start.y - perpendicularLength,
+				);
+				context.ctx.lineTo(
+					line.start.x - offset,
+					line.start.y + perpendicularLength,
+				);
+				context.ctx.moveTo(
+					line.end.x + offset,
+					line.end.y - perpendicularLength,
+				);
+				context.ctx.lineTo(
+					line.end.x + offset,
+					line.end.y + perpendicularLength,
+				);
+				context.ctx.stroke();
+			} else {
+				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+				context.ctx.setLineDash([5, 5]);
+				context.ctx.beginPath();
+				context.ctx.moveTo(line.start.x, line.start.y);
+				context.ctx.lineTo(line.end.x, line.end.y);
+				context.ctx.stroke();
+			}
 		});
 
 		context.ctx.restore();

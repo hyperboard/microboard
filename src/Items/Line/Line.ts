@@ -91,8 +91,15 @@ export function getIntersectionPointFromIntersectingLines(
 
 export class Line {
 	type = "Line" as const;
+	isCenter: boolean = false;
 
-	constructor(public start = new Point(), public end = new Point()) {}
+	constructor(
+		public start = new Point(),
+		public end = new Point(),
+		isCenter?: boolean,
+	) {
+		this.isCenter = isCenter ?? false;
+	}
 
 	getLength(): number {
 		const { start, end } = this;
