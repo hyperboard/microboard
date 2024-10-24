@@ -401,7 +401,11 @@ export function createEvents(board: Board, connection: Connection): Events {
 		if (!record) {
 			return;
 		}
-		record.command.revert();
+		if (record.event.body.operation.method === "undo") {
+			record.command.apply();
+		} else {
+			record.command.revert();
+		}
 	}
 
 	addOperationHandler("undo", applyUndo);

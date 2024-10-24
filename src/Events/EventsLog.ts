@@ -5,7 +5,6 @@ import { Operation } from "./EventsOperations";
 import { BoardOps } from "Board/BoardOperations";
 import { BoardEvent, BoardEventPack } from "./Events";
 import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
-import { Subject } from "Subject";
 
 export interface HistoryRecord {
 	event: BoardEvent;
@@ -243,8 +242,8 @@ export function createEventsLog(board: Board): EventsLog {
 			const record = { event, command };
 			command.apply();
 			records.push(record);
+			list.addConfirmedRecords([record]);
 		}
-		list.addConfirmedRecords(records);
 	}
 
 	function getSnapshot(): BoardSnapshot {
@@ -326,14 +325,12 @@ export function createEventsLog(board: Board): EventsLog {
 	function handleEventsInsertion(events: BoardEvent[]): void {
 		list.revertUnconfirmed();
 		const mergedEvents = mergeEvents(events);
-		const records: HistoryRecord[] = [];
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			records.push(record);
+			list.addConfirmedRecords([record]);
 		}
-		list.addConfirmedRecords(records);
 		list.applyUnconfirmed();
 	}
 
@@ -348,13 +345,44 @@ export function createEventsLog(board: Board): EventsLog {
 		return record;
 	}
 
+	function getTimeStamp(rec: HistoryRecord): number | undefined {
+		return (
+			("timeStamp" in rec.event.body.operation &&
+				rec.event.body.operation.timeStamp) ||
+			undefined
+		);
+	}
+
+	function createTimeStampAmountMap(
+		records: Iterable<HistoryRecord>,
+		filter?: (rec: HistoryRecord) => boolean,
+	): Map<number, number> {
+		const timeStampMap = new Map<number, number>();
+
+		for (const record of records) {
+			if (filter && !filter(record)) {
+				continue;
+			}
+			const timeStamp = getTimeStamp(record);
+			if (timeStamp) {
+				const currAmount = timeStampMap.get(timeStamp) || 0;
+				timeStampMap.set(timeStamp, currAmount + 1);
+			}
+		}
+		return timeStampMap;
+	}
+
 	function getUnorderedRecords(): HistoryRecord[] {
 		return list.getRecordsToSend().concat(list.getNewRecords());
 	}
 
-	// TODO: handle merge of records at different stages
 	function getUndoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
+
+		const timeStampMap = createTimeStampAmountMap(
+			list.backwardIterable(),
+			rec => rec.event.body.userId === userId,
+		);
 
 		for (const record of list.backwardIterable()) {
 			if (record.event.body.userId !== userId) {
@@ -362,7 +390,16 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 
 			if (record.event.body.operation.method === "undo") {
-				counter++;
+				const undid = getRecordById(
+					record.event.body.operation.eventId,
+				);
+				const stamp = undid && getTimeStamp(undid);
+				if (stamp) {
+					const mappedAmount = timeStampMap.get(stamp);
+					counter += mappedAmount || 1;
+				} else {
+					counter++;
+				}
 			} else if (counter === 0) {
 				return record;
 			} else {
@@ -373,7 +410,6 @@ export function createEventsLog(board: Board): EventsLog {
 		return null;
 	}
 
-	// TODO: handle merge of records at different stages
 	function getRedoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
 
@@ -405,9 +441,36 @@ export function createEventsLog(board: Board): EventsLog {
 		return null;
 	}
 
+	function mergeRecordsByTimestamp(
+		timeStamp: number,
+	): HistoryRecord | undefined {
+		const toMerge: BoardEvent[] = [];
+		for (const record of list.forwardIterable()) {
+			if (
+				"timeStamp" in record.event.body.operation &&
+				record.event.body.operation.timeStamp === timeStamp
+			) {
+				toMerge.push(record.event);
+			}
+		}
+		const merged = mergeEvents(toMerge);
+		if (merged.length === 1) {
+			const event = merged[0];
+			const command = createCommand(board, event.body.operation);
+			const record = { event, command };
+			return record;
+		}
+		return undefined;
+	}
+
 	function getRecordById(id: string): HistoryRecord | undefined {
 		for (const record of list.forwardIterable()) {
 			if (record.event.body.eventId === id) {
+				const timeStamp = getTimeStamp(record);
+				if (timeStamp) {
+					const mergedRecord = mergeRecordsByTimestamp(timeStamp);
+					return mergedRecord ?? record;
+				}
 				return record;
 			}
 		}
