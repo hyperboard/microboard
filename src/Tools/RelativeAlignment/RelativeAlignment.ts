@@ -33,6 +33,7 @@ export class AlignmentHelper {
 			(otherItem: Item) =>
 				otherItem !== movingMBR &&
 				otherItem.itemType !== "Connector" &&
+				otherItem.itemType !== "Drawing" &&
 				otherItem.isInView(camera),
 			5000,
 		);
