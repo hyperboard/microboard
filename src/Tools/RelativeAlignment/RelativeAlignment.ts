@@ -4,13 +4,13 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold = 10;
+	private alignThreshold = 5;
 	private snapMemory: { x: number | null; y: number | null } = {
 		x: null,
 		y: null,
 	};
 	board: Board;
-	snapThreshold = 10;
+	snapThreshold = 5;
 
 	constructor(board: Board, private spatialIndex: SpatialIndex) {
 		this.board = board;
@@ -27,6 +27,9 @@ export class AlignmentHelper {
 	} {
 		const movingMBR = movingItem.getMbr();
 		const camera = this.board.camera.getMbr();
+		const cameraWidth = camera.getWidth();
+		const scale = this.board.camera.getScale();
+		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 15);
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
 			15,
@@ -35,7 +38,7 @@ export class AlignmentHelper {
 				otherItem.itemType !== "Connector" &&
 				otherItem.itemType !== "Drawing" &&
 				otherItem.isInView(camera),
-			5000,
+			cameraWidth,
 		);
 
 		const verticalLines: Line[] = [];
@@ -62,43 +65,45 @@ export class AlignmentHelper {
 
 			if (!isSameWidth) {
 				if (
-					Math.abs(centerXMoving - centerXItem) < this.alignThreshold
+					Math.abs(centerXMoving - centerXItem) <
+					dynamicAlignThreshold
 				) {
 					const line = new Line(
 						new Point(
 							centerXItem,
-							Math.max(itemMbr.top, movingMBR.top),
+							Math.min(itemMbr.top, movingMBR.top),
 						),
 						new Point(
 							centerXItem,
-							Math.min(itemMbr.bottom, movingMBR.bottom),
+							Math.max(itemMbr.bottom, movingMBR.bottom),
 						),
 					);
-					line.isCenter = true;
 					verticalLines.push(line);
 				}
 			}
 
 			if (!isSameHeight) {
 				if (
-					Math.abs(centerYMoving - centerYItem) < this.alignThreshold
+					Math.abs(centerYMoving - centerYItem) <
+					dynamicAlignThreshold
 				) {
 					const line = new Line(
 						new Point(
-							Math.max(itemMbr.left, movingMBR.left),
+							Math.min(itemMbr.left, movingMBR.left),
 							centerYItem,
 						),
 						new Point(
-							Math.min(itemMbr.right, movingMBR.right),
+							Math.max(itemMbr.right, movingMBR.right),
 							centerYItem,
 						),
 					);
-					line.isCenter = true;
 					horizontalLines.push(line);
 				}
 			}
 
-			if (Math.abs(itemMbr.left - movingMBR.left) < this.alignThreshold) {
+			if (
+				Math.abs(itemMbr.left - movingMBR.left) < dynamicAlignThreshold
+			) {
 				verticalLines.push(
 					new Line(
 						new Point(
@@ -113,7 +118,8 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(itemMbr.right - movingMBR.right) < this.alignThreshold
+				Math.abs(itemMbr.right - movingMBR.right) <
+				dynamicAlignThreshold
 			) {
 				verticalLines.push(
 					new Line(
@@ -129,7 +135,7 @@ export class AlignmentHelper {
 				);
 			}
 
-			if (Math.abs(itemMbr.top - movingMBR.top) < this.alignThreshold) {
+			if (Math.abs(itemMbr.top - movingMBR.top) < dynamicAlignThreshold) {
 				horizontalLines.push(
 					new Line(
 						new Point(
@@ -145,7 +151,7 @@ export class AlignmentHelper {
 			}
 			if (
 				Math.abs(itemMbr.bottom - movingMBR.bottom) <
-				this.alignThreshold
+				dynamicAlignThreshold
 			) {
 				horizontalLines.push(
 					new Line(
@@ -161,7 +167,7 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(itemMbr.left - movingMBR.right) < this.alignThreshold
+				Math.abs(itemMbr.left - movingMBR.right) < dynamicAlignThreshold
 			) {
 				verticalLines.push(
 					new Line(
@@ -177,7 +183,7 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(itemMbr.right - movingMBR.left) < this.alignThreshold
+				Math.abs(itemMbr.right - movingMBR.left) < dynamicAlignThreshold
 			) {
 				verticalLines.push(
 					new Line(
@@ -193,7 +199,7 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(itemMbr.top - movingMBR.bottom) < this.alignThreshold
+				Math.abs(itemMbr.top - movingMBR.bottom) < dynamicAlignThreshold
 			) {
 				horizontalLines.push(
 					new Line(
@@ -209,7 +215,7 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(itemMbr.bottom - movingMBR.top) < this.alignThreshold
+				Math.abs(itemMbr.bottom - movingMBR.top) < dynamicAlignThreshold
 			) {
 				horizontalLines.push(
 					new Line(
@@ -224,7 +230,9 @@ export class AlignmentHelper {
 					),
 				);
 			}
-			if (Math.abs(centerXMoving - itemMbr.left) < this.alignThreshold) {
+			if (
+				Math.abs(centerXMoving - itemMbr.left) < dynamicAlignThreshold
+			) {
 				verticalLines.push(
 					new Line(
 						new Point(
@@ -238,7 +246,9 @@ export class AlignmentHelper {
 					),
 				);
 			}
-			if (Math.abs(centerXMoving - itemMbr.right) < this.alignThreshold) {
+			if (
+				Math.abs(centerXMoving - itemMbr.right) < dynamicAlignThreshold
+			) {
 				verticalLines.push(
 					new Line(
 						new Point(
@@ -252,7 +262,7 @@ export class AlignmentHelper {
 					),
 				);
 			}
-			if (Math.abs(centerYMoving - itemMbr.top) < this.alignThreshold) {
+			if (Math.abs(centerYMoving - itemMbr.top) < dynamicAlignThreshold) {
 				horizontalLines.push(
 					new Line(
 						new Point(
@@ -267,7 +277,7 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(centerYMoving - itemMbr.bottom) < this.alignThreshold
+				Math.abs(centerYMoving - itemMbr.bottom) < dynamicAlignThreshold
 			) {
 				horizontalLines.push(
 					new Line(
@@ -282,7 +292,7 @@ export class AlignmentHelper {
 					),
 				);
 			}
-			if (Math.abs(movingMBR.top - centerYItem) < this.alignThreshold) {
+			if (Math.abs(movingMBR.top - centerYItem) < dynamicAlignThreshold) {
 				horizontalLines.push(
 					new Line(
 						new Point(
@@ -297,7 +307,7 @@ export class AlignmentHelper {
 				);
 			}
 			if (
-				Math.abs(movingMBR.bottom - centerYItem) < this.alignThreshold
+				Math.abs(movingMBR.bottom - centerYItem) < dynamicAlignThreshold
 			) {
 				horizontalLines.push(
 					new Line(
@@ -312,7 +322,9 @@ export class AlignmentHelper {
 					),
 				);
 			}
-			if (Math.abs(movingMBR.left - centerXItem) < this.alignThreshold) {
+			if (
+				Math.abs(movingMBR.left - centerXItem) < dynamicAlignThreshold
+			) {
 				verticalLines.push(
 					new Line(
 						new Point(
@@ -326,7 +338,9 @@ export class AlignmentHelper {
 					),
 				);
 			}
-			if (Math.abs(movingMBR.right - centerXItem) < this.alignThreshold) {
+			if (
+				Math.abs(movingMBR.right - centerXItem) < dynamicAlignThreshold
+			) {
 				verticalLines.push(
 					new Line(
 						new Point(
@@ -356,6 +370,9 @@ export class AlignmentHelper {
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 		let snapped = false;
 
+		const scale = this.board.camera.getScale();
+		const dynamicSnapThreshold = Math.min(this.snapThreshold / scale, 15);
+
 		const snapToLine = (lines: Line[], isVertical: boolean) => {
 			for (const line of lines) {
 				if (!line) {
@@ -365,7 +382,7 @@ export class AlignmentHelper {
 				if (isVertical) {
 					if (
 						Math.abs(itemMbr.left - line.start.x) <
-						this.snapThreshold
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							line.start.x - itemMbr.left,
@@ -377,7 +394,7 @@ export class AlignmentHelper {
 						break;
 					} else if (
 						Math.abs(itemMbr.right - line.start.x) <
-						this.snapThreshold
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							line.start.x - itemMbr.right,
@@ -389,7 +406,7 @@ export class AlignmentHelper {
 						break;
 					} else if (
 						Math.abs(itemCenterX - line.start.x) <
-						this.snapThreshold
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							line.start.x - itemCenterX,
@@ -400,7 +417,8 @@ export class AlignmentHelper {
 						snapped = true;
 						break;
 					} else if (
-						Math.abs(itemCenterX - line.end.x) < this.snapThreshold
+						Math.abs(itemCenterX - line.end.x) <
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							line.end.x - itemCenterX,
@@ -414,7 +432,7 @@ export class AlignmentHelper {
 				} else {
 					if (
 						Math.abs(itemMbr.top - line.start.y) <
-						this.snapThreshold
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							0,
@@ -426,7 +444,7 @@ export class AlignmentHelper {
 						break;
 					} else if (
 						Math.abs(itemMbr.bottom - line.start.y) <
-						this.snapThreshold
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							0,
@@ -438,7 +456,7 @@ export class AlignmentHelper {
 						break;
 					} else if (
 						Math.abs(itemCenterY - line.start.y) <
-						this.snapThreshold
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							0,
@@ -449,7 +467,8 @@ export class AlignmentHelper {
 						snapped = true;
 						break;
 					} else if (
-						Math.abs(itemCenterY - line.end.y) < this.snapThreshold
+						Math.abs(itemCenterY - line.end.y) <
+						dynamicSnapThreshold
 					) {
 						draggingItem.transformation.translateBy(
 							0,
@@ -465,12 +484,6 @@ export class AlignmentHelper {
 			return snapped;
 		};
 
-		const snappedToVertical = snapToLine(snapLines.verticalLines, true);
-		const snappedToHorizontal = snapToLine(
-			snapLines.horizontalLines,
-			false,
-		);
-
 		if (
 			this.snapMemory.x !== null &&
 			Math.abs(cursorPosition.x - this.snapMemory.x) > 10
@@ -483,6 +496,12 @@ export class AlignmentHelper {
 		) {
 			this.snapMemory.y = null;
 		}
+
+		const snappedToVertical = snapToLine(snapLines.verticalLines, true);
+		const snappedToHorizontal = snapToLine(
+			snapLines.horizontalLines,
+			false,
+		);
 
 		return snappedToVertical || snappedToHorizontal;
 	}
@@ -497,80 +516,22 @@ export class AlignmentHelper {
 		const lineWidth = this.calculateLineThickness(zoom);
 		context.ctx.lineWidth = lineWidth;
 
-		const offset = 10;
-		const perpendicularLength = 5;
 		snapLines.verticalLines.forEach(line => {
-			if (line.isCenter) {
-				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
-				context.ctx.setLineDash([]);
-				context.ctx.beginPath();
-				context.ctx.moveTo(line.start.x, line.start.y - offset);
-				context.ctx.lineTo(line.end.x, line.end.y + offset);
-				context.ctx.stroke();
-
-				context.ctx.beginPath();
-				context.ctx.moveTo(
-					line.start.x - perpendicularLength,
-					line.start.y - offset,
-				);
-				context.ctx.lineTo(
-					line.start.x + perpendicularLength,
-					line.start.y - offset,
-				);
-				context.ctx.moveTo(
-					line.end.x - perpendicularLength,
-					line.end.y + offset,
-				);
-				context.ctx.lineTo(
-					line.end.x + perpendicularLength,
-					line.end.y + offset,
-				);
-				context.ctx.stroke();
-			} else {
-				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
-				context.ctx.setLineDash([5, 5]);
-				context.ctx.beginPath();
-				context.ctx.moveTo(line.start.x, line.start.y);
-				context.ctx.lineTo(line.end.x, line.end.y);
-				context.ctx.stroke();
-			}
+			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+			context.ctx.setLineDash([5, 5]);
+			context.ctx.beginPath();
+			context.ctx.moveTo(line.start.x, line.start.y);
+			context.ctx.lineTo(line.end.x, line.end.y);
+			context.ctx.stroke();
 		});
 
 		snapLines.horizontalLines.forEach(line => {
-			if (line.isCenter) {
-				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
-				context.ctx.setLineDash([]);
-				context.ctx.beginPath();
-				context.ctx.moveTo(line.start.x - offset, line.start.y);
-				context.ctx.lineTo(line.end.x + offset, line.end.y);
-				context.ctx.stroke();
-
-				context.ctx.beginPath();
-				context.ctx.moveTo(
-					line.start.x - offset,
-					line.start.y - perpendicularLength,
-				);
-				context.ctx.lineTo(
-					line.start.x - offset,
-					line.start.y + perpendicularLength,
-				);
-				context.ctx.moveTo(
-					line.end.x + offset,
-					line.end.y - perpendicularLength,
-				);
-				context.ctx.lineTo(
-					line.end.x + offset,
-					line.end.y + perpendicularLength,
-				);
-				context.ctx.stroke();
-			} else {
-				context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
-				context.ctx.setLineDash([5, 5]);
-				context.ctx.beginPath();
-				context.ctx.moveTo(line.start.x, line.start.y);
-				context.ctx.lineTo(line.end.x, line.end.y);
-				context.ctx.stroke();
-			}
+			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+			context.ctx.setLineDash([5, 5]);
+			context.ctx.beginPath();
+			context.ctx.moveTo(line.start.x, line.start.y);
+			context.ctx.lineTo(line.end.x, line.end.y);
+			context.ctx.stroke();
 		});
 
 		context.ctx.restore();
