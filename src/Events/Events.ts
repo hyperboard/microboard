@@ -304,7 +304,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			sendBoardEvent(
 				board.getBoardId(),
 				pendingEvent.event,
-				currentSequenceNumber,
+				currentSequenceNumber - 1,
 			);
 		}
 	}
