@@ -13,7 +13,6 @@ import {
 } from "slate";
 import { RemoveNodeOperation } from "slate";
 import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
-import { ItemOp } from "Board/Items/RichText/RichTextOperations";
 
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 
@@ -220,7 +219,7 @@ function transformRichTextOperation(
 				return toTransformItemOp;
 			}
 
-			const transformedOps: Operation[] = [];
+			const transformedOps: SlateOp[] = [];
 
 			for (const confOp of confirmedItemOp.ops) {
 				for (const transfOp of toTransformItemOp.ops) {
@@ -294,7 +293,7 @@ function transformRichTextOperation(
 	// edit - groupEdit
 	if (confirmed.method === "edit" && toTransform.method === "groupEdit") {
 		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
-			const transformedOps: Operation[] = [];
+			const transformedOps: SlateOp[] = [];
 
 			for (const confOp of confirmed.ops) {
 				for (const transfOp of toTransformItemOp.ops) {
