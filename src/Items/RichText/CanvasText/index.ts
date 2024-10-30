@@ -1,15 +1,12 @@
-import { getApiUrl } from "Config";
-import { BlockNode } from "../Editor/BlockNode";
-import { TextNode } from "../Editor/TextNode";
 import * as flow from 'dropflow';
 import { Descendant } from 'slate';
+import { BlockNode } from "../Editor/BlockNode";
+import { DEFAULT_TEXT_STYLES, loadFonts } from 'View/Items/RichText';
 
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial.ttf`, import.meta.url));
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial_Bold.ttf`, import.meta.url));
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial_Italic.ttf`, import.meta.url));
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial_Bold_Italic.ttf`, import.meta.url));
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
+
+await loadFonts();
 
 function getActualWidth(text: string, style: flow.DeclaredStyle, maxWidth: number): number {
 	const line = trimTextToFitWidth(text, style, maxWidth);
@@ -55,7 +52,7 @@ function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number): Drop
 	for (const node of slateNodes) {
 		if (node.type === 'paragraph') {
 			const paragraphStyle: flow.DeclaredStyle = {
-				textAlign: node.horisontalAlignment || 'left', 
+				textAlign: node.horisontalAlignment || 'left',
 				width: maxWidth,
 			};
 
@@ -65,15 +62,15 @@ function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number): Drop
 					fontStyle: child.italic ? 'italic' : 'normal',
 					// textDecoration: child.underline ? 'underline' : child['line-through'] ? 'line-through' : 'none',
 					color: child.fontColor && rgbRegex.test(child.fontColor)
-					? (() => {
-						const match = child.fontColor.match(rgbRegex);
-						return match
-							? { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]), a: 1 }
-							: { r: 0, g: 0, b: 0, a: 1 };
-					})()
-					: { r: 0, g: 0, b: 0, a: 1 },
+						? (() => {
+							const match = child.fontColor.match(rgbRegex);
+							return match
+								? { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]), a: 1 }
+								: { r: 0, g: 0, b: 0, a: 1 };
+						})()
+						: { r: 0, g: 0, b: 0, a: 1 },
 					fontSize: child.fontSize || 14,
-					fontFamily: ["Arial"],
+					fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
 					whiteSpace: "pre-wrap",
 					overflowWrap: "break-word",
 					backgroundColor: child.fontHighlight && rgbRegex.test(child.fontHighlight)
@@ -101,9 +98,9 @@ function createFlowDivs(dropflowNodes: {
 	style: flow.DeclaredStyle;
 	children: { style: flow.DeclaredStyle; text: string }[];
 }[]): flow.HTMLElement[] {
-	return dropflowNodes.map(paragraph => 
-		flow.h('div', { style: paragraph.style }, 
-			paragraph.children.map(child => 
+	return dropflowNodes.map(paragraph =>
+		flow.h('div', { style: paragraph.style },
+			paragraph.children.map(child =>
 				flow.h('span', { style: child.style }, [child.text])
 			)
 		)
@@ -144,27 +141,27 @@ export function getBlockNodes(data: Descendant[], maxWidth: number): LayoutBlock
 	}
 
 	return {
-			// nodes: dropflowNodes,
-			nodes: [],
-			maxWidth,
-			width,
-			height,
-			render: (ctx: CanvasRenderingContext2D, scale?: number) => {
-					if (scale) {
-						ctx.scale(scale, scale);
-					}
-					// console.log("SCALE", scale);
-					const canvas = ctx.canvas;
-					flow.renderToCanvas(rootElement, canvas);
-					if (scale) {
-						ctx.scale(1 / scale, 1 / scale);
-					}
-			},
-			realign: (newMaxWidth: number) => {
-					// Implement realign logic if needed
-			},
-			recoordinate: (newMaxWidth?: number) => {
-					// Implement recoordinate logic if needed
-			},
+		// nodes: dropflowNodes,
+		nodes: [],
+		maxWidth,
+		width,
+		height,
+		render: (ctx: CanvasRenderingContext2D, scale?: number) => {
+			if (scale) {
+				ctx.scale(scale, scale);
+			}
+			// console.log("SCALE", scale);
+			const canvas = ctx.canvas;
+			flow.renderToCanvas(rootElement, canvas);
+			if (scale) {
+				ctx.scale(1 / scale, 1 / scale);
+			}
+		},
+		realign: (newMaxWidth: number) => {
+			// Implement realign logic if needed
+		},
+		recoordinate: (newMaxWidth?: number) => {
+			// Implement recoordinate logic if needed
+		},
 	};
 }
