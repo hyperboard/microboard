@@ -13,77 +13,95 @@ import {
 } from "slate";
 import { RemoveNodeOperation } from "slate";
 import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
+import { ItemOp } from "Board/Items/RichText/RichTextOperations";
 
-// InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation
+// InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 
 // Arsenii - any_InsertTextOperation
 // Sawa - any_SetNodeOperation
 
 // any_RemoveTextOperation === any_InsertTextOperation ? - одинаковые трансформации для remove и insert ? 
 
-const operationTransformMap: Record<string, Record<string, Function>> = {
+const operationTransformMap: Record<TextOperation['type'] | NodeOperation['type'], Record<TextOperation['type'] | NodeOperation['type'], Function>> = {
 	insert_text: {
 		insert_text: insertText_insertText,
 		remove_text: insertText_removeText,
-		split_node: insertText_splitNode,
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: insertText_splitNode,
 	},
 	remove_text: {
 		insert_text: removeText_insertText,
 		remove_text: () => {},
-		split_node: () => {},
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: () => {},
+	},
+	insert_node: {
+		insert_text: () => {},
+		remove_text: () => {},
+		insert_node: () => {},
+		merge_node: () => {},
+		move_node: () => {},
+		remove_node: () => {},
+		set_node: () => {},
+		split_node: () => {},
 	},
 	split_node: {
 		insert_text: splitNode_insertText,
 		remove_text: () => {},
-		split_node: () => {},
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: () => {},
 	},
 	merge_node: {
 		insert_text: mergeNode_insertText,
 		remove_text: () => {},
-		split_node: () => {},
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: () => {},
 	},
 	move_node: {
 		insert_text: () => {},
 		remove_text: () => {},
-		split_node: () => {},
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: () => {},
 	},
 	remove_node: {
 		insert_text: removeNode_insertText,
 		remove_text: () => {},
-		split_node: () => {},
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: () => {},
 	},
 	set_node: {
 		insert_text: () => {},
 		remove_text: () => {},
-		split_node: () => {},
+		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
 		remove_node: () => {},
 		set_node: () => {},
+		split_node: () => {},
 	},
 };
 
@@ -148,9 +166,7 @@ function mergeNode_insertText(
 ): InsertTextOperation {
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
-		if (confirmed.position <= toTransform.offset) {
-			transformed.offset += confirmed.position;
-		}
+		transformed.offset += confirmed.position;
 	}
 	const newPath = Path.transform(transformed.path, confirmed);
 	if (newPath) {
@@ -191,35 +207,117 @@ function insertText_removeText(
 
 function transformRichTextOperation(
 	confirmed: RichTextOperation,
-	toTranform: RichTextOperation,
+	toTransform: RichTextOperation,
 ): RichTextOperation | undefined {
-	if (!("item" in confirmed) || !("item" in toTranform)) {
-		return undefined;
+	// groupEdit - groupEdit
+	if (confirmed.method === "groupEdit" && toTransform.method === "groupEdit") {
+		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
+			const confirmedItemOp = confirmed.itemsOps.find(
+				confItemOp => confItemOp.item === toTransformItemOp.item
+			);
+
+			if (!confirmedItemOp) {
+				return toTransformItemOp;
+			}
+
+			const transformedOps: Operation[] = [];
+
+			for (const confOp of confirmedItemOp.ops) {
+				for (const transfOp of toTransformItemOp.ops) {
+					const transformFunction =
+						operationTransformMap[confOp.type]?.[transfOp.type];
+					const transformed = transformFunction && transformFunction(confOp, transfOp);
+					if (transformed) {
+						transformedOps.push(transformed);
+					}
+				}
+			}
+
+			return {
+				...toTransformItemOp,
+				ops: transformedOps,
+			};
+		});
+
+		return {
+			...toTransform,
+			itemsOps: transformedItemsOps,
+		};
 	}
 
-	if (toTranform.item[0] !== confirmed.item[0]) {
-		return undefined;
-	}
-
-	if (confirmed.method === "edit" && toTranform.method === "edit") {
+	// edit-edit
+	if (confirmed.method === "edit" && toTransform.method === "edit" && toTransform.item[0] === confirmed.item[0]) {
 		const transformedOps: (TextOperation | NodeOperation)[] = [];
 
 		for (const confOp of confirmed.ops) {
-			for (const transfOp of toTranform.ops) {
+			for (const transfOp of toTransform.ops) {
 				const transformFunction =
 					operationTransformMap[confOp.type]?.[transfOp.type];
 				const transformed = transformFunction && transformFunction(confOp, transfOp);
 				if (transformed) {
 					transformedOps.push(transformed);
 				}
-
-				// others Transforms
 			}
 		}
 
 		return {
-			...toTranform,
+			...toTransform,
 			ops: transformedOps,
+		};
+	}
+
+	// groupEdit - edit
+	if (confirmed.method === "groupEdit" && toTransform.method === "edit") {
+		const transformedOps: (TextOperation | NodeOperation)[] = [];
+
+		for (const confItemOp of confirmed.itemsOps) {
+			if (confItemOp.item === toTransform.item[0]) {
+				for (const confOp of confItemOp.ops) {
+					for (const transfOp of toTransform.ops) {
+						const transformFunction =
+							operationTransformMap[confOp.type]?.[transfOp.type];
+						const transformed = transformFunction && transformFunction(confOp, transfOp);
+						if (transformed) {
+							transformedOps.push(transformed);
+						}
+					}
+				}
+			}
+		}
+
+		return {
+			...toTransform,
+			ops: transformedOps,
+		};
+	}
+
+	// edit - groupEdit
+	if (confirmed.method === "edit" && toTransform.method === "groupEdit") {
+		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
+			const transformedOps: Operation[] = [];
+
+			for (const confOp of confirmed.ops) {
+				for (const transfOp of toTransformItemOp.ops) {
+					if (confirmed.item[0] === toTransformItemOp.item) {
+						const transformFunction =
+							operationTransformMap[confOp.type]?.[transfOp.type];
+						const transformed = transformFunction && transformFunction(confOp, transfOp);
+						if (transformed) {
+							transformedOps.push(transformed);
+						}
+					}
+				}
+			}
+
+			return {
+				...toTransformItemOp,
+				ops: transformedOps,
+			};
+		});
+
+		return {
+			...toTransform,
+			itemsOps: transformedItemsOps,
 		};
 	}
 

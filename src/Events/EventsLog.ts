@@ -387,15 +387,14 @@ export function createEventsLog(board: Board): EventsLog {
 				const confirmed = [
 					...list
 						.getConfirmedRecords()
-						.map(rec => rec.event)
-						.slice(event.lastKnownOrder),
-					...events.filter(
-						evnt =>
-							evnt.body.eventId !== event.body.eventId &&
-							evnt.order > event.lastKnownOrder &&
-							evnt.order <= event.order,
-					),
-				];
+						.map(rec => rec.event),
+					...events,
+				].filter(
+					evnt =>
+						evnt.body.eventId !== event.body.eventId &&
+						evnt.order > event.lastKnownOrder &&
+						evnt.order <= event.order,
+				);
 				const transf = transformEvents(confirmed, [event]);
 				transformed.push(...transf);
 			} else {
