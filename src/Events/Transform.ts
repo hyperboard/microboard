@@ -7,11 +7,11 @@ import {
 	NodeOperation,
 	Path,
 	RemoveTextOperation,
+	RemoveNodeOperation,
 	Operation as SlateOp,
 	SplitNodeOperation,
 	TextOperation,
 } from "slate";
-import { RemoveNodeOperation } from "slate";
 import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
 
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
@@ -21,7 +21,19 @@ import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
 
 // any_RemoveTextOperation === any_InsertTextOperation ? - одинаковые трансформации для remove и insert ? 
 
-const operationTransformMap: Record<TextOperation['type'] | NodeOperation['type'], Record<TextOperation['type'] | NodeOperation['type'], Function>> = {
+type SlateOpTypesToTransform = TextOperation['type'] | NodeOperation['type'];
+type SlateOpsToTransform = TextOperation | NodeOperation;
+type TransformFunction<T extends SlateOpsToTransform, U extends SlateOpsToTransform> = (confirmed: T, toTransform: U) => U;
+
+type OperationTransformMap = {
+	[K in SlateOpTypesToTransform]: {
+		[L in SlateOpTypesToTransform]: TransformFunction<
+			Extract<SlateOpsToTransform, { type: K }>, Extract<SlateOpsToTransform, { type: L }>
+		> | (() => void); // TODO remove () => void when finished
+	}
+};
+
+const operationTransformMap: OperationTransformMap = {
 	insert_text: {
 		insert_text: insertText_insertText,
 		remove_text: insertText_removeText,
@@ -93,7 +105,7 @@ const operationTransformMap: Record<TextOperation['type'] | NodeOperation['type'
 		split_node: () => {},
 	},
 	set_node: {
-		insert_text: () => {},
+		insert_text: () => {}, // nothing, before setting it is splitted
 		remove_text: () => {},
 		insert_node: () => {},
 		merge_node: () => {},
@@ -221,15 +233,20 @@ function transformRichTextOperation(
 
 			const transformedOps: SlateOp[] = [];
 
-			for (const confOp of confirmedItemOp.ops) {
-				for (const transfOp of toTransformItemOp.ops) {
+			for (const transfOp of toTransformItemOp.ops) {
+				let actualyTransformed = { ...transfOp };
+
+				for (const confOp of confirmedItemOp.ops) {
 					const transformFunction =
-						operationTransformMap[confOp.type]?.[transfOp.type];
-					const transformed = transformFunction && transformFunction(confOp, transfOp);
+						operationTransformMap[confOp.type]?.[actualyTransformed.type];
+					const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+
 					if (transformed) {
-						transformedOps.push(transformed);
+						actualyTransformed = transformed;
 					}
 				}
+
+				transformedOps.push(actualyTransformed);
 			}
 
 			return {
@@ -246,17 +263,22 @@ function transformRichTextOperation(
 
 	// edit-edit
 	if (confirmed.method === "edit" && toTransform.method === "edit" && toTransform.item[0] === confirmed.item[0]) {
-		const transformedOps: (TextOperation | NodeOperation)[] = [];
+		const transformedOps: SlateOp[] = [];
 
-		for (const confOp of confirmed.ops) {
-			for (const transfOp of toTransform.ops) {
+		for (const transfOp of toTransform.ops) {
+			let actualyTransformed = { ...transfOp };
+
+			for (const confOp of confirmed.ops) {
 				const transformFunction =
-					operationTransformMap[confOp.type]?.[transfOp.type];
-				const transformed = transformFunction && transformFunction(confOp, transfOp);
+					operationTransformMap[confOp.type]?.[actualyTransformed.type];
+				const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+
 				if (transformed) {
-					transformedOps.push(transformed);
+					actualyTransformed = transformed;
 				}
 			}
+
+			transformedOps.push(actualyTransformed);
 		}
 
 		return {
@@ -267,20 +289,27 @@ function transformRichTextOperation(
 
 	// groupEdit - edit
 	if (confirmed.method === "groupEdit" && toTransform.method === "edit") {
-		const transformedOps: (TextOperation | NodeOperation)[] = [];
+		const transformedOps: SlateOp[] = [];
 
 		for (const confItemOp of confirmed.itemsOps) {
 			if (confItemOp.item === toTransform.item[0]) {
-				for (const confOp of confItemOp.ops) {
-					for (const transfOp of toTransform.ops) {
+				for (const transfOp of toTransform.ops) {
+					let actualyTransformed = { ...transfOp };
+
+					for (const confOp of confItemOp.ops) {
 						const transformFunction =
-							operationTransformMap[confOp.type]?.[transfOp.type];
-						const transformed = transformFunction && transformFunction(confOp, transfOp);
+							operationTransformMap[confOp.type]?.[actualyTransformed.type];
+						const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+
 						if (transformed) {
-							transformedOps.push(transformed);
+							actualyTransformed = transformed;
 						}
 					}
+
+					transformedOps.push(actualyTransformed);
 				}
+			} else {
+				transformedOps.push(...toTransform.ops);
 			}
 		}
 
@@ -295,17 +324,24 @@ function transformRichTextOperation(
 		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
 			const transformedOps: SlateOp[] = [];
 
-			for (const confOp of confirmed.ops) {
+			if (confirmed.item[0] === toTransformItemOp.item) {
 				for (const transfOp of toTransformItemOp.ops) {
-					if (confirmed.item[0] === toTransformItemOp.item) {
+					let actualyTransformed = { ...transfOp };
+
+					for (const confOp of confirmed.ops) {
 						const transformFunction =
-							operationTransformMap[confOp.type]?.[transfOp.type];
-						const transformed = transformFunction && transformFunction(confOp, transfOp);
+							operationTransformMap[confOp.type]?.[actualyTransformed.type];
+						const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+
 						if (transformed) {
-							transformedOps.push(transformed);
+							actualyTransformed = transformed;
 						}
 					}
+
+					transformedOps.push(actualyTransformed);
 				}
+			} else {
+				transformedOps.push(...toTransformItemOp.ops);
 			}
 
 			return {
