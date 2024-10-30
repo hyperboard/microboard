@@ -42,6 +42,22 @@ export interface BoardEventPackBody {
 	operations: Operation[];
 }
 
+export interface SyncBoardEvent extends BoardEvent {
+	lastKnownOrder: number;
+}
+
+interface SyncBoardEventPackBody extends BoardEventPackBody {
+	lastKnownOrder: number;
+}
+export interface SyncBoardEventPack extends BoardEventPack {
+	body: SyncBoardEventPackBody;
+}
+// export interface SyncBoardEventPack extends BoardEventPack {
+// 	lastKnownOrder: number;
+// }
+
+export type SyncEvent = SyncBoardEvent | SyncBoardEventPack;
+
 export interface RawEvents {
 	confirmedEvents: BoardEvent[];
 	eventsToSend: BoardEvent[];
@@ -217,7 +233,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 		handleBoardSnapshotMessage,
 	);
 
-	function handleFirstBatchOfEvents(events: BoardEvent[]): void {
+	function handleFirstBatchOfEvents(events: SyncBoardEvent[]): void {
 		log.insertEvents(events);
 		subject.publish(events[0]);
 		latestServerOrder = log.getLatestOrder();
@@ -329,10 +345,17 @@ export function createEvents(board: Board, connection: Connection): Events {
 		event: BoardEventPack,
 		sequenceNumber: number,
 	): void {
-		connection.publishBoardEvent(boardId, event, sequenceNumber);
+		const toSend: SyncEvent = {
+			...event,
+			body: {
+				...event.body,
+				lastKnownOrder: log.getLatestOrder(),
+			},
+		};
+		connection.publishBoardEvent(boardId, toSend, sequenceNumber);
 
 		pendingEvent = {
-			event,
+			event: toSend,
 			sequenceNumber,
 			lastSentTime: Date.now(),
 		};
