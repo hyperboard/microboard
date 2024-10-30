@@ -10,7 +10,7 @@ export class AddText extends BoardTool {
 	line: Line | undefined;
 	bounds = new Mbr();
 
-	constructor(board: Board) {
+	constructor(private board: Board) {
 		super(board);
 		this.setCursor();
 	}
@@ -44,7 +44,7 @@ export class AddText extends BoardTool {
 		return false;
 	}
 
-	leftButtonUp(): boolean {
+	async leftButtonUp(): Promise<boolean> {
 		if (this.line) {
 			const board = this.board;
 
@@ -57,7 +57,7 @@ export class AddText extends BoardTool {
 			richText.editor.setMaxWidth(600);
 			richText.editor.setSelectionHorisontalAlignment("left");
 			richText.insideOf = richText.itemType;
-			const text = board.add(richText);
+			const text = await board.add(richText);
 			this.board.selection.removeAll();
 			this.board.selection.add(text);
 			this.board.selection.editText();

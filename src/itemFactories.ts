@@ -51,6 +51,7 @@ function createShape(id: string, data: ItemData, board: Board): Shape {
 	return shape;
 }
 
+// async function createRichText(id: string, data: ItemData, board: Board): Promise<RichText> {
 function createRichText(id: string, data: ItemData, board: Board): RichText {
 	if (!isRichTextData(data)) {
 		throw new Error("Invalid data for RichText");
@@ -58,6 +59,7 @@ function createRichText(id: string, data: ItemData, board: Board): RichText {
 	const richText = new RichText(new Mbr(), id, board.events)
 		.setId(id)
 		.deserialize(data);
+	// await richText.deserialize(data);
 	return richText;
 }
 

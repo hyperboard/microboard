@@ -91,7 +91,7 @@ export function getIntersectionPointFromIntersectingLines(
 
 export class Line {
 	type = "Line" as const;
-	isCenter: boolean = false;
+	isCenter = false;
 
 	constructor(
 		public start = new Point(),

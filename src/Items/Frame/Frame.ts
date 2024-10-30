@@ -34,12 +34,12 @@ const defaultFrameData = new FrameData();
 export class Frame implements Geometry {
 	readonly itemType = "Frame";
 	parent = "Board";
-	readonly transformation = new Transformation(this.id, this.events);
+	readonly transformation: Transformation;
 	readonly subject = new Subject<Frame>();
-	private path = Frames[this.shapeType].path.copy();
+	private textContainer: Mbr;
+	private path: Path;
 	private children: string[] = [];
 	private mbr: Mbr = new Mbr();
-	private textContainer = Frames[this.shapeType].textBounds.copy();
 	readonly text: RichText;
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
@@ -58,6 +58,10 @@ export class Frame implements Geometry {
 		private borderStyle = defaultFrameData.borderStyle,
 		private borderWidth = defaultFrameData.borderWidth,
 	) {
+		this.textContainer = Frames[this.shapeType].textBounds.copy();
+		this.path = Frames[this.shapeType].path.copy();
+		this.transformation = new Transformation(this.id, this.events);
+
 		this.text = new RichText(
 			this.textContainer,
 			this.id,

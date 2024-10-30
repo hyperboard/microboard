@@ -79,7 +79,7 @@ export class Path implements Geometry, PathStylize {
 	private width: number;
 	private height: number;
 	private maxDimension: number;
-	private linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
+	private linePattern: number[];
 	connectedItemType = "";
 
 	constructor(
@@ -96,6 +96,7 @@ export class Path implements Geometry, PathStylize {
 		private shadowOffsetX: number = 0,
 		private shadowOffsetY: number = 0,
 	) {
+		this.linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
 		this.updateCache();
 		const mbr = this.getMbr();
 		this.x = mbr.left;

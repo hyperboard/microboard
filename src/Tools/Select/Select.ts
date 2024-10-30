@@ -8,7 +8,7 @@ import {
 } from "../../../View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
 import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
-import createCanvasDrawer from "../../drawMbrOnCanvas";
+import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
@@ -39,7 +39,7 @@ export class Select extends Tool {
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
-	canvasDrawer = createCanvasDrawer(this.board);
+	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
 
 	private alignmentHelper: AlignmentHelper;
@@ -52,6 +52,7 @@ export class Select extends Tool {
 
 	constructor(private board: Board) {
 		super();
+		this.canvasDrawer = createCanvasDrawer(board);
 		this.alignmentHelper = new AlignmentHelper(board, board.index);
 	}
 

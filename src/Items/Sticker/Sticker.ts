@@ -65,19 +65,10 @@ const _relation = width / height;
 export class Sticker implements Geometry {
 	parent = "Board";
 	readonly itemType = "Sticker";
-	readonly transformation = new Transformation(this.id, this.events);
+	readonly transformation: Transformation;
 	private stickerPath = StickerShape.stickerPath.copy();
 	private textContainer = StickerShape.textBounds.copy();
-	text = new RichText(
-		this.textContainer,
-		this.id,
-		this.events,
-		this.transformation,
-		"\u00A0",
-		false,
-		true,
-		this.itemType,
-	);
+	text: RichText;
 	readonly subject = new Subject<Sticker>();
 	transformationRenderBlock?: boolean = undefined;
 
@@ -86,6 +77,18 @@ export class Sticker implements Geometry {
 		private id = "",
 		private backgroundColor = defaultStickerData.backgroundColor,
 	) {
+		this.transformation = new Transformation(this.id, this.events);
+		this.text = new RichText(
+			this.textContainer,
+			this.id,
+			this.events,
+			this.transformation,
+			"\u00A0",
+			false,
+			true,
+			this.itemType,
+		);
+
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				this.transformPath();

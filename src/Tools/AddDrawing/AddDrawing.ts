@@ -22,7 +22,7 @@ export class AddDrawing extends BoardTool {
 	strokeColor = DEFAULT_PEN_COLOR;
 	strokeStyle: BorderStyle = DRAWING_STROKE_STYLE;
 
-	constructor(board: Board) {
+	constructor(private board: Board) {
 		super(board);
 		this.setCursor();
 
@@ -109,7 +109,7 @@ export class AddDrawing extends BoardTool {
 		return true;
 	}
 
-	leftButtonUp(): boolean {
+	 leftButtonUp(): boolean {
 		this.isDown = false;
 		const points = this.drawing.points;
 		const mbr = this.drawing.getMbr();

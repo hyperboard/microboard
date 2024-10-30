@@ -4,12 +4,14 @@ import { mapItemsByOperation } from "../ItemsCommandUtils";
 import { Sticker } from "./index";
 
 export class StickerCommand implements Command {
-	private reverse = this.getReverse();
+	private reverse: { item: Sticker; operation: StickerOperation }[];
 
 	constructor(
 		private sticker: Sticker[],
 		private operation: StickerOperation,
-	) {}
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const sticker of this.sticker) {
