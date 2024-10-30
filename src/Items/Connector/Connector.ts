@@ -32,8 +32,10 @@ import {
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
-import { ConnectorEdge, getEndPointer, getStartPointer } from "./Pointers";
-import { ConnectorPointerStyle } from "./Pointers/Pointers";
+import { ConnectorEdge } from "./Pointers";
+import { getStartPointer, getEndPointer } from "./Pointers/index";
+import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -53,39 +55,17 @@ export class Connector {
 	readonly itemType = "Connector";
 	parent = "Board";
 	private id = "";
-	readonly transformation = new Transformation(this.id, this.events);
+	readonly transformation: Transformation;
 	private middlePoints: BoardPoint[] = [];
 	private lineColor = CONNECTOR_COLOR;
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
 	private borderStyle: BorderStyle = CONNECTOR_BORDER_STYLE;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
-	startPointer = getStartPointer(
-		this.startPoint,
-		this.startPointerStyle,
-		this.lineStyle,
-		this.lines,
-	);
-	endPointer = getEndPointer(
-		this.endPoint,
-		this.endPointerStyle,
-		this.lineStyle,
-		this.lines,
-		this.lineWidth * 0.1 + 0.3,
-	);
+	startPointer: Pointer;
+	endPointer: Pointer;
 	animationFrameId?: number;
-	readonly text: RichText = new RichText(
-		this.getMbr(),
-		this.id,
-		this.events,
-		new Transformation(),
-		t("connector.textPlaceholder", {
-			ns: "default",
-		}),
-		true,
-		false,
-		undefined,
-	);
+	readonly text: RichText;
 	transformationRenderBlock?: boolean = undefined;
 	private optionalFindItemFn?: FindItemFn;
 	constructor(
@@ -97,6 +77,42 @@ export class Connector {
 		private startPointerStyle: ConnectorPointerStyle = "None",
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
 	) {
+		this.transformation = new Transformation(this.id, this.events);
+		this.text = new RichText(
+			this.getMbr(),
+			this.id,
+			this.events,
+			new Transformation(),
+			t("connector.textPlaceholder", {
+				ns: "default",
+			}),
+			true,
+			false,
+			"Connector",
+			{
+				...DEFAULT_TEXT_STYLES,
+				fontSize: localStorage.getItem("lastConnectorTextSize")
+					? Number(localStorage.getItem("lastConnectorTextSize"))
+					: DEFAULT_TEXT_STYLES.fontSize,
+				fontColor:
+					localStorage.getItem("lastConnectorTextColor") ??
+					DEFAULT_TEXT_STYLES.fontColor,
+			},
+		);
+		this.startPointer = getStartPointer(
+			this.startPoint,
+			this.startPointerStyle,
+			this.lineStyle,
+			this.lines,
+		);
+		this.endPointer = getEndPointer(
+			this.endPoint,
+			this.endPointerStyle,
+			this.lineStyle,
+			this.lines,
+			this.lineWidth * 0.1 + 0.3,
+		);
+
 		this.transformation.subject.subscribe((_sub, op) => {
 			if (op.method === "transformMany") {
 				const operation = op.items[this.getId()];
@@ -128,9 +144,10 @@ export class Connector {
 			maxWidth: 300,
 		});
 		this.text.addMbr(this.getMbr());
-		this.text.setSelectionHorisontalAlignment("left");
-		this.text.editor.setSelectionHorisontalAlignment("left");
-		this.text.insideOf = this.itemType;
+		// this.text.setSelectionHorisontalAlignment("left");
+		// this.text.editor.setSelectionHorisontalAlignment("left");
+		this.text.setSelectionHorisontalAlignment("center");
+		this.text.editor.setSelectionHorisontalAlignment("center");
 		this.text.setBoard(this.board);
 		this.text.editor.applyRichTextOp({
 			class: "RichText",
@@ -616,7 +633,7 @@ export class Connector {
 			return;
 		}
 		const ctx = context.ctx;
-		this.text.enableRender();
+		// this.text.enableRender();
 		const textMbr = this.text.getClipMbr();
 		// Save the current context state
 		ctx.save();
@@ -771,7 +788,6 @@ export class Connector {
 			x - width / 2,
 			y - height / 2,
 		);
-		this.text.transformCanvas();
 		this.text.updateElement();
 
 		// this.animationFrameId = 0;

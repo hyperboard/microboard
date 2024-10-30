@@ -305,18 +305,18 @@ export function getQuickAddButtons(
 					}
 				};
 
-				button.onclick = () => {
+				button.onclick = async () => {
 					if (!quickAddItems) {
 						button.resetState();
 						return;
 					}
 					const { newItem, connectorData } = quickAddItems;
 
-					const addedItem = board.add(newItem);
+					const addedItem = await board.add(newItem);
 					if ("itemId" in connectorData.endPoint) {
 						connectorData.endPoint.itemId = addedItem.getId();
 					}
-					board.add(
+					await board.add(
 						board.createItem(board.getNewItemId(), connectorData),
 					);
 

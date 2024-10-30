@@ -23,12 +23,13 @@ export class ConnectorTransformer extends Tool {
 	private statePointer: "start" | "end" | "none" = "none";
 	private state: Cursor = "default";
 
-	private snap = new ConnectorSnap(this.board);
+	private snap: ConnectorSnap;
 	private connector: Connector | null = null;
 	beginTimeStamp = Date.now();
 
 	constructor(private board: Board, private selection: Selection) {
 		super();
+		this.snap = new ConnectorSnap(this.board);
 	}
 
 	handleSelectionUpdate(items: SelectionItems): void {

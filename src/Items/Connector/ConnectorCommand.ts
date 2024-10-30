@@ -5,12 +5,14 @@ import { ConnectorOperation } from "./ConnectorOperations";
 type ReverseOperation = { item: Connector; operation: ConnectorOperation }[];
 
 export class ConnectorCommand implements Command {
-	reverse = this.getReverse();
+	reverse: ReverseOperation;
 
 	constructor(
 		private connector: Connector[],
 		private operation: ConnectorOperation,
-	) {}
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const connector of this.connector) {

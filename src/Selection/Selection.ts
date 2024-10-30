@@ -32,6 +32,7 @@ import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
 import { CONNECTOR_COLOR } from "../../View/Items/Connector";
 import { ItemOp } from "Board/Items/RichText/RichTextOperations";
 import { tempStorage } from "App/SessionStorage";
+import { Tool } from "Board/Tools/Tool";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -51,15 +52,17 @@ export class Selection {
 	private context: SelectionContext = "None";
 	readonly items = new SelectionItems();
 	shouldPublish = true;
-	readonly tool = new SelectionTransformer(this.board, this);
+	readonly tool: Tool;
 	textToEdit: RichText | undefined;
 	transformationRenderBlock?: boolean = undefined;
 
-	quickAddButtons: QuickAddButtons = getQuickAddButtons(this, this.board);
+	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
 
 	constructor(private board: Board, public events?: Events) {
 		requestAnimationFrame(this.updateScheduledObservers);
+		this.tool = new SelectionTransformer(board, this);
+		this.quickAddButtons = getQuickAddButtons(this, board);
 	}
 
 	serialize(): string {

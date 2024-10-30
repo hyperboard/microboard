@@ -100,7 +100,7 @@ export class Board {
 		this.drawingContext = context;
 	}
 
-	apply(op: Operation): void | false {
+	apply(op: Operation): void {
 		switch (op.class) {
 			case "Board":
 				return this.applyBoardOperation(op);
@@ -244,7 +244,7 @@ export class Board {
 	}
 
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
-	 */
+		*/
 	handleNesting(item: Item): void {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
@@ -266,11 +266,11 @@ export class Board {
 	}
 
 	/**
-	 * Creates new canvas and returns it.
-	 * Renders all items from translation on new canvas.
-	 * @param mbr - width and height for resulting canvas
-	 * @param translation - ids of items to draw on mbr
-	 */
+		* Creates new canvas and returns it.
+		* Renders all items from translation on new canvas.
+		* @param mbr - width and height for resulting canvas
+		* @param translation - ids of items to draw on mbr
+		*/
 	drawMbrOnCanvas(
 		mbr: Mbr,
 		translation: TransformManyItems,
@@ -386,7 +386,7 @@ export class Board {
 		});
 		const newItem = this.items.getById(id);
 		if (!newItem) {
-			throw new Error("Add item. Item was not created.");
+			throw new Error(`Add item. Item ${id} was not created.`);
 		}
 		this.handleNesting(newItem);
 		return newItem as T;
@@ -927,7 +927,7 @@ export class Board {
 			},
 		);
 
-		const pasteItem = (itemId: string, data: unknown) => {
+		const pasteItem = (itemId: string, data: unknown): void => {
 			if (!data) {
 				throw new Error("Pasting itemId doesn't exist in itemsMap");
 			}
@@ -944,19 +944,20 @@ export class Board {
 			items.push(item);
 		};
 
-		sortedItemsMap.forEach(([id, data]) => {
+		sortedItemsMap.map(([id, data]) => {
 			if (data.itemType === "Connector") {
 				return;
 			}
 
-			pasteItem(id, data);
+			return pasteItem(id, data);
 		});
 
-		sortedItemsMap.forEach(([id, data]) => {
+		sortedItemsMap.map(([id, data]) => {
 			if (data.itemType === "Connector") {
-				pasteItem(id, data);
+				return pasteItem(id, data);
 			}
-		});
+			return;
+		})
 	}
 
 	isOnBoard(item: Item): boolean {

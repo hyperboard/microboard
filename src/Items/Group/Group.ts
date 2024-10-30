@@ -20,7 +20,7 @@ export interface GroupData {
 export class Group implements Geometry {
 	readonly itemType = "Group";
 	parent = "Board";
-	readonly transformation = new Transformation(this.id);
+	readonly transformation: Transformation;
 	readonly subject = new Subject<Group>();
 
 	constructor(
@@ -28,6 +28,8 @@ export class Group implements Geometry {
 		private id = "",
 		private board: Board,
 	) {
+		this.transformation = new Transformation(this.id);
+
 		for (const child of children) {
 			child.parent = this.id;
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
