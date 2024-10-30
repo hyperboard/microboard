@@ -56,6 +56,7 @@ export class Connector {
 	readonly transformation = new Transformation(this.id, this.events);
 	private middlePoints: BoardPoint[] = [];
 	private lineColor = CONNECTOR_COLOR;
+	readonly linkTo = new LinkTo(this.id, this.events);
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
@@ -109,6 +110,10 @@ export class Connector {
 				}
 			}
 			this.translatePoints();
+			this.updatePaths();
+			this.subject.publish(this);
+		});
+		this.linkTo.subject.subscribe(() => {
 			this.updatePaths();
 			this.subject.publish(this);
 		});
@@ -205,6 +210,7 @@ export class Connector {
 	setId(id: string): this {
 		this.id = id;
 		this.text.setId(id);
+		this.linkTo.setId(id);
 		// this.text.addConnector(id);
 		this.transformation.setId(id);
 		return this;
@@ -249,6 +255,9 @@ export class Connector {
 			// case "Transformation":
 			// 	this.transformation.apply(operation);
 			// 	break;
+			case "LinkTo":
+				this.linkTo.apply(op);
+				break;
 			default:
 				return;
 		}
@@ -703,6 +712,7 @@ export class Connector {
 			lineColor: this.lineColor,
 			lineWidth: this.lineWidth,
 			text: text,
+			linkTo: this.linkTo,
 		};
 	}
 
@@ -722,6 +732,7 @@ export class Connector {
 		if (data.text) {
 			this.text.deserialize(data.text);
 		}
+		this.linkTo.deserialize(data.linkTo?.link);
 		this.startPointerStyle =
 			data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;
@@ -939,7 +950,7 @@ export class Connector {
 		}?focus=${this.getId()}`;
 	}
 
-	getLinkTo() {
-		return undefined;
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 }
