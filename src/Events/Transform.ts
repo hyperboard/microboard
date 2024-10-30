@@ -3,6 +3,7 @@ import { RichTextOperation } from "Board/Items";
 import { Operation } from "./EventsOperations";
 import {
 	InsertTextOperation,
+	MergeNodeOperation,
 	NodeOperation,
 	Path,
 	RemoveTextOperation,
@@ -17,6 +18,8 @@ import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
 
 // Arsenii - any_InsertTextOperation
 // Sawa - any_SetNodeOperation
+
+// any_RemoveTextOperation === any_InsertTextOperation ? - одинаковые трансформации для remove и insert ? 
 
 const operationTransformMap: Record<string, Record<string, Function>> = {
 	insert_text: {
@@ -47,7 +50,7 @@ const operationTransformMap: Record<string, Record<string, Function>> = {
 		set_node: () => {},
 	},
 	merge_node: {
-		insert_text: () => {},
+		insert_text: mergeNode_insertText,
 		remove_text: () => {},
 		split_node: () => {},
 		merge_node: () => {},
@@ -115,10 +118,7 @@ function splitNode_insertText(
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
 	const transformed = { ...toTransform };
-	if (
-		Path.equals(confirmed.path, toTransform.path) &&
-		"position" in confirmed
-	) {
+	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.position <= toTransform.offset) {
 			transformed.offset -= confirmed.position;
 		}
@@ -135,8 +135,26 @@ function removeNode_insertText(
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
 	const transformed = { ...toTransform };
-	if (Path.isBefore(confirmed.path, toTransform.path)) {
-		// transformed.path = Path.decrement(toTransform.path);
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
+	}
+	return transformed;
+}
+
+function mergeNode_insertText(
+	confirmed: MergeNodeOperation,
+	toTransform: InsertTextOperation,
+): InsertTextOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		if (confirmed.position <= toTransform.offset) {
+			transformed.offset += confirmed.position;
+		}
+	}
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
 	}
 	return transformed;
 }
@@ -190,8 +208,9 @@ function transformRichTextOperation(
 			for (const transfOp of toTranform.ops) {
 				const transformFunction =
 					operationTransformMap[confOp.type]?.[transfOp.type];
-				if (transformFunction) {
-					transformedOps.push(transformFunction(confOp, transfOp));
+				const transformed = transformFunction && transformFunction(confOp, transfOp);
+				if (transformed) {
+					transformedOps.push(transformed);
 				}
 
 				// others Transforms
