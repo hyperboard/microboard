@@ -3,8 +3,14 @@ import { Command, createCommand } from "./Command";
 import { mergeOperations } from "./Merge";
 import { Operation } from "./EventsOperations";
 import { BoardOps } from "Board/BoardOperations";
-import { BoardEvent, BoardEventPack } from "./Events";
+import {
+	BoardEvent,
+	BoardEventPack,
+	SyncBoardEvent,
+	SyncEvent,
+} from "./Events";
 import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
+import { transfromOperation } from "./Transform";
 
 export interface HistoryRecord {
 	event: BoardEvent;
@@ -21,7 +27,8 @@ export interface EventsLog {
 	getList(): HistoryRecord[];
 	getRaw(): RawHistoryRecords;
 	insertEvents(
-		events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		events: SyncEvent | SyncEvent[],
 	): void;
 	push(record: HistoryRecord): HistoryRecord;
 	getUnorderedRecords(): HistoryRecord[];
@@ -52,6 +59,7 @@ interface EventsList {
 	backwardIterable(): Iterable<HistoryRecord>;
 	revertUnconfirmed(): void;
 	applyUnconfirmed(): void;
+	justConfirmed: HistoryRecord[];
 	getSyncLog(): SyncLog;
 	syncLogSubject: SyncLogSubject;
 	clear(): void;
@@ -61,6 +69,8 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
+
+	const justConfirmed: HistoryRecord[] = [];
 
 	const { log: syncLog, subject: syncLogSubject } = createSyncLog();
 
@@ -153,6 +163,7 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		},
 
 		syncLogSubject,
+		justConfirmed,
 
 		prepareRecordsToSend(): HistoryRecord[] {
 			if (recordsToSend.length === 0 && newRecords.length > 0) {
@@ -197,6 +208,38 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		},
 
 		applyUnconfirmed(): void {
+			if (justConfirmed.length > 0) {
+				const transformedSend = transformEvents(
+					justConfirmed.map(rec => rec.event),
+					recordsToSend.map(rec => rec.event),
+				);
+				const transformedNew = transformEvents(
+					justConfirmed.map(rec => rec.event),
+					newRecords.map(rec => rec.event),
+				);
+
+				const recsToSend = transformedSend.map(event => ({
+					event,
+					command: createCommand(event.body.operation),
+				}));
+				const recsNew = transformedNew.map(event => ({
+					event,
+					command: createCommand(event.body.operation),
+				}));
+
+				recordsToSend.length = 0;
+				recordsToSend.push(...recsToSend);
+
+				newRecords.length = 0;
+				newRecords.push(...recsNew);
+
+				justConfirmed.length = 0;
+			}
+			console.log(
+				"applying after transforms",
+				recordsToSend.slice(),
+				newRecords.slice(),
+			);
 			apply(recordsToSend);
 			apply(newRecords);
 
@@ -234,14 +277,13 @@ export function createEventsLog(board: Board): EventsLog {
 		};
 	}
 
-	function deserialize(events: BoardEvent[]): void {
+	function deserialize(events: SyncBoardEvent[]): void {
 		list.clear();
-		const records: HistoryRecord[] = [];
+
 		for (const event of events) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			records.push(record);
 			list.addConfirmedRecords([record]);
 		}
 	}
@@ -290,7 +332,8 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	function insertEvents(
-		events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		events: SyncEvent | SyncEvent[],
 	): void {
 		const eventArray = Array.isArray(events) ? events : [events];
 		if (eventArray.length === 0) {
@@ -301,8 +344,10 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	function expandEvents(
-		events: (BoardEvent | BoardEventPack)[],
-	): BoardEvent[] {
+		// events: (BoardEvent | BoardEventPack)[],
+		events: SyncEvent[],
+		// ): BoardEvent[] {
+	): SyncBoardEvent[] {
 		return events.flatMap(event => {
 			if ("operations" in event.body) {
 				// Это BoardEventPack
@@ -314,22 +359,61 @@ export function createEventsLog(board: Board): EventsLog {
 						boardId: event.body.boardId,
 						operation,
 					},
+					lastKnownOrder:
+						"lastKnownOrder" in event
+							? event.lastKnownOrder
+							: event.body.lastKnownOrder,
 				}));
 			} else {
 				// Это обычный BoardEvent
-				return [event as BoardEvent];
+				return [event as SyncBoardEvent];
 			}
 		});
 	}
 
-	function handleEventsInsertion(events: BoardEvent[]): void {
+	// function handleEventsInsertion(events: BoardEvent[]): void {
+	function handleEventsInsertion(events: SyncBoardEvent[]): void {
 		list.revertUnconfirmed();
-		const mergedEvents = mergeEvents(events);
+
+		const transformed: BoardEvent[] = [];
+
+		console.log("HERE!!!", events);
+
+		for (const event of events) {
+			if (
+				event.lastKnownOrder !== undefined &&
+				event.lastKnownOrder + 1 < event.order
+			) {
+				const confirmed = [
+					...list
+						.getConfirmedRecords()
+						.map(rec => rec.event)
+						.slice(event.lastKnownOrder),
+					...events.filter(
+						evnt =>
+							evnt.body.eventId !== event.body.eventId &&
+							evnt.order > event.lastKnownOrder &&
+							evnt.order <= event.order,
+					),
+				];
+				const transf = transformEvents(confirmed, [event]);
+				transformed.push(...transf);
+			} else {
+				transformed.push(event);
+			}
+		}
+
+		// console.log("HANDLING insertion", events);
+		// const mergedEvents = mergeEvents(events);
+		console.log("HANDLING insertion", transformed);
+		const mergedEvents = mergeEvents(transformed);
+		console.log("merged", mergedEvents);
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
 			list.addConfirmedRecords([record]);
+			list.justConfirmed.push(record);
 		}
 		list.applyUnconfirmed();
 	}
@@ -518,11 +602,14 @@ export function createEventsLog(board: Board): EventsLog {
  * без изменений. Эта функция помогает оптимизировать историю событий,
  * уменьшая количество отдельных операций там, где это возможно.
  */
+// function mergeEvents(events: SyncBoardEvent[]): SyncBoardEvent[] {
 function mergeEvents(events: BoardEvent[]): BoardEvent[] {
 	if (events.length < 2) {
 		return events;
 	}
 
+	// const mergedEvents: SyncBoardEvent[] = [];
+	// let previous: SyncBoardEvent | null = null;
 	const mergedEvents: BoardEvent[] = [];
 	let previous: BoardEvent | null = null;
 
@@ -553,8 +640,10 @@ function mergeEvents(events: BoardEvent[]): BoardEvent[] {
 }
 
 function createMergedEvent(
+	// event: SyncBoardEvent,
 	event: BoardEvent,
 	mergedOperation: Operation,
+	// ): SyncBoardEvent {
 ): BoardEvent {
 	return {
 		...event,
@@ -563,4 +652,37 @@ function createMergedEvent(
 			operation: mergedOperation,
 		},
 	};
+}
+
+export function transformEvents(
+	confirmed: BoardEvent[],
+	toTransform: BoardEvent[],
+): BoardEvent[] {
+	const transformed: BoardEvent[] = [];
+
+	console.log("confirmed", [...confirmed]);
+	console.log("to transf", [...toTransform]);
+
+	for (const transf of toTransform) {
+		let actualyTransformed = { ...transf };
+
+		for (const conf of confirmed) {
+			const { operation: confOp } = conf.body;
+			const { operation: transfOp } = actualyTransformed.body;
+
+			const transformedOp = transfromOperation(confOp, transfOp);
+			if (transformedOp) {
+				actualyTransformed = {
+					...actualyTransformed,
+					body: {
+						...actualyTransformed.body,
+						operation: transformedOp,
+					},
+				};
+			}
+		}
+		transformed.push(actualyTransformed);
+	}
+
+	return transformed;
 }

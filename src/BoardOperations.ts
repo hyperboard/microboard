@@ -18,7 +18,7 @@ interface ItemMapBoardOp extends BoardOp {
 	itemsMap: { [key: string]: ItemData };
 }
 
-interface CreateItem extends SingleItemBoardOp {
+export interface CreateItem extends SingleItemBoardOp {
 	method: "add";
 	data: ItemData;
 }

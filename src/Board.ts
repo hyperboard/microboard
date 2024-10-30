@@ -10,7 +10,7 @@ import { BoardCommand } from "./BoardCommand";
 import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import { BoardEvent, createEvents } from "./Events/Events";
+import { BoardEvent, createEvents, SyncBoardEvent } from "./Events/Events";
 import { itemFactories } from "./itemFactories";
 import { Connector, Frame, Item, ItemData, Matrix, Mbr } from "./Items";
 import {
@@ -1001,6 +1001,7 @@ export class Board {
 
 export interface BoardSnapshot {
 	items: Record<string, ItemData>;
-	events: BoardEvent[];
+	// events: BoardEvent[];
+	events: SyncBoardEvent[];
 	lastIndex: number;
 }
