@@ -1,7 +1,7 @@
 import { Mbr, Path, Point, Arc, Paths } from "Board/Items";
 
-export const BPMN_IntermediateEventInterrupting = {
-	name: "BPMN_IntermediateEventInterrupting",
+export const BPMN_IntermediateEventNoneInterrupting = {
+	name: "BPMN_IntermediateEventNoneInterrupting",
 	textBounds: new Mbr(0, 105, 100, 145),
 	path: new Paths(
 		[
@@ -14,7 +14,7 @@ export const BPMN_IntermediateEventInterrupting = {
 		"none",
 		"black",
 		"dash",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),
@@ -22,5 +22,6 @@ export const BPMN_IntermediateEventInterrupting = {
 		new Point(100, 50),
 		new Point(50, 100),
 	],
-	createPath: (mbr: Mbr) => BPMN_IntermediateEventInterrupting.path.copy(),
+	createPath: (mbr: Mbr) =>
+		BPMN_IntermediateEventNoneInterrupting.path.copy(),
 };

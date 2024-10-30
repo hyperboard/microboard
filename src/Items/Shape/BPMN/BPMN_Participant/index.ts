@@ -19,7 +19,7 @@ export const BPMN_Participant = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

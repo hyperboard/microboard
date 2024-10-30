@@ -1,4 +1,4 @@
-import { Mbr, Line, Path, Point, Paths, CubicBezier } from "Board/Items";
+import { Mbr, Line, Path, Point, CubicBezier } from "Board/Items";
 
 export const BPMN_Gateway = {
 	name: "BPMN_Gateway",
@@ -39,7 +39,7 @@ export const BPMN_Gateway = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

@@ -38,7 +38,7 @@ export const BPMN_Task = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),
@@ -113,7 +113,7 @@ export const createBPMN_TaskPath = (mbr: Mbr) => {
 			"none",
 			"black",
 			"solid",
-			3,
+			2,
 		);
 	}
 
@@ -171,6 +171,6 @@ export const createBPMN_TaskPath = (mbr: Mbr) => {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	);
 };

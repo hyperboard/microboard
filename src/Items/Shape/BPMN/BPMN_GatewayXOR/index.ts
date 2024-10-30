@@ -45,7 +45,7 @@ export const BPMN_GatewayXOR = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

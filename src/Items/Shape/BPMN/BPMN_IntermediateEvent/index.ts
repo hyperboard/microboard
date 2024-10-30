@@ -17,7 +17,7 @@ export const BPMN_IntermediateEvent = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

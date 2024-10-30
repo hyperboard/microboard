@@ -4,15 +4,15 @@ import { BPMN_GatewayParallel } from "./BPMN_GatewayParallel";
 import { BPMN_GatewayXOR } from "./BPMN_GatewayXOR";
 import { BPMN_EndEvent } from "./BPMN_EndEvent";
 import { BPMN_StartEvent } from "./BPMN_StartEvent";
-import { BPMN_StartEventInterrupting } from "./BPMN_StartEventInterrupting";
+import { BPMN_StartEventNoneInterrupting } from "./BPMN_StartEventNoneInterrupting";
 import { BPMN_IntermediateEvent } from "./BPMN_IntermediateEvent";
-import { BPMN_IntermediateEventInterrupting } from "./BPMN_IntermediateEventInterrupting";
+import { BPMN_IntermediateEventNoneInterrupting } from "./BPMN_IntermediateEventNoneInterrupting";
 import { BPMN_Group } from "./BPMN_Group";
 import { BPMN_Participant } from "./BPMN_Participant";
 import { BPMN_Task } from "./BPMN_Task";
 import { BPMN_Transaction } from "./BPMN_Transaction";
-import { BPMN_SubprocessExpanded } from "./BPMN_SubprocessExpanded";
-import { BPMN_TextAnnotation } from "./BPMN_TextAnnotation";
+import { BPMN_EventSubprocess } from "./BPMN_EventSubprocess";
+import { BPMN_Annotation } from "./BPMN_Annotation";
 import { BPMN_DataObject } from "./BPMN_DataObject";
 
 export const BPMN = {
@@ -22,15 +22,15 @@ export const BPMN = {
 	BPMN_GatewayXOR,
 	BPMN_EndEvent,
 	BPMN_StartEvent,
-	BPMN_StartEventInterrupting,
+	BPMN_StartEventNoneInterrupting,
 	BPMN_IntermediateEvent,
-	BPMN_IntermediateEventInterrupting,
+	BPMN_IntermediateEventNoneInterrupting,
 	BPMN_Group,
 	BPMN_Participant,
 	BPMN_Task,
 	BPMN_Transaction,
-	BPMN_SubprocessExpanded,
-	BPMN_TextAnnotation,
+	BPMN_EventSubprocess,
+	BPMN_Annotation,
 	BPMN_DataObject,
 } as const;
 

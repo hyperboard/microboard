@@ -1,7 +1,7 @@
 import { Mbr, CubicBezier, Line, Path, Point, Paths } from "Board/Items";
 
-export const BPMN_SubprocessExpanded = {
-	name: "BPMN_SubprocessExpanded",
+export const BPMN_EventSubprocess = {
+	name: "BPMN_EventSubprocess",
 	textBounds: new Mbr(5, 5, 95, 75),
 	path: new Paths(
 		[
@@ -40,7 +40,7 @@ export const BPMN_SubprocessExpanded = {
 				"none",
 				"black",
 				"dot",
-				3,
+				2,
 			),
 			new Path(
 				[
@@ -53,7 +53,7 @@ export const BPMN_SubprocessExpanded = {
 				"none",
 				"black",
 				"solid",
-				3,
+				2,
 			),
 			new Path(
 				[new Line(new Point(44, 90), new Point(56, 90))],
@@ -61,13 +61,13 @@ export const BPMN_SubprocessExpanded = {
 				"none",
 				"black",
 				"solid",
-				3,
+				2,
 			),
 		],
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),
@@ -154,7 +154,7 @@ export const createBPMN_SubprocessExpandedPath = (mbr: Mbr) => {
 					"none",
 					"black",
 					"dot",
-					3,
+					2,
 				),
 				new Path(
 					[
@@ -167,7 +167,7 @@ export const createBPMN_SubprocessExpandedPath = (mbr: Mbr) => {
 					"none",
 					"black",
 					"solid",
-					3,
+					2,
 				),
 				new Path(
 					[new Line(new Point(44, 90), new Point(56, 90))],
@@ -175,13 +175,13 @@ export const createBPMN_SubprocessExpandedPath = (mbr: Mbr) => {
 					"none",
 					"black",
 					"solid",
-					3,
+					2,
 				),
 			],
 			"none",
 			"black",
 			"solid",
-			3,
+			2,
 		);
 	}
 
@@ -250,7 +250,7 @@ export const createBPMN_SubprocessExpandedPath = (mbr: Mbr) => {
 				"none",
 				"black",
 				"dot",
-				3,
+				2,
 			),
 			new Path(
 				[
@@ -263,7 +263,7 @@ export const createBPMN_SubprocessExpandedPath = (mbr: Mbr) => {
 				"none",
 				"black",
 				"solid",
-				3,
+				2,
 			),
 			new Path(
 				[new Line(new Point(44, 90), new Point(56, 90))],
@@ -271,12 +271,12 @@ export const createBPMN_SubprocessExpandedPath = (mbr: Mbr) => {
 				"none",
 				"black",
 				"solid",
-				3,
+				2,
 			),
 		],
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	);
 };

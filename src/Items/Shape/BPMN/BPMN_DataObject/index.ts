@@ -1,23 +1,32 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point, Paths } from "Board/Items";
 
 export const BPMN_DataObject = {
 	name: "BPMN_DataObject",
 	textBounds: new Mbr(0, 105, 100, 145),
-	path: new Path(
+	path: new Paths(
 		[
-			new Line(new Point(80, 0), new Point(0, 0)),
-			new Line(new Point(0, 0), new Point(0, 100)),
-			new Line(new Point(0, 100), new Point(100, 100)),
-			new Line(new Point(100, 100), new Point(100, 20)),
-			new Line(new Point(100, 20), new Point(80, 20)),
-			new Line(new Point(80, 20), new Point(80, 0)),
-			new Line(new Point(80, 0), new Point(100, 20)),
+			new Path(
+				[
+					new Line(new Point(80, 0), new Point(0, 0)),
+					new Line(new Point(0, 0), new Point(0, 100)),
+					new Line(new Point(0, 100), new Point(100, 100)),
+					new Line(new Point(100, 100), new Point(100, 20)),
+					new Line(new Point(100, 20), new Point(80, 0)),
+				],
+				true,
+			),
+			new Path(
+				[
+					new Line(new Point(100, 20), new Point(80, 20)),
+					new Line(new Point(80, 20), new Point(80, 0)),
+				],
+				false,
+			),
 		],
-		true,
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

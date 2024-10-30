@@ -153,6 +153,10 @@ export class Path implements Geometry, PathStylize {
 		return this.width;
 	}
 
+	getHeight() {
+		return this.height;
+	}
+
 	setBorderOpacity(opacity: number): void {
 		this.borderOpacity = opacity;
 	}

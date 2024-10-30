@@ -9,7 +9,7 @@ export const BPMN_EndEvent = {
 		"none",
 		"black",
 		"solid",
-		9,
+		8,
 	),
 	anchorPoints: [
 		new Point(0, 50),

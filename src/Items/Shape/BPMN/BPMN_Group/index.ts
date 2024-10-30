@@ -14,7 +14,7 @@ export const BPMN_Group = {
 		"none",
 		"black",
 		"dotDash",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

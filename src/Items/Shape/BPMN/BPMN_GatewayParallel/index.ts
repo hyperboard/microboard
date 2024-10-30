@@ -45,7 +45,7 @@ export const BPMN_GatewayParallel = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

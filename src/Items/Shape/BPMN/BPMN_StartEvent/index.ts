@@ -9,7 +9,7 @@ export const BPMN_StartEvent = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),

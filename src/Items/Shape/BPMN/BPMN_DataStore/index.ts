@@ -75,7 +75,7 @@ export const BPMN_DataStore = {
 		"none",
 		"black",
 		"solid",
-		3,
+		2,
 	),
 	anchorPoints: [
 		new Point(0, 50),
