@@ -11,15 +11,17 @@ import {
 	Operation as SlateOp,
 	SplitNodeOperation,
 	TextOperation,
+	InsertNodeOperation,
 } from "slate";
 import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
 
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 
-// Arsenii - any_InsertTextOperation
-// Sawa - any_SetNodeOperation
+// finished - any_InsertTextOperation
+// finished - any_RemoveTextOperation
+// TODO recheck with set_node
 
-// any_RemoveTextOperation === any_InsertTextOperation ? - одинаковые трансформации для remove и insert ? 
+// Sawa - any_SetNodeOperation
 
 type SlateOpTypesToTransform = TextOperation['type'] | NodeOperation['type'];
 type SlateOpsToTransform = TextOperation | NodeOperation;
@@ -46,7 +48,7 @@ const operationTransformMap: OperationTransformMap = {
 	},
 	remove_text: {
 		insert_text: removeText_insertText,
-		remove_text: () => {},
+		remove_text: removeText_removeText,
 		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
@@ -55,8 +57,8 @@ const operationTransformMap: OperationTransformMap = {
 		split_node: () => {},
 	},
 	insert_node: {
-		insert_text: () => {},
-		remove_text: () => {},
+		insert_text: insertNode_insertText,
+		remove_text: insertNode_removeText,
 		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
@@ -66,7 +68,7 @@ const operationTransformMap: OperationTransformMap = {
 	},
 	split_node: {
 		insert_text: splitNode_insertText,
-		remove_text: () => {},
+		remove_text: splitNode_removeText,
 		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
@@ -76,7 +78,7 @@ const operationTransformMap: OperationTransformMap = {
 	},
 	merge_node: {
 		insert_text: mergeNode_insertText,
-		remove_text: () => {},
+		remove_text: mergeNode_removeText,
 		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
@@ -84,7 +86,7 @@ const operationTransformMap: OperationTransformMap = {
 		set_node: () => {},
 		split_node: () => {},
 	},
-	move_node: {
+	move_node: { // DOES NOT APPEAR ? 
 		insert_text: () => {},
 		remove_text: () => {},
 		insert_node: () => {},
@@ -96,7 +98,7 @@ const operationTransformMap: OperationTransformMap = {
 	},
 	remove_node: {
 		insert_text: removeNode_insertText,
-		remove_text: () => {},
+		remove_text: removeNode_removeText,
 		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
@@ -105,8 +107,8 @@ const operationTransformMap: OperationTransformMap = {
 		split_node: () => {},
 	},
 	set_node: {
-		insert_text: () => {}, // nothing, before setting it is splitted
-		remove_text: () => {},
+		insert_text: () => {}, // nothing, before setting it is splitted?
+		remove_text: () => {}, // nothing
 		insert_node: () => {},
 		merge_node: () => {},
 		move_node: () => {},
@@ -171,6 +173,18 @@ function removeNode_insertText(
 	return transformed;
 }
 
+function insertNode_insertText(
+	confirmed: InsertNodeOperation,
+	toTransform: InsertTextOperation,
+): InsertTextOperation {
+	const transformed = { ...toTransform };
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
+	}
+	return transformed;
+}
+
 function mergeNode_insertText(
 	confirmed: MergeNodeOperation,
 	toTransform: InsertTextOperation,
@@ -179,6 +193,88 @@ function mergeNode_insertText(
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		transformed.offset += confirmed.position;
 	}
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
+	}
+	return transformed;
+}
+
+function insertText_removeText(
+	confirmed: InsertTextOperation,
+	toTransform: RemoveTextOperation,
+): RemoveTextOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		if (confirmed.offset <= toTransform.offset) {
+			transformed.offset += confirmed.text.length;
+		}
+	}
+	return transformed;
+}
+
+function removeText_removeText(
+	confirmed: RemoveTextOperation,
+	toTransform: RemoveTextOperation,
+): RemoveTextOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		if (confirmed.offset <= toTransform.offset) {
+			transformed.offset -= confirmed.text.length;
+		}
+	}
+	return transformed;
+}
+
+function insertNode_removeText(
+	confirmed: InsertNodeOperation,
+	toTransform: RemoveTextOperation,
+): RemoveTextOperation {
+	const transformed = { ...toTransform };
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
+	}
+	return transformed;
+}
+
+function splitNode_removeText(
+	confirmed: SplitNodeOperation,
+	toTransform: RemoveTextOperation,
+): RemoveTextOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		if (confirmed.position <= toTransform.offset) {
+			transformed.offset -= confirmed.position;
+		}
+	}
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
+	}
+	return transformed;
+}
+
+function mergeNode_removeText(
+	confirmed: MergeNodeOperation,
+	toTransform: RemoveTextOperation,
+): RemoveTextOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		transformed.offset += confirmed.position;
+	}
+	const newPath = Path.transform(transformed.path, confirmed);
+	if (newPath) {
+		transformed.path = newPath;
+	}
+	return transformed;
+}
+
+function removeNode_removeText(
+	confirmed: RemoveNodeOperation,
+	toTransform: RemoveTextOperation,
+): RemoveTextOperation {
+	const transformed = { ...toTransform };
 	const newPath = Path.transform(transformed.path, confirmed);
 	if (newPath) {
 		transformed.path = newPath;
@@ -199,19 +295,6 @@ function insertText_splitNode(
 	const newPath = Path.transform(transformed.path, confirmed);
 	if (newPath) {
 		transformed.path = newPath;
-	}
-	return transformed;
-}
-
-function insertText_removeText(
-	confirmed: InsertTextOperation,
-	toTransform: RemoveTextOperation,
-): RemoveTextOperation {
-	const transformed = { ...toTransform };
-	if (Path.equals(confirmed.path, toTransform.path)) {
-		if (confirmed.offset <= toTransform.offset) {
-			transformed.offset += confirmed.text.length;
-		}
 	}
 	return transformed;
 }

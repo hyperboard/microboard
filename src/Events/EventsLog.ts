@@ -235,11 +235,11 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 
 				justConfirmed.length = 0;
 			}
-			console.log(
-				"applying after transforms",
-				recordsToSend.slice(),
-				newRecords.slice(),
-			);
+			// console.log(
+			// 	"applying after transforms",
+			// 	recordsToSend.slice(),
+			// 	newRecords.slice(),
+			// );
 			apply(recordsToSend);
 			apply(newRecords);
 
@@ -377,7 +377,7 @@ export function createEventsLog(board: Board): EventsLog {
 
 		const transformed: BoardEvent[] = [];
 
-		console.log("HERE!!!", events);
+		// console.log("HERE!!!", events);
 
 		for (const event of events) {
 			if (
@@ -402,11 +402,9 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 		}
 
-		// console.log("HANDLING insertion", events);
-		// const mergedEvents = mergeEvents(events);
-		console.log("HANDLING insertion", transformed);
+		// console.log("HANDLING insertion", [...transformed]);
 		const mergedEvents = mergeEvents(transformed);
-		console.log("merged", mergedEvents);
+		// console.log("merged", mergedEvents);
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
@@ -659,8 +657,8 @@ export function transformEvents(
 ): BoardEvent[] {
 	const transformed: BoardEvent[] = [];
 
-	console.log("confirmed", [...confirmed]);
-	console.log("to transf", [...toTransform]);
+	// console.log("confirmed", [...confirmed]);
+	// console.log("to transf", [...toTransform]);
 
 	for (const transf of toTransform) {
 		let actualyTransformed = { ...transf };
