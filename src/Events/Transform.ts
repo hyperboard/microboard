@@ -27,16 +27,22 @@ import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
 
 // Sawa - any_SetNode
 
-type SlateOpTypesToTransform = TextOperation['type'] | NodeOperation['type'];
+type SlateOpTypesToTransform = TextOperation["type"] | NodeOperation["type"];
 type SlateOpsToTransform = TextOperation | NodeOperation;
-type TransformFunction<T extends SlateOpsToTransform, U extends SlateOpsToTransform> = (confirmed: T, toTransform: U) => U;
+type TransformFunction<
+	T extends SlateOpsToTransform,
+	U extends SlateOpsToTransform,
+> = (confirmed: T, toTransform: U) => U;
 
 type OperationTransformMap = {
 	[K in SlateOpTypesToTransform]: {
-		[L in SlateOpTypesToTransform]: TransformFunction<
-			Extract<SlateOpsToTransform, { type: K }>, Extract<SlateOpsToTransform, { type: L }>
-		> | (() => void); // TODO remove () => void when finished
-	}
+		[L in SlateOpTypesToTransform]:
+			| TransformFunction<
+					Extract<SlateOpsToTransform, { type: K }>,
+					Extract<SlateOpsToTransform, { type: L }>
+			  >
+			| (() => void); // TODO remove () => void when finished
+	};
 };
 
 const operationTransformMap: OperationTransformMap = {
@@ -90,7 +96,8 @@ const operationTransformMap: OperationTransformMap = {
 		set_node: () => {},
 		split_node: () => {},
 	},
-	move_node: { // DOES NOT APPEAR ? 
+	move_node: {
+		// DOES NOT APPEAR ?
 		insert_text: () => {},
 		remove_text: () => {},
 		insert_node: () => {},
@@ -432,39 +439,48 @@ function transformRichTextOperation(
 	toTransform: RichTextOperation,
 ): RichTextOperation | undefined {
 	// groupEdit - groupEdit
-	if (confirmed.method === "groupEdit" && toTransform.method === "groupEdit") {
-		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
-			const confirmedItemOp = confirmed.itemsOps.find(
-				confItemOp => confItemOp.item === toTransformItemOp.item
-			);
+	if (
+		confirmed.method === "groupEdit" &&
+		toTransform.method === "groupEdit"
+	) {
+		const transformedItemsOps = toTransform.itemsOps.map(
+			toTransformItemOp => {
+				const confirmedItemOp = confirmed.itemsOps.find(
+					confItemOp => confItemOp.item === toTransformItemOp.item,
+				);
 
-			if (!confirmedItemOp) {
-				return toTransformItemOp;
-			}
-
-			const transformedOps: SlateOp[] = [];
-
-			for (const transfOp of toTransformItemOp.ops) {
-				let actualyTransformed = { ...transfOp };
-
-				for (const confOp of confirmedItemOp.ops) {
-					const transformFunction =
-						operationTransformMap[confOp.type]?.[actualyTransformed.type];
-					const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
-
-					if (transformed) {
-						actualyTransformed = transformed;
-					}
+				if (!confirmedItemOp) {
+					return toTransformItemOp;
 				}
 
-				transformedOps.push(actualyTransformed);
-			}
+				const transformedOps: SlateOp[] = [];
 
-			return {
-				...toTransformItemOp,
-				ops: transformedOps,
-			};
-		});
+				for (const transfOp of toTransformItemOp.ops) {
+					let actualyTransformed = { ...transfOp };
+
+					for (const confOp of confirmedItemOp.ops) {
+						const transformFunction =
+							operationTransformMap[confOp.type]?.[
+								actualyTransformed.type
+							];
+						const transformed =
+							transformFunction &&
+							transformFunction(confOp, actualyTransformed);
+
+						if (transformed) {
+							actualyTransformed = transformed;
+						}
+					}
+
+					transformedOps.push(actualyTransformed);
+				}
+
+				return {
+					...toTransformItemOp,
+					ops: transformedOps,
+				};
+			},
+		);
 
 		return {
 			...toTransform,
@@ -473,7 +489,11 @@ function transformRichTextOperation(
 	}
 
 	// edit-edit
-	if (confirmed.method === "edit" && toTransform.method === "edit" && toTransform.item[0] === confirmed.item[0]) {
+	if (
+		confirmed.method === "edit" &&
+		toTransform.method === "edit" &&
+		toTransform.item[0] === confirmed.item[0]
+	) {
 		const transformedOps: SlateOp[] = [];
 
 		for (const transfOp of toTransform.ops) {
@@ -481,8 +501,12 @@ function transformRichTextOperation(
 
 			for (const confOp of confirmed.ops) {
 				const transformFunction =
-					operationTransformMap[confOp.type]?.[actualyTransformed.type];
-				const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+					operationTransformMap[confOp.type]?.[
+						actualyTransformed.type
+					];
+				const transformed =
+					transformFunction &&
+					transformFunction(confOp, actualyTransformed);
 
 				if (transformed) {
 					actualyTransformed = transformed;
@@ -509,8 +533,12 @@ function transformRichTextOperation(
 
 					for (const confOp of confItemOp.ops) {
 						const transformFunction =
-							operationTransformMap[confOp.type]?.[actualyTransformed.type];
-						const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+							operationTransformMap[confOp.type]?.[
+								actualyTransformed.type
+							];
+						const transformed =
+							transformFunction &&
+							transformFunction(confOp, actualyTransformed);
 
 						if (transformed) {
 							actualyTransformed = transformed;
@@ -532,34 +560,40 @@ function transformRichTextOperation(
 
 	// edit - groupEdit
 	if (confirmed.method === "edit" && toTransform.method === "groupEdit") {
-		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
-			const transformedOps: SlateOp[] = [];
+		const transformedItemsOps = toTransform.itemsOps.map(
+			toTransformItemOp => {
+				const transformedOps: SlateOp[] = [];
 
-			if (confirmed.item[0] === toTransformItemOp.item) {
-				for (const transfOp of toTransformItemOp.ops) {
-					let actualyTransformed = { ...transfOp };
+				if (confirmed.item[0] === toTransformItemOp.item) {
+					for (const transfOp of toTransformItemOp.ops) {
+						let actualyTransformed = { ...transfOp };
 
-					for (const confOp of confirmed.ops) {
-						const transformFunction =
-							operationTransformMap[confOp.type]?.[actualyTransformed.type];
-						const transformed = transformFunction && transformFunction(confOp, actualyTransformed);
+						for (const confOp of confirmed.ops) {
+							const transformFunction =
+								operationTransformMap[confOp.type]?.[
+									actualyTransformed.type
+								];
+							const transformed =
+								transformFunction &&
+								transformFunction(confOp, actualyTransformed);
 
-						if (transformed) {
-							actualyTransformed = transformed;
+							if (transformed) {
+								actualyTransformed = transformed;
+							}
 						}
+
+						transformedOps.push(actualyTransformed);
 					}
-
-					transformedOps.push(actualyTransformed);
+				} else {
+					transformedOps.push(...toTransformItemOp.ops);
 				}
-			} else {
-				transformedOps.push(...toTransformItemOp.ops);
-			}
 
-			return {
-				...toTransformItemOp,
-				ops: transformedOps,
-			};
-		});
+				return {
+					...toTransformItemOp,
+					ops: transformedOps,
+				};
+			},
+		);
 
 		return {
 			...toTransform,
@@ -570,111 +604,12 @@ function transformRichTextOperation(
 	return undefined;
 }
 
-function transformBoardAddAgainstRemove(
-	confirmed: RemoveItem,
-	toTransform: CreateItem,
-): BoardOps | undefined {
-	if (!toTransform?.data) {
-		return undefined;
-	}
-
-	if (toTransform.data.itemType === "Connector") {
-		const connectorData = toTransform.data;
-		const removedItems = Array.isArray(confirmed.item)
-			? confirmed.item
-			: [confirmed.item];
-
-		connectorData.endPoint;
-		const startPointRemoved = removedItems.includes(
-			connectorData.startPoint?.itemId,
-		);
-		const endPointRemoved = removedItems.includes(
-			connectorData.endPoint?.itemId,
-		);
-
-		if (startPointRemoved && endPointRemoved) {
-			return undefined;
-		}
-
-		if (startPointRemoved || endPointRemoved) {
-			const transformedOperation = {
-				...toTransform,
-				data: {
-					...connectorData,
-					...(startPointRemoved && {
-						startPoint: {
-							...connectorData.startPoint,
-							pointType: "Floating",
-							// itemId: "",
-							// relativeX: 0,
-							// relativeY: 0,
-							originalItemId: connectorData?.startPoint?.itemId,
-						},
-					}),
-					...(endPointRemoved && {
-						endPoint: {
-							...connectorData.endPoint,
-							pointType: "Floating",
-							// originalItemId: connectorData?.endPoint?.itemId,
-						},
-					}),
-				},
-			};
-			return transformedOperation;
-		}
-	}
-
-	return toTransform;
-}
-
-function transformBoardOperation(
-	confirmed: Operation,
-	toTransform: Operation,
-): Operation | undefined {
-	if (!("item" in confirmed) || !("item" in toTransform)) {
-		return undefined;
-	}
-
-	if (confirmed.method === "remove" && toTransform.method === "add") {
-		return transformBoardAddAgainstRemove(confirmed, toTransform);
-	}
-
-	// Floating. Remove object only on one client
-	if (confirmed.method === "remove" && toTransform.method === "remove") {
-		const confirmedItems = Array.isArray(confirmed.item)
-			? confirmed.item
-			: [confirmed.item];
-		const toTransformItems = Array.isArray(toTransform.item)
-			? toTransform.item
-			: [toTransform.item];
-
-		const remainingItems = toTransformItems.filter(
-			item => !confirmedItems.includes(item),
-		);
-
-		if (remainingItems.length === 0) {
-			return undefined;
-		}
-
-		return {
-			...toTransform,
-			item: remainingItems,
-		};
-	}
-
-	return toTransform;
-}
-
 export function transfromOperation(
 	confirmed: Operation,
 	toTransform: Operation,
 ): Operation | undefined {
 	if (confirmed.class === "RichText" && toTransform.class === "RichText") {
 		return transformRichTextOperation(confirmed, toTransform);
-	}
-
-	if (confirmed.class === "Board" && toTransform.class === "Board") {
-		return transformBoardOperation(confirmed, toTransform);
 	}
 
 	// others

@@ -11,6 +11,7 @@ import {
 } from "./Events";
 import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
 import { transfromOperation } from "./Transform";
+import { TransformConnectorHelper } from "./TransforHelper";
 
 export interface HistoryRecord {
 	event: BoardEvent;
@@ -63,6 +64,7 @@ interface EventsList {
 	getSyncLog(): SyncLog;
 	syncLogSubject: SyncLogSubject;
 	clear(): void;
+	removeUnconfirmedEventsByItems(itemIds: string[]): void;
 }
 
 function createEventsList(createCommand: (BoardOps) => Command): EventsList {
@@ -85,6 +87,21 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			record.command = createCommand(record.event.body.operation);
 			record.command.apply();
 		}
+	}
+
+	function shouldRemoveEvent(
+		operation: Operation,
+		itemIds: string[],
+	): boolean {
+		if (operation.method === "add" && operation.class === "Board") {
+			return itemIds.includes(operation.item);
+		}
+
+		if (operation.method === "remove" && operation.class === "Board") {
+			return operation.item.some(id => itemIds.includes(id));
+		}
+
+		return false;
 	}
 
 	return {
@@ -200,7 +217,6 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		revertUnconfirmed(): void {
 			revert(newRecords.reverse());
 			revert(recordsToSend.reverse());
-
 			syncLog.push({
 				msg: "revertUnconfirmed",
 				records: [...recordsToSend, ...newRecords],
@@ -217,7 +233,6 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 					justConfirmed.map(rec => rec.event),
 					newRecords.map(rec => rec.event),
 				);
-
 				const recsToSend = transformedSend.map(event => ({
 					event,
 					command: createCommand(event.body.operation),
@@ -226,13 +241,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 					event,
 					command: createCommand(event.body.operation),
 				}));
-
 				recordsToSend.length = 0;
 				recordsToSend.push(...recsToSend);
-
 				newRecords.length = 0;
 				newRecords.push(...recsNew);
-
 				justConfirmed.length = 0;
 			}
 			// console.log(
@@ -242,7 +254,6 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			// );
 			apply(recordsToSend);
 			apply(newRecords);
-
 			syncLog.push({
 				msg: "applyUnconfirmed",
 				records: [...recordsToSend, ...newRecords],
@@ -253,6 +264,44 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			confirmedRecords.length = 0;
 			recordsToSend.length = 0;
 			newRecords.length = 0;
+		},
+
+		// FIXME: should filter unconfirmed events and not send them
+		removeUnconfirmedEventsByItems(itemIds: string[]): void {
+			const removedFromToSend = recordsToSend.filter(record =>
+				shouldRemoveEvent(record.event.body.operation, itemIds),
+			);
+			if (removedFromToSend.length > 0) {
+				const newRecordsToSend = recordsToSend.filter(
+					record =>
+						!shouldRemoveEvent(
+							record.event.body.operation,
+							itemIds,
+						),
+				);
+				recordsToSend.length = 0;
+				recordsToSend.push(...newRecordsToSend);
+			}
+
+			const removedFromNew = newRecords.filter(record =>
+				shouldRemoveEvent(record.event.body.operation, itemIds),
+			);
+			if (removedFromNew.length > 0) {
+				const newRecordsArray = newRecords.filter(
+					record =>
+						!shouldRemoveEvent(
+							record.event.body.operation,
+							itemIds,
+						),
+				);
+				newRecords.length = 0;
+				newRecords.push(...newRecordsArray);
+			}
+
+			// syncLog.push({
+			// 	msg: "removedUnconfirmed",
+			// 	records: [...removedFromToSend, ...removedFromNew],
+			// });
 		},
 	};
 }
@@ -373,6 +422,21 @@ export function createEventsLog(board: Board): EventsLog {
 
 	// function handleEventsInsertion(events: BoardEvent[]): void {
 	function handleEventsInsertion(events: SyncBoardEvent[]): void {
+		list;
+		const toDelete =
+			TransformConnectorHelper.handleRemoveSnappedObject(events);
+
+		if (Array.isArray(toDelete) && toDelete.length > 0) {
+			list.removeUnconfirmedEventsByItems(toDelete);
+			toDelete.forEach(item => {
+				board.emit({
+					class: "Board",
+					method: "remove",
+					item: [item],
+				});
+			});
+		}
+
 		list.revertUnconfirmed();
 
 		const transformed: BoardEvent[] = [];
@@ -385,9 +449,7 @@ export function createEventsLog(board: Board): EventsLog {
 				event.lastKnownOrder + 1 < event.order
 			) {
 				const confirmed = [
-					...list
-						.getConfirmedRecords()
-						.map(rec => rec.event),
+					...list.getConfirmedRecords().map(rec => rec.event),
 					...events,
 				].filter(
 					evnt =>

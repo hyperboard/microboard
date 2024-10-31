@@ -10,15 +10,10 @@ import { BoardCommand } from "./BoardCommand";
 import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import { BoardEvent, createEvents, SyncBoardEvent } from "./Events/Events";
+import { createEvents, SyncBoardEvent } from "./Events/Events";
 import { itemFactories } from "./itemFactories";
-import { Connector, Frame, Item, ItemData, Matrix, Mbr } from "./Items";
-import {
-	BoardPoint,
-	ControlPoint,
-	ControlPointData,
-} from "./Items/Connector/ControlPoint";
-import { ConnectorEdge } from "./Items/Connector/Pointers";
+import { Frame, Item, ItemData, Matrix, Mbr } from "./Items";
+import { ControlPointData } from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
 import { DrawingContext } from "./Items/DrawingContext";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
@@ -183,38 +178,6 @@ export class Board {
 			this.selection.remove(item);
 			removedItems.push(item);
 		});
-		this.items.listAll().forEach(item => {
-			if (item.itemType === "Connector") {
-				this.replaceConnectorEdges(item, removedItems);
-			}
-		});
-	}
-
-	private replaceConnectorEdges(
-		connector: Connector,
-		removedItems: Item[],
-	): void {
-		const replaceConnectorEdge = (
-			point: ControlPoint,
-			edge: ConnectorEdge,
-		): void => {
-			if (point.pointType !== "Board") {
-				const pointData = new BoardPoint(point.x, point.y);
-				const item = removedItems.find(
-					item => item.getId() === point.item.getId(),
-				);
-				if (item) {
-					if (edge === "start") {
-						connector.applyStartPoint(pointData);
-					} else {
-						connector.applyEndPoint(pointData);
-					}
-				}
-			}
-		};
-
-		replaceConnectorEdge(connector.getStartPoint(), "start");
-		replaceConnectorEdge(connector.getEndPoint(), "end");
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
@@ -244,7 +207,7 @@ export class Board {
 	}
 
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
-		*/
+	 */
 	handleNesting(item: Item): void {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
@@ -266,11 +229,11 @@ export class Board {
 	}
 
 	/**
-		* Creates new canvas and returns it.
-		* Renders all items from translation on new canvas.
-		* @param mbr - width and height for resulting canvas
-		* @param translation - ids of items to draw on mbr
-		*/
+	 * Creates new canvas and returns it.
+	 * Renders all items from translation on new canvas.
+	 * @param mbr - width and height for resulting canvas
+	 * @param translation - ids of items to draw on mbr
+	 */
 	drawMbrOnCanvas(
 		mbr: Mbr,
 		translation: TransformManyItems,
@@ -638,21 +601,24 @@ export class Board {
 				const firstVisit = Array.from(
 					{ length: localStorage.length },
 					(_, i) => i,
-				).reduce((acc, i) => {
-					const key = localStorage.key(i);
-					if (key && key.startsWith("lastVisit")) {
-						const curr = +(localStorage.getItem(key) || "");
-						const currId = key.split("_")[1];
-						if (!acc || curr < acc.minVal) {
-							return {
-								minVal: curr,
-								minId: currId,
-							};
+				).reduce(
+					(acc, i) => {
+						const key = localStorage.key(i);
+						if (key && key.startsWith("lastVisit")) {
+							const curr = +(localStorage.getItem(key) || "");
+							const currId = key.split("_")[1];
+							if (!acc || curr < acc.minVal) {
+								return {
+									minVal: curr,
+									minId: currId,
+								};
+							}
+							return acc;
 						}
 						return acc;
-					}
-					return acc;
-				}, undefined as { minVal: number; minId: string } | undefined);
+					},
+					undefined as { minVal: number; minId: string } | undefined,
+				);
 				if (firstVisit && firstVisit.minId !== this.getBoardId()) {
 					localStorage.removeItem(`lastVisit_${firstVisit.minId}`);
 					localStorage.removeItem(`camera_${firstVisit.minId}`);
@@ -957,7 +923,7 @@ export class Board {
 				return pasteItem(id, data);
 			}
 			return;
-		})
+		});
 	}
 
 	isOnBoard(item: Item): boolean {
