@@ -2,14 +2,14 @@ import { Mbr, Line, Path, Point, Paths } from "Board/Items";
 
 export const BPMN_Annotation = {
 	name: "BPMN_Annotation",
-	textBounds: new Mbr(54, 4, 95, 98),
+	textBounds: new Mbr(5, 5, 100, 95),
 	path: new Paths(
 		[
 			new Path(
 				[
-					new Line(new Point(80, 0), new Point(50, 0)),
-					new Line(new Point(50, 0), new Point(50, 100)),
-					new Line(new Point(50, 100), new Point(80, 100)),
+					new Line(new Point(40, 0), new Point(0, 0)),
+					new Line(new Point(0, 0), new Point(0, 100)),
+					new Line(new Point(0, 100), new Point(40, 100)),
 				],
 				false,
 			),
@@ -19,11 +19,6 @@ export const BPMN_Annotation = {
 		"solid",
 		2,
 	),
-	anchorPoints: [
-		new Point(0, 50),
-		new Point(100, 50),
-		new Point(50, 0),
-		new Point(50, 100),
-	],
+	anchorPoints: [],
 	createPath: (mbr: Mbr) => BPMN_Annotation.path.copy(),
 };

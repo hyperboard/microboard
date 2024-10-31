@@ -460,17 +460,6 @@ export class Sticker implements Geometry {
 		}
 		res.mbr = this.getMbr();
 
-		sessionStorage.setItem(
-			"lastSticker",
-			JSON.stringify({
-				backgroundColor: this.backgroundColor,
-				id: this.id,
-				itemType: this.itemType,
-				parent: this.parent,
-				stickerPath: this.stickerPath,
-			}),
-		);
-
 		return res;
 	}
 

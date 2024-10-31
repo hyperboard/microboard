@@ -15,6 +15,7 @@ import {
 	Frame,
 	Item,
 	ItemData,
+	ItemType,
 	Mbr,
 	RichText,
 	Shape,
@@ -943,16 +944,36 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			sessionStorage.setItem(
-				`fontStyles_${item.itemType}`,
-				JSON.stringify(text.getFontStyles()),
-			);
+			this.saveFontStyle(text, item.itemType);
 		}
 		this.emit({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
 		});
+	}
+
+	private saveFontStyle(text: RichText, itemType: ItemType): void {
+		const boardId = this.board.getBoardId();
+
+		let savedStyle = sessionStorage.getItem(`fontStyles_${itemType}`);
+
+		sessionStorage.setItem(
+			`fontStyles_${itemType}`,
+			JSON.stringify(
+				savedStyle
+					? {
+							...JSON.parse(savedStyle),
+							[boardId]: text.getFontStyles(),
+					  }
+					: { [boardId]: text.getFontStyles() },
+			),
+		);
+
+		localStorage.setItem(
+			`fontStyles_${itemType}`,
+			JSON.stringify({ [boardId]: text.getFontStyles() }),
+		);
 	}
 
 	setFontColor(fontColor: string): void {

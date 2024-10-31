@@ -7,6 +7,7 @@ import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
+import { SessionStorage } from "../../../App/SessionStorage";
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;
@@ -16,15 +17,17 @@ export class AddShape extends BoardTool {
 	shape: Shape;
 	isDown = false;
 	isShiftPressed = false;
+	storage = new SessionStorage();
 
 	private handleKeyDownBound: (event: KeyboardEvent) => void;
 	private handleKeyUpBound: (event: KeyboardEvent) => void;
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
-		const savedShapeData = sessionStorage.getItem("lastShapeData");
+		const savedShapeData = this.storage.getShapeData(board.getBoardId());
+
 		if (savedShapeData) {
-			const data = JSON.parse(savedShapeData) as DefaultShapeData;
+			const data = savedShapeData;
 			this.shape = new Shape(
 				undefined,
 				"",
@@ -122,30 +125,33 @@ export class AddShape extends BoardTool {
 		if (this.type === "None") {
 			return false;
 		}
+		const storage = this.storage;
+		const boardId = this.board.getBoardId();
 		let width = this.bounds.getWidth();
 		let height = this.bounds.getHeight();
 		if (width < 2) {
-			const savedWidth = sessionStorage.getItem("shapeWidth");
+			const savedWidth = storage.getShapeWidth(boardId);
 			if (savedWidth) {
-				width = JSON.parse(savedWidth);
+				width = savedWidth;
 			} else {
 				width = 100;
 			}
 		} else {
-			sessionStorage.setItem("shapeWidth", JSON.stringify(width));
+			storage.saveShapeWidth(width, boardId);
 		}
 		if (height < 2) {
-			const savedHeight = sessionStorage.getItem("shapeHeight");
+			const savedHeight = storage.getShapeHeight(boardId);
 			if (savedHeight) {
-				height = JSON.parse(savedHeight);
+				height = savedHeight;
 			} else {
 				height = 100;
 			}
 		} else {
-			sessionStorage.setItem("shapeHeight", JSON.stringify(height));
+			storage.saveShapeHeight(height, boardId);
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
+		storage.saveShapeData(shape, boardId);
 		this.isDown = false;
 		if (ADD_TO_SELECTION) {
 			this.board.selection.removeAll();
@@ -201,8 +207,8 @@ export class AddShape extends BoardTool {
 		}
 		this.setShapeType(shape);
 		const { left, top, bottom, right } = this.board.camera.getMbr();
-		const x = (left + right) / 2;
-		const y = (top + bottom) / 2;
+		const x = (left + right) / 2 - 50;
+		const y = (top + bottom) / 2 - 50;
 		this.bounds = new Mbr(x, y, x, y);
 		this.line = new Line(new Point(x, y), new Point(x, y));
 		this.bounds.borderColor = SELECTION_COLOR;

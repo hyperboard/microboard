@@ -6,18 +6,19 @@ import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
 import { STICKER_COLOR_NAMES, STICKER_COLORS } from "View/Tools/AddSticker";
 import { CursorName } from "Board/Pointer/Cursor";
+import { SessionStorage } from "../../../App/SessionStorage";
 
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
 	line: Line | undefined;
 	bounds = new Mbr();
-
+	storage = new SessionStorage();
 	static defaultWidth?: number = undefined;
 	sticker = new Sticker(undefined, undefined);
 	isDown = false;
 	constructor(board: Board) {
 		super(board);
-		const lastSticker = this.getLastSticker();
+		const lastSticker = this.storage.getLastSticker(board.getBoardId());
 		this.sticker = new Sticker(
 			undefined,
 			undefined,
@@ -78,7 +79,8 @@ export class AddSticker extends BoardTool {
 	}
 
 	leftButtonUp(): boolean {
-		const lastSticker = this.getLastSticker();
+		const storage = this.storage;
+		const lastSticker = storage.getLastSticker(this.board.getBoardId());
 		if (lastSticker) {
 			try {
 				AddSticker.defaultWidth = +lastSticker.getWidth();
@@ -105,8 +107,8 @@ export class AddSticker extends BoardTool {
 			const mbr = this.line.getMbr();
 			AddSticker.defaultWidth = mbr.getWidth();
 		}
+		storage.saveStickerData(this.sticker, this.board.getBoardId());
 
-		this.setLastSticker(this.sticker);
 		return true;
 	}
 
@@ -149,18 +151,5 @@ export class AddSticker extends BoardTool {
 		if (this.isDown) {
 			this.bounds.render(context);
 		}
-	}
-
-	private getLastSticker(): Sticker | null {
-		const lastSticker = sessionStorage.getItem("lastSticker");
-		if (lastSticker) {
-			return new Sticker().deserialize(JSON.parse(lastSticker));
-		} else {
-			return null;
-		}
-	}
-
-	private setLastSticker(lastSticker: Sticker): void {
-		sessionStorage.setItem("lastSticker", JSON.stringify(lastSticker));
 	}
 }
