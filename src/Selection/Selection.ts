@@ -956,7 +956,7 @@ export class Selection {
 	private saveFontStyle(text: RichText, itemType: ItemType): void {
 		const boardId = this.board.getBoardId();
 
-		let savedStyle = sessionStorage.getItem(`fontStyles_${itemType}`);
+		const savedStyle = sessionStorage.getItem(`fontStyles_${itemType}`);
 
 		sessionStorage.setItem(
 			`fontStyles_${itemType}`,
