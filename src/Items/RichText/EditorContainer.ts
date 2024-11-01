@@ -104,6 +104,7 @@ export class EditorContainer {
 					}
 				}
 				this.decorated.realapply(op);
+				this.subject.publish(this);
 			},
 			undo: editor.undo,
 			redo: editor.redo,
@@ -131,7 +132,6 @@ export class EditorContainer {
 						}
 
 						this.recordedSelectionOp.ops.push(operation);
-						this.decorated.apply(operation);
 						this.subject.publish(this);
 					}
 					return;
@@ -151,7 +151,8 @@ export class EditorContainer {
 								operation.type !== "set_node" &&
 								this.getAutosize()
 							) {
-								const relativeFontSize = this.getFontSize() / this.getMatrixScale();
+								const relativeFontSize =
+									this.getFontSize() / this.getMatrixScale();
 								if (relativeFontSize < 10) {
 									this.getOnLimitReached()();
 									return;

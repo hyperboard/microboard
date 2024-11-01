@@ -260,29 +260,29 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.updateRequired = true;
 		// window.requestAnimationFrame(() => {
-			if (this.autoSize) {
-				this.calcAutoSize();
-			} else {
-				const nodes = getBlockNodes(
-					this.getTextForNodes(),
-					this.getMaxWidth(),
-				);
-				this.blockNodes = nodes;
-				if (
-					this.containerMaxWidth &&
-					this.blockNodes.width >= this.containerMaxWidth
-				) {
-					this.blockNodes.width = this.containerMaxWidth;
-				}
-			}
-
-			this.alignInRectangle(
-				this.getTransformedContainer(),
-				this.editor.verticalAlignment,
+		if (this.autoSize) {
+			this.calcAutoSize();
+		} else {
+			const nodes = getBlockNodes(
+				this.getTextForNodes(),
+				this.getMaxWidth(),
 			);
-			this.transformCanvas();
+			this.blockNodes = nodes;
+			if (
+				this.containerMaxWidth &&
+				this.blockNodes.width >= this.containerMaxWidth
+			) {
+				this.blockNodes.width = this.containerMaxWidth;
+			}
+		}
 
-			this.updateRequired = false;
+		this.alignInRectangle(
+			this.getTransformedContainer(),
+			this.editor.verticalAlignment,
+		);
+		this.transformCanvas();
+
+		this.updateRequired = false;
 		// });
 	}
 
@@ -309,7 +309,10 @@ export class RichText extends Mbr implements Geometry {
 
 		for (let i = 0; i < 10 && low < high; i += 1) {
 			const mid = (low + high) / 2;
-			const { width: calcWidth, height: calcHeight } = getBlockNodes(text, mid);
+			const { width: calcWidth, height: calcHeight } = getBlockNodes(
+				text,
+				mid,
+			);
 
 			const currentRatio = calcWidth / calcHeight;
 			const ratioDifference = Math.abs(currentRatio - targetRatio);
@@ -338,11 +341,11 @@ export class RichText extends Mbr implements Geometry {
 			const scale = Math.min(
 				containerWidth / closestWidth,
 				containerHeight / closestHeight,
-			)
+			);
 			return {
 				bestMaxWidth: initialMaxWidth / scale,
 				bestMaxHeight: initialMaxWidth / targetRatio / scale,
-			}
+			};
 		}
 
 		return { bestMaxWidth, bestMaxHeight };
@@ -481,8 +484,8 @@ export class RichText extends Mbr implements Geometry {
 			alignment === "top"
 				? rect.top
 				: alignment === "bottom"
-				? rect.bottom - height
-				: center.y - height / 2;
+					? rect.bottom - height
+					: center.y - height / 2;
 		this.left = left;
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
@@ -565,7 +568,6 @@ export class RichText extends Mbr implements Geometry {
 			this.transformation.apply(op);
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
-				this.setMaxWidth(op.maxWidth ?? 0);
 				this.setMaxWidth(op.maxWidth ?? 0);
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
@@ -692,7 +694,7 @@ export class RichText extends Mbr implements Geometry {
 
 	getTransformationScale = (): number => {
 		return this.transformation.getScale().y;
-	}
+	};
 
 	get onLimitReached(): () => void {
 		return this._onLimitReached;
@@ -942,8 +944,7 @@ export class RichText extends Mbr implements Geometry {
 					document.caretRangeFromPoint)
 			) {
 				const domRange = document.caretPositionFromPoint
-					?
-					  document.caretPositionFromPoint(point.x, point.y)
+					? document.caretPositionFromPoint(point.x, point.y)
 					: document.caretRangeFromPoint(point.x, point.y);
 				// @ts-expect-error: Suppress TS error for non-existent method
 				const textNode = document.caretPositionFromPoint
@@ -968,10 +969,8 @@ export class RichText extends Mbr implements Geometry {
 			} else {
 				if (
 					!(
-						(
-							document.caretPositionFromPoint ||
-							document.caretRangeFromPoint
-						)
+						document.caretPositionFromPoint ||
+						document.caretRangeFromPoint
 					)
 				) {
 					console.error(

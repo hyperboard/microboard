@@ -59,7 +59,10 @@ export class Selection {
 	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
 
-	constructor(private board: Board, public events?: Events) {
+	constructor(
+		private board: Board,
+		public events?: Events,
+	) {
 		requestAnimationFrame(this.updateScheduledObservers);
 		this.tool = new SelectionTransformer(board, this);
 		this.quickAddButtons = getQuickAddButtons(this, board);
@@ -130,7 +133,7 @@ export class Selection {
 							item instanceof Frame &&
 							item.transformation.isLocked
 						),
-			  )
+				)
 			: (value as Frame).transformation.isLocked;
 
 		this.items.add(value);
