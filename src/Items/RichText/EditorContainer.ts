@@ -104,7 +104,6 @@ export class EditorContainer {
 					}
 				}
 				this.decorated.realapply(op);
-				this.subject.publish(this);
 			},
 			undo: editor.undo,
 			redo: editor.redo,
@@ -132,6 +131,7 @@ export class EditorContainer {
 						}
 
 						this.recordedSelectionOp.ops.push(operation);
+						this.decorated.apply(operation);
 						this.subject.publish(this);
 					}
 					return;
