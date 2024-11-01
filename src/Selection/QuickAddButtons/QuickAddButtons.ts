@@ -17,18 +17,8 @@ import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
 
 export interface QuickAddButtons {
-	calculateQuickAddPosition: (
-		index: number,
-		selectedItem: Item,
-		connectorStartPoint: Point,
-	) => { newItem: Item; connectorData: ConnectorData };
 	clear: () => void;
-	getQuickButtonsPositions: (
-		customMbr?: Mbr,
-	) => { positions: Point[]; item: Item } | undefined;
 	render: (context: DrawingContext) => void;
-	htmlButtons?: HTMLButtonElement[];
-	quickAddItems?: QuickAddItems;
 }
 
 export interface QuickAddItems {
@@ -125,11 +115,17 @@ export function getQuickAddButtons(
 		const connectorData = defaultConnector.serialize();
 		connectorData.lineStyle = "orthogonal";
 
-		const savedStart = connectorStorage.getConnectorPointer("start");
+		const savedStart = connectorStorage.getConnectorPointer(
+			"start",
+			board.getBoardId(),
+		);
 		if (savedStart) {
 			connectorData.startPointerStyle = savedStart;
 		}
-		const savedEnd = connectorStorage.getConnectorPointer("end");
+		const savedEnd = connectorStorage.getConnectorPointer(
+			"end",
+			board.getBoardId(),
+		);
 		if (savedEnd) {
 			connectorData.endPointerStyle = savedEnd;
 		}
@@ -315,18 +311,18 @@ export function getQuickAddButtons(
 					}
 				};
 
-				button.onclick = () => {
+				button.onclick = async () => {
 					if (!quickAddItems) {
 						button.resetState();
 						return;
 					}
 					const { newItem, connectorData } = quickAddItems;
 
-					const addedItem = board.add(newItem);
+					const addedItem = await board.add(newItem);
 					if ("itemId" in connectorData.endPoint) {
 						connectorData.endPoint.itemId = addedItem.getId();
 					}
-					board.add(
+					await board.add(
 						board.createItem(board.getNewItemId(), connectorData),
 					);
 
@@ -344,18 +340,10 @@ export function getQuickAddButtons(
 	}
 
 	return {
-		calculateQuickAddPosition,
 		clear,
-		getQuickButtonsPositions,
 		render: (context: DrawingContext) => {
 			renderQuickAddItems(context);
 			renderQuickAddButtons();
-		},
-		get htmlButtons() {
-			return htmlButtons;
-		},
-		get quickAddItems() {
-			return quickAddItems;
 		},
 	};
 }

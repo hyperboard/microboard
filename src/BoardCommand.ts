@@ -3,9 +3,14 @@ import { BoardOps } from "./BoardOperations";
 import { Board } from "Board";
 
 export class BoardCommand implements Command {
-	private reverse = this.getReverse();
+	private reverse: BoardOps | BoardOps[];
 
-	constructor(private board: Board, private operation: BoardOps) {}
+	constructor(
+		private board: Board,
+		private operation: BoardOps,
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		this.board.apply(this.operation);

@@ -46,12 +46,12 @@ export const defaultCursors = [
 	"sticker-black",
 ] as const;
 
-export const customCursors = ["pen"] as const;
+export const customCursors = ["pen", "eraser"] as const;
 
-export type Cursor = typeof defaultCursors[number] | string;
+export type Cursor = (typeof defaultCursors)[number] | string;
 export type CursorName =
-	| typeof defaultCursors[number]
-	| typeof customCursors[number];
+	| (typeof defaultCursors)[number]
+	| (typeof customCursors)[number];
 export type CursorsMap = Partial<Record<CursorName, Cursor>>;
 
 /*

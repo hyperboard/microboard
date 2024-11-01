@@ -15,6 +15,7 @@ import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
+	ItemType,
 	Line,
 	Matrix,
 	Mbr,
@@ -82,11 +83,13 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
+	maxHeight: number;
 	private selection?: BaseSelection;
-	maxHeight = 0;
 	transformationRenderBlock?: boolean = undefined;
 	lastClickPoint?: Point;
 	initialFontColor?: string;
+	frameMbr?: Mbr;
+	private _onLimitReached: () => void = () => {};
 
 	constructor(
 		public container: Mbr,
@@ -96,7 +99,7 @@ export class RichText extends Mbr implements Geometry {
 		public placeholderText = i18next.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
-		public insideOf?: string,
+		public insideOf?: ItemType,
 		private initialTextStyles: DefaultTextStyles = DEFAULT_TEXT_STYLES,
 	) {
 		super();
@@ -125,6 +128,13 @@ export class RichText extends Mbr implements Geometry {
 			this.getScale,
 			this.getDefaultHorizontalAlignment(),
 			initialTextStyles,
+			this.getAutosize.bind(this),
+			this.isEmpty.bind(this),
+			this.autosizeEnable.bind(this),
+			this.autosizeDisable.bind(this),
+			this.getFontSize.bind(this),
+			this.getTransformationScale.bind(this),
+			() => this.onLimitReached,
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -155,9 +165,6 @@ export class RichText extends Mbr implements Geometry {
 		this.blockNodes = getBlockNodes(
 			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
-			this.insideOf,
-			undefined,
-			undefined,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -203,7 +210,7 @@ export class RichText extends Mbr implements Geometry {
 	getDefaultHorizontalAlignment(): HorisontalAlignment {
 		switch (this.insideOf) {
 			case "Sticker":
-				return "center";
+			case "Connector":
 			case "Shape":
 				return "center";
 			default:
@@ -256,14 +263,11 @@ export class RichText extends Mbr implements Geometry {
 		if (this.autoSize) {
 			this.calcAutoSize();
 		} else {
-			// this.calcAutoSize(false);
-			this.blockNodes = getBlockNodes(
-				this.getTextForNodes() as BlockNode[],
+			const nodes = getBlockNodes(
+				this.getTextForNodes(),
 				this.getMaxWidth(),
-				this.insideOf,
-				undefined,
-				undefined,
 			);
+			this.blockNodes = nodes;
 			if (
 				this.containerMaxWidth &&
 				this.blockNodes.width >= this.containerMaxWidth
@@ -272,65 +276,101 @@ export class RichText extends Mbr implements Geometry {
 			}
 		}
 
-		// this.blockNodes.maxWidth = this.getWidth()
-
 		this.alignInRectangle(
 			this.getTransformedContainer(),
 			this.editor.verticalAlignment,
 		);
 		this.transformCanvas();
+
 		this.updateRequired = false;
 		// });
 	}
 
-	calcAutoSize(shouldUpdate = true): void {
+	private findOptimalMaxWidth(
+		text: BlockNode[],
+		containerWidth: number,
+		containerHeight: number,
+		initialMaxWidth: number,
+		tolerance = 0.05,
+	): {
+		bestMaxWidth: number;
+		bestMaxHeight: number;
+	} {
+		const targetRatio = containerWidth / containerHeight;
+		let low = 0;
+		let high = initialMaxWidth * 10;
+		let bestMaxWidth = initialMaxWidth;
+		let bestMaxHeight = initialMaxWidth / targetRatio;
+		let didFound = false;
+
+		let closestRatioDifference = Infinity;
+		let closestWidth = initialMaxWidth;
+		let closestHeight = initialMaxWidth / targetRatio;
+
+		for (let i = 0; i < 10 && low < high; i += 1) {
+			const mid = (low + high) / 2;
+			const { width: calcWidth, height: calcHeight } = getBlockNodes(
+				text,
+				mid,
+			);
+
+			const currentRatio = calcWidth / calcHeight;
+			const ratioDifference = Math.abs(currentRatio - targetRatio);
+
+			if (ratioDifference < closestRatioDifference) {
+				closestRatioDifference = ratioDifference;
+				closestWidth = calcWidth;
+				closestHeight = calcHeight;
+			}
+
+			if (ratioDifference <= tolerance) {
+				bestMaxWidth = mid;
+				bestMaxHeight = calcHeight;
+				didFound = true;
+				break;
+			}
+
+			if (currentRatio < targetRatio) {
+				low = mid + 1;
+			} else {
+				high = mid - 1;
+			}
+		}
+
+		if (!didFound) {
+			const scale = Math.min(
+				containerWidth / closestWidth,
+				containerHeight / closestHeight,
+			);
+			return {
+				bestMaxWidth: initialMaxWidth / scale,
+				bestMaxHeight: initialMaxWidth / targetRatio / scale,
+			};
+		}
+
+		return { bestMaxWidth, bestMaxHeight };
+	}
+
+	calcAutoSize(): void {
 		const text = this.getText();
 		const container = this.getTransformedContainer();
 		const containerWidth = container.getWidth();
 		const containerHeight = container.getHeight();
-		const width = this.container.getWidth();
-		const maxWidth = width;
-		const blockNodes =
-			this.insideOf !== "Sticker"
-				? getBlockNodes(text as BlockNode[], maxWidth, this.insideOf)
-				: this.autoSizeScale < 1
-				? getBlockNodes(
-						text as BlockNode[],
-						containerWidth / this.autoSizeScale,
-						this.insideOf,
-				  )
-				: getBlockNodes(
-						text as BlockNode[],
-						containerWidth,
-						this.insideOf,
-						containerWidth,
-						containerHeight,
-				  );
-		/*
 
-				if (blockNodes.height / blockNodes.width < (1 / 7)) {
-
-						maxWidth = blockNodes.width / 3
-						if (maxWidth > width) {
-								maxWidth = width;
-						}
-						blockNodes = getBlockNodes(text, maxWidth);
-						if (blockNodes.width < blockNodes.height) {
-								maxWidth = blockNodes.height;
-								blockNodes = getBlockNodes(text, maxWidth);
-						}
-				}
-				*/
-
-		if (shouldUpdate) {
-			this.blockNodes = blockNodes;
-		}
-		const textWidth = this.blockNodes.width;
-		const textHeight = this.blockNodes.height;
-		const textScale = Math.min(
-			containerWidth / textWidth,
-			containerHeight / textHeight,
+		const optimal = this.findOptimalMaxWidth(
+			text as BlockNode[],
+			containerWidth,
+			containerHeight,
+			containerWidth,
 		);
+
+		const textScale = Math.min(
+			containerWidth / optimal.bestMaxWidth,
+			containerHeight / optimal.bestMaxHeight,
+		);
+
+		this.blockNodes = getBlockNodes(text, containerWidth / textScale);
+
 		this.autoSizeScale = textScale;
 		// this.maxWidth = maxWidth;
 		this.maxHeight = containerHeight / textScale;
@@ -444,8 +484,8 @@ export class RichText extends Mbr implements Geometry {
 			alignment === "top"
 				? rect.top
 				: alignment === "bottom"
-				? rect.bottom - height
-				: center.y - height / 2;
+					? rect.bottom - height
+					: center.y - height / 2;
 		this.left = left;
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
@@ -653,6 +693,18 @@ export class RichText extends Mbr implements Geometry {
 		return this.transformation.getScale().x;
 	};
 
+	getTransformationScale = (): number => {
+		return this.transformation.getScale().y;
+	};
+
+	get onLimitReached(): () => void {
+		return this._onLimitReached;
+	}
+
+	set onLimitReached(handler: () => void) {
+		this._onLimitReached = handler;
+	}
+
 	selectWholeText(): void {
 		this.editor.selectWholeText();
 	}
@@ -724,12 +776,8 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		const scaledFontSize =
-			!this.isInShape && fontSize !== "auto"
-				? fontSize / this.getScale()
-				: fontSize;
 		const ops = this.editor.setSelectionFontSize(
-			scaledFontSize,
+			fontSize,
 			selectionContext,
 		);
 		this.updateElement();
@@ -892,14 +940,12 @@ export class RichText extends Mbr implements Geometry {
 			// if there are TS errors, document.caretPositionFromPoint can support most browser, need to refactor
 			// FYI https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint
 			if (
-				refMbr.isInside(point) && // @ts-expect-error: Suppress TS error for non-existent method
+				refMbr.isInside(point) &&
 				(document.caretPositionFromPoint ||
 					document.caretRangeFromPoint)
 			) {
-				// @ts-expect-error: Suppress TS error for non-existent method
 				const domRange = document.caretPositionFromPoint
-					? // @ts-expect-error: Suppress TS error for non-existent method
-					  document.caretPositionFromPoint(point.x, point.y)
+					? document.caretPositionFromPoint(point.x, point.y)
 					: document.caretRangeFromPoint(point.x, point.y);
 				// @ts-expect-error: Suppress TS error for non-existent method
 				const textNode = document.caretPositionFromPoint
@@ -924,11 +970,8 @@ export class RichText extends Mbr implements Geometry {
 			} else {
 				if (
 					!(
-						// @ts-expect-error: Suppress TS error for non-existent method
-						(
-							document.caretPositionFromPoint ||
-							document.caretRangeFromPoint
-						)
+						document.caretPositionFromPoint ||
+						document.caretRangeFromPoint
 					)
 				) {
 					console.error(
@@ -1015,6 +1058,7 @@ export class RichText extends Mbr implements Geometry {
 			this.autosizeDisable();
 		}
 		this.insideOf = data.insideOf;
+		// await this.updateElement();
 		this.updateElement();
 		this.subject.publish(this);
 		return this;

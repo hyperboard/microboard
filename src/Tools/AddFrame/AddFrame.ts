@@ -8,17 +8,18 @@ import { NestingHighlighter } from "../NestingHighlighter";
 export class AddFrame extends BoardTool {
 	line: Line | undefined;
 	shape: FrameType = "Custom";
-	frame = new Frame(
-		undefined,
-		"",
-		`Frame ${this.board.getMaxFrameSerial() + 1}`,
-	);
+	frame: Frame;
 	mbr = new Mbr();
 	isDown = false;
 	toDrawBorder = new NestingHighlighter();
 
-	constructor(board: Board) {
+	constructor(private board: Board) {
 		super(board);
+		this.frame = new Frame(
+			undefined,
+			"",
+			`Frame ${this.board.getMaxFrameSerial() + 1}`,
+		);
 		this.setCursor();
 	}
 
@@ -79,7 +80,7 @@ export class AddFrame extends BoardTool {
 		return false;
 	}
 
-	leftButtonUp(): boolean {
+	async leftButtonUp(): Promise<boolean> {
 		this.isDown = false;
 		const width = this.mbr.getWidth();
 		const height = this.mbr.getHeight();
@@ -104,7 +105,7 @@ export class AddFrame extends BoardTool {
 			)
 			.filter(item => item.parent === "Board")
 			.forEach(item => this.frame.handleNesting(item));
-		const frame = this.board.add(this.frame);
+		const frame = await this.board.add(this.frame);
 		if (this.shape !== "Custom") {
 			frame.setCanChangeRatio(false);
 		}
@@ -121,7 +122,7 @@ export class AddFrame extends BoardTool {
 		return true;
 	}
 
-	addNextTo(): void {
+	async addNextTo(): Promise<void> {
 		const framesInView = this.board.items.getFramesInView();
 		if (framesInView.length === 0) {
 			if (this.shape === "Custom") {
@@ -190,7 +191,7 @@ export class AddFrame extends BoardTool {
 			)
 			.filter(item => item.parent === "Board")
 			.forEach(item => this.frame.handleNesting(item));
-		const frame = this.board.add(this.frame);
+		const frame = await this.board.add(this.frame);
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.moveCursorToEOL();
 

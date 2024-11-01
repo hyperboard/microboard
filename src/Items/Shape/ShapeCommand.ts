@@ -4,9 +4,14 @@ import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class ShapeCommand implements Command {
-	private reverse = this.getReverse();
+	private reverse: { item: Shape; operation: ShapeOperation }[];
 
-	constructor(private shape: Shape[], private operation: ShapeOperation) {}
+	constructor(
+		private shape: Shape[],
+		private operation: ShapeOperation,
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const shape of this.shape) {

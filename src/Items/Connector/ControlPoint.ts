@@ -57,7 +57,10 @@ export class BoardPoint extends Point {
 
 export class FloatingPoint extends Point {
 	readonly pointType = "Floating";
-	constructor(public item: Item, readonly relativePoint: Point) {
+	constructor(
+		public item: Item,
+		readonly relativePoint: Point,
+	) {
 		super();
 		this.recalculatePoint();
 	}
@@ -90,7 +93,10 @@ export class FloatingPoint extends Point {
 
 export class FixedPoint extends Point {
 	readonly pointType = "Fixed";
-	constructor(public item: Item, readonly relativePoint: Point) {
+	constructor(
+		public item: Item,
+		readonly relativePoint: Point,
+	) {
 		super();
 		this.recalculatePoint();
 	}
@@ -179,9 +185,13 @@ export function getControlPoint(
 		const item = findItem(data.itemId);
 
 		if (!item) {
-			throw new Error(
-				`getControlPoint(): item not found for ${data.pointType} point`,
+			console.warn(
+				`getControlPoint(): item not found for ${data.itemId}`,
 			);
+			// throw new Error(
+			// 	`getControlPoint(): item not found for ${data.pointType} point`,
+			// );
+			return new BoardPoint(0, 0);
 		}
 
 		switch (data.pointType) {

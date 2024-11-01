@@ -1,13 +1,12 @@
+import { tempStorage } from "App/SessionStorage";
 import { Board } from "Board/Board";
-import { Line, Mbr, Point, Shape } from "Board/Items";
+import { Line, Mbr, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape";
-import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
+import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
 import { BoardTool } from "../BoardTool";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { SessionStorage } from "../../../App/SessionStorage";
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;
@@ -17,17 +16,14 @@ export class AddShape extends BoardTool {
 	shape: Shape;
 	isDown = false;
 	isShiftPressed = false;
-	storage = new SessionStorage();
 
 	private handleKeyDownBound: (event: KeyboardEvent) => void;
 	private handleKeyUpBound: (event: KeyboardEvent) => void;
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
-		const savedShapeData = this.storage.getShapeData(board.getBoardId());
-
-		if (savedShapeData) {
-			const data = savedShapeData;
+		const data = tempStorage.getShapeData(board.getBoardId());
+		if (data) {
 			this.shape = new Shape(
 				undefined,
 				"",
@@ -125,33 +121,33 @@ export class AddShape extends BoardTool {
 		if (this.type === "None") {
 			return false;
 		}
-		const storage = this.storage;
 		const boardId = this.board.getBoardId();
-		let width = this.bounds.getWidth();
-		let height = this.bounds.getHeight();
-		if (width < 2) {
-			const savedWidth = storage.getShapeWidth(boardId);
-			if (savedWidth) {
-				width = savedWidth;
-			} else {
-				width = 100;
-			}
-		} else {
-			storage.saveShapeWidth(width, boardId);
+		const width =
+			this.bounds.getWidth() < 2
+				? tempStorage.getShapeWidth(boardId) || 100
+				: this.bounds.getWidth();
+		const height =
+			this.bounds.getHeight() < 2
+				? tempStorage.getShapeHeight(boardId) || 100
+				: this.bounds.getHeight();
+		if (this.bounds.getWidth() > 2) {
+			tempStorage.setShapeWidth(this.bounds.getWidth(), boardId);
 		}
-		if (height < 2) {
-			const savedHeight = storage.getShapeHeight(boardId);
-			if (savedHeight) {
-				height = savedHeight;
-			} else {
-				height = 100;
-			}
-		} else {
-			storage.saveShapeHeight(height, boardId);
+		if (this.bounds.getHeight() > 2) {
+			tempStorage.setShapeHeight(this.bounds.getHeight(), boardId);
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
-		storage.saveShapeData(shape, boardId);
+		const shapeData = {
+			shapeType: shape.getShapeType(),
+			backgroundColor: shape.getBackgroundColor(),
+			backgroundOpacity: shape.getBackgroundOpacity(),
+			borderColor: shape.getBorderColor(),
+			borderOpacity: shape.getBorderOpacity(),
+			borderStyle: shape.getBorderStyle(),
+			borderWidth: shape.getBorderWidth(),
+		};
+		tempStorage.setShapeData(shapeData, boardId);
 		this.isDown = false;
 		if (ADD_TO_SELECTION) {
 			this.board.selection.removeAll();
@@ -200,23 +196,6 @@ export class AddShape extends BoardTool {
 		this.board.tools.setTool(this);
 		this.setCursor();
 	};
-
-	createShapeInCenter(shape: ShapeType) {
-		if (this.type === "None") {
-			return;
-		}
-		this.setShapeType(shape);
-		const { left, top, bottom, right } = this.board.camera.getMbr();
-		const x = (left + right) / 2 - 50;
-		const y = (top + bottom) / 2 - 50;
-		this.bounds = new Mbr(x, y, x, y);
-		this.line = new Line(new Point(x, y), new Point(x, y));
-		this.bounds.borderColor = SELECTION_COLOR;
-		this.shape.setShapeType(this.type);
-		this.initTransformation();
-		this.board.tools.publish();
-		this.leftButtonUp();
-	}
 
 	render(context: DrawingContext): void {
 		if (this.isDown) {

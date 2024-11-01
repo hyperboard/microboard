@@ -10,15 +10,10 @@ import { BoardCommand } from "./BoardCommand";
 import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import { BoardEvent, createEvents } from "./Events/Events";
+import { createEvents, SyncBoardEvent } from "./Events/Events";
 import { itemFactories } from "./itemFactories";
-import { Connector, Frame, Item, ItemData, Matrix, Mbr } from "./Items";
-import {
-	BoardPoint,
-	ControlPoint,
-	ControlPointData,
-} from "./Items/Connector/ControlPoint";
-import { ConnectorEdge } from "./Items/Connector/Pointers";
+import { Frame, Item, ItemData, Matrix, Mbr } from "./Items";
+import { ControlPointData } from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
 import { DrawingContext } from "./Items/DrawingContext";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
@@ -100,7 +95,7 @@ export class Board {
 		this.drawingContext = context;
 	}
 
-	apply(op: Operation): void | false {
+	apply(op: Operation): void {
 		switch (op.class) {
 			case "Board":
 				return this.applyBoardOperation(op);
@@ -183,38 +178,6 @@ export class Board {
 			this.selection.remove(item);
 			removedItems.push(item);
 		});
-		this.items.listAll().forEach(item => {
-			if (item.itemType === "Connector") {
-				this.replaceConnectorEdges(item, removedItems);
-			}
-		});
-	}
-
-	private replaceConnectorEdges(
-		connector: Connector,
-		removedItems: Item[],
-	): void {
-		const replaceConnectorEdge = (
-			point: ControlPoint,
-			edge: ConnectorEdge,
-		): void => {
-			if (point.pointType !== "Board") {
-				const pointData = new BoardPoint(point.x, point.y);
-				const item = removedItems.find(
-					item => item.getId() === point.item.getId(),
-				);
-				if (item) {
-					if (edge === "start") {
-						connector.applyStartPoint(pointData);
-					} else {
-						connector.applyEndPoint(pointData);
-					}
-				}
-			}
-		};
-
-		replaceConnectorEdge(connector.getStartPoint(), "start");
-		replaceConnectorEdge(connector.getEndPoint(), "end");
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
@@ -386,7 +349,7 @@ export class Board {
 		});
 		const newItem = this.items.getById(id);
 		if (!newItem) {
-			throw new Error("Add item. Item was not created.");
+			throw new Error(`Add item. Item ${id} was not created.`);
 		}
 		this.handleNesting(newItem);
 		return newItem as T;
@@ -638,21 +601,24 @@ export class Board {
 				const firstVisit = Array.from(
 					{ length: localStorage.length },
 					(_, i) => i,
-				).reduce((acc, i) => {
-					const key = localStorage.key(i);
-					if (key && key.startsWith("lastVisit")) {
-						const curr = +(localStorage.getItem(key) || "");
-						const currId = key.split("_")[1];
-						if (!acc || curr < acc.minVal) {
-							return {
-								minVal: curr,
-								minId: currId,
-							};
+				).reduce(
+					(acc, i) => {
+						const key = localStorage.key(i);
+						if (key && key.startsWith("lastVisit")) {
+							const curr = +(localStorage.getItem(key) || "");
+							const currId = key.split("_")[1];
+							if (!acc || curr < acc.minVal) {
+								return {
+									minVal: curr,
+									minId: currId,
+								};
+							}
+							return acc;
 						}
 						return acc;
-					}
-					return acc;
-				}, undefined as { minVal: number; minId: string } | undefined);
+					},
+					undefined as { minVal: number; minId: string } | undefined,
+				);
 				if (firstVisit && firstVisit.minId !== this.getBoardId()) {
 					localStorage.removeItem(`lastVisit_${firstVisit.minId}`);
 					localStorage.removeItem(`camera_${firstVisit.minId}`);
@@ -789,9 +755,8 @@ export class Board {
 			.map(id => this.items.getById(id))
 			.filter(item => typeof item !== "undefined");
 		this.selection.removeAll();
-		if (itemsMap) {
-			this.selection.add(Object.values(items) as Item[]);
-		}
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 
 		return;
 	}
@@ -903,21 +868,20 @@ export class Board {
 			}
 
 			newMap[newItemId] = itemData;
-
-			this.emit({
-				class: "Board",
-				method: "duplicate",
-				itemsMap: newMap,
-			});
-
-			const items = Object.keys(newMap)
-				.map(id => this.items.getById(id))
-				.filter(item => typeof item !== "undefined");
-			this.selection.removeAll();
-			if (itemsMap) {
-				this.selection.add(Object.values(items) as Item[]);
-			}
 		}
+
+		this.emit({
+			class: "Board",
+			method: "duplicate",
+			itemsMap: newMap,
+		});
+
+		const items = Object.keys(newMap)
+			.map(id => this.items.getById(id))
+			.filter(item => typeof item !== "undefined");
+		this.selection.removeAll();
+		this.selection.add(items);
+		this.selection.setContext("EditUnderPointer");
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
@@ -929,7 +893,7 @@ export class Board {
 			},
 		);
 
-		const pasteItem = (itemId: string, data: unknown) => {
+		const pasteItem = (itemId: string, data: unknown): void => {
 			if (!data) {
 				throw new Error("Pasting itemId doesn't exist in itemsMap");
 			}
@@ -946,18 +910,19 @@ export class Board {
 			items.push(item);
 		};
 
-		sortedItemsMap.forEach(([id, data]) => {
+		sortedItemsMap.map(([id, data]) => {
 			if (data.itemType === "Connector") {
 				return;
 			}
 
-			pasteItem(id, data);
+			return pasteItem(id, data);
 		});
 
-		sortedItemsMap.forEach(([id, data]) => {
+		sortedItemsMap.map(([id, data]) => {
 			if (data.itemType === "Connector") {
-				pasteItem(id, data);
+				return pasteItem(id, data);
 			}
+			return;
 		});
 	}
 
@@ -1002,6 +967,7 @@ export class Board {
 
 export interface BoardSnapshot {
 	items: Record<string, ItemData>;
-	events: BoardEvent[];
+	// events: BoardEvent[];
+	events: SyncBoardEvent[];
 	lastIndex: number;
 }

@@ -8,7 +8,7 @@ import {
 } from "../../../View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
 import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
-import createCanvasDrawer from "../../drawMbrOnCanvas";
+import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
@@ -16,12 +16,14 @@ import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import { Frames } from "Board/Items/Frame/Basic";
 import AlignmentHelper from "../RelativeAlignment";
+import { Placeholder } from "Board/Items/Placeholder";
 
 export class Select extends Tool {
 	line: null | Line = null;
 	rect: null | Mbr = null;
 	downOnItem: null | Item = null;
 
+	isHoverUnselectedItem = false;
 	isDrawingRectangle = false;
 	isDraggingBoard = false;
 	isDraggingSelection = false;
@@ -37,7 +39,7 @@ export class Select extends Tool {
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
-	canvasDrawer = createCanvasDrawer(this.board);
+	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
 
 	private alignmentHelper: AlignmentHelper;
@@ -45,12 +47,13 @@ export class Select extends Tool {
 		verticalLines: [],
 		horizontalLines: [],
 	};
-	private isSnapped = false;
+	private isSnapped: boolean | undefined = false;
 	private snapCursorPos: Point | null = null;
 
 	constructor(private board: Board) {
 		super();
-		this.alignmentHelper = new AlignmentHelper(board.index);
+		this.canvasDrawer = createCanvasDrawer(board);
+		this.alignmentHelper = new AlignmentHelper(board, board.index);
 	}
 
 	clear(): void {
@@ -81,15 +84,24 @@ export class Select extends Tool {
 			item,
 			this.snapLines,
 			this.beginTimeStamp,
+			this.board.pointer.point,
 		);
 
-		if (this.isSnapped && this.snapCursorPos) {
+		if (this.isSnapped) {
+			if (!this.snapCursorPos) {
+				this.snapCursorPos = new Point(
+					this.board.pointer.point.x,
+					this.board.pointer.point.y,
+				);
+			}
+
 			const cursorDiffX = Math.abs(
 				this.board.pointer.point.x - this.snapCursorPos.x,
 			);
 			const cursorDiffY = Math.abs(
 				this.board.pointer.point.y - this.snapCursorPos.y,
 			);
+
 			if (
 				cursorDiffX > this.alignmentHelper.snapThreshold ||
 				cursorDiffY > this.alignmentHelper.snapThreshold
@@ -97,6 +109,12 @@ export class Select extends Tool {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 			} else {
+				if (this.snapLines.verticalLines.length > 0) {
+					this.board.pointer.point.x = this.snapCursorPos.x;
+				}
+				if (this.snapLines.horizontalLines.length > 0) {
+					this.board.pointer.point.y = this.snapCursorPos.y;
+				}
 				return true;
 			}
 		}
@@ -116,30 +134,15 @@ export class Select extends Tool {
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();
-		this.isDownOnSelection = false;
-
-		if (selectionMbr !== undefined) {
-			const itemsUnderPointer = this.board.items.getUnderPointer();
-			const isFrame = itemsUnderPointer.some(
-				item => item.itemType === "Frame",
+		const selectionItems = selection.list();
+		this.isDownOnSelection =
+			selectionMbr !== undefined &&
+			selectionMbr.isUnderPoint(pointer.point) &&
+			hover.every(hovered =>
+				selectionItems.some(
+					selected => selected.getId() === hovered.getId(),
+				),
 			);
-
-			if (isFrame) {
-				this.isDownOnSelection = true;
-			}
-
-			if (selectionMbr.isUnderPoint(pointer.point)) {
-				if (itemsUnderPointer.length > 0) {
-					const selectedItems = this.board.selection.items.list();
-					const isAnySelectedItemUnderPointer = selectedItems.some(
-						item => itemsUnderPointer.includes(item),
-					);
-					this.isDownOnSelection = isAnySelectedItemUnderPointer;
-				} else {
-					this.isDownOnSelection = true;
-				}
-			}
-		}
 
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
@@ -150,7 +153,12 @@ export class Select extends Tool {
 
 		this.isDownOnBoard = hover.length === 0;
 		this.isDrawingRectangle =
-			hover.filter(item => !(item instanceof Frame)).length === 0;
+			hover.filter(item => !(item instanceof Frame)).length === 0 &&
+			hover
+				.filter(item => item instanceof Frame)
+				.filter(frame => frame.isTextUnderPoint(pointer.point))
+				.length === 0;
+
 		if (this.isDrawingRectangle) {
 			const { x, y } = pointer.point;
 			this.line = new Line(new Point(x, y), new Point(x, y));
@@ -228,7 +236,7 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
-		const { selection } = this.board;
+		const { selection, items } = this.board;
 		const isLockedItemsFrames = selection.getIsLockedSelection();
 		if (isLockedItemsFrames) {
 			return false;
@@ -379,9 +387,33 @@ export class Select extends Tool {
 					this.toHighlight.remove([draggingItem, frame]);
 				}
 			});
+		}
 
+		const hover = items.getUnderPointer();
+		this.isHoverUnselectedItem =
+			hover.filter(item => item.itemType === "Placeholder").length === 1;
+
+		if (
+			this.isHoverUnselectedItem &&
+			!this.isDraggingUnselectedItem &&
+			selection.getContext() === "None"
+		) {
+			selection.setContext("HoverUnderPointer");
 			return false;
 		}
+
+		if (
+			(!this.isHoverUnselectedItem || this.isDraggingUnselectedItem) &&
+			selection.getContext() === "HoverUnderPointer"
+		) {
+			selection.setContext("None");
+			return false;
+		}
+
+		if (this.isDraggingUnselectedItem) {
+			return false;
+		}
+
 		if (this.isDrawingRectangle && this.line && this.rect) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
@@ -391,6 +423,7 @@ export class Select extends Tool {
 			this.board.tools.publish();
 			return false;
 		}
+
 		return false;
 	}
 
@@ -440,7 +473,8 @@ export class Select extends Tool {
 				) {
 					if (
 						!(curr instanceof ImageItem) &&
-						!(curr instanceof Drawing)
+						!(curr instanceof Drawing) &&
+						!(curr instanceof Placeholder)
 					) {
 						const text =
 							curr instanceof RichText ? curr : curr.text;

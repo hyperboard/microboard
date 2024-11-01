@@ -3,12 +3,14 @@ import { EventsOperation } from "./EventsOperations";
 import { Command } from "./Command";
 
 export class EventsCommand implements Command {
-	private reverse = this.getReverse();
+	private reverse: EventsOperation;
 
 	constructor(
 		private eventsModule: Events,
 		private operation: EventsOperation,
-	) {}
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		this.eventsModule.apply(this.operation);

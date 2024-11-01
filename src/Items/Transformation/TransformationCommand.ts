@@ -4,14 +4,19 @@ import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class TransformationCommand implements Command {
-	reverse = this.getReverse();
+	reverse: {
+		item: Transformation;
+		operation: TransformationOperation;
+	}[];
 
 	// TODO HANDLE MULTIPLE OPERATIONS
 
 	constructor(
 		private transformation: Transformation[],
 		private operation: TransformationOperation,
-	) {}
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const transformation of this.transformation) {

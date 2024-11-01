@@ -15,7 +15,6 @@ import {
 	Frame,
 	Item,
 	ItemData,
-	ItemType,
 	Mbr,
 	RichText,
 	Shape,
@@ -32,11 +31,14 @@ import { TransformManyItems } from "Board/Items/Transformation/TransformationOpe
 import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
 import { CONNECTOR_COLOR } from "../../View/Items/Connector";
 import { ItemOp } from "Board/Items/RichText/RichTextOperations";
+import { tempStorage } from "App/SessionStorage";
+import { Tool } from "Board/Tools/Tool";
 
 const defaultShapeData = new DefaultShapeData();
 
 export type SelectionContext =
 	| "SelectUnderPointer"
+	| "HoverUnderPointer"
 	| "EditUnderPointer"
 	| "EditTextUnderPointer"
 	| "SelectByRect"
@@ -50,15 +52,20 @@ export class Selection {
 	private context: SelectionContext = "None";
 	readonly items = new SelectionItems();
 	shouldPublish = true;
-	readonly tool = new SelectionTransformer(this.board, this);
+	readonly tool: Tool;
 	textToEdit: RichText | undefined;
 	transformationRenderBlock?: boolean = undefined;
 
-	quickAddButtons: QuickAddButtons = getQuickAddButtons(this, this.board);
+	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
 
-	constructor(private board: Board, public events?: Events) {
+	constructor(
+		private board: Board,
+		public events?: Events,
+	) {
 		requestAnimationFrame(this.updateScheduledObservers);
+		this.tool = new SelectionTransformer(board, this);
+		this.quickAddButtons = getQuickAddButtons(this, board);
 	}
 
 	serialize(): string {
@@ -126,7 +133,7 @@ export class Selection {
 							item instanceof Frame &&
 							item.transformation.isLocked
 						),
-			  )
+				)
 			: (value as Frame).transformation.isLocked;
 
 		this.items.add(value);
@@ -348,27 +355,33 @@ export class Selection {
 			return;
 		}
 		if (text.isEmpty()) {
-			const textColor = sessionStorage.getItem(
-				`fontColor_${item.itemType}`,
+			const textColor = tempStorage.getFontColor(
+				item.itemType,
+				this.board.getBoardId(),
 			);
-			const textSize = Number(
-				sessionStorage.getItem(`fontSize_${item.itemType}`),
+			const textSize = tempStorage.getFontSize(
+				item.itemType,
+				this.board.getBoardId(),
 			);
-			const highlightColor = sessionStorage.getItem(
-				`fontHighlight_${item.itemType}`,
+			const highlightColor = tempStorage.getFontHighlight(
+				item.itemType,
+				this.board.getBoardId(),
 			);
-			const styles = sessionStorage.getItem(
-				`fontStyles_${item.itemType}`,
+			const styles = tempStorage.getFontStyles(
+				item.itemType,
+				this.board.getBoardId(),
 			);
-			const horizontalAlignment = sessionStorage.getItem(
-				`horisontalAlignment_${item.itemType}`,
+			const horizontalAlignment = tempStorage.getHorizontalAlignment(
+				item.itemType,
+				this.board.getBoardId(),
 			);
-			const verticalAlignment = sessionStorage.getItem(
-				`verticalAlignment_${item.itemType}`,
+			const verticalAlignment = tempStorage.getVerticalAlignment(
+				item.itemType,
+				this.board.getBoardId(),
 			);
 			if (textColor) {
 				console.log(textColor);
-				text.setSelectionFontColor(JSON.parse(textColor), "None");
+				text.setSelectionFontColor(textColor, "None");
 			}
 			if (textSize) {
 				this.emit({
@@ -380,22 +393,17 @@ export class Selection {
 				});
 			}
 			if (highlightColor) {
-				text.setSelectionFontHighlight(
-					JSON.parse(highlightColor),
-					"None",
-				);
+				text.setSelectionFontHighlight(highlightColor, "None");
 			}
 			if (styles) {
-				const stylesArr = JSON.parse(styles);
+				const stylesArr = styles;
 				text.setSelectionFontStyle(stylesArr, "None");
 			}
 			if (horizontalAlignment && !(item instanceof Sticker)) {
-				text.setSelectionHorisontalAlignment(
-					JSON.parse(horizontalAlignment),
-				);
+				text.setSelectionHorisontalAlignment(horizontalAlignment);
 			}
 			if (verticalAlignment && !(item instanceof Sticker)) {
-				this.setVerticalAlignment(JSON.parse(verticalAlignment));
+				this.setVerticalAlignment(verticalAlignment);
 			}
 		}
 		this.textToEdit = text;
@@ -596,7 +604,11 @@ export class Selection {
 	}
 
 	getBorderStyle(): string {
-		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
+		const shape = this.items.getItemsByItemTypes([
+			"Shape",
+			"Drawing",
+			"Connector",
+		])[0];
 		return shape?.getBorderStyle() || defaultShapeData.borderStyle;
 	}
 
@@ -749,6 +761,15 @@ export class Selection {
 				method: "setStrokeStyle",
 				item: drawings,
 				style: borderStyle,
+			});
+		}
+		const connectors = this.items.getIdsByItemTypes(["Connector"]);
+		if (connectors.length > 0) {
+			this.emit({
+				class: "Connector",
+				method: "setBorderStyle",
+				item: connectors,
+				borderStyle,
 			});
 		}
 	}
@@ -914,9 +935,10 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			sessionStorage.setItem(
-				`fontSize_${item.itemType}`,
-				JSON.stringify(fontSize),
+			tempStorage.setFontSize(
+				item.itemType,
+				fontSize,
+				this.board.getBoardId(),
 			);
 		}
 		this.emit({
@@ -944,36 +966,17 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			this.saveFontStyle(text, item.itemType);
+			tempStorage.setFontStyles(
+				item.itemType,
+				text.getFontStyles(),
+				this.board.getBoardId(),
+			);
 		}
 		this.emit({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
 		});
-	}
-
-	private saveFontStyle(text: RichText, itemType: ItemType): void {
-		const boardId = this.board.getBoardId();
-
-		const savedStyle = sessionStorage.getItem(`fontStyles_${itemType}`);
-
-		sessionStorage.setItem(
-			`fontStyles_${itemType}`,
-			JSON.stringify(
-				savedStyle
-					? {
-							...JSON.parse(savedStyle),
-							[boardId]: text.getFontStyles(),
-					  }
-					: { [boardId]: text.getFontStyles() },
-			),
-		);
-
-		localStorage.setItem(
-			`fontStyles_${itemType}`,
-			JSON.stringify({ [boardId]: text.getFontStyles() }),
-		);
 	}
 
 	setFontColor(fontColor: string): void {
@@ -993,9 +996,10 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			sessionStorage.setItem(
-				`fontColor_${item.itemType}`,
-				JSON.stringify(fontColor),
+			tempStorage.setFontColor(
+				item.itemType,
+				fontColor,
+				this.board.getBoardId(),
 			);
 		}
 		this.emit({
@@ -1026,9 +1030,10 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			sessionStorage.setItem(
-				`fontHighlight_${item.itemType}`,
-				JSON.stringify(fontHighlight),
+			tempStorage.setFontHighlight(
+				item.itemType,
+				fontHighlight,
+				this.board.getBoardId(),
 			);
 		}
 		this.emit({
@@ -1059,9 +1064,11 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			sessionStorage.setItem(
-				`horisontalAlignment_${item.itemType}`,
-				JSON.stringify(horisontalAlignment),
+
+			tempStorage.setHorizontalAlignment(
+				item.itemType,
+				horisontalAlignment,
+				this.board.getBoardId(),
 			);
 		}
 		this.emit({
@@ -1089,9 +1096,10 @@ export class Selection {
 				return;
 			}
 
-			sessionStorage.setItem(
-				`verticalAlignment_${item.itemType}`,
-				JSON.stringify(verticalAlignment),
+			tempStorage.setVerticalAlignment(
+				item.itemType,
+				verticalAlignment,
+				this.board.getBoardId(),
 			);
 			if (item instanceof RichText) {
 				item.setEditorFocus(this.context);
@@ -1159,11 +1167,7 @@ export class Selection {
 
 	duplicate(): void {
 		this.board.duplicate(this.copy());
-		if (this.items.isSingle()) {
-			this.setContext("EditUnderPointer");
-		} else {
-			this.setContext("SelectByRect");
-		}
+		this.setContext("EditUnderPointer");
 	}
 
 	renderItemMbr(
