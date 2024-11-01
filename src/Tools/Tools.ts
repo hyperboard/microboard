@@ -3,7 +3,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { isIframe } from "lib/isIframe";
 import { Subject } from "Subject";
 import { AddConnector } from "./AddConnector";
-import { AddDrawing } from "./AddDrawing/AddDrawing";
+import { AddDrawing, AddHighlighter } from "./AddDrawing";
 import { AddFrame } from "./AddFrame";
 import { AddShape } from "./AddShape";
 import { AddSticker } from "./AddSticker";
@@ -14,6 +14,7 @@ import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { Item, Point } from "Board/Items";
+import { Eraser } from "./Eraser";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -169,7 +170,49 @@ export class Tools extends ToolContext {
 	}
 
 	getAddDrawing(): AddDrawing | undefined {
-		return this.tool instanceof AddDrawing ? this.tool : undefined;
+		return this.tool instanceof AddDrawing && !this.tool.isHighlighter()
+			? this.tool
+			: undefined;
+	}
+
+	addHighlighter(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
+		if (this.getAddHighlighter()) {
+			this.cancel();
+		} else {
+			this.tool = new AddHighlighter(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
+		}
+		this.publish();
+	}
+
+	getAddHighlighter(): AddHighlighter | undefined {
+		return this.tool instanceof AddHighlighter && this.tool.isHighlighter()
+			? this.tool
+			: undefined;
+	}
+
+	eraser(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
+		if (!this.getEraser()) {
+			this.tool = new Eraser(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
+		}
+		this.publish();
+	}
+
+	getEraser(): Eraser | undefined {
+		return this.tool instanceof Eraser ? this.tool : undefined;
 	}
 
 	export(): void {

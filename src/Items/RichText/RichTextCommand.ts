@@ -4,12 +4,14 @@ import { Command } from "Board/Events";
 import { Operation } from "slate";
 
 export class RichTextCommand implements Command {
-	private reverseOps = this.getReverse();
+	private reverse: { item: RichText; operation: RichTextOperation }[];
 
 	constructor(
 		private richText: RichText[],
 		private operation: RichTextOperation,
-	) {}
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const richText of this.richText) {
@@ -18,7 +20,7 @@ export class RichTextCommand implements Command {
 	}
 
 	revert(): void {
-		for (const { item, operation } of this.reverseOps) {
+		for (const { item, operation } of this.reverse) {
 			item.apply(operation);
 		}
 	}
@@ -145,7 +147,10 @@ export class RichTextGroupCommand implements Command {
 	private forwardOps: TextEdits[];
 	private reverseOps: TextEdits[];
 
-	constructor(private richText: RichText[], private operation: GroupEdit) {
+	constructor(
+		private richText: RichText[],
+		private operation: GroupEdit,
+	) {
 		this.forwardOps = this.getForward();
 		this.reverseOps = this.getReverse();
 	}

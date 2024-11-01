@@ -16,6 +16,7 @@ import { Drawing } from "Board/Items/Drawing";
 import { Sticker } from "Board/Items/Sticker";
 import { FrameCommand } from "Board/Items/Frame/FrameCommand";
 import { LinkToCommand } from "../Items/LinkTo/LinkToCommand";
+import { LinkTo } from "Board/Items/LinkTo/LinkTo";
 
 export interface Command {
 	apply(): void;

@@ -2,7 +2,7 @@ import { Board } from "./Board";
 import { Matrix, Mbr } from "./Items";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
-export default function createCanvasDrawer(board: Board): {
+export interface CanvasDrawer {
 	getLastCreatedCanvas: () => HTMLDivElement | undefined;
 	getLastTranslationKeys: () => string[] | undefined;
 	getMatrix: () => Matrix;
@@ -17,7 +17,9 @@ export default function createCanvasDrawer(board: Board): {
 		resizingMatrix?: Matrix,
 	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
-} {
+}
+
+export default function createCanvasDrawer(board: Board): CanvasDrawer {
 	let lastCreatedCanvas: HTMLDivElement | undefined = undefined;
 	let lastTranslationKeys: string[] | undefined = undefined;
 	let matrix = new Matrix();

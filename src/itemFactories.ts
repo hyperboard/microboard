@@ -15,6 +15,7 @@ import { Drawing, DrawingData } from "./Items/Drawing";
 import { Sticker } from "./Items/Sticker";
 import { StickerData } from "./Items/Sticker/StickerOperation";
 import { Board } from "./Board";
+import { Placeholder, PlaceholderData } from "./Items/Placeholder/Placeholder";
 
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
@@ -30,6 +31,7 @@ export const itemFactories: ItemFactories = {
 	Image: createImage,
 	Drawing: createDrawing,
 	Frame: createFrame,
+	Placeholder: createPlaceholder,
 	// Group: createGroup, // Uncomment if needed
 };
 
@@ -49,6 +51,7 @@ function createShape(id: string, data: ItemData, board: Board): Shape {
 	return shape;
 }
 
+// async function createRichText(id: string, data: ItemData, board: Board): Promise<RichText> {
 function createRichText(id: string, data: ItemData, board: Board): RichText {
 	if (!isRichTextData(data)) {
 		throw new Error("Invalid data for RichText");
@@ -56,6 +59,7 @@ function createRichText(id: string, data: ItemData, board: Board): RichText {
 	const richText = new RichText(new Mbr(), id, board.events)
 		.setId(id)
 		.deserialize(data);
+	// await richText.deserialize(data);
 	return richText;
 }
 
@@ -73,7 +77,7 @@ function createImage(id: string, data: ItemData, board: Board): ImageItem {
 	if (!isImageItemData(data)) {
 		throw new Error("Invalid data for ImageItem");
 	}
-	const image = new ImageItem(data, board.events, id)
+	const image = new ImageItem(data, board, board.events, id)
 		.setId(id)
 		.deserialize(data);
 	return image;
@@ -96,6 +100,21 @@ function createFrame(id: string, data: ItemData, board: Board): Frame {
 		.setBoard(board)
 		.deserialize(data);
 	return frame;
+}
+
+function createPlaceholder(
+	id: string,
+	data: ItemData,
+	board: Board,
+): Placeholder {
+	if (!isPlaceholderData(data)) {
+		throw new Error("Invalid data for Placeholder");
+	}
+	const placeholder = new Placeholder(board.events, data.miroData)
+		.setId(id)
+		.deserialize(data);
+
+	return placeholder;
 }
 
 // function createGroup(id: string, data: ItemData, board: Board): Group {
@@ -129,6 +148,10 @@ function isDrawingData(data: ItemData): data is DrawingData {
 
 function isFrameData(data: ItemData): data is FrameData {
 	return data.itemType === "Frame";
+}
+
+function isPlaceholderData(data: ItemData): data is PlaceholderData {
+	return data.itemType === "Placeholder";
 }
 
 // function isGroupData(data: ItemData): data is GroupData {

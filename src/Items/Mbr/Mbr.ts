@@ -99,8 +99,8 @@ export class Mbr implements Geometry {
 			alignment === "top"
 				? rect.top
 				: alignment === "bottom"
-				? rect.bottom - height
-				: center.y - height / 2;
+					? rect.bottom - height
+					: center.y - height / 2;
 		this.left = Math.max(left, rect.left);
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
@@ -123,7 +123,7 @@ export class Mbr implements Geometry {
 		}
 	}
 
-	combine(mbrs: Mbr | Mbr[]): void {
+	combine(mbrs: Mbr | Mbr[]): Mbr {
 		if (Array.isArray(mbrs)) {
 			for (const mbr of mbrs) {
 				this.addMbr(mbr);
@@ -131,6 +131,7 @@ export class Mbr implements Geometry {
 		} else {
 			this.addMbr(mbrs);
 		}
+		return this;
 	}
 
 	transform(matrix: Matrix): void {

@@ -4,9 +4,14 @@ import { LinkToOperation } from "./LinkToOperation";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class LinkToCommand implements Command {
-	reverse = this.getReverse();
+	private reverse: { item: LinkTo; operation: LinkToOperation }[];
 
-	constructor(private linkTo: LinkTo[], private operation: LinkToOperation) {}
+	constructor(
+		private linkTo: LinkTo[],
+		private operation: LinkToOperation,
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const linkTo of this.linkTo) {
@@ -24,7 +29,6 @@ export class LinkToCommand implements Command {
 		item: LinkTo;
 		operation: LinkToOperation;
 	}[] {
-		const op = this.operation;
 		switch (this.operation.method) {
 			case "setLinkTo":
 			case "removeLinkTo":

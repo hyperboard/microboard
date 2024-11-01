@@ -21,7 +21,7 @@ import {
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import createCanvasDrawer from "Board/drawMbrOnCanvas";
+import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 
 export class Transformer extends Tool {
@@ -34,12 +34,16 @@ export class Transformer extends Tool {
 	clickedOn?: ResizeType;
 	private toDrawBorders = new NestingHighlighter();
 	beginTimeStamp = Date.now();
-	canvasDrawer = createCanvasDrawer(this.board);
+	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
 	isShiftPressed = false;
 
-	constructor(private board: Board, private selection: Selection) {
+	constructor(
+		private board: Board,
+		private selection: Selection,
+	) {
 		super();
+		this.canvasDrawer = createCanvasDrawer(board);
 
 		selection.subject.subscribe(() => {
 			if (!this.resizeType) {

@@ -96,10 +96,13 @@ export class SpatialIndex {
 	}
 
 	copy(): Record<string, ItemData> {
-		const items = this.itemsArray.reduce((accumulator, item, i) => {
-			accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
-			return accumulator;
-		}, {} as Record<string, ItemData>);
+		const items = this.itemsArray.reduce(
+			(accumulator, item, i) => {
+				accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
+				return accumulator;
+			},
+			{} as Record<string, ItemData>,
+		);
 		const itemsAndFrames = this.framesArray.reduce(
 			(accumulator, item, i) => {
 				accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
@@ -443,13 +446,6 @@ export class Items {
 	getUnderPointer(size = 16): Item[] {
 		const { x, y } = this.pointer.point;
 		size = size / this.view.getScale();
-		const frameSize = size * 2;
-		const toleratedFrames = this.index.getEnclosedOrCrossed(
-			x - size,
-			y - size,
-			x + size,
-			y + frameSize,
-		);
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
 			y - size,
@@ -457,22 +453,22 @@ export class Items {
 			y + size,
 		);
 
-		let enclosed =
-			toleratedFrames.filter(item => !(item instanceof Frame)).length ===
-			0
-				? toleratedFrames
-				: tolerated.some(
-						item =>
-							item instanceof Connector ||
-							item instanceof Frame ||
-							item instanceof Drawing,
-				  )
-				? tolerated
-				: this.index.getEnclosedOrCrossed(x, y, x, y);
+		let enclosed = tolerated.some(
+			item =>
+				item instanceof Connector ||
+				item instanceof Frame ||
+				item instanceof Drawing,
+		)
+			? tolerated
+			: this.index.getEnclosedOrCrossed(x, y, x, y);
 
+		const underPointer = this.getUnderPoint(new Point(x, y), size);
 		if (enclosed.length === 0) {
-			const underPointer = this.getUnderPoint(new Point(x, y), size);
 			enclosed = underPointer;
+		}
+
+		if (underPointer.some(item => item instanceof Drawing)) {
+			enclosed = [...underPointer, ...enclosed];
 		}
 
 		const { nearest } = enclosed.reduce(

@@ -10,18 +10,23 @@ import { BoardTool } from "../BoardTool";
 export class AddConnector extends BoardTool {
 	connector: Connector | null = null;
 	lineStyle: ConnectorLineStyle = "curved";
-	startPoitner?: ConnectorPointerStyle;
+	startPointer?: ConnectorPointerStyle;
 	endPointer?: ConnectorPointerStyle;
 
-	snap = new ConnectorSnap(this.board);
+	snap: ConnectorSnap;
 
 	isDraggingFromFirstToSecond = false;
 	isDoneSecondPoint = false;
 	isDown = false;
 	isQuickAdd = false;
 
-	constructor(board: Board, itemToStart?: Item, position?: Point) {
+	constructor(
+		private board: Board,
+		itemToStart?: Item,
+		position?: Point,
+	) {
 		super(board);
+		this.snap = new ConnectorSnap(this.board);
 		this.setCursor();
 
 		const storage = new SessionStorage();
@@ -31,7 +36,7 @@ export class AddConnector extends BoardTool {
 		}
 		const savedStart = storage.getConnectorPointer("start");
 		if (savedStart) {
-			this.startPoitner = savedStart;
+			this.startPointer = savedStart;
 		}
 		const savedEnd = storage.getConnectorPointer("end");
 		if (savedEnd) {
@@ -45,13 +50,14 @@ export class AddConnector extends BoardTool {
 				itemToStart,
 				position,
 			);
+
 			this.connector = new Connector(
 				this.board,
 				undefined,
 				closestPoint,
 				closestPoint,
 				this.lineStyle,
-				this.startPoitner,
+				this.startPointer,
 				this.endPointer,
 			);
 		}
@@ -65,13 +71,14 @@ export class AddConnector extends BoardTool {
 		this.isDown = true;
 		const point = this.snap.getControlPoint();
 		if (!this.connector) {
+			console.log("new connector...");
 			this.connector = new Connector(
 				this.board,
 				undefined,
 				point,
 				point,
 				this.lineStyle,
-				this.startPoitner,
+				this.startPointer,
 				this.endPointer,
 			);
 		} else {
@@ -96,16 +103,16 @@ export class AddConnector extends BoardTool {
 		return true;
 	}
 
-	leftButtonUp(): boolean {
+	async leftButtonUp(): Promise<boolean> {
 		this.isDown = false;
 		if (!this.connector) {
 			return true;
 		}
 		if (this.isDoneSecondPoint) {
-			this.board.add(this.connector);
+			await this.board.add(this.connector);
 			this.board.tools.select();
 		} else if (this.isDraggingFromFirstToSecond) {
-			const addedConnector = this.board.add(this.connector);
+			const addedConnector = await this.board.add(this.connector);
 			const endPoint = this.connector.getEndPoint();
 			this.board.tools.select();
 			if (this.isQuickAdd && endPoint.pointType === "Board") {

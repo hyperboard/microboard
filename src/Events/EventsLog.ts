@@ -3,17 +3,33 @@ import { Command, createCommand } from "./Command";
 import { mergeOperations } from "./Merge";
 import { Operation } from "./EventsOperations";
 import { BoardOps } from "Board/BoardOperations";
-import { BoardEvent, BoardEventPack } from "./Events";
+import {
+	BoardEvent,
+	BoardEventPack,
+	SyncBoardEvent,
+	SyncEvent,
+} from "./Events";
+import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
+import { transfromOperation } from "./Transform";
+import { TransformConnectorHelper } from "./TransforHelper";
 
 export interface HistoryRecord {
 	event: BoardEvent;
 	command: Command;
 }
 
+export interface RawHistoryRecords {
+	confirmedRecords: HistoryRecord[];
+	recordsToSend: HistoryRecord[];
+	newRecords: HistoryRecord[];
+}
+
 export interface EventsLog {
 	getList(): HistoryRecord[];
+	getRaw(): RawHistoryRecords;
 	insertEvents(
-		events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		events: SyncEvent | SyncEvent[],
 	): void;
 	push(record: HistoryRecord): HistoryRecord;
 	getUnorderedRecords(): HistoryRecord[];
@@ -27,6 +43,8 @@ export interface EventsLog {
 	confirmEvent(event: BoardEvent | BoardEventPack): void;
 	getLatestOrder(): number;
 	getLastConfirmed(): BoardEvent | null;
+	getSyncLog(): SyncLog;
+	syncLogSubject: SyncLogSubject;
 }
 
 interface EventsList {
@@ -42,13 +60,21 @@ interface EventsList {
 	backwardIterable(): Iterable<HistoryRecord>;
 	revertUnconfirmed(): void;
 	applyUnconfirmed(): void;
+	justConfirmed: HistoryRecord[];
+	getSyncLog(): SyncLog;
+	syncLogSubject: SyncLogSubject;
 	clear(): void;
+	removeUnconfirmedEventsByItems(itemIds: string[]): void;
 }
 
 function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
+
+	const justConfirmed: HistoryRecord[] = [];
+
+	const { log: syncLog, subject: syncLogSubject } = createSyncLog();
 
 	function revert(records: HistoryRecord[]): void {
 		for (const record of records) {
@@ -63,8 +89,27 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		}
 	}
 
+	function shouldRemoveEvent(
+		operation: Operation,
+		itemIds: string[],
+	): boolean {
+		if (operation.method === "add" && operation.class === "Board") {
+			return itemIds.includes(operation.item);
+		}
+
+		if (operation.method === "remove" && operation.class === "Board") {
+			return operation.item.some(id => itemIds.includes(id));
+		}
+
+		return false;
+	}
+
 	return {
 		addConfirmedRecords(records: HistoryRecord[]): void {
+			syncLog.push({
+				msg: "confirmed",
+				records: [...records],
+			});
 			confirmedRecords.push(...records);
 		},
 
@@ -87,6 +132,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 					}
 				}
 
+				syncLog.push({
+					msg: "addedNew",
+					records: [record],
+				});
 				newRecords.push(record);
 			}
 		},
@@ -102,6 +151,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 				records[i].event.order = events[i].order;
 			}
 
+			syncLog.push({
+				msg: "confirmed",
+				records: [...records],
+			});
 			confirmedRecords.push(...records);
 			recordsToSend.splice(0, records.length);
 		},
@@ -122,8 +175,19 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			return [...confirmedRecords, ...recordsToSend, ...newRecords];
 		},
 
+		getSyncLog(): SyncLog {
+			return syncLog;
+		},
+
+		syncLogSubject,
+		justConfirmed,
+
 		prepareRecordsToSend(): HistoryRecord[] {
 			if (recordsToSend.length === 0 && newRecords.length > 0) {
+				syncLog.push({
+					msg: "toSend",
+					records: [...newRecords],
+				});
 				recordsToSend.push(...newRecords);
 				newRecords.length = 0;
 			}
@@ -153,17 +217,91 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		revertUnconfirmed(): void {
 			revert(newRecords.reverse());
 			revert(recordsToSend.reverse());
+			syncLog.push({
+				msg: "revertUnconfirmed",
+				records: [...recordsToSend, ...newRecords],
+			});
 		},
 
 		applyUnconfirmed(): void {
+			if (justConfirmed.length > 0) {
+				const transformedSend = transformEvents(
+					justConfirmed.map(rec => rec.event),
+					recordsToSend.map(rec => rec.event),
+				);
+				const transformedNew = transformEvents(
+					justConfirmed.map(rec => rec.event),
+					newRecords.map(rec => rec.event),
+				);
+				const recsToSend = transformedSend.map(event => ({
+					event,
+					command: createCommand(event.body.operation),
+				}));
+				const recsNew = transformedNew.map(event => ({
+					event,
+					command: createCommand(event.body.operation),
+				}));
+				recordsToSend.length = 0;
+				recordsToSend.push(...recsToSend);
+				newRecords.length = 0;
+				newRecords.push(...recsNew);
+				justConfirmed.length = 0;
+			}
+			// console.log(
+			// 	"applying after transforms",
+			// 	recordsToSend.slice(),
+			// 	newRecords.slice(),
+			// );
 			apply(recordsToSend);
 			apply(newRecords);
+			syncLog.push({
+				msg: "applyUnconfirmed",
+				records: [...recordsToSend, ...newRecords],
+			});
 		},
 
 		clear(): void {
 			confirmedRecords.length = 0;
 			recordsToSend.length = 0;
 			newRecords.length = 0;
+		},
+
+		// FIXME: should filter unconfirmed events and not send them
+		removeUnconfirmedEventsByItems(itemIds: string[]): void {
+			const removedFromToSend = recordsToSend.filter(record =>
+				shouldRemoveEvent(record.event.body.operation, itemIds),
+			);
+			if (removedFromToSend.length > 0) {
+				const newRecordsToSend = recordsToSend.filter(
+					record =>
+						!shouldRemoveEvent(
+							record.event.body.operation,
+							itemIds,
+						),
+				);
+				recordsToSend.length = 0;
+				recordsToSend.push(...newRecordsToSend);
+			}
+
+			const removedFromNew = newRecords.filter(record =>
+				shouldRemoveEvent(record.event.body.operation, itemIds),
+			);
+			if (removedFromNew.length > 0) {
+				const newRecordsArray = newRecords.filter(
+					record =>
+						!shouldRemoveEvent(
+							record.event.body.operation,
+							itemIds,
+						),
+				);
+				newRecords.length = 0;
+				newRecords.push(...newRecordsArray);
+			}
+
+			// syncLog.push({
+			// 	msg: "removedUnconfirmed",
+			// 	records: [...removedFromToSend, ...removedFromNew],
+			// });
 		},
 	};
 }
@@ -180,16 +318,23 @@ export function createEventsLog(board: Board): EventsLog {
 		return list.getAllRecords();
 	}
 
-	function deserialize(events: BoardEvent[]): void {
+	function getRaw(): RawHistoryRecords {
+		return {
+			confirmedRecords: list.getConfirmedRecords(),
+			recordsToSend: list.getRecordsToSend(),
+			newRecords: list.getNewRecords(),
+		};
+	}
+
+	function deserialize(events: SyncBoardEvent[]): void {
 		list.clear();
-		const records: HistoryRecord[] = [];
+
 		for (const event of events) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			records.push(record);
+			list.addConfirmedRecords([record]);
 		}
-		list.addConfirmedRecords(records);
 	}
 
 	function getSnapshot(): BoardSnapshot {
@@ -236,7 +381,8 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	function insertEvents(
-		events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
+		events: SyncEvent | SyncEvent[],
 	): void {
 		const eventArray = Array.isArray(events) ? events : [events];
 		if (eventArray.length === 0) {
@@ -247,8 +393,10 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	function expandEvents(
-		events: (BoardEvent | BoardEventPack)[],
-	): BoardEvent[] {
+		// events: (BoardEvent | BoardEventPack)[],
+		events: SyncEvent[],
+		// ): BoardEvent[] {
+	): SyncBoardEvent[] {
 		return events.flatMap(event => {
 			if ("operations" in event.body) {
 				// Это BoardEventPack
@@ -260,25 +408,72 @@ export function createEventsLog(board: Board): EventsLog {
 						boardId: event.body.boardId,
 						operation,
 					},
+					lastKnownOrder:
+						"lastKnownOrder" in event
+							? event.lastKnownOrder
+							: event.body.lastKnownOrder,
 				}));
 			} else {
 				// Это обычный BoardEvent
-				return [event as BoardEvent];
+				return [event as SyncBoardEvent];
 			}
 		});
 	}
 
-	function handleEventsInsertion(events: BoardEvent[]): void {
+	// function handleEventsInsertion(events: BoardEvent[]): void {
+	function handleEventsInsertion(events: SyncBoardEvent[]): void {
+		list;
+		const toDelete =
+			TransformConnectorHelper.handleRemoveSnappedObject(events);
+
+		if (Array.isArray(toDelete) && toDelete.length > 0) {
+			list.removeUnconfirmedEventsByItems(toDelete);
+			toDelete.forEach(item => {
+				board.emit({
+					class: "Board",
+					method: "remove",
+					item: [item],
+				});
+			});
+		}
+
 		list.revertUnconfirmed();
-		const mergedEvents = mergeEvents(events);
-		const records: HistoryRecord[] = [];
+
+		const transformed: BoardEvent[] = [];
+
+		// console.log("HERE!!!", events);
+
+		for (const event of events) {
+			if (
+				event.lastKnownOrder !== undefined &&
+				event.lastKnownOrder + 1 < event.order
+			) {
+				const confirmed = [
+					...list.getConfirmedRecords().map(rec => rec.event),
+					...events,
+				].filter(
+					evnt =>
+						evnt.body.eventId !== event.body.eventId &&
+						evnt.order > event.lastKnownOrder &&
+						evnt.order <= event.order,
+				);
+				const transf = transformEvents(confirmed, [event]);
+				transformed.push(...transf);
+			} else {
+				transformed.push(event);
+			}
+		}
+
+		// console.log("HANDLING insertion", [...transformed]);
+		const mergedEvents = mergeEvents(transformed);
+		// console.log("merged", mergedEvents);
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			records.push(record);
+			list.addConfirmedRecords([record]);
+			list.justConfirmed.push(record);
 		}
-		list.addConfirmedRecords(records);
 		list.applyUnconfirmed();
 	}
 
@@ -293,13 +488,44 @@ export function createEventsLog(board: Board): EventsLog {
 		return record;
 	}
 
+	function getTimeStamp(rec: HistoryRecord): number | undefined {
+		return (
+			("timeStamp" in rec.event.body.operation &&
+				rec.event.body.operation.timeStamp) ||
+			undefined
+		);
+	}
+
+	function createTimeStampAmountMap(
+		records: Iterable<HistoryRecord>,
+		filter?: (rec: HistoryRecord) => boolean,
+	): Map<number, number> {
+		const timeStampMap = new Map<number, number>();
+
+		for (const record of records) {
+			if (filter && !filter(record)) {
+				continue;
+			}
+			const timeStamp = getTimeStamp(record);
+			if (timeStamp) {
+				const currAmount = timeStampMap.get(timeStamp) || 0;
+				timeStampMap.set(timeStamp, currAmount + 1);
+			}
+		}
+		return timeStampMap;
+	}
+
 	function getUnorderedRecords(): HistoryRecord[] {
 		return list.getRecordsToSend().concat(list.getNewRecords());
 	}
 
-	// TODO: handle merge of records at different stages
 	function getUndoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
+
+		const timeStampMap = createTimeStampAmountMap(
+			list.backwardIterable(),
+			rec => rec.event.body.userId === userId,
+		);
 
 		for (const record of list.backwardIterable()) {
 			if (record.event.body.userId !== userId) {
@@ -307,7 +533,16 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 
 			if (record.event.body.operation.method === "undo") {
-				counter++;
+				const undid = getRecordById(
+					record.event.body.operation.eventId,
+				);
+				const stamp = undid && getTimeStamp(undid);
+				if (stamp) {
+					const mappedAmount = timeStampMap.get(stamp);
+					counter += mappedAmount || 1;
+				} else {
+					counter++;
+				}
 			} else if (counter === 0) {
 				return record;
 			} else {
@@ -318,7 +553,6 @@ export function createEventsLog(board: Board): EventsLog {
 		return null;
 	}
 
-	// TODO: handle merge of records at different stages
 	function getRedoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
 
@@ -350,9 +584,36 @@ export function createEventsLog(board: Board): EventsLog {
 		return null;
 	}
 
+	function mergeRecordsByTimestamp(
+		timeStamp: number,
+	): HistoryRecord | undefined {
+		const toMerge: BoardEvent[] = [];
+		for (const record of list.forwardIterable()) {
+			if (
+				"timeStamp" in record.event.body.operation &&
+				record.event.body.operation.timeStamp === timeStamp
+			) {
+				toMerge.push(record.event);
+			}
+		}
+		const merged = mergeEvents(toMerge);
+		if (merged.length === 1) {
+			const event = merged[0];
+			const command = createCommand(board, event.body.operation);
+			const record = { event, command };
+			return record;
+		}
+		return undefined;
+	}
+
 	function getRecordById(id: string): HistoryRecord | undefined {
 		for (const record of list.forwardIterable()) {
 			if (record.event.body.eventId === id) {
+				const timeStamp = getTimeStamp(record);
+				if (timeStamp) {
+					const mergedRecord = mergeRecordsByTimestamp(timeStamp);
+					return mergedRecord ?? record;
+				}
 				return record;
 			}
 		}
@@ -369,6 +630,9 @@ export function createEventsLog(board: Board): EventsLog {
 
 	return {
 		getList,
+		getRaw,
+		getSyncLog: list.getSyncLog,
+		syncLogSubject: list.syncLogSubject,
 		insertEvents,
 		confirmEvent,
 		push,
@@ -397,11 +661,14 @@ export function createEventsLog(board: Board): EventsLog {
  * без изменений. Эта функция помогает оптимизировать историю событий,
  * уменьшая количество отдельных операций там, где это возможно.
  */
+// function mergeEvents(events: SyncBoardEvent[]): SyncBoardEvent[] {
 function mergeEvents(events: BoardEvent[]): BoardEvent[] {
 	if (events.length < 2) {
 		return events;
 	}
 
+	// const mergedEvents: SyncBoardEvent[] = [];
+	// let previous: SyncBoardEvent | null = null;
 	const mergedEvents: BoardEvent[] = [];
 	let previous: BoardEvent | null = null;
 
@@ -432,8 +699,10 @@ function mergeEvents(events: BoardEvent[]): BoardEvent[] {
 }
 
 function createMergedEvent(
+	// event: SyncBoardEvent,
 	event: BoardEvent,
 	mergedOperation: Operation,
+	// ): SyncBoardEvent {
 ): BoardEvent {
 	return {
 		...event,
@@ -442,4 +711,37 @@ function createMergedEvent(
 			operation: mergedOperation,
 		},
 	};
+}
+
+export function transformEvents(
+	confirmed: BoardEvent[],
+	toTransform: BoardEvent[],
+): BoardEvent[] {
+	const transformed: BoardEvent[] = [];
+
+	// console.log("confirmed", [...confirmed]);
+	// console.log("to transf", [...toTransform]);
+
+	for (const transf of toTransform) {
+		let actualyTransformed = { ...transf };
+
+		for (const conf of confirmed) {
+			const { operation: confOp } = conf.body;
+			const { operation: transfOp } = actualyTransformed.body;
+
+			const transformedOp = transfromOperation(confOp, transfOp);
+			if (transformedOp) {
+				actualyTransformed = {
+					...actualyTransformed,
+					body: {
+						...actualyTransformed.body,
+						operation: transformedOp,
+					},
+				};
+			}
+		}
+		transformed.push(actualyTransformed);
+	}
+
+	return transformed;
 }

@@ -21,11 +21,7 @@ import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
-import {
-	createRoundedRectanglePath,
-	RoundedRectangle,
-} from "./Basic/RoundedRectangle";
-import { createSpeachBubblePath } from "./Basic/SpeachBubble";
+import { tempStorage } from "App/SessionStorage";
 import { LinkTo } from "../LinkTo/LinkTo";
 
 const defaultShapeData = new DefaultShapeData();
@@ -33,22 +29,11 @@ const defaultShapeData = new DefaultShapeData();
 export class Shape implements Geometry {
 	readonly itemType = "Shape";
 	parent = "Board";
-	readonly transformation = new Transformation(this.id, this.events);
-	private path = Shapes[this.shapeType].path.copy();
-	private mbr = Shapes[this.shapeType].path.getMbr().copy();
-	private textContainer = Shapes[this.shapeType].textBounds.copy();
-	readonly linkTo = new LinkTo(this.id, this.events);
-	readonly text = new RichText(
-		this.textContainer,
-		this.id,
-		this.events,
-		this.transformation,
-		this.linkTo,
-		"\u00A0",
-		true,
-		false,
-		"Shape",
-	);
+	readonly transformation: Transformation;
+	private path: Path | Paths;
+	private textContainer: Mbr;
+	readonly text: RichText;
+	readonly linkTo: LinkTo;
 	readonly subject = new Subject<Shape>();
 	transformationRenderBlock?: boolean = undefined;
 
@@ -62,7 +47,24 @@ export class Shape implements Geometry {
 		private borderOpacity = defaultShapeData.borderOpacity,
 		private borderStyle = defaultShapeData.borderStyle,
 		private borderWidth = defaultShapeData.borderWidth,
+		private mbr = Shapes[shapeType].path.getMbr().copy(),
 	) {
+		this.linkTo = new LinkTo(this.id, this.events);
+		this.transformation = new Transformation(this.id, this.events);
+		this.path = Shapes[this.shapeType].path.copy();
+		this.textContainer = Shapes[this.shapeType].textBounds.copy();
+		this.text = new RichText(
+			this.textContainer,
+			this.id,
+			this.events,
+			this.transformation,
+			this.linkTo,
+			"\u00A0",
+			true,
+			false,
+			"Shape",
+		);
+
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				this.transformPath();
@@ -110,18 +112,15 @@ export class Shape implements Geometry {
 	}
 
 	private saveShapeData(): void {
-		sessionStorage.setItem(
-			"lastShapeData",
-			JSON.stringify({
-				shapeType: this.shapeType,
-				backgroundColor: this.backgroundColor,
-				backgroundOpacity: this.backgroundOpacity,
-				borderColor: this.borderColor,
-				borderOpacity: this.borderOpacity,
-				borderStyle: this.borderStyle,
-				borderWidth: this.borderWidth,
-			}),
-		);
+		tempStorage.setShapeData({
+			shapeType: this.shapeType,
+			backgroundColor: this.backgroundColor,
+			backgroundOpacity: this.backgroundOpacity,
+			borderColor: this.borderColor,
+			borderOpacity: this.borderOpacity,
+			borderStyle: this.borderStyle,
+			borderWidth: this.borderWidth,
+		});
 	}
 
 	emit(operation: ShapeOperation): void {
@@ -473,17 +472,17 @@ export class Shape implements Geometry {
 		this.text.setContainer(this.textContainer.copy());
 		this.textContainer.transform(this.transformation.matrix);
 		/*
-        const previous = this.transformation.previous.copy();
-        console.log("previous", previous);
-        previous.invert();
-        console.log("inverted", previous);
-        const delta = previous.multiplyByMatrix(
-            this.transformation.matrix.copy(),
-        );
-        console.log("matrix", this.transformation.matrix);
-        console.log("delta", delta);
-        this.path.transform(delta);
-        */
+		const previous = this.transformation.previous.copy();
+		console.log("previous", previous);
+		previous.invert();
+		console.log("inverted", previous);
+		const delta = previous.multiplyByMatrix(
+			this.transformation.matrix.copy(),
+		);
+		console.log("matrix", this.transformation.matrix);
+		console.log("delta", delta);
+		this.path.transform(delta);
+		*/
 		this.path.transform(this.transformation.matrix);
 
 		this.path.setBackgroundColor(this.backgroundColor);

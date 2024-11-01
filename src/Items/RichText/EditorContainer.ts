@@ -25,6 +25,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -59,6 +60,13 @@ export class EditorContainer {
 		private getScale: () => number,
 		horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
+		private getAutosize: () => boolean,
+		private isEmpty: () => boolean,
+		private autosizeEnable: () => void,
+		private autosizeDisable: () => void,
+		private getFontSize: () => number,
+		private getMatrixScale: () => number,
+		private getOnLimitReached: () => () => void,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -85,6 +93,16 @@ export class EditorContainer {
 		this.decorated = {
 			realapply: editor.apply,
 			apply: op => {
+				if (
+					op.type === "set_node" &&
+					"enableAuto" in op.newProperties
+				) {
+					if (op.newProperties.enableAuto) {
+						this.autosizeEnable();
+					} else if (op.newProperties.enableAuto === false) {
+						this.autosizeDisable();
+					}
+				}
 				this.decorated.realapply(op);
 			},
 			undo: editor.undo,
@@ -95,6 +113,23 @@ export class EditorContainer {
 			if (this.shouldEmit) {
 				if (this.recordedSelectionOp) {
 					if (operation.type !== "set_selection") {
+						if (
+							operation.type === "set_node" &&
+							"fontSize" in operation.newProperties &&
+							"fontSize" in operation.properties
+						) {
+							if (operation.newProperties.fontSize === "auto") {
+								operation.newProperties.fontSize = 14;
+								operation.newProperties.enableAuto = true;
+								operation.properties.enableAuto = false;
+							} else {
+								operation.newProperties.enableAuto = false;
+								if (this.getAutosize()) {
+									operation.properties.enableAuto = true;
+								}
+							}
+						}
+
 						this.recordedSelectionOp.ops.push(operation);
 						this.decorated.apply(operation);
 						this.subject.publish(this);
@@ -109,6 +144,20 @@ export class EditorContainer {
 							this.recordedInsertionOps.push(operation);
 							this.decorated.apply(operation);
 						} else {
+							if (
+								operation.type !== "remove_node" &&
+								operation.type !== "remove_text" &&
+								operation.type !== "merge_node" &&
+								operation.type !== "set_node" &&
+								this.getAutosize()
+							) {
+								const relativeFontSize =
+									this.getFontSize() / this.getMatrixScale();
+								if (relativeFontSize < 10) {
+									this.getOnLimitReached()();
+									return;
+								}
+							}
 							this.emit({
 								class: "RichText",
 								method: "edit",
@@ -148,6 +197,13 @@ export class EditorContainer {
 		insertData: (data: DataTransfer) => void,
 		data: DataTransfer,
 	): void {
+		if (this.getAutosize()) {
+			const relativeFontSize = this.getFontSize() / this.getMatrixScale();
+			if (relativeFontSize < 10) {
+				this.getOnLimitReached()();
+				return;
+			}
+		}
 		this.insertingText = true;
 		insertData(data);
 		this.insertingText = false;
@@ -274,50 +330,6 @@ export class EditorContainer {
 
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
-		/* TODO bd-695
-				if (this.richText.getAutosize()
-						&& (op.ops[0].type === "insert_text"
-						|| op.ops[0].type === "split_node")
-				) {
-						console.log("text len", this.textLength);
-						console.log("w", this.richText.getWidth());
-						if (this.richText.getFontSize() > 14) { // 14 - defaultSize
-								console.log("BEFORE", this.richText.getFontSize());
-								if (op.ops[0].type === "split_node"
-								|| op.ops[0].text.length === 1) {
-										this.decorated.apply(op.ops[0]);
-										setTimeout(() => {
-												if (this.richText.getFontSize() < 14) {
-														console.log("overflowed");
-														// Clear all / remove last one
-														const removeOp = {
-																type: "remove_text",
-																path: op.ops[0].path,
-																offset: op.ops[0].offset + op.ops[0].text.length - 1,
-																text: op.ops[0].text.slice(-1)
-														};
-														this.richText.clearText();
-														this.decorated.apply(removeOp);
-												}
-										}, 5);
-								} else {
-										op.ops[0].text.split("").forEach((letter, index) => {
-												const newOp = {
-														...op,
-														ops: [{
-																...op.ops[0],
-																text: letter,
-																offset: op.ops[0].offset + index
-														}]
-												};
-												this.applySelectionEdit(newOp);
-										})
-								}
-						}
-				} else {
-						this.decorated.apply(op.ops[0]);
-				}
-				*/
 		for (const operation of op.ops) {
 			this.decorated.apply(operation);
 		}
@@ -565,7 +577,16 @@ export class EditorContainer {
 			});
 		}
 		this.recordMethodOps("setSelectionFontSize");
-		Editor.addMark(editor, "fontSize", size);
+
+		// changing empty Sticker fontSize type (number->auto / auto->number) leads to undefined behaviour
+		// next line doenst allow empty text to change fontSize type --- TODO fix
+		if (!this.isEmpty() || (size !== "auto" && !this.getAutosize())) {
+			if (size === 14 && this.getAutosize()) {
+				// autoSize is based on 14 => need to disable autoSizing in decorated.apply
+				Editor.addMark(editor, "fontSize", 1);
+			}
+			Editor.addMark(editor, "fontSize", size);
+		}
 
 		if (selectionContext === "EditTextUnderPointer") {
 			ReactEditor.focus(editor);

@@ -25,12 +25,12 @@ export interface DrawingData {
 export class Drawing extends Mbr implements Geometry {
 	readonly itemType = "Drawing";
 	parent = "Board";
-	readonly transformation = new Transformation(this.id, this.events);
+	readonly transformation: Transformation;
 	private path2d = Path2D ? new Path2D() : undefined; // just to make tests run in node
 	readonly subject = new Subject<Drawing>();
 	untransformedMbr = new Mbr();
 	private lines: Line[] = [];
-	readonly linkTo = new LinkTo(this.id, this.events);
+	readonly linkTo: LinkTo;
 	strokeWidth: BorderWidth = 1;
 	borderStyle: BorderStyle = "solid";
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
@@ -43,6 +43,8 @@ export class Drawing extends Mbr implements Geometry {
 		private id = "",
 	) {
 		super();
+		this.transformation = new Transformation(id, events);
+		this.linkTo = new LinkTo(this.id, this.events);
 		this.transformation.subject.subscribe(() => {
 			this.updateMbr();
 			this.updateLines();
@@ -256,6 +258,10 @@ export class Drawing extends Mbr implements Geometry {
 			new Point(mbr.left, mbr.top + height / 2),
 			new Point(mbr.right, mbr.top + height / 2),
 		];
+	}
+
+	getLines(): Line[] {
+		return this.lines;
 	}
 
 	isClosed(): boolean {

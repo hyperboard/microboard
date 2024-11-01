@@ -2,6 +2,7 @@ import { RichText } from "Board/Items";
 import { t } from "i18next";
 import { Subject } from "Subject";
 import {
+	CONNECTOR_BORDER_STYLE,
 	CONNECTOR_COLOR,
 	CONNECTOR_LINE_CAP,
 	CONNECTOR_LINE_WIDTH,
@@ -18,7 +19,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { Item } from "../Item";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
-import { Path, Paths } from "../Path";
+import { BorderStyle, Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Matrix, Transformation } from "../Transformation";
 import { ConnectorCommand } from "./ConnectorCommand";
@@ -31,8 +32,10 @@ import {
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
-import { ConnectorEdge, getEndPointer, getStartPointer } from "./Pointers";
-import { ConnectorPointerStyle } from "./Pointers/Pointers";
+import { ConnectorEdge } from "./Pointers";
+import { getStartPointer, getEndPointer } from "./Pointers/index";
+import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
 
 export const ConnectorLineStyles = [
@@ -41,53 +44,30 @@ export const ConnectorLineStyles = [
 	"orthogonal",
 ] as const;
 
-export type ConnectorLineStyle = typeof ConnectorLineStyles[number];
+export type ConnectorLineStyle = (typeof ConnectorLineStyles)[number];
 
 export const ConnectionLineWidths = [
 	1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24,
 ] as const;
 
-export type ConnectionLineWidth = typeof ConnectionLineWidths[number];
+export type ConnectionLineWidth = (typeof ConnectionLineWidths)[number];
 
 export class Connector {
 	readonly itemType = "Connector";
 	parent = "Board";
 	private id = "";
-	readonly transformation = new Transformation(this.id, this.events);
+	readonly transformation: Transformation;
 	private middlePoints: BoardPoint[] = [];
 	private lineColor = CONNECTOR_COLOR;
-	readonly linkTo = new LinkTo(this.id, this.events);
+	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
+	private borderStyle: BorderStyle = CONNECTOR_BORDER_STYLE;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
-	startPointer = getStartPointer(
-		this.startPoint,
-		this.startPointerStyle,
-		this.lineStyle,
-		this.lines,
-		this.lineWidth * 0.1 + 0.3,
-	);
-	endPointer = getEndPointer(
-		this.endPoint,
-		this.endPointerStyle,
-		this.lineStyle,
-		this.lines,
-		this.lineWidth * 0.1 + 0.3,
-	);
+	startPointer: Pointer;
+	endPointer: Pointer;
 	animationFrameId?: number;
-	readonly text: RichText = new RichText(
-		this.getMbr(),
-		this.id,
-		this.events,
-		new Transformation(),
-		new LinkTo(),
-		t("connector.textPlaceholder", {
-			ns: "default",
-		}),
-		true,
-		false,
-		undefined,
-	);
+	readonly text: RichText;
 	transformationRenderBlock?: boolean = undefined;
 	private optionalFindItemFn?: FindItemFn;
 	constructor(
@@ -99,6 +79,44 @@ export class Connector {
 		private startPointerStyle: ConnectorPointerStyle = "None",
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
 	) {
+		this.transformation = new Transformation(this.id, this.events);
+		this.linkTo = new LinkTo(this.id, this.events);
+		this.text = new RichText(
+			this.getMbr(),
+			this.id,
+			this.events,
+			new Transformation(),
+			this.linkTo,
+			t("connector.textPlaceholder", {
+				ns: "default",
+			}),
+			true,
+			false,
+			"Connector",
+			{
+				...DEFAULT_TEXT_STYLES,
+				fontSize: localStorage.getItem("lastConnectorTextSize")
+					? Number(localStorage.getItem("lastConnectorTextSize"))
+					: DEFAULT_TEXT_STYLES.fontSize,
+				fontColor:
+					localStorage.getItem("lastConnectorTextColor") ??
+					DEFAULT_TEXT_STYLES.fontColor,
+			},
+		);
+		this.startPointer = getStartPointer(
+			this.startPoint,
+			this.startPointerStyle,
+			this.lineStyle,
+			this.lines,
+		);
+		this.endPointer = getEndPointer(
+			this.endPoint,
+			this.endPointerStyle,
+			this.lineStyle,
+			this.lines,
+			this.lineWidth * 0.1 + 0.3,
+		);
+
 		this.transformation.subject.subscribe((_sub, op) => {
 			if (op.method === "transformMany") {
 				const operation = op.items[this.getId()];
@@ -134,9 +152,10 @@ export class Connector {
 			maxWidth: 300,
 		});
 		this.text.addMbr(this.getMbr());
-		this.text.setSelectionHorisontalAlignment("left");
-		this.text.editor.setSelectionHorisontalAlignment("left");
-		this.text.insideOf = this.itemType;
+		// this.text.setSelectionHorisontalAlignment("left");
+		// this.text.editor.setSelectionHorisontalAlignment("left");
+		this.text.setSelectionHorisontalAlignment("center");
+		this.text.editor.setSelectionHorisontalAlignment("center");
 		this.text.setBoard(this.board);
 		this.text.editor.applyRichTextOp({
 			class: "RichText",
@@ -241,6 +260,9 @@ export class Connector {
 					case "setLineStyle":
 						this.applyLineStyle(operation.lineStyle);
 						break;
+					case "setBorderStyle":
+						this.applyBorderStyle(operation.borderStyle);
+						break;
 					case "setLineColor":
 						this.applyLineColor(operation.lineColor);
 						break;
@@ -256,7 +278,7 @@ export class Connector {
 			// 	this.transformation.apply(operation);
 			// 	break;
 			case "LinkTo":
-				this.linkTo.apply(op);
+				this.linkTo.apply(operation);
 				break;
 			default:
 				return;
@@ -412,6 +434,20 @@ export class Connector {
 		this.updatePaths();
 	}
 
+	private setBorderStyle(style: BorderStyle): void {
+		this.emit({
+			class: "Connector",
+			method: "setBorderStyle",
+			item: [this.id],
+			borderStyle: style,
+		});
+	}
+
+	private applyBorderStyle(style: BorderStyle): void {
+		this.borderStyle = style;
+		this.updatePaths();
+	}
+
 	setLineWidth(width: ConnectionLineWidth): void {
 		this.emit({
 			class: "Connector",
@@ -483,6 +519,10 @@ export class Connector {
 
 	getLineStyle(): ConnectorLineStyle {
 		return this.lineStyle;
+	}
+
+	getBorderStyle(): BorderStyle {
+		return this.borderStyle;
 	}
 
 	getLineWidth(): ConnectionLineWidth {
@@ -605,7 +645,7 @@ export class Connector {
 			return;
 		}
 		const ctx = context.ctx;
-		this.text.enableRender();
+		// this.text.enableRender();
 		const textMbr = this.text.getClipMbr();
 		// Save the current context state
 		ctx.save();
@@ -712,6 +752,7 @@ export class Connector {
 			lineColor: this.lineColor,
 			lineWidth: this.lineWidth,
 			text: text,
+			borderStyle: this.borderStyle,
 			linkTo: this.linkTo,
 		};
 	}
@@ -739,6 +780,7 @@ export class Connector {
 		this.lineStyle = data.lineStyle ?? this.lineStyle;
 		this.lineColor = data.lineColor ?? this.lineColor;
 		this.lineWidth = data.lineWidth ?? this.lineWidth;
+		this.borderStyle = data.borderStyle ?? this.borderStyle;
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
@@ -760,7 +802,6 @@ export class Connector {
 			x - width / 2,
 			y - height / 2,
 		);
-		this.text.transformCanvas();
 		this.text.updateElement();
 
 		// this.animationFrameId = 0;
@@ -868,6 +909,7 @@ export class Connector {
 
 		this.lines.setBorderWidth(this.lineWidth);
 		this.lines.setBorderColor(this.lineColor);
+		this.lines.setBorderStyle(this.borderStyle);
 
 		this.updateTitle();
 	}

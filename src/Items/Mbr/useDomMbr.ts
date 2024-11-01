@@ -5,12 +5,13 @@ import { useAppSubscription } from "Board/useBoardSubscription";
 import { useForceUpdate } from "lib/useForceUpdate";
 import { useEffect, useState, type RefObject, useRef } from "react";
 import { updateRects } from "./updateRects";
+import { SubjectName } from "App/getSubscriptions";
 
 type Params = {
 	app: App;
 	board: Board;
 	ref: RefObject<HTMLElement>;
-	subjects?: string[];
+	subjects?: SubjectName[];
 	targetMbr?: Mbr;
 	verticalOffset?: number;
 	horizontalOffset?: number;

@@ -7,6 +7,7 @@ import { DrawingOperation } from "Board/Items/Drawing/DrawingOperation";
 import { StickerOperation } from "../Items/Sticker/StickerOperation";
 import { FrameOperation } from "../Items/Frame";
 import { LinkToOperation } from "../Items/LinkToOperation";
+import { PlaceholderOperation } from "Board/Items/Placeholder/PlaceholderOperation";
 
 interface Undo {
 	class: "Events";
@@ -30,8 +31,11 @@ export type ItemOperation =
 	| RichTextOperation
 	| ConnectorOperation
 	| DrawingOperation
-	| FrameOperation;
+	| FrameOperation
+	| PlaceholderOperation;
 
 export type UndoableOperation = BoardOps | ItemOperation;
 
 export type Operation = UndoableOperation | EventsOperation;
+
+export type MethodType = Operation["method"];

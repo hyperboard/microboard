@@ -66,21 +66,11 @@ const _relation = width / height;
 export class Sticker implements Geometry {
 	parent = "Board";
 	readonly itemType = "Sticker";
-	readonly transformation = new Transformation(this.id, this.events);
-	readonly linkTo = new LinkTo(this.id, this.events);
+	readonly transformation: Transformation;
+	readonly linkTo: LinkTo;
 	private stickerPath = StickerShape.stickerPath.copy();
 	private textContainer = StickerShape.textBounds.copy();
-	text = new RichText(
-		this.textContainer,
-		this.id,
-		this.events,
-		this.transformation,
-		this.linkTo,
-		"\u00A0",
-		false,
-		true,
-		this.itemType,
-	);
+	text: RichText;
 	readonly subject = new Subject<Sticker>();
 	transformationRenderBlock?: boolean = undefined;
 
@@ -89,6 +79,20 @@ export class Sticker implements Geometry {
 		private id = "",
 		private backgroundColor = defaultStickerData.backgroundColor,
 	) {
+		this.linkTo = new LinkTo(this.id, this.events);
+		this.transformation = new Transformation(this.id, this.events);
+		this.text = new RichText(
+			this.textContainer,
+			this.id,
+			this.events,
+			this.transformation,
+			this.linkTo,
+			"\u00A0",
+			false,
+			true,
+			this.itemType,
+		);
+
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				this.transformPath();
@@ -236,6 +240,7 @@ export class Sticker implements Geometry {
 					this.id,
 					this.events,
 					this.transformation,
+					this.linkTo,
 					"\u00A0",
 					false,
 					true,
@@ -243,19 +248,22 @@ export class Sticker implements Geometry {
 					{
 						...DEFAULT_TEXT_STYLES,
 						fontColor: isDarkColor(backgroundColor)
-							? "rgb(255,255,255)"
-							: "rgb(20, 21, 26)",
+							? "rgb(255, 255, 255)"
+							: DEFAULT_TEXT_STYLES.fontColor,
 					},
 				);
-			} else {
+			} else if (
+				this.text.getFontColor() === DEFAULT_TEXT_STYLES.fontColor ||
+				this.text.getFontColor() === "rgb(255, 255, 255)"
+			) {
 				const selection = this.text.getCurrentSelection();
 				if (selection) {
 					this.text.selectWholeText();
 				}
 				this.text.applySelectionFontColor(
 					isDarkColor(backgroundColor)
-						? "rgb(255,255,255)"
-						: "rgb(20, 21, 26)",
+						? "rgb(255, 255, 255)"
+						: DEFAULT_TEXT_STYLES.fontColor,
 				);
 				this.text.restoreSelection(selection);
 			}

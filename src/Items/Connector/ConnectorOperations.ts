@@ -4,6 +4,7 @@ import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { LinkTo } from "../LinkTo/LinkTo";
+import { BorderStyle } from "../Path";
 
 export class ConnectorData {
 	readonly itemType = "Connector";
@@ -15,6 +16,7 @@ export class ConnectorData {
 	lineColor = "";
 	linkTo: LinkTo = new LinkTo();
 	lineWidth: ConnectionLineWidth = 1;
+	borderStyle: BorderStyle = "solid";
 	transformation = new DefaultTransformationData();
 	text = new DefaultRichTextData([], "center", undefined);
 	optionalFindItemFn?: FindItemFn;
@@ -57,6 +59,13 @@ interface SetLineStyle {
 	lineStyle: ConnectorLineStyle;
 }
 
+interface SetBorderStyle {
+	class: "Connector";
+	method: "setBorderStyle";
+	item: string[];
+	borderStyle: BorderStyle;
+}
+
 interface SetLineColor {
 	class: "Connector";
 	method: "setLineColor";
@@ -85,4 +94,5 @@ export type ConnectorOperation =
 	| SetLineStyle
 	| SetLineColor
 	| SetLineWidth
-	| SwitchPointers;
+	| SwitchPointers
+	| SetBorderStyle;

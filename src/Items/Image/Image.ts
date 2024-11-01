@@ -1,6 +1,5 @@
 import { Events, Operation } from "Board/Events";
 import { Subject } from "Subject";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
@@ -8,6 +7,8 @@ import { Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
+import { Placeholder } from "../Placeholder";
+import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 
 export interface ImageItemData {
@@ -24,34 +25,34 @@ export interface Dimension {
 }
 
 function getPlaceholderImage(
+	board: Board,
 	imageDimension?: Dimension,
-	text?: string,
 ): HTMLImageElement {
 	const placeholderCanvas = document.createElement("canvas");
 	const placeholderContext = placeholderCanvas.getContext(
 		"2d",
 	) as CanvasRenderingContext2D; // this does not fail
+
+	const context = new DrawingContext(board.camera, placeholderContext);
+
+	const placeholder = new Placeholder();
+
 	if (imageDimension) {
 		placeholderCanvas.width = imageDimension.width;
 		placeholderCanvas.height = imageDimension.height;
-		placeholderContext.strokeStyle = "black";
-		placeholderContext.strokeRect(
-			0,
-			0,
-			imageDimension.width - 1,
-			imageDimension.height - 1,
+
+		placeholder.transformation.scaleTo(
+			imageDimension.width / 100,
+			imageDimension.height / 100,
 		);
 	} else {
 		placeholderCanvas.width = 250;
 		placeholderCanvas.height = 50;
+		placeholder.transformation.scaleTo(250 / 100, 50 / 100);
 	}
-	placeholderContext.font = `${DEFAULT_TEXT_STYLES.fontSize} ${DEFAULT_TEXT_STYLES.fontFamily}`;
-	placeholderContext.fillStyle = "black";
-	placeholderContext.fillText(
-		text ? text : "The image could not be loaded.",
-		0,
-		25,
-	);
+
+	placeholder.render(context);
+
 	const placeholderImage = new Image();
 	placeholderImage.src = placeholderCanvas.toDataURL();
 	return placeholderImage;
@@ -68,24 +69,27 @@ export class ImageItem extends Mbr {
 	parent = "Board";
 	image: HTMLImageElement;
 	readonly transformation: Transformation;
-	private linkTo: LinkTo;
+	readonly linkTo: LinkTo;
 	readonly subject = new Subject<ImageItem>();
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
 	storageLink: string;
 	imageDimension: Dimension;
+	board: Board;
 
 	constructor(
 		{ base64, storageLink, imageDimension }: ImageConstructorData,
+		board: Board,
 		events?: Events,
 		private id = "",
 	) {
 		super();
+		this.linkTo = new LinkTo(this.id, events);
+		this.board = board;
 		this.storageLink = storageLink;
 		this.imageDimension = imageDimension;
 		this.transformation = new Transformation(id, events);
-		this.linkTo = new LinkTo(this.id, events);
 		this.image = new Image();
 		this.image.crossOrigin = "anonymous";
 		this.image.onload = this.onLoad;
@@ -105,7 +109,7 @@ export class ImageItem extends Mbr {
 	handleError = (): void => {
 		// Provide handling logic for errors
 		console.error("Invalid dataUrl or image failed to load.");
-		this.image = getPlaceholderImage();
+		this.image = getPlaceholderImage(this.board);
 		this.updateMbr();
 		this.subject.publish(this);
 		this.shootLoadCallbacks();
@@ -119,7 +123,7 @@ export class ImageItem extends Mbr {
 	};
 
 	onError = (_error): void => {
-		this.image = getPlaceholderImage();
+		this.image = getPlaceholderImage(this.board);
 		this.updateMbr();
 		this.subject.publish(this);
 		this.shootLoadCallbacks();
@@ -198,9 +202,11 @@ export class ImageItem extends Mbr {
 			this.shootLoadCallbacks();
 		};
 		this.image = getPlaceholderImage(
+			this.board,
 			data.imageDimension,
-			"The image is loading from the storage",
+			// "The image is loading from the storage",
 		);
+
 		const storageImage = new Image();
 		storageImage.onload = () => {
 			this.image = storageImage;

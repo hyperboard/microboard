@@ -45,7 +45,8 @@ export function checkHotkeys(
 							| "Connector"
 							| "Image"
 							| "RichText"
-							| "Drawing",
+							| "Drawing"
+							| "Eraser",
 					),
 				)
 			) {

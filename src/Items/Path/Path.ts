@@ -12,7 +12,7 @@ export type Segment = Line | QuadraticBezier | CubicBezier;
 
 export const LinePatterns = {
 	solid: [] as number[],
-	dot: [1, 1],
+	dot: [1, 2],
 	dash: [10, 10],
 	longDash: [20, 5],
 	dotDash: [15, 3, 3, 3],
@@ -79,7 +79,7 @@ export class Path implements Geometry, PathStylize {
 	private width: number;
 	private height: number;
 	private maxDimension: number;
-	private linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
+	private linePattern: number[];
 	connectedItemType = "";
 
 	constructor(
@@ -92,8 +92,11 @@ export class Path implements Geometry, PathStylize {
 		private backgroundOpacity = 1,
 		private borderOpacity = 1,
 		private shadowColor: string = "transparent",
-		private shadowSize: number = 0,
+		private shadowBlur: number = 0,
+		private shadowOffsetX: number = 0,
+		private shadowOffsetY: number = 0,
 	) {
+		this.linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
 		this.updateCache();
 		const mbr = this.getMbr();
 		this.x = mbr.left;
@@ -135,6 +138,38 @@ export class Path implements Geometry, PathStylize {
 	setBorderWidth(width: number): void {
 		this.borderWidth = width;
 		this.linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
+	}
+
+	getShadowColor(): string {
+		return this.shadowColor;
+	}
+
+	setShadowColor(color: string): void {
+		this.shadowColor = color;
+	}
+
+	getShadowBlur(): number {
+		return this.shadowBlur;
+	}
+
+	setShadowBlur(blur: number): void {
+		this.shadowBlur = blur;
+	}
+
+	getShadowOffsetX(): number {
+		return this.shadowOffsetX;
+	}
+
+	setShadowOffsetX(offsetX: number): void {
+		this.shadowOffsetX = offsetX;
+	}
+
+	getShadowOffsetY(): number {
+		return this.shadowOffsetY;
+	}
+
+	setShadowOffsetY(offsetY: number): void {
+		this.shadowOffsetY = offsetY;
 	}
 
 	getBackgroundOpacity(): number {
@@ -351,17 +386,17 @@ export class Path implements Geometry, PathStylize {
 			}
 			return;
 		}
-		if (context.isBorderInvisible && !this.shadowSize) {
+		if (context.isBorderInvisible && !this.shadowBlur) {
 			if (shouldFillBackground) {
 				ctx.fillStyle = this.backgroundColor;
 				ctx.fill(this.path2d!);
 			}
 		} else {
-			if (this.shadowSize) {
+			if (this.shadowBlur) {
 				ctx.shadowColor = this.shadowColor;
-				ctx.shadowBlur = this.shadowSize;
-				ctx.shadowOffsetX = this.shadowSize;
-				ctx.shadowOffsetY = this.shadowSize;
+				ctx.shadowBlur = this.shadowBlur;
+				ctx.shadowOffsetX = this.shadowOffsetX;
+				ctx.shadowOffsetY = this.shadowOffsetY;
 			} else {
 				ctx.shadowColor = "transparent";
 			}
@@ -423,7 +458,9 @@ export class Path implements Geometry, PathStylize {
 			this.backgroundOpacity,
 			this.borderOpacity,
 			this.shadowColor,
-			this.shadowSize,
+			this.shadowBlur,
+			this.shadowOffsetX,
+			this.shadowOffsetY,
 		);
 	}
 

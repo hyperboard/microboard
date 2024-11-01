@@ -15,6 +15,7 @@ import { Subject } from "Subject";
 import { Command } from "./Command";
 import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
+import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
 
 export interface BoardEvent {
@@ -41,10 +42,36 @@ export interface BoardEventPackBody {
 	operations: Operation[];
 }
 
+export interface SyncBoardEvent extends BoardEvent {
+	lastKnownOrder: number;
+}
+
+interface SyncBoardEventPackBody extends BoardEventPackBody {
+	lastKnownOrder: number;
+}
+export interface SyncBoardEventPack extends BoardEventPack {
+	body: SyncBoardEventPackBody;
+}
+// export interface SyncBoardEventPack extends BoardEventPack {
+// 	lastKnownOrder: number;
+// }
+
+export type SyncEvent = SyncBoardEvent | SyncBoardEventPack;
+
+export interface RawEvents {
+	confirmedEvents: BoardEvent[];
+	eventsToSend: BoardEvent[];
+	newEvents: BoardEvent[];
+}
+
 export interface Events {
 	subject: Subject<BoardEvent>;
 	serialize(): BoardEvent[];
 	deserialize(serializedData: BoardEvent[]): void;
+	getRaw: () => RawEvents;
+	getAll: () => BoardEvent[];
+	getSyncLog: () => SyncLog;
+	syncLogSubject: SyncLogSubject;
 	getSnapshot(): BoardSnapshot;
 	disconnect(): void;
 	emit(operation: Operation, command: Command): void;
@@ -151,15 +178,27 @@ export function createEvents(board: Board, connection: Connection): Events {
 	);
 
 	function handleBoardEventListMessage(message: BoardEventListMsg): void {
+		const existinglist = log.getList();
+
 		const isFirstBatchOfEvents =
-			log.getList().length === 0 && message.events.length > 0;
+			existinglist.length === 0 && message.events.length > 0;
+
 		if (isFirstBatchOfEvents) {
 			handleFirstBatchOfEvents(message.events);
 		} else {
-			const events = message.events;
-			log.insertEvents(events);
-			latestServerOrder = log.getLatestOrder();
-			subject.publish(events[0]);
+			const maxOrder = Math.max(
+				...existinglist.map(record => record.event.order),
+			);
+
+			const newEvents = message.events.filter(
+				event => event.order > maxOrder,
+			);
+
+			if (newEvents.length > 0) {
+				log.insertEvents(newEvents);
+				latestServerOrder = log.getLatestOrder();
+				subject.publish(newEvents[0]);
+			}
 		}
 		onBoardLoad();
 	}
@@ -194,7 +233,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 		handleBoardSnapshotMessage,
 	);
 
-	function handleFirstBatchOfEvents(events: BoardEvent[]): void {
+	function handleFirstBatchOfEvents(events: SyncBoardEvent[]): void {
 		log.insertEvents(events);
 		subject.publish(events[0]);
 		latestServerOrder = log.getLatestOrder();
@@ -281,7 +320,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			sendBoardEvent(
 				board.getBoardId(),
 				pendingEvent.event,
-				currentSequenceNumber,
+				currentSequenceNumber - 1,
 			);
 		}
 	}
@@ -306,10 +345,17 @@ export function createEvents(board: Board, connection: Connection): Events {
 		event: BoardEventPack,
 		sequenceNumber: number,
 	): void {
-		connection.publishBoardEvent(boardId, event, sequenceNumber);
+		const toSend: SyncEvent = {
+			...event,
+			body: {
+				...event.body,
+				lastKnownOrder: log.getLatestOrder(),
+			},
+		};
+		connection.publishBoardEvent(boardId, toSend, sequenceNumber);
 
 		pendingEvent = {
-			event,
+			event: toSend,
 			sequenceNumber,
 			lastSentTime: Date.now(),
 		};
@@ -378,7 +424,11 @@ export function createEvents(board: Board, connection: Connection): Events {
 		if (!record) {
 			return;
 		}
-		record.command.revert();
+		if (record.event.body.operation.method === "undo") {
+			record.command.apply();
+		} else {
+			record.command.revert();
+		}
 	}
 
 	addOperationHandler("undo", applyUndo);
@@ -494,11 +544,26 @@ export function createEvents(board: Board, connection: Connection): Events {
 		return connection.connectionId;
 	}
 
+	function getRaw(): RawEvents {
+		const rawLog = log.getRaw();
+		return {
+			confirmedEvents: rawLog.confirmedRecords.map(
+				record => record.event,
+			),
+			eventsToSend: rawLog.recordsToSend.map(record => record.event),
+			newEvents: rawLog.newRecords.map(record => record.event),
+		};
+	}
+
 	const instance: Events = {
 		subject,
 		serialize: log.serialize,
 		deserialize: log.deserialize,
 		getSnapshot: log.getSnapshot,
+		getRaw,
+		getSyncLog: log.getSyncLog,
+		syncLogSubject: log.syncLogSubject,
+		getAll: () => log.getList().map(record => record.event),
 		disconnect,
 		emit,
 		apply,
