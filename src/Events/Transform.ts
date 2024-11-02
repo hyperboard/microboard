@@ -75,7 +75,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: insertNode_insertText,
 		remove_text: insertNode_removeText,
 		insert_node: insertNode_insertNode,
-		merge_node: () => {},
+		merge_node: insertNode_mergeNode,
 		move_node: () => {},
 		remove_node: insertNode_removeNode,
 		set_node: () => {},
@@ -85,7 +85,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: splitNode_insertText,
 		remove_text: splitNode_removeText,
 		insert_node: splitNode_insertNode,
-		merge_node: () => {},
+		merge_node: splitNode_mergeNode,
 		move_node: () => {},
 		remove_node: splitNode_removeNode,
 		set_node: () => {},
@@ -95,7 +95,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: mergeNode_insertText, // todo fix
 		remove_text: mergeNode_removeText,
 		insert_node: mergeNode_insertNode,
-		merge_node: () => {},
+		merge_node: mergeNode_mergeNode,
 		move_node: () => {},
 		remove_node: mergeNode_removeNode,
 		set_node: () => {},
@@ -116,7 +116,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: removeNode_insertText,
 		remove_text: removeNode_removeText,
 		insert_node: removeNode_insertNode,
-		merge_node: () => {},
+		merge_node: removeNode_mergeNode,
 		move_node: () => {},
 		remove_node: removeNode_removeNode,
 		set_node: () => {},
@@ -126,7 +126,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: () => {}, // nothing, before setting it is splitted?
 		remove_text: () => {}, // nothing
 		insert_node: setNode_insertNode,
-		merge_node: () => {},
+		merge_node: () => {}, // nothing??
 		move_node: () => {},
 		remove_node: setNode_removeNode,
 		set_node: () => {},
@@ -438,12 +438,12 @@ function insertText_mergeNode(
 	if (Path.isBefore(confirmed.path, toTransform.path) && Path.isSibling(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.position) {
 			transformed.position += confirmed.text.length;
-
 		}
 	}
 	transformPath(confirmed, transformed);
 	return transformed;
 }
+
 function removeText_mergeNode(
 	confirmed: RemoveTextOperation,
 	toTransform: MergeNodeOperation,
@@ -453,6 +453,50 @@ function removeText_mergeNode(
 		if (confirmed.offset <= toTransform.position) {
 			transformed.position += confirmed.text.length;
 		}
+	}
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function insertNode_mergeNode(
+	confirmed: InsertNodeOperation,
+	toTransform: MergeNodeOperation,
+): MergeNodeOperation {
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function removeNode_mergeNode(
+	confirmed: RemoveNodeOperation,
+	toTransform: MergeNodeOperation,
+): MergeNodeOperation {
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function splitNode_mergeNode(
+	confirmed: SplitNodeOperation,
+	toTransform: MergeNodeOperation,
+): MergeNodeOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		if (confirmed.position <= toTransform.position) {
+			transformed.position -= confirmed.position;
+		}
+	}
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function mergeNode_mergeNode(
+	confirmed: MergeNodeOperation,
+	toTransform: MergeNodeOperation,
+): MergeNodeOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		transformed.position += confirmed.position;
 	}
 	transformPath(confirmed, transformed);
 	return transformed;
