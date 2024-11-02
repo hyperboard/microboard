@@ -67,7 +67,7 @@ interface EventsList {
 	removeUnconfirmedEventsByItems(itemIds: string[]): void;
 }
 
-function createEventsList(createCommand: (BoardOps) => Command): EventsList {
+function createEventsList(createCommand: (BoardOps) => Command, board): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
@@ -227,11 +227,13 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			if (justConfirmed.length > 0) {
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					recordsToSend.map(rec => rec.event),
+					recordsToSend.reverse().map(rec => rec.event),
+					// board,
 				);
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					newRecords.map(rec => rec.event),
+					newRecords.reverse().map(rec => rec.event),
+					// board,
 				);
 				const recsToSend = transformedSend.map(event => ({
 					event,
@@ -307,7 +309,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 }
 
 export function createEventsLog(board: Board): EventsLog {
-	const list = createEventsList((ops: BoardOps) => createCommand(board, ops));
+	const list = createEventsList(
+		(ops: BoardOps) => createCommand(board, ops),
+		board,
+	);
 
 	function serialize(): BoardEvent[] {
 		const events = list.getConfirmedRecords().map(record => record.event);
@@ -457,6 +462,7 @@ export function createEventsLog(board: Board): EventsLog {
 						evnt.order > event.lastKnownOrder &&
 						evnt.order <= event.order,
 				);
+				// const transf = transformEvents(confirmed, [event], board);
 				const transf = transformEvents(confirmed, [event]);
 				transformed.push(...transf);
 			} else {
@@ -716,6 +722,7 @@ function createMergedEvent(
 export function transformEvents(
 	confirmed: BoardEvent[],
 	toTransform: BoardEvent[],
+	// board,
 ): BoardEvent[] {
 	const transformed: BoardEvent[] = [];
 
@@ -729,6 +736,7 @@ export function transformEvents(
 			const { operation: confOp } = conf.body;
 			const { operation: transfOp } = actualyTransformed.body;
 
+			// const transformedOp = transfromOperation(confOp, transfOp, board);
 			const transformedOp = transfromOperation(confOp, transfOp);
 			if (transformedOp) {
 				actualyTransformed = {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { RichTextOperation } from "Board/Items";
+import { RichText, RichTextOperation } from "Board/Items";
 import { Operation } from "./EventsOperations";
 import {
 	InsertTextOperation,
@@ -13,8 +13,12 @@ import {
 	TextOperation,
 	InsertNodeOperation,
 	SetNodeOperation,
+	BaseEditor,
 } from "slate";
-import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
+import { Node } from "slate";
+import { Board } from "Board/Board";
+import { ReactEditor } from "slate-react";
+import { HistoryEditor } from "slate-history";
 
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
@@ -25,6 +29,7 @@ import { BoardOps, CreateItem, RemoveItem } from "Board/BoardOperations";
 // finished - any_RemoveNode
 // TODO recheck with set_node
 
+// Arsenii - any_mergeNode
 // Sawa - any_SetNode
 
 type SlateOpTypesToTransform = TextOperation["type"] | NodeOperation["type"];
@@ -32,7 +37,7 @@ type SlateOpsToTransform = TextOperation | NodeOperation;
 type TransformFunction<
 	T extends SlateOpsToTransform,
 	U extends SlateOpsToTransform,
-> = (confirmed: T, toTransform: U) => U;
+> = (confirmed: T, toTransform: U, editor: BaseEditor & ReactEditor & HistoryEditor) => U;
 
 type OperationTransformMap = {
 	[K in SlateOpTypesToTransform]: {
@@ -50,7 +55,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: insertText_insertText,
 		remove_text: insertText_removeText,
 		insert_node: insertText_insertNode,
-		merge_node: () => {},
+		merge_node: insertText_mergeNode,
 		move_node: () => {},
 		remove_node: insertText_removeNode,
 		set_node: () => {},
@@ -60,7 +65,7 @@ const operationTransformMap: OperationTransformMap = {
 		insert_text: removeText_insertText,
 		remove_text: removeText_removeText,
 		insert_node: removeText_insertNode,
-		merge_node: () => {},
+		merge_node: removeText_mergeNode,
 		move_node: () => {},
 		remove_node: removeText_removeNode,
 		set_node: () => {},
@@ -87,7 +92,7 @@ const operationTransformMap: OperationTransformMap = {
 		split_node: () => {},
 	},
 	merge_node: {
-		insert_text: mergeNode_insertText,
+		insert_text: mergeNode_insertText, // todo fix
 		remove_text: mergeNode_removeText,
 		insert_node: mergeNode_insertNode,
 		merge_node: () => {},
@@ -197,15 +202,23 @@ function insertNode_insertText(
 	return transformed;
 }
 
+// TODO NEED TO FIX
 function mergeNode_insertText(
 	confirmed: MergeNodeOperation,
 	toTransform: InsertTextOperation,
+	// editor: BaseEditor & ReactEditor & HistoryEditor,
 ): InsertTextOperation {
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
+		// const previousSiblingPath = Path.previous(confirmed.path);
+		// const previousNode = Node.get(editor, previousSiblingPath);
+		// console.log("PREV NODE", previousNode);
+		// TODO NEED TO REWORK, need to add prev node lenght, but also need to upd editor so that node has correct length
+		// transformed.offset += Node.string(previousNode).length;
 		transformed.offset += confirmed.position;
 	}
 	transformPath(confirmed, transformed);
+	// console.log("ret", transformed);
 	return transformed;
 }
 
@@ -417,6 +430,34 @@ function setNode_removeNode(
 	return transformed;
 }
 
+function insertText_mergeNode(
+	confirmed: InsertTextOperation,
+	toTransform: MergeNodeOperation,
+): MergeNodeOperation {
+	const transformed = { ...toTransform };
+	if (Path.isBefore(confirmed.path, toTransform.path) && Path.isSibling(confirmed.path, toTransform.path)) {
+		if (confirmed.offset <= toTransform.position) {
+			transformed.position += confirmed.text.length;
+
+		}
+	}
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+function removeText_mergeNode(
+	confirmed: RemoveTextOperation,
+	toTransform: MergeNodeOperation,
+): MergeNodeOperation {
+	const transformed = { ...toTransform };
+	if (Path.isSibling(confirmed.path, toTransform.path)) {
+		if (confirmed.offset <= toTransform.position) {
+			transformed.position += confirmed.text.length;
+		}
+	}
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
 function insertText_splitNode(
 	confirmed: InsertTextOperation,
 	toTransform: SplitNodeOperation,
@@ -437,6 +478,7 @@ function insertText_splitNode(
 function transformRichTextOperation(
 	confirmed: RichTextOperation,
 	toTransform: RichTextOperation,
+	// board: Board,
 ): RichTextOperation | undefined {
 	// groupEdit - groupEdit
 	if (
@@ -448,11 +490,14 @@ function transformRichTextOperation(
 				const confirmedItemOp = confirmed.itemsOps.find(
 					confItemOp => confItemOp.item === toTransformItemOp.item,
 				);
+				// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
 
+				// if (!confirmedItemOp || !rt) {
 				if (!confirmedItemOp) {
 					return toTransformItemOp;
 				}
 
+				// const editor = rt.editor.editor;
 				const transformedOps: SlateOp[] = [];
 
 				for (const transfOp of toTransformItemOp.ops) {
@@ -465,6 +510,7 @@ function transformRichTextOperation(
 							];
 						const transformed =
 							transformFunction &&
+							// transformFunction(confOp, actualyTransformed, editor);
 							transformFunction(confOp, actualyTransformed);
 
 						if (transformed) {
@@ -494,6 +540,10 @@ function transformRichTextOperation(
 		toTransform.method === "edit" &&
 		toTransform.item[0] === confirmed.item[0]
 	) {
+		// const rt = board.items.getById(toTransform.item[0])?.getRichText();
+		// if (!rt) {
+		// 	return undefined;
+		// }
 		const transformedOps: SlateOp[] = [];
 
 		for (const transfOp of toTransform.ops) {
@@ -506,6 +556,7 @@ function transformRichTextOperation(
 					];
 				const transformed =
 					transformFunction &&
+					// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 					transformFunction(confOp, actualyTransformed);
 
 				if (transformed) {
@@ -527,6 +578,8 @@ function transformRichTextOperation(
 		const transformedOps: SlateOp[] = [];
 
 		for (const confItemOp of confirmed.itemsOps) {
+			// const rt = board.items.getById(toTransform.item[0])?.getRichText();
+			// if (confItemOp.item === toTransform.item[0] && rt) {
 			if (confItemOp.item === toTransform.item[0]) {
 				for (const transfOp of toTransform.ops) {
 					let actualyTransformed = { ...transfOp };
@@ -539,6 +592,7 @@ function transformRichTextOperation(
 						const transformed =
 							transformFunction &&
 							transformFunction(confOp, actualyTransformed);
+							// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 
 						if (transformed) {
 							actualyTransformed = transformed;
@@ -564,6 +618,8 @@ function transformRichTextOperation(
 			toTransformItemOp => {
 				const transformedOps: SlateOp[] = [];
 
+				// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
+				// if (confirmed.item[0] === toTransformItemOp.item && rt ) {
 				if (confirmed.item[0] === toTransformItemOp.item) {
 					for (const transfOp of toTransformItemOp.ops) {
 						let actualyTransformed = { ...transfOp };
@@ -576,6 +632,7 @@ function transformRichTextOperation(
 							const transformed =
 								transformFunction &&
 								transformFunction(confOp, actualyTransformed);
+								// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 
 							if (transformed) {
 								actualyTransformed = transformed;
@@ -607,9 +664,11 @@ function transformRichTextOperation(
 export function transfromOperation(
 	confirmed: Operation,
 	toTransform: Operation,
+	// board,
 ): Operation | undefined {
 	if (confirmed.class === "RichText" && toTransform.class === "RichText") {
 		return transformRichTextOperation(confirmed, toTransform);
+		// return transformRichTextOperation(confirmed, toTransform, board);
 	}
 
 	// others

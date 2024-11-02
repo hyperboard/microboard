@@ -25,6 +25,8 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+import { Node } from "slate";
+import { Text } from "slate";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -104,6 +106,7 @@ export class EditorContainer {
 					}
 				}
 				this.decorated.realapply(op);
+				this.subject.publish(this);
 			},
 			undo: editor.undo,
 			redo: editor.redo,
@@ -129,9 +132,7 @@ export class EditorContainer {
 								}
 							}
 						}
-
 						this.recordedSelectionOp.ops.push(operation);
-						this.decorated.apply(operation);
 						this.subject.publish(this);
 					}
 					return;
