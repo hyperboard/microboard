@@ -4,13 +4,13 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold = 5;
+	private alignThreshold = 2 ;
 	private snapMemory: { x: number | null; y: number | null } = {
 		x: null,
 		y: null,
 	};
 	board: Board;
-	snapThreshold = 5;
+	snapThreshold = 2;
 
 	constructor(board: Board, private spatialIndex: SpatialIndex) {
 		this.board = board;
@@ -29,10 +29,10 @@ export class AlignmentHelper {
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
-		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 15);
+		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 12);
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
-			15,
+			5,
 			(otherItem: Item) =>
 				otherItem !== movingMBR &&
 				otherItem.itemType !== "Connector" &&
@@ -371,7 +371,7 @@ export class AlignmentHelper {
 		let snapped = false;
 
 		const scale = this.board.camera.getScale();
-		const dynamicSnapThreshold = Math.min(this.snapThreshold / scale, 15);
+		const dynamicSnapThreshold = Math.min(this.snapThreshold / scale, 12);
 
 		const snapToLine = (lines: Line[], isVertical: boolean) => {
 			for (const line of lines) {
@@ -486,13 +486,13 @@ export class AlignmentHelper {
 
 		if (
 			this.snapMemory.x !== null &&
-			Math.abs(cursorPosition.x - this.snapMemory.x) > 10
+			Math.abs(cursorPosition.x - this.snapMemory.x) > dynamicSnapThreshold
 		) {
 			this.snapMemory.x = null;
 		}
 		if (
 			this.snapMemory.y !== null &&
-			Math.abs(cursorPosition.y - this.snapMemory.y) > 10
+			Math.abs(cursorPosition.y - this.snapMemory.y) > dynamicSnapThreshold
 		) {
 			this.snapMemory.y = null;
 		}

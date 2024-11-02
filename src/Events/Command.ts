@@ -44,6 +44,9 @@ export function createCommand(board: Board, operation: Operation): Command {
 							? operation.item
 							: [operation.item]
 						: Object.keys(operation.items);
+					if (operation.itemsMap) {
+						itemIdList.push(...Object.keys(operation.itemsMap));
+					}
 				const items = itemIdList
 					.map(itemId => board.items.findById(itemId) ?? itemId)
 					.filter((item): item is Item => {
