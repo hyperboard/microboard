@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { RichText, RichTextOperation } from "Board/Items";
+import { RichTextOperation } from "Board/Items";
 import { Operation } from "./EventsOperations";
 import {
 	InsertTextOperation,
@@ -15,29 +15,18 @@ import {
 	SetNodeOperation,
 	BaseEditor,
 } from "slate";
-import { Node } from "slate";
-import { Board } from "Board/Board";
 import { ReactEditor } from "slate-react";
 import { HistoryEditor } from "slate-history";
 
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
 
-// finished - any_InsertText
-// finished - any_RemoveText
-// finished - any_InsertNode
-// finished - any_RemoveNode
-// TODO recheck with set_node
-
-// Arsenii - any_mergeNode
-// Sawa - any_SetNode
-
-type SlateOpTypesToTransform = TextOperation["type"] | NodeOperation["type"];
-type SlateOpsToTransform = TextOperation | NodeOperation;
+type SlateOpTypesToTransform = Exclude<TextOperation["type"] | NodeOperation["type"], "move_node">;
+type SlateOpsToTransform = Exclude<TextOperation | NodeOperation, { type: "move_node" }>;
 type TransformFunction<
 	T extends SlateOpsToTransform,
 	U extends SlateOpsToTransform,
-> = (confirmed: T, toTransform: U, editor: BaseEditor & ReactEditor & HistoryEditor) => U;
+> = (confirmed: T, toTransform: U, editor: BaseEditor & ReactEditor & HistoryEditor) => U | undefined;
 
 type OperationTransformMap = {
 	[K in SlateOpTypesToTransform]: {
@@ -56,9 +45,9 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: insertText_removeText,
 		insert_node: insertText_insertNode,
 		merge_node: insertText_mergeNode,
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: insertText_removeNode,
-		set_node: () => {},
+		set_node: () => {}, // nothing
 		split_node: insertText_splitNode,
 	},
 	remove_text: {
@@ -66,71 +55,71 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: removeText_removeText,
 		insert_node: removeText_insertNode,
 		merge_node: removeText_mergeNode,
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: removeText_removeNode,
-		set_node: () => {},
-		split_node: () => {},
+		set_node: () => {}, // nothing
+		split_node: removeText_splitNode,
 	},
 	insert_node: {
 		insert_text: insertNode_insertText,
 		remove_text: insertNode_removeText,
 		insert_node: insertNode_insertNode,
 		merge_node: insertNode_mergeNode,
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: insertNode_removeNode,
-		set_node: () => {},
-		split_node: () => {},
+		set_node: insertNode_setNode,
+		split_node: insertNode_splitNode,
 	},
 	split_node: {
 		insert_text: splitNode_insertText,
 		remove_text: splitNode_removeText,
 		insert_node: splitNode_insertNode,
 		merge_node: splitNode_mergeNode,
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: splitNode_removeNode,
-		set_node: () => {},
-		split_node: () => {},
+		set_node: splitNode_setNode,
+		split_node: splitNode_splitNode,
 	},
 	merge_node: {
-		insert_text: mergeNode_insertText, // todo fix
+		insert_text: mergeNode_insertText, // todo fix mergeNode_any, splitNode_
 		remove_text: mergeNode_removeText,
 		insert_node: mergeNode_insertNode,
 		merge_node: mergeNode_mergeNode,
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: mergeNode_removeNode,
-		set_node: () => {},
-		split_node: () => {},
+		set_node: mergeNode_setNode,
+		split_node: mergeNode_splitNode,
 	},
-	move_node: {
-		// DOES NOT APPEAR ?
-		insert_text: () => {},
-		remove_text: () => {},
-		insert_node: () => {},
-		merge_node: () => {},
-		move_node: () => {},
-		remove_node: () => {},
-		set_node: () => {},
-		split_node: () => {},
-	},
+	// move_node: {
+	// 	// DOES NOT APPEAR ?
+	// 	insert_text: () => {},
+	// 	remove_text: () => {},
+	// 	insert_node: () => {},
+	// 	merge_node: () => {},
+	// 	move_node: () => {},
+	// 	remove_node: () => {},
+	// 	set_node: () => {},
+	// 	split_node: () => {},
+	// },
 	remove_node: {
 		insert_text: removeNode_insertText,
 		remove_text: removeNode_removeText,
 		insert_node: removeNode_insertNode,
 		merge_node: removeNode_mergeNode,
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: removeNode_removeNode,
-		set_node: () => {},
-		split_node: () => {},
+		set_node: removeNode_setNode,
+		split_node: removeNode_splitNode,
 	},
 	set_node: {
 		insert_text: () => {}, // nothing, before setting it is splitted?
 		remove_text: () => {}, // nothing
 		insert_node: setNode_insertNode,
 		merge_node: () => {}, // nothing??
-		move_node: () => {},
+		// move_node: () => {},
 		remove_node: setNode_removeNode,
-		set_node: () => {},
-		split_node: () => {},
+		set_node: setNode_setNode,
+		split_node: setNode_splitNode,
 	},
 };
 
@@ -515,6 +504,141 @@ function insertText_splitNode(
 	const newPath = Path.transform(transformed.path, confirmed);
 	if (newPath) {
 		transformed.path = newPath;
+	}
+	return transformed;
+}
+
+function removeText_splitNode(
+	confirmed: RemoveTextOperation,
+	toTransform: SplitNodeOperation,
+): SplitNodeOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		if (confirmed.offset <= toTransform.position) {
+			transformed.position -= confirmed.text.length;
+		}
+	}
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function insertNode_splitNode(
+	confirmed: InsertNodeOperation,
+	toTransform: SplitNodeOperation,
+): SplitNodeOperation {
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function removeNode_splitNode(
+	confirmed: RemoveNodeOperation,
+	toTransform: SplitNodeOperation,
+): SplitNodeOperation {
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function mergeNode_splitNode(
+	confirmed: MergeNodeOperation,
+	toTransform: SplitNodeOperation,
+): SplitNodeOperation {
+	const transformed = { ...toTransform };
+	// todo fix - add length of merged
+	// if (Path.equals(confirmed.path, toTransform.path)) {
+	// 	transformed.position += confirmed.position; 
+	// }
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function splitNode_splitNode(
+	confirmed: SplitNodeOperation,
+	toTransform: SplitNodeOperation,
+): SplitNodeOperation {
+	const transformed = { ...toTransform };
+	// todo fix
+	// if (Path.equals(confirmed.path, toTransform.path)) {
+	// 	if (confirmed.position <= toTransform.position) {
+	// 		transformed.position -= confirmed.position;
+	// 	}
+	// }
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function setNode_splitNode(
+	confirmed: SetNodeOperation,
+	toTransform: SplitNodeOperation,
+): SplitNodeOperation {
+	const transformed = { ...toTransform };
+	transformed.properties = {
+		...transformed.properties,
+		...confirmed.newProperties,
+	};
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function splitNode_setNode(
+	confirmed: SplitNodeOperation,
+	toTransform: SetNodeOperation,
+): SetNodeOperation {
+	const transformed = { ...toTransform };
+	// todo adjust the path to apply set_node to both resulting nodes
+	// or add new set_node to set prev node to prev node
+	// if (Path.equals(confirmed.path, toTransform.path)) {
+	// }
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function mergeNode_setNode(
+	confirmed: MergeNodeOperation,
+	toTransform: SetNodeOperation,
+): SetNodeOperation {
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function insertNode_setNode(
+	confirmed: InsertNodeOperation,
+	toTransform: SetNodeOperation,
+): SetNodeOperation {
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function removeNode_setNode(
+	confirmed: RemoveNodeOperation,
+	toTransform: SetNodeOperation,
+): SetNodeOperation | undefined {
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		return undefined;
+	}
+	const transformed = { ...toTransform };
+	transformPath(confirmed, transformed);
+	return transformed;
+}
+
+function setNode_setNode(
+	confirmed: SetNodeOperation,
+	toTransform: SetNodeOperation,
+): SetNodeOperation {
+	const transformed = { ...toTransform };
+	if (Path.equals(confirmed.path, toTransform.path)) {
+		// todo think on it 
+		transformed.newProperties = {
+			...toTransform.newProperties,
+			...confirmed.newProperties,
+		};
+		transformed.properties = {
+			...toTransform.properties,
+			...confirmed.newProperties,
+		}
 	}
 	return transformed;
 }
