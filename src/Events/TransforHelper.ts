@@ -3,6 +3,7 @@ import { BoardPoint, ControlPoint } from "Board/Items/Connector";
 import { ConnectorEdge } from "Board/Items/Connector/Pointers";
 import { SyncBoardEvent } from "./Events";
 import { RemoveItem } from "Board/BoardOperations";
+import { Board } from "Board";
 
 export class TransformConnectorHelper {
 	static replaceConnectorEdges(
@@ -32,6 +33,7 @@ export class TransformConnectorHelper {
 		replaceConnectorEdge(connector.getEndPoint(), "end");
 	}
 	static handleRemoveSnappedObject(
+		board: Board,
 		events: SyncBoardEvent[],
 	): string[] | undefined {
 		const connectorsToDelete: string[] = [];
@@ -41,7 +43,6 @@ export class TransformConnectorHelper {
 				ev.body.operation.class === "Board" &&
 				ev.body.operation.method === "remove",
 		);
-		const board = window.app.getBoard();
 		if (removeEvent) {
 			const rmOp = removeEvent.body.operation as RemoveItem;
 			const removedItemId = Array.isArray(rmOp.item)

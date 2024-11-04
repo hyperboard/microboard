@@ -67,7 +67,10 @@ interface EventsList {
 	removeUnconfirmedEventsByItems(itemIds: string[]): void;
 }
 
-function createEventsList(createCommand: (BoardOps) => Command, board): EventsList {
+function createEventsList(
+	createCommand: (BoardOps) => Command,
+	board,
+): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
@@ -249,11 +252,11 @@ function createEventsList(createCommand: (BoardOps) => Command, board): EventsLi
 				newRecords.push(...recsNew);
 				justConfirmed.length = 0;
 			}
-			// console.log(
-			// 	"applying after transforms",
-			// 	recordsToSend.slice(),
-			// 	newRecords.slice(),
-			// );
+			console.log(
+				"applying after transforms",
+				recordsToSend.slice(),
+				newRecords.slice(),
+			);
 			apply(recordsToSend);
 			apply(newRecords);
 			syncLog.push({
@@ -428,8 +431,10 @@ export function createEventsLog(board: Board): EventsLog {
 	// function handleEventsInsertion(events: BoardEvent[]): void {
 	function handleEventsInsertion(events: SyncBoardEvent[]): void {
 		list;
-		const toDelete =
-			TransformConnectorHelper.handleRemoveSnappedObject(events);
+		const toDelete = TransformConnectorHelper.handleRemoveSnappedObject(
+			board,
+			events,
+		);
 
 		if (Array.isArray(toDelete) && toDelete.length > 0) {
 			list.removeUnconfirmedEventsByItems(toDelete);
@@ -446,7 +451,7 @@ export function createEventsLog(board: Board): EventsLog {
 
 		const transformed: BoardEvent[] = [];
 
-		// console.log("HERE!!!", events);
+		console.log("HERE!!!", events);
 
 		for (const event of events) {
 			if (
@@ -470,9 +475,9 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 		}
 
-		// console.log("HANDLING insertion", [...transformed]);
+		console.log("HANDLING insertion", [...transformed]);
 		const mergedEvents = mergeEvents(transformed);
-		// console.log("merged", mergedEvents);
+		console.log("merged", mergedEvents);
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
@@ -726,8 +731,8 @@ export function transformEvents(
 ): BoardEvent[] {
 	const transformed: BoardEvent[] = [];
 
-	// console.log("confirmed", [...confirmed]);
-	// console.log("to transf", [...toTransform]);
+	console.log("confirmed", [...confirmed]);
+	console.log("to transf", [...toTransform]);
 
 	for (const transf of toTransform) {
 		let actualyTransformed = { ...transf };
