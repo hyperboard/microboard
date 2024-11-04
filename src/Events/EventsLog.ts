@@ -252,11 +252,6 @@ function createEventsList(
 				newRecords.push(...recsNew);
 				justConfirmed.length = 0;
 			}
-			console.log(
-				"applying after transforms",
-				recordsToSend.slice(),
-				newRecords.slice(),
-			);
 			apply(recordsToSend);
 			apply(newRecords);
 			syncLog.push({
@@ -451,8 +446,6 @@ export function createEventsLog(board: Board): EventsLog {
 
 		const transformed: BoardEvent[] = [];
 
-		console.log("HERE!!!", events);
-
 		for (const event of events) {
 			if (
 				event.lastKnownOrder !== undefined &&
@@ -475,9 +468,7 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 		}
 
-		console.log("HANDLING insertion", [...transformed]);
 		const mergedEvents = mergeEvents(transformed);
-		console.log("merged", mergedEvents);
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
@@ -730,9 +721,6 @@ export function transformEvents(
 	// board,
 ): BoardEvent[] {
 	const transformed: BoardEvent[] = [];
-
-	console.log("confirmed", [...confirmed]);
-	console.log("to transf", [...toTransform]);
 
 	for (const transf of toTransform) {
 		let actualyTransformed = { ...transf };
