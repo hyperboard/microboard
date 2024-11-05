@@ -2,15 +2,14 @@ import { Board } from "Board/Board";
 import { ImageItem } from "./Image";
 import { calculatePosition } from "./calculatePosition";
 import { prepareImage } from "./ImageHelpers";
-import * as PDFJS from "pdfjs-dist";
-import { RenderParameters } from "pdfjs-dist/types/src/display/api";
-PDFJS.GlobalWorkerOptions.workerSrc =
-	"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs";
+import * as PDFJS from "@bundled-es-modules/pdfjs-dist"
+import { RenderParameters } from "@bundled-es-modules/pdfjs-dist/types/src/display/api";
 
 export function uploadImage(file: File, board: Board) {
 	const reader = new FileReader();
 
 	if (file.type === "application/pdf") {
+		console.log("PDF PDF");
 		reader.onload = event => {
 			const typedarray = new Uint8Array(
 				event.target?.result as ArrayBufferLike,
@@ -48,6 +47,9 @@ export function uploadImage(file: File, board: Board) {
 										.then(imageData => {
 											const image = new ImageItem(
 												imageData,
+												board,
+												undefined,
+												"",
 											);
 											const boardImage = board.add(image);
 											boardImage.doOnceOnLoad(() => {
@@ -117,7 +119,12 @@ export function uploadImage(file: File, board: Board) {
 			const base64String = event.target?.result as string;
 			prepareImage(base64String)
 				.then(imageData => {
-					const image = new ImageItem(imageData);
+					const image = new ImageItem(
+						imageData,
+						board,
+						undefined,
+						"",
+					);
 					image.doOnceBeforeOnLoad(() => {
 						const { scaleX, scaleY, translateX, translateY } =
 							calculatePosition(image, board);

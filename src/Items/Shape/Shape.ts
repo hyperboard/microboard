@@ -28,20 +28,10 @@ const defaultShapeData = new DefaultShapeData();
 export class Shape implements Geometry {
 	readonly itemType = "Shape";
 	parent = "Board";
-	readonly transformation = new Transformation(this.id, this.events);
-	private path = Shapes[this.shapeType].path.copy();
-	private mbr = Shapes[this.shapeType].path.getMbr().copy();
-	private textContainer = Shapes[this.shapeType].textBounds.copy();
-	readonly text = new RichText(
-		this.textContainer,
-		this.id,
-		this.events,
-		this.transformation,
-		"\u00A0",
-		true,
-		false,
-		"Shape",
-	);
+	readonly transformation: Transformation;
+	private path: Path;
+	private textContainer: Mbr;
+	readonly text: RichText;
 	readonly subject = new Subject<Shape>();
 	transformationRenderBlock?: boolean = undefined;
 
@@ -56,6 +46,20 @@ export class Shape implements Geometry {
 		private borderStyle = defaultShapeData.borderStyle,
 		private borderWidth = defaultShapeData.borderWidth,
 	) {
+		this.transformation = new Transformation(this.id, this.events);
+		this.path = Shapes[this.shapeType].path.copy();
+		this.textContainer = Shapes[this.shapeType].textBounds.copy();
+		this.text = new RichText(
+			this.textContainer,
+			this.id,
+			this.events,
+			this.transformation,
+			"\u00A0",
+			true,
+			false,
+			"Shape",
+		);
+
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				this.transformPath();

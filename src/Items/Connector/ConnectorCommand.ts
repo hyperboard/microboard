@@ -5,12 +5,14 @@ import { ConnectorOperation } from "./ConnectorOperations";
 type ReverseOperation = { item: Connector; operation: ConnectorOperation }[];
 
 export class ConnectorCommand implements Command {
-	reverse = this.getReverse();
+	reverse: ReverseOperation;
 
 	constructor(
 		private connector: Connector[],
 		private operation: ConnectorOperation,
-	) {}
+	) {
+		this.reverse = this.getReverse();
+	}
 
 	apply(): void {
 		for (const connector of this.connector) {
@@ -80,6 +82,17 @@ export class ConnectorCommand implements Command {
 						operation: {
 							...this.operation,
 							lineStyle: connector.getLineStyle(),
+						},
+					});
+				}
+				break;
+			case "setBorderStyle":
+				for (const connector of this.connector) {
+					reverse.push({
+						item: connector,
+						operation: {
+							...this.operation,
+							borderStyle: connector.getBorderStyle(),
 						},
 					});
 				}

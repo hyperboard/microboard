@@ -8,7 +8,7 @@ import {
 } from "../../../View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
 import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
-import createCanvasDrawer from "../../drawMbrOnCanvas";
+import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { ImageItem } from "../../Items/Image";
 import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
@@ -39,7 +39,7 @@ export class Select extends Tool {
 	lastPointerMoveEventTime = Date.now();
 	toHighlight = new NestingHighlighter();
 	beginTimeStamp = Date.now();
-	canvasDrawer = createCanvasDrawer(this.board);
+	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
 
 	private alignmentHelper: AlignmentHelper;
@@ -52,7 +52,8 @@ export class Select extends Tool {
 
 	constructor(private board: Board) {
 		super();
-		this.alignmentHelper = new AlignmentHelper(board.index);
+		this.canvasDrawer = createCanvasDrawer(board);
+		this.alignmentHelper = new AlignmentHelper(board, board.index);
 	}
 
 	clear(): void {
@@ -83,15 +84,24 @@ export class Select extends Tool {
 			item,
 			this.snapLines,
 			this.beginTimeStamp,
+			this.board.pointer.point,
 		);
 
-		if (this.isSnapped && this.snapCursorPos) {
+		if (this.isSnapped) {
+			if (!this.snapCursorPos) {
+				this.snapCursorPos = new Point(
+					this.board.pointer.point.x,
+					this.board.pointer.point.y,
+				);
+			}
+
 			const cursorDiffX = Math.abs(
 				this.board.pointer.point.x - this.snapCursorPos.x,
 			);
 			const cursorDiffY = Math.abs(
 				this.board.pointer.point.y - this.snapCursorPos.y,
 			);
+
 			if (
 				cursorDiffX > this.alignmentHelper.snapThreshold ||
 				cursorDiffY > this.alignmentHelper.snapThreshold
@@ -99,6 +109,12 @@ export class Select extends Tool {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 			} else {
+				if (this.snapLines.verticalLines.length > 0) {
+					this.board.pointer.point.x = this.snapCursorPos.x;
+				}
+				if (this.snapLines.horizontalLines.length > 0) {
+					this.board.pointer.point.y = this.snapCursorPos.y;
+				}
 				return true;
 			}
 		}

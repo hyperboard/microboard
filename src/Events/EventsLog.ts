@@ -4,14 +4,22 @@ import { mergeOperations } from "./Merge";
 import { Operation } from "./EventsOperations";
 import { BoardOps } from "Board/BoardOperations";
 import { BoardEvent, BoardEventPack } from "./Events";
+import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
 
 export interface HistoryRecord {
 	event: BoardEvent;
 	command: Command;
 }
 
+export interface RawHistoryRecords {
+	confirmedRecords: HistoryRecord[];
+	recordsToSend: HistoryRecord[];
+	newRecords: HistoryRecord[];
+}
+
 export interface EventsLog {
 	getList(): HistoryRecord[];
+	getRaw(): RawHistoryRecords;
 	insertEvents(
 		events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
 	): void;
@@ -27,6 +35,8 @@ export interface EventsLog {
 	confirmEvent(event: BoardEvent | BoardEventPack): void;
 	getLatestOrder(): number;
 	getLastConfirmed(): BoardEvent | null;
+	getSyncLog(): SyncLog;
+	syncLogSubject: SyncLogSubject;
 }
 
 interface EventsList {
@@ -42,6 +52,8 @@ interface EventsList {
 	backwardIterable(): Iterable<HistoryRecord>;
 	revertUnconfirmed(): void;
 	applyUnconfirmed(): void;
+	getSyncLog(): SyncLog;
+	syncLogSubject: SyncLogSubject;
 	clear(): void;
 }
 
@@ -49,6 +61,8 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
+
+	const { log: syncLog, subject: syncLogSubject } = createSyncLog();
 
 	function revert(records: HistoryRecord[]): void {
 		for (const record of records) {
@@ -65,6 +79,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 
 	return {
 		addConfirmedRecords(records: HistoryRecord[]): void {
+			syncLog.push({
+				msg: "confirmed",
+				records: [...records],
+			});
 			confirmedRecords.push(...records);
 		},
 
@@ -87,6 +105,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 					}
 				}
 
+				syncLog.push({
+					msg: "addedNew",
+					records: [record],
+				});
 				newRecords.push(record);
 			}
 		},
@@ -102,6 +124,10 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 				records[i].event.order = events[i].order;
 			}
 
+			syncLog.push({
+				msg: "confirmed",
+				records: [...records],
+			});
 			confirmedRecords.push(...records);
 			recordsToSend.splice(0, records.length);
 		},
@@ -122,8 +148,18 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 			return [...confirmedRecords, ...recordsToSend, ...newRecords];
 		},
 
+		getSyncLog(): SyncLog {
+			return syncLog;
+		},
+
+		syncLogSubject,
+
 		prepareRecordsToSend(): HistoryRecord[] {
 			if (recordsToSend.length === 0 && newRecords.length > 0) {
+				syncLog.push({
+					msg: "toSend",
+					records: [...newRecords],
+				});
 				recordsToSend.push(...newRecords);
 				newRecords.length = 0;
 			}
@@ -153,11 +189,21 @@ function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 		revertUnconfirmed(): void {
 			revert(newRecords.reverse());
 			revert(recordsToSend.reverse());
+
+			syncLog.push({
+				msg: "revertUnconfirmed",
+				records: [...recordsToSend, ...newRecords],
+			});
 		},
 
 		applyUnconfirmed(): void {
 			apply(recordsToSend);
 			apply(newRecords);
+
+			syncLog.push({
+				msg: "applyUnconfirmed",
+				records: [...recordsToSend, ...newRecords],
+			});
 		},
 
 		clear(): void {
@@ -180,6 +226,14 @@ export function createEventsLog(board: Board): EventsLog {
 		return list.getAllRecords();
 	}
 
+	function getRaw(): RawHistoryRecords {
+		return {
+			confirmedRecords: list.getConfirmedRecords(),
+			recordsToSend: list.getRecordsToSend(),
+			newRecords: list.getNewRecords(),
+		};
+	}
+
 	function deserialize(events: BoardEvent[]): void {
 		list.clear();
 		const records: HistoryRecord[] = [];
@@ -188,8 +242,8 @@ export function createEventsLog(board: Board): EventsLog {
 			const record = { event, command };
 			command.apply();
 			records.push(record);
+			list.addConfirmedRecords([record]);
 		}
-		list.addConfirmedRecords(records);
 	}
 
 	function getSnapshot(): BoardSnapshot {
@@ -271,14 +325,12 @@ export function createEventsLog(board: Board): EventsLog {
 	function handleEventsInsertion(events: BoardEvent[]): void {
 		list.revertUnconfirmed();
 		const mergedEvents = mergeEvents(events);
-		const records: HistoryRecord[] = [];
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			records.push(record);
+			list.addConfirmedRecords([record]);
 		}
-		list.addConfirmedRecords(records);
 		list.applyUnconfirmed();
 	}
 
@@ -293,13 +345,44 @@ export function createEventsLog(board: Board): EventsLog {
 		return record;
 	}
 
+	function getTimeStamp(rec: HistoryRecord): number | undefined {
+		return (
+			("timeStamp" in rec.event.body.operation &&
+				rec.event.body.operation.timeStamp) ||
+			undefined
+		);
+	}
+
+	function createTimeStampAmountMap(
+		records: Iterable<HistoryRecord>,
+		filter?: (rec: HistoryRecord) => boolean,
+	): Map<number, number> {
+		const timeStampMap = new Map<number, number>();
+
+		for (const record of records) {
+			if (filter && !filter(record)) {
+				continue;
+			}
+			const timeStamp = getTimeStamp(record);
+			if (timeStamp) {
+				const currAmount = timeStampMap.get(timeStamp) || 0;
+				timeStampMap.set(timeStamp, currAmount + 1);
+			}
+		}
+		return timeStampMap;
+	}
+
 	function getUnorderedRecords(): HistoryRecord[] {
 		return list.getRecordsToSend().concat(list.getNewRecords());
 	}
 
-	// TODO: handle merge of records at different stages
 	function getUndoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
+
+		const timeStampMap = createTimeStampAmountMap(
+			list.backwardIterable(),
+			rec => rec.event.body.userId === userId,
+		);
 
 		for (const record of list.backwardIterable()) {
 			if (record.event.body.userId !== userId) {
@@ -307,7 +390,16 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 
 			if (record.event.body.operation.method === "undo") {
-				counter++;
+				const undid = getRecordById(
+					record.event.body.operation.eventId,
+				);
+				const stamp = undid && getTimeStamp(undid);
+				if (stamp) {
+					const mappedAmount = timeStampMap.get(stamp);
+					counter += mappedAmount || 1;
+				} else {
+					counter++;
+				}
 			} else if (counter === 0) {
 				return record;
 			} else {
@@ -318,7 +410,6 @@ export function createEventsLog(board: Board): EventsLog {
 		return null;
 	}
 
-	// TODO: handle merge of records at different stages
 	function getRedoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
 
@@ -350,9 +441,36 @@ export function createEventsLog(board: Board): EventsLog {
 		return null;
 	}
 
+	function mergeRecordsByTimestamp(
+		timeStamp: number,
+	): HistoryRecord | undefined {
+		const toMerge: BoardEvent[] = [];
+		for (const record of list.forwardIterable()) {
+			if (
+				"timeStamp" in record.event.body.operation &&
+				record.event.body.operation.timeStamp === timeStamp
+			) {
+				toMerge.push(record.event);
+			}
+		}
+		const merged = mergeEvents(toMerge);
+		if (merged.length === 1) {
+			const event = merged[0];
+			const command = createCommand(board, event.body.operation);
+			const record = { event, command };
+			return record;
+		}
+		return undefined;
+	}
+
 	function getRecordById(id: string): HistoryRecord | undefined {
 		for (const record of list.forwardIterable()) {
 			if (record.event.body.eventId === id) {
+				const timeStamp = getTimeStamp(record);
+				if (timeStamp) {
+					const mergedRecord = mergeRecordsByTimestamp(timeStamp);
+					return mergedRecord ?? record;
+				}
 				return record;
 			}
 		}
@@ -369,6 +487,9 @@ export function createEventsLog(board: Board): EventsLog {
 
 	return {
 		getList,
+		getRaw,
+		getSyncLog: list.getSyncLog,
+		syncLogSubject: list.syncLogSubject,
 		insertEvents,
 		confirmEvent,
 		push,
