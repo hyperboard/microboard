@@ -268,6 +268,9 @@ export function createEvents(board: Board, connection: Connection): Events {
 
 	function handleSubscribeConfirmation(msg: SubscribeConfirmationMsg): void {
 		currentSequenceNumber = msg.initialSequenceNumber;
+		if (pendingEvent) {
+			pendingEvent.sequenceNumber = currentSequenceNumber;
+		}
 		startIntervals();
 	}
 	messageRouter.addHandler<SubscribeConfirmationMsg>(
@@ -307,7 +310,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 					unpublishedEvent,
 					currentSequenceNumber,
 				);
-				currentSequenceNumber++;
 			}
 		}
 	}
@@ -320,7 +322,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			sendBoardEvent(
 				board.getBoardId(),
 				pendingEvent.event,
-				currentSequenceNumber - 1,
+				currentSequenceNumber,
 			);
 		}
 	}
@@ -330,6 +332,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			pendingEvent &&
 			pendingEvent.sequenceNumber === msg.sequenceNumber
 		) {
+			currentSequenceNumber++;
 			pendingEvent.event.order = msg.order;
 			log.confirmEvent(pendingEvent.event);
 			pendingEvent = null;
