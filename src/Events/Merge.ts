@@ -369,6 +369,29 @@ function mergeRichTextOperations(
 		};
 	}
 
+	if (
+		B.type === "split_node" &&
+		A.type === "split_node" &&
+		Path.isChild(A.path, B.path)
+	) {
+		return {
+			...opB,
+			ops: [...opA.ops, ...opB.ops],
+		};
+	}
+
+	if (
+		B.type === "merge_node" &&
+		A.type === "merge_node" &&
+		A.path.length === 1 &&
+		A.path[0] === B.path[1]
+	) {
+		return {
+			...opB,
+			ops: [...opA.ops, ...opB.ops],
+		};
+	}
+
 	return;
 }
 

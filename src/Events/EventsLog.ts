@@ -361,15 +361,16 @@ export function createEventsLog(board: Board): EventsLog {
 			return null;
 		}
 
-		const operations = recordsToSend.map(
-			record => record.event.body.operation,
-		);
+		const operationsWithEventIds = recordsToSend.map(record => ({
+			...record.event.body.operation,
+			actualId: record.event.body.eventId,
+		}));
 
 		const combinedEvent: BoardEventPack = {
 			...recordsToSend[0].event,
 			body: {
 				...recordsToSend[0].event.body,
-				operations: operations,
+				operations: operationsWithEventIds,
 			},
 		};
 
@@ -395,18 +396,14 @@ export function createEventsLog(board: Board): EventsLog {
 		handleEventsInsertion(expandedEvents);
 	}
 
-	function expandEvents(
-		// events: (BoardEvent | BoardEventPack)[],
-		events: SyncEvent[],
-		// ): BoardEvent[] {
-	): SyncBoardEvent[] {
+	function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
 		return events.flatMap(event => {
 			if ("operations" in event.body) {
 				// Это BoardEventPack
 				return event.body.operations.map(operation => ({
 					order: event.order,
 					body: {
-						eventId: event.body.eventId,
+						eventId: operation.actualId || event.body.eventId,
 						userId: event.body.userId,
 						boardId: event.body.boardId,
 						operation,

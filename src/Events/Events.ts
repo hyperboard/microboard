@@ -39,7 +39,7 @@ export interface BoardEventPackBody {
 	eventId: string;
 	userId: number;
 	boardId: string;
-	operations: Operation[];
+	operations: (Operation & { actualId?: string })[];
 }
 
 export interface SyncBoardEvent extends BoardEvent {
