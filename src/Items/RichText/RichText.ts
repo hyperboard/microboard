@@ -716,7 +716,9 @@ export class RichText extends Mbr implements Geometry {
 			this.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontColor(format, selectionContext);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -738,13 +740,15 @@ export class RichText extends Mbr implements Geometry {
 			this.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontStyle(style);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
 	setSelectionFontFamily(fontFamily: string): void {
 		this.editor.setSelectionFontFamily(fontFamily);
-		this.updateElement();
+		// this.updateElement();
 	}
 
 	applySelectionFontSize(
@@ -779,7 +783,9 @@ export class RichText extends Mbr implements Geometry {
 			fontSize,
 			selectionContext,
 		);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -794,7 +800,9 @@ export class RichText extends Mbr implements Geometry {
 			format,
 			selectionContext,
 		);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -813,7 +821,9 @@ export class RichText extends Mbr implements Geometry {
 			horisontalAlignment,
 			selectionContext,
 		);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 

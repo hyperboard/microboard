@@ -9,7 +9,7 @@ import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
 import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "View/Tools/Selection";
-import { createCommand } from "../Events/Command";
+import { Command, createCommand } from "../Events/Command";
 import {
 	Connector,
 	Frame,
@@ -85,11 +85,25 @@ export class Selection {
 	}
 
 	private emit(operation: Operation): void {
-		if (this.events) {
-			const command = createCommand(this.board, operation);
-			command.apply();
-			this.events.emit(operation, command);
+		if (!this.events) {
+			return;
 		}
+		const command = createCommand(this.board, operation);
+		command.apply();
+		this.events.emit(operation, command);
+	}
+
+	private emitApplied(operation: Operation): void {
+		this.emitCommand(operation);
+	}
+
+	private emitCommand(operation: Operation): Command | null {
+		if (!this.events) {
+			return null;
+		}
+		const command = createCommand(this.board, operation);
+		this.events.emit(operation, command);
+		return command;
 	}
 
 	updateQueue: Set<() => void> = new Set();
@@ -923,7 +937,7 @@ export class Selection {
 			});
 			tempStorage.setFontSize(item.itemType, fontSize);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -950,7 +964,7 @@ export class Selection {
 			});
 			tempStorage.setFontStyles(item.itemType, text.getFontStyles());
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -976,7 +990,7 @@ export class Selection {
 			});
 			tempStorage.setFontColor(item.itemType, fontColor);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -1006,7 +1020,7 @@ export class Selection {
 			});
 			tempStorage.setFontHighlight(item.itemType, fontHighlight);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -1040,7 +1054,7 @@ export class Selection {
 				horisontalAlignment,
 			);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
