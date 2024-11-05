@@ -15,6 +15,7 @@ import {
 	Frame,
 	Item,
 	ItemData,
+	ItemType,
 	Mbr,
 	RichText,
 	Shape,
@@ -225,6 +226,7 @@ export class Selection {
 		// Set a new timeout and keep its ID
 		this.timeoutID = setTimeout(this.on, 500);
 	};
+
 	disable(): void {
 		this.isOn = false;
 		this.setContext("None");
@@ -563,11 +565,26 @@ export class Selection {
 	}
 
 	getText(): RichText | null {
-		const item = this.items.getSingle();
-		if (!item) {
+		if (this.items.isEmpty()) {
 			return null;
 		}
-		return item.getRichText();
+		const items = this.items.list();
+		let maxRichText: RichText | null = null;
+		const itemType = items[0].itemType;
+		for (const item of items) {
+			if (item.itemType !== itemType) {
+				return null;
+			}
+			const richText = item.getRichText();
+			if (
+				richText &&
+				richText.getFontSize() >
+					(maxRichText ? maxRichText.getFontSize() : 0)
+			) {
+				maxRichText = richText;
+			}
+		}
+		return maxRichText;
 	}
 
 	isTextEmpty(): boolean {
@@ -898,11 +915,12 @@ export class Selection {
 		// });
 		// }
 
-		const frame = this.items.getSingle();
-
-		if (frame instanceof Frame) {
-			frame.setFrameType(frameType);
-		}
+		const items = this.items.list();
+		items.forEach(item => {
+			if (item instanceof Frame) {
+				item.setFrameType(frameType);
+			}
+		});
 	}
 
 	getFrameType(): FrameType {
