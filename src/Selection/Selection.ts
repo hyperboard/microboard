@@ -556,7 +556,7 @@ export class Selection {
 		}
 		const items = this.items.list();
 		let maxRichText: RichText | null = null;
-		let itemType = items[0].itemType;
+		const itemType = items[0].itemType;
 		for (const item of items) {
 			if (item.itemType !== itemType) {
 				return null;
