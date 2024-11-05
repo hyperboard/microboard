@@ -901,11 +901,12 @@ export class Selection {
 		// });
 		// }
 
-		const frame = this.items.getSingle();
-
-		if (frame instanceof Frame) {
-			frame.setFrameType(frameType);
-		}
+		const items = this.items.list();
+		items.forEach(item => {
+			if (item instanceof Frame) {
+				item.setFrameType(frameType);
+			}
+		});
 	}
 
 	getFrameType(): FrameType {
