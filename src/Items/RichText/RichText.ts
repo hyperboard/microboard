@@ -90,6 +90,7 @@ export class RichText extends Mbr implements Geometry {
 	initialFontColor?: string;
 	frameMbr?: Mbr;
 	private _onLimitReached: () => void = () => {};
+	private shrinkWidth = false;
 
 	constructor(
 		public container: Mbr,
@@ -162,9 +163,13 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 		);
+		if (!insideOf || insideOf === "RichText" || insideOf === "Connector") {
+			this.shrinkWidth = true;
+		}
 		this.blockNodes = getBlockNodes(
 			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
+			this.shrinkWidth,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -266,6 +271,7 @@ export class RichText extends Mbr implements Geometry {
 			const nodes = getBlockNodes(
 				this.getTextForNodes(),
 				this.getMaxWidth(),
+				this.shrinkWidth,
 			);
 			this.blockNodes = nodes;
 			if (
@@ -517,6 +523,9 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	setMaxWidth(maxWidth: number): this {
+		if (this.containerMaxWidth && this.shrinkWidth) {
+			this.shrinkWidth = false;
+		}
 		this.containerMaxWidth = maxWidth;
 		return this;
 	}
