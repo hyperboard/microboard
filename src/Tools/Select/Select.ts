@@ -80,6 +80,8 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
+		const increasedSnapThreshold = this.alignmentHelper.snapThreshold * 1.5;
+
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,
 			this.snapLines,
@@ -103,8 +105,8 @@ export class Select extends Tool {
 			);
 
 			if (
-				cursorDiffX > this.alignmentHelper.snapThreshold ||
-				cursorDiffY > this.alignmentHelper.snapThreshold
+				cursorDiffX > increasedSnapThreshold ||
+				cursorDiffY > increasedSnapThreshold
 			) {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
