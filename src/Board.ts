@@ -38,6 +38,11 @@ export class Board {
 	private drawingContext: DrawingContext | null = null;
 	interfaceType: InterfaceType = "edit";
 
+	private resolveConnecting!: () => void;
+	connecting = new Promise<void>(resolve => {
+		this.resolveConnecting = resolve;
+	});
+
 	constructor(private boardId = "") {
 		this.selection = new Selection(this, this.events);
 		this.tools.navigate();
@@ -45,12 +50,24 @@ export class Board {
 
 	/* Connect to the server to recieve the events*/
 	async connect(connection: Connection): Promise<void> {
-		this.events = createEvents(this, connection);
-		this.selection.events = this.events;
+		const currIndex = this.getSnapshot().lastIndex;
 		const snapshot = await this.getSnapshotFromCache();
-		if (snapshot && this.getSnapshot().lastIndex === 0) {
+		this.events = createEvents(
+			this,
+			connection,
+			currIndex || snapshot?.lastIndex || 0,
+		);
+		this.selection.events = this.events;
+		if (snapshot && currIndex === 0) {
 			this.deserialize(snapshot);
 		}
+		this.resolveConnecting();
+		setTimeout(() => {
+			this.items.subject.publish(this.items);
+		}, 0);
+		setTimeout(() => {
+			this.items.subject.publish(this.items);
+		}, 1000);
 	}
 
 	disconnect(): void {
@@ -456,15 +473,13 @@ export class Board {
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {
-		const { events } = snapshot;
-		/*
+		const { events, items } = snapshot;
 		this.index.clear();
 		for (const key in items) {
 			const itemData = items[key];
 			const item = this.createItem(key, itemData);
 			this.index.insert(item);
 		}
-		*/
 		this.events?.deserialize(events);
 	}
 

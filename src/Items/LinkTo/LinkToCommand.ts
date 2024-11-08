@@ -31,7 +31,6 @@ export class LinkToCommand implements Command {
 	}[] {
 		switch (this.operation.method) {
 			case "setLinkTo":
-			case "removeLinkTo":
 				return mapItemsByOperation(this.linkTo, linkTo => {
 					return {
 						...this.operation,

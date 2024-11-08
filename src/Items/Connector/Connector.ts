@@ -152,10 +152,8 @@ export class Connector {
 			maxWidth: 300,
 		});
 		this.text.addMbr(this.getMbr());
-		// this.text.setSelectionHorisontalAlignment("left");
-		// this.text.editor.setSelectionHorisontalAlignment("left");
-		this.text.setSelectionHorisontalAlignment("center");
-		this.text.editor.setSelectionHorisontalAlignment("center");
+		this.text.setSelectionHorisontalAlignment("left");
+		this.text.editor.setSelectionHorisontalAlignment("left");
 		this.text.setBoard(this.board);
 		this.text.editor.applyRichTextOp({
 			class: "RichText",

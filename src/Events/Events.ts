@@ -39,7 +39,7 @@ export interface BoardEventPackBody {
 	eventId: string;
 	userId: number;
 	boardId: string;
-	operations: Operation[];
+	operations: (Operation & { actualId?: string })[];
 }
 
 export interface SyncBoardEvent extends BoardEvent {
@@ -52,9 +52,6 @@ interface SyncBoardEventPackBody extends BoardEventPackBody {
 export interface SyncBoardEventPack extends BoardEventPack {
 	body: SyncBoardEventPackBody;
 }
-// export interface SyncBoardEventPack extends BoardEventPack {
-// 	lastKnownOrder: number;
-// }
 
 export type SyncEvent = SyncBoardEvent | SyncBoardEventPack;
 
@@ -84,10 +81,14 @@ export interface Events {
 
 type MessageHandler<T extends EventsMsg = EventsMsg> = (message: T) => void;
 
-export function createEvents(board: Board, connection: Connection): Events {
+export function createEvents(
+	board: Board,
+	connection: Connection,
+	lastOrder: number,
+): Events {
 	const log = createEventsLog(board);
 	const latestEvent: { [key: string]: number } = {};
-	let latestServerOrder = 0;
+	let latestServerOrder = lastOrder;
 	const subject = new Subject<BoardEvent>();
 
 	let currentSequenceNumber = 0;
@@ -137,7 +138,11 @@ export function createEvents(board: Board, connection: Connection): Events {
 
 	const messageRouter = createMessageRouter();
 
-	connection.subscribe(board.getBoardId(), messageRouter.handleMessage);
+	connection.subscribe(
+		board.getBoardId(),
+		messageRouter.handleMessage,
+		latestServerOrder,
+	);
 
 	function disconnect(): void {
 		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
@@ -200,7 +205,9 @@ export function createEvents(board: Board, connection: Connection): Events {
 				subject.publish(newEvents[0]);
 			}
 		}
+
 		onBoardLoad();
+		board.saveSnapshot();
 	}
 
 	messageRouter.addHandler<BoardEventListMsg>(
@@ -211,6 +218,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 	function handleCreateSnapshotRequestMessage(): void {
 		const snapshot = log.getSnapshot();
 		connection.publishSnapshot(board.getBoardId(), snapshot);
+		board.saveSnapshot(snapshot);
 	}
 
 	messageRouter.addHandler<SnapshotRequestMsg>(
@@ -268,6 +276,9 @@ export function createEvents(board: Board, connection: Connection): Events {
 
 	function handleSubscribeConfirmation(msg: SubscribeConfirmationMsg): void {
 		currentSequenceNumber = msg.initialSequenceNumber;
+		if (pendingEvent) {
+			pendingEvent.sequenceNumber = currentSequenceNumber;
+		}
 		startIntervals();
 	}
 	messageRouter.addHandler<SubscribeConfirmationMsg>(
@@ -307,7 +318,6 @@ export function createEvents(board: Board, connection: Connection): Events {
 					unpublishedEvent,
 					currentSequenceNumber,
 				);
-				currentSequenceNumber++;
 			}
 		}
 	}
@@ -320,7 +330,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			sendBoardEvent(
 				board.getBoardId(),
 				pendingEvent.event,
-				currentSequenceNumber - 1,
+				currentSequenceNumber,
 			);
 		}
 	}
@@ -330,6 +340,7 @@ export function createEvents(board: Board, connection: Connection): Events {
 			pendingEvent &&
 			pendingEvent.sequenceNumber === msg.sequenceNumber
 		) {
+			currentSequenceNumber++;
 			pendingEvent.event.order = msg.order;
 			log.confirmEvent(pendingEvent.event);
 			pendingEvent = null;

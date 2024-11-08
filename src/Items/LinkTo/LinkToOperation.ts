@@ -5,11 +5,7 @@ interface LinkToBase {
 
 interface SetLinkTo extends LinkToBase {
 	method: "setLinkTo";
-	link: string;
+	link: string | undefined;
 }
 
-interface RemoveLinkTo extends LinkToBase {
-	method: "removeLinkTo";
-}
-
-export type LinkToOperation = SetLinkTo | RemoveLinkTo;
+export type LinkToOperation = SetLinkTo;

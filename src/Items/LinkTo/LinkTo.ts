@@ -7,7 +7,10 @@ export class LinkTo {
 	readonly subject = new SubjectOperation<LinkTo, LinkToOperation>();
 	link?: string;
 
-	constructor(private id = "", private events?: Events) {}
+	constructor(
+		private id = "",
+		private events?: Events,
+	) {}
 
 	serialize(): string | undefined {
 		return this.link;
@@ -37,21 +40,14 @@ export class LinkTo {
 			case "setLinkTo":
 				this.applySetLink(op.link);
 				break;
-			case "removeLinkTo":
-				this.applyRemoveLink();
-				break;
 			default:
 				return;
 		}
 		this.subject.publish(this, op);
 	}
 
-	private applySetLink(link: string): void {
+	private applySetLink(link?: string): void {
 		this.link = link;
-	}
-
-	private applyRemoveLink(): void {
-		this.link = undefined;
 	}
 
 	setLinkTo(link: string): void {
@@ -66,8 +62,9 @@ export class LinkTo {
 	removeLinkTo(): void {
 		this.emit({
 			class: "LinkTo",
-			method: "removeLinkTo",
+			method: "setLinkTo",
 			item: [this.id],
+			link: undefined,
 		});
 	}
 }
