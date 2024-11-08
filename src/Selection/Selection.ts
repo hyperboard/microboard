@@ -9,12 +9,13 @@ import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
 import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "View/Tools/Selection";
-import { createCommand } from "../Events/Command";
+import { Command, createCommand } from "../Events/Command";
 import {
 	Connector,
 	Frame,
 	Item,
 	ItemData,
+	ItemType,
 	Mbr,
 	RichText,
 	Shape,
@@ -85,11 +86,25 @@ export class Selection {
 	}
 
 	private emit(operation: Operation): void {
-		if (this.events) {
-			const command = createCommand(this.board, operation);
-			command.apply();
-			this.events.emit(operation, command);
+		if (!this.events) {
+			return;
 		}
+		const command = createCommand(this.board, operation);
+		command.apply();
+		this.events.emit(operation, command);
+	}
+
+	private emitApplied(operation: Operation): void {
+		this.emitCommand(operation);
+	}
+
+	private emitCommand(operation: Operation): Command | null {
+		if (!this.events) {
+			return null;
+		}
+		const command = createCommand(this.board, operation);
+		this.events.emit(operation, command);
+		return command;
 	}
 
 	updateQueue: Set<() => void> = new Set();
@@ -211,6 +226,7 @@ export class Selection {
 		// Set a new timeout and keep its ID
 		this.timeoutID = setTimeout(this.on, 500);
 	};
+
 	disable(): void {
 		this.isOn = false;
 		this.setContext("None");
@@ -563,11 +579,26 @@ export class Selection {
 	}
 
 	getText(): RichText | null {
-		const item = this.items.getSingle();
-		if (!item) {
+		if (this.items.isEmpty()) {
 			return null;
 		}
-		return item.getRichText();
+		const items = this.items.list();
+		let maxRichText: RichText | null = null;
+		const itemType = items[0].itemType;
+		for (const item of items) {
+			if (item.itemType !== itemType) {
+				return null;
+			}
+			const richText = item.getRichText();
+			if (
+				richText &&
+				richText.getFontSize() >
+					(maxRichText ? maxRichText.getFontSize() : 0)
+			) {
+				maxRichText = richText;
+			}
+		}
+		return maxRichText;
 	}
 
 	isTextEmpty(): boolean {
@@ -898,11 +929,12 @@ export class Selection {
 		// });
 		// }
 
-		const frame = this.items.getSingle();
-
-		if (frame instanceof Frame) {
-			frame.setFrameType(frameType);
-		}
+		const items = this.items.list();
+		items.forEach(item => {
+			if (item instanceof Frame) {
+				item.setFrameType(frameType);
+			}
+		});
 	}
 
 	getFrameType(): FrameType {
@@ -941,7 +973,16 @@ export class Selection {
 				this.board.getBoardId(),
 			);
 		}
-		this.emit({
+		if (itemsOps.some(op => !op.ops.length)) {
+			this.emit({
+				class: "RichText",
+				method: "setFontSize",
+				item: this.items.ids(),
+				fontSize: size,
+				context: this.getContext(),
+			});
+		}
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -972,7 +1013,7 @@ export class Selection {
 				this.board.getBoardId(),
 			);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -1002,7 +1043,7 @@ export class Selection {
 				this.board.getBoardId(),
 			);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -1036,7 +1077,7 @@ export class Selection {
 				this.board.getBoardId(),
 			);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
@@ -1071,7 +1112,7 @@ export class Selection {
 				this.board.getBoardId(),
 			);
 		}
-		this.emit({
+		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
 			itemsOps,
