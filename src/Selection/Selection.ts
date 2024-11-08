@@ -953,16 +953,16 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			if (!ops.length) {
-				this.emit({
-					class: "RichText",
-					method: "setFontSize",
-					item: this.items.ids(),
-					fontSize: size,
-					context: this.getContext(),
-				});
-			}
 			tempStorage.setFontSize(item.itemType, fontSize);
+		}
+		if (itemsOps.some(op => !op.ops.length)) {
+			this.emit({
+				class: "RichText",
+				method: "setFontSize",
+				item: this.items.ids(),
+				fontSize: size,
+				context: this.getContext(),
+			});
 		}
 		this.emitApplied({
 			class: "RichText",
