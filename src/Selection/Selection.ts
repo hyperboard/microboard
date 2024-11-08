@@ -953,6 +953,15 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
+			if (!ops.length) {
+				this.emit({
+					class: "RichText",
+					method: "setFontSize",
+					item: this.items.ids(),
+					fontSize: size,
+					context: this.getContext(),
+				});
+			}
 			tempStorage.setFontSize(item.itemType, fontSize);
 		}
 		this.emitApplied({
