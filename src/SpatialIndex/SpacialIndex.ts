@@ -92,6 +92,10 @@ export class SpatialIndex {
 			this.itemsIndex.remove(item);
 		}
 
+		this.Mbr = new Mbr();
+		const allItems = [...this.itemsArray, ...this.framesArray];
+		allItems.forEach(item => this.Mbr.combine([item.getMbr()]));
+
 		this.subject.publish(this.items);
 	}
 
@@ -302,6 +306,10 @@ export class SpatialIndex {
 	}
 
 	getMbr(): Mbr {
+		// const mbr = new Mbr()
+		// const allItems = [...this.itemsArray, ...this.framesArray]
+		// allItems.forEach(item => mbr.combine([item.getMbr()]))
+		// return mbr
 		return this.Mbr;
 	}
 
