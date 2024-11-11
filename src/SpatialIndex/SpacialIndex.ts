@@ -92,14 +92,21 @@ export class SpatialIndex {
 			this.itemsIndex.remove(item);
 		}
 
+		this.Mbr = new Mbr();
+		const allItems = [...this.itemsArray, ...this.framesArray];
+		allItems.forEach(item => this.Mbr.combine([item.getMbr()]));
+
 		this.subject.publish(this.items);
 	}
 
 	copy(): Record<string, ItemData> {
-		const items = this.itemsArray.reduce((accumulator, item, i) => {
-			accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
-			return accumulator;
-		}, {} as Record<string, ItemData>);
+		const items = this.itemsArray.reduce(
+			(accumulator, item, i) => {
+				accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
+				return accumulator;
+			},
+			{} as Record<string, ItemData>,
+		);
 		const itemsAndFrames = this.framesArray.reduce(
 			(accumulator, item, i) => {
 				accumulator[item.getId()] = { ...item.serialize(), zIndex: i };
@@ -299,6 +306,10 @@ export class SpatialIndex {
 	}
 
 	getMbr(): Mbr {
+		// const mbr = new Mbr()
+		// const allItems = [...this.itemsArray, ...this.framesArray]
+		// allItems.forEach(item => mbr.combine([item.getMbr()]))
+		// return mbr
 		return this.Mbr;
 	}
 
