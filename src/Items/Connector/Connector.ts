@@ -239,6 +239,9 @@ export class Connector {
 
 	apply(operation: Operation): void {
 		switch (operation.class) {
+			case "RichText":
+				this.text.apply(operation);
+				break;
 			case "Connector":
 				switch (operation.method) {
 					case "setStartPoint":
@@ -789,6 +792,16 @@ export class Connector {
 	}
 
 	updateTitle(): void {
+		const selection = this.board.selection;
+		const isConnectorSelected = selection.items.findById(this.id);
+		if (
+			isConnectorSelected &&
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			this.text.isRenderEnabled = false;
+		} else {
+			this.text.isRenderEnabled = true;
+		}
 		if (!this.text) {
 			return;
 		}
