@@ -1,6 +1,6 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Frame, Mbr, Point, Shape, RichText, Matrix } from "Board/Items";
+import { Frame, Mbr, Point, Shape, RichText, Matrix, Line } from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
@@ -23,6 +23,7 @@ import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
+import AlignmentHelper from "Board/Tools/RelativeAlignment";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -37,6 +38,11 @@ export class Transformer extends Tool {
 	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
 	isShiftPressed = false;
+	private alignmentHelper: AlignmentHelper;
+	private snapLines: { verticalLines: Line[]; horizontalLines: Line[] } = {
+		verticalLines: [],
+		horizontalLines: [],
+	};
 
 	constructor(
 		private board: Board,
@@ -50,6 +56,8 @@ export class Transformer extends Tool {
 				this.mbr = this.selection.getMbr();
 			}
 		});
+
+		this.alignmentHelper = new AlignmentHelper(board, board.index);
 	}
 
 	updateAnchorType(): void {
@@ -156,6 +164,7 @@ export class Transformer extends Tool {
 		this.beginTimeStamp = Date.now();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.board.selection.subject.publish(this.board.selection);
+		this.snapLines = { verticalLines: [], horizontalLines: [] };
 		return wasResising;
 	}
 
@@ -182,6 +191,21 @@ export class Transformer extends Tool {
 		const isHeight =
 			this.resizeType === "top" || this.resizeType === "bottom";
 		const single = this.selection.items.getSingle();
+
+		if (single) {
+			this.snapLines = this.alignmentHelper.checkAlignment(single);
+
+			const snapped = this.alignmentHelper.snapToSide(
+				single,
+				this.snapLines,
+				this.beginTimeStamp,
+				this.resizeType,
+			);
+
+			if (snapped) {
+				this.mbr = single.getMbr();
+			}
+		}
 
 		if (
 			single instanceof Shape ||
@@ -369,6 +393,12 @@ export class Transformer extends Tool {
 			mbr.borderColor = selectionColor;
 			mbr.render(context);
 		}
+
+		this.alignmentHelper.renderSnapLines(
+			context,
+			this.snapLines,
+			this.board.camera.getScale(),
+		);
 
 		if (!isLockedItems) {
 			const anchors = this.calcAnchors();
