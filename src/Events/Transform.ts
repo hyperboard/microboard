@@ -21,12 +21,22 @@ import { HistoryEditor } from "slate-history";
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
 
-type SlateOpTypesToTransform = Exclude<TextOperation["type"] | NodeOperation["type"], "move_node">;
-type SlateOpsToTransform = Exclude<TextOperation | NodeOperation, { type: "move_node" }>;
+type SlateOpTypesToTransform = Exclude<
+	TextOperation["type"] | NodeOperation["type"],
+	"move_node"
+>;
+type SlateOpsToTransform = Exclude<
+	TextOperation | NodeOperation,
+	{ type: "move_node" }
+>;
 type TransformFunction<
 	T extends SlateOpsToTransform,
 	U extends SlateOpsToTransform,
-> = (confirmed: T, toTransform: U, editor: BaseEditor & ReactEditor & HistoryEditor) => U | undefined;
+> = (
+	confirmed: T,
+	toTransform: U,
+	editor: BaseEditor & ReactEditor & HistoryEditor,
+) => U | undefined;
 
 type OperationTransformMap = {
 	[K in SlateOpTypesToTransform]: {
@@ -424,7 +434,10 @@ function insertText_mergeNode(
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
 	const transformed = { ...toTransform };
-	if (Path.isBefore(confirmed.path, toTransform.path) && Path.isSibling(confirmed.path, toTransform.path)) {
+	if (
+		Path.isBefore(confirmed.path, toTransform.path) &&
+		Path.isSibling(confirmed.path, toTransform.path)
+	) {
 		if (confirmed.offset <= toTransform.position) {
 			transformed.position += confirmed.text.length;
 		}
@@ -547,7 +560,7 @@ function mergeNode_splitNode(
 	const transformed = { ...toTransform };
 	// todo fix - add length of merged
 	// if (Path.equals(confirmed.path, toTransform.path)) {
-	// 	transformed.position += confirmed.position; 
+	// 	transformed.position += confirmed.position;
 	// }
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -630,7 +643,7 @@ function setNode_setNode(
 ): SetNodeOperation {
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
-		// todo think on it 
+		// todo think on it
 		transformed.newProperties = {
 			...toTransform.newProperties,
 			...confirmed.newProperties,
@@ -638,7 +651,7 @@ function setNode_setNode(
 		transformed.properties = {
 			...toTransform.properties,
 			...confirmed.newProperties,
-		}
+		};
 	}
 	return transformed;
 }
@@ -760,7 +773,7 @@ function transformRichTextOperation(
 						const transformed =
 							transformFunction &&
 							transformFunction(confOp, actualyTransformed);
-							// transformFunction(confOp, actualyTransformed, rt.editor.editor);
+						// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 
 						if (transformed) {
 							actualyTransformed = transformed;
@@ -800,7 +813,7 @@ function transformRichTextOperation(
 							const transformed =
 								transformFunction &&
 								transformFunction(confOp, actualyTransformed);
-								// transformFunction(confOp, actualyTransformed, rt.editor.editor);
+							// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 
 							if (transformed) {
 								actualyTransformed = transformed;

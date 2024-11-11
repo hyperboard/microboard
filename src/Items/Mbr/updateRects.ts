@@ -1,7 +1,7 @@
 import { Board } from "Board";
 import { Mbr, RichText } from "Board/Items";
 import { RefObject } from "react";
-import { fitContextPanel } from "View/fit";
+import { fitContextPanel, fitLinkToBtn } from "View/fit";
 
 export function updateRects(
 	board: Board,
@@ -9,6 +9,7 @@ export function updateRects(
 	mbr?: Mbr,
 	verticalOffset?: number,
 	horizontalOffset?: number,
+	fit: "contextPanel" | "linkToBtn" = "contextPanel",
 ): Mbr | null {
 	const { selection, camera } = board;
 	const panel = ref.current;
@@ -21,15 +22,30 @@ export function updateRects(
 			: undefined;
 
 	if (panel && selectionMbr) {
-		const panelRect = fitContextPanel(
-			selectionMbr.getTransformed(camera.getMatrix()),
-			camera.window.getMbr(),
-			Mbr.fromDomRect(panel.getBoundingClientRect()),
-			verticalOffset,
-			horizontalOffset,
-			richTextSelection,
-		);
-		return panelRect;
+		if (fit === "contextPanel") {
+			const panelRect = fitContextPanel(
+				selectionMbr.getTransformed(camera.getMatrix()),
+				camera.window.getMbr(),
+				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				verticalOffset,
+				horizontalOffset,
+				richTextSelection,
+			);
+			return panelRect;
+		}
+		if (fit === "linkToBtn") {
+			if (!mbr) {
+				return null;
+			}
+			const panelRect = fitLinkToBtn(
+				selectionMbr.getTransformed(camera.getMatrix()),
+				camera.window.getMbr(),
+				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				verticalOffset,
+				horizontalOffset,
+			);
+			return panelRect;
+		}
 	}
 	return null;
 }

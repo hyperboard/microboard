@@ -29,6 +29,7 @@ import {
 } from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
 import { FRAME_TITLE_COLOR } from "View/Items/Frame";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
+import { LinkTo } from "../LinkTo/LinkTo";
 const defaultFrameData = new FrameData();
 
 export class Frame implements Geometry {
@@ -40,6 +41,7 @@ export class Frame implements Geometry {
 	private path: Path;
 	private children: string[] = [];
 	private mbr: Mbr = new Mbr();
+	readonly linkTo: LinkTo;
 	readonly text: RichText;
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
@@ -61,12 +63,14 @@ export class Frame implements Geometry {
 		this.textContainer = Frames[this.shapeType].textBounds.copy();
 		this.path = Frames[this.shapeType].path.copy();
 		this.transformation = new Transformation(this.id, this.events);
+		this.linkTo = new LinkTo(this.id, this.events);
 
 		this.text = new RichText(
 			this.textContainer,
 			this.id,
 			this.events,
 			this.transformation,
+			this.linkTo,
 			this.name,
 			true,
 			false,
@@ -81,6 +85,10 @@ export class Frame implements Geometry {
 			this.subject.publish(this);
 		});
 		this.text.subject.subscribe(() => {
+			this.updateMbr();
+			this.subject.publish(this);
+		});
+		this.linkTo.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
@@ -134,6 +142,10 @@ export class Frame implements Geometry {
 			item: [this.getId()],
 			childId,
 		});
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 
 	/**
@@ -209,6 +221,7 @@ export class Frame implements Geometry {
 		this.id = id;
 		this.text.setId(id);
 		this.transformation.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -348,6 +361,7 @@ export class Frame implements Geometry {
 			children: this.children,
 			text: this.text.serialize(),
 			canChangeRatio: this.canChangeRatio,
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -356,6 +370,7 @@ export class Frame implements Geometry {
 			this.shapeType = data.shapeType ?? this.shapeType;
 			this.initPath();
 		}
+		this.linkTo.deserialize(data.linkTo);
 		this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
 		this.backgroundOpacity =
 			data.backgroundOpacity ?? this.backgroundOpacity;
@@ -444,6 +459,9 @@ export class Frame implements Geometry {
 				break;
 			case "RichText":
 				this.text.apply(op);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
 				break;
 			default:
 				return;

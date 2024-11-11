@@ -15,6 +15,8 @@ import { Connector, Frame, Item, RichText, Shape } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { Sticker } from "Board/Items/Sticker";
 import { FrameCommand } from "Board/Items/Frame/FrameCommand";
+import { LinkToCommand } from "../Items/LinkTo/LinkToCommand";
+import { LinkTo } from "Board/Items/LinkTo/LinkTo";
 
 export interface Command {
 	apply(): void;
@@ -57,6 +59,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 						if (
 							operation.class !== "Transformation" &&
 							operation.class !== "RichText" &&
+							operation.class !== "LinkTo" &&
 							item.itemType !== operation.class
 						) {
 							console.warn(
@@ -98,6 +101,11 @@ export function createCommand(board: Board, operation: Operation): Command {
 								(item): item is Sticker =>
 									item.itemType === "Sticker",
 							),
+							operation,
+						);
+					case "LinkTo":
+						return new LinkToCommand(
+							items.map(item => item.linkTo),
 							operation,
 						);
 					case "Transformation":

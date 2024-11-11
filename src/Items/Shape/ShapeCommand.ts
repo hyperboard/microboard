@@ -6,7 +6,10 @@ import { mapItemsByOperation } from "../ItemsCommandUtils";
 export class ShapeCommand implements Command {
 	private reverse: { item: Shape; operation: ShapeOperation }[];
 
-	constructor(private shape: Shape[], private operation: ShapeOperation) {
+	constructor(
+		private shape: Shape[],
+		private operation: ShapeOperation,
+	) {
 		this.reverse = this.getReverse();
 	}
 

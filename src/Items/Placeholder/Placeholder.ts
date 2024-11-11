@@ -345,6 +345,16 @@ export class Placeholder {
 		this.renderIcon(context);
 	}
 
+	getLinkTo() {
+		return undefined;
+	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
+
 	getRichText(): null {
 		return null;
 	}

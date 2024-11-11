@@ -18,6 +18,7 @@ export class FrameData {
 		public children: string[] = [],
 		public text: RichTextData = new DefaultRichTextData([], "top", 600),
 		public canChangeRatio = true,
+		public linkTo: string | undefined = undefined,
 	) {}
 }
 

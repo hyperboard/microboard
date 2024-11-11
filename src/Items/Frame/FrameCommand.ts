@@ -4,9 +4,12 @@ import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class FrameCommand implements Command {
-	private reverse: { item: Frame; operation: FrameOperation }[]
+	private reverse: { item: Frame; operation: FrameOperation }[];
 
-	constructor(private frame: Frame[], private operation: FrameOperation) {
+	constructor(
+		private frame: Frame[],
+		private operation: FrameOperation,
+	) {
 		this.reverse = this.getReverse();
 	}
 

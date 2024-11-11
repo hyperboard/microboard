@@ -27,7 +27,10 @@ export class ConnectorTransformer extends Tool {
 	private connector: Connector | null = null;
 	beginTimeStamp = Date.now();
 
-	constructor(private board: Board, private selection: Selection) {
+	constructor(
+		private board: Board,
+		private selection: Selection,
+	) {
 		super();
 		this.snap = new ConnectorSnap(this.board);
 	}

@@ -38,7 +38,10 @@ export class Transformer extends Tool {
 	debounceUpd = createDebounceUpdater();
 	isShiftPressed = false;
 
-	constructor(private board: Board, private selection: Selection) {
+	constructor(
+		private board: Board,
+		private selection: Selection,
+	) {
 		super();
 		this.canvasDrawer = createCanvasDrawer(board);
 

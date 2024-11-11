@@ -3,6 +3,7 @@ import { ConnectionLineWidth, ConnectorLineStyle } from "./Connector";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { LinkTo } from "../LinkTo/LinkTo";
 import { BorderStyle } from "../Path";
 
 export class ConnectorData {
@@ -13,6 +14,7 @@ export class ConnectorData {
 	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";
 	lineColor = "";
+	linkTo: LinkTo = new LinkTo();
 	lineWidth: ConnectionLineWidth = 1;
 	borderStyle: BorderStyle = "solid";
 	transformation = new DefaultTransformationData();
