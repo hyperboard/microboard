@@ -2,6 +2,7 @@ import * as flow from "dropflow";
 import { Descendant } from "slate";
 import { BlockNode } from "../Editor/BlockNode";
 import { DEFAULT_TEXT_STYLES, loadFonts } from "View/Items/RichText";
+import { TextNode } from "../Editor/TextNode";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
@@ -17,6 +18,46 @@ interface DropflowChild {
 	text: string;
 }
 
+function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
+	return {
+		fontWeight: child.bold ? 800 : 400,
+		fontStyle: child.italic ? "italic" : "normal",
+		color:
+			child.fontColor && rgbRegex.test(child.fontColor)
+				? (() => {
+						const match = child.fontColor.match(rgbRegex);
+						return match
+							? {
+									r: parseInt(match[1]),
+									g: parseInt(match[2]),
+									b: parseInt(match[3]),
+									a: 1,
+								}
+							: { r: 0, g: 0, b: 0, a: 1 };
+					})()
+				: { r: 0, g: 0, b: 0, a: 1 },
+		fontSize: child.fontSize || 14,
+		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
+		whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
+		overflowWrap: "break-word",
+		backgroundColor:
+			child.fontHighlight && rgbRegex.test(child.fontHighlight)
+				? (() => {
+						const match = child.fontHighlight.match(rgbRegex);
+						return match
+							? {
+									r: parseInt(match[1]),
+									g: parseInt(match[2]),
+									b: parseInt(match[3]),
+									a: 1,
+								}
+							: "transparent";
+					})()
+				: "transparent",
+		lineHeight: { value: 1.4, unit: null },
+	};
+}
+
 function convertSlateToDropflow(
 	slateNodes: BlockNode[],
 	maxWidth: number,
@@ -30,52 +71,17 @@ function convertSlateToDropflow(
 				width: maxWidth === Infinity ? "auto" : maxWidth,
 			};
 
-			const children = node.children.map(child => {
-				const childStyle: flow.DeclaredStyle = {
-					fontWeight: child.bold ? 800 : 400,
-					fontStyle: child.italic ? "italic" : "normal",
-					// textDecoration: child.underline ? 'underline' : child['line-through'] ? 'line-through' : 'none',
-					color:
-						child.fontColor && rgbRegex.test(child.fontColor)
-							? (() => {
-									const match =
-										child.fontColor.match(rgbRegex);
-									return match
-										? {
-												r: parseInt(match[1]),
-												g: parseInt(match[2]),
-												b: parseInt(match[3]),
-												a: 1,
-											}
-										: { r: 0, g: 0, b: 0, a: 1 };
-								})()
-							: { r: 0, g: 0, b: 0, a: 1 },
-					fontSize: child.fontSize || 14,
-					fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
-					whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
-					overflowWrap: "break-word",
-					backgroundColor:
-						child.fontHighlight &&
-						rgbRegex.test(child.fontHighlight)
-							? (() => {
-									const match =
-										child.fontHighlight.match(rgbRegex);
-									return match
-										? {
-												r: parseInt(match[1]),
-												g: parseInt(match[2]),
-												b: parseInt(match[3]),
-												a: 1,
-											}
-										: "transparent";
-								})()
-							: "transparent",
-					lineHeight: { value: 1.4, unit: null },
-				};
-				return { style: childStyle, text: child.text };
-			});
+			for (const child of node.children) {
+				const childStyle = getChildStyle(child, maxWidth);
+				const textParts = child.text.split("\n");
 
-			dropflowNodes.push({ style: paragraphStyle, children });
+				textParts.forEach(text =>
+					dropflowNodes.push({
+						style: paragraphStyle,
+						children: [{ style: childStyle, text }],
+					}),
+				);
+			}
 		}
 	}
 
