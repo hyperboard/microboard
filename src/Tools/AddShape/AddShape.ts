@@ -138,16 +138,18 @@ export class AddShape extends BoardTool {
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
-		const shapeData = {
-			shapeType: shape.getShapeType(),
-			backgroundColor: shape.getBackgroundColor(),
-			backgroundOpacity: shape.getBackgroundOpacity(),
-			borderColor: shape.getBorderColor(),
-			borderOpacity: shape.getBorderOpacity(),
-			borderStyle: shape.getBorderStyle(),
-			borderWidth: shape.getBorderWidth(),
-		};
-		tempStorage.setShapeData(shapeData, boardId);
+		if (this.shape.getShapeType().split("_").length === 1) {
+			const shapeData = {
+				shapeType: shape.getShapeType(),
+				backgroundColor: shape.getBackgroundColor(),
+				backgroundOpacity: shape.getBackgroundOpacity(),
+				borderColor: shape.getBorderColor(),
+				borderOpacity: shape.getBorderOpacity(),
+				borderStyle: shape.getBorderStyle(),
+				borderWidth: shape.getBorderWidth(),
+			};
+			tempStorage.setShapeData(shapeData, boardId);
+		}
 		this.isDown = false;
 		if (ADD_TO_SELECTION) {
 			this.board.selection.removeAll();
