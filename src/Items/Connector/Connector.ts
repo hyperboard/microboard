@@ -36,6 +36,7 @@ import { ConnectorEdge } from "./Pointers";
 import { getStartPointer, getEndPointer } from "./Pointers/index";
 import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -58,6 +59,7 @@ export class Connector {
 	readonly transformation: Transformation;
 	private middlePoints: BoardPoint[] = [];
 	private lineColor = CONNECTOR_COLOR;
+	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
 	private borderStyle: BorderStyle = CONNECTOR_BORDER_STYLE;
 	readonly subject = new Subject<Connector>();
@@ -78,11 +80,13 @@ export class Connector {
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
 	) {
 		this.transformation = new Transformation(this.id, this.events);
+		this.linkTo = new LinkTo(this.id, this.events);
 		this.text = new RichText(
 			this.getMbr(),
 			this.id,
 			this.events,
 			new Transformation(),
+			this.linkTo,
 			t("connector.textPlaceholder", {
 				ns: "default",
 			}),
@@ -124,6 +128,10 @@ export class Connector {
 				}
 			}
 			this.translatePoints();
+			this.updatePaths();
+			this.subject.publish(this);
+		});
+		this.linkTo.subject.subscribe(() => {
 			this.updatePaths();
 			this.subject.publish(this);
 		});
@@ -219,6 +227,7 @@ export class Connector {
 	setId(id: string): this {
 		this.id = id;
 		this.text.setId(id);
+		this.linkTo.setId(id);
 		// this.text.addConnector(id);
 		this.transformation.setId(id);
 		return this;
@@ -230,6 +239,9 @@ export class Connector {
 
 	apply(operation: Operation): void {
 		switch (operation.class) {
+			case "RichText":
+				this.text.apply(operation);
+				break;
 			case "Connector":
 				switch (operation.method) {
 					case "setStartPoint":
@@ -266,6 +278,9 @@ export class Connector {
 			// case "Transformation":
 			// 	this.transformation.apply(operation);
 			// 	break;
+			case "LinkTo":
+				this.linkTo.apply(operation);
+				break;
 			default:
 				return;
 		}
@@ -739,6 +754,7 @@ export class Connector {
 			lineWidth: this.lineWidth,
 			text: text,
 			borderStyle: this.borderStyle,
+			linkTo: this.linkTo,
 		};
 	}
 
@@ -758,6 +774,7 @@ export class Connector {
 		if (data.text) {
 			this.text.deserialize(data.text);
 		}
+		this.linkTo.deserialize(data.linkTo?.link);
 		this.startPointerStyle =
 			data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;
@@ -775,6 +792,16 @@ export class Connector {
 	}
 
 	updateTitle(): void {
+		const selection = this.board.selection;
+		const isConnectorSelected = selection.items.findById(this.id);
+		if (
+			isConnectorSelected &&
+			this.board.selection.getContext() === "EditTextUnderPointer"
+		) {
+			this.text.isRenderEnabled = false;
+		} else {
+			this.text.isRenderEnabled = true;
+		}
 		if (!this.text) {
 			return;
 		}
@@ -968,5 +995,15 @@ export class Connector {
 
 	getRichText(): RichText {
 		return this.text;
+	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 }

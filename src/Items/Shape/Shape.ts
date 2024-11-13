@@ -22,6 +22,8 @@ import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
+import { tempStorage } from "App/SessionStorage";
+import { LinkTo } from "../LinkTo/LinkTo";
 import { BPMN } from "./BPMN";
 
 const defaultShapeData = new DefaultShapeData();
@@ -35,6 +37,7 @@ export class Shape implements Geometry {
 	private path: Path | Paths;
 	private textContainer: Mbr;
 	readonly text: RichText;
+	readonly linkTo: LinkTo;
 	readonly subject = new Subject<Shape>();
 	transformationRenderBlock?: boolean = undefined;
 
@@ -50,6 +53,7 @@ export class Shape implements Geometry {
 		private borderWidth = defaultShapeData.borderWidth,
 		private mbr = Shapes[shapeType].path.getMbr().copy(),
 	) {
+		this.linkTo = new LinkTo(this.id, this.events);
 		this.transformation = new Transformation(this.id, this.events);
 		this.path = Shapes[this.shapeType].path.copy();
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
@@ -58,6 +62,7 @@ export class Shape implements Geometry {
 			this.id,
 			this.events,
 			this.transformation,
+			this.linkTo,
 			"\u00A0",
 			true,
 			false,
@@ -102,6 +107,10 @@ export class Shape implements Geometry {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
+		this.linkTo.subject.subscribe(() => {
+			this.updateMbr();
+			this.subject.publish(this);
+		});
 		this.text.insideOf = this.itemType;
 		this.updateMbr();
 	}
@@ -128,6 +137,7 @@ export class Shape implements Geometry {
 			borderWidth: this.borderWidth,
 			transformation: this.transformation.serialize(),
 			text: this.text.serialize(),
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -135,6 +145,9 @@ export class Shape implements Geometry {
 		if (data.shapeType) {
 			this.shapeType = data.shapeType ?? this.shapeType;
 			this.initPath();
+		}
+		if (data.linkTo) {
+			this.linkTo.deserialize(data.linkTo);
 		}
 		this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
 		this.backgroundOpacity =
@@ -158,6 +171,7 @@ export class Shape implements Geometry {
 		this.id = id;
 		this.text.setId(id);
 		this.transformation.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -177,6 +191,9 @@ export class Shape implements Geometry {
 			case "Transformation":
 				this.transformation.apply(op);
 				// this.text.setContainer(this.text.container);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
 				break;
 			default:
 				return;
@@ -212,6 +229,10 @@ export class Shape implements Geometry {
 
 	getShapeType(): ShapeType {
 		return this.shapeType;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 
 	private applyShapeType(shapeType: ShapeType): void {
@@ -494,6 +515,7 @@ export class Shape implements Geometry {
 		}
 		return points;
 	}
+
 	doResize(
 		resizeType: ResizeType,
 		pointer: Point,
@@ -536,5 +558,11 @@ export class Shape implements Geometry {
 				return false;
 		}
 		return true;
+	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
 	}
 }

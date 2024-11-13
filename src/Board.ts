@@ -12,7 +12,15 @@ import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
 import { createEvents, SyncBoardEvent } from "./Events/Events";
 import { itemFactories } from "./itemFactories";
-import { Frame, Item, ItemData, Matrix, Mbr } from "./Items";
+import {
+	Connector,
+	ConnectorData,
+	Frame,
+	Item,
+	ItemData,
+	Matrix,
+	Mbr,
+} from "./Items";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
 import { DrawingContext } from "./Items/DrawingContext";
@@ -464,22 +472,51 @@ export class Board {
 		});
 	}
 
-	copy(): Record<string, ItemData> {
+	copy(): ItemData[] {
 		return this.items.index.copy();
 	}
 
-	serialize(): Record<string, ItemData> {
+	serialize(): ItemData[] {
 		return this.copy();
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {
 		const { events, items } = snapshot;
 		this.index.clear();
-		for (const key in items) {
-			const itemData = items[key];
-			const item = this.createItem(key, itemData);
-			this.index.insert(item);
+		const createdConnectors: Record<
+			string,
+			{ item: Connector; itemData: ConnectorData & { id: string } }
+		> = {};
+
+		if (Array.isArray(items)) {
+			for (const itemData of items) {
+				const item = this.createItem(itemData.id, itemData);
+				if (
+					item.itemType === "Connector" &&
+					itemData.itemType === "Connector"
+				) {
+					createdConnectors[itemData.id] = { item, itemData };
+				}
+				this.index.insert(item);
+			}
+		} else {
+			// for older snapshots, that were {id: data}
+			for (const key in items) {
+				const itemData = items[key];
+				const item = this.createItem(key, itemData);
+				if (item.itemType === "Connector") {
+					createdConnectors[key] = { item, itemData };
+				}
+				this.index.insert(item);
+			}
 		}
+
+		for (const key in createdConnectors) {
+			const { item, itemData } = createdConnectors[key];
+			item.applyStartPoint(itemData.startPoint);
+			item.applyEndPoint(itemData.endPoint);
+		}
+
 		this.events?.deserialize(events);
 	}
 
@@ -981,8 +1018,7 @@ export class Board {
 }
 
 export interface BoardSnapshot {
-	items: Record<string, ItemData>;
-	// events: BoardEvent[];
+	items: (ItemData & { id: string })[];
 	events: SyncBoardEvent[];
 	lastIndex: number;
 }

@@ -3,6 +3,7 @@ import { VerticalAlignment } from "../Alignment";
 import { TransformationData } from "../Transformation/TransformationData";
 import { validator } from "Board/Validators";
 import { JSONSchemaType } from "ajv";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export interface RichTextData {
 	readonly itemType: "RichText";
@@ -14,6 +15,7 @@ export interface RichTextData {
 	insideOf?: string;
 	color?: string;
 	placeholderText: string;
+	linkTo?: string;
 }
 // @ts-expect-error
 const richTextDataSchema: JSONSchemaType<RichTextData> = {
@@ -23,6 +25,7 @@ const richTextDataSchema: JSONSchemaType<RichTextData> = {
 		children: { type: "array", items: { type: "object" } },
 		verticalAlignment: { type: "string" },
 		maxWidth: { type: "number", nullable: true },
+		linkTo: { type: "string", nullable: true },
 		transformation: {
 			$ref: "transformationDataSchema",
 			nullable: true,
@@ -42,6 +45,7 @@ export class DefaultRichTextData implements RichTextData {
 		public verticalAlignment: VerticalAlignment = "center",
 		public maxWidth?: number,
 		public transformation?: TransformationData,
+		public linkTo?: LinkTo,
 		public containerMaxWidth?: number,
 		public insideOf?: string,
 		public color?: string,

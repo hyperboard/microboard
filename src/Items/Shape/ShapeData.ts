@@ -22,6 +22,7 @@ export interface ShapeData {
 	borderWidth: BorderWidth;
 	transformation: TransformationData;
 	text: RichTextData;
+	linkTo?: string;
 }
 
 const shapeDataSchema: JSONSchemaType<ShapeData> = {
@@ -35,6 +36,7 @@ const shapeDataSchema: JSONSchemaType<ShapeData> = {
 		borderOpacity: { type: "number" },
 		borderStyle: { type: "string" },
 		borderWidth: { type: "number" },
+		linkTo: { type: "string", nullable: true },
 		transformation: {
 			$ref: "transformationDataSchema",
 		},
@@ -71,5 +73,6 @@ export class DefaultShapeData implements ShapeData {
 		public borderWidth: BorderWidth = 1,
 		public transformation = new DefaultTransformationData(),
 		public text = new DefaultRichTextData(),
+		public linkTo?: string,
 	) {}
 }
