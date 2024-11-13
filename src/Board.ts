@@ -464,21 +464,29 @@ export class Board {
 		});
 	}
 
-	copy(): Record<string, ItemData> {
+	copy(): ItemData[] {
 		return this.items.index.copy();
 	}
 
-	serialize(): Record<string, ItemData> {
+	serialize(): ItemData[] {
 		return this.copy();
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {
 		const { events, items } = snapshot;
 		this.index.clear();
-		for (const key in items) {
-			const itemData = items[key];
-			const item = this.createItem(key, itemData);
-			this.index.insert(item);
+		if (Array.isArray(items)) {
+			for (const itemData of items) {
+				const item = this.createItem(itemData.id, itemData);
+				this.index.insert(item);
+			}
+		} else {
+			// for older snapshots, that were {id: data}
+			for (const key in items) {
+				const itemData = items[key];
+				const item = this.createItem(key, itemData);
+				this.index.insert(item);
+			}
 		}
 		this.events?.deserialize(events);
 	}
@@ -981,8 +989,7 @@ export class Board {
 }
 
 export interface BoardSnapshot {
-	items: Record<string, ItemData>;
-	// events: BoardEvent[];
+	items: (ItemData & { id: string })[];
 	events: SyncBoardEvent[];
 	lastIndex: number;
 }
