@@ -51,7 +51,10 @@ export class Board {
 	/* Connect to the server to recieve the events*/
 	async connect(connection: Connection): Promise<void> {
 		const currIndex = this.getSnapshot().lastIndex;
-		const snapshot = await this.getSnapshotFromCache();
+		// temporaly disable snapshot cache
+		// TODO: reenable when fixed multiple snapshots for one board
+		// const snapshot = await this.getSnapshotFromCache();
+		const snapshot = undefined;
 		this.events = createEvents(
 			this,
 			connection,
