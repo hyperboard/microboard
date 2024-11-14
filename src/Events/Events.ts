@@ -1,6 +1,7 @@
 import {
 	BoardEventListMsg,
 	BoardEventMsg,
+	BoardSubscriptionCompletedMsg,
 	ConfirmationMsg,
 	Connection,
 	EventsMsg,
@@ -150,19 +151,12 @@ export function createEvents(
 
 	const messageRouter = createMessageRouter();
 
-	connection.subscribe(
-		board.getBoardId(),
-		messageRouter.handleMessage,
-		latestServerOrder,
-	);
-
 	function disconnect(): void {
 		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
 	}
 
 	function handleViewModeMessage(): void {
-		board.interfaceType = "view";
-		board.tools.publish();
+		handleViewModeSetting();
 	}
 	messageRouter.addHandler<ViewModeMsg>("ViewMode", handleViewModeMessage);
 
@@ -195,31 +189,7 @@ export function createEvents(
 	);
 
 	function handleBoardEventListMessage(message: BoardEventListMsg): void {
-		const existinglist = log.getList();
-
-		const isFirstBatchOfEvents =
-			existinglist.length === 0 && message.events.length > 0;
-
-		if (isFirstBatchOfEvents) {
-			handleFirstBatchOfEvents(message.events);
-		} else {
-			const maxOrder = Math.max(
-				...existinglist.map(record => record.event.order),
-			);
-
-			const newEvents = message.events.filter(
-				event => event.order > maxOrder,
-			);
-
-			if (newEvents.length > 0) {
-				log.insertEvents(newEvents);
-				latestServerOrder = log.getLatestOrder();
-				subject.publish(newEvents[0]);
-			}
-		}
-
-		onBoardLoad();
-		board.saveSnapshot();
+		handleBoardEventListApplication(message.events);
 	}
 
 	messageRouter.addHandler<BoardEventListMsg>(
@@ -239,19 +209,82 @@ export function createEvents(
 	);
 
 	function handleBoardSnapshotMessage(message: SnapshotResponseMsg): void {
-		const existingSnapshot = board.getSnapshot();
-		if (existingSnapshot.lastIndex > 0) {
-			handleNewerEvents(message.snapshot, existingSnapshot);
-		} else {
-			board.deserialize(message.snapshot);
-		}
-		board.saveSnapshot(message.snapshot);
-		onBoardLoad();
+		handleSnapshotApplication(message.snapshot, message.lastEventOrder);
 	}
 	messageRouter.addHandler<SnapshotResponseMsg>(
 		"BoardSnapshot",
 		handleBoardSnapshotMessage,
 	);
+
+	function handleBoardSubscriptionCompletedMsg(
+		msg: BoardSubscriptionCompletedMsg,
+	): void {
+		handleSeqNumApplication(msg.initialSequenceNumber);
+		if (msg.snapshot) {
+			handleSnapshotApplication(msg.snapshot, msg.lastSnapshotEventOrder);
+		}
+		handleBoardEventListApplication(msg.eventsSinceLastSnapshot);
+		if (msg.mode === "view") {
+			handleViewModeSetting();
+		}
+		onBoardLoad();
+	}
+
+	messageRouter.addHandler(
+		"BoardSubscriptionCompleted",
+		handleBoardSubscriptionCompletedMsg,
+	);
+
+	function handleSeqNumApplication(initialSequenceNumber: number): void {
+		currentSequenceNumber = initialSequenceNumber;
+		if (pendingEvent) {
+			pendingEvent.sequenceNumber = currentSequenceNumber;
+		}
+		startIntervals();
+	}
+
+	function handleSnapshotApplication(
+		snapshot: BoardSnapshot,
+		lastEventOrder: number,
+	): void {
+		const existingSnapshot = board.getSnapshot();
+		if (existingSnapshot.lastIndex > 0) {
+			handleNewerEvents(snapshot, existingSnapshot);
+		} else {
+			board.deserialize(snapshot);
+		}
+		board.saveSnapshot(snapshot);
+	}
+
+	function handleBoardEventListApplication(events: SyncBoardEvent[]): void {
+		const existinglist = log.getList();
+
+		const isFirstBatchOfEvents =
+			existinglist.length === 0 && events.length > 0;
+
+		if (isFirstBatchOfEvents) {
+			handleFirstBatchOfEvents(events);
+		} else {
+			const maxOrder = Math.max(
+				...existinglist.map(record => record.event.order),
+			);
+
+			const newEvents = events.filter(event => event.order > maxOrder);
+
+			if (newEvents.length > 0) {
+				log.insertEvents(newEvents);
+				latestServerOrder = log.getLatestOrder();
+				subject.publish(newEvents[0]);
+			}
+		}
+
+		board.saveSnapshot();
+	}
+
+	function handleViewModeSetting(): void {
+		board.interfaceType = "view";
+		board.tools.publish();
+	}
 
 	function handleFirstBatchOfEvents(events: SyncBoardEvent[]): void {
 		log.insertEvents(events);
@@ -287,11 +320,7 @@ export function createEvents(
 	}
 
 	function handleSubscribeConfirmation(msg: SubscribeConfirmationMsg): void {
-		currentSequenceNumber = msg.initialSequenceNumber;
-		if (pendingEvent) {
-			pendingEvent.sequenceNumber = currentSequenceNumber;
-		}
-		startIntervals();
+		handleSeqNumApplication(msg.initialSequenceNumber);
 	}
 	messageRouter.addHandler<SubscribeConfirmationMsg>(
 		"SubscribeConfirmation",
@@ -632,6 +661,14 @@ export function createEvents(
 		},
 		getNotificationId: () => notificationId,
 	};
+
+	connection.subscribe(
+		board.getBoardId(),
+		messageRouter.handleMessage,
+		function getLatestServerOrder(): number {
+			return latestServerOrder;
+		},
+	);
 
 	return instance;
 }
