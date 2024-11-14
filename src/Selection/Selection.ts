@@ -385,7 +385,7 @@ export class Selection {
 				console.log(textColor);
 				text.setSelectionFontColor(textColor, "None");
 			}
-			if (textSize) {
+			if (textSize && this.context !== "EditUnderPointer") {
 				this.emit({
 					class: "RichText",
 					method: "setFontSize",
