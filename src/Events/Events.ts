@@ -17,6 +17,10 @@ import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
 import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
+import { notify } from "View/Ui/Toast";
+import { isMicroboard } from "lib/isMicroboard";
+import i18next from "i18next";
+import toast from "react-hot-toast";
 
 export interface BoardEvent {
 	order: number;
@@ -77,6 +81,8 @@ export interface Events {
 	redo(): void;
 	canUndo(): boolean;
 	canRedo(): boolean;
+	getNotificationId(): string | null;
+	removeBeforeUnloadListener(): void;
 }
 
 type MessageHandler<T extends EventsMsg = EventsMsg> = (message: T) => void;
@@ -101,6 +107,12 @@ export function createEvents(
 	const RESEND_INTERVAL = 1000; // 1 секунда
 	let publishIntervalTimer: NodeJS.Timeout | null = null;
 	let resendIntervalTimer: NodeJS.Timeout | null = null;
+	let notificationId: null | string = null;
+
+	const beforeUnloadListener = (event: BeforeUnloadEvent): void => {
+		event.preventDefault();
+		event.returnValue = "Do not leave the page to avoid losing data";
+	};
 
 	interface MessageRouter {
 		addHandler: <T extends EventsMsg>(
@@ -327,6 +339,31 @@ export function createEvents(
 			pendingEvent &&
 			Date.now() - pendingEvent.lastSentTime >= RESEND_INTERVAL
 		) {
+			if (!notificationId) {
+				window.addEventListener("beforeunload", beforeUnloadListener);
+				if (isMicroboard()) {
+					notificationId = notify({
+						header: i18next.t(
+							"notifications.restoringConnectionHeader",
+						),
+						body: i18next.t(
+							"notifications.restoringConnectionBody",
+						),
+						variant: "warning",
+						unclosable: true,
+						duration: Infinity,
+					});
+				} else {
+					notificationId = notify({
+						header: i18next.t("notifications.connectionLostHeader"),
+						variant: "black",
+						duration: Infinity,
+						unclosable: true,
+						position: "bottom-center",
+					});
+				}
+			}
+
 			sendBoardEvent(
 				board.getBoardId(),
 				pendingEvent.event,
@@ -340,6 +377,14 @@ export function createEvents(
 			pendingEvent &&
 			pendingEvent.sequenceNumber === msg.sequenceNumber
 		) {
+			if (notificationId) {
+				window.removeEventListener(
+					"beforeunload",
+					beforeUnloadListener,
+				);
+				toast.dismiss(notificationId);
+				notificationId = null;
+			}
 			currentSequenceNumber++;
 			pendingEvent.event.order = msg.order;
 			log.confirmEvent(pendingEvent.event);
@@ -582,6 +627,10 @@ export function createEvents(
 		redo,
 		canUndo,
 		canRedo,
+		removeBeforeUnloadListener: () => {
+			window.removeEventListener("beforeunload", beforeUnloadListener);
+		},
+		getNotificationId: () => notificationId,
 	};
 
 	return instance;
