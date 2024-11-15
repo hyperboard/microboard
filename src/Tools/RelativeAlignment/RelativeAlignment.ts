@@ -83,7 +83,10 @@ export class AlignmentHelper {
 			if (item === movingItem) {
 				return;
 			}
-			const itemMbr = item.getMbr();
+			const itemMbr =
+				item.itemType === "Shape"
+					? item.getPath().getMbr()
+					: item.getMbr();
 
 			const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
 			const centerXItem = (itemMbr.left + itemMbr.right) / 2;
