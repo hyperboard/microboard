@@ -203,7 +203,7 @@ export class AlignmentHelper {
 				const mainLine = lines[0];
 				return (
 					index === 0 ||
-					Math.abs(line.start.x - mainLine.start.x) >= 5
+					Math.abs(line.start.x - mainLine.start.x) >= 20
 				);
 			});
 
@@ -219,9 +219,12 @@ export class AlignmentHelper {
 				const mainLine = lines[0];
 				return (
 					index === 0 ||
-					Math.abs(line.start.y - mainLine.start.y) >= 5
+					Math.abs(line.start.y - mainLine.start.y) >= 20
 				);
 			});
+
+		console.log("horizontalLines", horizontalLines);
+		console.log("verticalLines", verticalLines);
 
 		return { verticalLines, horizontalLines };
 	}
@@ -246,106 +249,48 @@ export class AlignmentHelper {
 					return false;
 				}
 
-				if (isVertical) {
-					if (
-						Math.abs(itemMbr.left - line.start.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.start.x - itemMbr.left,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemMbr.right - line.start.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.start.x - itemMbr.right,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterX - line.start.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.start.x - itemCenterX,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterX - line.end.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.end.x - itemCenterX,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					}
-				} else {
-					if (
-						Math.abs(itemMbr.top - line.start.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.start.y - itemMbr.top,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemMbr.bottom - line.start.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.start.y - itemMbr.bottom,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterY - line.start.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.start.y - itemCenterY,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterY - line.end.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.end.y - itemCenterY,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					}
+				const snapOffset = isVertical ? line.start.x : line.start.y;
+				const itemOffset = isVertical ? itemMbr.left : itemMbr.top;
+				const itemSize = isVertical
+					? itemMbr.getWidth()
+					: itemMbr.getHeight();
+				const itemCenter = isVertical ? itemCenterX : itemCenterY;
+
+				if (Math.abs(itemOffset - snapOffset) < dynamicSnapThreshold) {
+					draggingItem.transformation.translateBy(
+						isVertical ? snapOffset - itemOffset : 0,
+						isVertical ? 0 : snapOffset - itemOffset,
+						beginTimeStamp,
+					);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					snapped = true;
+					break;
+				} else if (
+					Math.abs(itemOffset + itemSize - snapOffset) <
+					dynamicSnapThreshold
+				) {
+					draggingItem.transformation.translateBy(
+						isVertical ? snapOffset - (itemOffset + itemSize) : 0,
+						isVertical ? 0 : snapOffset - (itemOffset + itemSize),
+						beginTimeStamp,
+					);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					snapped = true;
+					break;
+				} else if (
+					Math.abs(itemCenter - snapOffset) < dynamicSnapThreshold
+				) {
+					draggingItem.transformation.translateBy(
+						isVertical ? snapOffset - itemCenter : 0,
+						isVertical ? 0 : snapOffset - itemCenter,
+						beginTimeStamp,
+					);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					snapped = true;
+					break;
 				}
 			}
 			return snapped;
