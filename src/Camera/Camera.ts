@@ -211,13 +211,13 @@ export class Camera {
 
 	isPinch(): boolean {
 		/*
-				const threshold = this.previous === "pinch" ? 0.2 : 10;
-				const distance = this.calculateDistance();
-				const is =
-						this.previousDistance !== null &&
-						Math.abs(distance - this.previousDistance) > threshold;
-				this.previous = is ? "pinch" : "pan";
-				*/
+                const threshold = this.previous === "pinch" ? 0.2 : 10;
+                const distance = this.calculateDistance();
+                const is =
+                        this.previousDistance !== null &&
+                        Math.abs(distance - this.previousDistance) > threshold;
+                this.previous = is ? "pinch" : "pan";
+                */
 		const previous = this.previousPositions;
 		if (!previous) {
 			return false;
@@ -228,6 +228,7 @@ export class Camera {
 			point1: new Point(touch1.pageX, touch1.pageY),
 			point2: new Point(touch2.pageX, touch2.pageY),
 		};
+
 		function getDirection(deltaX: number, deltaY: number): string {
 			if (Math.abs(deltaX) > Math.abs(deltaY)) {
 				return deltaX > 0 ? "right" : "left";
@@ -235,6 +236,7 @@ export class Camera {
 				return deltaY > 0 ? "down" : "up";
 			}
 		}
+
 		const direction1 = getDirection(
 			previous?.point1.x - current.point1.x,
 			previous?.point1.y - current.point1.y,
@@ -307,9 +309,16 @@ export class Camera {
 		this.zoomToViewCenter(newScale);
 	}
 
-	viewRectangle(mbr: Mbr): void {
-		const mbrWidth = mbr.getWidth();
-		const mbrHeight = mbr.getHeight();
+	viewRectangle(mbr: Mbr, offsetInPercent = 10): void {
+		const offsetY = (mbr.getHeight() * offsetInPercent) / 100;
+		const offsetX = (mbr.getWidth() * offsetInPercent) / 100;
+		const mbrWithOffset = new Mbr();
+		mbrWithOffset.left = mbr.left - offsetX;
+		mbrWithOffset.right = mbr.right + offsetX;
+		mbrWithOffset.top = mbr.top - offsetY;
+		mbrWithOffset.bottom = mbr.bottom + offsetY;
+		const mbrWidth = mbrWithOffset.getWidth();
+		const mbrHeight = mbrWithOffset.getHeight();
 
 		// Calculate the scale values
 		const scaleX = this.window.width / mbrWidth;
@@ -323,18 +332,13 @@ export class Camera {
 
 		// Calculate the translation values
 		let translationX, translationY;
-		if (mbrWidth > this.window.width || mbrHeight > this.window.height) {
-			// If the rectangle is bigger than the window, scale to the top-left corner
-			translationX = -mbr.left * scale;
-			translationY =
-				this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
-		} else {
-			// Center the Mbr in the view
-			translationX =
-				this.window.width / 2 - (mbr.left + mbrWidth / 2) * scale;
-			translationY =
-				this.window.height / 2 - (mbr.top + mbrHeight / 2) * scale;
-		}
+
+		// Center the Mbr in the view
+		translationX =
+			this.window.width / 2 - (mbrWithOffset.left + mbrWidth / 2) * scale;
+		translationY =
+			this.window.height / 2 -
+			(mbrWithOffset.top + mbrHeight / 2) * scale;
 
 		this.matrix.translateX = translationX;
 		this.matrix.translateY = translationY;
@@ -344,8 +348,8 @@ export class Camera {
 		this.subject.publish(this);
 	}
 
-	zoomToFit(rect: Mbr): void {
-		this.viewRectangle(rect);
+	zoomToFit(rect: Mbr, offsetInPercent = 10): void {
+		this.viewRectangle(rect, offsetInPercent);
 	}
 
 	getViewPointer(): { x: number; y: number } {

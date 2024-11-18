@@ -4,15 +4,18 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
-	private alignThreshold = 5;
+	private alignThreshold = 2;
 	private snapMemory: { x: number | null; y: number | null } = {
 		x: null,
 		y: null,
 	};
 	board: Board;
-	snapThreshold = 5;
+	snapThreshold = 2;
 
-	constructor(board: Board, private spatialIndex: SpatialIndex) {
+	constructor(
+		board: Board,
+		private spatialIndex: SpatialIndex,
+	) {
 		this.board = board;
 	}
 
@@ -29,10 +32,10 @@ export class AlignmentHelper {
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
-		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 15);
+		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 8);
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
-			15,
+			20,
 			(otherItem: Item) =>
 				otherItem !== movingMBR &&
 				otherItem.itemType !== "Connector" &&
@@ -41,320 +44,190 @@ export class AlignmentHelper {
 			cameraWidth,
 		);
 
-		const verticalLines: Line[] = [];
-		const horizontalLines: Line[] = [];
+		const verticalAlignments: Map<number, { minY: number; maxY: number }> =
+			new Map();
+		const horizontalAlignments: Map<
+			number,
+			{ minX: number; maxX: number }
+		> = new Map();
+
+		const addVerticalAlignment = (
+			x: number,
+			minY: number,
+			maxY: number,
+		) => {
+			if (verticalAlignments.has(x)) {
+				const alignment = verticalAlignments.get(x)!;
+				alignment.minY = Math.min(alignment.minY, minY);
+				alignment.maxY = Math.max(alignment.maxY, maxY);
+			} else {
+				verticalAlignments.set(x, { minY, maxY });
+			}
+		};
+
+		const addHorizontalAlignment = (
+			y: number,
+			minX: number,
+			maxX: number,
+		) => {
+			if (horizontalAlignments.has(y)) {
+				const alignment = horizontalAlignments.get(y)!;
+				alignment.minX = Math.min(alignment.minX, minX);
+				alignment.maxX = Math.max(alignment.maxX, maxX);
+			} else {
+				horizontalAlignments.set(y, { minX, maxX });
+			}
+		};
 
 		nearbyItems.forEach(item => {
 			if (item === movingItem) {
 				return;
 			}
-			const itemMbr = item.getMbr();
+			const itemMbr =
+				item.itemType === "Shape"
+					? item.getPath().getMbr()
+					: item.getMbr();
 
 			const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
 			const centerXItem = (itemMbr.left + itemMbr.right) / 2;
 
 			const centerYMoving = (movingMBR.top + movingMBR.bottom) / 2;
 			const centerYItem = (itemMbr.top + itemMbr.bottom) / 2;
-
+			const epsilon = 0.0001;
 			const isSameWidth =
-				Math.abs(itemMbr.right - itemMbr.left) ===
-				Math.abs(movingMBR.right - movingMBR.left);
+				Math.abs(movingMBR.getWidth() - itemMbr.getWidth()) < epsilon;
 			const isSameHeight =
-				Math.abs(itemMbr.bottom - itemMbr.top) ===
-				Math.abs(movingMBR.bottom - movingMBR.top);
+				Math.abs(movingMBR.getHeight() - itemMbr.getHeight()) < epsilon;
 
-			if (!isSameWidth) {
-				if (
-					Math.abs(centerXMoving - centerXItem) <
-					dynamicAlignThreshold
-				) {
-					const line = new Line(
-						new Point(
-							centerXItem,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							centerXItem,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					);
-					verticalLines.push(line);
-				}
+			if (
+				Math.abs(centerXMoving - centerXItem) < dynamicAlignThreshold &&
+				!isSameWidth
+			) {
+				addVerticalAlignment(
+					centerXItem,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
+				);
 			}
-
-			if (!isSameHeight) {
-				if (
-					Math.abs(centerYMoving - centerYItem) <
-					dynamicAlignThreshold
-				) {
-					const line = new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							centerYItem,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							centerYItem,
-						),
-					);
-					horizontalLines.push(line);
-				}
-			}
-
 			if (
 				Math.abs(itemMbr.left - movingMBR.left) < dynamicAlignThreshold
 			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							itemMbr.left,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							itemMbr.left,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
+				addVerticalAlignment(
+					itemMbr.left,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
 				);
 			}
 			if (
 				Math.abs(itemMbr.right - movingMBR.right) <
 				dynamicAlignThreshold
 			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							itemMbr.right,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							itemMbr.right,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
+				addVerticalAlignment(
+					itemMbr.right,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
+				);
+			}
+			if (
+				Math.abs(itemMbr.left - movingMBR.right) < dynamicAlignThreshold
+			) {
+				addVerticalAlignment(
+					itemMbr.left,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
+				);
+			}
+			if (
+				Math.abs(itemMbr.right - movingMBR.left) < dynamicAlignThreshold
+			) {
+				addVerticalAlignment(
+					itemMbr.right,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
 				);
 			}
 
+			if (
+				Math.abs(centerYMoving - centerYItem) < dynamicAlignThreshold &&
+				!isSameHeight
+			) {
+				addHorizontalAlignment(
+					centerYItem,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
+				);
+			}
 			if (Math.abs(itemMbr.top - movingMBR.top) < dynamicAlignThreshold) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							itemMbr.top,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							itemMbr.top,
-						),
-					),
+				addHorizontalAlignment(
+					itemMbr.top,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
 				);
 			}
 			if (
 				Math.abs(itemMbr.bottom - movingMBR.bottom) <
 				dynamicAlignThreshold
 			) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							itemMbr.bottom,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							itemMbr.bottom,
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(itemMbr.left - movingMBR.right) < dynamicAlignThreshold
-			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							itemMbr.left,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							itemMbr.left,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(itemMbr.right - movingMBR.left) < dynamicAlignThreshold
-			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							itemMbr.right,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							itemMbr.right,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
+				addHorizontalAlignment(
+					itemMbr.bottom,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
 				);
 			}
 			if (
 				Math.abs(itemMbr.top - movingMBR.bottom) < dynamicAlignThreshold
 			) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							itemMbr.top,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							itemMbr.top,
-						),
-					),
+				addHorizontalAlignment(
+					itemMbr.top,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
 				);
 			}
 			if (
 				Math.abs(itemMbr.bottom - movingMBR.top) < dynamicAlignThreshold
 			) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							itemMbr.bottom,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							itemMbr.bottom,
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(centerXMoving - itemMbr.left) < dynamicAlignThreshold
-			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							itemMbr.left,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							itemMbr.left,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(centerXMoving - itemMbr.right) < dynamicAlignThreshold
-			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							itemMbr.right,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							itemMbr.right,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
-				);
-			}
-			if (Math.abs(centerYMoving - itemMbr.top) < dynamicAlignThreshold) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							itemMbr.top,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							itemMbr.top,
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(centerYMoving - itemMbr.bottom) < dynamicAlignThreshold
-			) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							itemMbr.bottom,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							itemMbr.bottom,
-						),
-					),
-				);
-			}
-			if (Math.abs(movingMBR.top - centerYItem) < dynamicAlignThreshold) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							centerYItem,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							centerYItem,
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(movingMBR.bottom - centerYItem) < dynamicAlignThreshold
-			) {
-				horizontalLines.push(
-					new Line(
-						new Point(
-							Math.min(itemMbr.left, movingMBR.left),
-							centerYItem,
-						),
-						new Point(
-							Math.max(itemMbr.right, movingMBR.right),
-							centerYItem,
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(movingMBR.left - centerXItem) < dynamicAlignThreshold
-			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							centerXItem,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							centerXItem,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
-				);
-			}
-			if (
-				Math.abs(movingMBR.right - centerXItem) < dynamicAlignThreshold
-			) {
-				verticalLines.push(
-					new Line(
-						new Point(
-							centerXItem,
-							Math.min(itemMbr.top, movingMBR.top),
-						),
-						new Point(
-							centerXItem,
-							Math.max(itemMbr.bottom, movingMBR.bottom),
-						),
-					),
+				addHorizontalAlignment(
+					itemMbr.bottom,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
 				);
 			}
 		});
+
+		const verticalLines = Array.from(verticalAlignments.entries())
+			.map(
+				([x, range]) =>
+					new Line(
+						new Point(x, range.minY),
+						new Point(x, range.maxY),
+					),
+			)
+			.filter((line, index, lines) => {
+				const mainLine = lines[0];
+				return (
+					index === 0 ||
+					Math.abs(line.start.x - mainLine.start.x) >= 20
+				);
+			});
+
+		const horizontalLines = Array.from(horizontalAlignments.entries())
+			.map(
+				([y, range]) =>
+					new Line(
+						new Point(range.minX, y),
+						new Point(range.maxX, y),
+					),
+			)
+			.filter((line, index, lines) => {
+				const mainLine = lines[0];
+				return (
+					index === 0 ||
+					Math.abs(line.start.y - mainLine.start.y) >= 20
+				);
+			});
+
+		console.log("horizontalLines", horizontalLines);
+		console.log("verticalLines", verticalLines);
 
 		return { verticalLines, horizontalLines };
 	}
@@ -371,7 +244,7 @@ export class AlignmentHelper {
 		let snapped = false;
 
 		const scale = this.board.camera.getScale();
-		const dynamicSnapThreshold = Math.min(this.snapThreshold / scale, 15);
+		const dynamicSnapThreshold = Math.min(this.snapThreshold / scale, 8);
 
 		const snapToLine = (lines: Line[], isVertical: boolean) => {
 			for (const line of lines) {
@@ -379,106 +252,48 @@ export class AlignmentHelper {
 					return false;
 				}
 
-				if (isVertical) {
-					if (
-						Math.abs(itemMbr.left - line.start.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.start.x - itemMbr.left,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemMbr.right - line.start.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.start.x - itemMbr.right,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterX - line.start.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.start.x - itemCenterX,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterX - line.end.x) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							line.end.x - itemCenterX,
-							0,
-							beginTimeStamp,
-						);
-						this.snapMemory.x = cursorPosition.x;
-						snapped = true;
-						break;
-					}
-				} else {
-					if (
-						Math.abs(itemMbr.top - line.start.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.start.y - itemMbr.top,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemMbr.bottom - line.start.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.start.y - itemMbr.bottom,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterY - line.start.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.start.y - itemCenterY,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					} else if (
-						Math.abs(itemCenterY - line.end.y) <
-						dynamicSnapThreshold
-					) {
-						draggingItem.transformation.translateBy(
-							0,
-							line.end.y - itemCenterY,
-							beginTimeStamp,
-						);
-						this.snapMemory.y = cursorPosition.y;
-						snapped = true;
-						break;
-					}
+				const snapOffset = isVertical ? line.start.x : line.start.y;
+				const itemOffset = isVertical ? itemMbr.left : itemMbr.top;
+				const itemSize = isVertical
+					? itemMbr.getWidth()
+					: itemMbr.getHeight();
+				const itemCenter = isVertical ? itemCenterX : itemCenterY;
+
+				if (Math.abs(itemOffset - snapOffset) < dynamicSnapThreshold) {
+					draggingItem.transformation.translateBy(
+						isVertical ? snapOffset - itemOffset : 0,
+						isVertical ? 0 : snapOffset - itemOffset,
+						beginTimeStamp,
+					);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					snapped = true;
+					break;
+				} else if (
+					Math.abs(itemOffset + itemSize - snapOffset) <
+					dynamicSnapThreshold
+				) {
+					draggingItem.transformation.translateBy(
+						isVertical ? snapOffset - (itemOffset + itemSize) : 0,
+						isVertical ? 0 : snapOffset - (itemOffset + itemSize),
+						beginTimeStamp,
+					);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					snapped = true;
+					break;
+				} else if (
+					Math.abs(itemCenter - snapOffset) < dynamicSnapThreshold
+				) {
+					draggingItem.transformation.translateBy(
+						isVertical ? snapOffset - itemCenter : 0,
+						isVertical ? 0 : snapOffset - itemCenter,
+						beginTimeStamp,
+					);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					snapped = true;
+					break;
 				}
 			}
 			return snapped;
@@ -486,13 +301,15 @@ export class AlignmentHelper {
 
 		if (
 			this.snapMemory.x !== null &&
-			Math.abs(cursorPosition.x - this.snapMemory.x) > 10
+			Math.abs(cursorPosition.x - this.snapMemory.x) >
+				dynamicSnapThreshold
 		) {
 			this.snapMemory.x = null;
 		}
 		if (
 			this.snapMemory.y !== null &&
-			Math.abs(cursorPosition.y - this.snapMemory.y) > 10
+			Math.abs(cursorPosition.y - this.snapMemory.y) >
+				dynamicSnapThreshold
 		) {
 			this.snapMemory.y = null;
 		}

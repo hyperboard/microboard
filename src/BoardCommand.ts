@@ -5,7 +5,10 @@ import { Board } from "Board";
 export class BoardCommand implements Command {
 	private reverse: BoardOps | BoardOps[];
 
-	constructor(private board: Board, private operation: BoardOps) {
+	constructor(
+		private board: Board,
+		private operation: BoardOps,
+	) {
 		this.reverse = this.getReverse();
 	}
 

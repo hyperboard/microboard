@@ -38,6 +38,7 @@ import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextOperation } from "./RichTextOperations";
+import { LinkTo } from "../LinkTo/LinkTo";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -83,6 +84,7 @@ export class RichText extends Mbr implements Geometry {
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
 	private shouldEmit = true;
+	readonly linkTo: LinkTo;
 	maxHeight: number;
 	private selection?: BaseSelection;
 	transformationRenderBlock?: boolean = undefined;
@@ -90,12 +92,14 @@ export class RichText extends Mbr implements Geometry {
 	initialFontColor?: string;
 	frameMbr?: Mbr;
 	private _onLimitReached: () => void = () => {};
+	private shrinkWidth = false;
 
 	constructor(
 		public container: Mbr,
 		private id = "",
 		private events?: Events,
 		readonly transformation = new Transformation(id, events),
+		linkTo?: LinkTo,
 		public placeholderText = i18next.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
@@ -103,7 +107,7 @@ export class RichText extends Mbr implements Geometry {
 		private initialTextStyles: DefaultTextStyles = DEFAULT_TEXT_STYLES,
 	) {
 		super();
-
+		this.linkTo = linkTo || new LinkTo(this.id, this.events);
 		this.editor = new EditorContainer(
 			id,
 			this.emit,
@@ -162,9 +166,17 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 		);
+		if (!insideOf || insideOf === "RichText" || insideOf === "Connector") {
+			this.shrinkWidth = true;
+		}
+		this.linkTo.subject.subscribe(() => {
+			this.updateElement();
+			this.subject.publish(this);
+		});
 		this.blockNodes = getBlockNodes(
 			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
+			this.shrinkWidth,
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -260,29 +272,30 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.updateRequired = true;
 		// window.requestAnimationFrame(() => {
-			if (this.autoSize) {
-				this.calcAutoSize();
-			} else {
-				const nodes = getBlockNodes(
-					this.getTextForNodes(),
-					this.getMaxWidth(),
-				);
-				this.blockNodes = nodes;
-				if (
-					this.containerMaxWidth &&
-					this.blockNodes.width >= this.containerMaxWidth
-				) {
-					this.blockNodes.width = this.containerMaxWidth;
-				}
-			}
-
-			this.alignInRectangle(
-				this.getTransformedContainer(),
-				this.editor.verticalAlignment,
+		if (this.autoSize) {
+			this.calcAutoSize();
+		} else {
+			const nodes = getBlockNodes(
+				this.getTextForNodes(),
+				this.getMaxWidth(),
+				this.shrinkWidth,
 			);
-			this.transformCanvas();
+			this.blockNodes = nodes;
+			if (
+				this.containerMaxWidth &&
+				this.blockNodes.width >= this.containerMaxWidth
+			) {
+				this.blockNodes.width = this.containerMaxWidth;
+			}
+		}
 
-			this.updateRequired = false;
+		this.alignInRectangle(
+			this.getTransformedContainer(),
+			this.editor.verticalAlignment,
+		);
+		this.transformCanvas();
+
+		this.updateRequired = false;
 		// });
 	}
 
@@ -309,7 +322,10 @@ export class RichText extends Mbr implements Geometry {
 
 		for (let i = 0; i < 10 && low < high; i += 1) {
 			const mid = (low + high) / 2;
-			const { width: calcWidth, height: calcHeight } = getBlockNodes(text, mid);
+			const { width: calcWidth, height: calcHeight } = getBlockNodes(
+				text,
+				mid,
+			);
 
 			const currentRatio = calcWidth / calcHeight;
 			const ratioDifference = Math.abs(currentRatio - targetRatio);
@@ -338,11 +354,11 @@ export class RichText extends Mbr implements Geometry {
 			const scale = Math.min(
 				containerWidth / closestWidth,
 				containerHeight / closestHeight,
-			)
+			);
 			return {
 				bestMaxWidth: initialMaxWidth / scale,
 				bestMaxHeight: initialMaxWidth / targetRatio / scale,
-			}
+			};
 		}
 
 		return { bestMaxWidth, bestMaxHeight };
@@ -481,8 +497,8 @@ export class RichText extends Mbr implements Geometry {
 			alignment === "top"
 				? rect.top
 				: alignment === "bottom"
-				? rect.bottom - height
-				: center.y - height / 2;
+					? rect.bottom - height
+					: center.y - height / 2;
 		this.left = left;
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
@@ -514,6 +530,9 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	setMaxWidth(maxWidth: number): this {
+		if (this.containerMaxWidth && this.shrinkWidth) {
+			this.shrinkWidth = false;
+		}
 		this.containerMaxWidth = maxWidth;
 		return this;
 	}
@@ -563,9 +582,10 @@ export class RichText extends Mbr implements Geometry {
 	apply(op: Operation): void {
 		if (op.class === "Transformation") {
 			this.transformation.apply(op);
+		} else if (op.class === "LinkTo") {
+			this.linkTo.apply(op);
 		} else if (op.class === "RichText") {
 			if (op.method === "setMaxWidth") {
-				this.setMaxWidth(op.maxWidth ?? 0);
 				this.setMaxWidth(op.maxWidth ?? 0);
 			} else if (op.method === "setFontSize") {
 				if (op.fontSize === "auto") {
@@ -668,6 +688,7 @@ export class RichText extends Mbr implements Geometry {
 	setId(id: string): this {
 		this.id = id;
 		this.editor.setId(id);
+		this.linkTo.setId(id);
 		return this;
 	}
 
@@ -692,7 +713,7 @@ export class RichText extends Mbr implements Geometry {
 
 	getTransformationScale = (): number => {
 		return this.transformation.getScale().y;
-	}
+	};
 
 	get onLimitReached(): () => void {
 		return this._onLimitReached;
@@ -714,7 +735,9 @@ export class RichText extends Mbr implements Geometry {
 			this.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontColor(format, selectionContext);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -736,13 +759,15 @@ export class RichText extends Mbr implements Geometry {
 			this.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontStyle(style);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
 	setSelectionFontFamily(fontFamily: string): void {
 		this.editor.setSelectionFontFamily(fontFamily);
-		this.updateElement();
+		// this.updateElement();
 	}
 
 	applySelectionFontSize(
@@ -777,7 +802,9 @@ export class RichText extends Mbr implements Geometry {
 			fontSize,
 			selectionContext,
 		);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -792,7 +819,9 @@ export class RichText extends Mbr implements Geometry {
 			format,
 			selectionContext,
 		);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -811,7 +840,9 @@ export class RichText extends Mbr implements Geometry {
 			horisontalAlignment,
 			selectionContext,
 		);
-		this.updateElement();
+		if (selectionContext !== "EditTextUnderPointer") {
+			this.updateElement();
+		}
 		return ops;
 	}
 
@@ -942,8 +973,7 @@ export class RichText extends Mbr implements Geometry {
 					document.caretRangeFromPoint)
 			) {
 				const domRange = document.caretPositionFromPoint
-					?
-					  document.caretPositionFromPoint(point.x, point.y)
+					? document.caretPositionFromPoint(point.x, point.y)
 					: document.caretRangeFromPoint(point.x, point.y);
 				// @ts-expect-error: Suppress TS error for non-existent method
 				const textNode = document.caretPositionFromPoint
@@ -968,10 +998,8 @@ export class RichText extends Mbr implements Geometry {
 			} else {
 				if (
 					!(
-						(
-							document.caretPositionFromPoint ||
-							document.caretRangeFromPoint
-						)
+						document.caretPositionFromPoint ||
+						document.caretRangeFromPoint
 					)
 				) {
 					console.error(
@@ -1015,6 +1043,7 @@ export class RichText extends Mbr implements Geometry {
 					: this.transformation.serialize(),
 			insideOf: this.insideOf ? this.insideOf : this.itemType,
 			realSize: this.autoSize ? "auto" : this.getFontSize(),
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -1057,6 +1086,7 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			this.autosizeDisable();
 		}
+		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
 		// await this.updateElement();
 		this.updateElement();
@@ -1207,5 +1237,15 @@ export class RichText extends Mbr implements Geometry {
 
 	getRichText(): RichText {
 		return this;
+	}
+
+	getLink() {
+		return `${window.location.origin}${
+			window.location.pathname
+		}?focus=${this.getId()}`;
+	}
+
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
 	}
 }

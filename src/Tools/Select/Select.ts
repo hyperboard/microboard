@@ -80,6 +80,8 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
+		const increasedSnapThreshold = this.alignmentHelper.snapThreshold * 1.5;
+
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,
 			this.snapLines,
@@ -103,8 +105,8 @@ export class Select extends Tool {
 			);
 
 			if (
-				cursorDiffX > this.alignmentHelper.snapThreshold ||
-				cursorDiffY > this.alignmentHelper.snapThreshold
+				cursorDiffX > increasedSnapThreshold ||
+				cursorDiffY > increasedSnapThreshold
 			) {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
@@ -297,7 +299,10 @@ export class Select extends Tool {
 				return false;
 			}
 
-			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				this.debounceUpd.shouldUpd()
+			) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const translation = this.handleMultipleItemsTranslate(
 					this.canvasDrawer.getMatrix().translateX,
@@ -317,7 +322,6 @@ export class Select extends Tool {
 							translation,
 						);
 						this.debounceUpd.setFalse();
-						this.canvasDrawer.clearCanvasAndKeys();
 						this.debounceUpd.setTimeoutUpdate(1000);
 					}
 				}

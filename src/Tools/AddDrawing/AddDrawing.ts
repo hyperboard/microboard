@@ -109,7 +109,7 @@ export class AddDrawing extends BoardTool {
 		return true;
 	}
 
-	 leftButtonUp(): boolean {
+	leftButtonUp(): boolean {
 		this.isDown = false;
 		const points = this.drawing.points;
 		const mbr = this.drawing.getMbr();

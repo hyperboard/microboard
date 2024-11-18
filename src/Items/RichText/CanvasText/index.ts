@@ -1,43 +1,12 @@
-import { getApiUrl } from "Config";
+import * as flow from "dropflow";
+import { Descendant } from "slate";
 import { BlockNode } from "../Editor/BlockNode";
+import { DEFAULT_TEXT_STYLES, loadFonts } from "View/Items/RichText";
 import { TextNode } from "../Editor/TextNode";
-import * as flow from 'dropflow';
-import { Descendant } from 'slate';
-
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial.ttf`, import.meta.url));
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial_Bold.ttf`, import.meta.url));
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial_Italic.ttf`, import.meta.url));
-await flow.registerFont(new URL(`${getApiUrl()}/fonts/Arial_Bold_Italic.ttf`, import.meta.url));
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
-function getActualWidth(text: string, style: flow.DeclaredStyle, maxWidth: number): number {
-	const line = trimTextToFitWidth(text, style, maxWidth);
-	return measureText(line, style).width;
-}
-
-function trimTextToFitWidth(text: string, style: flow.DeclaredStyle, maxWidth: number): string {
-	const measureTextWidth = (text: string): number => measureText(text, style).width;
-
-	let start = 0;
-	let end = text.length;
-	let bestFit = "";
-
-	while (start <= end) {
-		const mid = Math.floor((start + end) / 2);
-		const substring = text.slice(0, mid);
-		const width = measureTextWidth(substring);
-
-		if (width <= maxWidth) {
-			bestFit = substring;
-			start = mid + 1;
-		} else {
-			end = mid - 1;
-		}
-	}
-
-	return bestFit;
-}
+await loadFonts();
 
 interface DropflowNodeData {
 	style: flow.DeclaredStyle;
@@ -49,64 +18,90 @@ interface DropflowChild {
 	text: string;
 }
 
-function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number): DropflowNodeData[] {
+function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
+	return {
+		fontWeight: child.bold ? 800 : 400,
+		fontStyle: child.italic ? "italic" : "normal",
+		color:
+			child.fontColor && rgbRegex.test(child.fontColor)
+				? (() => {
+						const match = child.fontColor.match(rgbRegex);
+						return match
+							? {
+									r: parseInt(match[1]),
+									g: parseInt(match[2]),
+									b: parseInt(match[3]),
+									a: 1,
+								}
+							: { r: 0, g: 0, b: 0, a: 1 };
+					})()
+				: { r: 0, g: 0, b: 0, a: 1 },
+		fontSize: child.fontSize || 14,
+		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
+		whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
+		overflowWrap: "break-word",
+		backgroundColor:
+			child.fontHighlight && rgbRegex.test(child.fontHighlight)
+				? (() => {
+						const match = child.fontHighlight.match(rgbRegex);
+						return match
+							? {
+									r: parseInt(match[1]),
+									g: parseInt(match[2]),
+									b: parseInt(match[3]),
+									a: 1,
+								}
+							: "transparent";
+					})()
+				: "transparent",
+		lineHeight: { value: 1.4, unit: null },
+	};
+}
+
+function convertSlateToDropflow(
+	slateNodes: BlockNode[],
+	maxWidth: number,
+): DropflowNodeData[] {
 	const dropflowNodes: DropflowNodeData[] = [];
 
 	for (const node of slateNodes) {
-		if (node.type === 'paragraph') {
+		if (node.type === "paragraph") {
 			const paragraphStyle: flow.DeclaredStyle = {
-				textAlign: node.horisontalAlignment || 'left', 
-				width: maxWidth,
+				textAlign: node.horisontalAlignment || "left",
+				width: maxWidth === Infinity ? "auto" : maxWidth,
 			};
 
-			const children = node.children.map(child => {
-				const childStyle: flow.DeclaredStyle = {
-					fontWeight: child.bold ? 800 : 400,
-					fontStyle: child.italic ? 'italic' : 'normal',
-					// textDecoration: child.underline ? 'underline' : child['line-through'] ? 'line-through' : 'none',
-					color: child.fontColor && rgbRegex.test(child.fontColor)
-					? (() => {
-						const match = child.fontColor.match(rgbRegex);
-						return match
-							? { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]), a: 1 }
-							: { r: 0, g: 0, b: 0, a: 1 };
-					})()
-					: { r: 0, g: 0, b: 0, a: 1 },
-					fontSize: child.fontSize || 14,
-					fontFamily: ["Arial"],
-					whiteSpace: "pre-wrap",
-					overflowWrap: "break-word",
-					backgroundColor: child.fontHighlight && rgbRegex.test(child.fontHighlight)
-						? (() => {
-							const match = child.fontHighlight.match(rgbRegex);
-							return match
-								? { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]), a: 1 }
-								: "transparent";
-						})()
-						: "transparent",
-					lineHeight: { value: 1.4, unit: null },
-					// lineHeight: "normal",
-				};
-				return { style: childStyle, text: child.text };
-			});
+			for (const child of node.children) {
+				const childStyle = getChildStyle(child, maxWidth);
+				const textParts = child.text.split("\n");
 
-			dropflowNodes.push({ style: paragraphStyle, children });
+				textParts.forEach(text =>
+					dropflowNodes.push({
+						style: paragraphStyle,
+						children: [{ style: childStyle, text }],
+					}),
+				);
+			}
 		}
 	}
 
 	return dropflowNodes;
 }
 
-function createFlowDivs(dropflowNodes: {
-	style: flow.DeclaredStyle;
-	children: { style: flow.DeclaredStyle; text: string }[];
-}[]): flow.HTMLElement[] {
-	return dropflowNodes.map(paragraph => 
-		flow.h('div', { style: paragraph.style }, 
-			paragraph.children.map(child => 
-				flow.h('span', { style: child.style }, [child.text])
-			)
-		)
+function createFlowDivs(
+	dropflowNodes: {
+		style: flow.DeclaredStyle;
+		children: { style: flow.DeclaredStyle; text: string }[];
+	}[],
+): flow.HTMLElement[] {
+	return dropflowNodes.map(paragraph =>
+		flow.h(
+			"div",
+			{ style: paragraph.style },
+			paragraph.children.map(child =>
+				flow.h("span", { style: child.style }, [child.text]),
+			),
+		),
 	);
 }
 
@@ -122,13 +117,41 @@ export interface LayoutBlockNodes {
 	recoordinate: (newMaxWidth?: number) => void;
 }
 
-export function getBlockNodes(data: Descendant[], maxWidth: number): LayoutBlockNodes {
+export function getBlockNodes(
+	data: Descendant[],
+	maxWidth: number,
+	shrink = false,
+): LayoutBlockNodes {
+	if (shrink) {
+		const singleLineLayout = getBlockNodes(data, Infinity);
+		const singleLineHeight = singleLineLayout.height;
+
+		const maxWidthLayout = getBlockNodes(data, maxWidth);
+		const maxWidthHeight = maxWidthLayout.height;
+
+		// If the height with maxWidth is greater than the single line height, return the maxWidth layout
+		if (maxWidthHeight > singleLineHeight) {
+			return maxWidthLayout;
+		}
+
+		const bestWidth = findMinimumWidthForSingleLineHeight(
+			data,
+			singleLineHeight,
+			maxWidth,
+		);
+		const oneSymbolWidth =
+			data[0].type === "paragraph" &&
+			typeof data[0].children[0].fontSize === "number" &&
+			getCharacterWidth(
+				data[0].children[0].fontSize,
+				data[0].children[0].fontFamily,
+			);
+		return getBlockNodes(data, bestWidth || oneSymbolWidth || bestWidth);
+	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
 	const divs = createFlowDivs(dropflowNodes);
 
-	const rootElement = flow.dom(
-		divs
-	);
+	const rootElement = flow.dom(divs);
 
 	const generated = flow.generate(rootElement);
 	flow.layout(generated);
@@ -144,27 +167,59 @@ export function getBlockNodes(data: Descendant[], maxWidth: number): LayoutBlock
 	}
 
 	return {
-			// nodes: dropflowNodes,
-			nodes: [],
-			maxWidth,
-			width,
-			height,
-			render: (ctx: CanvasRenderingContext2D, scale?: number) => {
-					if (scale) {
-						ctx.scale(scale, scale);
-					}
-					// console.log("SCALE", scale);
-					const canvas = ctx.canvas;
-					flow.renderToCanvas(rootElement, canvas);
-					if (scale) {
-						ctx.scale(1 / scale, 1 / scale);
-					}
-			},
-			realign: (newMaxWidth: number) => {
-					// Implement realign logic if needed
-			},
-			recoordinate: (newMaxWidth?: number) => {
-					// Implement recoordinate logic if needed
-			},
+		// nodes: dropflowNodes,
+		nodes: [],
+		maxWidth,
+		width,
+		height,
+		render: (ctx: CanvasRenderingContext2D, scale?: number) => {
+			if (scale) {
+				ctx.scale(scale, scale);
+			}
+			const canvas = ctx.canvas;
+			flow.renderToCanvas(rootElement, canvas);
+			if (scale) {
+				ctx.scale(1 / scale, 1 / scale);
+			}
+		},
+		realign: (newMaxWidth: number) => {
+			// Implement realign logic if needed
+		},
+		recoordinate: (newMaxWidth?: number) => {
+			// Implement recoordinate logic if needed
+		},
 	};
+}
+
+const canvas = document.createElement("canvas");
+const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+function getCharacterWidth(fontSize, fontFamily, character = "a"): number {
+	context.font = `${fontSize}px ${fontFamily}`;
+	const metrics = context.measureText(character);
+	return metrics.width;
+}
+
+function findMinimumWidthForSingleLineHeight(
+	data: Descendant[],
+	singleLineHeight: number,
+	maxWidth: number,
+): number {
+	let low = 0;
+	let high = maxWidth;
+	let bestWidth = maxWidth;
+
+	while (low <= high) {
+		const mid = Math.floor((low + high) / 2);
+		const midLayout = getBlockNodes(data, mid);
+		const midHeight = midLayout.height;
+
+		if (midHeight > singleLineHeight) {
+			low = mid + 1;
+		} else {
+			bestWidth = mid;
+			high = mid - 1;
+		}
+	}
+
+	return bestWidth;
 }

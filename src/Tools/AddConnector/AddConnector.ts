@@ -20,7 +20,11 @@ export class AddConnector extends BoardTool {
 	isDown = false;
 	isQuickAdd = false;
 
-	constructor(private board: Board, itemToStart?: Item, position?: Point) {
+	constructor(
+		private board: Board,
+		itemToStart?: Item,
+		position?: Point,
+	) {
 		super(board);
 		this.snap = new ConnectorSnap(this.board);
 		this.setCursor();
@@ -67,7 +71,7 @@ export class AddConnector extends BoardTool {
 		this.isDown = true;
 		const point = this.snap.getControlPoint();
 		if (!this.connector) {
-			console.log("new connector...")
+			console.log("new connector...");
 			this.connector = new Connector(
 				this.board,
 				undefined,

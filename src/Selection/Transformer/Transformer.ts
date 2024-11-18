@@ -38,7 +38,10 @@ export class Transformer extends Tool {
 	debounceUpd = createDebounceUpdater();
 	isShiftPressed = false;
 
-	constructor(private board: Board, private selection: Selection) {
+	constructor(
+		private board: Board,
+		private selection: Selection,
+	) {
 		super();
 		this.canvasDrawer = createCanvasDrawer(board);
 
@@ -386,7 +389,7 @@ export class Transformer extends Tool {
 		initMbr: Mbr,
 		isWidth: boolean,
 		isHeight: boolean,
-	): TransformManyItems | boolean {
+	): TransformManyItems {
 		const { matrix } = resize;
 		const translation: TransformManyItems = {};
 		const items = this.selection.items.list();

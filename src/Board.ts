@@ -10,15 +10,18 @@ import { BoardCommand } from "./BoardCommand";
 import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import { BoardEvent, createEvents } from "./Events/Events";
+import { createEvents, SyncBoardEvent } from "./Events/Events";
 import { itemFactories } from "./itemFactories";
-import { Connector, Frame, Item, ItemData, Matrix, Mbr } from "./Items";
 import {
-	BoardPoint,
-	ControlPoint,
-	ControlPointData,
-} from "./Items/Connector/ControlPoint";
-import { ConnectorEdge } from "./Items/Connector/Pointers";
+	Connector,
+	ConnectorData,
+	Frame,
+	Item,
+	ItemData,
+	Matrix,
+	Mbr,
+} from "./Items";
+import { ControlPointData } from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
 import { DrawingContext } from "./Items/DrawingContext";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
@@ -43,6 +46,11 @@ export class Board {
 	private drawingContext: DrawingContext | null = null;
 	interfaceType: InterfaceType = "edit";
 
+	private resolveConnecting!: () => void;
+	connecting = new Promise<void>(resolve => {
+		this.resolveConnecting = resolve;
+	});
+
 	constructor(private boardId = "") {
 		this.selection = new Selection(this, this.events);
 		this.tools.navigate();
@@ -50,12 +58,27 @@ export class Board {
 
 	/* Connect to the server to recieve the events*/
 	async connect(connection: Connection): Promise<void> {
-		this.events = createEvents(this, connection);
+		const currIndex = this.getSnapshot().lastIndex;
+		// temporaly disable snapshot cache
+		// TODO: reenable when fixed multiple snapshots for one board
+		// const snapshot = await this.getSnapshotFromCache();
+		const snapshot = undefined;
+		this.events = createEvents(
+			this,
+			connection,
+			currIndex || snapshot?.lastIndex || 0,
+		);
 		this.selection.events = this.events;
-		const snapshot = await this.getSnapshotFromCache();
-		if (snapshot && this.getSnapshot().lastIndex === 0) {
+		if (snapshot && currIndex === 0) {
 			this.deserialize(snapshot);
 		}
+		this.resolveConnecting();
+		setTimeout(() => {
+			this.items.subject.publish(this.items);
+		}, 0);
+		setTimeout(() => {
+			this.items.subject.publish(this.items);
+		}, 1000);
 	}
 
 	disconnect(): void {
@@ -183,38 +206,6 @@ export class Board {
 			this.selection.remove(item);
 			removedItems.push(item);
 		});
-		this.items.listAll().forEach(item => {
-			if (item.itemType === "Connector") {
-				this.replaceConnectorEdges(item, removedItems);
-			}
-		});
-	}
-
-	private replaceConnectorEdges(
-		connector: Connector,
-		removedItems: Item[],
-	): void {
-		const replaceConnectorEdge = (
-			point: ControlPoint,
-			edge: ConnectorEdge,
-		): void => {
-			if (point.pointType !== "Board") {
-				const pointData = new BoardPoint(point.x, point.y);
-				const item = removedItems.find(
-					item => item.getId() === point.item.getId(),
-				);
-				if (item) {
-					if (edge === "start") {
-						connector.applyStartPoint(pointData);
-					} else {
-						connector.applyEndPoint(pointData);
-					}
-				}
-			}
-		};
-
-		replaceConnectorEdge(connector.getStartPoint(), "start");
-		replaceConnectorEdge(connector.getEndPoint(), "end");
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
@@ -244,7 +235,7 @@ export class Board {
 	}
 
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
-		*/
+	 */
 	handleNesting(item: Item): void {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
@@ -266,11 +257,11 @@ export class Board {
 	}
 
 	/**
-		* Creates new canvas and returns it.
-		* Renders all items from translation on new canvas.
-		* @param mbr - width and height for resulting canvas
-		* @param translation - ids of items to draw on mbr
-		*/
+	 * Creates new canvas and returns it.
+	 * Renders all items from translation on new canvas.
+	 * @param mbr - width and height for resulting canvas
+	 * @param translation - ids of items to draw on mbr
+	 */
 	drawMbrOnCanvas(
 		mbr: Mbr,
 		translation: TransformManyItems,
@@ -484,24 +475,51 @@ export class Board {
 		});
 	}
 
-	copy(): Record<string, ItemData> {
+	copy(): ItemData[] {
 		return this.items.index.copy();
 	}
 
-	serialize(): Record<string, ItemData> {
+	serialize(): ItemData[] {
 		return this.copy();
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {
-		const { events } = snapshot;
-		/*
+		const { events, items } = snapshot;
 		this.index.clear();
-		for (const key in items) {
-			const itemData = items[key];
-			const item = this.createItem(key, itemData);
-			this.index.insert(item);
+		const createdConnectors: Record<
+			string,
+			{ item: Connector; itemData: ConnectorData & { id: string } }
+		> = {};
+
+		if (Array.isArray(items)) {
+			for (const itemData of items) {
+				const item = this.createItem(itemData.id, itemData);
+				if (
+					item.itemType === "Connector" &&
+					itemData.itemType === "Connector"
+				) {
+					createdConnectors[itemData.id] = { item, itemData };
+				}
+				this.index.insert(item);
+			}
+		} else {
+			// for older snapshots, that were {id: data}
+			for (const key in items) {
+				const itemData = items[key];
+				const item = this.createItem(key, itemData);
+				if (item.itemType === "Connector") {
+					createdConnectors[key] = { item, itemData };
+				}
+				this.index.insert(item);
+			}
 		}
-		*/
+
+		for (const key in createdConnectors) {
+			const { item, itemData } = createdConnectors[key];
+			item.applyStartPoint(itemData.startPoint);
+			item.applyEndPoint(itemData.endPoint);
+		}
+
 		this.events?.deserialize(events);
 	}
 
@@ -638,21 +656,24 @@ export class Board {
 				const firstVisit = Array.from(
 					{ length: localStorage.length },
 					(_, i) => i,
-				).reduce((acc, i) => {
-					const key = localStorage.key(i);
-					if (key && key.startsWith("lastVisit")) {
-						const curr = +(localStorage.getItem(key) || "");
-						const currId = key.split("_")[1];
-						if (!acc || curr < acc.minVal) {
-							return {
-								minVal: curr,
-								minId: currId,
-							};
+				).reduce(
+					(acc, i) => {
+						const key = localStorage.key(i);
+						if (key && key.startsWith("lastVisit")) {
+							const curr = +(localStorage.getItem(key) || "");
+							const currId = key.split("_")[1];
+							if (!acc || curr < acc.minVal) {
+								return {
+									minVal: curr,
+									minId: currId,
+								};
+							}
+							return acc;
 						}
 						return acc;
-					}
-					return acc;
-				}, undefined as { minVal: number; minId: string } | undefined);
+					},
+					undefined as { minVal: number; minId: string } | undefined,
+				);
 				if (firstVisit && firstVisit.minId !== this.getBoardId()) {
 					localStorage.removeItem(`lastVisit_${firstVisit.minId}`);
 					localStorage.removeItem(`camera_${firstVisit.minId}`);
@@ -957,7 +978,7 @@ export class Board {
 				return pasteItem(id, data);
 			}
 			return;
-		})
+		});
 	}
 
 	isOnBoard(item: Item): boolean {
@@ -1000,7 +1021,7 @@ export class Board {
 }
 
 export interface BoardSnapshot {
-	items: Record<string, ItemData>;
-	events: BoardEvent[];
+	items: (ItemData & { id: string })[];
+	events: SyncBoardEvent[];
 	lastIndex: number;
 }

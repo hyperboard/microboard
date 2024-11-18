@@ -6,6 +6,7 @@ import { ConnectorOperation } from "../Items/Connector";
 import { DrawingOperation } from "Board/Items/Drawing/DrawingOperation";
 import { StickerOperation } from "../Items/Sticker/StickerOperation";
 import { FrameOperation } from "../Items/Frame";
+import { LinkToOperation } from "../Items/LinkToOperation";
 import { PlaceholderOperation } from "Board/Items/Placeholder/PlaceholderOperation";
 
 interface Undo {
@@ -23,6 +24,7 @@ interface Redo {
 export type EventsOperation = Undo | Redo;
 
 export type ItemOperation =
+	| LinkToOperation
 	| TransformationOperation
 	| ShapeOperation
 	| StickerOperation

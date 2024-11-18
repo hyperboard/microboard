@@ -11,7 +11,7 @@ export const TextStyles = [
 	"superscript",
 ];
 
-export type TextStyle = typeof TextStyles[number];
+export type TextStyle = (typeof TextStyles)[number];
 
 export type TextNode = {
 	type: "text";

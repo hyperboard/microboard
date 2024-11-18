@@ -99,8 +99,8 @@ export class Mbr implements Geometry {
 			alignment === "top"
 				? rect.top
 				: alignment === "bottom"
-				? rect.bottom - height
-				: center.y - height / 2;
+					? rect.bottom - height
+					: center.y - height / 2;
 		this.left = Math.max(left, rect.left);
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;

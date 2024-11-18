@@ -147,7 +147,10 @@ export class RichTextGroupCommand implements Command {
 	private forwardOps: TextEdits[];
 	private reverseOps: TextEdits[];
 
-	constructor(private richText: RichText[], private operation: GroupEdit) {
+	constructor(
+		private richText: RichText[],
+		private operation: GroupEdit,
+	) {
 		this.forwardOps = this.getForward();
 		this.reverseOps = this.getReverse();
 	}

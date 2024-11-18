@@ -2,7 +2,7 @@ import { Board } from "Board/Board";
 import { ImageItem } from "./Image";
 import { calculatePosition } from "./calculatePosition";
 import { prepareImage } from "./ImageHelpers";
-import * as PDFJS from "@bundled-es-modules/pdfjs-dist"
+import * as PDFJS from "@bundled-es-modules/pdfjs-dist";
 import { RenderParameters } from "@bundled-es-modules/pdfjs-dist/types/src/display/api";
 
 export function uploadImage(file: File, board: Board) {

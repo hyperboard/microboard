@@ -25,6 +25,8 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+import { Node } from "slate";
+import { Text } from "slate";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -104,73 +106,73 @@ export class EditorContainer {
 					}
 				}
 				this.decorated.realapply(op);
+				this.subject.publish(this);
 			},
 			undo: editor.undo,
 			redo: editor.redo,
 		};
 		/** We decorate methods */
 		editor.apply = (operation: SlateOp): void => {
-			if (this.shouldEmit) {
-				if (this.recordedSelectionOp) {
-					if (operation.type !== "set_selection") {
-						if (
-							operation.type === "set_node" &&
-							"fontSize" in operation.newProperties &&
-							"fontSize" in operation.properties
-						) {
-							if (operation.newProperties.fontSize === "auto") {
-								operation.newProperties.fontSize = 14;
-								operation.newProperties.enableAuto = true;
-								operation.properties.enableAuto = false;
-							} else {
-								operation.newProperties.enableAuto = false;
-								if (this.getAutosize()) {
-									operation.properties.enableAuto = true;
-								}
-							}
-						}
-
-						this.recordedSelectionOp.ops.push(operation);
-						this.decorated.apply(operation);
-						this.subject.publish(this);
-					}
+			if (!this.shouldEmit) {
+				return;
+			}
+			if (this.recordedSelectionOp) {
+				if (operation.type === "set_selection") {
 					return;
-				} else {
-					if (operation.type === "set_selection") {
-						this.decorated.apply(operation);
-						this.subject.publish(this);
-					} else if (this.id !== "") {
-						if (this.insertingText) {
-							this.recordedInsertionOps.push(operation);
-							this.decorated.apply(operation);
-						} else {
-							if (
-								operation.type !== "remove_node" &&
-								operation.type !== "remove_text" &&
-								operation.type !== "merge_node" &&
-								operation.type !== "set_node" &&
-								this.getAutosize()
-							) {
-								const relativeFontSize = this.getFontSize() / this.getMatrixScale();
-								if (relativeFontSize < 10) {
-									this.getOnLimitReached()();
-									return;
-								}
-							}
-							this.emit({
-								class: "RichText",
-								method: "edit",
-								item: [this.id],
-								selection: JSON.parse(
-									JSON.stringify(this.editor.selection),
-								),
-								ops: [operation],
-							});
-						}
+				}
+				if (
+					operation.type === "set_node" &&
+					"fontSize" in operation.newProperties &&
+					"fontSize" in operation.properties
+				) {
+					if (operation.newProperties.fontSize === "auto") {
+						operation.newProperties.fontSize = 14;
+						operation.newProperties.enableAuto = true;
+						operation.properties.enableAuto = false;
 					} else {
-						this.decorated.apply(operation);
-						this.subject.publish(this);
+						operation.newProperties.enableAuto = false;
+						if (this.getAutosize()) {
+							operation.properties.enableAuto = true;
+						}
 					}
+				}
+				this.recordedSelectionOp.ops.push(operation);
+				this.decorated.apply(operation);
+			} else {
+				if (operation.type === "set_selection") {
+					this.decorated.apply(operation);
+					this.subject.publish(this);
+				} else if (this.id !== "") {
+					if (this.insertingText) {
+						this.recordedInsertionOps.push(operation);
+						this.decorated.apply(operation);
+					} else {
+						if (
+							operation.type !== "remove_node" &&
+							operation.type !== "remove_text" &&
+							operation.type !== "merge_node" &&
+							operation.type !== "set_node" &&
+							this.getAutosize()
+						) {
+							const relativeFontSize =
+								this.getFontSize() / this.getMatrixScale();
+							if (relativeFontSize < 10) {
+								this.getOnLimitReached()();
+								return;
+							}
+						}
+						this.emit({
+							class: "RichText",
+							method: "edit",
+							item: [this.id],
+							selection: JSON.parse(
+								JSON.stringify(this.editor.selection),
+							),
+							ops: [operation],
+						});
+					}
+				} else {
+					this.decorated.apply(operation);
 				}
 			}
 		};
