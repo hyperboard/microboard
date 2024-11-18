@@ -1,6 +1,6 @@
 import { Events, Operation } from "Board/Events";
 import { DrawingContext } from "../DrawingContext";
-import { Shapes } from "../Shape/Basic";
+import { Shapes } from "../Shape";
 import PlaceholderImg from "shared/assets/imgs/no-img-icon.svg";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { Subject } from "Subject";

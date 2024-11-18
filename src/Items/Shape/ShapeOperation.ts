@@ -1,5 +1,5 @@
 import { BorderStyle } from "../Path";
-import { ShapeType } from "./Basic";
+import { ShapeType } from "./index";
 
 export type ShapeOperation =
 	| SetBackgroundColor

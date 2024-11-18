@@ -5,10 +5,10 @@ import { Line } from "../Line";
 import { CubicBezier, QuadraticBezier } from "../Curve";
 import { Point } from "../Point";
 import { Mbr } from "../Mbr";
-import { Matrix } from "..";
+import { Arc, Matrix } from "..";
 import { GeometricNormal } from "../GeometricNormal";
 
-export type Segment = Line | QuadraticBezier | CubicBezier;
+export type Segment = Line | QuadraticBezier | CubicBezier | Arc;
 
 export const LinePatterns = {
 	solid: [] as number[],
@@ -186,6 +186,10 @@ export class Path implements Geometry, PathStylize {
 
 	getWidth() {
 		return this.width;
+	}
+
+	getHeight() {
+		return this.height;
 	}
 
 	setBorderOpacity(opacity: number): void {

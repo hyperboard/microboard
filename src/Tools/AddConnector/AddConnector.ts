@@ -30,15 +30,18 @@ export class AddConnector extends BoardTool {
 		this.setCursor();
 
 		const storage = new SessionStorage();
-		const savedStyle = storage.getConnectorLineStyle();
+		const savedStyle = storage.getConnectorLineStyle(board.getBoardId());
 		if (savedStyle) {
 			this.lineStyle = savedStyle;
 		}
-		const savedStart = storage.getConnectorPointer("start");
+		const savedStart = storage.getConnectorPointer(
+			"start",
+			board.getBoardId(),
+		);
 		if (savedStart) {
 			this.startPointer = savedStart;
 		}
-		const savedEnd = storage.getConnectorPointer("end");
+		const savedEnd = storage.getConnectorPointer("end", board.getBoardId());
 		if (savedEnd) {
 			this.endPointer = savedEnd;
 		}

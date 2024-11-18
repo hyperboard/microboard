@@ -5,7 +5,7 @@ import {
 	getControlPoint,
 } from "Board/Items/Connector/ControlPoint";
 import { getDirection } from "Board/Items/Connector/getLine/findOrthogonalPath";
-import { ShapeType } from "Board/Items/Shape/Basic";
+import { ShapeType } from "Board/Items/Shape";
 
 /** index represents the number of connection - left, right, top, bottom */
 export function getControlPointData(
