@@ -319,8 +319,7 @@ export class Transformer extends Tool {
 						currItem =>
 							currItem !== item &&
 							!(currItem instanceof Frame) &&
-							(currItem.parent === "Board" ||
-								currItem.parent === item.getId()),
+							currItem.parent === "Board",
 					);
 				itemsToCheck.forEach(currItem => {
 					if (item.handleNesting(currItem)) {
