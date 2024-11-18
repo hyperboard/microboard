@@ -153,7 +153,7 @@ export class AddSticker extends BoardTool {
 	}
 
 	private getLastSticker(): Sticker | null {
-		const lastSticker = tempStorage.getStickerData(this.board.getBoardId());
+		const lastSticker = tempStorage.getStickerData();
 		if (lastSticker) {
 			return new Sticker().deserialize(lastSticker);
 		} else {
@@ -162,6 +162,6 @@ export class AddSticker extends BoardTool {
 	}
 
 	private setLastSticker(lastSticker: Sticker): void {
-		tempStorage.setStickerData(lastSticker, this.board.getBoardId());
+		tempStorage.setStickerData(lastSticker);
 	}
 }

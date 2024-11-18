@@ -309,7 +309,7 @@ export class Camera {
 		this.zoomToViewCenter(newScale);
 	}
 
-	viewRectangle(mbr: Mbr, offsetInPercent: number = 10): void {
+	viewRectangle(mbr: Mbr, offsetInPercent = 10): void {
 		const offsetY = (mbr.getHeight() * offsetInPercent) / 100;
 		const offsetX = (mbr.getWidth() * offsetInPercent) / 100;
 		const mbrWithOffset = new Mbr();
@@ -348,7 +348,7 @@ export class Camera {
 		this.subject.publish(this);
 	}
 
-	zoomToFit(rect: Mbr, offsetInPercent: number = 10): void {
+	zoomToFit(rect: Mbr, offsetInPercent = 10): void {
 		this.viewRectangle(rect, offsetInPercent);
 	}
 

@@ -69,6 +69,10 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			matrix.scale(scaleX, scaleY);
 			lastCreatedCanvas.style.transformOrigin = "top left";
 			lastCreatedCanvas.style.transform = `scale(${matrix.scaleX}, ${matrix.scaleY})`;
+			const anchors = lastCreatedCanvas.querySelectorAll("div");
+			anchors.forEach(anchor => {
+				anchor.style.transform = `scale(${1 / matrix.scaleX}, ${1 / matrix.scaleY})`;
+			});
 		}
 	}
 
@@ -78,6 +82,10 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			matrix.scaleY = scaleY;
 			lastCreatedCanvas.style.transformOrigin = "top left";
 			lastCreatedCanvas.style.transform = `scale(${matrix.scaleX}, ${matrix.scaleY})`;
+			const anchors = lastCreatedCanvas.querySelectorAll("div");
+			anchors.forEach(anchor => {
+				anchor.style.transform = `scale(${1 / matrix.scaleX}, ${1 / matrix.scaleY})`;
+			});
 		}
 	}
 

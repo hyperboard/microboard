@@ -299,7 +299,10 @@ export class Select extends Tool {
 				return false;
 			}
 
-			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd) {
+			if (
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				this.debounceUpd.shouldUpd()
+			) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const translation = this.handleMultipleItemsTranslate(
 					this.canvasDrawer.getMatrix().translateX,
@@ -319,7 +322,6 @@ export class Select extends Tool {
 							translation,
 						);
 						this.debounceUpd.setFalse();
-						this.canvasDrawer.clearCanvasAndKeys();
 						this.debounceUpd.setTimeoutUpdate(1000);
 					}
 				}

@@ -26,7 +26,7 @@ export class Placeholder {
 	readonly itemType = "Placeholder";
 	shapeType = "Rectangle";
 	parent = "Board";
-	readonly transformation = new Transformation(this.id, this.events);
+	readonly transformation: Transformation;
 	private path = Shapes[this.shapeType].path.copy();
 	private mbr = Shapes[this.shapeType].path.getMbr().copy();
 	readonly subject = new Subject<Placeholder>();
@@ -40,6 +40,7 @@ export class Placeholder {
 		private backgroundColor = "#E5E5EA",
 		private icon: string = PlaceholderImg?.toString() || "",
 	) {
+		this.transformation = new Transformation(this.id, this.events);
 		this.transformation.subject.subscribe((_subject: Transformation) => {
 			this.transformPath();
 			this.updateMbr();
@@ -157,7 +158,7 @@ export class Placeholder {
 		});
 	}
 
-	getMiroData(): unknown {
+	getMiroData(): any {
 		return this.miroData;
 	}
 
@@ -345,11 +346,11 @@ export class Placeholder {
 		this.renderIcon(context);
 	}
 
-	getLinkTo() {
+	getLinkTo(): undefined {
 		return undefined;
 	}
 
-	getLink() {
+	getLink(): string {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;

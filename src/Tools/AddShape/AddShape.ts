@@ -22,7 +22,7 @@ export class AddShape extends BoardTool {
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
-		const data = tempStorage.getShapeData(board.getBoardId());
+		const data = tempStorage.getShapeData();
 		if (data) {
 			this.shape = new Shape(
 				undefined,
@@ -121,35 +121,22 @@ export class AddShape extends BoardTool {
 		if (this.type === "None") {
 			return false;
 		}
-		const boardId = this.board.getBoardId();
 		const width =
 			this.bounds.getWidth() < 2
-				? tempStorage.getShapeWidth(boardId) || 100
+				? tempStorage.getShapeWidth() || 100
 				: this.bounds.getWidth();
 		const height =
 			this.bounds.getHeight() < 2
-				? tempStorage.getShapeHeight(boardId) || 100
+				? tempStorage.getShapeHeight() || 100
 				: this.bounds.getHeight();
 		if (this.bounds.getWidth() > 2) {
-			tempStorage.setShapeWidth(this.bounds.getWidth(), boardId);
+			tempStorage.setShapeWidth(this.bounds.getWidth());
 		}
 		if (this.bounds.getHeight() > 2) {
-			tempStorage.setShapeHeight(this.bounds.getHeight(), boardId);
+			tempStorage.setShapeHeight(this.bounds.getHeight());
 		}
 		this.initTransformation(width / 100, height / 100);
 		const shape = this.board.add(this.shape);
-		if (this.shape.getShapeType().split("_").length === 1) {
-			const shapeData = {
-				shapeType: shape.getShapeType(),
-				backgroundColor: shape.getBackgroundColor(),
-				backgroundOpacity: shape.getBackgroundOpacity(),
-				borderColor: shape.getBorderColor(),
-				borderOpacity: shape.getBorderOpacity(),
-				borderStyle: shape.getBorderStyle(),
-				borderWidth: shape.getBorderWidth(),
-			};
-			tempStorage.setShapeData(shapeData, boardId);
-		}
 		this.isDown = false;
 		if (ADD_TO_SELECTION) {
 			this.board.selection.removeAll();

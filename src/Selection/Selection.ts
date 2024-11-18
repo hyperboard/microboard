@@ -371,35 +371,25 @@ export class Selection {
 			return;
 		}
 		if (text.isEmpty()) {
-			const textColor = tempStorage.getFontColor(
-				item.itemType,
-				this.board.getBoardId(),
-			);
-			const textSize = tempStorage.getFontSize(
-				item.itemType,
-				this.board.getBoardId(),
-			);
-			const highlightColor = tempStorage.getFontHighlight(
-				item.itemType,
-				this.board.getBoardId(),
-			);
-			const styles = tempStorage.getFontStyles(
-				item.itemType,
-				this.board.getBoardId(),
-			);
+			const textColor = tempStorage.getFontColor(item.itemType);
+			const textSize = tempStorage.getFontSize(item.itemType);
+			const highlightColor = tempStorage.getFontHighlight(item.itemType);
+			const styles = tempStorage.getFontStyles(item.itemType);
 			const horizontalAlignment = tempStorage.getHorizontalAlignment(
 				item.itemType,
-				this.board.getBoardId(),
 			);
 			const verticalAlignment = tempStorage.getVerticalAlignment(
 				item.itemType,
-				this.board.getBoardId(),
 			);
 			if (textColor) {
 				console.log(textColor);
 				text.setSelectionFontColor(textColor, "None");
 			}
-			if (textSize) {
+			if (
+				textSize &&
+				this.context !== "EditUnderPointer" &&
+				this.context !== "EditTextUnderPointer"
+			) {
 				this.emit({
 					class: "RichText",
 					method: "setFontSize",
@@ -967,11 +957,11 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontSize(
-				item.itemType,
-				fontSize,
-				this.board.getBoardId(),
-			);
+			if (item.itemType === "Sticker" && fontSize === "auto") {
+				tempStorage.remove(`fontSize_${item.itemType}`);
+			} else {
+				tempStorage.setFontSize(item.itemType, fontSize);
+			}
 		}
 		if (itemsOps.some(op => !op.ops.length)) {
 			this.emit({
@@ -1007,11 +997,7 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontStyles(
-				item.itemType,
-				text.getFontStyles(),
-				this.board.getBoardId(),
-			);
+			tempStorage.setFontStyles(item.itemType, text.getFontStyles());
 		}
 		this.emitApplied({
 			class: "RichText",
@@ -1037,11 +1023,7 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontColor(
-				item.itemType,
-				fontColor,
-				this.board.getBoardId(),
-			);
+			tempStorage.setFontColor(item.itemType, fontColor);
 		}
 		this.emitApplied({
 			class: "RichText",
@@ -1071,11 +1053,7 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontHighlight(
-				item.itemType,
-				fontHighlight,
-				this.board.getBoardId(),
-			);
+			tempStorage.setFontHighlight(item.itemType, fontHighlight);
 		}
 		this.emitApplied({
 			class: "RichText",
@@ -1109,7 +1087,6 @@ export class Selection {
 			tempStorage.setHorizontalAlignment(
 				item.itemType,
 				horisontalAlignment,
-				this.board.getBoardId(),
 			);
 		}
 		this.emitApplied({
@@ -1137,11 +1114,7 @@ export class Selection {
 				return;
 			}
 
-			tempStorage.setVerticalAlignment(
-				item.itemType,
-				verticalAlignment,
-				this.board.getBoardId(),
-			);
+			tempStorage.setVerticalAlignment(item.itemType, verticalAlignment);
 			if (item instanceof RichText) {
 				item.setEditorFocus(this.context);
 			}
