@@ -957,7 +957,11 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontSize(item.itemType, fontSize);
+			if (item.itemType === "Sticker" && fontSize === "auto") {
+				tempStorage.remove(`fontSize_${item.itemType}`);
+			} else {
+				tempStorage.setFontSize(item.itemType, fontSize);
+			}
 		}
 		if (itemsOps.some(op => !op.ops.length)) {
 			this.emit({
