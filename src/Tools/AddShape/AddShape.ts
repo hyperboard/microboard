@@ -64,6 +64,14 @@ export class AddShape extends BoardTool {
 	}
 
 	setShapeType(type: ShapeType): void {
+		const splittedCurrentType = this.type.split("_");
+		const splittedNewType = type.split("_");
+		if (
+			splittedCurrentType[0] !== splittedNewType[0] &&
+			!(splittedNewType.length === 1 && splittedCurrentType.length === 1)
+		) {
+			this.shape = new Shape();
+		}
 		this.type = type;
 		this.board.tools.publish();
 	}
