@@ -134,11 +134,11 @@ function sliceTextByWidth(
 				measureText(
 					data[0].children[0].fontSize,
 					data[0].children[0].fontFamily,
-					currentText,
+					currentText + "...",
 				).width) ||
 			0;
 
-		if (currentWidth > maxWidth - 5) {
+		if (currentWidth > maxWidth) {
 			currentText = currentText.slice(0, -3) + "...";
 			break;
 		}
