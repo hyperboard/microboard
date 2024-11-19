@@ -117,11 +117,50 @@ export interface LayoutBlockNodes {
 	recoordinate: (newMaxWidth?: number) => void;
 }
 
+function sliceTextByWidth(
+	data: Descendant[],
+	maxWidth: number,
+): LayoutBlockNodes {
+	const text = data[0].type === "paragraph" ? data[0].children[0].text : "";
+	const newData: Descendant = JSON.parse(JSON.stringify(data[0]));
+	let currentText = "";
+	let currentWidth = 0;
+
+	for (let i = 0; i < text.length; i++) {
+		currentText += text[i];
+		currentWidth =
+			(data[0].type === "paragraph" &&
+				typeof data[0].children[0].fontSize === "number" &&
+				measureText(
+					data[0].children[0].fontSize,
+					data[0].children[0].fontFamily,
+					currentText,
+				).width) ||
+			0;
+
+		if (currentWidth > maxWidth - 5) {
+			currentText = currentText.slice(0, -3) + "...";
+			break;
+		}
+	}
+
+	if (newData.type === "paragraph") {
+		newData.children[0].text = currentText;
+	}
+
+	return getBlockNodes([newData], maxWidth);
+}
+
 export function getBlockNodes(
 	data: Descendant[],
 	maxWidth: number,
 	shrink = false,
+	isFrame?: boolean,
 ): LayoutBlockNodes {
+	if (isFrame && data[0].type === "paragraph") {
+		return sliceTextByWidth(data, maxWidth);
+	}
+
 	if (shrink) {
 		const singleLineLayout = getBlockNodes(data, Infinity);
 		const singleLineHeight = singleLineLayout.height;
@@ -197,6 +236,11 @@ function getCharacterWidth(fontSize, fontFamily, character = "a"): number {
 	context.font = `${fontSize}px ${fontFamily}`;
 	const metrics = context.measureText(character);
 	return metrics.width;
+}
+
+function measureText(fontSize, fontFamily, text): TextMetrics {
+	context.font = `${fontSize}px ${fontFamily}`;
+	return context.measureText(text);
 }
 
 function findMinimumWidthForSingleLineHeight(

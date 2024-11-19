@@ -177,6 +177,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
 			this.shrinkWidth,
+			this.insideOf === "Frame"
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -279,6 +280,7 @@ export class RichText extends Mbr implements Geometry {
 				this.getTextForNodes(),
 				this.getMaxWidth(),
 				this.shrinkWidth,
+				this.insideOf === "Frame"
 			);
 			this.blockNodes = nodes;
 			if (
