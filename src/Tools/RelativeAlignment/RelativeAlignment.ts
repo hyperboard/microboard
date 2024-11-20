@@ -226,9 +226,6 @@ export class AlignmentHelper {
 				);
 			});
 
-		console.log("horizontalLines", horizontalLines);
-		console.log("verticalLines", verticalLines);
-
 		return { verticalLines, horizontalLines };
 	}
 
