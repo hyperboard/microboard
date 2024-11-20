@@ -154,6 +154,70 @@ export class Select extends Tool {
 		return angle * (180 / Math.PI); // Конвертация в градусы
 	}
 
+	private handleShiftGuidelines(item: Item, mousePosition: Point): void {
+		if (item) {
+			if (!this.originalCenter) {
+				this.originalCenter = item.getMbr().getCenter();
+				this.guidelines = this.alignmentHelper.generateGuidelines(
+					this.originalCenter,
+				).lines;
+			}
+			this.mainLine = new Line(this.originalCenter, mousePosition);
+			let minAngle = Infinity;
+			let newSnapLine: Line | null = null;
+
+			this.guidelines.forEach(guideline => {
+				const angle = this.calculateAngle(this.mainLine!, guideline);
+				if (angle < minAngle) {
+					minAngle = angle;
+					newSnapLine = guideline;
+				}
+			});
+
+			if (newSnapLine) {
+				this.snapLine = newSnapLine as Line;
+				const mainLineLength = this.calculateLineLength(
+					this.mainLine,
+					this.originalCenter!,
+				);
+
+				const snapDirectionX =
+					(this.snapLine.end.x - this.snapLine.start.x) /
+					this.calculateLineLength(
+						this.snapLine,
+						this.originalCenter!,
+					);
+				const snapDirectionY =
+					(this.snapLine.end.y - this.snapLine.start.y) /
+					this.calculateLineLength(
+						this.snapLine,
+						this.originalCenter!,
+					);
+
+				const newEndX =
+					this.originalCenter.x + snapDirectionX * mainLineLength;
+				const newEndY =
+					this.originalCenter.y + snapDirectionY * mainLineLength;
+
+				const threshold = 1;
+				const translateX =
+					Math.abs(newEndX - item.getMbr().getCenter().x) > threshold
+						? newEndX - item.getMbr().getCenter().x
+						: 0;
+				const translateY =
+					Math.abs(newEndY - item.getMbr().getCenter().y) > threshold
+						? newEndY - item.getMbr().getCenter().y
+						: 0;
+
+				item.transformation.translateBy(
+					translateX,
+					translateY,
+					this.beginTimeStamp,
+				);
+			}
+		}
+	}
+
 	leftButtonDown(): boolean {
 		if (this.isRightDown || this.isMiddleDown) {
 			return false;
@@ -294,62 +358,7 @@ export class Select extends Tool {
 		if (isShift) {
 			const mousePosition = this.board.pointer.point;
 			if (this.downOnItem) {
-				if (!this.originalCenter) {
-					this.originalCenter = this.downOnItem.getMbr().getCenter();
-					this.guidelines = this.alignmentHelper.generateGuidelines(
-						this.originalCenter,
-					).lines;
-				}
-				this.mainLine = new Line(this.originalCenter, mousePosition);
-				let minAngle = Infinity;
-				let newSnapLine: Line | null = null;
-
-				this.guidelines.forEach(guideline => {
-					const angle = this.calculateAngle(
-						this.mainLine!,
-						guideline,
-					);
-					if (angle < minAngle) {
-						minAngle = angle;
-						newSnapLine = guideline;
-					}
-				});
-
-				if (newSnapLine) {
-					this.snapLine = newSnapLine;
-					const mainLineLength = this.calculateLineLength(
-						this.mainLine,
-						this.originalCenter!,
-					);
-
-					const snapDirectionX =
-						(this.snapLine.end.x - this.snapLine.start.x) /
-						this.calculateLineLength(
-							this.snapLine,
-							this.originalCenter!,
-						);
-					const snapDirectionY =
-						(this.snapLine.end.y - this.snapLine.start.y) /
-						this.calculateLineLength(
-							this.snapLine,
-							this.originalCenter!,
-						);
-
-					const newEndX =
-						this.originalCenter.x + snapDirectionX * mainLineLength;
-					const newEndY =
-						this.originalCenter.y + snapDirectionY * mainLineLength;
-
-					const translateX =
-						newEndX - this.downOnItem.getMbr().getCenter().x;
-					const translateY =
-						newEndY - this.downOnItem.getMbr().getCenter().y;
-					this.downOnItem.transformation.translateBy(
-						translateX,
-						translateY,
-						this.beginTimeStamp,
-					);
-				}
+				this.handleShiftGuidelines(this.downOnItem, mousePosition);
 			}
 		} else {
 			this.originalCenter = null;
