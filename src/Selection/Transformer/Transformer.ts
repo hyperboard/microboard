@@ -394,7 +394,7 @@ export class Transformer extends Tool {
 		const items = this.selection.items.list();
 
 		for (const item of items) {
-			const itemMbr = item.getMbr();
+			const itemMbr = item.getPath().getMbr();
 			const deltaX = itemMbr.left - initMbr.left;
 			const translateX =
 				deltaX * matrix.scaleX - deltaX + matrix.translateX;
