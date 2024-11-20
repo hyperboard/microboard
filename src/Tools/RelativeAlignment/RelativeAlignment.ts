@@ -94,11 +94,17 @@ export class AlignmentHelper {
 
 			const centerYMoving = (movingMBR.top + movingMBR.bottom) / 2;
 			const centerYItem = (itemMbr.top + itemMbr.bottom) / 2;
-			const epsilon = 0.0001;
-			const isSameWidth =
-				Math.abs(movingMBR.getWidth() - itemMbr.getWidth()) < epsilon;
-			const isSameHeight =
-				Math.abs(movingMBR.getHeight() - itemMbr.getHeight()) < epsilon;
+			const widthDifference = Math.abs(
+				movingMBR.getWidth() - itemMbr.getWidth(),
+			);
+			const heightDifference = Math.abs(
+				movingMBR.getHeight() - itemMbr.getHeight(),
+			);
+
+			const tolerance = 0.1;
+
+			const isSameWidth = widthDifference < tolerance;
+			const isSameHeight = heightDifference < tolerance;
 
 			if (
 				Math.abs(centerXMoving - centerXItem) < dynamicAlignThreshold &&

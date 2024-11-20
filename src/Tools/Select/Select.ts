@@ -219,7 +219,6 @@ export class Select extends Tool {
 	}
 
 	private clearGuidelines(): void {
-		console.log("вызвалось");
 		this.originalCenter = null;
 		this.guidelines = [];
 		this.mainLine = null;
@@ -374,9 +373,7 @@ export class Select extends Tool {
 				}
 			}
 		} else {
-			console.log("mi tut");
 			this.clearGuidelines();
-			console.log("snap", this.snapLine);
 		}
 
 		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
