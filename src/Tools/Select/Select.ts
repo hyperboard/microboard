@@ -218,6 +218,14 @@ export class Select extends Tool {
 		}
 	}
 
+	private clearGuidelines(): void {
+		console.log("вызвалось");
+		this.originalCenter = null;
+		this.guidelines = [];
+		this.mainLine = null;
+		this.snapLine = null;
+	}
+
 	leftButtonDown(): boolean {
 		if (this.isRightDown || this.isMiddleDown) {
 			return false;
@@ -359,12 +367,16 @@ export class Select extends Tool {
 			const mousePosition = this.board.pointer.point;
 			if (this.downOnItem) {
 				this.handleShiftGuidelines(this.downOnItem, mousePosition);
+			} else if (this.isDraggingSelection) {
+				const singleItem = selection.items.getSingle();
+				if (singleItem) {
+					this.handleShiftGuidelines(singleItem, mousePosition);
+				}
 			}
 		} else {
-			this.originalCenter = null;
-			this.guidelines = [];
-			this.mainLine = null;
-			this.snapLine = null;
+			console.log("mi tut");
+			this.clearGuidelines();
+			console.log("snap", this.snapLine);
 		}
 
 		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
@@ -641,6 +653,7 @@ export class Select extends Tool {
 			this.originalCenter = this.downOnItem.getMbr().getCenter();
 		}
 		this.clear();
+		this.clearGuidelines();
 		this.board.tools.publish();
 		return false;
 	}
@@ -774,6 +787,7 @@ export class Select extends Tool {
 	}
 
 	render(context: DrawingContext): void {
+		const { isShift } = this.board.keyboard;
 		if (this.isDrawingRectangle && this.rect) {
 			this.rect.strokeWidth = 1 / this.board.camera.getScale();
 			this.rect.render(context);
@@ -787,9 +801,9 @@ export class Select extends Tool {
 			this.board.camera.getScale(),
 		);
 
-		if (this.snapLine) {
+		if (this.snapLine && isShift) {
 			context.ctx.save();
-			context.ctx.strokeStyle = "rgba(0, 0, 255, 0.5)";
+			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
 			context.ctx.lineWidth = 1 / this.board.camera.getScale();
 			context.ctx.setLineDash([10, 5]);
 
