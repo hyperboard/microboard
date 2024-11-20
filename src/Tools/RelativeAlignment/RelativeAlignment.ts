@@ -28,7 +28,10 @@ export class AlignmentHelper {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
-		const movingMBR = movingItem.getMbr();
+		const movingMBR =
+			movingItem.itemType === "Shape"
+				? movingItem.getPath().getMbr()
+				: movingItem.getMbr();
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
