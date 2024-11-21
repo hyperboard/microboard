@@ -335,7 +335,7 @@ export class SpatialIndex {
 		return combined.slice(0, maxItems);
 	}
 
-	list(): Item[] {
+	list(): ItemWoFrames[] {
 		return this.itemsArray.concat();
 	}
 

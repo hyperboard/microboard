@@ -209,7 +209,6 @@ export class Board {
 	}
 
 	private applyItemOperation(op: ItemOperation): void {
-		// @ts-expect-error incorrect type
 		this.findItemAndApply(op.item, item => {
 			item.apply(op);
 		});
