@@ -71,17 +71,47 @@ function convertSlateToDropflow(
 				width: maxWidth === Infinity ? "auto" : maxWidth,
 			};
 
+			let currNode: DropflowNodeData = {
+				style: paragraphStyle,
+				children: [],
+			};
+
 			for (const child of node.children) {
 				const childStyle = getChildStyle(child, maxWidth);
 				const textParts = child.text.split("\n");
+				if (textParts.length === 1) {
+					currNode.children.push({
+						style: childStyle,
+						text: textParts[0],
+					});
+				} else {
+					currNode.children.push({
+						style: childStyle,
+						text: textParts[0],
+					});
+					dropflowNodes.push(currNode);
 
-				textParts.forEach(text =>
-					dropflowNodes.push({
+					textParts.forEach((text, idx) => {
+						if (idx > 0 && idx < textParts.length - 1) {
+							dropflowNodes.push({
+								style: paragraphStyle,
+								children: [{ style: childStyle, text }],
+							});
+						}
+					});
+					currNode = {
 						style: paragraphStyle,
-						children: [{ style: childStyle, text }],
-					}),
-				);
+						children: [
+							{
+								text: textParts[textParts.length - 1],
+								style: childStyle,
+							},
+						],
+					};
+				}
 			}
+
+			dropflowNodes.push(currNode);
 		}
 	}
 
