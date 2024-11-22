@@ -199,7 +199,7 @@ export class Select extends Tool {
 				const newEndY =
 					this.originalCenter.y + snapDirectionY * mainLineLength;
 
-				const threshold = 1;
+				const threshold = 0;
 				const translateX =
 					Math.abs(newEndX - item.getMbr().getCenter().x) > threshold
 						? newEndX - item.getMbr().getCenter().x
