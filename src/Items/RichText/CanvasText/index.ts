@@ -192,7 +192,20 @@ export function getBlockNodes(
 	}
 
 	if (shrink) {
-		const singleLineLayout = getBlockNodes(data, Infinity);
+		const filledEmptys = data.map(
+			des =>
+				(des.type === "paragraph" && {
+					...des,
+					children: des.children.map(child => ({
+						...child,
+						text: child.text.length === 0 ? "1" : child.text,
+					})),
+				}) ||
+				des,
+		);
+
+		// non emptys width is calculated correctly
+		const singleLineLayout = getBlockNodes(filledEmptys, Infinity);
 		const singleLineHeight = singleLineLayout.height;
 
 		const maxWidthLayout = getBlockNodes(data, maxWidth);
