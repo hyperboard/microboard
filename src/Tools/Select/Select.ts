@@ -49,6 +49,10 @@ export class Select extends Tool {
 	};
 	private isSnapped: boolean | undefined = false;
 	private snapCursorPos: Point | null = null;
+	private originalCenter: Point | null = null;
+	private guidelines: Line[] = [];
+	private mainLine: Line | null = null;
+	private snapLine: Line | null = null;
 
 	constructor(private board: Board) {
 		super();
@@ -121,6 +125,104 @@ export class Select extends Tool {
 			}
 		}
 		return false;
+	}
+
+	private calculateLineLength(line: Line, center: Point): number {
+		const dx = line.end.x - line.start.x;
+		const dy = line.end.y - line.start.y;
+		const length = Math.sqrt(dx * dx + dy * dy);
+
+		const directionX = line.end.x - center.x;
+		const directionY = line.end.y - center.y;
+
+		const dotProduct = dx * directionX + dy * directionY;
+
+		return dotProduct >= 0 ? length : -length;
+	}
+
+	private calculateAngle(line1: Line, line2: Line): number {
+		const dx1 = line1.end.x - line1.start.x;
+		const dy1 = line1.end.y - line1.start.y;
+		const dx2 = line2.end.x - line2.start.x;
+		const dy2 = line2.end.y - line2.start.y;
+
+		const dotProduct = dx1 * dx2 + dy1 * dy2;
+		const magnitude1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+		const magnitude2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+		const angle = Math.acos(dotProduct / (magnitude1 * magnitude2));
+		return angle * (180 / Math.PI); // Конвертация в градусы
+	}
+
+	private handleShiftGuidelines(item: Item, mousePosition: Point): void {
+		if (item) {
+			if (!this.originalCenter) {
+				this.originalCenter = item.getMbr().getCenter();
+				this.guidelines = this.alignmentHelper.generateGuidelines(
+					this.originalCenter,
+				).lines;
+			}
+			this.mainLine = new Line(this.originalCenter, mousePosition);
+			let minAngle = Infinity;
+			let newSnapLine: Line | null = null;
+
+			this.guidelines.forEach(guideline => {
+				const angle = this.calculateAngle(this.mainLine!, guideline);
+				if (angle < minAngle) {
+					minAngle = angle;
+					newSnapLine = guideline;
+				}
+			});
+
+			if (newSnapLine) {
+				this.snapLine = newSnapLine as Line;
+				const mainLineLength = this.calculateLineLength(
+					this.mainLine,
+					this.originalCenter!,
+				);
+
+				const snapDirectionX =
+					(this.snapLine.end.x - this.snapLine.start.x) /
+					this.calculateLineLength(
+						this.snapLine,
+						this.originalCenter!,
+					);
+				const snapDirectionY =
+					(this.snapLine.end.y - this.snapLine.start.y) /
+					this.calculateLineLength(
+						this.snapLine,
+						this.originalCenter!,
+					);
+
+				const newEndX =
+					this.originalCenter.x + snapDirectionX * mainLineLength;
+				const newEndY =
+					this.originalCenter.y + snapDirectionY * mainLineLength;
+
+				const threshold = 0;
+				const translateX =
+					Math.abs(newEndX - item.getMbr().getCenter().x) > threshold
+						? newEndX - item.getMbr().getCenter().x
+						: 0;
+				const translateY =
+					Math.abs(newEndY - item.getMbr().getCenter().y) > threshold
+						? newEndY - item.getMbr().getCenter().y
+						: 0;
+
+				item.transformation.translateBy(
+					translateX,
+					translateY,
+					this.beginTimeStamp,
+				);
+			}
+		}
+	}
+
+	private clearGuidelines(): void {
+		this.originalCenter = null;
+		this.guidelines = [];
+		this.mainLine = null;
+		this.snapLine = null;
 	}
 
 	leftButtonDown(): boolean {
@@ -239,6 +341,7 @@ export class Select extends Tool {
 
 	pointerMoveBy(x: number, y: number): boolean {
 		const { selection, items } = this.board;
+		const { isShift } = this.board.keyboard;
 		const isLockedItemsFrames = selection.getIsLockedSelection();
 		if (isLockedItemsFrames) {
 			return false;
@@ -257,6 +360,20 @@ export class Select extends Tool {
 		if (this.isDraggingBoard) {
 			this.board.camera.translateBy(x, y);
 			return false;
+		}
+
+		if (isShift) {
+			const mousePosition = this.board.pointer.point;
+			if (this.downOnItem) {
+				this.handleShiftGuidelines(this.downOnItem, mousePosition);
+			} else if (this.isDraggingSelection) {
+				const singleItem = selection.items.getSingle();
+				if (singleItem) {
+					this.handleShiftGuidelines(singleItem, mousePosition);
+				}
+			}
+		} else {
+			this.clearGuidelines();
 		}
 
 		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
@@ -528,7 +645,12 @@ export class Select extends Tool {
 				this.beginTimeStamp,
 			);
 		}
+
+		if (this.isMovedAfterDown && this.downOnItem) {
+			this.originalCenter = this.downOnItem.getMbr().getCenter();
+		}
 		this.clear();
+		this.clearGuidelines();
 		this.board.tools.publish();
 		return false;
 	}
@@ -662,6 +784,7 @@ export class Select extends Tool {
 	}
 
 	render(context: DrawingContext): void {
+		const { isShift } = this.board.keyboard;
 		if (this.isDrawingRectangle && this.rect) {
 			this.rect.strokeWidth = 1 / this.board.camera.getScale();
 			this.rect.render(context);
@@ -674,5 +797,19 @@ export class Select extends Tool {
 			this.snapLines,
 			this.board.camera.getScale(),
 		);
+
+		if (this.snapLine && isShift) {
+			context.ctx.save();
+			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+			context.ctx.lineWidth = 1 / this.board.camera.getScale();
+			context.ctx.setLineDash([10, 5]);
+
+			context.ctx.beginPath();
+			context.ctx.moveTo(this.snapLine.start.x, this.snapLine.start.y);
+			context.ctx.lineTo(this.snapLine.end.x, this.snapLine.end.y);
+			context.ctx.stroke();
+
+			context.ctx.restore();
+		}
 	}
 }
