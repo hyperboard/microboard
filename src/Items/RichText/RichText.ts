@@ -177,6 +177,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getTextForNodes() as BlockNode[],
 			this.getMaxWidth(),
 			this.shrinkWidth,
+			this.insideOf === "Frame",
 		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
@@ -279,6 +280,7 @@ export class RichText extends Mbr implements Geometry {
 				this.getTextForNodes(),
 				this.getMaxWidth(),
 				this.shrinkWidth,
+				this.insideOf === "Frame",
 			);
 			this.blockNodes = nodes;
 			if (
@@ -476,6 +478,15 @@ export class RichText extends Mbr implements Geometry {
 				this.getTransformedContainer(),
 				this.editor.verticalAlignment,
 			);
+		}
+		if (this.insideOf === "Frame") {
+			const nodes = getBlockNodes(
+				this.getTextForNodes(),
+				this.getMaxWidth(),
+				this.shrinkWidth,
+				this.insideOf === "Frame",
+			);
+			this.blockNodes = nodes;
 		}
 		this.setClipPath();
 		if (!this.isInShape && !this.autoSize) {

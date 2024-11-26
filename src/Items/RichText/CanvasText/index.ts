@@ -71,17 +71,47 @@ function convertSlateToDropflow(
 				width: maxWidth === Infinity ? "auto" : maxWidth,
 			};
 
+			let currNode: DropflowNodeData = {
+				style: paragraphStyle,
+				children: [],
+			};
+
 			for (const child of node.children) {
 				const childStyle = getChildStyle(child, maxWidth);
 				const textParts = child.text.split("\n");
+				if (textParts.length === 1) {
+					currNode.children.push({
+						style: childStyle,
+						text: textParts[0],
+					});
+				} else {
+					currNode.children.push({
+						style: childStyle,
+						text: textParts[0],
+					});
+					dropflowNodes.push(currNode);
 
-				textParts.forEach(text =>
-					dropflowNodes.push({
+					textParts.forEach((text, idx) => {
+						if (idx > 0 && idx < textParts.length - 1) {
+							dropflowNodes.push({
+								style: paragraphStyle,
+								children: [{ style: childStyle, text }],
+							});
+						}
+					});
+					currNode = {
 						style: paragraphStyle,
-						children: [{ style: childStyle, text }],
-					}),
-				);
+						children: [
+							{
+								text: textParts[textParts.length - 1],
+								style: childStyle,
+							},
+						],
+					};
+				}
 			}
+
+			dropflowNodes.push(currNode);
 		}
 	}
 
@@ -117,13 +147,65 @@ export interface LayoutBlockNodes {
 	recoordinate: (newMaxWidth?: number) => void;
 }
 
+function sliceTextByWidth(
+	data: Descendant[],
+	maxWidth: number,
+): LayoutBlockNodes {
+	const text = data[0].type === "paragraph" ? data[0].children[0].text : "";
+	const newData: Descendant = JSON.parse(JSON.stringify(data[0]));
+	let currentText = "";
+	let currentWidth = 0;
+
+	for (let i = 0; i < text.length; i++) {
+		currentText += text[i];
+		currentWidth =
+			(data[0].type === "paragraph" &&
+				typeof data[0].children[0].fontSize === "number" &&
+				measureText(
+					data[0].children[0].fontSize,
+					data[0].children[0].fontFamily,
+					currentText + "...",
+				).width) ||
+			0;
+
+		if (currentWidth > maxWidth) {
+			currentText = currentText.slice(0, -3) + "...";
+			break;
+		}
+	}
+
+	if (newData.type === "paragraph") {
+		newData.children[0].text = currentText;
+	}
+
+	return getBlockNodes([newData], maxWidth);
+}
+
 export function getBlockNodes(
 	data: Descendant[],
 	maxWidth: number,
 	shrink = false,
+	isFrame?: boolean,
 ): LayoutBlockNodes {
+	if (isFrame && data[0].type === "paragraph") {
+		return sliceTextByWidth(data, maxWidth);
+	}
+
 	if (shrink) {
-		const singleLineLayout = getBlockNodes(data, Infinity);
+		const filledEmptys = data.map(
+			des =>
+				(des.type === "paragraph" && {
+					...des,
+					children: des.children.map(child => ({
+						...child,
+						text: child.text.length === 0 ? "1" : child.text,
+					})),
+				}) ||
+				des,
+		);
+
+		// non emptys width is calculated correctly
+		const singleLineLayout = getBlockNodes(filledEmptys, Infinity);
 		const singleLineHeight = singleLineLayout.height;
 
 		const maxWidthLayout = getBlockNodes(data, maxWidth);
@@ -197,6 +279,11 @@ function getCharacterWidth(fontSize, fontFamily, character = "a"): number {
 	context.font = `${fontSize}px ${fontFamily}`;
 	const metrics = context.measureText(character);
 	return metrics.width;
+}
+
+function measureText(fontSize, fontFamily, text): TextMetrics {
+	context.font = `${fontSize}px ${fontFamily}`;
+	return context.measureText(text);
 }
 
 function findMinimumWidthForSingleLineHeight(

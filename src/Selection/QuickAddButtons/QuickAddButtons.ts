@@ -82,7 +82,7 @@ export function getQuickAddButtons(
 
 		let step = 1;
 		while (
-			board.items.getEnclosedOrCrossed(
+			board.index.getItemsEnclosedOrCrossed(
 				newMbr.left,
 				newMbr.top,
 				newMbr.right,
@@ -115,11 +115,17 @@ export function getQuickAddButtons(
 		const connectorData = defaultConnector.serialize();
 		connectorData.lineStyle = "orthogonal";
 
-		const savedStart = connectorStorage.getConnectorPointer("start");
+		const savedStart = connectorStorage.getConnectorPointer(
+			"start",
+			board.getBoardId(),
+		);
 		if (savedStart) {
 			connectorData.startPointerStyle = savedStart;
 		}
-		const savedEnd = connectorStorage.getConnectorPointer("end");
+		const savedEnd = connectorStorage.getConnectorPointer(
+			"end",
+			board.getBoardId(),
+		);
 		if (savedEnd) {
 			connectorData.endPointerStyle = savedEnd;
 		}

@@ -1,6 +1,7 @@
 import { Board } from "Board/Board";
 import { Item, Line, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
 
 export class AlignmentHelper {
@@ -28,7 +29,10 @@ export class AlignmentHelper {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
-		const movingMBR = movingItem.getMbr();
+		const movingMBR =
+			movingItem.itemType === "Shape"
+				? movingItem.getPath().getMbr()
+				: movingItem.getMbr();
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
@@ -93,11 +97,17 @@ export class AlignmentHelper {
 
 			const centerYMoving = (movingMBR.top + movingMBR.bottom) / 2;
 			const centerYItem = (itemMbr.top + itemMbr.bottom) / 2;
-			const epsilon = 0.0001;
-			const isSameWidth =
-				Math.abs(movingMBR.getWidth() - itemMbr.getWidth()) < epsilon;
-			const isSameHeight =
-				Math.abs(movingMBR.getHeight() - itemMbr.getHeight()) < epsilon;
+			const widthDifference = Math.abs(
+				movingMBR.getWidth() - itemMbr.getWidth(),
+			);
+			const heightDifference = Math.abs(
+				movingMBR.getHeight() - itemMbr.getHeight(),
+			);
+
+			const tolerance = 0.1;
+
+			const isSameWidth = widthDifference < tolerance;
+			const isSameHeight = heightDifference < tolerance;
 
 			if (
 				Math.abs(centerXMoving - centerXItem) < dynamicAlignThreshold &&
@@ -226,10 +236,28 @@ export class AlignmentHelper {
 				);
 			});
 
-		console.log("horizontalLines", horizontalLines);
-		console.log("verticalLines", verticalLines);
-
 		return { verticalLines, horizontalLines };
+	}
+
+	generateGuidelines(center: Point): { lines: Line[] } {
+		const lines: Line[] = [];
+		const length = 10000;
+
+		const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+
+		angles.forEach(angle => {
+			const radians = (angle * Math.PI) / 180;
+			const endX1 = center.x + length * Math.cos(radians);
+			const endY1 = center.y + length * Math.sin(radians);
+			const endX2 = center.x - length * Math.cos(radians);
+			const endY2 = center.y - length * Math.sin(radians);
+
+			lines.push(
+				new Line(new Point(endX1, endY1), new Point(endX2, endY2)),
+			);
+		});
+
+		return { lines };
 	}
 
 	snapToClosestLine(
@@ -321,6 +349,67 @@ export class AlignmentHelper {
 		);
 
 		return snappedToVertical || snappedToHorizontal;
+	}
+
+	snapToSide(
+		draggingItem: Item,
+		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
+		beginTimeStamp: number,
+		side: ResizeType,
+	): boolean {
+		const itemMbr = draggingItem.getMbr();
+		const snapToLine = (lines: Line[], isVertical: boolean) => {
+			for (const line of lines) {
+				if (!line) {
+					return false;
+				}
+
+				if (isVertical) {
+					if (
+						(side.includes("left") &&
+							Math.abs(itemMbr.left - line.start.x) <
+								this.snapThreshold) ||
+						(side.includes("right") &&
+							Math.abs(itemMbr.right - line.start.x) <
+								this.snapThreshold)
+					) {
+						const translateX = side.includes("left")
+							? line.start.x - itemMbr.left
+							: line.start.x - itemMbr.right;
+						draggingItem.transformation.translateBy(
+							translateX,
+							0,
+							beginTimeStamp,
+						);
+						return true;
+					}
+				} else {
+					if (
+						(side.includes("top") &&
+							Math.abs(itemMbr.top - line.start.y) <
+								this.snapThreshold) ||
+						(side.includes("bottom") &&
+							Math.abs(itemMbr.bottom - line.start.y) <
+								this.snapThreshold)
+					) {
+						const translateY = side.includes("top")
+							? line.start.y - itemMbr.top
+							: line.start.y - itemMbr.bottom;
+						draggingItem.transformation.translateBy(
+							0,
+							translateY,
+							beginTimeStamp,
+						);
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+
+		return side.includes("left") || side.includes("right")
+			? snapToLine(snapLines.verticalLines, true)
+			: snapToLine(snapLines.horizontalLines, false);
 	}
 
 	renderSnapLines(

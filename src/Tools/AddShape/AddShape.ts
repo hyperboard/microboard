@@ -1,8 +1,8 @@
 import { tempStorage } from "App/SessionStorage";
 import { Board } from "Board/Board";
-import { Line, Mbr, Shape } from "Board/Items";
+import { Line, Mbr, Point, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { ShapeType } from "Board/Items/Shape/Basic";
+import { ShapeType } from "Board/Items/Shape";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
 import { SELECTION_COLOR } from "View/Tools/Selection";
@@ -64,6 +64,14 @@ export class AddShape extends BoardTool {
 	}
 
 	setShapeType(type: ShapeType): void {
+		const splittedCurrentType = this.type.split("_");
+		const splittedNewType = type.split("_");
+		if (
+			splittedCurrentType[0] !== splittedNewType[0] &&
+			!(splittedNewType.length === 1 && splittedCurrentType.length === 1)
+		) {
+			this.shape = new Shape();
+		}
 		this.type = type;
 		this.board.tools.publish();
 	}
@@ -185,6 +193,23 @@ export class AddShape extends BoardTool {
 		this.board.tools.setTool(this);
 		this.setCursor();
 	};
+
+	createShapeInCenter(shape: ShapeType) {
+		if (this.type === "None") {
+			return;
+		}
+		this.setShapeType(shape);
+		const { left, top, bottom, right } = this.board.camera.getMbr();
+		const x = (left + right) / 2 - 50;
+		const y = (top + bottom) / 2 - 50;
+		this.bounds = new Mbr(x, y, x, y);
+		this.line = new Line(new Point(x, y), new Point(x, y));
+		this.bounds.borderColor = SELECTION_COLOR;
+		this.shape.setShapeType(this.type);
+		this.initTransformation();
+		this.board.tools.publish();
+		this.leftButtonUp();
+	}
 
 	render(context: DrawingContext): void {
 		if (this.isDown) {

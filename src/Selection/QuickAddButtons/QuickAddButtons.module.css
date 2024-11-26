@@ -7,7 +7,9 @@
 	background-color: #93aff6;
 	border-radius: 50%;
 	border: 1px solid #ffffff;
-	transition: transform 0.2s, border 0s 0.2s;
+	transition:
+		transform 0.2s,
+		border 0s 0.2s;
 	margin: auto;
 }
 
