@@ -255,63 +255,68 @@ export class Frame implements Geometry {
 			return false;
 		}
 
-		if (this.getCanChangeRatio()) {
-			const res = getResize(resizeType, pointer, mbr, opposite);
-			this.transformation.scaleByTranslateBy(
-				{
-					x: res.matrix.scaleX,
-					y: res.matrix.scaleY,
-				},
-				{
-					x: res.matrix.translateX,
-					y: res.matrix.translateY,
-				},
-				timeStamp,
-			);
-			this.setLastFrameScale();
-			res.mbr = this.getMbr();
-			return res;
-		} else {
-			if (
-				resizeType === "leftBottom" ||
-				resizeType === "leftTop" ||
-				resizeType === "rightBottom" ||
-				resizeType === "rightTop"
-			) {
-				const res = getProportionalResize(
-					resizeType,
-					pointer,
-					mbr,
-					opposite,
-				);
-				const thisMbr = this.getMbr();
-				const deltaX = thisMbr.left - thisMbr.left;
-				const translateX =
-					deltaX * res.matrix.scaleX - deltaX + res.matrix.translateX;
-				const deltaY = thisMbr.top - thisMbr.top;
-				const translateY =
-					deltaY * res.matrix.scaleY - deltaY + res.matrix.translateY;
-				this.transformation.scaleByTranslateBy(
-					{
-						x: res.matrix.scaleX,
-						y: res.matrix.scaleY,
-					},
-					{
-						x: translateX,
-						y: translateY,
-					},
-					timeStamp,
-				);
-				this.setLastFrameScale();
-				res.mbr = this.getMbr();
-				return res;
-			} else {
-				return {
-					matrix: this.transformation.matrix,
-					mbr: this.getMbr(),
-				};
-			}
+		const proportional =
+			resizeType === "leftBottom" ||
+			resizeType === "leftTop" ||
+			resizeType === "rightBottom" ||
+			resizeType === "rightTop";
+
+		const res = proportional
+			? getProportionalResize(resizeType, pointer, mbr, opposite)
+			: this.getCanChangeRatio()
+				? getResize(resizeType, pointer, mbr, opposite)
+				: null;
+
+		if (!res) {
+			return {
+				matrix: this.transformation.matrix,
+				mbr: this.getMbr(),
+			};
 		}
+
+		let { scaleX, scaleY, translateX, translateY } = res.matrix;
+		const thisMbr = this.getMbr();
+		const initMbr = Frames[this.shapeType].path.copy().getMbr();
+
+		if (
+			this.mbr.right - this.mbr.left < initMbr.getWidth() &&
+			res.matrix.scaleX < 1
+		) {
+			scaleX = 1;
+			translateX = 0;
+		} else if (proportional) {
+			const deltaX = thisMbr.left - thisMbr.left;
+			translateX =
+				deltaX * res.matrix.scaleX - deltaX + res.matrix.translateX;
+		}
+
+		if (
+			this.mbr.bottom - this.mbr.top < initMbr.getHeight() &&
+			res.matrix.scaleY < 1
+		) {
+			scaleY = 1;
+			translateY = 0;
+		} else if (proportional) {
+			const deltaY = thisMbr.top - thisMbr.top;
+			translateY =
+				deltaY * res.matrix.scaleY - deltaY + res.matrix.translateY;
+		}
+
+		this.transformation.scaleByTranslateBy(
+			{
+				x: scaleX,
+				y: scaleY,
+			},
+			{
+				x: translateX,
+				y: translateY,
+			},
+			timeStamp,
+		);
+
+		this.setLastFrameScale();
+		res.mbr = this.getMbr();
+		return res;
 	}
 
 	getLastFrameScale(): { x: number; y: number } {
