@@ -19,6 +19,7 @@ interface DropflowChild {
 }
 
 function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
+	const fontSize = typeof child.fontSize === "number" ? child.fontSize : 14;
 	return {
 		fontWeight: child.bold ? 800 : 400,
 		fontStyle: child.italic ? "italic" : "normal",
@@ -36,7 +37,7 @@ function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
 							: { r: 0, g: 0, b: 0, a: 1 };
 					})()
 				: { r: 0, g: 0, b: 0, a: 1 },
-		fontSize: child.fontSize || 14,
+		fontSize,
 		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
 		whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
 		overflowWrap: "break-word",
@@ -54,7 +55,10 @@ function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
 							: "transparent";
 					})()
 				: "transparent",
-		lineHeight: { value: 1.4, unit: null },
+		lineHeight: {
+			value: 1.4,
+			unit: null,
+		},
 	};
 }
 
@@ -68,7 +72,6 @@ function convertSlateToDropflow(
 		if (node.type === "paragraph") {
 			const paragraphStyle: flow.DeclaredStyle = {
 				textAlign: node.horisontalAlignment || "left",
-				width: maxWidth === Infinity ? "auto" : maxWidth,
 			};
 
 			let currNode: DropflowNodeData = {
@@ -118,18 +121,28 @@ function convertSlateToDropflow(
 	return dropflowNodes;
 }
 
-function createFlowDivs(
+function createFlowDiv(
 	dropflowNodes: {
 		style: flow.DeclaredStyle;
 		children: { style: flow.DeclaredStyle; text: string }[];
 	}[],
-): flow.HTMLElement[] {
-	return dropflowNodes.map(paragraph =>
-		flow.h(
-			"div",
-			{ style: paragraph.style },
-			paragraph.children.map(child =>
-				flow.h("span", { style: child.style }, [child.text]),
+	maxWidth: number,
+): flow.HTMLElement {
+	return flow.h(
+		"div",
+		{
+			style: {
+				lineHeight: 1.4,
+				width: maxWidth === Infinity ? "auto" : maxWidth,
+			},
+		},
+		dropflowNodes.map(paragraph =>
+			flow.h(
+				"div",
+				{ style: paragraph.style },
+				paragraph.children.map(child =>
+					flow.h("span", { style: child.style }, [child.text]),
+				),
 			),
 		),
 	);
@@ -231,7 +244,7 @@ export function getBlockNodes(
 		return getBlockNodes(data, bestWidth || oneSymbolWidth || bestWidth);
 	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
-	const divs = createFlowDivs(dropflowNodes);
+	const divs = createFlowDiv(dropflowNodes, maxWidth);
 
 	const rootElement = flow.dom(divs);
 
@@ -239,7 +252,7 @@ export function getBlockNodes(
 	flow.layout(generated);
 	let width = 0;
 	let height = 0;
-	for (const span of generated.containingBlock.box.children) {
+	for (const span of generated.children[0].containingBlock.box.children) {
 		if (span.isBlockContainer()) {
 			if (span.contentArea.width > width) {
 				width = span.contentArea.width;
