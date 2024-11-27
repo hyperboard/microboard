@@ -24,6 +24,7 @@ import { TransformManyItems } from "Board/Items/Transformation/TransformationOpe
 import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 import AlignmentHelper from "Board/Tools/RelativeAlignment";
+import { Frames } from "Board/Items/Frame/Basic";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -463,22 +464,31 @@ export class Transformer extends Tool {
 					};
 				}
 			} else if (item instanceof Frame) {
-				if (!item.getCanChangeRatio()) {
-					if (
-						this.clickedOn === "leftBottom" ||
-						this.clickedOn === "leftTop" ||
-						this.clickedOn === "rightBottom" ||
-						this.clickedOn === "rightTop"
-					) {
-						translation[item.getId()] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [item.getId()],
-							translate: { x: translateX, y: translateY },
-							scale: { x: matrix.scaleX, y: matrix.scaleY },
-						};
-					}
-				} else {
+				const initMbr = Frames[item.getFrameType()].path
+					.copy()
+					.getMbr();
+
+				if (
+					itemMbr.right - itemMbr.left < initMbr.getWidth() &&
+					matrix.scaleX < 1
+				) {
+					matrix.scaleX = 1;
+				}
+
+				if (
+					itemMbr.bottom - itemMbr.top < initMbr.getWidth() &&
+					matrix.scaleY < 1
+				) {
+					matrix.scaleY = 1;
+				}
+
+				const proportional =
+					this.clickedOn === "leftBottom" ||
+					this.clickedOn === "leftTop" ||
+					this.clickedOn === "rightBottom" ||
+					this.clickedOn === "rightTop";
+
+				if (item.getCanChangeRatio() || proportional) {
 					translation[item.getId()] = {
 						class: "Transformation",
 						method: "scaleByTranslateBy",

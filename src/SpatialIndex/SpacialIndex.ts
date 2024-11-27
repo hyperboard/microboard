@@ -499,7 +499,13 @@ export class Items {
 			},
 		);
 
-		return nearest ? [nearest] : [];
+		if (nearest) {
+			return [nearest];
+		} else {
+			return this.index
+				.listFrames()
+				.filter(frame => frame.isTextUnderPoint(this.pointer.point));
+		}
 	}
 
 	getNearPointer(
