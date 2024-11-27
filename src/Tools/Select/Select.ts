@@ -114,14 +114,6 @@ export class Select extends Tool {
 			) {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
-			} else {
-				if (this.snapLines.verticalLines.length > 0) {
-					this.board.pointer.point.x = this.snapCursorPos.x;
-				}
-				if (this.snapLines.horizontalLines.length > 0) {
-					this.board.pointer.point.y = this.snapCursorPos.y;
-				}
-				return true;
 			}
 		}
 		return false;
