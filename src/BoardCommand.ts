@@ -1,6 +1,7 @@
 import { Command } from "./Events";
 import { BoardOps } from "./BoardOperations";
 import { Board } from "Board";
+import { Group } from "./Items/Group";
 
 export class BoardCommand implements Command {
 	private reverse: BoardOps | BoardOps[];
@@ -118,6 +119,34 @@ export class BoardCommand implements Command {
 					method: "remove",
 					item: [operation.item],
 				};
+			}
+			case "addLockedGroup": {
+				return {
+					class: "Board",
+					method: "removeLockedGroup",
+					item: [operation.item],
+				};
+			}
+			case "removeLockedGroup": {
+				const items = this.board.items;
+				const reverse: BoardOps[] = [];
+
+				for (const itemId of operation.item) {
+					const item = items.getById(itemId);
+					if (!item || item.itemType !== "Group") {
+						throw new Error(
+							"Get reverse board operation. Item not found",
+						);
+					}
+					reverse.push({
+						class: "Board",
+						method: "addLockedGroup",
+						item: itemId,
+						data: item.serialize(),
+					});
+				}
+
+				return reverse;
 			}
 			case "duplicate":
 			case "paste": {

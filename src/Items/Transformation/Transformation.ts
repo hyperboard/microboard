@@ -21,7 +21,10 @@ export class Transformation {
 	private rotate = defaultData.rotate;
 	isLocked = false;
 
-	constructor(private id = "", private events?: Events) {}
+	constructor(
+		private id = "",
+		private events?: Events,
+	) {}
 
 	serialize(): TransformationData {
 		return {
@@ -141,7 +144,7 @@ export class Transformation {
 				this.applyLocked(op.locked);
 				break;
 			case "unlocked":
-				this.applyLocked(op.locked);
+				this.applyUnlocked(op.locked);
 				break;
 			default:
 				return;

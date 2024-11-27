@@ -1,6 +1,8 @@
 import { Connector, ConnectorData } from "./Connector";
 import { Drawing, DrawingData } from "./Drawing";
 import { Frame, FrameData } from "./Frame";
+import { Group } from "./Group";
+import { GroupData } from "./Group/GroupOperation";
 import { ImageItem, ImageItemData } from "./Image";
 import { Placeholder, PlaceholderData } from "./Placeholder/Placeholder";
 import { RichText, RichTextData } from "./RichText";
@@ -16,7 +18,9 @@ export type Item =
 	| Drawing
 	| Sticker
 	| Frame
-	| Placeholder;
+	| Placeholder
+	| Group;
+
 export type ItemType = Item["itemType"];
 export type ItemData =
 	| ShapeData
@@ -26,4 +30,5 @@ export type ItemData =
 	| DrawingData
 	| StickerData
 	| FrameData
-	| PlaceholderData;
+	| PlaceholderData
+	| GroupData;

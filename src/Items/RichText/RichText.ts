@@ -39,6 +39,7 @@ import { RichTextCommand } from "./RichTextCommand";
 import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextOperation } from "./RichTextOperations";
 import { LinkTo } from "../LinkTo/LinkTo";
+import { Camera } from "Board/Camera";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -951,9 +952,8 @@ export class RichText extends Mbr implements Geometry {
 		return this.editor.verticalAlignment;
 	}
 
-	saveLastClickPoint(board: Board): void {
-		const point = board.pointer.point.copy();
-		point.transform(board.camera.getMatrix());
+	saveLastClickPoint(point: Point, camera: Camera): void {
+		point.transform(camera.getMatrix());
 		this.lastClickPoint = point;
 	}
 
