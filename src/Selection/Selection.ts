@@ -141,16 +141,6 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
-		const newValue = Array.isArray(value)
-			? value.filter(
-					item =>
-						!(
-							item instanceof Frame &&
-							item.transformation.isLocked
-						),
-				)
-			: (value as Frame).transformation.isLocked;
-
 		this.items.add(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
@@ -164,7 +154,9 @@ export class Selection {
 	}
 
 	addAll(): void {
-		const items = this.board.items.listAll();
+		const items = this.board.items
+			.listAll()
+			.filter(item => !item.transformation.isLocked);
 		const frames = this.board.items
 			.listFrames()
 			.filter(item => !item.transformation.isLocked);
@@ -452,14 +444,14 @@ export class Selection {
 		this.removeAll();
 		const enclosedFrames = this.board.items
 			.getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
-			.filter(
-				item => item instanceof Frame && !item.transformation.isLocked,
-			);
+			.filter(item => !item.transformation.isLocked);
 		const list = this.board.items
 			.getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
 			.filter(
 				item =>
-					!(item instanceof Frame) || enclosedFrames.includes(item),
+					(!(item instanceof Frame) ||
+						enclosedFrames.includes(item)) &&
+					!item.transformation.isLocked,
 			);
 		if (list.length !== 0) {
 			this.add(list);
@@ -1123,13 +1115,11 @@ export class Selection {
 	}
 
 	removeFromBoard(): void {
-		const isLockedFrame = this.items
+		const isLocked = this.items
 			.list()
-			.some(
-				item => item instanceof Frame && item.transformation.isLocked,
-			);
+			.some(item => item.transformation.isLocked);
 
-		if (isLockedFrame) {
+		if (isLocked) {
 			return;
 		}
 		this.emit({
@@ -1143,12 +1133,8 @@ export class Selection {
 
 	getIsLockedSelection(): boolean {
 		const items = this.list();
-		const isFrame = items.some(item => item.itemType === "Frame");
-		const isFrameLocked = items.some(
-			item => item.itemType === "Frame" && item.transformation.isLocked,
-		);
 
-		return isFrame && isFrameLocked;
+		return items.some(item => item.transformation.isLocked);
 	}
 
 	isLocked(): boolean {
@@ -1194,10 +1180,9 @@ export class Selection {
 			? 1 / context.matrix.scaleX
 			: 1 / customScale;
 
-		const selectionColor =
-			item.itemType === "Frame" && item.transformation.isLocked
-				? SELECTION_LOCKED_COLOR
-				: SELECTION_COLOR;
+		const selectionColor = item.transformation.isLocked
+			? SELECTION_LOCKED_COLOR
+			: SELECTION_COLOR;
 		mbr.borderColor = selectionColor;
 		mbr.render(context);
 	}
@@ -1205,9 +1190,12 @@ export class Selection {
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
 		const isSingleConnector = single && single.itemType === "Connector";
+		const isLocked = single && single.transformation.isLocked;
 
 		if (isSingleConnector) {
-			this.tool.render(context);
+			if (!isLocked) {
+				this.tool.render(context);
+			}
 			return;
 		}
 
@@ -1216,7 +1204,9 @@ export class Selection {
 				this.renderItemMbr(context, item);
 			}
 			this.tool.render(context);
-			this.quickAddButtons.render(context);
+			if (!isLocked) {
+				this.quickAddButtons.render(context);
+			}
 		}
 	}
 }

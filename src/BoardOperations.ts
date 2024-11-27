@@ -1,4 +1,5 @@
 import { ItemData } from "./Items";
+import { GroupData } from "./Items/Group";
 
 export type ItemsIndexRecord = Record<string, number>;
 
@@ -23,8 +24,17 @@ export interface CreateItem extends SingleItemBoardOp {
 	data: ItemData;
 }
 
+export interface CreateLockedGroupItem extends SingleItemBoardOp {
+	method: "addLockedGroup";
+	data: GroupData;
+}
+
 export interface RemoveItem extends MultiItemBoardOp {
 	method: "remove";
+}
+
+export interface RemoveLockedGroup extends MultiItemBoardOp {
+	method: "removeLockedGroup";
 }
 
 interface MoveToZIndex extends SingleItemBoardOp {
@@ -68,7 +78,9 @@ interface Duplicate extends ItemMapBoardOp {
 
 export type BoardOps =
 	| CreateItem
+	| CreateLockedGroupItem
 	| RemoveItem
+	| RemoveLockedGroup
 	| MoveToZIndex
 	| MoveManyToZIndex
 	| MoveSecondBeforeFirst

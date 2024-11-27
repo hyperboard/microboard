@@ -16,6 +16,7 @@ import { Sticker } from "./Items/Sticker";
 import { StickerData } from "./Items/Sticker/StickerOperation";
 import { Board } from "./Board";
 import { Placeholder, PlaceholderData } from "./Items/Placeholder/Placeholder";
+import { Group, GroupData } from "./Items/Group";
 
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
@@ -32,7 +33,7 @@ export const itemFactories: ItemFactories = {
 	Drawing: createDrawing,
 	Frame: createFrame,
 	Placeholder: createPlaceholder,
-	// Group: createGroup, // Uncomment if needed
+	Group: createGroup,
 };
 
 function createSticker(id: string, data: ItemData, board: Board): Sticker {
@@ -115,10 +116,17 @@ function createPlaceholder(
 	return placeholder;
 }
 
-// function createGroup(id: string, data: ItemData, board: Board): Group {
-//    if (!isGroupData(data)) throw new Error('Invalid data for Group');
-//    return new Group(board.events).setId(id).deserialize(data);
-// } // Uncomment if needed
+function createGroup(id: string, data: ItemData, board: Board): Group {
+	if (!isGroupData(data)) {
+		throw new Error("Invalid data for Group");
+	}
+
+	const group = new Group(board, board.events, data.children, "")
+		.setId(id)
+		.deserialize(data);
+
+	return group;
+}
 
 function isStickerData(data: ItemData): data is StickerData {
 	return data.itemType === "Sticker";
@@ -152,6 +160,6 @@ function isPlaceholderData(data: ItemData): data is PlaceholderData {
 	return data.itemType === "Placeholder";
 }
 
-// function isGroupData(data: ItemData): data is GroupData {
-//     return data.itemType === 'Group';
-// } // Uncomment if needed
+function isGroupData(data: ItemData): data is GroupData {
+	return data.itemType === "Group";
+}

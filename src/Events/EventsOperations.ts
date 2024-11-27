@@ -8,6 +8,7 @@ import { StickerOperation } from "../Items/Sticker/StickerOperation";
 import { FrameOperation } from "../Items/Frame";
 import { LinkToOperation } from "../Items/LinkToOperation";
 import { PlaceholderOperation } from "Board/Items/Placeholder/PlaceholderOperation";
+import { GroupOperation } from "Board/Items/Group/GroupOperation";
 
 interface Undo {
 	class: "Events";
@@ -32,7 +33,8 @@ export type ItemOperation =
 	| ConnectorOperation
 	| DrawingOperation
 	| FrameOperation
-	| PlaceholderOperation;
+	| PlaceholderOperation
+	| GroupOperation;
 
 export type UndoableOperation = BoardOps | ItemOperation;
 

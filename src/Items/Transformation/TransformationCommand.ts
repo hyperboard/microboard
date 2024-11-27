@@ -167,6 +167,32 @@ export class TransformationCommand implements Command {
 					return { item: currTrans, operation: reverseOp };
 				});
 			}
+			case "locked": {
+				return mapItemsByOperation(
+					this.transformation,
+					() => {
+						return {
+							...this.operation,
+							item: [...op.item!],
+							method: "unlocked",
+							locked: false,
+						};
+					},
+				);
+			}
+			case "unlocked": {
+				return mapItemsByOperation(
+					this.transformation,
+					() => {
+						return {
+							...this.operation,
+							item: [...op.item!],
+							method: "locked",
+							locked: true,
+						};
+					},
+				);
+			}
 			default:
 				return [
 					{ item: this.transformation[0], operation: this.operation },

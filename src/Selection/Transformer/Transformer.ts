@@ -128,6 +128,11 @@ export class Transformer extends Tool {
 	}
 
 	leftButtonUp(): boolean {
+		const isLockedItems = this.selection.getIsLockedSelection();
+		if (isLockedItems) {
+			return false;
+		}
+		
 		if (
 			this.canvasDrawer.getLastCreatedCanvas() &&
 			this.clickedOn &&
@@ -192,6 +197,11 @@ export class Transformer extends Tool {
 		const isHeight =
 			this.resizeType === "top" || this.resizeType === "bottom";
 		const single = this.selection.items.getSingle();
+
+		if (single?.transformation.isLocked) {
+			this.board.pointer.setCursor("default");
+			return false;
+		}
 
 		if (single) {
 			this.snapLines = this.alignmentHelper.checkAlignment(single);

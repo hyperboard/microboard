@@ -16,7 +16,10 @@ import { Drawing } from "Board/Items/Drawing";
 import { Sticker } from "Board/Items/Sticker";
 import { FrameCommand } from "Board/Items/Frame/FrameCommand";
 import { LinkToCommand } from "../Items/LinkTo/LinkToCommand";
-import { LinkTo } from "Board/Items/LinkTo/LinkTo";
+import { GroupCommand } from "Board/Items/Group/GroupCommand";
+import { Group } from "Board/Items/Group";
+import { PlaceholderCommand } from "Board/Items/Placeholder/PlaceholderCommand";
+import { Placeholder } from "Board/Items/Placeholder";
 
 export interface Command {
 	apply(): void;
@@ -139,6 +142,22 @@ export function createCommand(board: Board, operation: Operation): Command {
 							items.filter(
 								(item): item is Frame =>
 									item.itemType === "Frame",
+							),
+							operation,
+						);
+					case "Placeholder":
+						return new PlaceholderCommand(
+							items.filter(
+								(item): item is Placeholder =>
+									item.itemType === "Placeholder",
+							),
+							operation,
+						);
+					case "Group":
+						return new GroupCommand(
+							items.filter(
+								(item): item is Group =>
+									item.itemType === "Group",
 							),
 							operation,
 						);

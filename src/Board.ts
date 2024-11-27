@@ -7,7 +7,13 @@ import {
 	SELECTION_COLOR,
 } from "View/Tools/Selection";
 import { BoardCommand } from "./BoardCommand";
-import { BoardOps, ItemsIndexRecord, RemoveItem } from "./BoardOperations";
+import {
+	BoardOps,
+	CreateLockedGroupItem,
+	ItemsIndexRecord,
+	RemoveItem,
+	RemoveLockedGroup,
+} from "./BoardOperations";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
 import { createEvents, SyncBoardEvent } from "./Events/Events";
@@ -31,6 +37,7 @@ import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
+import { Group } from "./Items/Group";
 
 export type InterfaceType = "edit" | "view";
 
@@ -187,8 +194,13 @@ export class Board {
 			case "add":
 				const item = this.createItem(op.item, op.data);
 				return this.index.insert(item);
+			case "addLockedGroup":
+				return this.applyAddLockedGroupOperation(op);
 			case "remove": {
 				return this.applyRemoveOperation(op);
+			}
+			case "removeLockedGroup": {
+				return this.applyRemoveLockedGroupOperation(op);
 			}
 			case "paste": {
 				return this.applyPasteOperation(op.itemsMap);
@@ -199,7 +211,48 @@ export class Board {
 		}
 	}
 
+	private applyAddLockedGroupOperation(op: CreateLockedGroupItem): void {
+		const item = this.createItem(op.item, op.data) as Group;
+		const groupChildrenIds = item.getChildrenIds();
+		this.index.insert(item);
+
+		const lastChildrenId = this.index.getById(
+			groupChildrenIds[groupChildrenIds.length - 1],
+		);
+		if (lastChildrenId) {
+			const zIndex = this.index.getZIndex(lastChildrenId) + 1;
+			this.index.moveToZIndex(item, zIndex);
+		}
+
+		item.getChildren().forEach(item => {
+			item.transformation.isLocked = true;
+		});
+
+		item.transformation.isLocked = true;
+	}
+
 	private applyRemoveOperation(op: RemoveItem): void {
+		const removedItems: Item[] = [];
+		this.findItemAndApply(op.item, item => {
+			this.index.remove(item);
+			this.selection.remove(item);
+			removedItems.push(item);
+		});
+	}
+
+	private applyRemoveLockedGroupOperation(op: RemoveLockedGroup): void {
+		const item = this.index.getById(op.item[0]);
+
+		if (!item || item.itemType !== "Group") {
+			return;
+		}
+
+		item.getChildren().forEach(item => {
+			item.transformation.isLocked = false;
+			item.parent = "Board";
+		});
+		item.transformation.isLocked = false;
+
 		const removedItems: Item[] = [];
 		this.findItemAndApply(op.item, item => {
 			this.index.remove(item);
@@ -382,10 +435,34 @@ export class Board {
 		return newItem as T;
 	}
 
+	addLockedGroup(item: Group) {
+		const id = this.getNewItemId();
+		this.emit({
+			class: "Board",
+			method: "addLockedGroup",
+			item: id,
+			data: item.serialize(),
+		});
+		const newItem = this.items.getById(id);
+		if (!newItem) {
+			throw new Error(`Add item. Item ${id} was not created.`);
+		}
+		this.handleNesting(newItem);
+		return newItem as T;
+	}
+
 	remove(item: Item): void {
 		this.emit({
 			class: "Board",
 			method: "remove",
+			item: [item.getId()],
+		});
+	}
+
+	removeLockedGroup(item: Group): void {
+		this.emit({
+			class: "Board",
+			method: "removeLockedGroup",
 			item: [item.getId()],
 		});
 	}

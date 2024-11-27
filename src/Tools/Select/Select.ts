@@ -14,9 +14,9 @@ import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
-import { Frames } from "Board/Items/Frame/Basic";
 import AlignmentHelper from "../RelativeAlignment";
 import { Placeholder } from "Board/Items/Placeholder";
+import { Group } from "Board/Items/Group/Group.js";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -334,8 +334,11 @@ export class Select extends Tool {
 	pointerMoveBy(x: number, y: number): boolean {
 		const { selection, items } = this.board;
 		const { isShift } = this.board.keyboard;
-		const isLockedItemsFrames = selection.getIsLockedSelection();
-		if (isLockedItemsFrames) {
+		const isLocked =
+			selection.getIsLockedSelection() ||
+			this.downOnItem?.transformation.isLocked;
+
+		if (isLocked) {
 			return false;
 		}
 
@@ -467,10 +470,7 @@ export class Select extends Tool {
 						}
 					});
 				} else if (item instanceof Frame) {
-					item.text.setContainer(
-						Frames[item.getFrameType()].textBounds.copy(),
-						item.getMbr(),
-					);
+					item.text.setContainer(item.getMbr());
 				}
 			});
 
@@ -547,6 +547,7 @@ export class Select extends Tool {
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
 			const hovered = this.board.items.getUnderPointer();
+
 			if (isCtrl || isShift) {
 				const underPointer = hovered[0];
 				const isEmptySelection =
@@ -584,19 +585,22 @@ export class Select extends Tool {
 					topItem === curr &&
 					!this.board.selection.getIsLockedSelection()
 				) {
-					if (
-						!(curr instanceof ImageItem) &&
-						!(curr instanceof Drawing) &&
-						!(curr instanceof Placeholder)
-					) {
-						const text =
-							curr instanceof RichText ? curr : curr.text;
-						text.saveLastClickPoint(this.board);
-					}
+					curr
+						.getRichText()
+						?.saveLastClickPoint(
+							this.board.pointer.point.copy(),
+							this.board.camera,
+						);
 					this.board.selection.editText();
 				} else {
 					this.board.selection.editUnderPointer();
 				}
+
+				if (topItem instanceof Group) {
+					const groupChildren = topItem.getChildren();
+					this.board.selection.add(groupChildren);
+				}
+
 				this.board.tools.publish();
 				this.clear();
 				return false;
@@ -683,21 +687,23 @@ export class Select extends Tool {
 		if (this.board.interfaceType === "view") {
 			return false;
 		}
-		this.board.selection.editTextUnderPointer();
 		const toEdit = this.board.selection.items.getSingle();
+		if (toEdit?.transformation.isLocked) {
+			return false;
+		}
+
+		this.board.selection.editTextUnderPointer();
 
 		if (this.board.selection.getIsLockedSelection()) {
 			return false;
 		}
 
-		if (
-			toEdit &&
-			!(toEdit instanceof ImageItem) &&
-			!(toEdit instanceof Drawing)
-		) {
-			const text = toEdit instanceof RichText ? toEdit : toEdit.text;
-			text.saveLastClickPoint(this.board);
-		}
+		toEdit
+			?.getRichText()
+			?.saveLastClickPoint(
+				this.board.pointer.point.copy(),
+				this.board.camera,
+			);
 		this.board.selection.editText();
 		return false;
 	}

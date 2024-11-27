@@ -6,6 +6,7 @@ import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";
+import { Item } from "ViewTalkIntegration/ContextPanel/Buttons/RestOptionsMenu/Item";
 
 type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -454,6 +455,11 @@ export class Items {
 			x + size,
 			y + size,
 		);
+
+		const groups = tolerated.filter(item => item.itemType === "Group");
+		if (groups.length > 0) {
+			return groups;
+		}
 
 		let enclosed = tolerated.some(
 			item =>

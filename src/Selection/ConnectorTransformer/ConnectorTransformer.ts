@@ -74,6 +74,12 @@ export class ConnectorTransformer extends Tool {
 
 	pointerMoveBy(_x: number, _y: number): boolean {
 		const pointer = this.board.pointer;
+		const connector = this.board.selection.items.getSingle();
+		
+		if(connector && connector.transformation.isLocked) {
+			pointer.setCursor("default");
+			return false;
+		}
 
 		if (this.state === "grabbing") {
 			this.updateConnectorPoints();
