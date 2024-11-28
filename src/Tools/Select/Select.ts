@@ -50,6 +50,7 @@ export class Select extends Tool {
 	private isSnapped: boolean | undefined = false;
 	private snapCursorPos: Point | null = null;
 	private originalCenter: Point | null = null;
+	private initialCursorPos: Point = new Point();
 	private guidelines: Line[] = [];
 	private mainLine: Line | null = null;
 	private snapLine: Line | null = null;
@@ -80,6 +81,7 @@ export class Select extends Tool {
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.debounceUpd.setFalse();
+		this.initialCursorPos = new Point(0, 0);
 		this.snapLines = { verticalLines: [], horizontalLines: [] };
 	}
 
@@ -115,6 +117,19 @@ export class Select extends Tool {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 			}
+		} else if (this.initialCursorPos) {
+			const itemCenter = item.getMbr().getCenter();
+			const targetX =
+				this.board.pointer.point.x - this.initialCursorPos.x;
+			const targetY =
+				this.board.pointer.point.y - this.initialCursorPos.y;
+			const translateX = targetX - itemCenter.x;
+			const translateY = targetY - itemCenter.y;
+			item.transformation.translateBy(
+				translateX,
+				translateY,
+				this.beginTimeStamp,
+			);
 		}
 		return false;
 	}
@@ -263,6 +278,14 @@ export class Select extends Tool {
 			this.rect.backgroundColor = SELECTION_BACKGROUND;
 			this.board.tools.publish();
 			return false;
+		}
+
+		if (this.downOnItem && !this.initialCursorPos) {
+			const itemCenter = this.downOnItem.getMbr().getCenter();
+			this.initialCursorPos = new Point(
+				this.board.pointer.point.x - itemCenter.x,
+				this.board.pointer.point.y - itemCenter.y,
+			);
 		}
 
 		this.isDownOnUnselectedItem = hover.length !== 0;
