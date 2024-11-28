@@ -14,6 +14,7 @@ import {
 import { TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { Descendant } from "slate";
 import Ajv from "ajv";
+import { PlaceholderData } from "Board/Items/Placeholder";
 
 export const validator = new Ajv();
 
@@ -51,6 +52,7 @@ const itemValidators: Record<string, (data: any) => boolean> = {
 	Image: validateImageItemData,
 	Drawing: validateDrawingData,
 	Frame: validateFrameData,
+	Placeholder: validatePlaceholderData,
 };
 
 function validateItemData(itemData: any): boolean {
@@ -150,8 +152,8 @@ export function validateRichTextData(richTextData: any): boolean {
 		richTextData.hasOwnProperty("children") &&
 		Array.isArray(richTextData.children) &&
 		validateChildren(richTextData.children) &&
-		richTextData.hasOwnProperty("verticalAlignment") &&
-		typeof richTextData.verticalAlignment === "string" &&
+		(typeof richTextData.verticalAlignment === "string" ||
+			richTextData.verticalAlignment === undefined) &&
 		(typeof richTextData.maxWidth === "number" ||
 			richTextData.maxWidth === undefined);
 	return isValid;
@@ -325,6 +327,18 @@ function validateDrawingData(data: any): data is DrawingData {
 	}
 
 	return true;
+}
+
+function validatePlaceholderData(data: any): data is PlaceholderData {
+	const isValid =
+		data.hasOwnProperty("transformation") &&
+		data.hasOwnProperty("icon") &&
+		data.hasOwnProperty("miroData") &&
+		typeof data.transformation === "object" &&
+		typeof data.icon === "string" &&
+		typeof data.miroData === "object" &&
+		validateTransformationData(data.transformation);
+	return isValid;
 }
 
 function validatePointData(data: any): data is PointData {
