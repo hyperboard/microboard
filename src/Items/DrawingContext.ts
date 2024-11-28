@@ -13,6 +13,9 @@ export class DrawingContext {
 		public ctx:
 			| CanvasRenderingContext2D
 			| OffscreenCanvasRenderingContext2D,
+		public cursorCtx?:
+			| CanvasRenderingContext2D
+			| OffscreenCanvasRenderingContext2D,
 		public matrix = new Matrix(),
 	) {
 		this.setCamera(camera);
@@ -29,6 +32,15 @@ export class DrawingContext {
 		this.ctx.setTransform(1 * this.DPI, 0, 0, 1 * this.DPI, 0, 0);
 		this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 		this.matrix.applyToContext(this.ctx);
+	}
+
+	clearCursor(): void {
+		if (!this.cursorCtx) {
+			return;
+		}
+		this.cursorCtx.setTransform(1 * this.DPI, 0, 0, 1 * this.DPI, 0, 0);
+		this.cursorCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+		this.matrix.applyToContext(this.cursorCtx);
 	}
 
 	applyChanges(): void {

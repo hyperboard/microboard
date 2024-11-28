@@ -168,30 +168,24 @@ export class TransformationCommand implements Command {
 				});
 			}
 			case "locked": {
-				return mapItemsByOperation(
-					this.transformation,
-					() => {
-						return {
-							...this.operation,
-							item: [...op.item!],
-							method: "unlocked",
-							locked: false,
-						};
-					},
-				);
+				return mapItemsByOperation(this.transformation, () => {
+					return {
+						...this.operation,
+						item: [...op.item!],
+						method: "unlocked",
+						locked: false,
+					};
+				});
 			}
 			case "unlocked": {
-				return mapItemsByOperation(
-					this.transformation,
-					() => {
-						return {
-							...this.operation,
-							item: [...op.item!],
-							method: "locked",
-							locked: true,
-						};
-					},
-				);
+				return mapItemsByOperation(this.transformation, () => {
+					return {
+						...this.operation,
+						item: [...op.item!],
+						method: "locked",
+						locked: true,
+					};
+				});
 			}
 			default:
 				return [

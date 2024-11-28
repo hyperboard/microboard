@@ -132,7 +132,7 @@ export class Transformer extends Tool {
 		if (isLockedItems) {
 			return false;
 		}
-		
+
 		if (
 			this.canvasDrawer.getLastCreatedCanvas() &&
 			this.clickedOn &&
