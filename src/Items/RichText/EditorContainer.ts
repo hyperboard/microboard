@@ -446,7 +446,11 @@ export class EditorContainer {
 		}
 
 		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
+			try {
+				ReactEditor.focus(editor);
+			} catch (er) {
+				console.warn(er);
+			}
 		}
 
 		return this.popRecordedOps();

@@ -957,8 +957,8 @@ export class RichText extends Mbr implements Geometry {
 		this.lastClickPoint = point;
 	}
 
-	getLastClickPoint(): Point | undefined {
-		return this.lastClickPoint?.copy();
+	getLastClickPoint(): Point {
+		return this.lastClickPoint?.copy() || new Point(0, 0);
 	}
 
 	clearLastClickPoint(): void {

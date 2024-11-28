@@ -263,18 +263,9 @@ export class Selection {
 		if (this.items.isEmpty()) {
 			return;
 		}
-		if (this.items.isSingle()) {
-			const item = this.items.getSingle();
-			if (item && item.itemType === "RichText") {
-				// this.setTextToEdit(item);
-				this.setContext("EditTextUnderPointer");
-				this.board.items.subject.publish(this.board.items);
-			} else {
-				this.setContext("EditUnderPointer");
-			}
-		} else {
-			this.setContext("EditUnderPointer");
-		}
+
+		this.setContext("EditUnderPointer");
+
 		this.board.tools.select();
 	}
 
@@ -1017,6 +1008,7 @@ export class Selection {
 			});
 			tempStorage.setFontColor(item.itemType, fontColor);
 		}
+		console.log(itemsOps);
 		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
