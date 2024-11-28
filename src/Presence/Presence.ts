@@ -652,8 +652,6 @@ export class Presence {
 		});
 
 		ctx.restore();
-
-		requestAnimationFrame(() => this.renderPointer(context));
 	}
 
 	private renderCursorWithLabel(
