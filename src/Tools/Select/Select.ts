@@ -277,8 +277,24 @@ export class Select extends Tool {
 			this.rect.borderColor = SELECTION_COLOR;
 			this.rect.backgroundColor = SELECTION_BACKGROUND;
 			this.board.tools.publish();
+
+			this.board.presence.throttledEmit({
+				method: "DrawSelect",
+				timestamp: Date.now(),
+				size: {
+					left: this.rect.left,
+					top: this.rect.top,
+					right: this.rect.right,
+					bottom: this.rect.bottom,
+				},
+			});
+
 			return false;
 		}
+		this.board.presence.throttledEmit({
+			method: "CancelDrawSelect",
+			timestamp: Date.now(),
+		});
 
 		if (this.downOnItem && !this.initialCursorPos) {
 			const itemCenter = this.downOnItem.getMbr().getCenter();
@@ -557,8 +573,24 @@ export class Select extends Tool {
 			this.rect.borderColor = SELECTION_COLOR;
 			this.rect.backgroundColor = SELECTION_BACKGROUND;
 			this.board.tools.publish();
+
+			this.board.presence.throttledEmit({
+				method: "DrawSelect",
+				timestamp: Date.now(),
+				size: {
+					left: this.rect.left,
+					top: this.rect.top,
+					right: this.rect.right,
+					bottom: this.rect.bottom,
+				},
+			});
 			return false;
 		}
+
+		this.board.presence.throttledEmit({
+			method: "CancelDrawSelect",
+			timestamp: Date.now(),
+		});
 
 		return false;
 	}
@@ -651,8 +683,23 @@ export class Select extends Tool {
 			}
 			this.board.tools.publish();
 			this.clear();
+
+			this.board.presence.throttledEmit({
+				method: "DrawSelect",
+				timestamp: Date.now(),
+				size: {
+					left: this.rect.left,
+					top: this.rect.top,
+					right: this.rect.right,
+					bottom: this.rect.bottom,
+				},
+			});
 			return false;
 		}
+		this.board.presence.throttledEmit({
+			method: "CancelDrawSelect",
+			timestamp: Date.now(),
+		});
 		// this.board.selection.removeAll();
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
 			const translation = this.handleMultipleItemsTranslate(

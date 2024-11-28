@@ -145,7 +145,7 @@ export class Camera {
 		return this;
 	}
 
-	private applyMatrix(matrix: Matrix): void {
+	applyMatrix(matrix: Matrix): void {
 		this.matrix = new Matrix(
 			matrix.translateX,
 			matrix.translateY,

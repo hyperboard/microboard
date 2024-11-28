@@ -5,6 +5,7 @@ import {
 	ConfirmationMsg,
 	Connection,
 	EventsMsg,
+	PresenceEventType,
 	SnapshotRequestMsg,
 	SnapshotResponseMsg,
 	SubscribeConfirmationMsg,
@@ -84,6 +85,7 @@ export interface Events {
 	canRedo(): boolean;
 	getNotificationId(): string | null;
 	removeBeforeUnloadListener(): void;
+	sendPresenceEvent(event: PresenceEventType): void;
 }
 
 type MessageHandler<T extends EventsMsg = EventsMsg> = (message: T) => void;
@@ -446,6 +448,10 @@ export function createEvents(
 		};
 	}
 
+	function sendPresenceEvent(event: PresenceEventType): void {
+		connection.publishPresenceEvent(board.getBoardId(), event);
+	}
+
 	function onBoardLoad(): void {
 		const searchParams = new URLSearchParams(
 			window.location.search.slice(1),
@@ -660,6 +666,7 @@ export function createEvents(
 			window.removeEventListener("beforeunload", beforeUnloadListener);
 		},
 		getNotificationId: () => notificationId,
+		sendPresenceEvent,
 	};
 
 	connection.subscribe(

@@ -38,6 +38,7 @@ import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
 import { Group } from "./Items/Group";
+import { Presence } from "./Presence/Presence";
 
 export type InterfaceType = "edit" | "view";
 
@@ -46,7 +47,9 @@ export class Board {
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
+
 	readonly camera: Camera = new Camera(this.pointer);
+	readonly presence: Presence;
 	index = new SpatialIndex(this.camera, this.pointer);
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
@@ -60,6 +63,7 @@ export class Board {
 
 	constructor(private boardId = "") {
 		this.selection = new Selection(this, this.events);
+		this.presence = new Presence(this);
 		this.tools.navigate();
 	}
 
@@ -74,6 +78,16 @@ export class Board {
 			this,
 			connection,
 			currIndex || snapshot?.lastIndex || 0,
+		);
+		this.presence.addEvents(this.events);
+		this.presence.setCurrentUser(
+			localStorage.getItem(`currentUser`)
+				? localStorage.getItem(`currentUser`)!
+				: (() => {
+						const uuid = uuidv4();
+						localStorage.setItem(`currentUser`, uuid);
+						return uuid;
+					})(),
 		);
 		this.selection.events = this.events;
 		if (snapshot && currIndex === 0) {
