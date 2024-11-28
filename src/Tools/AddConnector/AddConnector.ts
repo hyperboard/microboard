@@ -74,7 +74,6 @@ export class AddConnector extends BoardTool {
 		this.isDown = true;
 		const point = this.snap.getControlPoint();
 		if (!this.connector) {
-			console.log("new connector...");
 			this.connector = new Connector(
 				this.board,
 				undefined,

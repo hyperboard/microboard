@@ -365,7 +365,6 @@ export class Selection {
 				item.itemType,
 			);
 			if (textColor) {
-				console.log(textColor);
 				text.setSelectionFontColor(textColor, "None");
 			}
 			if (
