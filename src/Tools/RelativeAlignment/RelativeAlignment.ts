@@ -1,5 +1,5 @@
 import { Board } from "Board/Board";
-import { Item, Line, Point } from "Board/Items";
+import { Frame, Item, Line, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
@@ -37,6 +37,10 @@ export class AlignmentHelper {
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
 		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 8);
+
+		const childrenIds =
+			movingItem instanceof Frame ? movingItem.getChildrenIds() : [];
+
 		const nearbyItems = this.spatialIndex.getNearestTo(
 			movingMBR.getCenter(),
 			20,
@@ -44,7 +48,8 @@ export class AlignmentHelper {
 				otherItem !== movingMBR &&
 				otherItem.itemType !== "Connector" &&
 				otherItem.itemType !== "Drawing" &&
-				otherItem.isInView(camera),
+				otherItem.isInView(camera) &&
+				!childrenIds.includes(otherItem.getId()),
 			cameraWidth,
 		);
 
