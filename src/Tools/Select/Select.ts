@@ -86,7 +86,7 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
-		const increasedSnapThreshold = this.alignmentHelper.snapThreshold * 1.5;
+		const increasedSnapThreshold = 10;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,

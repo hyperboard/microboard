@@ -202,7 +202,43 @@ export class AlignmentHelper {
 					Math.max(itemMbr.right, movingMBR.right),
 				);
 			}
+			if (
+				Math.abs(centerXMoving - itemMbr.left) < dynamicAlignThreshold
+			) {
+				addVerticalAlignment(
+					itemMbr.left,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
+				);
+			}
+			if (
+				Math.abs(centerXMoving - itemMbr.right) < dynamicAlignThreshold
+			) {
+				addVerticalAlignment(
+					itemMbr.right,
+					Math.min(itemMbr.top, movingMBR.top),
+					Math.max(itemMbr.bottom, movingMBR.bottom),
+				);
+			}
+			if (Math.abs(centerYMoving - itemMbr.top) < dynamicAlignThreshold) {
+				addHorizontalAlignment(
+					itemMbr.top,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
+				);
+			}
+			if (
+				Math.abs(centerYMoving - itemMbr.bottom) < dynamicAlignThreshold
+			) {
+				addHorizontalAlignment(
+					itemMbr.bottom,
+					Math.min(itemMbr.left, movingMBR.left),
+					Math.max(itemMbr.right, movingMBR.right),
+				);
+			}
 		});
+
+		const precisionThreshold = 1;
 
 		const verticalLines = Array.from(verticalAlignments.entries())
 			.map(
@@ -217,6 +253,11 @@ export class AlignmentHelper {
 				return (
 					index === 0 ||
 					Math.abs(line.start.x - mainLine.start.x) >= 20
+				);
+			})
+			.filter(line => {
+				return (
+					Math.abs(line.start.x - line.end.x) <= precisionThreshold
 				);
 			});
 
@@ -233,6 +274,11 @@ export class AlignmentHelper {
 				return (
 					index === 0 ||
 					Math.abs(line.start.y - mainLine.start.y) >= 20
+				);
+			})
+			.filter(line => {
+				return (
+					Math.abs(line.start.y - line.end.y) <= precisionThreshold
 				);
 			});
 
@@ -272,7 +318,10 @@ export class AlignmentHelper {
 		let snapped = false;
 
 		const scale = this.board.camera.getScale();
-		const dynamicSnapThreshold = Math.min(this.snapThreshold / scale, 8);
+		const dynamicSnapThreshold = Math.min(
+			Math.max(this.snapThreshold / scale, 0.6),
+			3,
+		);
 
 		const snapToLine = (lines: Line[], isVertical: boolean) => {
 			for (const line of lines) {
