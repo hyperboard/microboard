@@ -257,23 +257,16 @@ export class Select extends Tool {
 				),
 			);
 
-		if (this.downOnItem && !this.initialCursorPos) {
-			const itemCenter = this.downOnItem.getMbr().getCenter();
-			this.initialCursorPos = new Point(
-				this.board.pointer.point.x - itemCenter.x,
-				this.board.pointer.point.y - itemCenter.y,
-			);
-		} else if (this.isDownOnSelection && !this.initialCursorPos) {
-			const itemCenter = selectionItems[0].getMbr().getCenter();
-			this.initialCursorPos = new Point(
-				this.board.pointer.point.x - itemCenter.x,
-				this.board.pointer.point.y - itemCenter.y,
-			);
-		}
-
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
 			this.board.selection.transformationRenderBlock = true;
+			if (!this.initialCursorPos) {
+				const itemCenter = selectionItems[0].getMbr().getCenter();
+				this.initialCursorPos = new Point(
+					this.board.pointer.point.x - itemCenter.x,
+					this.board.pointer.point.y - itemCenter.y,
+				);
+			}
 			this.board.selection.quickAddButtons.clear();
 			return false;
 		}
