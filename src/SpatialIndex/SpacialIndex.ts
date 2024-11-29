@@ -6,7 +6,6 @@ import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";
-import { Item } from "ViewTalkIntegration/ContextPanel/Buttons/RestOptionsMenu/Item";
 
 type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -547,5 +546,16 @@ export class Items {
 		rest.forEach(item => item.render(context)); // non-frame items
 		frames.forEach(frame => frame.renderBorders(context)); // borders of frames
 		frames.forEach(frame => frame.renderName(context)); // names of frames
+	}
+
+	renderHTML(): string {
+		const frames = this.getFramesInView();
+		const rest = this.getItemsInView();
+		let result = "";
+		// frames.forEach(frame => frame.renderHTML());
+		for (const item of rest) {
+			result += item.renderHTML();
+		}
+		return result;
 	}
 }

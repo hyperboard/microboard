@@ -9,6 +9,7 @@ import {
 	Transforms,
 	Text,
 	Operation as SlateOp,
+	Element,
 } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
@@ -1139,6 +1140,79 @@ export class RichText extends Mbr implements Geometry {
 			}
 			ctx.restore();
 		}
+	}
+
+	renderHTML(): string {
+		const renderNode = (node: Descendant): string => {
+			if (Text.isText(node)) {
+				let text = escapeHtml(node.text);
+				if (node.bold) text = `<strong>${text}</strong>`;
+				if (node.italic) text = `<em>${text}</em>`;
+				if (node.underline) text = `<u>${text}</u>`;
+				if (node["line-through"]) text = `<s>${text}</s>`;
+				if (node.fontColor)
+					text = `<span style="color: ${node.fontColor}">${text}</span>`;
+				if (node.fontHighlight)
+					text = `<span style="background-color: ${node.fontHighlight}">${text}</span>`;
+				if (node.fontSize)
+					text = `<span style="font-size: ${node.fontSize}px">${text}</span>`;
+				if (node.fontFamily)
+					text = `<span style="font-family: ${node.fontFamily}">${text}</span>`;
+				return text;
+			}
+
+			if (Element.isElement(node)) {
+				const children = node.children.map(renderNode).join("");
+				switch (node.type) {
+					case "paragraph":
+						return `<p style="text-align: ${node.horisontalAlignment || "left"}">${children}</p>`;
+					case "heading":
+						return `<h${node.level} style="text-align: ${node.horisontalAlignment || "left"}">${children}</h${node.level}>`;
+					case "block-quote":
+						return `<blockquote style="text-align: ${node.horisontalAlignment || "left"}">${children}</blockquote>`;
+					default:
+						return children;
+				}
+			}
+
+			return "";
+		};
+
+		const escapeHtml = (unsafe: string): string => {
+			return unsafe
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;");
+		};
+
+		const content = this.editor.editor.children.map(renderNode).join("");
+
+		// Get transformation values
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+
+		// Create CSS transform string
+		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+
+		// Calculate the transformed width and height
+		const transformedWidth = this.getTextWidth() * scaleX;
+		const transformedHeight = this.blockNodes.height * scaleY;
+
+		// Create CSS styles string
+		const styles = [
+			`width: ${transformedWidth}px`,
+			`height: ${transformedHeight}px`,
+			`transform: ${transform}`,
+			`transform-origin: top left`,
+			`position: absolute`,
+			`left: ${this.left}px`,
+			`top: ${this.top}px`,
+			`overflow: hidden`, // To ensure content doesn't spill out when scaled
+		].join(";");
+
+		return `<div style="${styles}">${content}</div>`;
 	}
 
 	clearText(): void {
