@@ -298,6 +298,11 @@ export class Path implements Geometry, PathStylize {
 		for (let i = 1, len = this.segments.length; i < len; i++) {
 			mbr.combine(this.segments[i].getMbr());
 		}
+		const offset = this.borderWidth / 2;
+		mbr.left -= offset;
+		mbr.top -= offset;
+		mbr.right += offset;
+		mbr.bottom += offset;
 		return mbr;
 	}
 

@@ -127,7 +127,7 @@ export class AddDrawing extends BoardTool {
 		drawing.setStrokeColor(this.strokeColor);
 		drawing.setStrokeWidth(this.strokeWidth);
 		drawing.setBorderStyle(this.strokeStyle);
-		this.board.add(drawing);
+		this.board.add(drawing).updateMbr();
 		this.board.selection.removeAll();
 		this.drawing = new Drawing([]);
 		this.board.tools.publish();

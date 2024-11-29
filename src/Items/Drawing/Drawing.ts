@@ -90,8 +90,8 @@ export class Drawing extends Mbr implements Geometry {
 
 	updateGeometry(): void {
 		this.updatePath2d();
-		this.updateMbr();
 		this.updateLines();
+		this.updateMbr();
 	}
 
 	updateMbr(): void {
@@ -105,9 +105,14 @@ export class Drawing extends Mbr implements Geometry {
 		this.right = this.left + width * this.transformation.matrix.scaleX;
 		this.bottom = this.top + height * this.transformation.matrix.scaleY;
 		*/
-		const mbr = this.untransformedMbr.getTransformed(
-			this.transformation.matrix,
-		);
+		const offset = this.getStrokeWidth() / 2;
+		const untransformedMbr = this.untransformedMbr.copy();
+		untransformedMbr.left -= offset;
+		untransformedMbr.top -= offset;
+		untransformedMbr.right += offset;
+		untransformedMbr.bottom += offset;
+
+		const mbr = untransformedMbr.getTransformed(this.transformation.matrix);
 
 		this.left = mbr.left;
 		this.top = mbr.top;
@@ -197,12 +202,11 @@ export class Drawing extends Mbr implements Geometry {
 			if (distance >= 2) {
 				// adjust this threshold as needed
 				this.points.push(point);
-				this.updateGeometry();
 			}
 		} else {
 			this.points.push(point);
-			this.updateGeometry();
 		}
+		this.updateGeometry();
 	}
 
 	setId(id: string): this {
@@ -310,6 +314,7 @@ export class Drawing extends Mbr implements Geometry {
 						];
 						break;
 				}
+				this.updateMbr();
 				break;
 			case "Transformation":
 				this.transformation.apply(op);
