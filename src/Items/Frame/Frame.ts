@@ -188,26 +188,17 @@ export class Frame implements Geometry {
 			return false;
 		}
 
-		const frameMbr = this.getMbr();
+		const frameMbr = this.getMbr().copy();
 		if (item.isEnclosedOrCrossedBy(frameMbr)) {
 			if (frameMbr.isInside(item.getMbr().getCenter())) {
 				if (!options || !options.onlyForOut) {
-					// this.addChild(item.getId());
-					// item.parent = this.getId(); // TODO change item declaration (or each of item), so it has setParent property
 					return true;
 				}
 				return false;
 			} else {
-				// this.removeChild(item.getId());
-				// item.parent = "Board";
 				return false;
 			}
 		}
-		// } else {
-		// 	// this.removeChild(item.getId());
-		// 	// item.parent = "Board";
-		// 	return false;
-		// }
 		return false;
 	}
 
