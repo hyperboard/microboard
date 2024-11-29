@@ -1,65 +1,67 @@
 import { Item, Frame } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { ItemWoFrames } from "Board/SpatialIndex/SpacialIndex";
 import { Tool } from "Board/Tools/Tool";
 
+interface HighlightGroup {
+	frame: Frame;
+	children: Item[];
+}
+
 export class NestingHighlighter extends Tool {
-	private toHighlight: Item[] = [];
-	constructor(items?: Item[]) {
+	private toHighlight: HighlightGroup[] = [];
+
+	constructor() {
 		super();
-		if (items) {
-			this.add(items);
-		}
 	}
 
 	clear(): void {
 		this.toHighlight = [];
 	}
 
-	listAll(): Item[] {
+	listAll(): HighlightGroup[] {
 		return this.toHighlight;
 	}
 
-	add(item: Item | Item[]): void {
-		if (Array.isArray(item)) {
-			this.toHighlight.push(
-				...item.filter(
-					currItem => !this.toHighlight.includes(currItem),
-				),
-			);
+	add(frame: Frame, children: Item | Item[]): void {
+		const existing = this.toHighlight.find(group => group.frame === frame);
+		const array = Array.isArray(children) ? children : [children];
+		if (existing) {
+			array.forEach(child => {
+				if (!existing.children.includes(child)) {
+					existing.children.push(child);
+				}
+			});
 		} else {
-			if (!this.toHighlight.includes(item)) {
-				this.toHighlight.push(item);
-			}
+			this.toHighlight.push({ frame, children: array });
 		}
 	}
 
-	remove(item: Item | Item[]): void {
-		if (Array.isArray(item)) {
-			this.toHighlight = this.toHighlight.filter(
-				toHighlightItem => !item.includes(toHighlightItem),
-			);
-		} else {
-			this.toHighlight = this.toHighlight.filter(
-				toHighlightItem => toHighlightItem !== item,
-			);
-		}
-	}
-
-	set(item: Item | Item[]): void {
-		this.toHighlight = Array.isArray(item) ? item : [item];
+	/** Remvoe children only, frames would be cleaned when empty */
+	remove(item: Item): void {
+		this.toHighlight.forEach(group => {
+			group.children = group.children.filter(child => child !== item);
+		});
+		this.toHighlight = this.toHighlight.filter(
+			group => group.children.length > 0,
+		);
 	}
 
 	render(context: DrawingContext): void {
 		if (this.toHighlight.length > 0) {
-			this.toHighlight.forEach(toDraw => {
-				const rect = toDraw.getMbr();
-				if (toDraw instanceof Frame) {
-					rect.borderColor = "blue";
-					rect.strokeWidth = 1;
-				} else {
-					rect.backgroundColor = "rgb(128, 128, 128, 0.5)";
-				}
-				rect.render(context);
+			this.toHighlight.forEach(group => {
+				// Render frame
+				const frameRect = group.frame.getMbr();
+				frameRect.borderColor = "blue";
+				frameRect.strokeWidth = 1;
+				frameRect.render(context);
+
+				// Render children
+				group.children.forEach(child => {
+					const childRect = child.getMbr();
+					childRect.backgroundColor = "rgb(128, 128, 128, 0.5)";
+					childRect.render(context);
+				});
 			});
 		}
 	}

@@ -7,7 +7,7 @@ import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";
 
-type ItemWoFrames = Exclude<Item, Frame>;
+export type ItemWoFrames = Exclude<Item, Frame>;
 
 export class SpatialIndex {
 	subject = new Subject<Items>();
@@ -420,6 +420,15 @@ export class Items {
 		bottom: number,
 	): Item[] {
 		return this.index.getEnclosedOrCrossed(left, top, right, bottom);
+	}
+
+	getFramesEnclosedOrCrossed(
+		left: number,
+		top: number,
+		right: number,
+		bottom: number,
+	): Frame[] {
+		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
 	}
 
 	getUnderPoint(point: Point, tolerance = 5): Item[] {

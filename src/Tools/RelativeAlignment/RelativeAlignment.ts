@@ -3,6 +3,14 @@ import { Frame, Item, Line, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
+import { CanvasDrawer } from "Board/drawMbrOnCanvas";
+
+type SnapAlignment = {
+	offset: number;
+	itemOffset: number;
+	itemSize: number;
+	itemCenter: number;
+};
 
 export class AlignmentHelper {
 	private alignThreshold = 2;
@@ -16,6 +24,7 @@ export class AlignmentHelper {
 	constructor(
 		board: Board,
 		private spatialIndex: SpatialIndex,
+		private canvasDrawer: CanvasDrawer,
 	) {
 		this.board = board;
 	}
@@ -320,7 +329,6 @@ export class AlignmentHelper {
 		const itemMbr = draggingItem.getMbr();
 		const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
-		let snapped = false;
 
 		const scale = this.board.camera.getScale();
 		const dynamicSnapThreshold = Math.min(
@@ -328,81 +336,89 @@ export class AlignmentHelper {
 			3,
 		);
 
-		const snapToLine = (lines: Line[], isVertical: boolean) => {
-			for (const line of lines) {
-				if (!line) {
-					return false;
-				}
+		const getAlignmentInfo = (
+			line: Line,
+			isVertical: boolean,
+		): SnapAlignment => ({
+			offset: isVertical ? line.start.x : line.start.y,
+			itemOffset: isVertical ? itemMbr.left : itemMbr.top,
+			itemSize: isVertical ? itemMbr.getWidth() : itemMbr.getHeight(),
+			itemCenter: isVertical ? itemCenterX : itemCenterY,
+		});
 
-				const snapOffset = isVertical ? line.start.x : line.start.y;
-				const itemOffset = isVertical ? itemMbr.left : itemMbr.top;
-				const itemSize = isVertical
-					? itemMbr.getWidth()
-					: itemMbr.getHeight();
-				const itemCenter = isVertical ? itemCenterX : itemCenterY;
+		const trySnap = (
+			alignment: SnapAlignment,
+			isVertical: boolean,
+		): boolean => {
+			const snapConditions: {
+				check: number;
+				translation: number;
+			}[] = [
+				{
+					check: alignment.itemOffset - alignment.offset,
+					translation: alignment.offset - alignment.itemOffset,
+				},
+				{
+					check:
+						alignment.itemOffset +
+						alignment.itemSize -
+						alignment.offset,
+					translation:
+						alignment.offset -
+						(alignment.itemOffset + alignment.itemSize),
+				},
+				{
+					check: alignment.itemCenter - alignment.offset,
+					translation: alignment.offset - alignment.itemCenter,
+				},
+			];
 
-				if (Math.abs(itemOffset - snapOffset) < dynamicSnapThreshold) {
-					draggingItem.transformation.translateBy(
-						isVertical ? snapOffset - itemOffset : 0,
-						isVertical ? 0 : snapOffset - itemOffset,
+			for (const { check, translation } of snapConditions) {
+				if (Math.abs(check) < dynamicSnapThreshold) {
+					const x = isVertical ? translation : 0;
+					const y = isVertical ? 0 : translation;
+					this.translateItemsOrCanvas(
+						draggingItem,
+						x,
+						y,
 						beginTimeStamp,
 					);
 					this.snapMemory[isVertical ? "x" : "y"] =
 						cursorPosition[isVertical ? "x" : "y"];
-					snapped = true;
-					break;
-				} else if (
-					Math.abs(itemOffset + itemSize - snapOffset) <
-					dynamicSnapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						isVertical ? snapOffset - (itemOffset + itemSize) : 0,
-						isVertical ? 0 : snapOffset - (itemOffset + itemSize),
-						beginTimeStamp,
-					);
-					this.snapMemory[isVertical ? "x" : "y"] =
-						cursorPosition[isVertical ? "x" : "y"];
-					snapped = true;
-					break;
-				} else if (
-					Math.abs(itemCenter - snapOffset) < dynamicSnapThreshold
-				) {
-					draggingItem.transformation.translateBy(
-						isVertical ? snapOffset - itemCenter : 0,
-						isVertical ? 0 : snapOffset - itemCenter,
-						beginTimeStamp,
-					);
-					this.snapMemory[isVertical ? "x" : "y"] =
-						cursorPosition[isVertical ? "x" : "y"];
-					snapped = true;
-					break;
+					return true;
 				}
 			}
-			return snapped;
+			return false;
 		};
 
-		if (
-			this.snapMemory.x !== null &&
-			Math.abs(cursorPosition.x - this.snapMemory.x) >
-				dynamicSnapThreshold
-		) {
-			this.snapMemory.x = null;
-		}
-		if (
-			this.snapMemory.y !== null &&
-			Math.abs(cursorPosition.y - this.snapMemory.y) >
-				dynamicSnapThreshold
-		) {
-			this.snapMemory.y = null;
+		const snapToLine = (lines: Line[], isVertical: boolean): boolean => {
+			for (const line of lines) {
+				if (!line) {
+					continue;
+				}
+
+				const alignment = getAlignmentInfo(line, isVertical);
+				if (trySnap(alignment, isVertical)) {
+					return true;
+				}
+			}
+			return false;
+		};
+
+		for (const axis of ["x", "y"] as const) {
+			if (
+				this.snapMemory[axis] !== null &&
+				Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) >
+					dynamicSnapThreshold
+			) {
+				this.snapMemory[axis] = null;
+			}
 		}
 
-		const snappedToVertical = snapToLine(snapLines.verticalLines, true);
-		const snappedToHorizontal = snapToLine(
-			snapLines.horizontalLines,
-			false,
+		return (
+			snapToLine(snapLines.verticalLines, true) ||
+			snapToLine(snapLines.horizontalLines, false)
 		);
-
-		return snappedToVertical || snappedToHorizontal;
 	}
 
 	snapToSide(
@@ -412,58 +428,109 @@ export class AlignmentHelper {
 		side: ResizeType,
 	): boolean {
 		const itemMbr = draggingItem.getMbr();
-		const snapToLine = (lines: Line[], isVertical: boolean) => {
-			for (const line of lines) {
-				if (!line) {
-					return false;
-				}
 
-				if (isVertical) {
-					if (
-						(side.includes("left") &&
-							Math.abs(itemMbr.left - line.start.x) <
-								this.snapThreshold) ||
-						(side.includes("right") &&
-							Math.abs(itemMbr.right - line.start.x) <
-								this.snapThreshold)
-					) {
-						const translateX = side.includes("left")
-							? line.start.x - itemMbr.left
-							: line.start.x - itemMbr.right;
-						draggingItem.transformation.translateBy(
-							translateX,
-							0,
-							beginTimeStamp,
-						);
-						return true;
-					}
-				} else {
-					if (
-						(side.includes("top") &&
-							Math.abs(itemMbr.top - line.start.y) <
-								this.snapThreshold) ||
-						(side.includes("bottom") &&
-							Math.abs(itemMbr.bottom - line.start.y) <
-								this.snapThreshold)
-					) {
-						const translateY = side.includes("top")
-							? line.start.y - itemMbr.top
-							: line.start.y - itemMbr.bottom;
-						draggingItem.transformation.translateBy(
-							0,
-							translateY,
-							beginTimeStamp,
-						);
-						return true;
-					}
-				}
-			}
-			return false;
+		const getAlignmentInfo = (line: Line, side: ResizeType) => {
+			const alignments: Record<
+				ResizeType,
+				{ position: number; reference: number; offset: number }
+			> = {
+				left: {
+					position: itemMbr.left,
+					reference: line.start.x,
+					offset: line.start.x - itemMbr.left,
+				},
+				right: {
+					position: itemMbr.right,
+					reference: line.start.x,
+					offset: line.start.x - itemMbr.right,
+				},
+				top: {
+					position: itemMbr.top,
+					reference: line.start.y,
+					offset: line.start.y - itemMbr.top,
+				},
+				bottom: {
+					position: itemMbr.bottom,
+					reference: line.start.y,
+					offset: line.start.y - itemMbr.bottom,
+				},
+				leftTop: {
+					position: itemMbr.left,
+					reference: line.start.x,
+					offset: line.start.x - itemMbr.left,
+				},
+				leftBottom: {
+					position: itemMbr.left,
+					reference: line.start.x,
+					offset: line.start.x - itemMbr.left,
+				},
+				rightTop: {
+					position: itemMbr.right,
+					reference: line.start.x,
+					offset: line.start.x - itemMbr.right,
+				},
+				rightBottom: {
+					position: itemMbr.right,
+					reference: line.start.x,
+					offset: line.start.x - itemMbr.right,
+				},
+			};
+
+			return alignments[side];
 		};
 
-		return side.includes("left") || side.includes("right")
-			? snapToLine(snapLines.verticalLines, true)
-			: snapToLine(snapLines.horizontalLines, false);
+		const isVerticalSide = new Set([
+			"left",
+			"right",
+			"leftTop",
+			"leftBottom",
+			"rightTop",
+			"rightBottom",
+		]);
+		const isVertical = isVerticalSide.has(side);
+		const lines = isVertical
+			? snapLines.verticalLines
+			: snapLines.horizontalLines;
+
+		for (const line of lines) {
+			if (!line) {
+				continue;
+			}
+
+			const alignment = getAlignmentInfo(line, side);
+
+			if (
+				Math.abs(alignment.position - alignment.reference) <
+				this.snapThreshold
+			) {
+				const x = isVertical ? alignment.offset : 0;
+				const y = isVertical ? 0 : alignment.offset;
+				this.translateItemsOrCanvas(draggingItem, x, y, beginTimeStamp);
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	translateItemsOrCanvas(
+		item: Item,
+		x: number,
+		y: number,
+		timeStamp: number,
+	) {
+		if (this.canvasDrawer.getLastCreatedCanvas()) {
+			this.canvasDrawer.translateCanvasBy(x, y);
+		} else {
+			if (item.itemType === "Frame") {
+				const translation =
+					this.board.selection.handleManyItemsTranslate(x, y);
+				this.board.selection.transformMany(translation, timeStamp);
+			} else {
+				item.transformation.translateBy(x, y, timeStamp);
+			}
+		}
 	}
 
 	renderSnapLines(

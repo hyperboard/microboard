@@ -306,7 +306,7 @@ export class Board {
 		const itemCenter = item.getMbr().getCenter();
 		const frame = this.items
 			.getFramesInView()
-			.filter(frame => item.isEnclosedOrCrossedBy(frame.getMbr()))
+			.filter(frame => frame.handleNesting(item))
 			.reduce((acc: Frame | undefined, frame) => {
 				if (
 					!acc ||
@@ -318,7 +318,7 @@ export class Board {
 				return acc;
 			}, undefined);
 		if (frame) {
-			frame.handleNesting(item);
+			frame.emitAddChild(item);
 		}
 	}
 
@@ -331,21 +331,46 @@ export class Board {
 	drawMbrOnCanvas(
 		mbr: Mbr,
 		translation: TransformManyItems,
+		actualMbr?: Mbr,
 	): HTMLDivElement | undefined {
 		const canvas = document.createElement("canvas");
-		const width = mbr.getWidth();
-		const height = mbr.getHeight();
+		const width = mbr.getWidth() + 2;
+		const height = mbr.getHeight() + 2;
 		canvas.width = width * this.camera.getMatrix().scaleX;
 		canvas.height = height * this.camera.getMatrix().scaleY;
-
-		canvas.style.border = `1px solid ${SELECTION_COLOR}`;
-		canvas.style.boxSizing = "border-box";
 
 		const container = document.createElement("div");
 		container.style.position = "relative";
 		container.style.width = `${canvas.width}px`;
 		container.style.height = `${canvas.height}px`;
 		container.appendChild(canvas);
+
+		if (actualMbr) {
+			const leftOffset =
+				(actualMbr.left - mbr.left) * this.camera.getMatrix().scaleX;
+			const topOffset =
+				(actualMbr.top - mbr.top) * this.camera.getMatrix().scaleX;
+			const width = actualMbr.getWidth() * this.camera.getMatrix().scaleX;
+			const height =
+				actualMbr.getHeight() * this.camera.getMatrix().scaleY;
+
+			const borderDiv = document.createElement("div");
+			borderDiv.id = "canvasBorder";
+			borderDiv.style.position = "absolute";
+			borderDiv.style.transformOrigin = "left top";
+			borderDiv.style.border = `1px solid ${SELECTION_COLOR}`;
+			borderDiv.style.boxSizing = "border-box";
+			borderDiv.style.left = `${leftOffset}px`;
+			borderDiv.style.top = `${topOffset}px`;
+			borderDiv.style.width = `${width}px`;
+			borderDiv.style.height = `${height}px`;
+			canvas.style.border = "";
+			canvas.style.boxSizing = "border-box";
+			container.appendChild(borderDiv);
+		} else {
+			canvas.style.border = `1px solid ${SELECTION_COLOR}`;
+			canvas.style.boxSizing = "border-box";
+		}
 
 		const createAnchorDiv = (
 			left: string,
@@ -376,8 +401,15 @@ export class Board {
 			),
 		];
 
+		const canvasBorder = Array.from(container.children).find(
+			child => child.id === "canvasBorder",
+		);
 		for (const anchor of anchors) {
-			container.appendChild(anchor);
+			if (canvasBorder) {
+				canvasBorder.appendChild(anchor);
+			} else {
+				container.appendChild(anchor);
+			}
 		}
 
 		const ctx = canvas.getContext("2d");
@@ -388,10 +420,6 @@ export class Board {
 			);
 			return;
 		}
-
-		ctx.rect(0, 0, canvas.width, canvas.height);
-		ctx.fillStyle = "transparent";
-		ctx.fill();
 
 		const camera = new Camera();
 		const newCameraMatix = new Matrix(-mbr.left, -mbr.top, 1, 1);
@@ -414,11 +442,13 @@ export class Board {
 			const item = this.items.getById(id);
 			if (item) {
 				item.render(context);
-				this.selection.renderItemMbr(
-					context,
-					item,
-					this.camera.getMatrix().scaleX,
-				);
+				if (item.itemType !== "Frame") {
+					this.selection.renderItemMbr(
+						context,
+						item,
+						this.camera.getMatrix().scaleX,
+					);
+				}
 			}
 		});
 

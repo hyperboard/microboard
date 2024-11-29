@@ -120,7 +120,7 @@ export function logHotkey(
 			`%cSelection context:%c ${
 				hotkeyConfig.selectionContext?.join(", ") ?? "Not provided"
 			}\n%cPrevent default:%c ${
-				hotkeyConfig.preventDefault ?? true ? "true" : "false"
+				(hotkeyConfig.preventDefault ?? true) ? "true" : "false"
 			}\n%cSingle item only:%c ${
 				hotkeyConfig.singleItemOnly ? "true" : "false"
 			}\n%cSelected items of the type:%c ${
@@ -130,7 +130,7 @@ export function logHotkey(
 			"color: #ffd800; font-size: 16px; font-weight: 600;",
 			"color: #808080; font-size: 16px;",
 			`color: ${
-				hotkeyConfig.preventDefault ?? true ? "#4cbb17" : "#c80815"
+				(hotkeyConfig.preventDefault ?? true) ? "#4cbb17" : "#c80815"
 			}; font-size: 16px; font-weight: 600;`,
 			"color: #808080; font-size: 16px;",
 			`color: ${

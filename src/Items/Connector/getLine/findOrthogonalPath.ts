@@ -332,14 +332,14 @@ function createGrid(
 			start.pointType !== "Board"
 				? start.item
 				: end.pointType !== "Board"
-				? end.item
-				: null;
+					? end.item
+					: null;
 		const itemDir =
 			start.pointType !== "Board"
 				? startDir
 				: end.pointType !== "Board"
-				? endDir
-				: null;
+					? endDir
+					: null;
 		if (!item || !itemDir) {
 			throw new Error(
 				"Item or connector direction not found in start/end point",
@@ -775,20 +775,23 @@ export function removeUnnecessaryPoints(
 	centerLine: Point[],
 	fromStart: boolean,
 ): void {
-	const foundPoint = pathToCenterLine.reduce((acc, point, index) => {
-		if (acc) {
-			return acc;
-		}
-		if (
-			index !== pathToCenterLine.length - 1 &&
-			centerLine.some(centerLinePoint =>
-				centerLinePoint.barelyEqual(point),
-			)
-		) {
-			return point;
-		}
-		return undefined;
-	}, undefined as undefined | Point);
+	const foundPoint = pathToCenterLine.reduce(
+		(acc, point, index) => {
+			if (acc) {
+				return acc;
+			}
+			if (
+				index !== pathToCenterLine.length - 1 &&
+				centerLine.some(centerLinePoint =>
+					centerLinePoint.barelyEqual(point),
+				)
+			) {
+				return point;
+			}
+			return undefined;
+		},
+		undefined as undefined | Point,
+	);
 	if (foundPoint) {
 		const foundIndex = centerLine.reduce((acc, point, index) => {
 			if (acc !== -1) {
@@ -880,7 +883,7 @@ export function findOrthogonalPath(
 	const adjustedCenterLine =
 		centerLine.length > 0
 			? startPoint.getDistance(centerLine[0]) <
-			  startPoint.getDistance(centerLine[centerLine.length - 1])
+				startPoint.getDistance(centerLine[centerLine.length - 1])
 				? centerLine
 				: centerLine.reverse()
 			: centerLine;

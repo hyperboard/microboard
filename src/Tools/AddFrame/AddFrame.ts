@@ -11,7 +11,7 @@ export class AddFrame extends BoardTool {
 	frame: Frame;
 	mbr = new Mbr();
 	isDown = false;
-	toDrawBorder = new NestingHighlighter();
+	nestingHighlighter = new NestingHighlighter();
 
 	constructor(private board: Board) {
 		super(board);
@@ -58,7 +58,7 @@ export class AddFrame extends BoardTool {
 			this.mbr = this.line.getMbr();
 			this.mbr.borderColor = "blue";
 
-			this.toDrawBorder.clear();
+			this.nestingHighlighter.clear();
 			const enclosedOrCrossed = this.board.items.getEnclosedOrCrossed(
 				this.mbr.left,
 				this.mbr.top,
@@ -71,7 +71,7 @@ export class AddFrame extends BoardTool {
 					item.parent === "Board" &&
 					this.mbr.isInside(item.getMbr().getCenter()),
 			);
-			this.toDrawBorder.add(inside);
+			this.nestingHighlighter.add(this.frame, inside);
 
 			this.initTransformation();
 			this.board.tools.publish();
@@ -80,7 +80,7 @@ export class AddFrame extends BoardTool {
 		return false;
 	}
 
-	async leftButtonUp(): Promise<boolean> {
+	leftButtonUp(): boolean {
 		this.isDown = false;
 		const width = this.mbr.getWidth();
 		const height = this.mbr.getHeight();
@@ -96,16 +96,18 @@ export class AddFrame extends BoardTool {
 			);
 		}
 
+		const currMbr = this.frame.getMbr();
 		this.board.items
 			.getEnclosedOrCrossed(
-				this.frame.getMbr().left,
-				this.frame.getMbr().top,
-				this.frame.getMbr().right,
-				this.frame.getMbr().bottom,
+				currMbr.left,
+				currMbr.top,
+				currMbr.right,
+				currMbr.bottom,
 			)
 			.filter(item => item.parent === "Board")
-			.forEach(item => this.frame.handleNesting(item));
-		const frame = await this.board.add(this.frame);
+			.filter(item => this.frame.handleNesting(item))
+			.forEach(item => this.frame.emitAddChild(item));
+		const frame = this.board.add(this.frame);
 		if (this.shape !== "Custom") {
 			frame.setCanChangeRatio(false);
 		}
@@ -113,7 +115,7 @@ export class AddFrame extends BoardTool {
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.moveCursorToEOL();
 
-		this.toDrawBorder.clear();
+		this.nestingHighlighter.clear();
 		this.board.selection.removeAll();
 		this.board.selection.add(frame);
 		this.board.selection.editText();
@@ -122,7 +124,7 @@ export class AddFrame extends BoardTool {
 		return true;
 	}
 
-	async addNextTo(): Promise<void> {
+	addNextTo(): void {
 		const framesInView = this.board.items.getFramesInView();
 		if (framesInView.length === 0) {
 			if (this.shape === "Custom") {
@@ -182,20 +184,22 @@ export class AddFrame extends BoardTool {
 			}
 			this.board.fitMbrInView(this.frame.getMbr());
 		}
+		const frameMbr = this.frame.getMbr();
 		this.board.items
 			.getEnclosedOrCrossed(
-				this.frame.getMbr().left,
-				this.frame.getMbr().top,
-				this.frame.getMbr().right,
-				this.frame.getMbr().bottom,
+				frameMbr.left,
+				frameMbr.top,
+				frameMbr.right,
+				frameMbr.bottom,
 			)
 			.filter(item => item.parent === "Board")
-			.forEach(item => this.frame.handleNesting(item));
-		const frame = await this.board.add(this.frame);
+			.filter(item => this.frame.handleNesting(item))
+			.forEach(item => this.frame.emitAddChild(item));
+		const frame = this.board.add(this.frame);
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.moveCursorToEOL();
 
-		this.toDrawBorder.clear();
+		this.nestingHighlighter.clear();
 		this.board.selection.removeAll();
 		this.board.selection.add(frame);
 		this.board.selection.editText();
@@ -236,7 +240,7 @@ export class AddFrame extends BoardTool {
 		if (this.isDown) {
 			// this.frame.renderBorders(context);
 			this.mbr.render(context);
-			this.toDrawBorder.render(context);
+			this.nestingHighlighter.render(context);
 		}
 	}
 }

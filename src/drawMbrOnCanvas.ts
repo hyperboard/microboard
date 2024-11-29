@@ -15,6 +15,7 @@ export interface CanvasDrawer {
 		sumMbr: Mbr,
 		translation: TransformManyItems,
 		resizingMatrix?: Matrix,
+		actualMbr?: Mbr,
 	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
 }
@@ -116,6 +117,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		sumMbr: Mbr,
 		translation: TransformManyItems,
 		resizingMatrix?: Matrix,
+		actualMbr?: Mbr,
 	): void {
 		const translationKeys = Object.keys(translation);
 		if (
@@ -128,7 +130,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 				scaleCanvasBy(resizingMatrix.scaleX, resizingMatrix.scaleY);
 			}
 		} else {
-			const cnvs = board.drawMbrOnCanvas(sumMbr, translation);
+			const cnvs = board.drawMbrOnCanvas(sumMbr, translation, actualMbr);
 			if (cnvs) {
 				cnvs.style.position = "absolute";
 				cnvs.style.zIndex = "50";

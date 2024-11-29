@@ -34,7 +34,7 @@ export class Transformer extends Tool {
 	// original mbr when resize was triggered
 	startMbr: Mbr | undefined;
 	clickedOn?: ResizeType;
-	private toDrawBorders = new NestingHighlighter();
+	private nestingHighlighter = new NestingHighlighter();
 	beginTimeStamp = Date.now();
 	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
@@ -58,7 +58,11 @@ export class Transformer extends Tool {
 			}
 		});
 
-		this.alignmentHelper = new AlignmentHelper(board, board.index);
+		this.alignmentHelper = new AlignmentHelper(
+			board,
+			board.index,
+			this.canvasDrawer,
+		);
 	}
 
 	updateAnchorType(): void {
@@ -159,14 +163,16 @@ export class Transformer extends Tool {
 			this.mbr = resize.mbr;
 			this.debounceUpd.setFalse();
 		}
-
 		this.updateAnchorType();
 		const wasResising = this.resizeType !== undefined;
+		if (wasResising) {
+			this.selection.nestSelectedItems();
+		}
 		this.resizeType = undefined;
 		this.clickedOn = undefined;
 		this.oppositePoint = undefined;
 		this.mbr = undefined;
-		this.toDrawBorders.clear();
+		this.nestingHighlighter.clear();
 		this.beginTimeStamp = Date.now();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.board.selection.subject.publish(this.board.selection);
@@ -338,47 +344,38 @@ export class Transformer extends Tool {
 			this.mbr = resize.mbr;
 		}
 
-		const frames = this.board.items
-			.getEnclosedOrCrossed(mbr.left, mbr.top, mbr.right, mbr.bottom)
-			.filter(item => item instanceof Frame);
+		const frames = this.board.items.getFramesEnclosedOrCrossed(
+			mbr.left,
+			mbr.top,
+			mbr.right,
+			mbr.bottom,
+		);
 		list.forEach(item => {
 			if (item instanceof Frame) {
-				const itemsToCheck = this.board.items
-					.getEnclosedOrCrossed(
-						item.getMbr().left,
-						item.getMbr().top,
-						item.getMbr().right,
-						item.getMbr().bottom,
-					)
-					.filter(
-						currItem =>
-							currItem !== item &&
-							!(currItem instanceof Frame) &&
-							currItem.parent === "Board",
-					);
+				const currMbr = item.getMbr();
+				const itemsToCheck = this.board.items.getEnclosedOrCrossed(
+					currMbr.left,
+					currMbr.top,
+					currMbr.right,
+					currMbr.bottom,
+				);
 				itemsToCheck.forEach(currItem => {
-					if (item.handleNesting(currItem)) {
-						this.toDrawBorders.add([item, currItem]);
+					if (
+						item.handleNesting(currItem) &&
+						(currItem.parent === "Board" ||
+							currItem.parent === item.getId())
+					) {
+						this.nestingHighlighter.add(item, currItem);
 					} else {
-						if (
-							this.toDrawBorders.listAll().includes(item) &&
-							this.toDrawBorders.listAll().includes(currItem)
-						) {
-							this.toDrawBorders.remove([item, currItem]);
-						}
+						this.nestingHighlighter.remove(currItem);
 					}
 				});
 			} else {
 				frames.forEach(frame => {
-					if (frame instanceof Frame) {
-						if (!frame.handleNesting(item, { onlyForOut: true })) {
-							if (
-								this.toDrawBorders.listAll().includes(frame) &&
-								this.toDrawBorders.listAll().includes(item)
-							) {
-								this.toDrawBorders.remove([frame, item]);
-							}
-						}
+					if (frame.handleNesting(item)) {
+						this.nestingHighlighter.add(frame, item);
+					} else {
+						this.nestingHighlighter.remove(item);
 					}
 				});
 			}
@@ -417,7 +414,7 @@ export class Transformer extends Tool {
 			}
 		}
 
-		this.toDrawBorders.render(context);
+		this.nestingHighlighter.render(context);
 	}
 
 	handleSelectionUpdate(_items: SelectionItems): void {

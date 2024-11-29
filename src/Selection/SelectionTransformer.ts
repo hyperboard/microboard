@@ -12,7 +12,10 @@ export class SelectionTransformer extends Tool {
 
 	private tool: Transformer | ConnectorTransformer;
 
-	constructor(private board: Board, private selection: Selection) {
+	constructor(
+		private board: Board,
+		private selection: Selection,
+	) {
 		super();
 
 		this.defaultTransformerTool = new Transformer(this.board, selection);

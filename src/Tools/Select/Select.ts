@@ -7,10 +7,7 @@ import {
 	SELECTION_COLOR,
 } from "../../../View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
-import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
 import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
-import { ImageItem } from "../../Items/Image";
-import { Drawing } from "../../Items/Drawing";
 import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
@@ -37,7 +34,7 @@ export class Select extends Tool {
 	isMovedAfterDown = false;
 	isCtrl = false;
 	lastPointerMoveEventTime = Date.now();
-	toHighlight = new NestingHighlighter();
+	nestingHighlighter = new NestingHighlighter();
 	beginTimeStamp = Date.now();
 	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
@@ -58,10 +55,15 @@ export class Select extends Tool {
 	constructor(private board: Board) {
 		super();
 		this.canvasDrawer = createCanvasDrawer(board);
-		this.alignmentHelper = new AlignmentHelper(board, board.index);
+		this.alignmentHelper = new AlignmentHelper(
+			board,
+			board.index,
+			this.canvasDrawer,
+		);
 	}
 
 	clear(): void {
+		this.board.selection.nestSelectedItems(this.downOnItem, false);
 		this.isDrawingRectangle = false;
 		this.isDraggingBoard = false;
 		this.isDraggingSelection = false;
@@ -78,7 +80,7 @@ export class Select extends Tool {
 		this.downOnItem = null;
 		this.lastPointerMoveEventTime = Date.now();
 		this.beginTimeStamp = Date.now();
-		this.toHighlight.clear();
+		this.nestingHighlighter.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.debounceUpd.setFalse();
 		this.snapLines = { verticalLines: [], horizontalLines: [] };
@@ -124,7 +126,8 @@ export class Select extends Tool {
 				this.board.pointer.point.y - this.initialCursorPos.y;
 			const translateX = targetX - itemCenter.x;
 			const translateY = targetY - itemCenter.y;
-			item.transformation.translateBy(
+			this.alignmentHelper.translateItemsOrCanvas(
+				item,
 				translateX,
 				translateY,
 				this.beginTimeStamp,
@@ -434,7 +437,6 @@ export class Select extends Tool {
 
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd.shouldUpd() &&
 				JSON.stringify(
 					this.canvasDrawer.getLastTranslationKeys()?.sort(),
 				) ===
@@ -454,22 +456,31 @@ export class Select extends Tool {
 				this.debounceUpd.shouldUpd()
 			) {
 				this.canvasDrawer.translateCanvasBy(x, y);
-				const translation = this.handleMultipleItemsTranslate(
-					this.canvasDrawer.getMatrix().translateX,
-					this.canvasDrawer.getMatrix().translateY,
+				const translation =
+					this.board.selection.handleManyItemsTranslate(
+						this.canvasDrawer.getMatrix().translateX,
+						this.canvasDrawer.getMatrix().translateY,
+					);
+				this.board.selection.transformMany(
+					translation,
+					this.beginTimeStamp,
 				);
-				selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.debounceUpd.setFalse();
 			} else {
-				const translation = this.handleMultipleItemsTranslate(x, y);
+				const translation = selection.handleManyItemsTranslate(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
 				if (Object.keys(translation).length > 1) {
-					const sumMbr = this.canvasDrawer.countSumMbr(translation);
+					const selectedMbr = this.board.selection.getMbr()?.copy();
+					const sumMbr = this.canvasDrawer
+						.countSumMbr(translation)
+						?.copy();
 					if (sumMbr) {
 						this.canvasDrawer.updateCanvasAndKeys(
 							sumMbr,
 							translation,
+							undefined,
+							selectedMbr,
 						);
 						this.debounceUpd.setFalse();
 						this.debounceUpd.setTimeoutUpdate(1000);
@@ -497,18 +508,11 @@ export class Select extends Tool {
 				) {
 					frames.forEach(frame => {
 						if (frame.handleNesting(item)) {
-							this.toHighlight.add([item, frame]);
+							this.nestingHighlighter.add(frame, item);
 						} else {
-							if (
-								this.toHighlight.listAll().includes(frame) &&
-								this.toHighlight.listAll().includes(item)
-							) {
-								this.toHighlight.remove([item, frame]);
-							}
+							this.nestingHighlighter.remove(item);
 						}
 					});
-				} else if (item instanceof Frame) {
-					item.text.setContainer(item.getMbr());
 				}
 			});
 
@@ -523,19 +527,20 @@ export class Select extends Tool {
 				return false;
 			}
 
+			const draggingMbr = draggingItem.getMbr();
 			const frames = this.board.items
 				.getEnclosedOrCrossed(
-					draggingItem.getMbr().left,
-					draggingItem.getMbr().top,
-					draggingItem.getMbr().right,
-					draggingItem.getMbr().bottom,
+					draggingMbr.left,
+					draggingMbr.top,
+					draggingMbr.right,
+					draggingMbr.bottom,
 				)
 				.filter(item => item instanceof Frame);
 			frames.forEach(frame => {
 				if (frame.handleNesting(draggingItem)) {
-					this.toHighlight.add([draggingItem, frame]);
-				} else if (this.toHighlight.listAll().includes(frame)) {
-					this.toHighlight.remove([draggingItem, frame]);
+					this.nestingHighlighter.add(frame, draggingItem);
+				} else {
+					this.nestingHighlighter.remove(draggingItem);
 				}
 			});
 		}
@@ -704,7 +709,7 @@ export class Select extends Tool {
 		});
 		// this.board.selection.removeAll();
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
-			const translation = this.handleMultipleItemsTranslate(
+			const translation = this.board.selection.handleManyItemsTranslate(
 				this.canvasDrawer.getMatrix().translateX,
 				this.canvasDrawer.getMatrix().translateY,
 			);
@@ -780,36 +785,6 @@ export class Select extends Tool {
 		return false;
 	}
 
-	handleMultipleItemsTranslate(x: number, y: number): TransformManyItems {
-		const translation: TransformManyItems = {};
-
-		this.board.selection.list().forEach(selectedItem => {
-			translation[selectedItem.getId()] = {
-				class: "Transformation",
-				method: "scaleByTranslateBy",
-				item: [selectedItem.getId()],
-				scale: { x: 1, y: 1 },
-				translate: { x, y },
-			};
-		});
-		this.board.selection.list().forEach(item => {
-			if (item instanceof Frame) {
-				item.getChildrenIds().forEach(childId => {
-					if (!(childId in translation)) {
-						translation[childId] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [childId],
-							scale: { x: 1, y: 1 },
-							translate: { x, y },
-						};
-					}
-				});
-			}
-		});
-		return translation;
-	}
-
 	onCancel(): void {
 		if (this.board.selection.showQuickAddPanel) {
 			this.board.selection.showQuickAddPanel = false;
@@ -859,7 +834,7 @@ export class Select extends Tool {
 			this.rect.strokeWidth = 1 / this.board.camera.getScale();
 			this.rect.render(context);
 		} else {
-			this.toHighlight.render(context);
+			this.nestingHighlighter.render(context);
 		}
 
 		this.alignmentHelper.renderSnapLines(

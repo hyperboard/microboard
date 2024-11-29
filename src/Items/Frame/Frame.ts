@@ -100,6 +100,27 @@ export class Frame implements Geometry {
 		return this;
 	}
 
+	/** Sets parent of child and emits add child message */
+	emitAddChild(child: Item): void {
+		this.addChild(child.getId());
+		child.parent = this.getId();
+	}
+
+	emitRemoveChild(child: Item): void {
+		this.removeChild(child.getId());
+		child.parent = "Board";
+	}
+
+	emitNesting(child: Item): boolean {
+		if (this.handleNesting(child)) {
+			this.emitAddChild(child);
+			return true;
+		} else {
+			this.emitRemoveChild(child);
+			return false;
+		}
+	}
+
 	/**
 	 * Parent cant be child,
 	 * Child cant be itself,
@@ -150,8 +171,8 @@ export class Frame implements Geometry {
 
 	/**
 	 * Returns:
-	 * true - if added child to Frame.
-	 * false - if didnt add child to Frame.
+	 * true - if can be child of the frame
+	 * false - if outside of the frame
 	 */
 	handleNesting(
 		item: Item,
@@ -171,18 +192,22 @@ export class Frame implements Geometry {
 		if (item.isEnclosedOrCrossedBy(frameMbr)) {
 			if (frameMbr.isInside(item.getMbr().getCenter())) {
 				if (!options || !options.onlyForOut) {
-					this.addChild(item.getId());
-					item.parent = this.getId(); // TODO change item declaration (or each of item), so it has setParent property
+					// this.addChild(item.getId());
+					// item.parent = this.getId(); // TODO change item declaration (or each of item), so it has setParent property
+					return true;
 				}
-				return true;
+				return false;
 			} else {
-				this.removeChild(item.getId());
-				item.parent = "Board";
+				// this.removeChild(item.getId());
+				// item.parent = "Board";
+				return false;
 			}
-		} else {
-			this.removeChild(item.getId());
-			item.parent = "Board";
 		}
+		// } else {
+		// 	// this.removeChild(item.getId());
+		// 	// item.parent = "Board";
+		// 	return false;
+		// }
 		return false;
 	}
 
@@ -560,19 +585,30 @@ export class Frame implements Geometry {
 			this.getChildrenIds().forEach(childId => {
 				const child = this.board?.items.getById(childId);
 				if (child) {
-					this.handleNesting(child);
+					if (this.handleNesting(child)) {
+						this.applyAddChild(child.getId());
+						child.parent = this.getId();
+					} else {
+						this.applyRemoveChild(child.getId());
+						child.parent = "Board";
+					}
+					// this.handleNesting(child);
 				}
 			});
+			const currMbr = this.getMbr();
 			this.board.items
 				.getEnclosedOrCrossed(
-					this.getMbr().left,
-					this.getMbr().top,
-					this.getMbr().right,
-					this.getMbr().bottom,
+					currMbr.left,
+					currMbr.top,
+					currMbr.right,
+					currMbr.bottom,
 				)
 				.forEach(item => {
 					if (item.parent === "Board") {
-						this.handleNesting(item);
+						if (this.handleNesting(item)) {
+							this.applyAddChild(item.getId());
+							item.parent = this.getId();
+						}
 					}
 				});
 			this.board.fitMbrInView(this.getMbr());

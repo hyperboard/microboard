@@ -3,7 +3,7 @@ import { TextNode } from "./TextNode";
 
 export const ListTypes = ["numbered-list", "bulleted-list"] as const;
 
-export type ListType = typeof ListTypes[number];
+export type ListType = (typeof ListTypes)[number];
 
 export const BlockTypes = [
 	"paragraph",
@@ -14,7 +14,7 @@ export const BlockTypes = [
 	"heading",
 ] as const;
 
-export type BlockType = typeof BlockTypes[number];
+export type BlockType = (typeof BlockTypes)[number];
 
 export type ParagraphNode = {
 	type: "paragraph";

@@ -533,11 +533,12 @@ export class Selection {
 				if (!(id in copiedItemsMap)) {
 					const childItem = this.board.items.getById(id);
 					if (!childItem) {
-						throw new Error(
+						console.warn(
 							`Didn't find item with ${id} while copying`,
 						);
+					} else {
+						this.handleItemCopy(childItem, copiedItemsMap);
 					}
-					this.handleItemCopy(childItem, copiedItemsMap);
 				}
 			});
 
@@ -695,6 +696,92 @@ export class Selection {
 		return [this.textToEdit];
 	}
 
+	nestSelectedItems(unselectedItem?: Item | null, checkFrames = true): void {
+		const selected = this.board.selection.items.list();
+		if (
+			unselectedItem &&
+			!selected.find(item => item.getId() === unselectedItem.getId())
+		) {
+			selected.push(unselectedItem);
+		}
+		const selectedMbr = selected.reduce((acc: Mbr | undefined, item) => {
+			if (!acc) {
+				return item.getMbr();
+			}
+			return acc.combine(item.getMbr());
+		}, undefined);
+
+		if (selectedMbr) {
+			const selectedMap = Object.fromEntries(
+				selected.map(item => [item.getId(), { item, nested: false }]),
+			) as { [k: string]: { item: Item; nested: false | Frame } };
+
+			this.board.items
+				.getFramesEnclosedOrCrossed(
+					selectedMbr?.left,
+					selectedMbr?.top,
+					selectedMbr?.right,
+					selectedMbr?.bottom,
+				)
+				.forEach(frame => {
+					selected.forEach(selectedItem => {
+						if (frame.handleNesting(selectedItem)) {
+							selectedMap[selectedItem.getId()].nested = frame;
+						}
+					});
+				});
+
+			Object.values(selectedMap).forEach(val => {
+				if (val.nested) {
+					val.nested.emitAddChild(val.item);
+				} else if (val.item.parent !== "Board") {
+					const parentFrame = this.board.items.getById(
+						val.item.parent,
+					);
+					if (parentFrame && parentFrame.itemType === "Frame") {
+						parentFrame.emitRemoveChild(val.item);
+					} else {
+						console.warn(
+							`Didnt find frame with id ${val.item.parent}`,
+						);
+					}
+				}
+				if (val.item.itemType === "Frame" && checkFrames) {
+					const currFrame = val.item;
+					const currMbr = currFrame.getMbr();
+					const children = val.item
+						.getChildrenIds()
+						.map(childId => this.board.items.getById(childId))
+						.filter(item => !!item);
+					const underFrame = this.board.items
+						.getEnclosedOrCrossed(
+							currMbr.left,
+							currMbr.top,
+							currMbr.right,
+							currMbr.bottom,
+						)
+						.filter(
+							item =>
+								item.parent === "Board" ||
+								item.parent === currFrame.getId(),
+						);
+					const uniqueItems = new Set();
+					const toCheck = [...children, ...underFrame].filter(
+						item => {
+							const id = item.getId();
+							if (uniqueItems.has(id)) {
+								return false;
+							}
+							uniqueItems.add(id);
+							return true;
+						},
+					);
+					toCheck.forEach(child => currFrame.emitNesting(child));
+				}
+			});
+		}
+	}
+
 	translateBy(x: number, y: number, timeStamp?: number): void {
 		this.emit({
 			class: "Transformation",
@@ -735,6 +822,7 @@ export class Selection {
 
 	// TODO all the other transformations are redundant, use this one for everything
 	// Instead of TransformationOperation just put matrix in it
+	/** Emits transformManyItems */
 	transformMany(items: TransformManyItems, timeStamp?: number): void {
 		this.shouldPublish = false;
 		this.emit({
@@ -744,6 +832,38 @@ export class Selection {
 			timeStamp,
 		});
 		this.shouldPublish = true;
+	}
+
+	/** transforms selected items with frames' children */
+	handleManyItemsTranslate(x: number, y: number): TransformManyItems {
+		const translation: TransformManyItems = {};
+
+		this.list().forEach(selectedItem => {
+			translation[selectedItem.getId()] = {
+				class: "Transformation",
+				method: "scaleByTranslateBy",
+				item: [selectedItem.getId()],
+				scale: { x: 1, y: 1 },
+				translate: { x, y },
+			};
+		});
+		this.list().forEach(item => {
+			if (item instanceof Frame) {
+				item.getChildrenIds().forEach(childId => {
+					if (!(childId in translation)) {
+						translation[childId] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [childId],
+							scale: { x: 1, y: 1 },
+							translate: { x, y },
+						};
+					}
+				});
+			}
+		});
+
+		return translation;
 	}
 
 	setStrokeStyle(borderStyle: BorderStyle): void {
@@ -1007,7 +1127,6 @@ export class Selection {
 			});
 			tempStorage.setFontColor(item.itemType, fontColor);
 		}
-		console.log(itemsOps);
 		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
@@ -1118,7 +1237,7 @@ export class Selection {
 			method: "remove",
 			item: this.items.ids(),
 		});
-		this.board.tools.getSelect()?.toHighlight.clear();
+		this.board.tools.getSelect()?.nestingHighlighter.clear();
 		this.setContext("None");
 	}
 
