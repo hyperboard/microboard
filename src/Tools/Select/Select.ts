@@ -50,7 +50,7 @@ export class Select extends Tool {
 	private isSnapped: boolean | undefined = false;
 	private snapCursorPos: Point | null = null;
 	private originalCenter: Point | null = null;
-	private initialCursorPos: Point = new Point();
+	private initialCursorPos: Point | null = null;
 	private guidelines: Line[] = [];
 	private mainLine: Line | null = null;
 	private snapLine: Line | null = null;
@@ -81,7 +81,6 @@ export class Select extends Tool {
 		this.toHighlight.clear();
 		this.canvasDrawer.clearCanvasAndKeys();
 		this.debounceUpd.setFalse();
-		this.initialCursorPos = new Point(0, 0);
 		this.snapLines = { verticalLines: [], horizontalLines: [] };
 	}
 
@@ -296,14 +295,6 @@ export class Select extends Tool {
 			timestamp: Date.now(),
 		});
 
-		if (this.downOnItem && !this.initialCursorPos) {
-			const itemCenter = this.downOnItem.getMbr().getCenter();
-			this.initialCursorPos = new Point(
-				this.board.pointer.point.x - itemCenter.x,
-				this.board.pointer.point.y - itemCenter.y,
-			);
-		}
-
 		this.isDownOnUnselectedItem = hover.length !== 0;
 		this.isDraggingUnselectedItem = this.isDownOnUnselectedItem;
 		if (this.isDownOnUnselectedItem) {
@@ -312,6 +303,14 @@ export class Select extends Tool {
 				return false;
 			}
 			this.downOnItem = hover[hover.length - 1];
+
+			if (this.downOnItem && !this.initialCursorPos) {
+				const itemCenter = this.downOnItem.getMbr().getCenter();
+				this.initialCursorPos = new Point(
+					this.board.pointer.point.x - itemCenter.x,
+					this.board.pointer.point.y - itemCenter.y,
+				);
+			}
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			// TODO API Dirty Check
 			// if (
@@ -599,6 +598,9 @@ export class Select extends Tool {
 		if (!this.isLeftDown) {
 			return false;
 		}
+
+		this.initialCursorPos = null;
+
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
 			const hovered = this.board.items.getUnderPointer();
