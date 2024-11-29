@@ -1146,18 +1146,30 @@ export class RichText extends Mbr implements Geometry {
 		const renderNode = (node: Descendant): string => {
 			if (Text.isText(node)) {
 				let text = escapeHtml(node.text);
-				if (node.bold) text = `<strong>${text}</strong>`;
-				if (node.italic) text = `<em>${text}</em>`;
-				if (node.underline) text = `<u>${text}</u>`;
-				if (node["line-through"]) text = `<s>${text}</s>`;
-				if (node.fontColor)
+				if (node.bold) {
+					text = `<strong>${text}</strong>`;
+				}
+				if (node.italic) {
+					text = `<em>${text}</em>`;
+				}
+				if (node.underline) {
+					text = `<u>${text}</u>`;
+				}
+				if (node["line-through"]) {
+					text = `<s>${text}</s>`;
+				}
+				if (node.fontColor) {
 					text = `<span style="color: ${node.fontColor}">${text}</span>`;
-				if (node.fontHighlight)
+				}
+				if (node.fontHighlight) {
 					text = `<span style="background-color: ${node.fontHighlight}">${text}</span>`;
-				if (node.fontSize)
+				}
+				if (node.fontSize) {
 					text = `<span style="font-size: ${node.fontSize}px">${text}</span>`;
-				if (node.fontFamily)
+				}
+				if (node.fontFamily) {
 					text = `<span style="font-family: ${node.fontFamily}">${text}</span>`;
+				}
 				return text;
 			}
 
