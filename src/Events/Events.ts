@@ -9,7 +9,8 @@ import {
 	SnapshotRequestMsg,
 	SnapshotResponseMsg,
 	SubscribeConfirmationMsg,
-	ViewModeMsg,
+	type ModeMsg,
+	ViewMode,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -157,10 +158,23 @@ export function createEvents(
 		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
 	}
 
-	function handleViewModeMessage(): void {
-		handleViewModeSetting();
+	function handleModeMessage(message: ModeMsg): void {
+		if (board.interfaceType !== message.mode) {
+			enforceMode(message.mode);
+			notify({
+				header: "Владелец доски изменил настройки доступа",
+				body: `Теперь вы можете ${message.mode === "edit" ? "редактировать" : "просматривать"} доску.`,
+				variant: "info",
+			});
+		}
 	}
-	messageRouter.addHandler<ViewModeMsg>("ViewMode", handleViewModeMessage);
+
+	function enforceMode(mode: ViewMode) {
+		board.interfaceType = mode;
+		board.tools.publish();
+	}
+
+	messageRouter.addHandler<ModeMsg>("Mode", handleModeMessage);
 
 	function handleBoardEventMessage(message: BoardEventMsg): void {
 		const event = message.event;
@@ -226,9 +240,7 @@ export function createEvents(
 			handleSnapshotApplication(msg.snapshot, msg.lastSnapshotEventOrder);
 		}
 		handleBoardEventListApplication(msg.eventsSinceLastSnapshot);
-		if (msg.mode === "view") {
-			handleViewModeSetting();
-		}
+		enforceMode(msg.mode);
 		onBoardLoad();
 	}
 

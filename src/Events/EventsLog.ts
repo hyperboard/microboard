@@ -397,6 +397,7 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
+		console.log(events);
 		return events.flatMap(event => {
 			if ("operations" in event.body) {
 				// Это BoardEventPack

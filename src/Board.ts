@@ -54,7 +54,7 @@ export class Board {
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
-	interfaceType: InterfaceType = "edit";
+	interfaceType: InterfaceType = "view";
 
 	private resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {

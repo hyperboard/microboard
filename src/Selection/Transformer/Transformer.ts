@@ -181,6 +181,11 @@ export class Transformer extends Tool {
 	}
 
 	pointerMoveBy(_x: number, _y: number): boolean {
+		if (this.board.interfaceType === "view") {
+			console.log("moveBy view", this.board.interfaceType);
+			return false;
+		}
+		console.log("moveBy", this.board.interfaceType);
 		const isLockedItems = this.selection.getIsLockedSelection();
 		if (isLockedItems) {
 			return false;
