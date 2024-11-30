@@ -24,19 +24,11 @@ export class Tools extends ToolContext {
 	}
 
 	setTool(tool: BoardTool): void {
-		if (this.board.interfaceType === "view") {
-			this.tool = new Navigate(this.board);
-			return;
-		}
 		this.tool = tool;
 		this.publish();
 	}
 
 	navigate(): void {
-		if (this.board.interfaceType === "view") {
-			this.tool = new Navigate(this.board);
-			return;
-		}
 		if (this.getNavigate()) {
 			this.cancel();
 		} else {
@@ -50,10 +42,6 @@ export class Tools extends ToolContext {
 	}
 
 	select(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
-			this.tool = new Navigate(this.board);
-			return;
-		}
 		if (this.getSelect()) {
 			this.navigate();
 		} else {

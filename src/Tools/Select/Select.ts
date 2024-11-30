@@ -1,5 +1,5 @@
 import { Board } from "../../Board";
-import { Frame, Item, Line, Mbr, Point, RichText } from "../../Items";
+import { Frame, Item, Line, Mbr, Point } from "../../Items";
 import { DrawingContext } from "../../Items/DrawingContext";
 import { Tool } from "../Tool";
 import {
@@ -12,7 +12,6 @@ import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import AlignmentHelper from "../RelativeAlignment";
-import { Placeholder } from "Board/Items/Placeholder";
 import { Group } from "Board/Items/Group/Group.js";
 
 export class Select extends Tool {
@@ -275,7 +274,7 @@ export class Select extends Tool {
 		this.isDrawingRectangle =
 			hover.filter(item => !(item instanceof Frame)).length === 0 &&
 			hover
-				.filter(item => item instanceof Frame)
+				.filter((item): item is Frame => item instanceof Frame)
 				.filter(frame => frame.isTextUnderPoint(pointer.point))
 				.length === 0;
 
@@ -380,6 +379,20 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
+		console.log("moveBy", this.board.interfaceType);
+		if (this.isDrawingRectangle && this.line && this.rect) {
+			const point = this.board.pointer.point.copy();
+			this.line = new Line(this.line.start, point);
+			this.rect = this.line.getMbr();
+			this.rect.borderColor = SELECTION_COLOR;
+			this.rect.backgroundColor = SELECTION_BACKGROUND;
+			this.board.tools.publish();
+			return false;
+		}
+
+		if (this.board.interfaceType === "view") {
+			return false;
+		}
 		const { selection, items } = this.board;
 		const { isShift } = this.board.keyboard;
 		const isLocked =
@@ -502,7 +515,7 @@ export class Select extends Tool {
 					selectionMbr!.right,
 					selectionMbr!.bottom,
 				)
-				.filter(item => item instanceof Frame)
+				.filter((item): item is Frame => item instanceof Frame)
 				.filter(frame => !selection.items.list().includes(frame));
 			const draggingFramesIds = selection
 				.list()
@@ -542,7 +555,7 @@ export class Select extends Tool {
 					draggingMbr.right,
 					draggingMbr.bottom,
 				)
-				.filter(item => item instanceof Frame);
+				.filter((item): item is Frame => item instanceof Frame);
 			frames.forEach(frame => {
 				if (frame.handleNesting(draggingItem)) {
 					this.nestingHighlighter.add(frame, draggingItem);
@@ -613,6 +626,27 @@ export class Select extends Tool {
 
 		this.initialCursorPos = null;
 
+		if (this.isDrawingRectangle && this.line && this.rect) {
+			const isAddToSelection = this.board.keyboard.down === "Shift";
+			if (isAddToSelection) {
+				const { left, top, right, bottom } = this.rect;
+				const items = this.board.items.getEnclosedOrCrossed(
+					left,
+					top,
+					right,
+					bottom,
+				);
+				this.board.selection.add(items);
+			} else {
+				this.board.selection.selectEnclosedOrCrossedBy(this.rect);
+			}
+			this.board.tools.publish();
+			this.clear();
+			return false;
+		}
+		if (this.board.interfaceType === "view") {
+			return false;
+		}
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
 			const hovered = this.board.items.getUnderPointer();
