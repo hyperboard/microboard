@@ -384,10 +384,7 @@ export function createEventsLog(board: Board): EventsLog {
 			: 0;
 	}
 
-	function insertEvents(
-		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
-		events: SyncEvent | SyncEvent[],
-	): void {
+	function insertEvents(events: SyncEvent | SyncEvent[]): void {
 		const eventArray = Array.isArray(events) ? events : [events];
 		if (eventArray.length === 0) {
 			return;
@@ -397,7 +394,6 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
-		console.log(events);
 		return events.flatMap(event => {
 			if ("operations" in event.body) {
 				// Это BoardEventPack

@@ -454,8 +454,9 @@ export class Items {
 		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getUnderPointer(size = 16): Item[] {
+	getUnderPointer(size = 0): Item[] {
 		const { x, y } = this.pointer.point;
+		const unmofiedSize = size;
 		size = size / this.view.getScale();
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
@@ -516,9 +517,13 @@ export class Items {
 		if (nearest) {
 			return [nearest];
 		} else {
-			return this.index
+			const frames = this.index
 				.listFrames()
 				.filter(frame => frame.isTextUnderPoint(this.pointer.point));
+			if (frames.length === 0 && unmofiedSize !== 16) {
+				return this.getUnderPointer(16);
+			}
+			return frames;
 		}
 	}
 

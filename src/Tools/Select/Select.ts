@@ -379,7 +379,6 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
-		console.log("moveBy", this.board.interfaceType);
 		if (this.isDrawingRectangle && this.line && this.rect) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
