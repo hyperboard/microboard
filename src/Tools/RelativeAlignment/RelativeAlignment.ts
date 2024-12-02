@@ -38,6 +38,9 @@ export class AlignmentHelper {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
+		if (movingItem.itemType === "Comment") {
+			return { verticalLines: [], horizontalLines: [] };
+		}
 		const movingMBR =
 			movingItem.itemType === "Shape"
 				? movingItem.getPath().getMbr()
@@ -98,7 +101,7 @@ export class AlignmentHelper {
 		};
 
 		nearbyItems.forEach(item => {
-			if (item === movingItem) {
+			if (item === movingItem || item.itemType === "Comment") {
 				return;
 			}
 			const itemMbr =

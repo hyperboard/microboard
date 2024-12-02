@@ -1,7 +1,13 @@
 import { Board } from "Board";
-import { Mbr, RichText } from "Board/Items";
+import { Mbr, Point, RichText } from "Board/Items";
 import { RefObject } from "react";
-import { fitContextPanel, fitLinkToBtn } from "View/fit";
+import {
+	fitBoardMenu,
+	fitComment,
+	fitContextPanel,
+	fitLinkToBtn,
+	fitThreadPanel,
+} from "View/fit";
 
 export function updateRects(
 	board: Board,
@@ -9,7 +15,12 @@ export function updateRects(
 	mbr?: Mbr,
 	verticalOffset?: number,
 	horizontalOffset?: number,
-	fit: "contextPanel" | "linkToBtn" = "contextPanel",
+	fit:
+		| "boardMenu"
+		| "contextPanel"
+		| "linkToBtn"
+		| "comment"
+		| "threadPanel" = "contextPanel",
 ): Mbr | null {
 	const { selection, camera } = board;
 	const panel = ref.current;
@@ -38,6 +49,44 @@ export function updateRects(
 				return null;
 			}
 			const panelRect = fitLinkToBtn(
+				selectionMbr.getTransformed(camera.getMatrix()),
+				camera.window.getMbr(),
+				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				verticalOffset,
+				horizontalOffset,
+			);
+			return panelRect;
+		}
+		if (fit === "comment") {
+			if (!mbr) {
+				return null;
+			}
+			const panelRect = fitComment(
+				selectionMbr.getTransformed(camera.getMatrix()),
+				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				verticalOffset,
+				horizontalOffset,
+			);
+			return panelRect;
+		}
+		if (fit === "threadPanel") {
+			if (!mbr) {
+				return null;
+			}
+			const panelRect = fitThreadPanel(
+				selectionMbr.getTransformed(camera.getMatrix()),
+				camera.window.getMbr(),
+				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				verticalOffset,
+				horizontalOffset,
+			);
+			return panelRect;
+		}
+		if (fit === "boardMenu") {
+			if (!mbr) {
+				return null;
+			}
+			const panelRect = fitBoardMenu(
 				selectionMbr.getTransformed(camera.getMatrix()),
 				camera.window.getMbr(),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),

@@ -8,6 +8,7 @@ import {
 	ConnectorData,
 	Frame,
 	FrameData,
+	Point,
 } from "./Items";
 import { Item, ItemData } from "./Items";
 import { ImageItem, ImageItemData } from "./Items/Image";
@@ -17,6 +18,7 @@ import { StickerData } from "./Items/Sticker/StickerOperation";
 import { Board } from "./Board";
 import { Placeholder, PlaceholderData } from "./Items/Placeholder/Placeholder";
 import { Group, GroupData } from "./Items/Group";
+import { Comment } from "./Items/Comment";
 
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
@@ -33,6 +35,7 @@ export const itemFactories: ItemFactories = {
 	Drawing: createDrawing,
 	Frame: createFrame,
 	Placeholder: createPlaceholder,
+	Comment: createComment,
 	Group: createGroup,
 };
 
@@ -42,6 +45,16 @@ function createSticker(id: string, data: ItemData, board: Board): Sticker {
 	}
 	const sticker = new Sticker(board.events).setId(id).deserialize(data);
 	return sticker;
+}
+
+function createComment(id: string, data: ItemData, board: Board): Comment {
+	if (!isCommentData(data)) {
+		throw new Error("Invalid data for CommentContainer");
+	}
+	const comment = new Comment(new Point(), board.events)
+		.setId(id)
+		.deserialize(data);
+	return comment;
 }
 
 function createShape(id: string, data: ItemData, board: Board): Shape {
@@ -130,6 +143,10 @@ function createGroup(id: string, data: ItemData, board: Board): Group {
 
 function isStickerData(data: ItemData): data is StickerData {
 	return data.itemType === "Sticker";
+}
+
+function isCommentData(data: ItemData): data is ItemData {
+	return data.itemType === "Comment";
 }
 
 function isShapeData(data: ItemData): data is ShapeData {

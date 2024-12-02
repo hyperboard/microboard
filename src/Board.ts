@@ -39,11 +39,13 @@ import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
 import { Group } from "./Items/Group";
 import { Presence } from "./Presence/Presence";
+import { Comment } from "./Items/Comment";
 
 export type InterfaceType = "edit" | "view";
 
 export class Board {
 	events: Events | undefined;
+	isBoardMenuOpen = false;
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
@@ -941,6 +943,19 @@ export class Board {
 		this.selection.setContext("EditUnderPointer");
 
 		return;
+	}
+
+	removeVoidComments() {
+		const voidComments = this.items
+			.listAll()
+			.filter(
+				item => item instanceof Comment && !item.getThread().length,
+			);
+		if (voidComments) {
+			for (const comment of voidComments) {
+				this.remove(comment);
+			}
+		}
 	}
 
 	duplicate(itemsMap: { [key: string]: ItemData }): void {

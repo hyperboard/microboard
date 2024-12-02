@@ -11,7 +11,7 @@ import { BorderStyle } from "../../Items/Path";
 import { BoardTool } from "../BoardTool";
 
 export class Eraser extends BoardTool {
-	itemType: "Eraser";
+	itemType = "Eraser";
 	isDown = false;
 	strokeWidth = ERASER_STROKE_WIDTH;
 	strokeColor = DEFAULT_ERASER_COLOR;
