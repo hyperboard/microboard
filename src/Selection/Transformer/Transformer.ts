@@ -1,6 +1,15 @@
 import { Tool } from "Board/Tools/Tool";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { Frame, Mbr, Point, Shape, RichText, Matrix, Line } from "Board/Items";
+import {
+	Frame,
+	Mbr,
+	Point,
+	Shape,
+	RichText,
+	Matrix,
+	Line,
+	Item,
+} from "Board/Items";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { Board } from "Board";
 import { Selection } from "Board/Selection";
@@ -311,6 +320,8 @@ export class Transformer extends Tool {
 					resizedMbr.getWidth() / single.getScale(),
 				);
 				single.transformation.translateBy(matrix.translateX, 0);
+				matrix.translateY = 0;
+				matrix.scaleY = 1;
 			} else {
 				single.transformation.scaleByTranslateBy(
 					{ x: matrix.scaleX, y: matrix.scaleY },
@@ -318,14 +329,16 @@ export class Transformer extends Tool {
 					this.beginTimeStamp,
 				);
 			}
-			const translation = this.handleMultipleItemsResize(
-				{ matrix, mbr: resizedMbr },
-				mbr,
-				isWidth,
-				isHeight,
-				followingComments,
-			);
-			this.selection.transformMany(translation, this.beginTimeStamp);
+			if (followingComments) {
+				const translation = this.handleMultipleItemsResize(
+					{ matrix, mbr: resizedMbr },
+					mbr,
+					isWidth,
+					isHeight,
+					followingComments,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+			}
 			this.mbr = single.getMbr();
 		} else {
 			const items = this.selection.items.list();
@@ -336,24 +349,25 @@ export class Transformer extends Tool {
 			if (containsStickerOrText && (isWidth || isHeight)) {
 				return false;
 			}
-			const resize = getProportionalResize(
-				this.resizeType,
-				this.board.pointer.point,
-				mbr,
-				this.oppositePoint,
-			);
+
+			const resize =
+				containsStickerOrText || this.isShiftPressed
+					? getProportionalResize(
+							this.resizeType,
+							this.board.pointer.point,
+							mbr,
+							this.oppositePoint,
+						)
+					: getResize(
+							this.resizeType,
+							this.board.pointer.point,
+							mbr,
+							this.oppositePoint,
+						);
+
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd.shouldUpd() &&
-				JSON.stringify(
-					this.canvasDrawer.getLastTranslationKeys()?.sort(),
-				) ===
-					JSON.stringify(
-						this.selection
-							.list()
-							.map(item => item.getId())
-							.sort(),
-					)
+				!this.debounceUpd.shouldUpd()
 			) {
 				this.canvasDrawer.recoordinateCanvas(resize.mbr);
 				this.canvasDrawer.scaleCanvasTo(
@@ -494,7 +508,7 @@ export class Transformer extends Tool {
 		});
 
 		for (const item of items) {
-			const itemMbr = item.getPath().getMbr();
+			const itemMbr = item.getMbr();
 			const deltaX = itemMbr.left - initMbr.left;
 			const translateX =
 				deltaX * matrix.scaleX - deltaX + matrix.translateX;
