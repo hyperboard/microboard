@@ -310,6 +310,12 @@ export class Camera {
 	}
 
 	viewRectangle(mbr: Mbr, offsetInPercent = 10): void {
+		if (mbr.left === mbr.right && mbr.bottom === mbr.top) {
+			mbr.left = mbr.left - 100;
+			mbr.right = mbr.right + 100;
+			mbr.top = mbr.top - 100;
+			mbr.bottom = mbr.bottom + 100;
+		}
 		const offsetY = (mbr.getHeight() * offsetInPercent) / 100;
 		const offsetX = (mbr.getWidth() * offsetInPercent) / 100;
 		const mbrWithOffset = new Mbr();

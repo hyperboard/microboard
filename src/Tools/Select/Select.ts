@@ -7,12 +7,14 @@ import {
 	SELECTION_COLOR,
 } from "../../../View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
+import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
 import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
 import { isSafari } from "App/isSafari";
 import AlignmentHelper from "../RelativeAlignment";
 import { Group } from "Board/Items/Group/Group.js";
+import { Comment } from "Board/Items/Comment/Comment";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -233,7 +235,7 @@ export class Select extends Tool {
 		this.snapLine = null;
 	}
 
-	leftButtonDown(): boolean {
+	leftButtonDown(hoveredItem?: Item): boolean {
 		if (this.isRightDown || this.isMiddleDown) {
 			return false;
 		}
@@ -241,7 +243,14 @@ export class Select extends Tool {
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
 		selection.showQuickAddPanel = false;
-		const hover = items.getUnderPointer();
+		const hover = [
+			...items
+				.getUnderPointer()
+				.filter(i => i.getId() !== hoveredItem?.getId()),
+		];
+		if (hoveredItem) {
+			hover.push(hoveredItem);
+		}
 
 		this.beginTimeStamp = Date.now();
 
@@ -445,6 +454,15 @@ export class Select extends Tool {
 			this.snapLines = { verticalLines: [], horizontalLines: [] };
 		}
 
+		// TODO uncomment
+		// if (this.downOnItem?.itemType === "Comment") {
+		// 	const topItem = this.board.items.getUnderPointer().pop();
+		// 	this.nestingHighlighter.clear();
+		// 	if (topItem) {
+		// 		this.nestingHighlighter.add(topItem);
+		// 	}
+		// }
+
 		if (this.isDraggingSelection) {
 			const selectionMbr = selection.getMbr();
 			if (selection.items.list().length === 1) {
@@ -454,14 +472,26 @@ export class Select extends Tool {
 				}
 			}
 
+			const followedComments: Comment[] = [];
+			for (const item of selection.items.list()) {
+				followedComments.push(
+					...this.board.items
+						.getComments()
+						.filter(
+							comment =>
+								comment.getItemToFollow() === item.getId(),
+						),
+				);
+			}
+
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
+				!this.debounceUpd.shouldUpd() &&
 				JSON.stringify(
 					this.canvasDrawer.getLastTranslationKeys()?.sort(),
 				) ===
 					JSON.stringify(
-						selection
-							.list()
+						[...selection.list(), ...followedComments]
 							.map(item => item.getId())
 							.sort(),
 					)
@@ -484,16 +514,25 @@ export class Select extends Tool {
 					translation,
 					this.beginTimeStamp,
 				);
+				selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.debounceUpd.setFalse();
 			} else {
 				const translation = selection.handleManyItemsTranslate(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
-				if (Object.keys(translation).length > 1) {
+				const translationKeys = Object.keys(translation);
+				const commentsSet = new Set(
+					this.board.items
+						.getComments()
+						.map(comment => comment.getId()),
+				);
+
+				if (
+					translationKeys.filter(item => !commentsSet.has(item))
+						.length > 1
+				) {
 					const selectedMbr = this.board.selection.getMbr()?.copy();
-					const sumMbr = this.canvasDrawer
-						.countSumMbr(translation)
-						?.copy();
+					const sumMbr = this.canvasDrawer.countSumMbr(translation);
 					if (sumMbr) {
 						this.canvasDrawer.updateCanvasAndKeys(
 							sumMbr,
@@ -540,7 +579,15 @@ export class Select extends Tool {
 		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
-			draggingItem.transformation.translateBy(x, y, this.beginTimeStamp);
+			const translation = this.handleMultipleItemsTranslate(
+				x,
+				y,
+				draggingItem,
+			);
+			this.board.selection.transformMany(
+				translation,
+				this.beginTimeStamp,
+			);
 
 			if (this.handleSnapping(this.downOnItem)) {
 				return false;
@@ -646,6 +693,13 @@ export class Select extends Tool {
 		if (this.board.interfaceType === "view") {
 			return false;
 		}
+
+		const topItem = this.board.items.getUnderPointer().pop();
+		const curr = this.downOnItem;
+		if (curr instanceof Comment && topItem) {
+			curr.setItemToFollow(topItem.getId());
+		}
+
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
 			const hovered = this.board.items.getUnderPointer();
@@ -823,6 +877,61 @@ export class Select extends Tool {
 			);
 		this.board.selection.editText();
 		return false;
+	}
+
+	handleMultipleItemsTranslate(
+		x: number,
+		y: number,
+		unselectedItem?: Item,
+	): TransformManyItems {
+		const translation: TransformManyItems = {};
+
+		const createTranslationWithComments = (item: Item) => {
+			translation[item.getId()] = {
+				class: "Transformation",
+				method: "scaleByTranslateBy",
+				item: [item.getId()],
+				scale: { x: 1, y: 1 },
+				translate: { x, y },
+			};
+			const followedComments = this.board.items
+				.getComments()
+				.filter(comment => comment.getItemToFollow() === item.getId());
+			for (const comment of followedComments) {
+				translation[comment.getId()] = {
+					class: "Transformation",
+					method: "scaleByTranslateBy",
+					item: [comment.getId()],
+					scale: { x: 1, y: 1 },
+					translate: { x, y },
+				};
+			}
+		};
+
+		if (unselectedItem) {
+			createTranslationWithComments(unselectedItem);
+			return translation;
+		}
+
+		this.board.selection.list().forEach(selectedItem => {
+			if (selectedItem instanceof Frame) {
+				selectedItem.getChildrenIds().forEach(childId => {
+					if (!(childId in translation)) {
+						translation[childId] = {
+							class: "Transformation",
+							method: "scaleByTranslateBy",
+							item: [childId],
+							scale: { x: 1, y: 1 },
+							translate: { x, y },
+						};
+					}
+				});
+			}
+
+			createTranslationWithComments(selectedItem);
+		});
+
+		return translation;
 	}
 
 	onCancel(): void {

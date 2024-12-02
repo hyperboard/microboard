@@ -23,6 +23,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
 import { tempStorage } from "App/SessionStorage";
+import { Comment } from "Board/Items/Comment/Comment";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BPMN } from "./BPMN";
 
@@ -34,6 +35,7 @@ export class Shape implements Geometry {
 	readonly itemType = "Shape";
 	parent = "Board";
 	readonly transformation: Transformation;
+	readonly pinnedComment?: Comment;
 	private path: Path | Paths;
 	private textContainer: Mbr;
 	readonly text: RichText;

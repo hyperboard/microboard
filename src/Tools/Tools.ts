@@ -15,6 +15,7 @@ import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
 import { Item, Point } from "Board/Items";
 import { Eraser } from "./Eraser";
+import { AddComment } from "./AddComment";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
@@ -203,6 +204,26 @@ export class Tools extends ToolContext {
 		return this.tool instanceof Eraser ? this.tool : undefined;
 	}
 
+	addComment(clearSelection = false): void {
+		if (this.board.interfaceType === "view") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
+		if (this.getAddComment() && !isIframe()) {
+			this.cancel();
+		} else {
+			this.tool = new AddComment(this.board);
+			if (clearSelection) {
+				this.board.selection.removeAll();
+			}
+		}
+		this.publish();
+	}
+
+	getAddComment(): AddComment | undefined {
+		return this.tool instanceof AddComment ? this.tool : undefined;
+	}
+
 	export(): void {
 		if (this.board.interfaceType === "view") {
 			this.tool = new Navigate(this.board);
@@ -261,6 +282,7 @@ export class Tools extends ToolContext {
 	}
 
 	publish(): void {
+		this.board.isBoardMenuOpen = false;
 		this.subject.publish(this);
 	}
 

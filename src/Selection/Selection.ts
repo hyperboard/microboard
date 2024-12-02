@@ -186,6 +186,7 @@ export class Selection {
 		if (single instanceof RichText && single.isEmpty()) {
 			this.board.remove(single);
 		}
+		this.board.removeVoidComments();
 		this.items.removeAll();
 		this.setContext("None");
 		this.subject.publish(this);
@@ -783,43 +784,43 @@ export class Selection {
 		}
 	}
 
-	translateBy(x: number, y: number, timeStamp?: number): void {
-		this.emit({
-			class: "Transformation",
-			method: "translateBy",
-			item: this.items.ids(),
-			x,
-			y,
-			timeStamp,
-		});
-		this.off();
-	}
-
-	scaleBy(x: number, y: number, timeStamp?: number): void {
-		this.emit({
-			class: "Transformation",
-			method: "scaleBy",
-			item: this.items.ids(),
-			x,
-			y,
-			timeStamp,
-		});
-	}
-
-	scaleByTranslateBy(
-		scale: { x: number; y: number },
-		translate: { x: number; y: number },
-		timeStamp?: number,
-	): void {
-		this.emit({
-			class: "Transformation",
-			method: "scaleByTranslateBy",
-			item: this.items.ids(),
-			scale,
-			translate,
-			timeStamp,
-		});
-	}
+	// translateBy(x: number, y: number, timeStamp?: number): void {
+	// 	this.emit({
+	// 		class: "Transformation",
+	// 		method: "translateBy",
+	// 		item: this.items.ids(),
+	// 		x,
+	// 		y,
+	// 		timeStamp,
+	// 	});
+	// 	this.off();
+	// }
+	//
+	// scaleBy(x: number, y: number, timeStamp?: number): void {
+	// 	this.emit({
+	// 		class: "Transformation",
+	// 		method: "scaleBy",
+	// 		item: this.items.ids(),
+	// 		x,
+	// 		y,
+	// 		timeStamp,
+	// 	});
+	// }
+	//
+	// scaleByTranslateBy(
+	// 	scale: { x: number; y: number },
+	// 	translate: { x: number; y: number },
+	// 	timeStamp?: number,
+	// ): void {
+	// 	this.emit({
+	// 		class: "Transformation",
+	// 		method: "scaleByTranslateBy",
+	// 		item: this.items.ids(),
+	// 		scale,
+	// 		translate,
+	// 		timeStamp,
+	// 	});
+	// }
 
 	// TODO all the other transformations are redundant, use this one for everything
 	// Instead of TransformationOperation just put matrix in it
@@ -1233,10 +1234,17 @@ export class Selection {
 		if (isLocked) {
 			return;
 		}
+
+		const itemIds = this.items.ids();
+		for (const comment of this.board.items.getComments()) {
+			if (itemIds.includes(comment.getItemToFollow() || "")) {
+				itemIds.push(comment.getId());
+			}
+		}
 		this.emit({
 			class: "Board",
 			method: "remove",
-			item: this.items.ids(),
+			item: itemIds,
 		});
 		this.board.tools.getSelect()?.nestingHighlighter.clear();
 		this.setContext("None");

@@ -6,7 +6,7 @@ import { Board } from "Board";
 import { Selection } from "Board/Selection";
 import { getResizeType, ResizeType } from "./getResizeType";
 import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getProportionalResize } from "./getResizeMatrix";
+import { getProportionalResize, getResize } from "./getResizeMatrix";
 import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
@@ -25,6 +25,7 @@ import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 import AlignmentHelper from "Board/Tools/RelativeAlignment";
 import { Frames } from "Board/Items/Frame/Basic";
+import { Comment } from "Board/Items/Comment/Comment";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -163,6 +164,7 @@ export class Transformer extends Tool {
 			this.mbr = resize.mbr;
 			this.debounceUpd.setFalse();
 		}
+
 		this.updateAnchorType();
 		const wasResising = this.resizeType !== undefined;
 		if (wasResising) {
@@ -206,6 +208,17 @@ export class Transformer extends Tool {
 		const isHeight =
 			this.resizeType === "top" || this.resizeType === "bottom";
 		const single = this.selection.items.getSingle();
+		let followingComments: Comment[] | undefined = this.board.items
+			.getComments()
+			.filter(comment => {
+				return (
+					comment.getItemToFollow() &&
+					comment.getItemToFollow() === single?.getId()
+				);
+			});
+		if (!followingComments.length) {
+			followingComments = undefined;
+		}
 
 		if (single?.transformation.isLocked) {
 			this.board.pointer.setCursor("default");
@@ -232,6 +245,7 @@ export class Transformer extends Tool {
 			single instanceof Sticker ||
 			single instanceof Frame
 		) {
+			let translation: TransformManyItems | boolean = {};
 			if (this.isShiftPressed) {
 				const { matrix, mbr: resizedMbr } = getProportionalResize(
 					this.resizeType,
@@ -240,7 +254,7 @@ export class Transformer extends Tool {
 					this.oppositePoint,
 				);
 				this.mbr = resizedMbr;
-				const translation = this.handleMultipleItemsResize(
+				translation = this.handleMultipleItemsResize(
 					{ matrix, mbr: resizedMbr },
 					mbr,
 					isWidth,
@@ -256,6 +270,33 @@ export class Transformer extends Tool {
 					this.startMbr || new Mbr(),
 					this.beginTimeStamp,
 				).mbr;
+				if (followingComments) {
+					const { matrix, mbr: resizedMbr } =
+						single instanceof Sticker
+							? getProportionalResize(
+									this.resizeType,
+									this.board.pointer.point,
+									mbr,
+									this.oppositePoint,
+								)
+							: getResize(
+									this.resizeType,
+									this.board.pointer.point,
+									mbr,
+									this.oppositePoint,
+								);
+					translation = this.handleMultipleItemsResize(
+						{ matrix, mbr: resizedMbr },
+						mbr,
+						isWidth,
+						isHeight,
+						followingComments,
+					);
+					this.selection.transformMany(
+						translation,
+						this.beginTimeStamp,
+					);
+				}
 			}
 		} else if (single instanceof RichText) {
 			const { matrix, mbr: resizedMbr } = getProportionalResize(
@@ -277,6 +318,14 @@ export class Transformer extends Tool {
 					this.beginTimeStamp,
 				);
 			}
+			const translation = this.handleMultipleItemsResize(
+				{ matrix, mbr: resizedMbr },
+				mbr,
+				isWidth,
+				isHeight,
+				followingComments,
+			);
+			this.selection.transformMany(translation, this.beginTimeStamp);
 			this.mbr = single.getMbr();
 		} else {
 			const items = this.selection.items.list();
@@ -429,10 +478,20 @@ export class Transformer extends Tool {
 		initMbr: Mbr,
 		isWidth: boolean,
 		isHeight: boolean,
-	): TransformManyItems {
-		const { matrix } = resize;
+		itemsToResize?: Item[],
+	): TransformManyItems | boolean {
+		const { matrix, mbr } = resize;
 		const translation: TransformManyItems = {};
-		const items = this.selection.items.list();
+		const items = itemsToResize
+			? itemsToResize
+			: this.selection.items.list();
+		this.board.items.getComments().forEach(comment => {
+			if (
+				items.some(item => item.getId() === comment.getItemToFollow())
+			) {
+				items.push(comment);
+			}
+		});
 
 		for (const item of items) {
 			const itemMbr = item.getPath().getMbr();
@@ -454,7 +513,7 @@ export class Transformer extends Tool {
 						method: "scaleByTranslateBy",
 						item: [item.getId()],
 						translate: { x: matrix.translateX, y: 0 },
-						scale: { x: 1, y: 1 },
+						scale: { x: matrix.scaleX, y: matrix.scaleX },
 					};
 				} else if (isHeight) {
 					translation[item.getId()] = {

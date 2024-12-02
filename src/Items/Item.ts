@@ -9,6 +9,7 @@ import { RichText, RichTextData } from "./RichText";
 import { Shape, ShapeData } from "./Shape";
 import { Sticker } from "./Sticker";
 import { StickerData } from "./Sticker/StickerOperation";
+import { Comment, CommentData } from "./Comment";
 
 export type Item =
 	| RichText
@@ -19,6 +20,7 @@ export type Item =
 	| Sticker
 	| Frame
 	| Placeholder
+	| Comment
 	| Group;
 
 export type ItemType = Item["itemType"];
@@ -31,4 +33,5 @@ export type ItemData =
 	| StickerData
 	| FrameData
 	| PlaceholderData
+	| CommentData
 	| GroupData;

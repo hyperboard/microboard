@@ -48,6 +48,30 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			lastCreatedCanvas.style.top = `${
 				currentTop + y * board.camera.getMatrix().scaleY
 			}px`;
+
+			if (!lastTranslationKeys) {
+				return;
+			}
+
+			lastTranslationKeys.forEach(id => {
+				const item = board.items.getById(id);
+				if (item && item.itemType === "Comment") {
+					const commentElement = document.querySelector(
+						`#comment-${item.getId()}`,
+					) as HTMLDivElement | null;
+					if (commentElement) {
+						commentElement.style.left = `${
+							parseFloat(commentElement.style.left || "0") +
+							x * board.camera.getMatrix().scaleX
+						}px`;
+						commentElement.style.top = `${
+							parseFloat(commentElement.style.top || "0") +
+							y * board.camera.getMatrix().scaleY
+						}px`;
+						commentElement.style.zIndex = "51";
+					}
+				}
+			});
 		}
 	}
 
@@ -108,6 +132,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			lastTranslationKeys = undefined;
 			board.selection.shouldPublish = true;
 		}
+
 		board.selection.transformationRenderBlock = undefined;
 		board.selection.subject.publish(board.selection);
 		matrix = new Matrix();
@@ -132,6 +157,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		} else {
 			const cnvs = board.drawMbrOnCanvas(sumMbr, translation, actualMbr);
 			if (cnvs) {
+				cnvs.id = "selection-canvas";
 				cnvs.style.position = "absolute";
 				cnvs.style.zIndex = "50";
 				cnvs.style.left = `${

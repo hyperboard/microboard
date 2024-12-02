@@ -15,6 +15,7 @@ import { Connector, Frame, Item, RichText, Shape } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { Sticker } from "Board/Items/Sticker";
 import { FrameCommand } from "Board/Items/Frame/FrameCommand";
+import { Comment, CommentCommand } from "../Items/Comment";
 import { LinkToCommand } from "../Items/LinkTo/LinkToCommand";
 import { GroupCommand } from "Board/Items/Group/GroupCommand";
 import { Group } from "Board/Items/Group";
@@ -95,6 +96,14 @@ export function createCommand(board: Board, operation: Operation): Command {
 							items.filter(
 								(item): item is Drawing =>
 									item.itemType === "Drawing",
+							),
+							operation,
+						);
+					case "Comment":
+						return new CommentCommand(
+							items.filter(
+								(item): item is Comment =>
+									item.itemType === "Comment",
 							),
 							operation,
 						);

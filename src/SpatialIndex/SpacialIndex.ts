@@ -6,6 +6,7 @@ import { Subject } from "Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";
+import { Comment } from "../Items/Comment";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -46,6 +47,7 @@ export class SpatialIndex {
 			this.itemsArray.push(item);
 			this.itemsIndex.insert(item);
 		}
+
 		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
 			this.Mbr = item.getMbr().copy();
 		} else {
@@ -195,6 +197,7 @@ export class SpatialIndex {
 		this.itemsArray = newItems;
 		this.itemsArray.forEach(this.change.bind(this));
 	}
+
 	// TODO Item could be frame
 	moveSecondAfterFirst(first: ItemWoFrames, second: ItemWoFrames): void {
 		const secondIndex = this.itemsArray.indexOf(second);
@@ -205,6 +208,7 @@ export class SpatialIndex {
 		this.change(second);
 		this.subject.publish(this.items);
 	}
+
 	// TODO Item could be frame
 	moveSecondBeforeFirst(first: ItemWoFrames, second: ItemWoFrames): void {
 		const secondIndex = this.itemsArray.indexOf(second);
@@ -297,6 +301,12 @@ export class SpatialIndex {
 		return this.itemsIndex.getRectsEnclosedOrCrossedBy(
 			new Mbr(left, top, right, bottom),
 		);
+	}
+
+	getComments(): Comment[] {
+		return this.itemsArray.filter(
+			item => item instanceof Comment,
+		) as Comment[];
 	}
 
 	getMbr(): Mbr {
@@ -452,6 +462,10 @@ export class Items {
 	getFramesInView(): Frame[] {
 		const { left, top, right, bottom } = this.view.getMbr();
 		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
+	}
+
+	getComments(): Comment[] {
+		return this.index.getComments();
 	}
 
 	getUnderPointer(size = 0): Item[] {

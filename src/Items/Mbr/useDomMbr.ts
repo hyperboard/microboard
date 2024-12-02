@@ -4,18 +4,23 @@ import { Mbr } from "Board/Items";
 import { useAppSubscription } from "Board/useBoardSubscription";
 import { useForceUpdate } from "lib/useForceUpdate";
 import { useEffect, useState, type RefObject, useRef } from "react";
+import { useEffect, useState, type RefObject, useRef } from "react";
 import { updateRects } from "./updateRects";
-import { SubjectName } from "App/getSubscriptions";
 
 type Params = {
 	app: App;
 	board: Board;
 	ref: RefObject<HTMLElement>;
-	subjects?: SubjectName[];
+	subjects?: string[];
 	targetMbr?: Mbr;
 	verticalOffset?: number;
 	horizontalOffset?: number;
-	fit?: "contextPanel" | "linkToBtn";
+	fit?:
+		| "contextPanel"
+		| "linkToBtn"
+		| "comment"
+		| "threadPanel"
+		| "boardMenu";
 };
 
 export function useDomMbr({
