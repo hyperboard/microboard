@@ -687,6 +687,7 @@ export function createEvents(
 		function getLatestServerOrder(): number {
 			return latestServerOrder;
 		},
+		board.getAccessKey(),
 	);
 
 	return instance;

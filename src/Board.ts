@@ -61,7 +61,10 @@ export class Board {
 		this.resolveConnecting = resolve;
 	});
 
-	constructor(private boardId = "") {
+	constructor(
+		private boardId = "",
+		private accessKey?: string,
+	) {
 		this.selection = new Selection(this, this.events);
 		this.presence = new Presence(this);
 		this.tools.navigate();
@@ -129,6 +132,10 @@ export class Board {
 
 	getBoardId(): string {
 		return this.boardId;
+	}
+
+	getAccessKey(): string | undefined {
+		return this.accessKey;
 	}
 
 	setBoardId(boardId: string): void {
