@@ -48,30 +48,6 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			lastCreatedCanvas.style.top = `${
 				currentTop + y * board.camera.getMatrix().scaleY
 			}px`;
-
-			if (!lastTranslationKeys) {
-				return;
-			}
-
-			lastTranslationKeys.forEach(id => {
-				const item = board.items.getById(id);
-				if (item && item.itemType === "Comment") {
-					const commentElement = document.querySelector(
-						`#comment-${item.getId()}`,
-					) as HTMLDivElement | null;
-					if (commentElement) {
-						commentElement.style.left = `${
-							parseFloat(commentElement.style.left || "0") +
-							x * board.camera.getMatrix().scaleX
-						}px`;
-						commentElement.style.top = `${
-							parseFloat(commentElement.style.top || "0") +
-							y * board.camera.getMatrix().scaleY
-						}px`;
-						commentElement.style.zIndex = "51";
-					}
-				}
-			});
 		}
 	}
 

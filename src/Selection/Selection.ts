@@ -837,21 +837,43 @@ export class Selection {
 	}
 
 	/** transforms selected items with frames' children */
-	handleManyItemsTranslate(x: number, y: number): TransformManyItems {
+	handleManyItemsTranslate(
+		x: number,
+		y: number,
+		unselectedItem?: Item,
+	): TransformManyItems {
 		const translation: TransformManyItems = {};
 
-		this.list().forEach(selectedItem => {
-			translation[selectedItem.getId()] = {
+		const createTranslationWithComments = (item: Item) => {
+			translation[item.getId()] = {
 				class: "Transformation",
 				method: "scaleByTranslateBy",
-				item: [selectedItem.getId()],
+				item: [item.getId()],
 				scale: { x: 1, y: 1 },
 				translate: { x, y },
 			};
-		});
-		this.list().forEach(item => {
-			if (item instanceof Frame) {
-				item.getChildrenIds().forEach(childId => {
+			const followedComments = this.board.items
+				.getComments()
+				.filter(comment => comment.getItemToFollow() === item.getId());
+			for (const comment of followedComments) {
+				translation[comment.getId()] = {
+					class: "Transformation",
+					method: "scaleByTranslateBy",
+					item: [comment.getId()],
+					scale: { x: 1, y: 1 },
+					translate: { x, y },
+				};
+			}
+		};
+
+		if (unselectedItem) {
+			createTranslationWithComments(unselectedItem);
+			return translation;
+		}
+
+		this.board.selection.list().forEach(selectedItem => {
+			if (selectedItem instanceof Frame) {
+				selectedItem.getChildrenIds().forEach(childId => {
 					if (!(childId in translation)) {
 						translation[childId] = {
 							class: "Transformation",
@@ -863,6 +885,8 @@ export class Selection {
 					}
 				});
 			}
+
+			createTranslationWithComments(selectedItem);
 		});
 
 		return translation;

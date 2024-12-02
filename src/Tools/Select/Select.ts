@@ -15,6 +15,7 @@ import { isSafari } from "App/isSafari";
 import AlignmentHelper from "../RelativeAlignment";
 import { Group } from "Board/Items/Group/Group.js";
 import { Comment } from "Board/Items/Comment/Comment";
+import { Selection } from "Board/Selection/index.js";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -23,7 +24,7 @@ export class Select extends Tool {
 
 	isHoverUnselectedItem = false;
 	isDrawingRectangle = false;
-	isDraggingBoard = false;
+	isCameraPan = false;
 	isDraggingSelection = false;
 	isDraggingUnselectedItem = false;
 	isDownOnSelection = false;
@@ -66,7 +67,7 @@ export class Select extends Tool {
 	clear(): void {
 		this.board.selection.nestSelectedItems(this.downOnItem, false);
 		this.isDrawingRectangle = false;
-		this.isDraggingBoard = false;
+		this.isCameraPan = false;
 		this.isDraggingSelection = false;
 		this.isDraggingUnselectedItem = false;
 		this.isDownOnSelection = false;
@@ -363,8 +364,8 @@ export class Select extends Tool {
 
 		const hover = items.getUnderPointer();
 		this.isDownOnBoard = hover.length === 0;
-		this.isDraggingBoard = this.isDownOnBoard;
-		if (this.isDraggingBoard) {
+		this.isCameraPan = this.isDownOnBoard;
+		if (this.isCameraPan) {
 			return false;
 		}
 
@@ -383,18 +384,31 @@ export class Select extends Tool {
 		}
 		this.clear();
 		this.isMiddleDown = true;
-		this.isDraggingBoard = true;
+		this.isCameraPan = true;
 		return false;
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
-		if (this.isDrawingRectangle && this.line && this.rect) {
+		const isDrawingSelectionMbr =
+			this.isDrawingRectangle && this.line && this.rect;
+		if (isDrawingSelectionMbr) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
 			this.rect = this.line.getMbr();
 			this.rect.borderColor = SELECTION_COLOR;
 			this.rect.backgroundColor = SELECTION_BACKGROUND;
 			this.board.tools.publish();
+
+			this.board.presence.throttledEmit({
+				method: "DrawSelect",
+				timestamp: Date.now(),
+				size: {
+					left: this.rect.left,
+					top: this.rect.top,
+					right: this.rect.right,
+					bottom: this.rect.bottom,
+				},
+			});
 			return false;
 		}
 
@@ -402,57 +416,17 @@ export class Select extends Tool {
 			return false;
 		}
 		const { selection, items } = this.board;
-		const { isShift } = this.board.keyboard;
-		const isLocked =
-			selection.getIsLockedSelection() ||
-			this.downOnItem?.transformation.isLocked;
 
-		if (isLocked) {
-			return false;
-		}
+		this.updateMovementFlag();
 
-		const throttleTime = 10;
-		const timeDiff =
-			this.lastPointerMoveEventTime + throttleTime - Date.now();
-
-		if (timeDiff > 0) {
-			this.isMovedAfterDown = false;
-		} else {
-			this.isMovedAfterDown =
-				this.isLeftDown || this.isRightDown || this.isMiddleDown;
-		}
-		if (this.isDraggingBoard) {
+		if (this.isCameraPan) {
 			this.board.camera.translateBy(x, y);
 			return false;
 		}
 
-		if (isShift) {
-			const mousePosition = this.board.pointer.point;
-			if (this.downOnItem) {
-				this.handleShiftGuidelines(this.downOnItem, mousePosition);
-			} else if (this.isDraggingSelection) {
-				const singleItem = selection.items.getSingle();
-				if (singleItem) {
-					this.handleShiftGuidelines(singleItem, mousePosition);
-				}
-			}
-		} else {
-			this.clearGuidelines();
-		}
+		this.updateGuidelines();
 
-		if (this.downOnItem && this.downOnItem.itemType !== "Connector") {
-			this.snapLines = this.alignmentHelper.checkAlignment(
-				this.downOnItem,
-			);
-		} else if (
-			this.isDraggingSelection &&
-			this.board.selection.items.list().length === 1
-		) {
-			const singleItem = this.board.selection.items.list()[0];
-			this.snapLines = this.alignmentHelper.checkAlignment(singleItem);
-		} else {
-			this.snapLines = { verticalLines: [], horizontalLines: [] };
-		}
+		this.updateSnapLines();
 
 		// TODO uncomment
 		// if (this.downOnItem?.itemType === "Comment") {
@@ -472,43 +446,26 @@ export class Select extends Tool {
 				}
 			}
 
-			const followedComments: Comment[] = [];
-			for (const item of selection.items.list()) {
-				followedComments.push(
-					...this.board.items
-						.getComments()
-						.filter(
-							comment =>
-								comment.getItemToFollow() === item.getId(),
-						),
-				);
-			}
-
-			if (
+			// TODO: fix error case when not selected items are translated with selection
+			const isCanvasOk =
 				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd.shouldUpd() &&
-				JSON.stringify(
-					this.canvasDrawer.getLastTranslationKeys()?.sort(),
-				) ===
-					JSON.stringify(
-						[...selection.list(), ...followedComments]
-							.map(item => item.getId())
-							.sort(),
-					)
-			) {
+				!this.debounceUpd.shouldUpd();
+
+			const isCanvasNeedsUpdate =
+				this.canvasDrawer.getLastCreatedCanvas() &&
+				this.debounceUpd.shouldUpd();
+
+			if (isCanvasOk) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				return false;
-			}
-
-			if (
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				this.debounceUpd.shouldUpd()
-			) {
+			} else if (isCanvasNeedsUpdate) {
 				this.canvasDrawer.translateCanvasBy(x, y);
+				const { translateX, translateY } =
+					this.canvasDrawer.getMatrix();
 				const translation =
 					this.board.selection.handleManyItemsTranslate(
-						this.canvasDrawer.getMatrix().translateX,
-						this.canvasDrawer.getMatrix().translateY,
+						translateX,
+						translateY,
 					);
 				this.board.selection.transformMany(
 					translation,
@@ -520,6 +477,7 @@ export class Select extends Tool {
 			} else {
 				const translation = selection.handleManyItemsTranslate(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
+
 				const translationKeys = Object.keys(translation);
 				const commentsSet = new Set(
 					this.board.items
@@ -546,40 +504,15 @@ export class Select extends Tool {
 				}
 			}
 
-			const frames = this.board.items
-				.getEnclosedOrCrossed(
-					selectionMbr!.left,
-					selectionMbr!.top,
-					selectionMbr!.right,
-					selectionMbr!.bottom,
-				)
-				.filter((item): item is Frame => item instanceof Frame)
-				.filter(frame => !selection.items.list().includes(frame));
-			const draggingFramesIds = selection
-				.list()
-				.filter(item => item instanceof Frame)
-				.map(frame => frame.getId());
-			selection.list().forEach(item => {
-				if (
-					!(item instanceof Frame) &&
-					!draggingFramesIds.includes(item.parent)
-				) {
-					frames.forEach(frame => {
-						if (frame.handleNesting(item)) {
-							this.nestingHighlighter.add(frame, item);
-						} else {
-							this.nestingHighlighter.remove(item);
-						}
-					});
-				}
-			});
+			this.updateFramesNesting(selectionMbr, selection);
 
 			return false;
 		}
+
 		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
-			const translation = this.handleMultipleItemsTranslate(
+			const translation = this.board.selection.handleManyItemsTranslate(
 				x,
 				y,
 				draggingItem,
@@ -632,37 +565,101 @@ export class Select extends Tool {
 			return false;
 		}
 
-		if (this.isDraggingUnselectedItem) {
-			return false;
-		}
-
-		if (this.isDrawingRectangle && this.line && this.rect) {
-			const point = this.board.pointer.point.copy();
-			this.line = new Line(this.line.start, point);
-			this.rect = this.line.getMbr();
-			this.rect.borderColor = SELECTION_COLOR;
-			this.rect.backgroundColor = SELECTION_BACKGROUND;
-			this.board.tools.publish();
-
-			this.board.presence.throttledEmit({
-				method: "DrawSelect",
-				timestamp: Date.now(),
-				size: {
-					left: this.rect.left,
-					top: this.rect.top,
-					right: this.rect.right,
-					bottom: this.rect.bottom,
-				},
-			});
-			return false;
-		}
-
 		this.board.presence.throttledEmit({
 			method: "CancelDrawSelect",
 			timestamp: Date.now(),
 		});
 
 		return false;
+	}
+
+	private updateMovementFlag(): void {
+		const throttleTime = 10;
+		const timeDiff =
+			this.lastPointerMoveEventTime + throttleTime - Date.now();
+
+		if (timeDiff > 0) {
+			this.isMovedAfterDown = false;
+		} else {
+			this.isMovedAfterDown =
+				this.isLeftDown || this.isRightDown || this.isMiddleDown;
+		}
+	}
+
+	private updateGuidelines(): void {
+		const { isShift } = this.board.keyboard;
+
+		if (isShift) {
+			const mousePosition = this.board.pointer.point;
+			if (this.downOnItem) {
+				this.handleShiftGuidelines(this.downOnItem, mousePosition);
+			} else if (this.isDraggingSelection) {
+				const singleItem = this.board.selection.items.getSingle();
+				if (singleItem) {
+					this.handleShiftGuidelines(singleItem, mousePosition);
+				}
+			}
+		} else {
+			this.clearGuidelines();
+		}
+	}
+
+	private updateFramesNesting(
+		selectionMbr: Mbr | undefined,
+		selection: Selection,
+	): void {
+		const frames = this.board.items
+			.getEnclosedOrCrossed(
+				selectionMbr!.left,
+				selectionMbr!.top,
+				selectionMbr!.right,
+				selectionMbr!.bottom,
+			)
+			.filter((item): item is Frame => item instanceof Frame)
+			.filter(frame => !selection.items.list().includes(frame));
+		const draggingFramesIds = selection
+			.list()
+			.filter(item => item instanceof Frame)
+			.map(frame => frame.getId());
+		selection.list().forEach(item => {
+			if (
+				!(item instanceof Frame) &&
+				!draggingFramesIds.includes(item.parent)
+			) {
+				frames.forEach(frame => {
+					if (frame.handleNesting(item)) {
+						this.nestingHighlighter.add(frame, item);
+					} else {
+						this.nestingHighlighter.remove(item);
+					}
+				});
+			}
+		});
+	}
+
+	private updateSnapLines(): void {
+		const alignmentItem = this.getAlignmentItem();
+
+		if (alignmentItem) {
+			this.snapLines = this.alignmentHelper.checkAlignment(alignmentItem);
+		} else {
+			this.snapLines = { verticalLines: [], horizontalLines: [] };
+		}
+	}
+
+	private getAlignmentItem(): Item | null {
+		const isConnectorUnderPointer =
+			this.downOnItem?.itemType === "Connector";
+		const singleItem = this.board.selection.items.getSingle();
+		const isDraggingSingleSelectedItem =
+			this.isDraggingSelection && singleItem;
+		if (!isConnectorUnderPointer) {
+			return this.downOnItem;
+		}
+		if (isDraggingSingleSelectedItem) {
+			return singleItem;
+		}
+		return null;
 	}
 
 	leftButtonUp(): boolean {
@@ -877,61 +874,6 @@ export class Select extends Tool {
 			);
 		this.board.selection.editText();
 		return false;
-	}
-
-	handleMultipleItemsTranslate(
-		x: number,
-		y: number,
-		unselectedItem?: Item,
-	): TransformManyItems {
-		const translation: TransformManyItems = {};
-
-		const createTranslationWithComments = (item: Item) => {
-			translation[item.getId()] = {
-				class: "Transformation",
-				method: "scaleByTranslateBy",
-				item: [item.getId()],
-				scale: { x: 1, y: 1 },
-				translate: { x, y },
-			};
-			const followedComments = this.board.items
-				.getComments()
-				.filter(comment => comment.getItemToFollow() === item.getId());
-			for (const comment of followedComments) {
-				translation[comment.getId()] = {
-					class: "Transformation",
-					method: "scaleByTranslateBy",
-					item: [comment.getId()],
-					scale: { x: 1, y: 1 },
-					translate: { x, y },
-				};
-			}
-		};
-
-		if (unselectedItem) {
-			createTranslationWithComments(unselectedItem);
-			return translation;
-		}
-
-		this.board.selection.list().forEach(selectedItem => {
-			if (selectedItem instanceof Frame) {
-				selectedItem.getChildrenIds().forEach(childId => {
-					if (!(childId in translation)) {
-						translation[childId] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [childId],
-							scale: { x: 1, y: 1 },
-							translate: { x, y },
-						};
-					}
-				});
-			}
-
-			createTranslationWithComments(selectedItem);
-		});
-
-		return translation;
 	}
 
 	onCancel(): void {
