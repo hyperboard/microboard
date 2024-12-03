@@ -181,16 +181,7 @@ export class EditorContainer {
 		editor.undo = (): void => {};
 		const { insertData } = editor;
 		editor.insertData = (data: DataTransfer): void => {
-			const text = data.getData("text/plain");
-			try {
-				const map = JSON.parse(text);
-				const isDataValid = validateItemsMap(map);
-				if (!isDataValid) {
-					this.insertAndEmit(insertData, data);
-				}
-			} catch (error) {
-				this.insertAndEmit(insertData, data);
-			}
+			return this.insertAndEmit(insertData, data);
 		};
 	}
 
