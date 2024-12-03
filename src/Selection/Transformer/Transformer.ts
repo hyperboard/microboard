@@ -397,7 +397,7 @@ export class Transformer extends Tool {
 					isHeight,
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
-				if (Object.keys(translation).length > 50) {
+				if (Object.keys(translation).length > 10) {
 					this.canvasDrawer.updateCanvasAndKeys(
 						resize.mbr,
 						translation,
@@ -493,7 +493,7 @@ export class Transformer extends Tool {
 		isWidth: boolean,
 		isHeight: boolean,
 		itemsToResize?: Item[],
-	): TransformManyItems | boolean {
+	): TransformManyItems {
 		const { matrix, mbr } = resize;
 		const translation: TransformManyItems = {};
 		const items = itemsToResize

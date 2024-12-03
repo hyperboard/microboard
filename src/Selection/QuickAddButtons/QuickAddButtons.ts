@@ -115,17 +115,11 @@ export function getQuickAddButtons(
 		const connectorData = defaultConnector.serialize();
 		connectorData.lineStyle = "orthogonal";
 
-		const savedStart = connectorStorage.getConnectorPointer(
-			"start",
-			board.getBoardId(),
-		);
+		const savedStart = connectorStorage.getConnectorPointer("start");
 		if (savedStart) {
 			connectorData.startPointerStyle = savedStart;
 		}
-		const savedEnd = connectorStorage.getConnectorPointer(
-			"end",
-			board.getBoardId(),
-		);
+		const savedEnd = connectorStorage.getConnectorPointer("end");
 		if (savedEnd) {
 			connectorData.endPointerStyle = savedEnd;
 		}

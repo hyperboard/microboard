@@ -49,6 +49,7 @@ export class Frame implements Geometry {
 	private board?: Board;
 
 	constructor(
+		private getItemById: (id: string) => Item | undefined,
 		private events?: Events,
 		private id = "",
 		private name = "",
@@ -126,7 +127,7 @@ export class Frame implements Geometry {
 	 * Child cant be itself,
 	 * frame cant be child
 	 */
-	addChild(childId: string): void {
+	private addChild(childId: string): void {
 		this.emit({
 			class: "Frame",
 			method: "addChild",
@@ -141,10 +142,14 @@ export class Frame implements Geometry {
 			// && child.itemType !== "Frame"
 			this.getId() !== childId
 		) {
-			if (!this.children.includes(childId)) {
+			const foundItem = this.getItemById(childId);
+			if (!this.children.includes(childId) && foundItem) {
 				this.children.push(childId);
+				foundItem.parent = this.getId();
 				this.updateMbr();
 				this.subject.publish(this);
+			} else if (!foundItem) {
+				console.warn(`Could not find child with id ${childId}`);
 			}
 		}
 	}
@@ -156,7 +161,7 @@ export class Frame implements Geometry {
 		this.subject.publish(this);
 	}
 
-	removeChild(childId: string): void {
+	private removeChild(childId: string): void {
 		this.emit({
 			class: "Frame",
 			method: "removeChild",
@@ -175,28 +180,27 @@ export class Frame implements Geometry {
 	 * false - if outside of the frame
 	 */
 	handleNesting(
-		item: Item,
+		item: Item | Mbr,
 		options?: {
 			onlyForOut?: boolean;
 			cancelIfChild?: boolean;
 		},
 	): boolean {
+		const isItem = "itemType" in item;
+		const itemMbr = isItem ? item.getMbr() : item;
 		if (item instanceof Frame) {
 			return false;
 		}
-		if (options?.cancelIfChild && item.parent !== "Board") {
+		if (options?.cancelIfChild && isItem && item.parent !== "Board") {
 			return false;
 		}
 
 		const frameMbr = this.getMbr().copy();
 		if (item.isEnclosedOrCrossedBy(frameMbr)) {
-			if (frameMbr.isInside(item.getMbr().getCenter())) {
+			if (frameMbr.isInside(itemMbr.getCenter())) {
 				if (!options || !options.onlyForOut) {
 					return true;
 				}
-				return false;
-			} else {
-				return false;
 			}
 		}
 		return false;

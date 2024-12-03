@@ -65,7 +65,9 @@ export class Select extends Tool {
 	}
 
 	clear(): void {
-		this.board.selection.nestSelectedItems(this.downOnItem, false);
+		if (this.isDraggingSelection || this.isDraggingUnselectedItem) {
+			this.board.selection.nestSelectedItems(this.downOnItem, false);
+		}
 		this.isDrawingRectangle = false;
 		this.isCameraPan = false;
 		this.isDraggingSelection = false;
@@ -439,9 +441,9 @@ export class Select extends Tool {
 
 		if (this.isDraggingSelection) {
 			const selectionMbr = selection.getMbr();
-			if (selection.items.list().length === 1) {
-				const singleItem = selection.items.list()[0];
-				if (this.handleSnapping(singleItem)) {
+			const single = selection.items.getSingle();
+			if (single) {
+				if (this.handleSnapping(single)) {
 					return false;
 				}
 			}
@@ -457,26 +459,23 @@ export class Select extends Tool {
 
 			if (isCanvasOk) {
 				this.canvasDrawer.translateCanvasBy(x, y);
+				this.canvasDrawer.highlightNesting();
 				return false;
 			} else if (isCanvasNeedsUpdate) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const { translateX, translateY } =
 					this.canvasDrawer.getMatrix();
-				const translation =
-					this.board.selection.handleManyItemsTranslate(
-						translateX,
-						translateY,
-					);
-				this.board.selection.transformMany(
-					translation,
-					this.beginTimeStamp,
+				const translation = selection.getManyItemsTranslation(
+					translateX,
+					translateY,
 				);
+				this.canvasDrawer.highlightNesting();
 				selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.debounceUpd.setFalse();
+				return false;
 			} else {
-				const translation = selection.handleManyItemsTranslate(x, y);
-				selection.transformMany(translation, this.beginTimeStamp);
+				const translation = selection.getManyItemsTranslation(x, y);
 
 				const translationKeys = Object.keys(translation);
 				const commentsSet = new Set(
@@ -487,7 +486,7 @@ export class Select extends Tool {
 
 				if (
 					translationKeys.filter(item => !commentsSet.has(item))
-						.length > 1
+						.length > 10
 				) {
 					const selectedMbr = this.board.selection.getMbr()?.copy();
 					const sumMbr = this.canvasDrawer.countSumMbr(translation);
@@ -498,9 +497,14 @@ export class Select extends Tool {
 							undefined,
 							selectedMbr,
 						);
+						this.canvasDrawer.translateCanvasBy(x, y);
+						this.canvasDrawer.highlightNesting();
 						this.debounceUpd.setFalse();
 						this.debounceUpd.setTimeoutUpdate(1000);
+						return false;
 					}
+				} else {
+					selection.transformMany(translation, this.beginTimeStamp);
 				}
 			}
 
@@ -512,7 +516,7 @@ export class Select extends Tool {
 		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
-			const translation = this.board.selection.handleManyItemsTranslate(
+			const translation = this.board.selection.getManyItemsTranslation(
 				x,
 				y,
 				draggingItem,
@@ -648,18 +652,19 @@ export class Select extends Tool {
 	}
 
 	private getAlignmentItem(): Item | null {
+		let finalItem: Item | null = null;
 		const isConnectorUnderPointer =
-			this.downOnItem?.itemType === "Connector";
+			this.downOnItem?.itemType !== "Connector";
 		const singleItem = this.board.selection.items.getSingle();
 		const isDraggingSingleSelectedItem =
 			this.isDraggingSelection && singleItem;
-		if (!isConnectorUnderPointer) {
-			return this.downOnItem;
+		if (isConnectorUnderPointer) {
+			finalItem = this.downOnItem;
 		}
 		if (isDraggingSingleSelectedItem) {
-			return singleItem;
+			finalItem = singleItem;
 		}
-		return null;
+		return finalItem;
 	}
 
 	leftButtonUp(): boolean {
@@ -800,7 +805,7 @@ export class Select extends Tool {
 		});
 		// this.board.selection.removeAll();
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
-			const translation = this.board.selection.handleManyItemsTranslate(
+			const translation = this.board.selection.getManyItemsTranslation(
 				this.canvasDrawer.getMatrix().translateX,
 				this.canvasDrawer.getMatrix().translateY,
 			);

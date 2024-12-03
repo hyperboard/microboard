@@ -10,6 +10,7 @@ import { TransformationData } from "../Transformation/TransformationData";
 import { Placeholder } from "../Placeholder";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
+import { storageURL } from "./ImageHelpers";
 
 export interface ImageItemData {
 	itemType: "Image";
@@ -74,7 +75,7 @@ export class ImageItem extends Mbr {
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
-	storageLink: string;
+	private _storageLink: string;
 	imageDimension: Dimension;
 	board: Board;
 
@@ -104,6 +105,21 @@ export class ImageItem extends Mbr {
 			this.subject.publish(this);
 		});
 		this.transformation.subject.subscribe(this.onTransform);
+	}
+
+	set storageLink(link: string) {
+		try {
+			const url = new URL(link);
+			// If the link is a valid URL, replace its domain with window.location.origin
+			this._storageLink = `${window.location.origin}${url.pathname}`;
+		} catch (_) {
+			// If the link is not a valid URL, prepend it with storageUrl
+			this._storageLink = `${storageURL}/${link}`;
+		}
+	}
+
+	get storageLink() {
+		return this._storageLink;
 	}
 
 	handleError = (): void => {

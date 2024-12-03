@@ -724,7 +724,6 @@ export class Selection {
 					selectedMbr?.right,
 					selectedMbr?.bottom,
 				)
-				.filter(frame => !selectedMap[frame.getId()])
 				.forEach(frame => {
 					selected.forEach(selectedItem => {
 						if (frame.handleNesting(selectedItem)) {
@@ -837,21 +836,33 @@ export class Selection {
 	}
 
 	/** transforms selected items with frames' children */
-	handleManyItemsTranslate(
+	getManyItemsTranslation(
 		x: number,
 		y: number,
 		unselectedItem?: Item,
 	): TransformManyItems {
 		const translation: TransformManyItems = {};
 
-		const createTranslationWithComments = (item: Item) => {
-			translation[item.getId()] = {
+		function addItemToTranslation(itemId: string): void {
+			translation[itemId] = {
 				class: "Transformation",
 				method: "scaleByTranslateBy",
-				item: [item.getId()],
+				item: [itemId],
 				scale: { x: 1, y: 1 },
 				translate: { x, y },
 			};
+		}
+
+		function tryToAddFrameChildrenToTranslation(selectedItem: Item): void {
+			if (!(selectedItem instanceof Frame)) {
+				return;
+			}
+			for (const childId of selectedItem.getChildrenIds()) {
+				addItemToTranslation(childId);
+			}
+		}
+
+		const createTranslationWithComments = (item: Item): void => {
 			const followedComments = this.board.items
 				.getComments()
 				.filter(comment => comment.getItemToFollow() === item.getId());
@@ -867,27 +878,18 @@ export class Selection {
 		};
 
 		if (unselectedItem) {
+			addItemToTranslation(unselectedItem.getId());
 			createTranslationWithComments(unselectedItem);
 			return translation;
 		}
 
-		this.board.selection.list().forEach(selectedItem => {
-			if (selectedItem instanceof Frame) {
-				selectedItem.getChildrenIds().forEach(childId => {
-					if (!(childId in translation)) {
-						translation[childId] = {
-							class: "Transformation",
-							method: "scaleByTranslateBy",
-							item: [childId],
-							scale: { x: 1, y: 1 },
-							translate: { x, y },
-						};
-					}
-				});
-			}
+		for (const selectedItem of this.board.selection.list()) {
+			addItemToTranslation(selectedItem.getId());
+
+			tryToAddFrameChildrenToTranslation(selectedItem);
 
 			createTranslationWithComments(selectedItem);
-		});
+		}
 
 		return translation;
 	}
