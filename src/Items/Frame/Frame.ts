@@ -127,7 +127,7 @@ export class Frame implements Geometry {
 	 * Child cant be itself,
 	 * frame cant be child
 	 */
-	addChild(childId: string): void {
+	private addChild(childId: string): void {
 		this.emit({
 			class: "Frame",
 			method: "addChild",
@@ -161,7 +161,7 @@ export class Frame implements Geometry {
 		this.subject.publish(this);
 	}
 
-	removeChild(childId: string): void {
+	private removeChild(childId: string): void {
 		this.emit({
 			class: "Frame",
 			method: "removeChild",
@@ -201,9 +201,6 @@ export class Frame implements Geometry {
 				if (!options || !options.onlyForOut) {
 					return true;
 				}
-				return false;
-			} else {
-				return false;
 			}
 		}
 		return false;

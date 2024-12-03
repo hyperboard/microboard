@@ -65,7 +65,9 @@ export class Select extends Tool {
 	}
 
 	clear(): void {
-		this.board.selection.nestSelectedItems(this.downOnItem, false);
+		if (this.isDraggingSelection || this.isDraggingUnselectedItem) {
+			this.board.selection.nestSelectedItems(this.downOnItem, false);
+		}
 		this.isDrawingRectangle = false;
 		this.isCameraPan = false;
 		this.isDraggingSelection = false;
@@ -439,9 +441,9 @@ export class Select extends Tool {
 
 		if (this.isDraggingSelection) {
 			const selectionMbr = selection.getMbr();
-			if (selection.items.list().length === 1) {
-				const singleItem = selection.items.list()[0];
-				if (this.handleSnapping(singleItem)) {
+			const single = selection.items.getSingle();
+			if (single) {
+				if (this.handleSnapping(single)) {
 					return false;
 				}
 			}

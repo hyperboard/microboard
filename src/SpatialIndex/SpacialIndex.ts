@@ -77,14 +77,12 @@ export class SpatialIndex {
 				.map(childId => this.getById(childId))
 				.filter(child => child !== undefined)
 				.forEach(child => {
-					item.removeChild(child.getId()); // not sure if it is necessary for being able to undo
-					child.parent = "Board";
+					item.emitRemoveChild(child);
 				});
 		}
 		if (item.parent !== "Board") {
 			const parentFrame = this.items.getById(item.parent) as Frame;
-			parentFrame.removeChild(item.getId());
-			item.parent = "Board"; // not sure if it is necessary for being able to undo
+			parentFrame.emitRemoveChild(item);
 		}
 		if (item instanceof Frame) {
 			this.framesArray.splice(this.framesArray.indexOf(item), 1);
