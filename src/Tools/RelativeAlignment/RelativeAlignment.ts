@@ -522,17 +522,18 @@ export class AlignmentHelper {
 		x: number,
 		y: number,
 		timeStamp: number,
-	) {
+	): void {
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
-			this.canvasDrawer.translateCanvasBy(x, y);
+			return;
+		}
+		if (item.itemType === "Frame") {
+			const translation = this.board.selection.handleManyItemsTranslate(
+				x,
+				y,
+			);
+			this.board.selection.transformMany(translation, timeStamp);
 		} else {
-			if (item.itemType === "Frame") {
-				const translation =
-					this.board.selection.handleManyItemsTranslate(x, y);
-				this.board.selection.transformMany(translation, timeStamp);
-			} else {
-				item.transformation.translateBy(x, y, timeStamp);
-			}
+			item.transformation.translateBy(x, y, timeStamp);
 		}
 	}
 
