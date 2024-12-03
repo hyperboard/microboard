@@ -374,7 +374,6 @@ export class Transformer extends Tool {
 					resize.matrix.scaleX,
 					resize.matrix.scaleY,
 				);
-				this.canvasDrawer.highlightNesting();
 				return false;
 			}
 			if (
@@ -387,7 +386,6 @@ export class Transformer extends Tool {
 					isWidth,
 					isHeight,
 				);
-				this.canvasDrawer.highlightNesting();
 				this.selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
@@ -405,7 +403,6 @@ export class Transformer extends Tool {
 						translation,
 						resize.matrix,
 					);
-					this.canvasDrawer.highlightNesting();
 					this.debounceUpd.setFalse();
 					this.debounceUpd.setTimeoutUpdate(1000);
 				}
