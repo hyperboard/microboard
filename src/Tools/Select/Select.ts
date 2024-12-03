@@ -650,18 +650,19 @@ export class Select extends Tool {
 	}
 
 	private getAlignmentItem(): Item | null {
+		let finalItem: Item | null = null;
 		const isConnectorUnderPointer =
-			this.downOnItem?.itemType === "Connector";
+			this.downOnItem?.itemType !== "Connector";
 		const singleItem = this.board.selection.items.getSingle();
 		const isDraggingSingleSelectedItem =
 			this.isDraggingSelection && singleItem;
-		if (!isConnectorUnderPointer) {
-			return this.downOnItem;
+		if (isConnectorUnderPointer) {
+			finalItem = this.downOnItem;
 		}
 		if (isDraggingSingleSelectedItem) {
-			return singleItem;
+			finalItem = singleItem;
 		}
-		return null;
+		return finalItem;
 	}
 
 	leftButtonUp(): boolean {
