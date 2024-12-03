@@ -1,15 +1,4 @@
 import { Subject } from "Subject";
-import {
-	CameraEvent,
-	CancelDrawSelectEvent,
-	DrawSelectEvent,
-	PointerMoveEvent,
-	PresenceEventMsg,
-	PresenceEventType,
-	SelectionEvent,
-	SetUserColorEvent,
-	UserJoinMsg,
-} from "App/Connection";
 import { Board } from "Board/Board";
 import { Events } from "Board/Events";
 import { DrawingContext } from "Board/Items/DrawingContext";
@@ -18,27 +7,29 @@ import { Camera } from "Board/Camera";
 import { throttleWithDebounce } from "shared/utils";
 import { isMicroboard } from "lib/isMicroboard";
 import { catmullRomInterpolate, rgbToRgba } from "./helpers";
+import i18n from "Lang";
+import {
+	BringToMeEvent,
+	CameraEvent,
+	CancelDrawSelectEvent,
+	DrawSelectEvent,
+	FollowEvent,
+	PointerMoveEvent,
+	PresenceEventMsg,
+	PresenceEventType,
+	PresencePingEvent,
+	SelectionEvent,
+	SetUserColorEvent,
+	StopFollowingEvent,
+	UserJoinMsg,
+} from "./Events";
+import { PRESENCE_COLORS } from "./consts";
 
-export const PRESENCE_COLORS = [
-	"rgb(71,120,245)", // light blue
-	"rgb(244,142,47)", // orange
-	"rgb(38,189,108)", // light green
-	"rgb(230,72,61)", // red
-	"rgb(146,79,232)", // purple
-	"rgb(94,99,110)", // asphalt
-	"rgb(142,164,210)", // asphalt light
-	"rgb(164,3,111)", // magenta
-	"rgb(15,163,177)", // teal
-	"rgb(228,191,27)", // yellow
-	"rgb(211,84,131)", // pink
-	"rgb(147,163,177)", // gray
-	"rgb(255,113,91)", // pear
-	"rgb(184,146,255)", // light purple
-	"rgb(46,134,171)", // navy
-	"rgb(49,57,60)", // black
-];
-
-export const PRESENCE_CURSOR_THROTTLE = 333;
+const SECOND = 1000;
+const CURSOR_FPS = 5;
+export const PRESENCE_CURSOR_THROTTLE = SECOND / CURSOR_FPS;
+export const PRESENCE_CLEANUP_USER_TIMER = 180_000;
+export const PRESENCE_CLEANUP_IDLE_TIMER = 60_000;
 
 interface Cursor {
 	x: number;
@@ -51,6 +42,7 @@ export interface PresenceUser {
 	color: string; // rgb
 	colorChangeable: boolean;
 	lastActivity: number;
+	lastPing: number;
 	selection: string[];
 	pointer: Cursor;
 	avatar: string | null;
@@ -71,16 +63,17 @@ export interface PresenceUser {
 }
 
 let cleanupInterval: NodeJS.Timer | number | null = null;
-const CLEANUP_LIFETIME = 60_000;
 
 export class Presence {
 	readonly subject = new Subject<Presence>();
 	events: Events | undefined;
 	readonly board: Board;
 	trackedUser: PresenceUser | null = null;
+	private cursorsEnabled = true;
 
 	private currentUserId: string | null = null;
 	users: Map<string, PresenceUser> = new Map();
+	followers: string[] = [];
 	private svgImageCache: { [color: string]: HTMLImageElement } = {};
 	private cursorPositionHistory: {
 		[nickname: string]: {
@@ -141,7 +134,9 @@ export class Presence {
 		cleanupInterval = setInterval(() => {
 			this.users = new Map(
 				Array.from(this.users.entries()).filter(([_, user]) => {
-					return Date.now() - user.lastActivity < CLEANUP_LIFETIME;
+					return (
+						Date.now() - user.lastPing < PRESENCE_CLEANUP_USER_TIMER
+					);
 				}),
 			);
 			this.subject.publish(this);
@@ -166,10 +161,21 @@ export class Presence {
 		this.processMessage(messages);
 	}
 
+	// Maintaining current user presence
+	ping(): void {
+		this.emit({
+			method: "Ping",
+			timestamp: Date.now(),
+		});
+	}
+
 	join(msg: UserJoinMsg): void {
-		for (const event of msg.events) {
-			this.processMessage(event);
-		}
+		Object.entries(msg.snapshots).map(([userId, snapshot]) => {
+			this.users.set(userId, snapshot);
+		});
+		// for (const event of msg.events) {
+		// 	this.processMessage(event);
+		// }
 	}
 
 	getUsers(excludeSelf = false): PresenceUser[] {
@@ -209,10 +215,11 @@ export class Presence {
 				userId: userId.toString(),
 				color,
 				lastActivity: eventData.timestamp,
+				lastPing: eventData.timestamp,
 				selection: [],
 				pointer: { x: 0, y: 0 },
 				colorChangeable: true,
-				nickname: event.nickname || "Анонимный пользователь",
+				nickname: event.nickname || "Anonymous",
 				camera: null,
 				avatar: null,
 			});
@@ -253,9 +260,93 @@ export class Presence {
 			case "Camera":
 				this.processCameraEvent(event as PresenceEventMsg<CameraEvent>);
 				break;
+
+			case "Ping":
+				this.processPing(event as PresenceEventMsg<PresencePingEvent>);
+				break;
+
+			case "BringToMe":
+				this.processBringToMe(
+					event as PresenceEventMsg<BringToMeEvent>,
+				);
+				break;
+
+			case "StopFollowing":
+				this.processStopFollowing(
+					event as PresenceEventMsg<StopFollowingEvent>,
+				);
+				break;
+
+			case "Follow":
+				this.processFollowEvent(event as PresenceEventMsg<FollowEvent>);
+				break;
 		}
 
 		this.subject.publish(this);
+	}
+
+	processFollowEvent(msg: PresenceEventMsg<FollowEvent>): void {
+		const currentUser = localStorage.getItem(`currentUser`);
+		if (!currentUser) {
+			return;
+		}
+
+		if (msg.event.user === currentUser) {
+			this.followers.push(msg.userId.toString());
+			this.followers = Array.from(new Set(this.followers));
+		}
+	}
+
+	processBringToMe(msg: PresenceEventMsg<BringToMeEvent>): void {
+		const currentUser = localStorage.getItem(`currentUser`);
+		if (!currentUser) {
+			return;
+		}
+		if (msg.event.users.includes(currentUser)) {
+			const bringerId = msg.userId.toString();
+			const userToTrack = this.users.get(bringerId);
+			if (userToTrack) {
+				this.trackedUser = userToTrack;
+				this.enableTracking(userToTrack.userId);
+			}
+		}
+	}
+
+	processStopFollowing(msg: PresenceEventMsg<StopFollowingEvent>): void {
+		const currentUser = localStorage.getItem(`currentUser`);
+		if (!currentUser) {
+			return;
+		}
+		if (msg.event.users.includes(currentUser)) {
+			this.followers = this.followers.filter(
+				follower => follower !== msg.userId.toString(),
+			);
+		}
+		if (!this.trackedUser) {
+			return;
+		}
+		if (this.trackedUser.userId !== msg.userId) {
+			return;
+		}
+		if (
+			msg.event.users.includes(currentUser) &&
+			this.trackedUser.userId === msg.userId
+		) {
+			this.disableTracking();
+		}
+	}
+
+	processPing(msg: PresenceEventMsg<PresencePingEvent>): void {
+		const user = this.users.get(msg.userId.toString())!;
+		user.lastPing = msg.event.timestamp;
+		const userCopy = { ...user };
+		if (msg.avatar) {
+			userCopy.avatar = msg.avatar;
+		}
+		if (msg.color) {
+			userCopy.color = msg.color;
+		}
+		this.users.set(msg.userId.toString(), userCopy);
 	}
 
 	processCameraEvent(msg: PresenceEventMsg<CameraEvent>): void {
@@ -293,7 +384,6 @@ export class Presence {
 		}
 		userCopy.select = eventData.size;
 		userCopy.nickname = msg.nickname;
-		// userCopy.color = msg.color;
 		if (msg.color) {
 			userCopy.color = msg.color;
 		}
@@ -394,11 +484,37 @@ export class Presence {
 					),
 				);
 			}
+			this.emit({
+				method: "Follow",
+				user: userId,
+				timestamp: Date.now(),
+			});
 		}
 	}
 
 	disableTracking(): void {
+		if (!this.trackedUser) {
+			return;
+		}
+		this.emit({
+			method: "StopFollowing",
+			timestamp: Date.now(),
+			users: [this.trackedUser?.userId],
+		});
 		this.trackedUser = null;
+	}
+
+	getFollowers(): PresenceUser[] {
+		const followers: PresenceUser[] = [];
+
+		for (const followerId of this.followers) {
+			const follower = this.users.get(followerId);
+			if (follower) {
+				followers.push(follower);
+			}
+		}
+
+		return followers;
 	}
 
 	getSelects(): {
@@ -429,6 +545,12 @@ export class Presence {
 			}
 		});
 		return selects;
+	}
+
+	toggleCursorsRendering(): boolean {
+		this.cursorsEnabled = !this.cursorsEnabled;
+
+		return this.cursorsEnabled;
 	}
 
 	getCursors(): { x: number; y: number; color: string; nickname: string }[] {
@@ -555,103 +677,136 @@ export class Presence {
 		}
 	}
 
-	// FIXME: FPS are start decreasing when there are many cursors or events. Need to fix
+	private isPointerRendering = false;
+	private pointerAnimationId: number | null = null;
+
 	private renderPointer(context: DrawingContext): void {
 		if (!isMicroboard()) {
+			this.stopPointerRendering();
 			return;
 		}
 
-		const cursors = this.getCursors();
+		if (this.isPointerRendering) {
+			return;
+		}
+		this.isPointerRendering = true;
+
 		const ctx = context.cursorCtx;
 		if (!ctx) {
+			this.stopPointerRendering();
 			return;
 		}
-		const scale = 1 / context.camera.getScale();
 
-		const TRANSITION_DURATION = 250;
-		const currentTime = performance.now();
+		const TRANSITION_DURATION = 250; // Must be less than PRESENCE_CURSOR_THROTTLE. About 10-15%
 
-		ctx.save();
-		ctx.font = `${14 * scale}px Arial`;
-		ctx.textAlign = "left";
-		ctx.textBaseline = "middle";
-
-		Object.values(cursors).forEach(cursor => {
-			this.saveImageCache(cursor);
-
-			const cursorHistory =
-				this.cursorPositionHistory?.[cursor.nickname] || [];
-			const currentPosition = { x: cursor.x, y: cursor.y };
-
-			cursorHistory.push(currentPosition);
-			if (cursorHistory.length > 4) {
-				cursorHistory.shift();
+		const renderLoop = (): void => {
+			const ctx = context.cursorCtx;
+			if (!ctx) {
+				this.stopPointerRendering();
+				return;
 			}
+			const scale = 1 / context.camera.getScale();
+			const cursors = this.getCursors();
+			const currentTime = performance.now();
 
-			if (cursorHistory.length < 4) {
-				const previousPosition =
-					this.previousCursorPositions[cursor.nickname] ||
-					currentPosition;
+			ctx.save();
+			ctx.font = `${14 * scale}px Arial`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			// FIXME: Rewrite to not use fixed numbers;
+			ctx.clearRect(-20000, -20000, 40_000, 40_000);
+
+			Object.values(cursors).forEach(cursor => {
+				this.saveImageCache(cursor);
+
+				const cursorHistory =
+					this.cursorPositionHistory[cursor.nickname] || [];
+				const currentPosition = { x: cursor.x, y: cursor.y };
+				cursorHistory.push(currentPosition);
+
+				if (cursorHistory.length > 4) {
+					cursorHistory.shift();
+				}
+
+				if (cursorHistory.length < 4) {
+					const previousPosition =
+						this.previousCursorPositions[cursor.nickname] ||
+						currentPosition;
+					const timeSinceLastUpdate =
+						currentTime - (previousPosition.timestamp || 0);
+					const progress = Math.min(
+						1,
+						timeSinceLastUpdate / TRANSITION_DURATION,
+					);
+
+					const interpolatedX =
+						previousPosition.x +
+						(currentPosition.x - previousPosition.x) * progress;
+					const interpolatedY =
+						previousPosition.y +
+						(currentPosition.y - previousPosition.y) * progress;
+
+					this.renderCursorWithLabel(
+						context,
+						cursor,
+						{ x: interpolatedX, y: interpolatedY },
+						scale,
+					);
+
+					this.previousCursorPositions[cursor.nickname] = {
+						...previousPosition,
+						x: interpolatedX,
+						y: interpolatedY,
+						timestamp: currentTime,
+					};
+					return;
+				}
+
 				const timeSinceLastUpdate =
-					currentTime - (previousPosition.timestamp || 0);
+					currentTime - (cursorHistory[0].timestamp || 0);
+
 				const progress = Math.min(
 					1,
 					timeSinceLastUpdate / TRANSITION_DURATION,
 				);
 
-				const interpolatedX =
-					previousPosition.x +
-					(currentPosition.x - previousPosition.x) * progress;
-				const interpolatedY =
-					previousPosition.y +
-					(currentPosition.y - previousPosition.y) * progress;
+				const interpolatedPoint = catmullRomInterpolate(
+					cursorHistory[0],
+					cursorHistory[1],
+					cursorHistory[2],
+					cursorHistory[3],
+					progress,
+				);
 
 				this.renderCursorWithLabel(
 					context,
 					cursor,
-					{ x: interpolatedX, y: interpolatedY },
+					interpolatedPoint,
 					scale,
 				);
 
 				this.previousCursorPositions[cursor.nickname] = {
-					...previousPosition,
-					x: interpolatedX,
-					y: interpolatedY,
+					...interpolatedPoint,
+					x: interpolatedPoint.x,
+					y: interpolatedPoint.y,
 					timestamp: currentTime,
 				};
-				return;
-			}
-			const timeSinceLastUpdate =
-				currentTime - (cursorHistory[0].timestamp || 0);
-			const progress = Math.min(
-				1,
-				timeSinceLastUpdate / TRANSITION_DURATION,
-			);
+			});
 
-			const interpolatedPoint = catmullRomInterpolate(
-				cursorHistory[0],
-				cursorHistory[1],
-				cursorHistory[2],
-				cursorHistory[3],
-				progress,
-			);
+			ctx.restore();
 
-			this.renderCursorWithLabel(
-				context,
-				cursor,
-				interpolatedPoint,
-				scale,
-			);
+			this.pointerAnimationId = requestAnimationFrame(renderLoop);
+		};
 
-			this.previousCursorPositions[cursor.nickname] = {
-				...currentPosition,
-				x: interpolatedPoint.x,
-				y: interpolatedPoint.y,
-				timestamp: currentTime,
-			};
-		});
+		renderLoop();
+	}
 
-		ctx.restore();
+	private stopPointerRendering(): void {
+		if (this.pointerAnimationId !== null) {
+			cancelAnimationFrame(this.pointerAnimationId);
+			this.pointerAnimationId = null;
+			this.isPointerRendering = false;
+		}
 	}
 
 	private renderCursorWithLabel(
@@ -660,23 +815,20 @@ export class Presence {
 		position: { x: number; y: number },
 		scale: number,
 	): void {
+		if (!this.cursorsEnabled) {
+			return;
+		}
 		const ctx = context.cursorCtx;
 		if (!ctx) {
 			return;
 		}
 
-		ctx.clearRect(
-			position.x - 100 * scale,
-			position.y - 100 * scale,
-			1000 * scale,
-			1000 * scale,
-		);
-
-		const label = cursor.nickname;
+		const anonTranslate = i18n.t("presence.anonymous");
+		const label =
+			cursor.nickname === "Anonymous" ? anonTranslate : cursor.nickname;
 		const textWidth = ctx.measureText(label).width;
 		const labelHeight = 20 * scale;
 
-		// Shadow and label rendering logic remains the same as in previous implementation
 		ctx.shadowColor = "rgba(20, 21, 26, 0.125)";
 		ctx.shadowOffsetX = -4 * scale;
 		ctx.shadowOffsetY = 4 * scale;
@@ -704,7 +856,6 @@ export class Presence {
 		);
 		ctx.fill();
 
-		// Disable shadow for text and image
 		ctx.shadowColor = "transparent";
 		ctx.fillStyle = "#FFFFFF";
 		ctx.fillText(

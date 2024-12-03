@@ -34,11 +34,11 @@ export const catmullRomInterpolate = (
 	return { x: interpolatedX, y: interpolatedY };
 };
 
-export const rgbToRgba = (rgb: string, opacity: number): string | null => {
+export const rgbToRgba = (rgb: string, opacity: number): string => {
 	const match = rgb.match(/^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/);
 	if (!match) {
 		// throw new Error("Invalid RGB format. Expected format: 'rgb(r, g, b)'");
-		return null;
+		return rgb;
 	}
 	const [_, red, green, blue] = match;
 	const clampedOpacity = Math.max(0, Math.min(1, opacity));

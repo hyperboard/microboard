@@ -24,6 +24,7 @@ import { notify } from "View/Ui/Toast";
 import { isMicroboard } from "lib/isMicroboard";
 import i18next from "i18next";
 import toast from "react-hot-toast";
+import { PresenceEventType } from "Board/Presence/Events";
 
 export interface BoardEvent {
 	order: number;
