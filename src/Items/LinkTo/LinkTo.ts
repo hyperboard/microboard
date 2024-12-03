@@ -1,4 +1,4 @@
-import { SubjectOperation } from "../../../SubjectOperation";
+import { SubjectOperation } from "SubjectOperation";
 import { LinkToOperation } from "./LinkToOperation";
 import { Events } from "../../Events";
 import { LinkToCommand } from "./LinkToCommand";
