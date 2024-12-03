@@ -48,6 +48,7 @@ export class Comment implements Geometry {
 	private itemToFollow?: string;
 	readonly subject = new Subject<Comment>();
 	readonly linkTo: LinkTo;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private anchor = new Point(),

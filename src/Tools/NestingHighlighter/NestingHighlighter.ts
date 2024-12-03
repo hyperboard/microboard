@@ -4,7 +4,7 @@ import { ItemWoFrames } from "Board/SpatialIndex/SpacialIndex";
 import { Tool } from "Board/Tools/Tool";
 
 interface HighlightGroup {
-	frame: Frame;
+	frame?: Frame;
 	children: Item[];
 }
 
@@ -37,6 +37,10 @@ export class NestingHighlighter extends Tool {
 		}
 	}
 
+	addSingleItem(item: Item): void {
+		this.toHighlight.push({ children: [item] });
+	}
+
 	/** Remvoe children only, frames would be cleaned when empty */
 	remove(item: Item): void {
 		this.toHighlight.forEach(group => {
@@ -51,10 +55,12 @@ export class NestingHighlighter extends Tool {
 		if (this.toHighlight.length > 0) {
 			this.toHighlight.forEach(group => {
 				// Render frame
-				const frameRect = group.frame.getMbr();
-				frameRect.borderColor = "blue";
-				frameRect.strokeWidth = 1;
-				frameRect.render(context);
+				if (group.frame) {
+					const frameRect = group.frame.getMbr();
+					frameRect.borderColor = "blue";
+					frameRect.strokeWidth = 1;
+					frameRect.render(context);
+				}
 
 				// Render children
 				group.children.forEach(child => {

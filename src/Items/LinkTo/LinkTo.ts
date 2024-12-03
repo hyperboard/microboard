@@ -6,6 +6,7 @@ import { LinkToCommand } from "./LinkToCommand";
 export class LinkTo {
 	readonly subject = new SubjectOperation<LinkTo, LinkToOperation>();
 	link?: string;
+	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
 		private id = "",

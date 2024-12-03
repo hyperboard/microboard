@@ -325,7 +325,11 @@ export class Select extends Tool {
 			}
 			this.downOnItem = hover[hover.length - 1];
 
-			if (this.downOnItem && !this.initialCursorPos) {
+			if (
+				this.downOnItem &&
+				!this.initialCursorPos &&
+				this.downOnItem.itemType !== "Comment"
+			) {
 				const itemCenter = this.downOnItem.getMbr().getCenter();
 				this.initialCursorPos = new Point(
 					this.board.pointer.point.x - itemCenter.x,
@@ -430,14 +434,13 @@ export class Select extends Tool {
 
 		this.updateSnapLines();
 
-		// TODO uncomment
-		// if (this.downOnItem?.itemType === "Comment") {
-		// 	const topItem = this.board.items.getUnderPointer().pop();
-		// 	this.nestingHighlighter.clear();
-		// 	if (topItem) {
-		// 		this.nestingHighlighter.add(topItem);
-		// 	}
-		// }
+		if (this.downOnItem?.itemType === "Comment") {
+			const topItem = this.board.items.getUnderPointer().pop();
+			this.nestingHighlighter.clear();
+			if (topItem) {
+				this.nestingHighlighter.addSingleItem(topItem);
+			}
+		}
 
 		if (this.isDraggingSelection) {
 			const selectionMbr = selection.getMbr();
