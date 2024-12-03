@@ -49,6 +49,7 @@ export class Frame implements Geometry {
 	private board?: Board;
 
 	constructor(
+		private getItemById: (id: string) => Item | undefined,
 		private events?: Events,
 		private id = "",
 		private name = "",
@@ -141,10 +142,14 @@ export class Frame implements Geometry {
 			// && child.itemType !== "Frame"
 			this.getId() !== childId
 		) {
-			if (!this.children.includes(childId)) {
+			const foundItem = this.getItemById(childId);
+			if (!this.children.includes(childId) && foundItem) {
 				this.children.push(childId);
+				foundItem.parent = this.getId();
 				this.updateMbr();
 				this.subject.publish(this);
+			} else if (!foundItem) {
+				console.warn(`Could not find child with id ${childId}`);
 			}
 		}
 	}

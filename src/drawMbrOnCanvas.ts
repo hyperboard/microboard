@@ -223,12 +223,10 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 
 	function highlightNesting(): void {
 		const container = getLastCreatedCanvas();
-		const drawnItemsMbrs = drawnItems?.reduce((acc, item) => {
-			if (item.itemType !== "Frame") {
-				acc.set(item.getId(), item.getMbr());
-			}
+		const drawnItemsMap = drawnItems?.reduce((acc, item) => {
+			acc.set(item.getId(), { item, mbr: item.getMbr() });
 			return acc;
-		}, new Map<string, Mbr>());
+		}, new Map<string, { item: Item; mbr: Mbr }>());
 		if (!container || !drawnItems) {
 			return;
 		}
@@ -266,12 +264,20 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			containerMbr.bottom,
 		);
 		if (frames) {
-			drawnItemsMbrs?.forEach(mbr => {
+			drawnItemsMap?.forEach(({ mbr }) => {
 				mbr.transform(currMatrix);
 			});
 			frames.forEach(frame => {
-				drawnItemsMbrs?.forEach((mbr, key) => {
-					if (frame.handleNesting(mbr) && lastCreatedCanvas) {
+				drawnItemsMap?.forEach(({ mbr, item }, key) => {
+					if (item.itemType === "Frame") {
+						return;
+					}
+					if (
+						lastCreatedCanvas &&
+						(!drawnItemsMap.get(frame.getId()) ||
+							item.parent !== frame.getId()) &&
+						frame.handleNesting(mbr)
+					) {
 						const div = createBorderDivForItem(
 							mbr,
 							lastCreatedCanvas,
@@ -286,7 +292,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		}
 	}
 
-	function removeHighlighted(id: string) {
+	function removeHighlighted(id: string): void {
 		const added = highlightedDivs.get(id);
 		if (added) {
 			added.remove();
