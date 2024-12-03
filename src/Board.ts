@@ -24,6 +24,7 @@ import {
 	Frame,
 	Item,
 	ItemData,
+	ItemsLocalCounter,
 	Matrix,
 	Mbr,
 } from "./Items";
@@ -452,19 +453,25 @@ export class Board {
 			.map(id => {
 				const item = this.items.getById(id);
 				if (item) {
-					item.render(context);
 					if (item.itemType !== "Frame") {
-						this.selection.renderItemMbr(
-							context,
-							item,
-							this.camera.getMatrix().scaleX,
-						);
+						return item;
 					}
+					item.render(context);
 					return item;
 				}
 				return;
 			})
 			.filter(item => !!item);
+		items.forEach(item => {
+			if (item.itemType !== "Frame") {
+				item.render(context);
+				this.selection.renderItemMbr(
+					context,
+					item,
+					this.camera.getMatrix().scaleX,
+				);
+			}
+		});
 
 		return { canvas: container, items };
 	}

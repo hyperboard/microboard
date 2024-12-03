@@ -485,7 +485,7 @@ export class Select extends Tool {
 
 				if (
 					translationKeys.filter(item => !commentsSet.has(item))
-						.length > 1
+						.length > 10
 				) {
 					const selectedMbr = this.board.selection.getMbr()?.copy();
 					const sumMbr = this.canvasDrawer.countSumMbr(translation);
@@ -496,11 +496,14 @@ export class Select extends Tool {
 							undefined,
 							selectedMbr,
 						);
+						this.canvasDrawer.translateCanvasBy(x, y);
 						this.canvasDrawer.highlightNesting();
 						this.debounceUpd.setFalse();
 						this.debounceUpd.setTimeoutUpdate(1000);
 						return false;
 					}
+				} else {
+					selection.transformMany(translation, this.beginTimeStamp);
 				}
 			}
 
