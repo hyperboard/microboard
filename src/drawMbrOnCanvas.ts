@@ -1,5 +1,5 @@
 import { Board } from "./Board";
-import { Matrix, Mbr } from "./Items";
+import { Item, Matrix, Mbr } from "./Items";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 
 export interface CanvasDrawer {
@@ -18,12 +18,15 @@ export interface CanvasDrawer {
 		actualMbr?: Mbr,
 	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
+	highlightNesting: () => void;
 }
 
 export default function createCanvasDrawer(board: Board): CanvasDrawer {
 	let lastCreatedCanvas: HTMLDivElement | undefined = undefined;
 	let lastTranslationKeys: string[] | undefined = undefined;
+	let drawnItems: Item[] | undefined = undefined;
 	let matrix = new Matrix();
+	const highlightedDivs = new Map<string, HTMLDivElement>();
 
 	function getLastCreatedCanvas(): HTMLDivElement | undefined {
 		return lastCreatedCanvas;
@@ -111,6 +114,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 
 		board.selection.transformationRenderBlock = undefined;
 		board.selection.subject.publish(board.selection);
+		drawnItems = undefined;
 		matrix = new Matrix();
 	}
 
@@ -131,9 +135,14 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 				scaleCanvasBy(resizingMatrix.scaleX, resizingMatrix.scaleY);
 			}
 		} else {
-			const cnvs = board.drawMbrOnCanvas(sumMbr, translation, actualMbr);
-			if (cnvs) {
-				cnvs.id = "selection-canvas";
+			const canvas = board.drawMbrOnCanvas(
+				sumMbr,
+				translation,
+				actualMbr,
+			);
+			if (canvas) {
+				const { canvas: cnvs, items } = canvas;
+				drawnItems = items;
 				cnvs.style.position = "absolute";
 				cnvs.style.zIndex = "50";
 				cnvs.style.left = `${
@@ -168,10 +177,120 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 					mbr = item.getMbr();
 				} else {
 					mbr.combine(item.getMbr());
+					if (item.itemType === "Frame") {
+						mbr.combine(item.getRichText().getMbr());
+					}
 				}
 			}
 			return mbr;
 		}, undefined);
+	}
+
+	function createBorderDivForItem(
+		itemMbr: Mbr,
+		container: HTMLDivElement,
+	): HTMLDivElement {
+		const containerLeft = parseFloat(container.style.left || "0");
+		const containerTop = parseFloat(container.style.top || "0");
+		const currMatrix = getMatrix();
+		const cameraMatrix = board.camera.getMatrix();
+		// TODO fix scaling
+		const leftOffset =
+			((itemMbr.left - board.camera.getMbr().left) * cameraMatrix.scaleX -
+				containerLeft) /
+			currMatrix.scaleX;
+		const topOffset =
+			((itemMbr.top - board.camera.getMbr().top) * cameraMatrix.scaleY -
+				containerTop) /
+			currMatrix.scaleY;
+		const width = itemMbr.getWidth() * board.camera.getMatrix().scaleX;
+		const height = itemMbr.getHeight() * board.camera.getMatrix().scaleY;
+
+		const borderDiv = document.createElement("div");
+		borderDiv.style.position = "absolute";
+		borderDiv.style.backgroundColor = "rgb(128, 128, 128, 0.5)";
+		borderDiv.style.boxSizing = "border-box";
+		borderDiv.style.left = `${leftOffset}px`;
+		borderDiv.style.top = `${topOffset}px`;
+		borderDiv.style.width = `${width}px`;
+		borderDiv.style.height = `${height}px`;
+		borderDiv.style.transform = `scale(${1 / currMatrix.scaleX}, ${1 / currMatrix.scaleY})`;
+		borderDiv.style.pointerEvents = "none";
+
+		container.appendChild(borderDiv);
+		return borderDiv;
+	}
+
+	function highlightNesting(): void {
+		const container = getLastCreatedCanvas();
+		const drawnItemsMbrs = drawnItems?.reduce((acc, item) => {
+			if (item.itemType !== "Frame") {
+				acc.set(item.getId(), item.getMbr());
+			}
+			return acc;
+		}, new Map<string, Mbr>());
+		if (!container || !drawnItems) {
+			return;
+		}
+		const left = parseFloat(container.style.left || "0");
+		const top = parseFloat(container.style.top || "0");
+		const width = parseFloat(container.style.width || "0");
+		const height = parseFloat(container.style.height || "0");
+
+		const currMatrix = getMatrix();
+		const cameraMbr = board.camera.getMbr();
+		const cameraMatrix = board.camera.getMatrix();
+		const realLeft = left / cameraMatrix.scaleX + cameraMbr.left;
+		const realTop = top / cameraMatrix.scaleY + cameraMbr.top;
+		const transform = container.style.transform;
+		let scaleX = 1,
+			scaleY = 1;
+		if (transform) {
+			const match = transform.match(/scale\(([^,]+),\s*([^)]+)\)/);
+			if (match) {
+				scaleX = parseFloat(match[1]);
+				scaleY = parseFloat(match[2]);
+			}
+		}
+
+		const adjustedWidth = (width / cameraMatrix.scaleX) * scaleX;
+		const adjustedHeight = (height / cameraMatrix.scaleY) * scaleY;
+		const realRight = realLeft + adjustedWidth;
+		const realBottom = realTop + adjustedHeight;
+
+		const containerMbr = new Mbr(realLeft, realTop, realRight, realBottom);
+		const frames = board.items.getFramesEnclosedOrCrossed(
+			containerMbr.left,
+			containerMbr.top,
+			containerMbr.right,
+			containerMbr.bottom,
+		);
+		if (frames) {
+			drawnItemsMbrs?.forEach(mbr => {
+				mbr.transform(currMatrix);
+			});
+			frames.forEach(frame => {
+				drawnItemsMbrs?.forEach((mbr, key) => {
+					if (frame.handleNesting(mbr) && lastCreatedCanvas) {
+						const div = createBorderDivForItem(
+							mbr,
+							lastCreatedCanvas,
+						);
+						removeHighlighted(key);
+						highlightedDivs.set(key, div);
+					} else {
+						removeHighlighted(key);
+					}
+				});
+			});
+		}
+	}
+
+	function removeHighlighted(id: string) {
+		const added = highlightedDivs.get(id);
+		if (added) {
+			added.remove();
+		}
 	}
 
 	return {
@@ -185,5 +304,6 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		clearCanvasAndKeys,
 		updateCanvasAndKeys,
 		countSumMbr,
+		highlightNesting,
 	};
 }

@@ -457,23 +457,21 @@ export class Select extends Tool {
 
 			if (isCanvasOk) {
 				this.canvasDrawer.translateCanvasBy(x, y);
+				this.canvasDrawer.highlightNesting();
 				return false;
 			} else if (isCanvasNeedsUpdate) {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const { translateX, translateY } =
 					this.canvasDrawer.getMatrix();
-				const translation =
-					this.board.selection.handleManyItemsTranslate(
-						translateX,
-						translateY,
-					);
-				this.board.selection.transformMany(
-					translation,
-					this.beginTimeStamp,
+				const translation = selection.handleManyItemsTranslate(
+					translateX,
+					translateY,
 				);
+				this.canvasDrawer.highlightNesting();
 				selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.debounceUpd.setFalse();
+				return false;
 			} else {
 				const translation = selection.handleManyItemsTranslate(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
@@ -498,8 +496,10 @@ export class Select extends Tool {
 							undefined,
 							selectedMbr,
 						);
+						this.canvasDrawer.highlightNesting();
 						this.debounceUpd.setFalse();
 						this.debounceUpd.setTimeoutUpdate(1000);
+						return false;
 					}
 				}
 			}

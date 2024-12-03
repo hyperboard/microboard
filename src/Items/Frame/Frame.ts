@@ -175,22 +175,24 @@ export class Frame implements Geometry {
 	 * false - if outside of the frame
 	 */
 	handleNesting(
-		item: Item,
+		item: Item | Mbr,
 		options?: {
 			onlyForOut?: boolean;
 			cancelIfChild?: boolean;
 		},
 	): boolean {
+		const isItem = "itemType" in item;
+		const itemMbr = isItem ? item.getMbr() : item;
 		if (item instanceof Frame) {
 			return false;
 		}
-		if (options?.cancelIfChild && item.parent !== "Board") {
+		if (options?.cancelIfChild && isItem && item.parent !== "Board") {
 			return false;
 		}
 
 		const frameMbr = this.getMbr().copy();
 		if (item.isEnclosedOrCrossedBy(frameMbr)) {
-			if (frameMbr.isInside(item.getMbr().getCenter())) {
+			if (frameMbr.isInside(itemMbr.getCenter())) {
 				if (!options || !options.onlyForOut) {
 					return true;
 				}

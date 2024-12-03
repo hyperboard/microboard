@@ -724,7 +724,6 @@ export class Selection {
 					selectedMbr?.right,
 					selectedMbr?.bottom,
 				)
-				.filter(frame => !selectedMap[frame.getId()])
 				.forEach(frame => {
 					selected.forEach(selectedItem => {
 						if (frame.handleNesting(selectedItem)) {

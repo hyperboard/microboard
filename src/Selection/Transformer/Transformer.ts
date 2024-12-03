@@ -374,6 +374,7 @@ export class Transformer extends Tool {
 					resize.matrix.scaleX,
 					resize.matrix.scaleY,
 				);
+				this.canvasDrawer.highlightNesting();
 				return false;
 			}
 			if (
@@ -386,6 +387,7 @@ export class Transformer extends Tool {
 					isWidth,
 					isHeight,
 				);
+				this.canvasDrawer.highlightNesting();
 				this.selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
@@ -397,12 +399,13 @@ export class Transformer extends Tool {
 					isHeight,
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
-				if (Object.keys(translation).length > 50) {
+				if (Object.keys(translation).length > 10) {
 					this.canvasDrawer.updateCanvasAndKeys(
 						resize.mbr,
 						translation,
 						resize.matrix,
 					);
+					this.canvasDrawer.highlightNesting();
 					this.debounceUpd.setFalse();
 					this.debounceUpd.setTimeoutUpdate(1000);
 				}
@@ -493,7 +496,7 @@ export class Transformer extends Tool {
 		isWidth: boolean,
 		isHeight: boolean,
 		itemsToResize?: Item[],
-	): TransformManyItems | boolean {
+	): TransformManyItems {
 		const { matrix, mbr } = resize;
 		const translation: TransformManyItems = {};
 		const items = itemsToResize

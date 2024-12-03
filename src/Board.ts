@@ -341,7 +341,7 @@ export class Board {
 		mbr: Mbr,
 		translation: TransformManyItems,
 		actualMbr?: Mbr,
-	): HTMLDivElement | undefined {
+	): { canvas: HTMLDivElement; items: Item[] } | undefined {
 		const canvas = document.createElement("canvas");
 		const width = mbr.getWidth() + 2;
 		const height = mbr.getHeight() + 2;
@@ -349,6 +349,7 @@ export class Board {
 		canvas.height = height * this.camera.getMatrix().scaleY;
 
 		const container = document.createElement("div");
+		container.id = "selection-canvas";
 		container.style.position = "relative";
 		container.style.width = `${canvas.width}px`;
 		container.style.height = `${canvas.height}px`;
@@ -447,21 +448,25 @@ export class Board {
 		);
 		context.matrix.applyToContext(context.ctx);
 
-		Object.keys(translation).forEach(id => {
-			const item = this.items.getById(id);
-			if (item) {
-				item.render(context);
-				if (item.itemType !== "Frame") {
-					this.selection.renderItemMbr(
-						context,
-						item,
-						this.camera.getMatrix().scaleX,
-					);
+		const items = Object.keys(translation)
+			.map(id => {
+				const item = this.items.getById(id);
+				if (item) {
+					item.render(context);
+					if (item.itemType !== "Frame") {
+						this.selection.renderItemMbr(
+							context,
+							item,
+							this.camera.getMatrix().scaleX,
+						);
+					}
+					return item;
 				}
-			}
-		});
+				return;
+			})
+			.filter(item => !!item);
 
-		return container;
+		return { canvas: container, items };
 	}
 
 	createItem(id: string, data: ItemData): Item {
