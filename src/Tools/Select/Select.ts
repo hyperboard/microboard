@@ -463,7 +463,7 @@ export class Select extends Tool {
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const { translateX, translateY } =
 					this.canvasDrawer.getMatrix();
-				const translation = selection.handleManyItemsTranslate(
+				const translation = selection.getManyItemsTranslation(
 					translateX,
 					translateY,
 				);
@@ -473,7 +473,7 @@ export class Select extends Tool {
 				this.debounceUpd.setFalse();
 				return false;
 			} else {
-				const translation = selection.handleManyItemsTranslate(x, y);
+				const translation = selection.getManyItemsTranslation(x, y);
 				selection.transformMany(translation, this.beginTimeStamp);
 
 				const translationKeys = Object.keys(translation);
@@ -512,7 +512,7 @@ export class Select extends Tool {
 		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
-			const translation = this.board.selection.handleManyItemsTranslate(
+			const translation = this.board.selection.getManyItemsTranslation(
 				x,
 				y,
 				draggingItem,
@@ -800,7 +800,7 @@ export class Select extends Tool {
 		});
 		// this.board.selection.removeAll();
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
-			const translation = this.board.selection.handleManyItemsTranslate(
+			const translation = this.board.selection.getManyItemsTranslation(
 				this.canvasDrawer.getMatrix().translateX,
 				this.canvasDrawer.getMatrix().translateY,
 			);

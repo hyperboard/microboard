@@ -836,7 +836,7 @@ export class Selection {
 	}
 
 	/** transforms selected items with frames' children */
-	handleManyItemsTranslate(
+	getManyItemsTranslation(
 		x: number,
 		y: number,
 		unselectedItem?: Item,

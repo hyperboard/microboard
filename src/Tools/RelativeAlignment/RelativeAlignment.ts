@@ -527,7 +527,7 @@ export class AlignmentHelper {
 			return;
 		}
 		if (item.itemType === "Frame") {
-			const translation = this.board.selection.handleManyItemsTranslate(
+			const translation = this.board.selection.getManyItemsTranslation(
 				x,
 				y,
 			);
