@@ -474,7 +474,6 @@ export class Select extends Tool {
 				return false;
 			} else {
 				const translation = selection.getManyItemsTranslation(x, y);
-				selection.transformMany(translation, this.beginTimeStamp);
 
 				const translationKeys = Object.keys(translation);
 				const commentsSet = new Set(
