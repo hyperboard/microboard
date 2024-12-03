@@ -1,7 +1,7 @@
 import { sha256 } from "shared/sha256";
 import { ImageConstructorData } from "./Image";
 
-const storageURL = `${window.location.origin}/api/v1/media`;
+export const storageURL = `${window.location.origin}/api/v1/media`;
 
 export const uploadToTheStorage = async (
 	hash: string,
