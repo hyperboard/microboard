@@ -550,6 +550,10 @@ export class RichText extends Mbr implements Geometry {
 		return this;
 	}
 
+	shouldShrink(): boolean {
+		return this.shrinkWidth;
+	}
+
 	setBoard(board: Board): void {
 		this.board = board;
 	}
