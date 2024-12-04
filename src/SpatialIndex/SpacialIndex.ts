@@ -469,7 +469,7 @@ export class Items {
 	getUnderPointer(size = 0): Item[] {
 		const { x, y } = this.pointer.point;
 		const unmofiedSize = size;
-		size = size / this.view.getScale();
+		size = 16 / this.view.getScale();
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
 			y - size,
@@ -482,12 +482,7 @@ export class Items {
 			return groups;
 		}
 
-		let enclosed = tolerated.some(
-			item =>
-				item instanceof Connector ||
-				item instanceof Frame ||
-				item instanceof Drawing,
-		)
+		let enclosed = tolerated.some(item => item instanceof Connector)
 			? tolerated
 			: this.index.getEnclosedOrCrossed(x, y, x, y);
 
@@ -528,15 +523,15 @@ export class Items {
 
 		if (nearest) {
 			return [nearest];
-		} else {
-			const frames = this.index
-				.listFrames()
-				.filter(frame => frame.isTextUnderPoint(this.pointer.point));
-			if (frames.length === 0 && unmofiedSize !== 16) {
-				return this.getUnderPointer(16);
-			}
-			return frames;
 		}
+
+		const frames = this.index
+			.listFrames()
+			.filter(frame => frame.isTextUnderPoint(this.pointer.point));
+		if (frames.length === 0 && unmofiedSize !== 16) {
+			return this.getUnderPointer(16);
+		}
+		return frames;
 	}
 
 	getNearPointer(
