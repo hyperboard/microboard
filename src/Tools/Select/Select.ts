@@ -336,17 +336,18 @@ export class Select extends Tool {
 					this.board.pointer.point.y - itemCenter.y,
 				);
 			}
+
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
-			// TODO API Dirty Check
-			// if (
-			// 	this.downOnItem.itemType === "Connector" &&
-			// 	!this.board.keyboard.isCtrl
-			// ) {
-			// 	this.board.selection.editUnderPointer();
-			// 	this.board.tools.publish();
-			// 	this.clear();
-			// 	return this.board.selection.tool.getTool().leftButtonDown();
-			// }
+			if (
+				this.downOnItem.itemType === "Connector" &&
+				this.downOnItem.isConnectedOnePoint() &&
+				!this.board.keyboard.isCtrl
+			) {
+				this.board.selection.editUnderPointer();
+				this.board.tools.publish();
+				this.clear();
+				return this.board.selection.tool.leftButtonDown();
+			}
 			return false;
 		}
 		return false;

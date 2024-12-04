@@ -13,7 +13,7 @@ import {
 } from "View/Items/Connector";
 
 const config = {
-	anchorDistance: 5,
+	anchorDistance: 10,
 };
 
 export class ConnectorTransformer extends Tool {
@@ -58,6 +58,7 @@ export class ConnectorTransformer extends Tool {
 			this.statePointer = "end";
 			this.state = "grabbing";
 		}
+		
 		this.beginTimeStamp = Date.now();
 		return this.state !== "default";
 	}
@@ -84,9 +85,10 @@ export class ConnectorTransformer extends Tool {
 		if (this.state === "grabbing") {
 			this.updateConnectorPoints();
 			pointer.setCursor("grabbing");
-		} else if (this.isHoveringAnchor(this.startPointerAnchor)) {
-			pointer.setCursor("grab");
-		} else if (this.isHoveringAnchor(this.endPointerAnchor)) {
+		} else if (
+			this.isHoveringAnchor(this.startPointerAnchor) ||
+			this.isHoveringAnchor(this.endPointerAnchor)
+		) {
 			pointer.setCursor("grab");
 		} else {
 			pointer.setCursor("default");
@@ -131,7 +133,7 @@ export class ConnectorTransformer extends Tool {
 	}
 
 	private isHoveringAnchor(anchor: Anchor | null): boolean {
-		if (!anchor) {
+		if (!anchor || !this.connector) {
 			return false;
 		}
 		const camera = this.board.camera;

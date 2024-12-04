@@ -594,6 +594,13 @@ export class Connector {
 		);
 	}
 
+	isConnectedOnePoint(): boolean {
+		return (
+			this.startPoint.pointType !== "Board" ||
+			this.endPoint.pointType !== "Board"
+		);
+	}
+
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;
