@@ -36,9 +36,9 @@ function getFixedPoint(
 }
 export class ConnectorSnap {
 	distance = {
-		neighbor: 0.5,
-		border: 0.5,
-		anchor: 0.5,
+		neighbor: 50,
+		border: 10,
+		anchor: 15,
 	};
 
 	maxNeighbors = 10;
@@ -87,17 +87,10 @@ export class ConnectorSnap {
 
 	pointerMove(): void {
 		this.setHover();
-		const hover = this.hover.item;
 		const nearest = this.getNearest();
 
 		if (this.isNearBorder(nearest)) {
 			this.snap.item = nearest;
-		} else if (
-			hover &&
-			hover !== this.connector &&
-			hover.itemType !== "Frame"
-		) {
-			this.snap.item = hover;
 		} else {
 			this.snap.item = null;
 		}
@@ -154,6 +147,7 @@ export class ConnectorSnap {
 	}
 
 	getNearest(): Item | null {
+
 		const neighbors = this.board.items.getNearPointer(
 			this.distance.neighbor / this.board.camera.getScale(),
 			this.maxNeighbors,
