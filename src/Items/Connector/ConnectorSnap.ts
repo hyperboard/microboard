@@ -36,9 +36,9 @@ function getFixedPoint(
 }
 export class ConnectorSnap {
 	distance = {
-		neighbor: 1,
-		border: 1,
-		anchor: 1,
+		neighbor: 0.5,
+		border: 0.5,
+		anchor: 0.5,
 	};
 
 	maxNeighbors = 10;
@@ -154,15 +154,10 @@ export class ConnectorSnap {
 	}
 
 	getNearest(): Item | null {
-		console.log('this.distance.neighbor', this.distance.neighbor)
-		
 		const neighbors = this.board.items.getNearPointer(
 			this.distance.neighbor / this.board.camera.getScale(),
 			this.maxNeighbors,
 		);
-
-		console.log('neighbors', neighbors)
-
 
 		const pointer = this.board.pointer.point;
 
@@ -190,7 +185,6 @@ export class ConnectorSnap {
 	}
 
 	isNearBorder(item: Item | null): boolean {
-		console.log('isNearBorder')
 		if (!item) {
 			return false;
 		}
