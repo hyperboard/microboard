@@ -108,6 +108,7 @@ export function createEvents(
 		sequenceNumber: number;
 		lastSentTime: number;
 	} | null = null;
+	let firstSentTime: number | null = null;
 	const PUBLISH_INTERVAL = 100; // 100 мс (10 раз в секунду)
 	const RESEND_INTERVAL = 1000; // 1 секунда
 	let publishIntervalTimer: NodeJS.Timeout | null = null;
@@ -379,32 +380,40 @@ export function createEvents(
 	}
 
 	function tryResendEvent(): void {
+		const date = Date.now();
 		if (
 			pendingEvent &&
-			Date.now() - pendingEvent.lastSentTime >= RESEND_INTERVAL
+			date - pendingEvent.lastSentTime >= RESEND_INTERVAL
 		) {
-			if (!notificationId) {
-				window.addEventListener("beforeunload", beforeUnloadListener);
-				if (isMicroboard()) {
-					notificationId = notify({
-						header: i18next.t(
-							"notifications.restoringConnectionHeader",
-						),
-						body: i18next.t(
-							"notifications.restoringConnectionBody",
-						),
-						variant: "warning",
-						unclosable: true,
-						duration: Infinity,
-					});
-				} else {
-					notificationId = notify({
-						header: i18next.t("notifications.connectionLostHeader"),
-						variant: "black",
-						duration: Infinity,
-						unclosable: true,
-						position: "bottom-center",
-					});
+			if (firstSentTime && date - firstSentTime >= RESEND_INTERVAL * 5) {
+				if (!notificationId) {
+					window.addEventListener(
+						"beforeunload",
+						beforeUnloadListener,
+					);
+					if (isMicroboard()) {
+						notificationId = notify({
+							header: i18next.t(
+								"notifications.restoringConnectionHeader",
+							),
+							body: i18next.t(
+								"notifications.restoringConnectionBody",
+							),
+							variant: "warning",
+							unclosable: true,
+							duration: Infinity,
+						});
+					} else {
+						notificationId = notify({
+							header: i18next.t(
+								"notifications.connectionLostHeader",
+							),
+							variant: "black",
+							duration: Infinity,
+							unclosable: true,
+							position: "bottom-center",
+						});
+					}
 				}
 			}
 
@@ -433,6 +442,7 @@ export function createEvents(
 			pendingEvent.event.order = msg.order;
 			log.confirmEvent(pendingEvent.event);
 			pendingEvent = null;
+			firstSentTime = null;
 		}
 	}
 	messageRouter.addHandler<ConfirmationMsg>(
@@ -454,11 +464,15 @@ export function createEvents(
 		};
 		connection.publishBoardEvent(boardId, toSend, sequenceNumber);
 
+		const date = Date.now();
 		pendingEvent = {
 			event: toSend,
 			sequenceNumber,
-			lastSentTime: Date.now(),
+			lastSentTime: date,
 		};
+		if (!firstSentTime) {
+			firstSentTime = date;
+		}
 	}
 
 	function sendPresenceEvent(event: PresenceEventType): void {
