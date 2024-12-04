@@ -255,7 +255,7 @@ export class Transformer extends Tool {
 			single instanceof Frame
 		) {
 			let translation: TransformManyItems | boolean = {};
-			if (this.isShiftPressed) {
+			if (this.isShiftPressed && single.itemType !== "Sticker") {
 				const { matrix, mbr: resizedMbr } = getProportionalResize(
 					this.resizeType,
 					this.board.pointer.point,
@@ -346,24 +346,29 @@ export class Transformer extends Tool {
 				item =>
 					item.itemType === "Sticker" || item.itemType === "RichText",
 			);
+
 			if (containsStickerOrText && (isWidth || isHeight)) {
 				return false;
 			}
 
-			const resize =
-				containsStickerOrText || this.isShiftPressed
-					? getProportionalResize(
-							this.resizeType,
-							this.board.pointer.point,
-							mbr,
-							this.oppositePoint,
-						)
-					: getResize(
-							this.resizeType,
-							this.board.pointer.point,
-							mbr,
-							this.oppositePoint,
-						);
+			const shouldBeProportionalResize =
+				containsStickerOrText ||
+				this.isShiftPressed ||
+				(!isWidth && !isHeight);
+
+			const resize = shouldBeProportionalResize
+				? getProportionalResize(
+						this.resizeType,
+						this.board.pointer.point,
+						mbr,
+						this.oppositePoint,
+					)
+				: getResize(
+						this.resizeType,
+						this.board.pointer.point,
+						mbr,
+						this.oppositePoint,
+					);
 
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
@@ -544,40 +549,6 @@ export class Transformer extends Tool {
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
-					};
-				}
-			} else if (item instanceof Frame) {
-				const initMbr = Frames[item.getFrameType()].path
-					.copy()
-					.getMbr();
-
-				if (
-					itemMbr.right - itemMbr.left < initMbr.getWidth() &&
-					matrix.scaleX < 1
-				) {
-					matrix.scaleX = 1;
-				}
-
-				if (
-					itemMbr.bottom - itemMbr.top < initMbr.getWidth() &&
-					matrix.scaleY < 1
-				) {
-					matrix.scaleY = 1;
-				}
-
-				const proportional =
-					this.clickedOn === "leftBottom" ||
-					this.clickedOn === "leftTop" ||
-					this.clickedOn === "rightBottom" ||
-					this.clickedOn === "rightTop";
-
-				if (item.getCanChangeRatio() || proportional) {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: matrix.scaleX, y: matrix.scaleY },
 					};
 				}
 			} else {

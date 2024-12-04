@@ -244,6 +244,71 @@ export function getProportionalResize(
 			}
 			break;
 		}
+		case "top":
+		case "bottom": {
+			if (resizeType === "top") {
+				if (x < opposite.x && y < opposite.y) {
+					newMbr = new Mbr(
+						opposite.x,
+						opposite.y - newHeight,
+						opposite.x + newWidth,
+						opposite.y,
+					);
+				} else if (x > opposite.x && y > opposite.y) {
+					newMbr = new Mbr(
+						opposite.x,
+						opposite.y,
+						opposite.x + newWidth,
+						opposite.y + newHeight,
+					);
+				} else if (x > opposite.x) {
+					newMbr = new Mbr(
+						opposite.x,
+						opposite.y - newHeight,
+						opposite.x + newWidth,
+						opposite.y,
+					);
+				} else {
+					newMbr = new Mbr(
+						opposite.x - newWidth,
+						opposite.y - newHeight,
+						opposite.x,
+						opposite.y,
+					);
+				}
+			} else {
+				if (x > opposite.x && y < opposite.y) {
+					newMbr = new Mbr(
+						opposite.x,
+						opposite.y - newHeight,
+						opposite.x + newWidth,
+						opposite.y,
+					);
+				} else if (x < opposite.x && y > opposite.y) {
+					newMbr = new Mbr(
+						opposite.x - newWidth,
+						opposite.y,
+						opposite.x,
+						opposite.y + newHeight,
+					);
+				} else if (x < opposite.x) {
+					newMbr = new Mbr(
+						opposite.x - newWidth,
+						opposite.y - newHeight,
+						opposite.x,
+						opposite.y,
+					);
+				} else {
+					newMbr = new Mbr(
+						opposite.x,
+						opposite.y,
+						opposite.x + newWidth,
+						opposite.y + newHeight,
+					);
+				}
+			}
+			break;
+		}
 		default: {
 			newMbr = resizedMbr;
 			newWidth = notLessThanOne(newMbr.getWidth());
