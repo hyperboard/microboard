@@ -312,24 +312,27 @@ export class Board {
 
 	/** Nest item to the frame which is seen on the screen and covers the most volume of the item
 	 */
-	handleNesting(item: Item): void {
-		const itemCenter = item.getMbr().getCenter();
-		const frame = this.items
-			.getFramesInView()
-			.filter(frame => frame.handleNesting(item))
-			.reduce((acc: Frame | undefined, frame) => {
-				if (
-					!acc ||
-					frame.getDistanceToPoint(itemCenter) >
-						acc.getDistanceToPoint(itemCenter)
-				) {
-					acc = frame;
-				}
-				return acc;
-			}, undefined);
-		if (frame) {
-			frame.emitAddChild(item);
-		}
+	handleNesting(items: Item | Item[]): void {
+		const arrayed = Array.isArray(items) ? items : [items];
+		arrayed.forEach(item => {
+			const itemCenter = item.getMbr().getCenter();
+			const frame = this.items
+				.getFramesInView()
+				.filter(frame => frame.handleNesting(item))
+				.reduce((acc: Frame | undefined, frame) => {
+					if (
+						!acc ||
+						frame.getDistanceToPoint(itemCenter) >
+							acc.getDistanceToPoint(itemCenter)
+					) {
+						acc = frame;
+					}
+					return acc;
+				}, undefined);
+			if (frame) {
+				frame.emitAddChild(item);
+			}
+		});
 	}
 
 	/**
@@ -950,6 +953,7 @@ export class Board {
 		const items = Object.keys(newMap)
 			.map(id => this.items.getById(id))
 			.filter(item => typeof item !== "undefined");
+		this.handleNesting(items);
 		this.selection.removeAll();
 		this.selection.add(items);
 		this.selection.setContext("EditUnderPointer");
@@ -1088,6 +1092,7 @@ export class Board {
 		const items = Object.keys(newMap)
 			.map(id => this.items.getById(id))
 			.filter(item => typeof item !== "undefined");
+		this.handleNesting(items);
 		this.selection.removeAll();
 		this.selection.add(items);
 		this.selection.setContext("EditUnderPointer");
