@@ -430,9 +430,7 @@ export class EditorContainer {
 			return [];
 		}
 		this.recordMethodOps("setSelectionFontColor");
-		if (marks.fontColor === format) {
-			Editor.removeMark(editor, "fontColor");
-		} else {
+		if (marks.fontColor !== format) {
 			Editor.addMark(editor, "fontColor", format);
 		}
 
