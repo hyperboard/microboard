@@ -1,4 +1,3 @@
-import { validateItemsMap } from "Board/Validators";
 import { findCommonStrings } from "lib/findCommonStrings";
 import {
 	BaseEditor,
@@ -26,7 +25,7 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { Node } from "slate";
-import { Text } from "slate";
+// import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
 export class EditorContainer {
 	readonly editor: BaseEditor & ReactEditor & HistoryEditor;
@@ -794,9 +793,64 @@ export class EditorContainer {
 	}
 
 	insertText(text: string): void {
-		const { editor } = this;
-		Transforms.insertText(editor, text);
+		this.insertingText = true;
+		this.insertCopiedText(text);
+		this.insertingText = false;
+		this.emitWithoutApplying({
+			class: "RichText",
+			method: "edit",
+			item: [this.id],
+			selection: JSON.parse(JSON.stringify(this.editor.selection)),
+			ops: this.recordedInsertionOps,
+		});
+		this.recordedInsertionOps = [];
 	}
+
+	insertCopiedText(text: string): boolean {
+		const lines = text.split(/\r\n|\r|\n/);
+		let split = false;
+
+		for (const line of lines) {
+			if (split) {
+				Transforms.splitNodes(this.editor, { always: true });
+			}
+
+			this.editor.insertText(line);
+			split = true;
+		}
+		return true;
+	}
+
+	insertData = (data: DataTransfer) => {
+		if (!this.editor.insertFragmentData(data)) {
+			this.editor.insertTextData(data);
+		}
+	};
+
+	insertFragmentData = (data: DataTransfer): boolean => {
+		/**
+		 * Checking copied fragment from application/x-slate-fragment or data-slate-fragment
+		 */
+		const fragment = data.getData("application/x-slate-fragment");
+		// || getSlateFragmentAttribute(data);
+
+		if (fragment) {
+			const decoded = decodeURIComponent(window.atob(fragment));
+			const parsed = JSON.parse(decoded) as Node[];
+			e.insertFragment(parsed);
+			return true;
+		}
+		return false;
+	};
+
+	insertTextData = (data: DataTransfer): boolean => {
+		const text = data.getData("text/plain");
+
+		if (text) {
+			return this.insertCopiedText(text);
+		}
+		return false;
+	};
 
 	hasTextInSelection(): boolean {
 		const { selection } = this.editor;
