@@ -551,6 +551,40 @@ export class Transformer extends Tool {
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
 					};
 				}
+			} else if (item instanceof Frame) {
+				const initMbr = Frames[item.getFrameType()].path
+					.copy()
+					.getMbr();
+
+				if (
+					itemMbr.right - itemMbr.left < initMbr.getWidth() &&
+					matrix.scaleX < 1
+				) {
+					matrix.scaleX = 1;
+				}
+
+				if (
+					itemMbr.bottom - itemMbr.top < initMbr.getWidth() &&
+					matrix.scaleY < 1
+				) {
+					matrix.scaleY = 1;
+				}
+
+				const proportional =
+					this.clickedOn === "leftBottom" ||
+					this.clickedOn === "leftTop" ||
+					this.clickedOn === "rightBottom" ||
+					this.clickedOn === "rightTop";
+
+				if (item.getCanChangeRatio() || proportional) {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: matrix.scaleX, y: matrix.scaleY },
+					};
+				}
 			} else {
 				if (item instanceof Sticker && (isWidth || isHeight)) {
 					translation[item.getId()] = {
