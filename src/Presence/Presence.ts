@@ -26,10 +26,15 @@ import {
 import { PRESENCE_COLORS } from "./consts";
 
 const SECOND = 1000;
-const CURSOR_FPS = 5;
+const CURSOR_FPS = 3;
+
 export const PRESENCE_CURSOR_THROTTLE = SECOND / CURSOR_FPS;
-export const PRESENCE_CLEANUP_USER_TIMER = 180_000;
+export const CURSORS_ANIMATION_DURATION = Math.ceil(
+	(PRESENCE_CURSOR_THROTTLE / 100) * 85,
+);
+export const PRESENCE_CLEANUP_USER_TIMER = 180_000; // Matching Redis ttl
 export const PRESENCE_CLEANUP_IDLE_TIMER = 60_000;
+export const CURSORS_IDLE_CLEANUP_DELAY = 60_000;
 
 interface Cursor {
 	x: number;
@@ -42,7 +47,9 @@ export interface PresenceUser {
 	color: string; // rgb
 	colorChangeable: boolean;
 	lastActivity: number;
+	lastPointerActivity: number;
 	lastPing: number;
+	boardId: string;
 	selection: string[];
 	pointer: Cursor;
 	avatar: string | null;
@@ -82,6 +89,16 @@ export class Presence {
 			timestamp?: number;
 		}[];
 	} = {};
+	private previousCursorPositions: {
+		[nickname: string]: {
+			x: number;
+			y: number;
+			timestamp: number;
+		};
+	} = {};
+
+	private isPointerRendering = false;
+	private pointerAnimationId: number | null = null;
 
 	constructor(board: Board) {
 		this.board = board;
@@ -104,6 +121,14 @@ export class Presence {
 				timestamp: Date.now(),
 			});
 		});
+	}
+
+	clear(): void {
+		this.users = new Map();
+		this.followers = [];
+		this.trackedUser = null;
+		this.cursorPositionHistory = {};
+		this.previousCursorPositions = {};
 	}
 
 	throttledEmit = throttleWithDebounce(this.emit.bind(this), 500, 500);
@@ -170,25 +195,28 @@ export class Presence {
 	}
 
 	join(msg: UserJoinMsg): void {
+		// this.clear();
 		Object.entries(msg.snapshots).map(([userId, snapshot]) => {
 			this.users.set(userId, snapshot);
 		});
-		// for (const event of msg.events) {
-		// 	this.processMessage(event);
-		// }
+		this.subject.publish(this);
 	}
 
-	getUsers(excludeSelf = false): PresenceUser[] {
+	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
 		if (excludeSelf) {
 			const currentUser = localStorage.getItem(`currentUser`);
 			if (!currentUser) {
-				return Array.from(this.users.values());
+				return Array.from(this.users.values()).filter(
+					user => user.boardId === boardId,
+				);
 			}
 			return Array.from(this.users.values()).filter(
-				user => user.userId !== currentUser,
+				user => user.userId !== currentUser && user.boardId === boardId,
 			);
 		} else {
-			return Array.from(this.users.values());
+			return Array.from(this.users.values()).filter(
+				user => user.boardId === boardId,
+			);
 		}
 	}
 
@@ -222,6 +250,8 @@ export class Presence {
 				nickname: event.nickname || "Anonymous",
 				camera: null,
 				avatar: null,
+				boardId: this.board.getBoardId(),
+				lastPointerActivity: eventData.timestamp,
 			});
 			user = this.users.get(userId.toString())!;
 		}
@@ -285,6 +315,25 @@ export class Presence {
 		this.subject.publish(this);
 	}
 
+	private updateUserMetaInfo(
+		msg: PresenceEventMsg,
+		userCopy: PresenceUser,
+		shouldUpdateActivity = true,
+	): void {
+		if (msg.avatar) {
+			userCopy.avatar = msg.avatar;
+		}
+
+		if (msg.color) {
+			userCopy.color = msg.color;
+		}
+		userCopy.nickname = msg.nickname;
+		userCopy.boardId = msg.boardId;
+		if (shouldUpdateActivity) {
+			userCopy.lastActivity = Date.now();
+		}
+	}
+
 	processFollowEvent(msg: PresenceEventMsg<FollowEvent>): void {
 		const currentUser = localStorage.getItem(`currentUser`);
 		if (!currentUser) {
@@ -340,12 +389,7 @@ export class Presence {
 		const user = this.users.get(msg.userId.toString())!;
 		user.lastPing = msg.event.timestamp;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
+		this.updateUserMetaInfo(msg, userCopy, false);
 		this.users.set(msg.userId.toString(), userCopy);
 	}
 
@@ -353,13 +397,8 @@ export class Presence {
 		const user = this.users.get(msg.userId.toString())!;
 		const eventData: CameraEvent = msg.event;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
 		userCopy.camera = eventData;
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
+		this.updateUserMetaInfo(msg, userCopy);
 		if (this.trackedUser) {
 			this.board.camera.applyMatrix(
 				new Matrix(
@@ -379,15 +418,8 @@ export class Presence {
 		const user = this.users.get(msg.userId.toString())!;
 		const eventData: DrawSelectEvent = msg.event;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
+		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.select = eventData.size;
-		userCopy.nickname = msg.nickname;
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
-		userCopy.lastActivity = Date.now();
 
 		this.users.set(msg.userId.toString(), userCopy);
 	}
@@ -397,16 +429,8 @@ export class Presence {
 	): void {
 		const user = this.users.get(msg.userId.toString())!;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
+		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.select = undefined;
-		userCopy.nickname = msg.nickname;
-		// userCopy.color = msg.color;
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
-		userCopy.lastActivity = Date.now();
 
 		this.users.set(msg.userId.toString(), userCopy);
 	}
@@ -415,17 +439,9 @@ export class Presence {
 		const user = this.users.get(msg.userId.toString())!;
 		const eventData: PointerMoveEvent = msg.event;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
+		this.updateUserMetaInfo(msg, userCopy);
+		userCopy.lastPointerActivity = Date.now();
 		userCopy.pointer = { x: eventData.position.x, y: eventData.position.y };
-		userCopy.nickname = msg.nickname;
-		// userCopy.color = msg.color;
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
-		userCopy.lastActivity = Date.now();
-
 		this.users.set(msg.userId.toString(), userCopy);
 	}
 
@@ -433,36 +449,16 @@ export class Presence {
 		const user = this.users.get(msg.userId.toString())!;
 		const eventData: SelectionEvent = msg.event;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
+		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.selection = eventData.selectedItems;
-		userCopy.nickname = msg.nickname;
-		// userCopy.color = msg.color;
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
-		userCopy.lastActivity = Date.now();
-
 		this.users.set(msg.userId.toString(), userCopy);
 	}
 
 	processSetColor(msg: PresenceEventMsg<SetUserColorEvent>): void {
 		const user = this.users.get(msg.userId.toString())!;
-		const eventData: SetUserColorEvent = msg.event;
 		const userCopy = { ...user };
-		if (msg.avatar) {
-			userCopy.avatar = msg.avatar;
-		}
-		userCopy.color = eventData.color;
 		userCopy.colorChangeable = false;
-		userCopy.nickname = msg.nickname;
-		// userCopy.color = msg.color;
-		if (msg.color) {
-			userCopy.color = msg.color;
-		}
-		userCopy.lastActivity = Date.now();
-
+		this.updateUserMetaInfo(msg, userCopy);
 		this.users.set(msg.userId.toString(), userCopy);
 	}
 
@@ -560,8 +556,15 @@ export class Presence {
 			color: string;
 			nickname: string;
 		}[] = [];
+		const currentBoardId = this.board.getBoardId();
+		const now = Date.now();
+
 		this.users.forEach(user => {
-			if (user.userId !== this.currentUserId) {
+			if (
+				user.userId !== this.currentUserId &&
+				user.boardId === currentBoardId &&
+				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
+			) {
 				cursors.push({
 					...user.pointer,
 					color: user.color,
@@ -569,13 +572,19 @@ export class Presence {
 				});
 			}
 		});
+
 		return cursors;
 	}
 
 	getSelections(): { selection: Item[]; color: string }[] {
 		const selections: { selection: Item[]; color: string }[] = [];
+		const currentBoardId = this.board.getBoardId();
+
 		this.users.forEach(user => {
-			if (user.userId !== this.currentUserId) {
+			if (
+				user.userId !== this.currentUserId &&
+				user.boardId === currentBoardId
+			) {
 				const items: Item[] = [];
 				for (const sel of user.selection) {
 					const foundItem = this.board.items.findById(sel);
@@ -586,6 +595,7 @@ export class Presence {
 				selections.push({ selection: items, color: user.color });
 			}
 		});
+
 		return selections;
 	}
 
@@ -648,14 +658,6 @@ export class Presence {
 		mbr.render(context);
 	}
 
-	private previousCursorPositions: {
-		[nickname: string]: {
-			x: number;
-			y: number;
-			timestamp: number;
-		};
-	} = {};
-
 	private saveImageCache(cursor: {
 		x: number;
 		y: number;
@@ -677,9 +679,6 @@ export class Presence {
 		}
 	}
 
-	private isPointerRendering = false;
-	private pointerAnimationId: number | null = null;
-
 	private renderPointer(context: DrawingContext): void {
 		if (!isMicroboard()) {
 			this.stopPointerRendering();
@@ -696,8 +695,6 @@ export class Presence {
 			this.stopPointerRendering();
 			return;
 		}
-
-		const TRANSITION_DURATION = 250; // Must be less than PRESENCE_CURSOR_THROTTLE. About 10-15%
 
 		const renderLoop = (): void => {
 			const ctx = context.cursorCtx;
@@ -736,7 +733,7 @@ export class Presence {
 						currentTime - (previousPosition.timestamp || 0);
 					const progress = Math.min(
 						1,
-						timeSinceLastUpdate / TRANSITION_DURATION,
+						timeSinceLastUpdate / CURSORS_ANIMATION_DURATION,
 					);
 
 					const interpolatedX =
@@ -767,7 +764,7 @@ export class Presence {
 
 				const progress = Math.min(
 					1,
-					timeSinceLastUpdate / TRANSITION_DURATION,
+					timeSinceLastUpdate / CURSORS_ANIMATION_DURATION,
 				);
 
 				const interpolatedPoint = catmullRomInterpolate(

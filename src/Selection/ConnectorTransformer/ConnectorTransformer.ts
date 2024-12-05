@@ -58,7 +58,7 @@ export class ConnectorTransformer extends Tool {
 			this.statePointer = "end";
 			this.state = "grabbing";
 		}
-		
+
 		this.beginTimeStamp = Date.now();
 		return this.state !== "default";
 	}
