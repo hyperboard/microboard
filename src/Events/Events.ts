@@ -5,7 +5,6 @@ import {
 	ConfirmationMsg,
 	Connection,
 	EventsMsg,
-	PresenceEventType,
 	SnapshotRequestMsg,
 	SnapshotResponseMsg,
 	SubscribeConfirmationMsg,
@@ -24,7 +23,11 @@ import { notify } from "View/Ui/Toast";
 import { isMicroboard } from "lib/isMicroboard";
 import i18next from "i18next";
 import toast from "react-hot-toast";
-import { PresenceEventType } from "Board/Presence/Events";
+import {
+	PresenceEventMsg,
+	PresenceEventType,
+	UserJoinMsg,
+} from "Board/Presence/Events";
 
 export interface BoardEvent {
 	order: number;
@@ -205,6 +208,21 @@ export function createEvents(
 		"BoardEvent",
 		handleBoardEventMessage,
 	);
+
+	function handlePresenceEventMessage(message: PresenceEventMsg): void {
+		board.presence.push(message);
+	}
+
+	messageRouter.addHandler<PresenceEventMsg>(
+		"PresenceEvent",
+		handlePresenceEventMessage,
+	);
+
+	function handleUserJoinMessage(message: UserJoinMsg): void {
+		board.presence.join(message);
+	}
+
+	messageRouter.addHandler<UserJoinMsg>("UserJoin", handleUserJoinMessage);
 
 	function handleBoardEventListMessage(message: BoardEventListMsg): void {
 		handleBoardEventListApplication(message.events);
