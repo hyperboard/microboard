@@ -234,14 +234,12 @@ export function getBlockNodes(
 			singleLineHeight,
 			maxWidth,
 		);
-		const oneSymbolWidth =
-			data[0].type === "paragraph" &&
-			typeof data[0].children[0].fontSize === "number" &&
-			getCharacterWidth(
-				data[0].children[0].fontSize,
-				data[0].children[0].fontFamily,
-			);
-		return getBlockNodes(data, bestWidth || oneSymbolWidth || bestWidth);
+		const biggetOneSymbolWidth = getOneCharacterMaxWidth(data);
+
+		return getBlockNodes(
+			data,
+			bestWidth > biggetOneSymbolWidth ? bestWidth : biggetOneSymbolWidth,
+		);
 	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
 	const divs = createFlowDiv(dropflowNodes, maxWidth);
@@ -288,10 +286,28 @@ export function getBlockNodes(
 
 const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-function getCharacterWidth(fontSize, fontFamily, character = "a"): number {
-	context.font = `${fontSize}px ${fontFamily}`;
-	const metrics = context.measureText(character);
-	return metrics.width;
+function getOneCharacterMaxWidth(data: Descendant[]): number {
+	let maxWidth = 0;
+
+	for (const desc of data) {
+		if (desc.type !== "paragraph") {
+			continue;
+		}
+
+		for (const child of desc.children) {
+			if (typeof child.fontSize === "number" && child.text.length === 1) {
+				const bold = (child.bold && "bold") || "";
+				const italic = (child.italic && "italic") || "";
+				context.font = `${bold} ${italic} ${child.fontSize}px ${child.fontFamily}`;
+				const metrics = context.measureText(child.text);
+				if (metrics.width > maxWidth) {
+					maxWidth = metrics.width;
+				}
+			}
+		}
+	}
+
+	return maxWidth;
 }
 
 function measureText(fontSize, fontFamily, text): TextMetrics {
