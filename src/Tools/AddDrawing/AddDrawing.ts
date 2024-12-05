@@ -94,8 +94,7 @@ export class AddDrawing extends BoardTool {
 			return false;
 		}
 		this.isDown = true;
-		const pointer = this.board.pointer.point.copy();
-		this.drawing = new Drawing([pointer]);
+		this.drawing = new Drawing([]);
 		this.board.tools.publish();
 		return true;
 	}
@@ -112,9 +111,14 @@ export class AddDrawing extends BoardTool {
 	leftButtonUp(): boolean {
 		this.isDown = false;
 		const points = this.drawing.points;
+		if (points.length === 0) {
+			const pointer = this.board.pointer.point.copy();
+			this.drawing.addPoint(pointer);
+		}
 		const mbr = this.drawing.getMbr();
 		const x = mbr.left;
 		const y = mbr.top;
+	
 		if (points.length === 0) {
 			return false;
 		}
