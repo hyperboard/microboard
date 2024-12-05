@@ -4,7 +4,7 @@ import {
 	DRAWING_STROKE_STYLE,
 	HIGHLIGHTER_SETTINGS_KEY,
 	INITIAL_HIGHLIGHTER_STROKE_WIDTH,
-} from "../../../View/Tools/AddDrawing";
+} from "View/Tools/AddDrawing";
 import { BorderStyle } from "../../Items/Path";
 import { Board } from "../../Board";
 

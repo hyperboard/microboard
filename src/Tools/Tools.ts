@@ -191,7 +191,9 @@ export class Tools extends ToolContext {
 			this.tool = new Navigate(this.board);
 			return;
 		}
-		if (!this.getEraser()) {
+		if (this.getEraser()) {
+			this.cancel();
+		} else {
 			this.tool = new Eraser(this.board);
 			if (clearSelection) {
 				this.board.selection.removeAll();
