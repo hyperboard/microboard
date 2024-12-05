@@ -552,24 +552,6 @@ export class Transformer extends Tool {
 					};
 				}
 			} else if (item instanceof Frame) {
-				const initMbr = Frames[item.getFrameType()].path
-					.copy()
-					.getMbr();
-
-				if (
-					itemMbr.right - itemMbr.left < initMbr.getWidth() &&
-					matrix.scaleX < 1
-				) {
-					matrix.scaleX = 1;
-				}
-
-				if (
-					itemMbr.bottom - itemMbr.top < initMbr.getWidth() &&
-					matrix.scaleY < 1
-				) {
-					matrix.scaleY = 1;
-				}
-
 				const proportional =
 					this.clickedOn === "leftBottom" ||
 					this.clickedOn === "leftTop" ||

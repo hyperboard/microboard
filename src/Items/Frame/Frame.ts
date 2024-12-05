@@ -275,17 +275,9 @@ export class Frame implements Geometry {
 			return false;
 		}
 
-		const proportional =
-			resizeType === "leftBottom" ||
-			resizeType === "leftTop" ||
-			resizeType === "rightBottom" ||
-			resizeType === "rightTop";
-
-		const res = proportional
-			? getProportionalResize(resizeType, pointer, mbr, opposite)
-			: this.getCanChangeRatio()
-				? getResize(resizeType, pointer, mbr, opposite)
-				: null;
+		const res = this.getCanChangeRatio()
+			? getResize(resizeType, pointer, mbr, opposite)
+			: getProportionalResize(resizeType, pointer, mbr, opposite);
 
 		if (!res) {
 			return {
@@ -295,7 +287,6 @@ export class Frame implements Geometry {
 		}
 
 		let { scaleX, scaleY, translateX, translateY } = res.matrix;
-		const thisMbr = this.getMbr();
 		const initMbr = Frames[this.shapeType].path.copy().getMbr();
 
 		if (
@@ -304,10 +295,6 @@ export class Frame implements Geometry {
 		) {
 			scaleX = 1;
 			translateX = 0;
-		} else if (proportional) {
-			const deltaX = thisMbr.left - thisMbr.left;
-			translateX =
-				deltaX * res.matrix.scaleX - deltaX + res.matrix.translateX;
 		}
 
 		if (
@@ -316,10 +303,6 @@ export class Frame implements Geometry {
 		) {
 			scaleY = 1;
 			translateY = 0;
-		} else if (proportional) {
-			const deltaY = thisMbr.top - thisMbr.top;
-			translateY =
-				deltaY * res.matrix.scaleY - deltaY + res.matrix.translateY;
 		}
 
 		this.transformation.scaleByTranslateBy(
@@ -608,6 +591,7 @@ export class Frame implements Geometry {
 				});
 			this.board.fitMbrInView(this.getMbr());
 		}
+		this.setCanChangeRatio(shapeType === "Custom");
 		this.updateMbr();
 	}
 
