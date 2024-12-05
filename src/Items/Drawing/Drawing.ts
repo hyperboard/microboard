@@ -81,10 +81,10 @@ export class Drawing extends Mbr implements Geometry {
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.optimizePoints();
-		this.updateGeometry();
 		this.transformation.deserialize(data.transformation);
 		this.borderColor = data.strokeStyle;
 		this.strokeWidth = data.strokeWidth;
+		this.updateGeometry();
 		return this;
 	}
 
