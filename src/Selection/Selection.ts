@@ -289,11 +289,11 @@ export class Selection {
 			return;
 		}
 		if (shouldReplace) {
-			text.clearText();
+			text.editor.clearText();
 			text.editor.editor.insertText(shouldReplace);
 		}
 		if (shouldReplace || moveCursorToEnd) {
-			text.moveCursorToEnd();
+			text.editor.moveCursorToEndOfTheText();
 		}
 		this.setTextToEdit(item);
 		this.setContext("EditTextUnderPointer");
@@ -315,7 +315,7 @@ export class Selection {
 		if (!text) {
 			return;
 		}
-		await text.moveCursorToEnd(); // prob should be 20 ms
+		await text.editor.moveCursorToEndOfTheText(); // prob should be 20 ms
 		text.editor.appendText(appendedText);
 		this.setTextToEdit(item);
 		this.setContext("EditTextUnderPointer");
@@ -332,7 +332,7 @@ export class Selection {
 			const text = item.getRichText();
 			if (text) {
 				this.setTextToEdit(item);
-				text.selectWholeText();
+				text.editor.selectWholeText();
 				this.board.items.subject.publish(this.board.items);
 			}
 			this.setContext("EditUnderPointer");
@@ -396,7 +396,7 @@ export class Selection {
 			}
 		}
 		this.textToEdit = text;
-		text.selectWholeText();
+		text.editor.selectWholeText();
 		this.textToEdit.disableRender();
 		this.board.items.subject.publish(this.board.items);
 	}
@@ -508,11 +508,11 @@ export class Selection {
 			const copyText = t("frame.copy");
 			const copiedFrameText =
 				copyText + (textItem || serializedData.text.placeholderText);
-			item.text.clearText();
-			item.text.addText(copiedFrameText);
+			item.text.editor.clearText();
+			item.text.editor.addText(copiedFrameText);
 			serializedData.text = item.text.serialize();
-			item.text.clearText();
-			item.text.addText(textItem);
+			item.text.editor.clearText();
+			item.text.editor.addText(textItem);
 		}
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}
@@ -581,7 +581,7 @@ export class Selection {
 
 	getAutosize(): boolean {
 		const sticker = this.items.getItemsByItemTypes(["Sticker"])[0];
-		return sticker?.text.getAutosize() || false;
+		return sticker?.text.isAutosize() || false;
 	}
 
 	getFontSize(): number {
@@ -1119,7 +1119,7 @@ export class Selection {
 				continue;
 			}
 			if (isMultiple) {
-				text.selectWholeText();
+				text.editor.selectWholeText();
 			}
 			const ops = text.setSelectionFontStyle(fontStyle, this.context);
 			itemsOps.push({
@@ -1145,7 +1145,7 @@ export class Selection {
 				continue;
 			}
 			if (isMultiple) {
-				text.selectWholeText();
+				text.editor.selectWholeText();
 			}
 			const ops = text.setSelectionFontColor(fontColor, this.context);
 			itemsOps.push({
@@ -1172,7 +1172,7 @@ export class Selection {
 				continue;
 			}
 			if (isMultiple) {
-				text.selectWholeText();
+				text.editor.selectWholeText();
 			}
 			const ops = text.setSelectionFontHighlight(
 				fontHighlight,
@@ -1202,7 +1202,7 @@ export class Selection {
 				continue;
 			}
 			if (isMultiple) {
-				text.selectWholeText();
+				text.editor.selectWholeText();
 			}
 			const ops = text.setSelectionHorisontalAlignment(
 				horisontalAlignment,

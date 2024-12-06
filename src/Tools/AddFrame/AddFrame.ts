@@ -114,7 +114,7 @@ export class AddFrame extends BoardTool {
 		}
 
 		// frame.setNameSerial(this.board.items.listFrames());
-		frame.text.moveCursorToEOL();
+		frame.text.editor.moveCursorToEndOfTheText();
 
 		this.nestingHighlighter.clear();
 		this.board.selection.removeAll();
@@ -198,7 +198,7 @@ export class AddFrame extends BoardTool {
 			.forEach(item => this.frame.emitAddChild(item));
 		const frame = this.board.add(this.frame);
 		// frame.setNameSerial(this.board.items.listFrames());
-		frame.text.moveCursorToEOL();
+		frame.text.editor.moveCursorToEndOfTheText();
 
 		this.nestingHighlighter.clear();
 		this.board.selection.removeAll();

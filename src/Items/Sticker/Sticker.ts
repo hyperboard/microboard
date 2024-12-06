@@ -99,7 +99,7 @@ export class Sticker implements Geometry {
 				if (op.method === "scaleBy") {
 					this.text.updateElement();
 				} else if (op.method === "scaleByTranslateBy") {
-					if (this.text.getAutosize()) {
+					if (this.text.isAutosize()) {
 						this.text.scaleAutoSizeScale(
 							Math.min(op.scale.x, op.scale.y),
 						);
@@ -111,7 +111,7 @@ export class Sticker implements Geometry {
 				} else if (op.method === "transformMany") {
 					const transformOp = op.items[this.id];
 					if (transformOp.method === "scaleByTranslateBy") {
-						if (this.text.getAutosize()) {
+						if (this.text.isAutosize()) {
 							this.text.scaleAutoSizeScale(
 								Math.min(
 									transformOp.scale.x,
@@ -258,7 +258,7 @@ export class Sticker implements Geometry {
 			) {
 				const selection = this.text.getCurrentSelection();
 				if (selection) {
-					this.text.selectWholeText();
+					this.text.editor.selectWholeText();
 				}
 				this.text.applySelectionFontColor(
 					isDarkColor(backgroundColor)

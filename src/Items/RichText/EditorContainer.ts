@@ -818,4 +818,40 @@ export class EditorContainer {
 	isEmpty(): boolean {
 		return isTextEmpty(this.editor.children);
 	}
+
+	clearText(): void {
+		Transforms.select(this.editor, {
+			anchor: Editor.start(this.editor, []),
+			focus: Editor.end(this.editor, []),
+		});
+		Transforms.delete(this.editor);
+	}
+
+	addText(text: string): void {
+		this.editor.apply({
+			type: "insert_text",
+			text: text,
+			path: [0, 0],
+			offset: 0,
+		});
+	}
+
+	moveCursorToEndOfTheText(delay = 10): Promise<void> {
+		const moveCursorToTheEndOfTheText = (): void => {
+			this.selectWholeText();
+			Transforms.collapse(this.editor, { edge: "end" });
+		};
+
+		return new Promise<void>(resolve => {
+			if (delay === 0) {
+				moveCursorToTheEndOfTheText();
+				resolve();
+			} else {
+				setTimeout(() => {
+					moveCursorToTheEndOfTheText();
+					resolve();
+				}, delay);
+			}
+		});
+	}
 }

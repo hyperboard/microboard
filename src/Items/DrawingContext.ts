@@ -3,22 +3,21 @@ import { Matrix } from "./Transformation/Matrix";
 
 /** A container for a CanvasRenderingContext2D, to extend it with more data. */
 export class DrawingContext {
-	DPI = window.devicePixelRatio;
 	isBorderInvisible = false;
 	shapeVisibilityTreshold = 3;
 	rectangleVisibilyTreshold = 2;
 
 	constructor(
 		public camera: Camera,
-		public ctx:
-			| CanvasRenderingContext2D
-			| OffscreenCanvasRenderingContext2D,
-		public cursorCtx?:
-			| CanvasRenderingContext2D
-			| OffscreenCanvasRenderingContext2D,
+		public ctx: CanvasRenderingContext2D,
+		public cursorCtx?: CanvasRenderingContext2D,
 		public matrix = new Matrix(),
 	) {
 		this.setCamera(camera);
+	}
+
+	dpi(): number {
+		return window.devicePixelRatio;
 	}
 
 	setCamera(camera: Camera): void {
@@ -29,7 +28,7 @@ export class DrawingContext {
 	}
 
 	clear(): void {
-		this.ctx.setTransform(1 * this.DPI, 0, 0, 1 * this.DPI, 0, 0);
+		this.ctx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
 		this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 		this.matrix.applyToContext(this.ctx);
 	}
@@ -38,7 +37,7 @@ export class DrawingContext {
 		if (!this.cursorCtx) {
 			return;
 		}
-		this.cursorCtx.setTransform(1 * this.DPI, 0, 0, 1 * this.DPI, 0, 0);
+		this.cursorCtx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
 		this.cursorCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 		this.matrix.applyToContext(this.cursorCtx);
 	}

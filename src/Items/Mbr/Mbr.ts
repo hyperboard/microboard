@@ -11,6 +11,7 @@ import {
 import { Geometry } from "../Geometry";
 import { GeometricNormal } from "../GeometricNormal";
 import { BorderStyle, Path, scalePatterns } from "../Path";
+import { RichText } from "..";
 
 /**
  * The minimum bounding rectangle (MBR), also known as bounding box (BBOX) or envelope.
@@ -174,6 +175,18 @@ export class Mbr implements Geometry {
 		return new Path(this.getLines(), true);
 	}
 
+	getSnapAnchorPoints(): Point[] {
+		const mbr = this;
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		return [
+			new Point(mbr.left + width / 2, mbr.top),
+			new Point(mbr.left + width / 2, mbr.bottom),
+			new Point(mbr.left, mbr.top + height / 2),
+			new Point(mbr.right, mbr.top + height / 2),
+		];
+	}
+
 	getNearestPointInside(point: Point): Point {
 		const { x, y } = point;
 		const { left, top, right, bottom } = this;
@@ -278,6 +291,10 @@ export class Mbr implements Geometry {
 		return new Mbr(this.left, this.top, this.right, this.bottom);
 	}
 
+	isClosed(): boolean {
+		return true;
+	}
+
 	getNearestEdgePointTo(point: Point): Point {
 		return this.getNearestPointOnPerimeter(point, false);
 	}
@@ -333,6 +350,10 @@ export class Mbr implements Geometry {
 		this.path = new Path2D();
 		this.path.rect(this.left, this.top, this.getWidth(), this.getHeight());
 		*/
+	}
+
+	getRichText(): RichText | null {
+		return null;
 	}
 
 	render(context: DrawingContext): void {
