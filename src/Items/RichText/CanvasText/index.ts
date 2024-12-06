@@ -67,11 +67,11 @@ function convertSlateToDropflow(
 	maxWidth: number,
 ): DropflowNodeData[] {
 	const dropflowNodes: DropflowNodeData[] = [];
-
 	for (const node of slateNodes) {
 		if (node.type === "paragraph") {
 			const paragraphStyle: flow.DeclaredStyle = {
 				textAlign: node.horisontalAlignment || "left",
+				fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
 			};
 
 			let currNode: DropflowNodeData = {
@@ -134,6 +134,7 @@ function createFlowDiv(
 			style: {
 				lineHeight: 1.4,
 				width: maxWidth === Infinity ? "auto" : maxWidth,
+				fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
 			},
 		},
 		dropflowNodes.map(paragraph =>
@@ -245,6 +246,12 @@ export function getBlockNodes(
 	const divs = createFlowDiv(dropflowNodes, maxWidth);
 
 	const rootElement = flow.dom(divs);
+	flow.loadNotoFonts(rootElement);
+	// flow.loadNotoFonts(rootElement).then(() => {
+	// 	if (onFontLoad) {
+	// 		onFontLoad(undefined);
+	// 	}
+	// });
 
 	const generated = flow.generate(rootElement);
 	flow.layout(generated);
@@ -261,7 +268,7 @@ export function getBlockNodes(
 
 	return {
 		// nodes: dropflowNodes,
-		nodes: [],
+		nodes: generated,
 		maxWidth,
 		width,
 		height,

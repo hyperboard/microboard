@@ -171,7 +171,7 @@ export class RichText extends Mbr implements Geometry {
 		});
 		this.layoutNodes = getBlockNodes(
 			this.getBlockNodes(),
-			this.getMaxWidth(),
+			this.getMaxWidth() || 0,
 			this.shrinkWidth,
 			this.insideOf === "Frame",
 		);
@@ -256,7 +256,7 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			const nodes = getBlockNodes(
 				this.getBlockNodes(),
-				this.getMaxWidth(),
+				this.getMaxWidth() || 0,
 				this.shrinkWidth,
 				this.insideOf === "Frame",
 			);
@@ -385,7 +385,7 @@ export class RichText extends Mbr implements Geometry {
 		if (this.insideOf === "Frame") {
 			const nodes = getBlockNodes(
 				this.getBlockNodes(),
-				this.getMaxWidth(),
+				this.getMaxWidth() || 0,
 				this.shrinkWidth,
 				this.insideOf === "Frame",
 			);
