@@ -533,7 +533,13 @@ export class AlignmentHelper {
 			);
 			this.board.selection.transformMany(translation, timeStamp);
 		} else {
-			item.transformation.translateBy(x, y, timeStamp);
+			item.transformation.applyTransformMany({
+				class: "Transformation",
+				method: "translateBy",
+				item: [item.getId()],
+				x,
+				y,
+			});
 		}
 	}
 
