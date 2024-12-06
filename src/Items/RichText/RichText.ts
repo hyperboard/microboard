@@ -34,13 +34,13 @@ import { LayoutBlockNodes } from "./CanvasText";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
-import { isTextEmpty } from "./isTextEmpty";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 import { RichTextCommand } from "./RichTextCommand";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import { RichTextOperation } from "./RichTextOperations";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { Camera } from "Board/Camera";
+import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
+import { getParagraph } from "./getParagraph";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -71,7 +71,6 @@ export function toggleEdit(value: boolean): void {
 export class RichText extends Mbr implements Geometry {
 	readonly itemType = "RichText";
 	parent = "Board";
-	board!: Board;
 	readonly subject = new Subject<RichText>();
 	readonly editor: EditorContainer;
 
@@ -80,12 +79,11 @@ export class RichText extends Mbr implements Geometry {
 
 	private isContainerSet = false;
 	isRenderEnabled = true;
-	private blockNodes: LayoutBlockNodes;
+	private layoutNodes: LayoutBlockNodes;
 	private clipPath: Path2D | undefined;
 	private updateRequired = false;
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
-	private shouldEmit = true;
 	readonly linkTo: LinkTo;
 	maxHeight: number;
 	private selection?: BaseSelection;
@@ -135,7 +133,6 @@ export class RichText extends Mbr implements Geometry {
 			this.getDefaultHorizontalAlignment(),
 			initialTextStyles,
 			this.getAutosize.bind(this),
-			this.isEmpty.bind(this),
 			this.autosizeEnable.bind(this),
 			this.autosizeDisable.bind(this),
 			this.getFontSize.bind(this),
@@ -175,8 +172,8 @@ export class RichText extends Mbr implements Geometry {
 			this.updateElement();
 			this.subject.publish(this);
 		});
-		this.blockNodes = getBlockNodes(
-			this.getTextForNodes() as BlockNode[],
+		this.layoutNodes = getBlockNodes(
+			this.getBlockNodes(),
 			this.getMaxWidth(),
 			this.shrinkWidth,
 			this.insideOf === "Frame",
@@ -187,38 +184,18 @@ export class RichText extends Mbr implements Geometry {
 		});
 	}
 
-	getTextForNodes() {
-		const children = this.editor.editor.children;
-		if (isTextEmpty(children)) {
-			return [
-				{
-					type: "paragraph",
-					lineHeight: 1.4,
-					children: [
-						{
-							type: "text",
-							// styles: this.getFontStyles().includes("bold")
-							// 	? "bold"
-							// 	: "",
-							bold: this.getFontStyles().includes("bold"),
-							italic: this.getFontStyles().includes("italic"),
-							underline:
-								this.getFontStyles().includes("underline"),
-							"line-through":
-								this.getFontStyles().includes("line-through"),
-							fontColor: this.getFontColor(),
-							fontHighlight: "",
-							fontSize: this.getFontSize(),
-							fontFamily: this.getFontFamily(),
-							horisontalAlignment:
-								this.getDefaultHorizontalAlignment(),
-							text: this.placeholderText,
-						},
-					],
-				},
-			];
+	getBlockNodes(): BlockNode[] {
+		if (!this.editor.isEmpty()) {
+			return this.editor.getBlockNodes();
 		} else {
-			return children;
+			return getParagraph(
+				this.getFontStyles(),
+				this.getFontColor(),
+				this.getFontSize(),
+				this.getFontFamily(),
+				this.getDefaultHorizontalAlignment(),
+				this.placeholderText,
+			);
 		}
 	}
 
@@ -234,20 +211,21 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	isEmpty(): boolean {
-		return isTextEmpty(this.editor.editor.children);
+		return this.editor.isEmpty();
 	}
 
 	handleInshapeScale(): void {
-		if (this.isInShape) {
-			if (
-				this.getTextWidth() > (this.getMaxWidth() || 0) ||
-				this.hasWraps()
-			) {
-				this.updateElement();
-			} else {
-				this.transformCanvas();
-				this.recoordinate(this.getMaxWidth());
-			}
+		if (!this.isInShape) {
+			return;
+		}
+		const maxWidth = this.getMaxWidth();
+		const shouldUpdateLayout =
+			this.getTextWidth() > (maxWidth || 0) || this.hasWraps();
+		if (shouldUpdateLayout) {
+			this.updateElement();
+		} else {
+			this.transformCanvas();
+			this.recoordinate(maxWidth);
 		}
 	}
 
@@ -258,12 +236,13 @@ export class RichText extends Mbr implements Geometry {
 	handleBlur = (): void => {
 		this.selection = this.getCurrentSelection(); // Save current selection
 		isEditInProcessValue = false;
-		if (this.selection) {
-			// TODO: Что-нибудь с этим сделать...
-			try {
-				ReactEditor.focus(this.editor.editor);
-			} catch {}
+		if (!this.selection) {
+			return;
 		}
+		// TODO: Что-нибудь с этим сделать...
+		try {
+			ReactEditor.focus(this.editor.editor);
+		} catch {}
 	};
 
 	updateElement(): void {
@@ -274,22 +253,21 @@ export class RichText extends Mbr implements Geometry {
 			return;
 		}
 		this.updateRequired = true;
-		// window.requestAnimationFrame(() => {
 		if (this.autoSize) {
 			this.calcAutoSize();
 		} else {
 			const nodes = getBlockNodes(
-				this.getTextForNodes(),
+				this.getBlockNodes(),
 				this.getMaxWidth(),
 				this.shrinkWidth,
 				this.insideOf === "Frame",
 			);
-			this.blockNodes = nodes;
+			this.layoutNodes = nodes;
 			if (
 				this.containerMaxWidth &&
-				this.blockNodes.width >= this.containerMaxWidth
+				this.layoutNodes.width >= this.containerMaxWidth
 			) {
-				this.blockNodes.width = this.containerMaxWidth;
+				this.layoutNodes.width = this.containerMaxWidth;
 			}
 		}
 
@@ -300,72 +278,6 @@ export class RichText extends Mbr implements Geometry {
 		this.transformCanvas();
 
 		this.updateRequired = false;
-		// });
-	}
-
-	private findOptimalMaxWidth(
-		text: BlockNode[],
-		containerWidth: number,
-		containerHeight: number,
-		initialMaxWidth: number,
-		tolerance = 0.05,
-	): {
-		bestMaxWidth: number;
-		bestMaxHeight: number;
-	} {
-		const targetRatio = containerWidth / containerHeight;
-		let low = 0;
-		let high = initialMaxWidth * 10;
-		let bestMaxWidth = initialMaxWidth;
-		let bestMaxHeight = initialMaxWidth / targetRatio;
-		let didFound = false;
-
-		let closestRatioDifference = Infinity;
-		let closestWidth = initialMaxWidth;
-		let closestHeight = initialMaxWidth / targetRatio;
-
-		for (let i = 0; i < 10 && low < high; i += 1) {
-			const mid = (low + high) / 2;
-			const { width: calcWidth, height: calcHeight } = getBlockNodes(
-				text,
-				mid,
-			);
-
-			const currentRatio = calcWidth / calcHeight;
-			const ratioDifference = Math.abs(currentRatio - targetRatio);
-
-			if (ratioDifference < closestRatioDifference) {
-				closestRatioDifference = ratioDifference;
-				closestWidth = calcWidth;
-				closestHeight = calcHeight;
-			}
-
-			if (ratioDifference <= tolerance) {
-				bestMaxWidth = mid;
-				bestMaxHeight = calcHeight;
-				didFound = true;
-				break;
-			}
-
-			if (currentRatio < targetRatio) {
-				low = mid + 1;
-			} else {
-				high = mid - 1;
-			}
-		}
-
-		if (!didFound) {
-			const scale = Math.min(
-				containerWidth / closestWidth,
-				containerHeight / closestHeight,
-			);
-			return {
-				bestMaxWidth: initialMaxWidth / scale,
-				bestMaxHeight: initialMaxWidth / targetRatio / scale,
-			};
-		}
-
-		return { bestMaxWidth, bestMaxHeight };
 	}
 
 	calcAutoSize(): void {
@@ -374,7 +286,7 @@ export class RichText extends Mbr implements Geometry {
 		const containerWidth = container.getWidth();
 		const containerHeight = container.getHeight();
 
-		const optimal = this.findOptimalMaxWidth(
+		const optimal = findOptimalMaxWidthForTextAutoSize(
 			text as BlockNode[],
 			containerWidth,
 			containerHeight,
@@ -386,7 +298,7 @@ export class RichText extends Mbr implements Geometry {
 			containerHeight / optimal.bestMaxHeight,
 		);
 
-		this.blockNodes = getBlockNodes(text, containerWidth / textScale);
+		this.layoutNodes = getBlockNodes(text, containerWidth / textScale);
 
 		this.autoSizeScale = textScale;
 		// this.maxWidth = maxWidth;
@@ -394,7 +306,7 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	getTextWidth(): number {
-		return this.blockNodes.width;
+		return this.layoutNodes.width;
 	}
 
 	getMaxWidth(): number | undefined {
@@ -439,7 +351,7 @@ export class RichText extends Mbr implements Geometry {
 	} {
 		let left = this.left;
 		let top = this.top;
-		const { width, height } = this.blockNodes;
+		const { width, height } = this.layoutNodes;
 		const maxWidth = this.getMaxWidth();
 		const maxHeight = this.getMaxHeight();
 		const container = this.getTransformedContainer();
@@ -467,8 +379,8 @@ export class RichText extends Mbr implements Geometry {
 			this.container = new Mbr(
 				0,
 				0,
-				this.blockNodes.width,
-				this.blockNodes.height,
+				this.layoutNodes.width,
+				this.layoutNodes.height,
 			);
 			const transformed = this.getTransformedContainer();
 			this.left = transformed.left;
@@ -483,12 +395,12 @@ export class RichText extends Mbr implements Geometry {
 		}
 		if (this.insideOf === "Frame") {
 			const nodes = getBlockNodes(
-				this.getTextForNodes(),
+				this.getBlockNodes(),
 				this.getMaxWidth(),
 				this.shrinkWidth,
 				this.insideOf === "Frame",
 			);
-			this.blockNodes = nodes;
+			this.layoutNodes = nodes;
 		}
 		this.setClipPath();
 		if (!this.isInShape && !this.autoSize) {
@@ -498,8 +410,8 @@ export class RichText extends Mbr implements Geometry {
 
 	alignInRectangle(rect: Mbr, alignment: VerticalAlignment): void {
 		const center = rect.getCenter();
-		let width = this.blockNodes.maxWidth;
-		let height = this.blockNodes.height;
+		let width = this.layoutNodes.maxWidth;
+		let height = this.layoutNodes.height;
 		let left = rect.left;
 		if (this.autoSize) {
 			width = width * this.autoSizeScale;
@@ -554,10 +466,6 @@ export class RichText extends Mbr implements Geometry {
 		return this.shrinkWidth;
 	}
 
-	setBoard(board: Board): void {
-		this.board = board;
-	}
-
 	/**
 	 * Get the container that would be used to align the CanvasDocument.
 	 */
@@ -584,10 +492,7 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	emit = (op: RichTextOperation): void => {
-		if (operationsRichTextDebugEnabled) {
-			console.info("<- RichText.emit", op);
-		}
-		if (this.events && this.shouldEmit) {
+		if (this.events) {
 			const command = new RichTextCommand([this], op);
 			command.apply();
 			this.events.emit(op, command);
@@ -597,29 +502,34 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	apply(op: Operation): void {
-		if (op.class === "Transformation") {
-			this.transformation.apply(op);
-		} else if (op.class === "LinkTo") {
-			this.linkTo.apply(op);
-		} else if (op.class === "RichText") {
-			if (op.method === "setMaxWidth") {
-				this.setMaxWidth(op.maxWidth ?? 0);
-			} else if (op.method === "setFontSize") {
-				if (op.fontSize === "auto") {
-					this.autosizeEnable();
-					this.applySelectionFontSize(14, op.context);
+		switch (op.class) {
+			case "Transformation":
+				this.transformation.apply(op);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
+				break;
+			case "RichText":
+				if (op.method === "setMaxWidth") {
+					this.setMaxWidth(op.maxWidth ?? 0);
+				} else if (op.method === "setFontSize") {
+					if (op.fontSize === "auto") {
+						this.autosizeEnable();
+						this.applySelectionFontSize(14, op.context);
+					} else {
+						this.autosizeDisable();
+						this.applySelectionFontSize(op.fontSize, op.context);
+					}
 				} else {
-					this.autosizeDisable();
-					this.applySelectionFontSize(op.fontSize, op.context);
+					this.selection = null;
+					this.editor.applyRichTextOp(op);
 				}
-			} else {
-				this.selection = null;
-				this.editor.applyRichTextOp(op);
-			}
-			this.updateElement();
-		} else {
-			return;
+				this.updateElement();
+				break;
+			default:
+				return;
 		}
+
 		this.subject.publish(this);
 	}
 
@@ -759,9 +669,9 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	applySelectionFontColor(fontColor: string): void {
-		this.shouldEmit = false;
+		this.editor.shouldEmit = false;
 		this.editor.applySelectionFontColor(fontColor);
-		this.shouldEmit = true;
+		this.editor.shouldEmit = true;
 		this.updateElement();
 	}
 
@@ -782,11 +692,6 @@ export class RichText extends Mbr implements Geometry {
 		return ops;
 	}
 
-	setSelectionFontFamily(fontFamily: string): void {
-		this.editor.setSelectionFontFamily(fontFamily);
-		// this.updateElement();
-	}
-
 	applySelectionFontSize(
 		fontSize: number,
 		selectionContext?: SelectionContext,
@@ -794,7 +699,7 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.shouldEmit = false;
+		this.editor.shouldEmit = false;
 		if (this.isInShape) {
 			this.editor.applySelectionFontSize(fontSize, selectionContext);
 		} else {
@@ -804,7 +709,7 @@ export class RichText extends Mbr implements Geometry {
 				selectionContext,
 			);
 		}
-		this.shouldEmit = true;
+		this.editor.shouldEmit = true;
 		this.updateElement();
 	}
 
@@ -870,9 +775,7 @@ export class RichText extends Mbr implements Geometry {
 		if (selectionContext === "EditUnderPointer") {
 			this.selectWholeText();
 		}
-		this.shouldEmit = false;
 		this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
-		this.shouldEmit = true;
 		this.updateElement();
 	}
 
@@ -1137,10 +1040,10 @@ export class RichText extends Mbr implements Geometry {
 			}
 			if (this.autoSize) {
 				// @ts-expect-error
-				this.blockNodes.render(ctx, this.autoSizeScale);
+				this.layoutNodes.render(ctx, this.autoSizeScale);
 			} else {
 				// @ts-expect-error
-				this.blockNodes.render(ctx);
+				this.layoutNodes.render(ctx);
 			}
 			ctx.restore();
 		}
@@ -1214,7 +1117,7 @@ export class RichText extends Mbr implements Geometry {
 
 		// Calculate the transformed width and height
 		const transformedWidth = this.getTextWidth() * scaleX;
-		const transformedHeight = this.blockNodes.height * scaleY;
+		const transformedHeight = this.layoutNodes.height * scaleY;
 
 		// Create CSS styles string
 		const styles = [
@@ -1242,27 +1145,14 @@ export class RichText extends Mbr implements Geometry {
 	getClipMbr(): Mbr {
 		const mbr = this.getMbr();
 		const center = mbr.getCenter();
-		const { width } = this.blockNodes;
+		const { width } = this.layoutNodes;
 		mbr.left = center.x - width / 2;
 		mbr.right = mbr.left + width;
 		return mbr;
 	}
 
-	getPath(): Path | Paths {
-		const { left, top, right, bottom } = this.getMbr();
-		const leftTop = new Point(left, top);
-		const rightTop = new Point(right, top);
-		const rightBottom = new Point(right, bottom);
-		const leftBottom = new Point(left, bottom);
-		return new Path(
-			[
-				new Line(leftTop, rightTop),
-				new Line(rightTop, rightBottom),
-				new Line(rightBottom, leftBottom),
-				new Line(leftBottom, leftTop),
-			],
-			true,
-		);
+	getPath(): Path {
+		return this.getMbr().getPath();
 	}
 
 	getSnapAnchorPoints(): Point[] {
@@ -1310,18 +1200,18 @@ export class RichText extends Mbr implements Geometry {
 	realign(): void {
 		const maxWidth = this.getMaxWidth();
 		if (maxWidth) {
-			this.blockNodes.realign(maxWidth);
+			this.layoutNodes.realign(maxWidth);
 		} else {
-			this.blockNodes.realign(this.getTransformedContainer().getWidth());
+			this.layoutNodes.realign(this.getTransformedContainer().getWidth());
 		}
 	}
 
 	recoordinate(newMaxWidth?: number): void {
-		this.blockNodes.recoordinate(newMaxWidth);
+		this.layoutNodes.recoordinate(newMaxWidth);
 	}
 
 	hasWraps(): boolean {
-		return this.blockNodes.nodes.some(
+		return this.layoutNodes.nodes.some(
 			node => node.height > node.lineHeight * this.getFontSize(),
 		);
 	}
@@ -1329,11 +1219,10 @@ export class RichText extends Mbr implements Geometry {
 	getMaxFontSize(): number {
 		const marks = this.editor.getSelectionMarks();
 		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
+		if (fontSize === "auto") {
+			return 14; // should not get here
+		}
 		return fontSize * this.autoSizeScale;
-	}
-
-	splitNode(): void {
-		Transforms.splitNodes(this.editor.editor, { always: true });
 	}
 
 	getRichText(): RichText {

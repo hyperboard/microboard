@@ -17,7 +17,6 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { DefaultTextStyles } from "./RichText";
-import { operationsRichTextDebugEnabled } from "./RichTextDebugSettings";
 import {
 	RichTextOperation,
 	SelectionMethod,
@@ -25,6 +24,7 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { Node } from "slate";
+import { isTextEmpty } from "./isTextEmpty";
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
 export class EditorContainer {
@@ -45,12 +45,9 @@ export class EditorContainer {
 		redo: (): void => {},
 	};
 
-	private shouldEmit = true;
-	private recordedSelectionOp: SelectionOp | undefined = undefined;
+	shouldEmit = true;
+	private recordedOps: SlateOp[] | null = null;
 	readonly subject = new Subject<EditorContainer>();
-
-	private insertingText = false;
-	private recordedInsertionOps: SlateOp[] = [];
 
 	constructor(
 		private id: string,
@@ -62,7 +59,6 @@ export class EditorContainer {
 		horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
 		private getAutosize: () => boolean,
-		private isEmpty: () => boolean,
 		private autosizeEnable: () => void,
 		private autosizeDisable: () => void,
 		private getFontSize: () => number,
@@ -115,7 +111,8 @@ export class EditorContainer {
 			if (!this.shouldEmit) {
 				return;
 			}
-			if (this.recordedSelectionOp) {
+			const isRecordingOperations = this.recordedOps !== null;
+			if (isRecordingOperations) {
 				if (operation.type === "set_selection") {
 					return;
 				}
@@ -135,41 +132,36 @@ export class EditorContainer {
 						}
 					}
 				}
-				this.recordedSelectionOp.ops.push(operation);
+				this.recordedOps.push(operation);
 				this.decorated.apply(operation);
 			} else {
 				if (operation.type === "set_selection") {
 					this.decorated.apply(operation);
 					this.subject.publish(this);
 				} else if (this.id !== "") {
-					if (this.insertingText) {
-						this.recordedInsertionOps.push(operation);
-						this.decorated.apply(operation);
-					} else {
-						if (
-							operation.type !== "remove_node" &&
-							operation.type !== "remove_text" &&
-							operation.type !== "merge_node" &&
-							operation.type !== "set_node" &&
-							this.getAutosize()
-						) {
-							const relativeFontSize =
-								this.getFontSize() / this.getMatrixScale();
-							if (relativeFontSize < 10) {
-								this.getOnLimitReached()();
-								return;
-							}
+					if (
+						operation.type !== "remove_node" &&
+						operation.type !== "remove_text" &&
+						operation.type !== "merge_node" &&
+						operation.type !== "set_node" &&
+						this.getAutosize()
+					) {
+						const relativeFontSize =
+							this.getFontSize() / this.getMatrixScale();
+						if (relativeFontSize < 10) {
+							this.getOnLimitReached()();
+							return;
 						}
-						this.emit({
-							class: "RichText",
-							method: "edit",
-							item: [this.id],
-							selection: JSON.parse(
-								JSON.stringify(this.editor.selection),
-							),
-							ops: [operation],
-						});
 					}
+					this.emit({
+						class: "RichText",
+						method: "edit",
+						item: [this.id],
+						selection: JSON.parse(
+							JSON.stringify(this.editor.selection),
+						),
+						ops: [operation],
+					});
 				} else {
 					this.decorated.apply(operation);
 				}
@@ -178,34 +170,6 @@ export class EditorContainer {
 		// Disable editor's native undo/redo
 		editor.redo = (): void => {};
 		editor.undo = (): void => {};
-		const { insertData } = editor;
-		editor.insertData = (data: DataTransfer): void => {
-			return this.insertAndEmit(insertData, data);
-		};
-	}
-
-	private insertAndEmit(
-		insertData: (data: DataTransfer) => void,
-		data: DataTransfer,
-	): void {
-		if (this.getAutosize()) {
-			const relativeFontSize = this.getFontSize() / this.getMatrixScale();
-			if (relativeFontSize < 10) {
-				this.getOnLimitReached()();
-				return;
-			}
-		}
-		this.insertingText = true;
-		insertData(data);
-		this.insertingText = false;
-		this.emitWithoutApplying({
-			class: "RichText",
-			method: "edit",
-			item: [this.id],
-			selection: JSON.parse(JSON.stringify(this.editor.selection)),
-			ops: this.recordedInsertionOps,
-		});
-		this.recordedInsertionOps = [];
 	}
 
 	setId(id: string): this {
@@ -213,34 +177,27 @@ export class EditorContainer {
 		return this;
 	}
 
-	recordMethodOps(method: SelectionMethod): void {
-		this.recordedSelectionOp = {
+	startOpRecording(): void {
+		this.recordedOps = [];
+	}
+
+	getSelectionOp(method: SelectionMethod, ops: SlateOp[]): SelectionOp {
+		return {
 			class: "RichText",
 			method,
 			item: [this.id],
-			selection: JSON.parse(JSON.stringify(this.editor.selection)),
-			ops: [],
+			selection: this.getSelection(),
+			ops,
 		};
 	}
 
-	emitMethodOps(): void {
-		const op = this.recordedSelectionOp;
-		if (op && this.shouldEmit) {
-			this.emitWithoutApplying(op);
-		}
-		this.recordedSelectionOp = undefined;
-	}
-
-	popRecordedOps(): SlateOp[] {
-		const op = this.recordedSelectionOp;
-		this.recordedSelectionOp = undefined;
+	stopOpRecordingAndGetOps(): SlateOp[] {
+		const op = this.recordedOps;
+		this.recordedOps = null;
 		return op?.ops ?? [];
 	}
 
 	applyRichTextOp(op: RichTextOperation): void {
-		if (operationsRichTextDebugEnabled) {
-			console.info("-> EditorContainer.applyRichTextOp", op);
-		}
 		try {
 			switch (op.method) {
 				case "edit":
@@ -338,7 +295,7 @@ export class EditorContainer {
 		this.shouldEmit = true;
 	}
 
-	selectWholeText() {
+	selectWholeText(): void {
 		const start = Editor.start(this.editor, []);
 		const end = Editor.end(this.editor, []);
 		const range = { anchor: start, focus: end };
@@ -428,7 +385,7 @@ export class EditorContainer {
 		if (!marks) {
 			return [];
 		}
-		this.recordMethodOps("setSelectionFontColor");
+		this.startOpRecording();
 		if (marks.fontColor !== format) {
 			Editor.addMark(editor, "fontColor", format);
 		}
@@ -441,7 +398,7 @@ export class EditorContainer {
 			}
 		}
 
-		return this.popRecordedOps();
+		return this.stopOpRecordingAndGetOps();
 	}
 
 	isMarkActive = (format: string) => {
@@ -459,7 +416,7 @@ export class EditorContainer {
 	};
 
 	setSelectionFontStyle(style: TextStyle | TextStyle[]): SlateOp[] {
-		this.recordMethodOps("setSelectionFontStyle");
+		this.startOpRecording();
 		const styleList = Array.isArray(style) ? style : [style];
 		for (const style of styleList) {
 			const selectionStyles = this.getEachNodeInSelectionStyles();
@@ -481,25 +438,7 @@ export class EditorContainer {
 				Editor.addMark(this.editor, style, true);
 			}
 		}
-		return this.popRecordedOps();
-	}
-
-	setSelectionFontFamily(fontFamily: string): void {
-		const editor = this.editor;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			return;
-		}
-		this.recordMethodOps("setSelectionFontFamily");
-		if (marks.fontFamily === fontFamily) {
-			Editor.removeMark(editor, "fontFamily");
-		} else {
-			Editor.addMark(editor, "fontFamily", fontFamily);
-		}
-		this.emitMethodOps();
+		return this.stopOpRecordingAndGetOps();
 	}
 
 	applySelectionFontColor(fontColor: string): void {
@@ -569,7 +508,7 @@ export class EditorContainer {
 				focus: Editor.end(this.editor, []),
 			});
 		}
-		this.recordMethodOps("setSelectionFontSize");
+		this.startOpRecording();
 
 		// changing empty Sticker fontSize type (number->auto / auto->number) leads to undefined behaviour
 		// next line doenst allow empty text to change fontSize type --- TODO fix
@@ -585,7 +524,7 @@ export class EditorContainer {
 			ReactEditor.focus(editor);
 		}
 
-		return this.popRecordedOps();
+		return this.stopOpRecordingAndGetOps();
 	}
 
 	setSelectionFontHighlight(
@@ -598,9 +537,9 @@ export class EditorContainer {
 		}
 		const marks = this.getSelectionMarks();
 		if (!marks) {
-			return;
+			return [];
 		}
-		this.recordMethodOps("setSelectionFontHighlight");
+		this.startOpRecording();
 		if (format === "none") {
 			Editor.removeMark(editor, "fontHighlight");
 		} else if (marks.fontHighlight === format) {
@@ -613,14 +552,14 @@ export class EditorContainer {
 			ReactEditor.focus(editor);
 		}
 
-		return this.popRecordedOps();
+		return this.stopOpRecordingAndGetOps();
 	}
 
 	setSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
 		selectionContext?: string,
 	): SlateOp[] {
-		this.recordMethodOps("setSelectionHorizontalAlignment");
+		this.startOpRecording();
 		const editor = this.editor;
 		if (!editor) {
 			throw new Error("Editor is not initialized");
@@ -649,7 +588,7 @@ export class EditorContainer {
 		Transforms.setNodes(editor, {
 			horisontalAlignment: horisontalAlignment,
 		});
-		return this.popRecordedOps();
+		return this.stopOpRecordingAndGetOps();
 	}
 
 	setEditorFocus(selectionContext?: string): void {
@@ -712,7 +651,7 @@ export class EditorContainer {
 		return textNodes;
 	}
 
-	getEachNodeInSelectionStyles() {
+	getEachNodeInSelectionStyles(): string[][] {
 		return this.getAllTextNodesInSelection().map(n => {
 			const styles: TextStyle[] = [];
 			if (n.bold) {
@@ -793,17 +732,18 @@ export class EditorContainer {
 	}
 
 	insertText(text: string): void {
-		this.insertingText = true;
+		if (this.getAutosize()) {
+			const relativeFontSize = this.getFontSize() / this.getMatrixScale();
+			if (relativeFontSize < 10) {
+				this.getOnLimitReached()();
+				return;
+			}
+		}
+		this.startOpRecording();
 		this.insertCopiedText(text);
-		this.insertingText = false;
-		this.emitWithoutApplying({
-			class: "RichText",
-			method: "edit",
-			item: [this.id],
-			selection: JSON.parse(JSON.stringify(this.editor.selection)),
-			ops: this.recordedInsertionOps,
-		});
-		this.recordedInsertionOps = [];
+		this.emitWithoutApplying(
+			this.getSelectionOp("edit", this.stopOpRecordingAndGetOps()),
+		);
 	}
 
 	insertCopiedText(text: string): boolean {
@@ -865,5 +805,17 @@ export class EditorContainer {
 
 	getSelection(): BaseSelection {
 		return JSON.parse(JSON.stringify(this.editor.selection));
+	}
+
+	splitNode(): void {
+		Transforms.splitNodes(this.editor, { always: true });
+	}
+
+	getBlockNodes(): BlockNode[] {
+		return this.editor.children as BlockNode[];
+	}
+
+	isEmpty(): boolean {
+		return isTextEmpty(this.editor.children);
 	}
 }

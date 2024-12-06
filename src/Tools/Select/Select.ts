@@ -923,7 +923,7 @@ export class Select extends Tool {
 			) {
 				const text =
 					single.itemType === "RichText" ? single : single.text;
-				text.splitNode();
+				text.editor.splitNode();
 			}
 		}
 	}

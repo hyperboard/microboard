@@ -10,7 +10,7 @@ import {
 } from "../Line";
 import { Geometry } from "../Geometry";
 import { GeometricNormal } from "../GeometricNormal";
-import { BorderStyle, scalePatterns } from "../Path";
+import { BorderStyle, Path, scalePatterns } from "../Path";
 
 /**
  * The minimum bounding rectangle (MBR), also known as bounding box (BBOX) or envelope.
@@ -168,6 +168,10 @@ export class Mbr implements Geometry {
 			new Line(new Point(right, top), new Point(right, bottom)),
 			new Line(new Point(left, top), new Point(left, bottom)),
 		];
+	}
+
+	getPath(): Path {
+		return new Path(this.getLines(), true);
 	}
 
 	getNearestPointInside(point: Point): Point {
