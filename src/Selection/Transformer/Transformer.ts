@@ -351,7 +351,12 @@ export class Transformer extends Tool {
 				return false;
 			}
 
+			const isIncludesFixedFrame = items.some(
+				item => item.itemType === "Frame" && !item.getCanChangeRatio(),
+			);
+
 			const shouldBeProportionalResize =
+				isIncludesFixedFrame ||
 				containsStickerOrText ||
 				this.isShiftPressed ||
 				(!isWidth && !isHeight);
@@ -549,22 +554,6 @@ export class Transformer extends Tool {
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
-					};
-				}
-			} else if (item instanceof Frame) {
-				const proportional =
-					this.clickedOn === "leftBottom" ||
-					this.clickedOn === "leftTop" ||
-					this.clickedOn === "rightBottom" ||
-					this.clickedOn === "rightTop";
-
-				if (item.getCanChangeRatio() || proportional) {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: matrix.scaleX, y: matrix.scaleY },
 					};
 				}
 			} else {
