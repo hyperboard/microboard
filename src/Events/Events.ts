@@ -160,11 +160,12 @@ export function createEvents(
 	const messageRouter = createMessageRouter();
 
 	function disconnect(): void {
+		enforceMode("loading");
 		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
 	}
 
 	function handleModeMessage(message: ModeMsg): void {
-		if (board.interfaceType !== message.mode) {
+		if (board.getInterfaceType() !== message.mode) {
 			enforceMode(message.mode);
 			notify({
 				header: "Владелец доски изменил настройки доступа",
@@ -175,8 +176,7 @@ export function createEvents(
 	}
 
 	function enforceMode(mode: ViewMode) {
-		board.interfaceType = mode;
-		board.tools.publish();
+		board.setInterfaceType(mode);
 	}
 
 	messageRouter.addHandler<ModeMsg>("Mode", handleModeMessage);
@@ -313,11 +313,6 @@ export function createEvents(
 		}
 
 		board.saveSnapshot();
-	}
-
-	function handleViewModeSetting(): void {
-		board.interfaceType = "view";
-		board.tools.publish();
 	}
 
 	function handleFirstBatchOfEvents(events: SyncBoardEvent[]): void {

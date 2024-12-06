@@ -4,14 +4,14 @@ import { Mbr } from "Board/Items";
 import { useAppSubscription } from "Board/useBoardSubscription";
 import { useForceUpdate } from "lib/useForceUpdate";
 import { useEffect, useState, type RefObject, useRef } from "react";
-import { useEffect, useState, type RefObject, useRef } from "react";
 import { updateRects } from "./updateRects";
+import type { SubjectName } from "App/getSubscriptions";
 
 type Params = {
 	app: App;
 	board: Board;
 	ref: RefObject<HTMLElement>;
-	subjects?: string[];
+	subjects?: SubjectName[];
 	targetMbr?: Mbr;
 	verticalOffset?: number;
 	horizontalOffset?: number;
@@ -37,7 +37,7 @@ export function useDomMbr({
 	const forceUpdate = useForceUpdate();
 	const isMounted = useRef(true);
 
-	useAppSubscription(app, {
+	useAppSubscription({
 		subjects,
 		observer: () => {
 			if (isMounted.current) {

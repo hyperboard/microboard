@@ -42,7 +42,7 @@ import { Group } from "./Items/Group";
 import { Presence } from "./Presence/Presence";
 import { Comment } from "./Items/Comment";
 
-export type InterfaceType = "edit" | "view";
+export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {
 	events: Events | undefined;
@@ -57,7 +57,7 @@ export class Board {
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
-	interfaceType: InterfaceType = "view";
+	private interfaceType: InterfaceType = "loading";
 
 	private resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {
@@ -1176,6 +1176,15 @@ export class Board {
 			.filter(match => match !== null)
 			.map(match => parseInt(match[1], 10))
 			.reduce((max, num) => Math.max(max, num), 0);
+	}
+
+	setInterfaceType(interfaceType: InterfaceType) {
+		this.interfaceType = interfaceType;
+		this.tools.publish();
+	}
+
+	getInterfaceType() {
+		return this.interfaceType;
 	}
 }
 

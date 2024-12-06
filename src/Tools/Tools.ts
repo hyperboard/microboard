@@ -59,7 +59,7 @@ export class Tools extends ToolContext {
 	}
 
 	addSticker(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -75,7 +75,7 @@ export class Tools extends ToolContext {
 	}
 
 	addShape(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -99,7 +99,7 @@ export class Tools extends ToolContext {
 	}
 
 	addText(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -123,7 +123,7 @@ export class Tools extends ToolContext {
 		itemToStart?: Item,
 		position?: Point,
 	): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -143,7 +143,7 @@ export class Tools extends ToolContext {
 	}
 
 	addDrawing(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -165,7 +165,7 @@ export class Tools extends ToolContext {
 	}
 
 	addHighlighter(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -187,7 +187,7 @@ export class Tools extends ToolContext {
 	}
 
 	eraser(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -207,7 +207,7 @@ export class Tools extends ToolContext {
 	}
 
 	addComment(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -227,7 +227,7 @@ export class Tools extends ToolContext {
 	}
 
 	export(): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -244,7 +244,7 @@ export class Tools extends ToolContext {
 	}
 
 	addFrame(clearSelection = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -264,7 +264,7 @@ export class Tools extends ToolContext {
 	}
 
 	cancel(): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -274,7 +274,7 @@ export class Tools extends ToolContext {
 	}
 
 	confirm(): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			this.tool = new Navigate(this.board);
 			return;
 		}

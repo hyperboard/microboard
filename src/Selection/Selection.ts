@@ -258,7 +258,7 @@ export class Selection {
 	}
 
 	editSelected(): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			return;
 		}
 		if (this.items.isEmpty()) {
@@ -271,7 +271,7 @@ export class Selection {
 	}
 
 	editText(shouldReplace?: string, moveCursorToEnd = false): void {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			return;
 		}
 		if (this.items.isEmpty()) {

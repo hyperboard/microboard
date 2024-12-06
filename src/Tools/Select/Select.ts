@@ -419,7 +419,7 @@ export class Select extends Tool {
 			return false;
 		}
 
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			return false;
 		}
 		const { selection, items } = this.board;
@@ -696,7 +696,7 @@ export class Select extends Tool {
 			this.clear();
 			return false;
 		}
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			return false;
 		}
 
@@ -861,7 +861,7 @@ export class Select extends Tool {
 	}
 
 	leftButtonDouble(): boolean {
-		if (this.board.interfaceType === "view") {
+		if (this.board.getInterfaceType() !== "edit") {
 			return false;
 		}
 		const toEdit = this.board.selection.items.getSingle();
