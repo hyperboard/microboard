@@ -493,7 +493,6 @@ export class EditorContainer {
 		if (!editor) {
 			throw new Error("Editor is not initialized");
 		}
-
 		const marks = this.getSelectionMarks();
 		if (!marks) {
 			throw new Error("Editor can not get selection marks");
@@ -719,6 +718,27 @@ export class EditorContainer {
 			return null;
 		}
 		return node;
+	}
+
+	applyHyperlink(url: string, selection: BaseSelection): void {
+		const { editor } = this;
+		if (!editor) {
+			throw new Error("Editor is not initialized");
+		}
+
+		Transforms.wrapNodes(
+			editor,
+			{ type: "link", url },
+			{ at: selection, split: true },
+		);
+
+		Transforms.setNodes(
+			editor,
+			{ style: { color: "purple", textDecoration: "underline" } },
+			{ at: selection },
+		);
+
+		ReactEditor.focus(editor);
 	}
 
 	appendText(text: string) {
