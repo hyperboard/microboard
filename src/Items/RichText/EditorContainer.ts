@@ -210,6 +210,8 @@ export class EditorContainer {
 				case "setSelectionFontColor":
 				case "setSelectionFontFamily":
 				case "setSelectionFontSize":
+					this.applyRichTextOp(op);
+					break;
 				case "setSelectionFontHighlight":
 				case "setSelectionFontStyle":
 				case "setSelectionHorizontalAlignment":
