@@ -1123,9 +1123,14 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	hasWraps(): boolean {
-		return this.layoutNodes.nodes.some(
-			node => node.height > node.lineHeight * this.getFontSize(),
-		);
+		if (Array.isArray(this.layoutNodes.nodes)) {
+			return this.layoutNodes.nodes.some(
+				node => node.height > node.lineHeight * this.getFontSize(),
+			);
+		} else {
+			console.warn("layoutNodes.nodes is not an array");
+			return false;
+		}
 	}
 
 	getMaxFontSize(): number {
