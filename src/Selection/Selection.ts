@@ -1033,8 +1033,8 @@ export class Selection {
 	}
 
 	getCanChangeRatio(): boolean {
-		const frame = this.items.getItemsByItemTypes(["Frame"])[0] as Frame;
-		return frame?.getCanChangeRatio() ?? true;
+		const frames = this.items.getItemsByItemTypes(["Frame"]) as Frame[];
+		return frames.every(frame => frame.getCanChangeRatio());
 	}
 
 	setFrameType(frameType: FrameType): void {

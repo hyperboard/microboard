@@ -674,7 +674,13 @@ export class Select extends Tool {
 
 		this.initialCursorPos = null;
 
-		if (this.isDrawingRectangle && this.line && this.rect) {
+		if (
+			this.isDrawingRectangle &&
+			this.line &&
+			this.rect &&
+			this.rect.getHeight() &&
+			this.rect.getWidth()
+		) {
 			const isAddToSelection = this.board.keyboard.down === "Shift";
 			if (isAddToSelection) {
 				const { left, top, right, bottom } = this.rect;
@@ -727,6 +733,18 @@ export class Select extends Tool {
 					) === null;
 				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
+					if (underPointer.itemType === "Frame") {
+						const { left, right, top, bottom } =
+							underPointer.getMbr();
+						const itemsInFrame = this.board.items
+							.getEnclosedOrCrossed(left, top, right, bottom)
+							.filter(item =>
+								underPointer
+									.getChildrenIds()
+									.includes(item.getId()),
+							);
+						this.board.selection.add(itemsInFrame);
+					}
 					this.board.selection.setContext("EditUnderPointer");
 				} else {
 					this.board.selection.remove(underPointer);
@@ -737,6 +755,7 @@ export class Select extends Tool {
 			} else {
 				const topItem = hovered.pop();
 				const curr = this.board.selection.items.getSingle();
+
 				if (
 					this.board.selection.getContext() === "EditUnderPointer" &&
 					curr &&

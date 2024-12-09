@@ -254,12 +254,12 @@ export class Frame implements Geometry {
 	}
 
 	updateMbr(): void {
-		const rect = this.path.getMbr();
+		const rect = this.path.getMbr().copy();
 		this.mbr = rect;
 	}
 
 	getMbr(): Mbr {
-		return this.mbr;
+		return this.mbr.copy();
 	}
 
 	doResize(
