@@ -10,6 +10,7 @@ import {
 	SubscribeConfirmationMsg,
 	type ModeMsg,
 	ViewMode,
+	type InvalidateRightsMsg,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -167,11 +168,11 @@ export function createEvents(
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
 			enforceMode(message.mode);
-			notify({
-				header: "Владелец доски изменил настройки доступа",
-				body: `Теперь вы можете ${message.mode === "edit" ? "редактировать" : "просматривать"} доску.`,
-				variant: "info",
-			});
+			// ({
+			// 	header: "Владелец доски изменил настройки доступа",
+			// 	body: `Теперь вы можете ${message.mode === "edit" ? "редактировать" : "просматривать"} доску.`,
+			// 	varianotifynt: "info",
+			// });
 		}
 	}
 
@@ -354,6 +355,24 @@ export function createEvents(
 	messageRouter.addHandler<SubscribeConfirmationMsg>(
 		"SubscribeConfirmation",
 		handleSubscribeConfirmation,
+	);
+
+	async function handleInvalidateRightsMsg(
+		msg: InvalidateRightsMsg,
+	): Promise<void> {
+		// await connection.publishAuth();
+		// connection.publishGetMode();
+		if (msg.byUser) {
+			notify({
+				variant: "info",
+				header: "Владелец изменил настройки доступа",
+				body: "Обновите страницу, чтобы использовать обновленные настройки",
+			});
+		}
+	}
+	messageRouter.addHandler<InvalidateRightsMsg>(
+		"InvalidateRights",
+		handleInvalidateRightsMsg,
 	);
 
 	function startIntervals(): void {
