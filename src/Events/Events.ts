@@ -669,7 +669,8 @@ export function createEvents(
 	}
 
 	function getOpKey(op: Operation): string {
-		return "item" in op ? `${op.method}_${op.item}` : op.method;
+		// return "item" in op ? `${op.method}_${op.item}` : op.method;
+		return op.method;
 	}
 
 	function canUndo(): boolean {

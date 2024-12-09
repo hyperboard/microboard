@@ -15,14 +15,21 @@ interface MultiItemBoardOp extends BoardOp {
 	item: string[];
 }
 
+type DataMap = { [key: string]: ItemData };
 interface ItemMapBoardOp extends BoardOp {
-	itemsMap: { [key: string]: ItemData };
+	itemsMap: DataMap;
 }
 
-export interface CreateItem extends SingleItemBoardOp {
+interface ItemCreation {
 	method: "add";
-	data: ItemData;
+	timeStamp?: number;
 }
+
+export type CreateItem = ItemCreation &
+	(
+		| (SingleItemBoardOp & { data: ItemData })
+		| (MultiItemBoardOp & { data: DataMap })
+	);
 
 export interface CreateLockedGroupItem extends SingleItemBoardOp {
 	method: "addLockedGroup";

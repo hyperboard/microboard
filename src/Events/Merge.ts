@@ -76,6 +76,11 @@ export function mergeOperations(
 	if (opA.method !== opB.method) {
 		return;
 	}
+
+	if (opA.class === "Board" && opB.class === "Board") {
+		return mergeBoardOperations(opA, opB);
+	}
+
 	if (opA.class === "Transformation" && opB.class === "Transformation") {
 		return mergeTransformationOperations(opA, opB);
 	}
@@ -487,4 +492,34 @@ function mergeDrawingOperations(
 		};
 	}
 	return;
+}
+
+function mergeBoardOperations(
+	opA: BoardOps,
+	opB: BoardOps,
+): BoardOps | undefined {
+	if (
+		opA.method === "add" &&
+		opB.method === "add" &&
+		opA.timeStamp !== undefined &&
+		opA.timeStamp === opB.timeStamp
+	) {
+		const opBItems = Array.isArray(opB.item) ? opB.item : [opB.item];
+		const opAItems = Array.isArray(opA.item) ? opA.item : [opA.item];
+
+		const opBData = Array.isArray(opB.item)
+			? opB.data
+			: { [opB.item]: opB.data };
+		const opAData = Array.isArray(opA.item)
+			? opA.data
+			: { [opA.item]: opA.data };
+
+		return {
+			...opB,
+			item: [...opBItems, ...opAItems],
+			data: { ...opBData, ...opAData },
+		};
+	}
+
+	return undefined;
 }

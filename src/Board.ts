@@ -9,6 +9,7 @@ import {
 import { BoardCommand } from "./BoardCommand";
 import {
 	BoardOps,
+	CreateItem,
 	CreateLockedGroupItem,
 	ItemsIndexRecord,
 	RemoveItem,
@@ -216,8 +217,7 @@ export class Board {
 				return this.index.sendManyToBack(items);
 			}
 			case "add":
-				const item = this.createItem(op.item, op.data);
-				return this.index.insert(item);
+				return this.applyAddItems(op);
 			case "addLockedGroup":
 				return this.applyAddLockedGroupOperation(op);
 			case "remove": {
@@ -233,6 +233,28 @@ export class Board {
 				return this.applyPasteOperation(op.itemsMap);
 			}
 		}
+	}
+
+	private applyAddItems(op: CreateItem): void {
+		if (Array.isArray(op.item)) {
+			const items = op.item.map(item =>
+				this.createItem(item, op.data[item]),
+			);
+			items.forEach(item => this.index.insert(item));
+			items.forEach(item => {
+				if (item.itemType === "Connector" && op.data[item.getId()]) {
+					const connectorData = op.data[
+						item.getId()
+					] as ConnectorData;
+					item.applyStartPoint(connectorData.startPoint);
+					item.applyEndPoint(connectorData.endPoint);
+				}
+			});
+			return;
+		}
+
+		const item = this.createItem(op.item, op.data);
+		return this.index.insert(item);
 	}
 
 	private applyAddLockedGroupOperation(op: CreateLockedGroupItem): void {
@@ -487,13 +509,14 @@ export class Board {
 		return factory(id, data, this);
 	}
 
-	add<T extends Item>(item: T): T {
+	add<T extends Item>(item: T, timeStamp?: number): T {
 		const id = this.getNewItemId();
 		this.emit({
 			class: "Board",
 			method: "add",
 			item: id,
 			data: item.serialize(),
+			timeStamp,
 		});
 		const newItem = this.items.getById(id);
 		if (!newItem) {

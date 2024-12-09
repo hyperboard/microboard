@@ -117,7 +117,9 @@ export class BoardCommand implements Command {
 				return {
 					class: "Board",
 					method: "remove",
-					item: [operation.item],
+					item: Array.isArray(operation.item)
+						? operation.item
+						: [operation.item],
 				};
 			}
 			case "addLockedGroup": {
