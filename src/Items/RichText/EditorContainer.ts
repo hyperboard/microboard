@@ -194,7 +194,7 @@ export class EditorContainer {
 	stopOpRecordingAndGetOps(): SlateOp[] {
 		const op = this.recordedOps;
 		this.recordedOps = null;
-		return op?.ops ?? [];
+		return op?.ops ?? op ?? [];
 	}
 
 	applyRichTextOp(op: RichTextOperation): void {
@@ -685,6 +685,10 @@ export class EditorContainer {
 		const styles: TextStyle[][] = nodes.reduce(
 			(acc: TextStyle[][], node: TextNode) => {
 				const styles: TextStyle[] = [];
+				if(node.text === '') {
+					return acc;
+				}
+				
 				if (node.bold) {
 					styles.push("bold");
 				}

@@ -51,7 +51,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 							: [operation.item]
 						: "items" in operation
 							? Object.keys(operation.items)
-							: Object.keys(operation.itemsOps);
+							: Object.values(operation.itemsOps);
 
 				const items = itemIdList
 					.map(itemId => board.items.findById(itemId) ?? itemId)
