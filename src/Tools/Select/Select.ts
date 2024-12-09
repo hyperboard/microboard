@@ -2,12 +2,8 @@ import { Board } from "../../Board";
 import { Frame, Item, Line, Mbr, Point } from "../../Items";
 import { DrawingContext } from "../../Items/DrawingContext";
 import { Tool } from "../Tool";
-import {
-	SELECTION_BACKGROUND,
-	SELECTION_COLOR,
-} from "../../../View/Tools/Selection";
+import { SELECTION_BACKGROUND, SELECTION_COLOR } from "View/Tools/Selection";
 import { NestingHighlighter } from "../NestingHighlighter";
-import { TransformManyItems } from "../../Items/Transformation/TransformationOperations";
 import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { createDebounceUpdater } from "../DebounceUpdater";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
