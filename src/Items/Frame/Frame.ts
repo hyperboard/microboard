@@ -27,7 +27,7 @@ import {
 	exportBoardSnapshot,
 	SnapshotInfo,
 } from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
-import { FRAME_TITLE_COLOR } from "View/Items/Frame";
+import { FRAME_TITLE_COLOR, FRAME_TYPES } from "View/Items/Frame";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
 const defaultFrameData = new FrameData();
@@ -287,6 +287,11 @@ export class Frame implements Geometry {
 		}
 
 		let { scaleX, scaleY, translateX, translateY } = res.matrix;
+
+		if (this.getCanChangeRatio() && this.shapeType !== "Custom") {
+			this.setFrameType("Custom");
+		}
+
 		const initMbr = Frames[this.shapeType].path.copy().getMbr();
 
 		if (
@@ -448,6 +453,10 @@ export class Frame implements Geometry {
 		this.path.setBorderWidth(this.borderWidth);
 		this.path.setBorderStyle(this.borderStyle);
 		this.path.setBorderOpacity(this.borderOpacity);
+		// if (this.shapeType !== "Custom" &&
+		// 	(
+		// 		(this.mbr.getWidth() / this.getMbr().getHeight()).toFixed(0)) !==
+		// 	FRAME_TYPES.find(fr => fr.id === this.shapeType)?.label))
 	}
 
 	apply(op: Operation): void {

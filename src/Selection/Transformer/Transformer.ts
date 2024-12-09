@@ -279,6 +279,7 @@ export class Transformer extends Tool {
 					this.startMbr || new Mbr(),
 					this.beginTimeStamp,
 				).mbr;
+
 				if (followingComments) {
 					const { matrix, mbr: resizedMbr } =
 						single instanceof Sticker
@@ -573,6 +574,15 @@ export class Transformer extends Tool {
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleY },
 					};
+
+					if (
+						item.itemType === "Frame" &&
+						item.getCanChangeRatio() &&
+						!this.isShiftPressed &&
+						item.getFrameType() !== "Custom"
+					) {
+						item.setFrameType("Custom");
+					}
 				}
 			}
 		}
