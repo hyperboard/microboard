@@ -10,7 +10,6 @@ import {
 	SubscribeConfirmationMsg,
 	type ModeMsg,
 	ViewMode,
-	type InvalidateRightsMsg,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -355,24 +354,6 @@ export function createEvents(
 	messageRouter.addHandler<SubscribeConfirmationMsg>(
 		"SubscribeConfirmation",
 		handleSubscribeConfirmation,
-	);
-
-	async function handleInvalidateRightsMsg(
-		msg: InvalidateRightsMsg,
-	): Promise<void> {
-		// await connection.publishAuth();
-		// connection.publishGetMode();
-		if (msg.byUser) {
-			notify({
-				variant: "info",
-				header: "Владелец изменил настройки доступа",
-				body: "Обновите страницу, чтобы использовать обновленные настройки",
-			});
-		}
-	}
-	messageRouter.addHandler<InvalidateRightsMsg>(
-		"InvalidateRights",
-		handleInvalidateRightsMsg,
 	);
 
 	function startIntervals(): void {
