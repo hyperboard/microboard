@@ -468,7 +468,7 @@ export class Items {
 
 	getUnderPointer(size = 0): Item[] {
 		const { x, y } = this.pointer.point;
-		const unmofiedSize = size;
+		const unmodifiedSize = size;
 		size = 16 / this.view.getScale();
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
@@ -528,7 +528,7 @@ export class Items {
 		const frames = this.index
 			.listFrames()
 			.filter(frame => frame.isTextUnderPoint(this.pointer.point));
-		if (frames.length === 0 && unmofiedSize !== 16) {
+		if (frames.length === 0 && unmodifiedSize !== 16) {
 			return this.getUnderPointer(16);
 		}
 		return frames;
