@@ -1,7 +1,7 @@
 import { Item, Frame } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { ItemWoFrames } from "Board/SpatialIndex/SpacialIndex";
 import { Tool } from "Board/Tools/Tool";
+import { FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR, FRAME_CHILDREN_HIGHLIGHTER_COLOR, FRAME_HIGHLIGHTER_BORDER_COLOR } from "View/Items/Frame";
 
 interface HighlightGroup {
 	frame?: Frame;
@@ -57,15 +57,17 @@ export class NestingHighlighter extends Tool {
 				// Render frame
 				if (group.frame) {
 					const frameRect = group.frame.getMbr();
-					frameRect.borderColor = "blue";
-					frameRect.strokeWidth = 1;
+					frameRect.borderColor = FRAME_HIGHLIGHTER_BORDER_COLOR;
+					frameRect.strokeWidth = 0.3;
 					frameRect.render(context);
 				}
 
 				// Render children
 				group.children.forEach(child => {
 					const childRect = child.getMbr();
-					childRect.backgroundColor = "rgb(128, 128, 128, 0.5)";
+					childRect.backgroundColor = FRAME_CHILDREN_HIGHLIGHTER_COLOR;
+					childRect.borderColor = FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR;
+					childRect.strokeWidth = 0.3;
 					childRect.render(context);
 				});
 			});
