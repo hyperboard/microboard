@@ -12,6 +12,7 @@ import AlignmentHelper from "../RelativeAlignment";
 import { Group } from "Board/Items/Group/Group.js";
 import { Comment } from "Board/Items/Comment/Comment";
 import { Selection } from "Board/Selection/index.js";
+import { SelectionItems } from "Board/Selection/SelectionItems.js";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -87,7 +88,7 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
-		const increasedSnapThreshold = 10;
+		const increasedSnapThreshold = 2;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,
@@ -252,7 +253,7 @@ export class Select extends Tool {
 		}
 
 		const isLocked = this.board.selection.getIsLockedSelection();
-		if(isLocked) {
+		if (isLocked) {
 			return false;
 		}
 
@@ -656,18 +657,27 @@ export class Select extends Tool {
 		}
 	}
 
-	private getAlignmentItem(): Item | null {
-		let finalItem: Item | null = null;
+	private getAlignmentItem(): Item | SelectionItems | null {
+		let finalItem: Item | SelectionItems | null = null;
+
+		const singleItem = this.board.selection.items.getSingle();
+		const groupItem = this.board.selection.items;
+
 		const isConnectorUnderPointer =
 			this.downOnItem?.itemType !== "Connector";
-		const singleItem = this.board.selection.items.getSingle();
 		const isDraggingSingleSelectedItem =
 			this.isDraggingSelection && singleItem;
+		const isDregginGroupSelectedItem =
+			this.isDraggingSelection && groupItem;
+
 		if (isConnectorUnderPointer) {
 			finalItem = this.downOnItem;
 		}
 		if (isDraggingSingleSelectedItem) {
 			finalItem = singleItem;
+		}
+		if (isDregginGroupSelectedItem) {
+			finalItem = groupItem;
 		}
 		return finalItem;
 	}

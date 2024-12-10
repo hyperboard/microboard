@@ -1,6 +1,7 @@
 import { Board } from "Board/Board";
-import { Frame, Item, Line, Point } from "Board/Items";
+import { Frame, Item, Line, Mbr, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { SelectionItems } from "Board/Selection/SelectionItems";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
 import { CanvasDrawer } from "Board/drawMbrOnCanvas";
@@ -34,17 +35,23 @@ export class AlignmentHelper {
 		return baseThickness / (zoom / 100);
 	}
 
-	checkAlignment(movingItem: Item): {
+	checkAlignment(movingItem: Item | SelectionItems): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
-		if (movingItem.itemType === "Comment") {
-			return { verticalLines: [], horizontalLines: [] };
+		let movingMBR;
+		if (movingItem instanceof SelectionItems) {
+			movingMBR = movingItem.getMbr();
+		} else {
+			if (movingItem.itemType === "Comment") {
+				return { verticalLines: [], horizontalLines: [] };
+			}
+			movingMBR =
+				movingItem.itemType === "Shape"
+					? movingItem.getPath().getMbr()
+					: movingItem.getMbr();
 		}
-		const movingMBR =
-			movingItem.itemType === "Shape"
-				? movingItem.getPath().getMbr()
-				: movingItem.getMbr();
+
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
