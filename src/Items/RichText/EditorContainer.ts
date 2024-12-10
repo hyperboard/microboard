@@ -685,10 +685,10 @@ export class EditorContainer {
 		const styles: TextStyle[][] = nodes.reduce(
 			(acc: TextStyle[][], node: TextNode) => {
 				const styles: TextStyle[] = [];
-				if(node.text === '') {
+				if (node.text === "") {
 					return acc;
 				}
-				
+
 				if (node.bold) {
 					styles.push("bold");
 				}

@@ -109,7 +109,7 @@ export class AddDrawing extends BoardTool {
 	}
 
 	leftButtonUp(): boolean {
-		if(!this.drawing) {
+		if (!this.drawing) {
 			return false;
 		}
 
@@ -122,7 +122,7 @@ export class AddDrawing extends BoardTool {
 		const mbr = this.drawing.getMbr();
 		const x = mbr.left;
 		const y = mbr.top;
-	
+
 		if (points.length === 0) {
 			return false;
 		}
@@ -174,7 +174,7 @@ export class AddDrawing extends BoardTool {
 			this.renderPointerCircle(this.board.pointer.point, context);
 		}
 
-		if(!this.drawing) {
+		if (!this.drawing) {
 			return;
 		}
 

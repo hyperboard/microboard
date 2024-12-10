@@ -34,7 +34,7 @@ export const CURSORS_ANIMATION_DURATION = Math.ceil(
 );
 export const PRESENCE_CLEANUP_USER_TIMER = 180_000; // Matching Redis ttl
 export const PRESENCE_CLEANUP_IDLE_TIMER = 60_000;
-export const CURSORS_IDLE_CLEANUP_DELAY = 60_000;
+export const CURSORS_IDLE_CLEANUP_DELAY = 10_000;
 
 interface Cursor {
 	x: number;
@@ -44,6 +44,8 @@ interface Cursor {
 export interface PresenceUser {
 	nickname: string;
 	userId: string;
+	softId: string | null;
+	hardId: string | null;
 	color: string; // rgb
 	colorChangeable: boolean;
 	lastActivity: number;
@@ -83,14 +85,14 @@ export class Presence {
 	followers: string[] = [];
 	private svgImageCache: { [color: string]: HTMLImageElement } = {};
 	private cursorPositionHistory: {
-		[nickname: string]: {
+		[userId: string]: {
 			x: number;
 			y: number;
 			timestamp?: number;
 		}[];
 	} = {};
 	private previousCursorPositions: {
-		[nickname: string]: {
+		[userId: string]: {
 			x: number;
 			y: number;
 			timestamp: number;
@@ -160,7 +162,8 @@ export class Presence {
 			this.users = new Map(
 				Array.from(this.users.entries()).filter(([_, user]) => {
 					return (
-						Date.now() - user.lastPing < PRESENCE_CLEANUP_USER_TIMER
+						Date.now() - user.lastActivity <
+						PRESENCE_CLEANUP_USER_TIMER
 					);
 				}),
 			);
@@ -195,7 +198,6 @@ export class Presence {
 	}
 
 	join(msg: UserJoinMsg): void {
-		// this.clear();
 		Object.entries(msg.snapshots).map(([userId, snapshot]) => {
 			this.users.set(userId, snapshot);
 		});
@@ -203,21 +205,30 @@ export class Presence {
 	}
 
 	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
+		const now = Date.now();
+		const PING_CLEANUP = 15_000;
+
+		let filteredUsers = Array.from(this.users.values()).filter(
+			user =>
+				user.boardId === boardId && now - user.lastPing <= PING_CLEANUP,
+		);
+
 		if (excludeSelf) {
-			const currentUser = localStorage.getItem(`currentUser`);
-			if (!currentUser) {
-				return Array.from(this.users.values()).filter(
-					user => user.boardId === boardId,
+			const currentUser = localStorage.getItem("currentUser");
+			if (currentUser) {
+				filteredUsers = filteredUsers.filter(
+					user => user.userId !== currentUser,
 				);
 			}
-			return Array.from(this.users.values()).filter(
-				user => user.userId !== currentUser && user.boardId === boardId,
-			);
-		} else {
-			return Array.from(this.users.values()).filter(
-				user => user.boardId === boardId,
-			);
 		}
+
+		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
+		filteredUsers.forEach(user => {
+			const key = user.hardId === null ? Symbol() : user.hardId;
+			uniqueUsers.set(key, user);
+		});
+
+		return Array.from(uniqueUsers.values());
 	}
 
 	getColors(): string[] {
@@ -241,6 +252,8 @@ export class Presence {
 
 			this.users.set(userId.toString(), {
 				userId: userId.toString(),
+				softId: event.softId,
+				hardId: event.hardId,
 				color,
 				lastActivity: eventData.timestamp,
 				lastPing: eventData.timestamp,
@@ -513,6 +526,12 @@ export class Presence {
 		return followers;
 	}
 
+	toggleCursorsRendering(): boolean {
+		this.cursorsEnabled = !this.cursorsEnabled;
+
+		return this.cursorsEnabled;
+	}
+
 	getSelects(): {
 		left: number;
 		top: number;
@@ -521,6 +540,23 @@ export class Presence {
 		color: string;
 		nickname: string;
 	}[] {
+		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
+		this.users.forEach(user => {
+			if (user.userId !== this.currentUserId) {
+				const key =
+					user.hardId !== null
+						? `hardId:${user.hardId}`
+						: `softId:${user.userId}`;
+				const existingUser = uniqueUsers.get(key);
+				if (
+					!existingUser ||
+					user.lastActivity > existingUser.lastActivity
+				) {
+					uniqueUsers.set(key, user);
+				}
+			}
+		});
+
 		const selects: {
 			left: number;
 			top: number;
@@ -529,71 +565,107 @@ export class Presence {
 			color: string;
 			nickname: string;
 		}[] = [];
-		this.users.forEach(user => {
-			if (user.userId !== this.currentUserId) {
-				if (user.select) {
-					selects.push({
-						...user.select,
-						color: user.color,
-						nickname: user.nickname,
-					});
-				}
-			}
-		});
-		return selects;
-	}
 
-	toggleCursorsRendering(): boolean {
-		this.cursorsEnabled = !this.cursorsEnabled;
-
-		return this.cursorsEnabled;
-	}
-
-	getCursors(): { x: number; y: number; color: string; nickname: string }[] {
-		const cursors: {
-			x: number;
-			y: number;
-			color: string;
-			nickname: string;
-		}[] = [];
-		const currentBoardId = this.board.getBoardId();
-		const now = Date.now();
-
-		this.users.forEach(user => {
-			if (
-				user.userId !== this.currentUserId &&
-				user.boardId === currentBoardId &&
-				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
-			) {
-				cursors.push({
-					...user.pointer,
+		uniqueUsers.forEach(user => {
+			if (user.select) {
+				selects.push({
+					...user.select,
 					color: user.color,
 					nickname: user.nickname,
 				});
 			}
 		});
 
+		return selects;
+	}
+
+	getCursors(): {
+		x: number;
+		y: number;
+		color: string;
+		nickname: string;
+		userId: string;
+	}[] {
+		const currentBoardId = this.board.getBoardId();
+		const now = Date.now();
+
+		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
+		this.users.forEach(user => {
+			if (
+				user.userId !== this.currentUserId &&
+				user.boardId === currentBoardId &&
+				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
+			) {
+				const key =
+					user.hardId !== null
+						? `hardId:${user.hardId}`
+						: `softId:${user.userId}`;
+				const existingUser = uniqueUsers.get(key);
+				if (
+					!existingUser ||
+					user.lastActivity > existingUser.lastActivity
+				) {
+					uniqueUsers.set(key, user);
+				}
+			}
+		});
+
+		const cursors: {
+			userId: string;
+			x: number;
+			y: number;
+			color: string;
+			nickname: string;
+		}[] = [];
+
+		uniqueUsers.forEach(user => {
+			cursors.push({
+				...user.pointer,
+				userId: user.userId,
+				color: user.color,
+				nickname: user.nickname,
+			});
+		});
+
 		return cursors;
 	}
 
 	getSelections(): { selection: Item[]; color: string }[] {
-		const selections: { selection: Item[]; color: string }[] = [];
 		const currentBoardId = this.board.getBoardId();
+		const now = Date.now();
 
+		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
 		this.users.forEach(user => {
 			if (
 				user.userId !== this.currentUserId &&
-				user.boardId === currentBoardId
+				user.boardId === currentBoardId &&
+				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
 			) {
-				const items: Item[] = [];
-				for (const sel of user.selection) {
-					const foundItem = this.board.items.findById(sel);
-					if (foundItem) {
-						items.push(foundItem);
-					}
+				const key =
+					user.hardId !== null
+						? `hardId:${user.hardId}`
+						: `softId:${user.userId}`;
+				const existingUser = uniqueUsers.get(key);
+				if (
+					!existingUser ||
+					user.lastActivity > existingUser.lastActivity
+				) {
+					uniqueUsers.set(key, user);
 				}
-				selections.push({ selection: items, color: user.color });
 			}
+		});
+
+		const selections: { selection: Item[]; color: string }[] = [];
+
+		uniqueUsers.forEach(user => {
+			const items: Item[] = [];
+			for (const sel of user.selection) {
+				const foundItem = this.board.items.findById(sel);
+				if (foundItem) {
+					items.push(foundItem);
+				}
+			}
+			selections.push({ selection: items, color: user.color });
 		});
 
 		return selections;
@@ -717,7 +789,7 @@ export class Presence {
 				this.saveImageCache(cursor);
 
 				const cursorHistory =
-					this.cursorPositionHistory[cursor.nickname] || [];
+					this.cursorPositionHistory[cursor.userId] || [];
 				const currentPosition = { x: cursor.x, y: cursor.y };
 				cursorHistory.push(currentPosition);
 
@@ -727,7 +799,7 @@ export class Presence {
 
 				if (cursorHistory.length < 4) {
 					const previousPosition =
-						this.previousCursorPositions[cursor.nickname] ||
+						this.previousCursorPositions[cursor.userId] ||
 						currentPosition;
 					const timeSinceLastUpdate =
 						currentTime - (previousPosition.timestamp || 0);
@@ -750,7 +822,7 @@ export class Presence {
 						scale,
 					);
 
-					this.previousCursorPositions[cursor.nickname] = {
+					this.previousCursorPositions[cursor.userId] = {
 						...previousPosition,
 						x: interpolatedX,
 						y: interpolatedY,
@@ -782,7 +854,7 @@ export class Presence {
 					scale,
 				);
 
-				this.previousCursorPositions[cursor.nickname] = {
+				this.previousCursorPositions[cursor.userId] = {
 					...interpolatedPoint,
 					x: interpolatedPoint.x,
 					y: interpolatedPoint.y,

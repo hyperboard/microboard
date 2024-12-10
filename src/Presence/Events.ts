@@ -96,6 +96,8 @@ export interface PresenceEventMsg<T = PresenceEventType> {
 	boardId: string;
 	event: T;
 	userId: string;
+	softId: string | null;
+	hardId: string | null;
 	messageId: string;
 	nickname: string;
 	color: string | null;

@@ -521,7 +521,7 @@ export class Transformer extends Tool {
 			let itemX = item.getMbr().left;
 			let itemY = item.getMbr().top;
 
-			if(item.itemType === "Drawing") {
+			if (item.itemType === "Drawing") {
 				itemX = item.transformation.matrix.translateX;
 				itemY = item.transformation.matrix.translateY;
 			}

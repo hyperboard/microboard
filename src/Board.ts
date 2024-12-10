@@ -88,13 +88,12 @@ export class Board {
 		);
 		this.presence.addEvents(this.events);
 		this.presence.setCurrentUser(
-			localStorage.getItem(`currentUser`)
-				? localStorage.getItem(`currentUser`)!
-				: (() => {
-						const uuid = uuidv4();
-						localStorage.setItem(`currentUser`, uuid);
-						return uuid;
-					})(),
+			localStorage.getItem(`currentUser`) ||
+				(() => {
+					const uuid = uuidv4();
+					localStorage.setItem(`currentUser`, uuid);
+					return uuid;
+				})(),
 		);
 		this.selection.events = this.events;
 		if (snapshot && currIndex === 0) {
