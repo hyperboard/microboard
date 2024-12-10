@@ -82,12 +82,14 @@ export function getQuickAddButtons(
 
 		let step = 1;
 		while (
-			board.index.getItemsEnclosedOrCrossed(
-				newMbr.left,
-				newMbr.top,
-				newMbr.right,
-				newMbr.bottom,
-			).length > 0
+			board.index
+				.getItemsEnclosedOrCrossed(
+					newMbr.left,
+					newMbr.top,
+					newMbr.right,
+					newMbr.bottom,
+				)
+				.filter(item => item.itemType !== "Connector").length > 0
 		) {
 			const direction = step % 2 === 0 ? -1 : 1;
 			newMbr.transform(
