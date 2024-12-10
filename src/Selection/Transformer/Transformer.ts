@@ -33,7 +33,6 @@ import { TransformManyItems } from "Board/Items/Transformation/TransformationOpe
 import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 import AlignmentHelper from "Board/Tools/RelativeAlignment";
-import { Frames } from "Board/Items/Frame/Basic";
 import { Comment } from "Board/Items/Comment/Comment";
 
 export class Transformer extends Tool {
@@ -519,11 +518,18 @@ export class Transformer extends Tool {
 		});
 
 		for (const item of items) {
-			const itemMbr = item.getMbr();
-			const deltaX = itemMbr.left - initMbr.left;
+			let itemX = item.getMbr().left;
+			let itemY = item.getMbr().top;
+
+			if(item.itemType === "Drawing") {
+				itemX = item.transformation.matrix.translateX;
+				itemY = item.transformation.matrix.translateY;
+			}
+
+			const deltaX = itemX - initMbr.left;
 			const translateX =
 				deltaX * matrix.scaleX - deltaX + matrix.translateX;
-			const deltaY = itemMbr.top - initMbr.top;
+			const deltaY = itemY - initMbr.top;
 			const translateY =
 				deltaY * matrix.scaleY - deltaY + matrix.translateY;
 

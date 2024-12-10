@@ -16,7 +16,7 @@ import {
 import { BoardTool } from "../BoardTool";
 
 export class AddDrawing extends BoardTool {
-	drawing = new Drawing([]);
+	drawing: Drawing | null = null;
 	isDown = false;
 	strokeWidth = INITIAL_DRAWING_STROKE_WIDTH;
 	strokeColor = DEFAULT_PEN_COLOR;
@@ -100,7 +100,7 @@ export class AddDrawing extends BoardTool {
 	}
 
 	pointerMoveBy(_x: number, _y: number): boolean {
-		if (this.isDown) {
+		if (this.isDown && this.drawing) {
 			const pointer = this.board.pointer.point.copy();
 			this.drawing.addPoint(pointer);
 		}
@@ -109,6 +109,10 @@ export class AddDrawing extends BoardTool {
 	}
 
 	leftButtonUp(): boolean {
+		if(!this.drawing) {
+			return false;
+		}
+
 		this.isDown = false;
 		const points = this.drawing.points;
 		if (points.length === 0) {
@@ -133,7 +137,7 @@ export class AddDrawing extends BoardTool {
 		drawing.setBorderStyle(this.strokeStyle);
 		this.board.add(drawing).updateMbr();
 		this.board.selection.removeAll();
-		this.drawing = new Drawing([]);
+		this.drawing = null;
 		this.board.tools.publish();
 		return true;
 	}
@@ -166,13 +170,18 @@ export class AddDrawing extends BoardTool {
 	};
 
 	render(context: DrawingContext): void {
+		if (RENDER_POINTER_CIRCLE) {
+			this.renderPointerCircle(this.board.pointer.point, context);
+		}
+
+		if(!this.drawing) {
+			return;
+		}
+
 		const drawing = this.drawing;
 		drawing.setStrokeColor(this.strokeColor);
 		drawing.setStrokeWidth(this.strokeWidth);
 		drawing.setBorderStyle(this.strokeStyle);
 		drawing.render(context);
-		if (RENDER_POINTER_CIRCLE) {
-			this.renderPointerCircle(this.board.pointer.point, context);
-		}
 	}
 }
