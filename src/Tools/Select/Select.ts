@@ -711,6 +711,7 @@ export class Select extends Tool {
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
 			const hovered = this.board.items.getUnderPointer();
+			this.board.pointer.subject.publish(this.board.pointer);
 
 			if (isCtrl || isShift) {
 				const underPointer = hovered[0];

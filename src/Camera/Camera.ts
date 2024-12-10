@@ -335,6 +335,7 @@ export class Camera {
 
 		// Ensure the scale is not less than the minimum scale
 		scale = Math.max(scale, this.minScale);
+		scale = Math.min(scale, this.maxScale);
 
 		// Calculate the translation values
 		let translationX, translationY;
