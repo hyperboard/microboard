@@ -251,6 +251,11 @@ export class Select extends Tool {
 			hover.push(hoveredItem);
 		}
 
+		const isLocked = this.board.selection.getIsLockedSelection();
+		if(isLocked) {
+			return false;
+		}
+
 		this.beginTimeStamp = Date.now();
 
 		const selectionMbr = selection.getMbr();

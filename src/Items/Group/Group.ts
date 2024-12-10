@@ -159,6 +159,7 @@ export class Group extends Mbr {
 		let left = Number.MAX_SAFE_INTEGER;
 		let top = Number.MAX_SAFE_INTEGER;
 		let right = Number.MIN_SAFE_INTEGER;
+		let bottom = Number.MIN_SAFE_INTEGER;
 
 		const mbrs = this.children.map((childId: string) => {
 			const mbr = this.board.items.getById(childId)?.getMbr();
@@ -174,6 +175,10 @@ export class Group extends Mbr {
 				right = mbr?.right;
 			}
 
+			if (mbr && bottom < mbr.bottom) {
+				bottom = mbr?.bottom;
+			}
+
 			return mbr;
 		});
 
@@ -185,6 +190,7 @@ export class Group extends Mbr {
 			mbr.left = left !== Number.MAX_SAFE_INTEGER ? left : 0;
 			mbr.top = top !== Number.MAX_SAFE_INTEGER ? top : 0;
 			mbr.right = right !== Number.MIN_SAFE_INTEGER ? right : 0;
+			mbr.bottom = bottom !== Number.MIN_SAFE_INTEGER ? bottom : 0;
 			this.left = mbr.left;
 			this.bottom = mbr.bottom;
 			this.right = mbr.right;
