@@ -158,7 +158,7 @@ export class Placeholder {
 		});
 	}
 
-	getMiroData(): any {
+	getMiroData(): unknown {
 		return this.miroData;
 	}
 

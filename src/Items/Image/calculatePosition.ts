@@ -1,7 +1,10 @@
 import type { Board } from "Board/Board";
 import type { ImageItem } from "./Image";
 
-export function calculatePosition(boardImage: ImageItem, board: Board) {
+export function calculatePosition(
+	boardImage: ImageItem,
+	board: Board,
+): { scaleX: number; scaleY: number; translateX: number; translateY: number } {
 	const viewportMbr = board.camera.getMbr();
 
 	const viewportWidth = viewportMbr.getWidth();

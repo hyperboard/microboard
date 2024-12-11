@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Mbr, Point, RichText } from "Board/Items";
+import { Mbr, RichText } from "Board/Items";
 import { RefObject } from "react";
 import {
 	fitBoardMenu,

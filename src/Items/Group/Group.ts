@@ -82,13 +82,13 @@ export class Group extends Mbr {
 		switch (op.class) {
 			case "Group":
 				if (op.method === "addChild") {
-					this.applyAddChild(op.child);
+					this.applyAddChild(op.childId);
 				} else if (op.method === "removeChild") {
 					this.applyRemoveChild(op.childId);
 				}
 				break;
 			case "Transformation":
-				this.transformation.apply(op, this.board);
+				this.transformation.apply(op);
 				break;
 			default:
 				return;
