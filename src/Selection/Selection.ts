@@ -1311,7 +1311,10 @@ export class Selection {
 	}
 
 	duplicate(): void {
-		this.board.duplicate(this.copy());
+		const filteredItemMap = Object.values(this.copy()).filter(
+			item => item.itemType !== "Group",
+		);
+		this.board.duplicate(filteredItemMap);
 		this.setContext("EditUnderPointer");
 	}
 
