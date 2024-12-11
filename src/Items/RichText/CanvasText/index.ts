@@ -246,12 +246,6 @@ export function getBlockNodes(
 	const divs = createFlowDiv(dropflowNodes, maxWidth);
 
 	const rootElement = flow.dom(divs);
-	flow.loadNotoFonts(rootElement);
-	// flow.loadNotoFonts(rootElement).then(() => {
-	// 	if (onFontLoad) {
-	// 		onFontLoad(undefined);
-	// 	}
-	// });
 
 	const generated = flow.generate(rootElement);
 	flow.layout(generated);
