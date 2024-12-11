@@ -1202,6 +1202,7 @@ export class Board {
 
 	setInterfaceType(interfaceType: InterfaceType) {
 		this.interfaceType = interfaceType;
+		this.tools.navigate();
 		this.tools.publish();
 	}
 

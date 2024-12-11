@@ -28,6 +28,7 @@ import {
 	PresenceEventType,
 	UserJoinMsg,
 } from "Board/Presence/Events";
+import i18n from "Lang";
 
 export interface BoardEvent {
 	order: number;
@@ -167,11 +168,14 @@ export function createEvents(
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
 			enforceMode(message.mode);
-			// ({
-			// 	header: "Владелец доски изменил настройки доступа",
-			// 	body: `Теперь вы можете ${message.mode === "edit" ? "редактировать" : "просматривать"} доску.`,
-			// 	varianotifynt: "info",
-			// });
+			notify({
+				header: i18n.t("sharing.settingsChanged.heading"),
+				body:
+					message.mode === "edit"
+						? i18n.t("sharing.settingsChanged.bodyEdit")
+						: i18n.t("sharing.settingsChanged.bodyView"),
+				duration: 5000,
+			});
 		}
 	}
 
