@@ -27,7 +27,7 @@ import {
 	exportBoardSnapshot,
 	SnapshotInfo,
 } from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
-import { FRAME_TITLE_COLOR, FRAME_TYPES } from "View/Items/Frame";
+import { FRAME_TITLE_COLOR } from "View/Items/Frame";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
 const defaultFrameData = new FrameData();
@@ -95,7 +95,7 @@ export class Frame implements Geometry {
 		});
 	}
 
-	setBoard(board: Board) {
+	setBoard(board: Board): this {
 		this.board = board;
 
 		return this;
@@ -682,7 +682,7 @@ export class Frame implements Geometry {
 		});
 	}
 
-	getLink() {
+	getLink(): string {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;

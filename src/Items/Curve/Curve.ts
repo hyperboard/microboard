@@ -265,7 +265,8 @@ function findTForLength(
 	error = 0.05,
 	start = 0,
 	end = 1,
-) {
+): number {
+	// eslint-disable-next-line id-length
 	let t = (start + end) / 2;
 	let iterations = 0;
 

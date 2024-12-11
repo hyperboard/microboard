@@ -43,7 +43,7 @@ export class FrameCommand implements Command {
 					};
 				});
 			case "setFrameType":
-				return mapItemsByOperation(frame, frame => {
+				return mapItemsByOperation(frame, () => {
 					return {
 						...this.operation,
 						// eslint-disable-next-line @typescript-eslint/ban-ts-comment

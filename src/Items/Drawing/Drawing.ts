@@ -235,7 +235,7 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	getPath(): Path | Paths {
+	getPath(): Path {
 		const { left, top, right, bottom } = this.getMbr();
 		const leftTop = new Point(left, top);
 		const rightTop = new Point(right, top);
@@ -393,7 +393,7 @@ export class Drawing extends Mbr implements Geometry {
 		return null;
 	}
 
-	getLink() {
+	getLink(): string {
 		return `${window.location.origin}${
 			window.location.pathname
 		}?focus=${this.getId()}`;
