@@ -205,7 +205,6 @@ export class RichText extends Mbr implements Geometry {
 		},
 	): LayoutBlockNodes {
 		if (window.customTextRender && customData) {
-			console.log("old");
 			return getBlockNodesOld(
 				customData.nodes,
 				customData.maxWidth ?? Infinity,
