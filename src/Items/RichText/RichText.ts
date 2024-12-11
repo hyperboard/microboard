@@ -38,6 +38,7 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { Camera } from "Board/Camera";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
+import { getBlockNodesOld } from "./CanvasText/oldRender";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -169,17 +170,57 @@ export class RichText extends Mbr implements Geometry {
 			this.updateElement();
 			this.subject.publish(this);
 		});
-		this.layoutNodes = getBlockNodes(
-			this.getBlockNodes(),
-			this.getMaxWidth() || 0,
-			this.shrinkWidth,
-			this.insideOf === "Frame",
-		);
+		this.layoutNodes = this.calcBlockNodes({
+			nodes: this.getBlockNodes(),
+			maxWidth: this.getMaxWidth() || 0,
+			shrink: this.shrinkWidth,
+			isFrame: this.insideOf === "Frame",
+		});
+		// this.layoutNodes = getBlockNodes(
+		// 	this.getBlockNodes(),
+		// 	this.getMaxWidth() || 0,
+		// 	this.shrinkWidth,
+		// 	this.insideOf === "Frame",
+		// );
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
 			path: [0, 0],
 		});
 		this.setClipPath();
+	}
+
+	calcBlockNodes(
+		data: {
+			nodes: BlockNode[];
+			maxWidth: number;
+			shrink?: boolean;
+			isFrame?: boolean;
+		},
+		customData?: {
+			nodes: BlockNode[];
+			maxWidth?: number; // = Infinity,
+			insideOf?: string;
+			containerWidth?: number;
+			containerHeight?: number;
+		},
+	): LayoutBlockNodes {
+		if (window.customTextRender && customData) {
+			console.log("old");
+			return getBlockNodesOld(
+				customData.nodes,
+				customData.maxWidth ?? Infinity,
+				customData.insideOf,
+				customData.containerWidth,
+				customData.containerHeight,
+			);
+		}
+
+		return getBlockNodes(
+			data.nodes,
+			data.maxWidth,
+			data.shrink,
+			data.isFrame,
+		);
 	}
 
 	getBlockNodes(): BlockNode[] {
@@ -254,13 +295,26 @@ export class RichText extends Mbr implements Geometry {
 		if (this.autoSize) {
 			this.calcAutoSize();
 		} else {
-			const nodes = getBlockNodes(
-				this.getBlockNodes(),
-				this.getMaxWidth() || 0,
-				this.shrinkWidth,
-				this.insideOf === "Frame",
+			// const nodes = getBlockNodes(
+			// 	this.getBlockNodes(),
+			// 	this.getMaxWidth() || 0,
+			// 	this.shrinkWidth,
+			// 	this.insideOf === "Frame",
+			// );
+			// this.layoutNodes = nodes;
+			this.layoutNodes = this.calcBlockNodes(
+				{
+					nodes: this.getBlockNodes(),
+					maxWidth: this.getMaxWidth() || 0,
+					shrink: this.shrinkWidth,
+					isFrame: this.insideOf === "Frame",
+				},
+				{
+					nodes: this.getBlockNodes(),
+					maxWidth: this.getMaxWidth(),
+					insideOf: this.insideOf,
+				},
 			);
-			this.layoutNodes = nodes;
 			if (
 				this.containerMaxWidth &&
 				this.layoutNodes.width >= this.containerMaxWidth
@@ -279,13 +333,13 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	calcAutoSize(): void {
-		const text = this.getText();
+		const nodes = this.getBlockNodes();
 		const container = this.getTransformedContainer();
 		const containerWidth = container.getWidth();
 		const containerHeight = container.getHeight();
 
 		const optimal = findOptimalMaxWidthForTextAutoSize(
-			text as BlockNode[],
+			nodes,
 			containerWidth,
 			containerHeight,
 			containerWidth,
@@ -296,7 +350,19 @@ export class RichText extends Mbr implements Geometry {
 			containerHeight / optimal.bestMaxHeight,
 		);
 
-		this.layoutNodes = getBlockNodes(text, containerWidth / textScale);
+		// this.layoutNodes = getBlockNodes(nodes, containerWidth / textScale);
+		this.layoutNodes = this.calcBlockNodes(
+			{
+				nodes,
+				maxWidth: containerWidth / textScale,
+			},
+			{
+				nodes,
+				maxWidth: containerWidth / textScale,
+				insideOf: this.insideOf,
+				// TODO fix here
+			},
+		);
 
 		this.autoSizeScale = textScale;
 		// this.maxWidth = maxWidth;
@@ -381,15 +447,6 @@ export class RichText extends Mbr implements Geometry {
 				this.getTransformedContainer(),
 				this.editor.verticalAlignment,
 			);
-		}
-		if (this.insideOf === "Frame") {
-			const nodes = getBlockNodes(
-				this.getBlockNodes(),
-				this.getMaxWidth() || 0,
-				this.shrinkWidth,
-				this.insideOf === "Frame",
-			);
-			this.layoutNodes = nodes;
 		}
 		this.setClipPath();
 		if (!this.isInShape && !this.autoSize) {
@@ -580,6 +637,7 @@ export class RichText extends Mbr implements Geometry {
 		return this;
 	}
 
+	/** deprecated use  */
 	getText(): Descendant[] {
 		return this.editor.getText();
 	}

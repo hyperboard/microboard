@@ -1,3 +1,4 @@
+import { getBlockNodesOld } from "./CanvasText/oldRender";
 import { BlockNode } from "./Editor/BlockNode";
 import { getBlockNodes } from "./RichTextCanvasRenderer";
 
@@ -24,10 +25,10 @@ export function findOptimalMaxWidthForTextAutoSize(
 
 	for (let i = 0; i < 10 && low < high; i += 1) {
 		const mid = (low + high) / 2;
-		const { width: calcWidth, height: calcHeight } = getBlockNodes(
-			text,
-			mid,
-		);
+		const { width: calcWidth, height: calcHeight } =
+			!window.customTextRender
+				? getBlockNodes(text, mid)
+				: getBlockNodesOld(text, mid);
 
 		const currentRatio = calcWidth / calcHeight;
 		const ratioDifference = Math.abs(currentRatio - targetRatio);

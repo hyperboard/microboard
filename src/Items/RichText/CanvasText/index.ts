@@ -162,11 +162,11 @@ export interface LayoutBlockNodes {
 }
 
 function sliceTextByWidth(
-	data: Descendant[],
+	data: BlockNode[],
 	maxWidth: number,
 ): LayoutBlockNodes {
 	const text = data[0].type === "paragraph" ? data[0].children[0].text : "";
-	const newData: Descendant = JSON.parse(JSON.stringify(data[0]));
+	const newData: BlockNode = JSON.parse(JSON.stringify(data[0]));
 	let currentText = "";
 	let currentWidth = 0;
 
@@ -196,7 +196,7 @@ function sliceTextByWidth(
 }
 
 export function getBlockNodes(
-	data: Descendant[],
+	data: BlockNode[],
 	maxWidth: number,
 	shrink = false,
 	isFrame?: boolean,
@@ -317,7 +317,7 @@ function measureText(fontSize, fontFamily, text): TextMetrics {
 }
 
 function findMinimumWidthForSingleLineHeight(
-	data: Descendant[],
+	data: BlockNode[],
 	singleLineHeight: number,
 	maxWidth: number,
 ): number {
