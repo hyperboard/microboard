@@ -179,7 +179,7 @@ export function createEvents(
 		}
 	}
 
-	function enforceMode(mode: ViewMode) {
+	function enforceMode(mode: ViewMode): void {
 		board.setInterfaceType(mode);
 	}
 
@@ -249,7 +249,7 @@ export function createEvents(
 	);
 
 	function handleBoardSnapshotMessage(message: SnapshotResponseMsg): void {
-		handleSnapshotApplication(message.snapshot, message.lastEventOrder);
+		handleSnapshotApplication(message.snapshot);
 	}
 	messageRouter.addHandler<SnapshotResponseMsg>(
 		"BoardSnapshot",
@@ -261,7 +261,7 @@ export function createEvents(
 	): void {
 		handleSeqNumApplication(msg.initialSequenceNumber);
 		if (msg.snapshot) {
-			handleSnapshotApplication(msg.snapshot, msg.lastSnapshotEventOrder);
+			handleSnapshotApplication(msg.snapshot);
 		}
 		handleBoardEventListApplication(msg.eventsSinceLastSnapshot);
 		enforceMode(msg.mode);
@@ -281,10 +281,7 @@ export function createEvents(
 		startIntervals();
 	}
 
-	function handleSnapshotApplication(
-		snapshot: BoardSnapshot,
-		lastEventOrder: number,
-	): void {
+	function handleSnapshotApplication(snapshot: BoardSnapshot): void {
 		const existingSnapshot = board.getSnapshot();
 		if (existingSnapshot.lastIndex > 0) {
 			handleNewerEvents(snapshot, existingSnapshot);

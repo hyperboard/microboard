@@ -140,7 +140,7 @@ export class Camera {
 		}
 	}
 
-	setBoardId(id: string) {
+	setBoardId(id: string): this {
 		this.boardId = id;
 		return this;
 	}
@@ -338,12 +338,10 @@ export class Camera {
 		scale = Math.min(scale, this.maxScale);
 
 		// Calculate the translation values
-		let translationX, translationY;
-
 		// Center the Mbr in the view
-		translationX =
+		const translationX =
 			this.window.width / 2 - (mbrWithOffset.left + mbrWidth / 2) * scale;
-		translationY =
+		const translationY =
 			this.window.height / 2 -
 			(mbrWithOffset.top + mbrHeight / 2) * scale;
 

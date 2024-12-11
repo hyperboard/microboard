@@ -6,7 +6,7 @@ import { ConnectorOperation } from "../Items/Connector";
 import { DrawingOperation } from "Board/Items/Drawing/DrawingOperation";
 import { StickerOperation } from "../Items/Sticker/StickerOperation";
 import { FrameOperation } from "../Items/Frame";
-import { LinkToOperation } from "../Items/LinkToOperation";
+import { LinkToOperation } from "../Items/LinkTo/LinkToOperation";
 import { PlaceholderOperation } from "Board/Items/Placeholder/PlaceholderOperation";
 import { GroupOperation } from "Board/Items/Group/GroupOperation";
 import { CommentOperation } from "../Items/Comment";
