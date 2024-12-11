@@ -189,28 +189,17 @@ export class RichText extends Mbr implements Geometry {
 		this.setClipPath();
 	}
 
-	calcBlockNodes(
-		data: {
-			nodes: BlockNode[];
-			maxWidth: number;
-			shrink?: boolean;
-			isFrame?: boolean;
-		},
-		customData?: {
-			nodes: BlockNode[];
-			maxWidth?: number; // = Infinity,
-			insideOf?: string;
-			containerWidth?: number;
-			containerHeight?: number;
-		},
-	): LayoutBlockNodes {
-		if (window.customTextRender && customData) {
+	calcBlockNodes(data: {
+		nodes: BlockNode[];
+		maxWidth: number;
+		shrink?: boolean;
+		isFrame?: boolean;
+	}): LayoutBlockNodes {
+		if (window.customTextRender) {
 			return getBlockNodesOld(
-				customData.nodes,
-				customData.maxWidth ?? Infinity,
-				customData.insideOf,
-				customData.containerWidth,
-				customData.containerHeight,
+				data.nodes,
+				data.maxWidth || Infinity,
+				this.insideOf,
 			);
 		}
 
@@ -301,19 +290,12 @@ export class RichText extends Mbr implements Geometry {
 			// 	this.insideOf === "Frame",
 			// );
 			// this.layoutNodes = nodes;
-			this.layoutNodes = this.calcBlockNodes(
-				{
-					nodes: this.getBlockNodes(),
-					maxWidth: this.getMaxWidth() || 0,
-					shrink: this.shrinkWidth,
-					isFrame: this.insideOf === "Frame",
-				},
-				{
-					nodes: this.getBlockNodes(),
-					maxWidth: this.getMaxWidth(),
-					insideOf: this.insideOf,
-				},
-			);
+			this.layoutNodes = this.calcBlockNodes({
+				nodes: this.getBlockNodes(),
+				maxWidth: this.getMaxWidth() || 0,
+				shrink: this.shrinkWidth,
+				isFrame: this.insideOf === "Frame",
+			});
 			if (
 				this.containerMaxWidth &&
 				this.layoutNodes.width >= this.containerMaxWidth
@@ -350,18 +332,10 @@ export class RichText extends Mbr implements Geometry {
 		);
 
 		// this.layoutNodes = getBlockNodes(nodes, containerWidth / textScale);
-		this.layoutNodes = this.calcBlockNodes(
-			{
-				nodes,
-				maxWidth: containerWidth / textScale,
-			},
-			{
-				nodes,
-				maxWidth: containerWidth / textScale,
-				insideOf: this.insideOf,
-				// TODO fix here
-			},
-		);
+		this.layoutNodes = this.calcBlockNodes({
+			nodes,
+			maxWidth: containerWidth / textScale,
+		});
 
 		this.autoSizeScale = textScale;
 		// this.maxWidth = maxWidth;
