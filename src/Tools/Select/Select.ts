@@ -657,8 +657,8 @@ export class Select extends Tool {
 		}
 	}
 
-	private getAlignmentItem(): Item | SelectionItems | null {
-		let finalItem: Item | SelectionItems | null = null;
+	private getAlignmentItem(): Item | null {
+		let finalItem: Item | null = null;
 
 		const singleItem = this.board.selection.items.getSingle();
 		const groupItem = this.board.selection.items;
@@ -667,17 +667,14 @@ export class Select extends Tool {
 			this.downOnItem?.itemType !== "Connector";
 		const isDraggingSingleSelectedItem =
 			this.isDraggingSelection && singleItem;
-		const isDregginGroupSelectedItem =
-			this.isDraggingSelection && groupItem;
+		// const isDregginGroupSelectedItem =
+		// 	this.isDraggingSelection && groupItem;
 
 		if (isConnectorUnderPointer) {
 			finalItem = this.downOnItem;
 		}
 		if (isDraggingSingleSelectedItem) {
 			finalItem = singleItem;
-		}
-		if (isDregginGroupSelectedItem) {
-			finalItem = groupItem;
 		}
 		return finalItem;
 	}
