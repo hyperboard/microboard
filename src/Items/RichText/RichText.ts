@@ -218,7 +218,7 @@ export class RichText extends Mbr implements Geometry {
 			return getParagraph(
 				this.getFontStyles(),
 				this.getFontColor(),
-				this.getFontSize(),
+				this.isAutosize() ? 14 : this.getFontSize(),
 				this.getFontFamily(),
 				this.getDefaultHorizontalAlignment(),
 				this.placeholderText,
