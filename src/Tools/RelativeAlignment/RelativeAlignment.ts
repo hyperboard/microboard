@@ -35,22 +35,17 @@ export class AlignmentHelper {
 		return baseThickness / (zoom / 100);
 	}
 
-	checkAlignment(movingItem: Item | SelectionItems): {
+	checkAlignment(movingItem: Item): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
-		let movingMBR;
-		if (movingItem instanceof SelectionItems) {
-			movingMBR = movingItem.getMbr();
-		} else {
-			if (movingItem.itemType === "Comment") {
-				return { verticalLines: [], horizontalLines: [] };
-			}
-			movingMBR =
-				movingItem.itemType === "Shape"
-					? movingItem.getPath().getMbr()
-					: movingItem.getMbr();
+		if (movingItem.itemType === "Comment") {
+			return { verticalLines: [], horizontalLines: [] };
 		}
+		const movingMBR =
+			movingItem.itemType === "Shape"
+				? movingItem.getPath().getMbr()
+				: movingItem.getMbr();
 
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
