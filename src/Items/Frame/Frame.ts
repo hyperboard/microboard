@@ -30,6 +30,7 @@ import {
 import { FRAME_TITLE_COLOR } from "View/Items/Frame";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
+import { positionRelatively, translateElementBy } from "Board/HTMLRender";
 const defaultFrameData = new FrameData();
 
 export class Frame implements Geometry {
@@ -733,6 +734,38 @@ export class Frame implements Geometry {
 			nMbr.backgroundColor = "rgba(173, 216, 230, 0.25)";
 			nMbr.render(context);
 		}
+	}
+
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("div");
+		div.id = this.getId();
+
+		div.style.backgroundColor = this.backgroundColor;
+		div.style.opacity = this.backgroundOpacity.toString();
+
+		div.style.borderColor = this.borderColor;
+		div.style.borderWidth = `${this.borderWidth}px`;
+		div.style.borderStyle = this.borderStyle;
+
+		const { translateX, translateY } = this.transformation.matrix;
+
+		const transform = `translate(${translateX}px, ${translateY}px), scale(1, 1)`;
+
+		const transformedWidth = this.getMbr().getWidth();
+		const transformedHeight = this.getMbr().getHeight();
+
+		div.style.width = `${transformedWidth}px`;
+		div.style.height = `${transformedHeight}px`;
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+
+		const textElement = this.text.renderHTML();
+		textElement.style.transform = `translate(0px, -30px) scale(1, 1)`;
+		textElement.id = `${this.getId()}_text`;
+		div.appendChild(textElement);
+
+		return div;
 	}
 
 	getRichText(): RichText {

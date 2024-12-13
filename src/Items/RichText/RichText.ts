@@ -39,6 +39,7 @@ import { Camera } from "Board/Camera";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
 import { getBlockNodesOld } from "./CanvasText/oldRender";
+import { CSSProperties } from "react";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -610,7 +611,7 @@ export class RichText extends Mbr implements Geometry {
 		return this;
 	}
 
-	/** deprecated use  */
+	/** deprecated use getBlockNodes */
 	getText(): Descendant[] {
 		return this.editor.getText();
 	}
@@ -1023,52 +1024,62 @@ export class RichText extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	renderHTML(): string {
-		const renderNode = (node: Descendant): string => {
+	renderHTML(): HTMLDivElement {
+		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
-				let text = escapeHtml(node.text);
-				if (node.bold) {
-					text = `<strong>${text}</strong>`;
-				}
-				if (node.italic) {
-					text = `<em>${text}</em>`;
-				}
-				if (node.underline) {
-					text = `<u>${text}</u>`;
-				}
-				if (node["line-through"]) {
-					text = `<s>${text}</s>`;
-				}
-				if (node.fontColor) {
-					text = `<span style="color: ${node.fontColor}">${text}</span>`;
-				}
-				if (node.fontHighlight) {
-					text = `<span style="background-color: ${node.fontHighlight}">${text}</span>`;
-				}
-				if (node.fontSize) {
-					text = `<span style="font-size: ${node.fontSize}px">${text}</span>`;
-				}
-				if (node.fontFamily) {
-					text = `<span style="font-family: ${node.fontFamily}">${text}</span>`;
-				}
-				return text;
+				const text = escapeHtml(node.text);
+				const span = document.createElement("span");
+				span.textContent = text;
+				span.style.fontWeight = node.bold ? "700" : "400";
+				span.style.fontStyle = node.italic ? "italic" : "";
+				span.style.textDecoration = [
+					node.underline ? "underline" : "",
+					node["line-through"] ? "line-through" : "",
+				]
+					.filter(Boolean)
+					.join(" ");
+				span.style.color =
+					node.fontColor || DEFAULT_TEXT_STYLES.fontColor;
+				span.style.backgroundColor =
+					node.fontHighlight || DEFAULT_TEXT_STYLES.fontHighlight;
+				span.style.fontSize = node.fontSize
+					? `${node.fontSize}px`
+					: DEFAULT_TEXT_STYLES.fontSize + "";
+				span.style.fontFamily =
+					node.fontFamily || DEFAULT_TEXT_STYLES.fontFamily;
+
+				return span;
 			}
 
 			if (Element.isElement(node)) {
-				const children = node.children.map(renderNode).join("");
+				const children = node.children.map(renderNode);
 				switch (node.type) {
-					case "paragraph":
-						return `<p style="text-align: ${node.horisontalAlignment || "left"}">${children}</p>`;
 					case "heading":
-						return `<h${node.level} style="text-align: ${node.horisontalAlignment || "left"}">${children}</h${node.level}>`;
+						const header = document.createElement(`h${node.level}`);
+						header.style.textAlign =
+							node.horisontalAlignment || "left";
+						header.append(...children);
+						return header;
 					case "block-quote":
-						return `<blockquote style="text-align: ${node.horisontalAlignment || "left"}">${children}</blockquote>`;
+						const blockquote = document.createElement("blockquote");
+						blockquote.style.textAlign =
+							node.horisontalAlignment || "left";
+						blockquote.append(...children);
+						return blockquote;
+					case "paragraph":
 					default:
-						return children;
+						const par = document.createElement("p");
+						par.style.textAlign =
+							node.horisontalAlignment || "left";
+						par.style.lineHeight =
+							DEFAULT_TEXT_STYLES.lineHeight + "";
+						par.style.margin = "0";
+						par.append(...children);
+						return par;
 				}
 			}
 
-			return "";
+			return document.createElement("div");
 		};
 
 		const escapeHtml = (unsafe: string): string => {
@@ -1080,7 +1091,7 @@ export class RichText extends Mbr implements Geometry {
 				.replace(/'/g, "&#039;");
 		};
 
-		const content = this.editor.editor.children.map(renderNode).join("");
+		const elements = this.editor.editor.children.map(renderNode);
 
 		// Get transformation values
 		const { translateX, translateY, scaleX, scaleY } =
@@ -1093,19 +1104,17 @@ export class RichText extends Mbr implements Geometry {
 		const transformedWidth = this.getTextWidth() * scaleX;
 		const transformedHeight = this.layoutNodes.height * scaleY;
 
-		// Create CSS styles string
-		const styles = [
-			`width: ${transformedWidth}px`,
-			`height: ${transformedHeight}px`,
-			`transform: ${transform}`,
-			`transform-origin: top left`,
-			`position: absolute`,
-			`left: ${this.left}px`,
-			`top: ${this.top}px`,
-			`overflow: hidden`, // To ensure content doesn't spill out when scaled
-		].join(";");
+		const div = document.createElement("div");
+		div.id = this.getId();
+		div.style.width = `${transformedWidth + 5}px`;
+		div.style.height = `${transformedHeight}px`;
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+		div.style.overflow = "hidden";
+		div.append(...elements);
 
-		return `<div style="${styles}">${content}</div>`;
+		return div;
 	}
 
 	getClipMbr(): Mbr {

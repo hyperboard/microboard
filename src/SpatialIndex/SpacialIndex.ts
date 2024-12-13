@@ -7,6 +7,7 @@ import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";
 import { Comment } from "../Items/Comment";
+import { positionRelatively, translateElementBy } from "Board/HTMLRender";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -81,8 +82,10 @@ export class SpatialIndex {
 				});
 		}
 		if (item.parent !== "Board") {
-			const parentFrame = this.items.getById(item.parent) as Frame;
-			parentFrame.emitRemoveChild(item);
+			const parentFrame = this.items.getById(item.parent) as
+				| Frame
+				| undefined;
+			parentFrame?.emitRemoveChild(item);
 		}
 		if (item instanceof Frame) {
 			this.framesArray.splice(this.framesArray.indexOf(item), 1);
@@ -396,7 +399,7 @@ export class Items {
 		this.index.change(item);
 	}
 
-	listAll(): Item[] {
+	listAll(): ItemWoFrames[] {
 		return this.index.list();
 	}
 
@@ -572,10 +575,72 @@ export class Items {
 	renderHTML(): string {
 		const frames = this.getFramesInView();
 		const rest = this.getItemsInView();
+		return this.getHTML(frames, rest);
+	}
+
+	getWholeHTML(): string {
+		const frames = this.listFrames();
+		const rest = this.listAll();
+		return this.getHTML(frames, rest);
+	}
+
+	getHTML(frames: Frame[], rest: ItemWoFrames[]): string {
+		const lowestCoordinates = [...frames, ...rest]
+			.map(item => item.getMbr())
+			.reduce(
+				(acc, mbr) => ({
+					left: Math.min(acc.left, mbr.left),
+					top: Math.min(acc.top, mbr.top),
+				}),
+				{ left: 0, top: 0 },
+			);
+
+		const childrenMap = new Map<string, string>();
+		const framesHTML = frames.map(frame => {
+			frame
+				.getChildrenIds()
+				.forEach(childId => childrenMap.set(childId, frame.getId()));
+
+			const html = frame.renderHTML();
+			translateElementBy(
+				html,
+				-lowestCoordinates.left,
+				-lowestCoordinates.top,
+			);
+
+			return html;
+		});
+
+		const restHTML = rest
+			.map(item => "renderHTML" in item && item.renderHTML())
+			.filter(item => !!item)
+			.map(item =>
+				translateElementBy(
+					item,
+					-lowestCoordinates.left,
+					-lowestCoordinates.top,
+				),
+			);
+
+		for (const item of restHTML) {
+			const parentFrameId = childrenMap.get(item.id);
+			const frame = framesHTML.find(
+				el => parentFrameId !== undefined && el.id === parentFrameId,
+			);
+			if (frame) {
+				positionRelatively(item, frame);
+				frame.appendChild(item);
+			}
+		}
+
 		let result = "";
-		// frames.forEach(frame => frame.renderHTML());
-		for (const item of rest) {
-			result += item.renderHTML();
+		for (const frame of framesHTML) {
+			result += frame.outerHTML;
+		}
+		for (const item of restHTML) {
+			if (!childrenMap.get(item.id)) {
+				result += item.outerHTML;
+			}
 		}
 		return result;
 	}

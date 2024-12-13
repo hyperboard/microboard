@@ -649,6 +649,25 @@ export class Board {
 		return this.copy();
 	}
 
+	serializeHtml(): string {
+		const items = this.items.getWholeHTML();
+		const body = `<body style="background-color: rgba(200, 200, 200, 0.2);"><div id="items">${items}</div></body>`;
+		const head = `
+		<head>
+			<meta charset="utf-8" />
+			<title>Microboard ${this.getBoardId()}</title>
+			<link rel="preconnect" href="https://fonts.googleapis.com">
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+			<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
+				rel="stylesheet"
+			/>
+		</head>`
+			.split("")
+			.filter(letter => letter !== "\t" && letter !== "\n")
+			.join("");
+		return `${head}${body}`;
+	}
+
 	deserialize(snapshot: BoardSnapshot): void {
 		const { events, items } = snapshot;
 		this.index.clear();
