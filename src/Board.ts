@@ -23,6 +23,7 @@ import {
 	Connector,
 	ConnectorData,
 	Frame,
+	FrameData,
 	Item,
 	ItemData,
 	ItemsLocalCounter,
@@ -675,15 +676,19 @@ export class Board {
 			string,
 			{ item: Connector; itemData: ConnectorData & { id: string } }
 		> = {};
+		const createdFrames: Record<
+			string,
+			{ item: Frame; itemData: FrameData }
+		> = {};
 
 		if (Array.isArray(items)) {
 			for (const itemData of items) {
 				const item = this.createItem(itemData.id, itemData);
-				if (
-					item.itemType === "Connector" &&
-					itemData.itemType === "Connector"
-				) {
+				if (item.itemType === "Connector") {
 					createdConnectors[itemData.id] = { item, itemData };
+				}
+				if (item.itemType === "Frame") {
+					createdFrames[item.getId()] = { item, itemData };
 				}
 				this.index.insert(item);
 			}
@@ -703,6 +708,10 @@ export class Board {
 			const { item, itemData } = createdConnectors[key];
 			item.applyStartPoint(itemData.startPoint);
 			item.applyEndPoint(itemData.endPoint);
+		}
+		for (const key in createdFrames) {
+			const { item, itemData } = createdFrames[key];
+			itemData.children.forEach(childId => item.applyAddChild(childId));
 		}
 
 		this.events?.deserialize(events);

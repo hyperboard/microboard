@@ -1093,14 +1093,11 @@ export class RichText extends Mbr implements Geometry {
 
 		const elements = this.editor.editor.children.map(renderNode);
 
-		// Get transformation values
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
 
-		// Create CSS transform string
-		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX.toFixed(2)}, ${scaleY.toFixed(2)})`;
 
-		// Calculate the transformed width and height
 		const transformedWidth = this.getTextWidth() * scaleX;
 		const transformedHeight = this.layoutNodes.height * scaleY;
 

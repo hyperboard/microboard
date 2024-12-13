@@ -610,7 +610,6 @@ export class Items {
 
 			return html;
 		});
-
 		const restHTML = rest
 			.map(item => "renderHTML" in item && item.renderHTML())
 			.filter(item => !!item)

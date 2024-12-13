@@ -137,7 +137,7 @@ export class Frame implements Geometry {
 		});
 	}
 
-	private applyAddChild(childId: string): void {
+	applyAddChild(childId: string, noWarn = false): void {
 		if (
 			this.parent !== childId &&
 			// && child.itemType !== "Frame"
@@ -149,7 +149,7 @@ export class Frame implements Geometry {
 				foundItem.parent = this.getId();
 				this.updateMbr();
 				this.subject.publish(this);
-			} else if (!foundItem) {
+			} else if (!foundItem && !noWarn) {
 				console.warn(`Could not find child with id ${childId}`);
 			}
 		}
@@ -398,7 +398,7 @@ export class Frame implements Geometry {
 		}
 		if (data.children) {
 			data.children.forEach(child => {
-				this.applyAddChild(child);
+				this.applyAddChild(child, true);
 			});
 		}
 		if (data.text) {
@@ -749,7 +749,7 @@ export class Frame implements Geometry {
 
 		const { translateX, translateY } = this.transformation.matrix;
 
-		const transform = `translate(${translateX}px, ${translateY}px), scale(1, 1)`;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(1, 1)`;
 
 		const transformedWidth = this.getMbr().getWidth();
 		const transformedHeight = this.getMbr().getHeight();

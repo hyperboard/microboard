@@ -118,7 +118,7 @@ export class ImageItem extends Mbr {
 		}
 	}
 
-	get storageLink() {
+	get storageLink(): string {
 		return this._storageLink;
 	}
 
@@ -261,6 +261,25 @@ export class ImageItem extends Mbr {
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.drawImage(this.image, 0, 0);
 		ctx.restore();
+	}
+
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("div");
+		div.id = this.getId();
+		div.style.backgroundImage = `url(${this.storageLink})`;
+		div.style.width = `${this.imageDimension.width}px`;
+		div.style.height = `${this.imageDimension.height}px`;
+
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+		div.style.backgroundSize = "cover";
+
+		return div;
 	}
 
 	getPath(): Path | Paths {
