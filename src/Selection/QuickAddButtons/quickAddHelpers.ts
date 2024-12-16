@@ -32,11 +32,11 @@ export function getControlPointData(
 		pointType: "Fixed",
 		itemId: item.getId(),
 		relativeX:
-			item.itemType === "Shape"
+			item.itemType === "Shape" || item.itemType === "RichText"
 				? adjMapScaled[index].x
 				: adjMapScaled[index].x / 2,
 		relativeY:
-			item.itemType === "Shape"
+			item.itemType === "Shape" || item.itemType === "RichText"
 				? adjMapScaled[index].y
 				: adjMapScaled[index].y / 2,
 	};
