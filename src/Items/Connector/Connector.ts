@@ -46,9 +46,7 @@ export const ConnectorLineStyles = [
 
 export type ConnectorLineStyle = (typeof ConnectorLineStyles)[number];
 
-export const ConnectionLineWidths = [
-	1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24,
-] as const;
+export const ConnectionLineWidths = [1, 2, 3, 4, 5, 6, 7, 8, 12] as const;
 
 export type ConnectionLineWidth = (typeof ConnectionLineWidths)[number];
 

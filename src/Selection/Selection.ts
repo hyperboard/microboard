@@ -956,7 +956,7 @@ export class Selection {
 		}
 	}
 
-	setStrokeWidth(width: ConnectionLineWidth): void {
+	setStrokeWidth(width: number): void {
 		// TODO make single operation to set strokeWidth on any item with stroke
 		const shapes = this.items.getIdsByItemTypes(["Shape"]);
 		if (shapes.length > 0) {

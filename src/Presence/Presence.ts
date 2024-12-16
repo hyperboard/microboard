@@ -108,8 +108,8 @@ export class Presence {
 
 		const throttleCameraEvent = throttleWithDebounce(
 			this.sendCameraPresence.bind(this),
-			500,
-			500,
+			100,
+			100,
 		);
 
 		this.board.camera.subject.subscribe(_camera => {
