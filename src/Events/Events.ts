@@ -415,7 +415,6 @@ export function createEvents(
 								"notifications.restoringConnectionBody",
 							),
 							variant: "warning",
-							unclosable: true,
 							duration: Infinity,
 						});
 					} else {
@@ -425,7 +424,6 @@ export function createEvents(
 							),
 							variant: "black",
 							duration: Infinity,
-							unclosable: true,
 							position: "bottom-center",
 						});
 					}
