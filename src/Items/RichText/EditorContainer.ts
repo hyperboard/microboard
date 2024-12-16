@@ -806,6 +806,25 @@ export class EditorContainer {
 		return true;
 	}
 
+	insertAICopiedText(text: string): boolean {
+		const lines = text.split(/\r\n|\r|\n/);
+		const combinedText = lines.join("\n"); // Объединяем строки в один текст
+		const styles = Editor.marks(this.editor);
+		const isPrevTextEmpty = this.isEditorEmpty();
+		let insertLocation: Location | undefined = undefined;
+
+		if (isPrevTextEmpty) {
+			insertLocation = { path: [0, 0], offset: combinedText.length };
+			this.editor.insertText(combinedText);
+		} else {
+			Transforms.insertText(this.editor, combinedText, {
+				at: insertLocation,
+			});
+		}
+
+		return true;
+	}
+
 	insertData = (data: DataTransfer) => {
 		if (!this.editor.insertFragmentData(data)) {
 			this.editor.insertTextData(data);
