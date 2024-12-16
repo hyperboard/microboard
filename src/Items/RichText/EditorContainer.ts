@@ -781,14 +781,16 @@ export class EditorContainer {
 	insertCopiedText(text: string): boolean {
 		const lines = text.split(/\r\n|\r|\n/);
 		const styles = Editor.marks(this.editor);
+		const isPrevTextEmpty = this.isEditorEmpty();
 		let insertLocation: Location | undefined = undefined;
-		if (this.isEditorEmpty()) {
+
+		if (isPrevTextEmpty) {
 			insertLocation = { path: [0, 0], offset: lines[0].length };
 			this.editor.insertText(lines[0]);
 		}
 
-		const paragraphs: Node | Node[] = lines
-			.slice(this.isEditorEmpty() ? 1 : 0)
+		const paragraphs: Node[] = lines
+			.slice(isPrevTextEmpty ? 1 : 0)
 			.map((line: string) => {
 				return {
 					type: "paragraph",
@@ -796,7 +798,11 @@ export class EditorContainer {
 				};
 			});
 
-		Transforms.insertNodes(this.editor, paragraphs, { at: insertLocation });
+		if (paragraphs.length !== 0) {
+			Transforms.insertNodes(this.editor, paragraphs, {
+				at: insertLocation,
+			});
+		}
 		return true;
 	}
 
