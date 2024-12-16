@@ -1092,10 +1092,10 @@ export class RichText extends Mbr implements Geometry {
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
 
-		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX.toFixed(2)}, ${scaleY.toFixed(2)})`;
+		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
-		const transformedWidth = this.getTextWidth() * scaleX;
-		const transformedHeight = this.layoutNodes.height * scaleY;
+		const transformedWidth = this.getTransformedContainer().getWidth();
+		const transformedHeight = this.getTransformedContainer().getHeight();
 
 		const div = document.createElement("div");
 		div.id = this.getId();
@@ -1105,6 +1105,15 @@ export class RichText extends Mbr implements Geometry {
 		div.style.transform = transform;
 		div.style.position = "absolute";
 		div.style.overflow = "hidden";
+		div.style.overflowWrap = "break-word";
+		if (this.layoutNodes.height < transformedHeight) {
+			const alignment = this.getVerticalAlignment();
+			if (alignment === "center") {
+				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / 2 / scaleY}px`;
+			} else if (alignment === "bottom") {
+				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
+			}
+		}
 		div.append(...elements);
 
 		return div;

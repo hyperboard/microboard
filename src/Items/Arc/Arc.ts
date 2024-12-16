@@ -127,6 +127,12 @@ export class Arc {
 		return new Point(x, y);
 	}
 
+	getStartPoint(): Point {
+		const x = this.center.x + this.radiusX * Math.cos(this.startAngle);
+		const y = this.center.y + this.radiusY * Math.sin(this.startAngle);
+		return new Point(x, y);
+	}
+
 	getPointByTangent(tangent: number): Point {
 		return this.getPoint(tangent);
 	}

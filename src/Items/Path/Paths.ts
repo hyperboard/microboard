@@ -221,6 +221,10 @@ export class Paths implements Geometry {
 		}
 	}
 
+	renderHTML(): string {
+		return this.paths.map(path => path.renderHTML()).join(" ");
+	}
+
 	transform(matrix: Matrix): void {
 		for (const path of this.paths) {
 			path.transform(matrix);

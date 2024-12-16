@@ -763,6 +763,7 @@ export class Frame implements Geometry {
 		const textElement = this.text.renderHTML();
 		textElement.style.transform = `translate(0px, -30px) scale(1, 1)`;
 		textElement.id = `${this.getId()}_text`;
+		textElement.style.overflow = "visible";
 		div.appendChild(textElement);
 
 		return div;

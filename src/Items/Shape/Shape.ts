@@ -10,7 +10,7 @@ import {
 } from "..";
 import { BasicShapes } from "./Basic";
 import { ShapeType } from "./index";
-import { BorderStyle, BorderWidth } from "../Path";
+import { BorderStyle, BorderWidth, LinePatterns } from "../Path";
 import { Subject } from "Subject";
 import { RichText } from "../RichText";
 import { ShapeOperation } from "./ShapeOperation";
@@ -26,6 +26,12 @@ import { tempStorage } from "App/SessionStorage";
 import { Comment } from "Board/Items/Comment/Comment";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BPMN } from "./BPMN";
+import {
+	positionRelatively,
+	resetElementScale,
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -454,6 +460,78 @@ export class Shape implements Geometry {
 		}
 		this.path.render(context);
 		this.text.render(context);
+	}
+
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("div");
+
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const mbr = this.getMbr();
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		const unscaledWidth = width / scaleX;
+		const unscaledHeight = height / scaleY;
+
+		const svg = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"svg",
+		);
+		svg.setAttribute("width", `${unscaledWidth}px`);
+		svg.setAttribute("height", `${unscaledHeight}px`);
+		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute("style", "position: absolute;");
+
+		const pathElement = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"path",
+		);
+		pathElement.setAttribute(
+			"d",
+			Shapes[this.shapeType].path.copy().renderHTML(),
+		);
+		pathElement.setAttribute("fill", this.backgroundColor);
+		pathElement.setAttribute(
+			"fill-opacity",
+			this.backgroundOpacity.toString(),
+		);
+		pathElement.setAttribute("stroke", this.borderColor);
+		pathElement.setAttribute("stroke-width", this.borderWidth.toString());
+		pathElement.setAttribute(
+			"stroke-opacity",
+			this.borderOpacity.toString(),
+		);
+		pathElement.setAttribute(
+			"stroke-dasharray",
+			LinePatterns[this.borderStyle].join(", "),
+		);
+
+		svg.appendChild(pathElement);
+		div.appendChild(svg);
+
+		div.id = this.getId();
+		div.style.width = unscaledWidth + "px";
+		div.style.height = unscaledHeight + "px";
+		div.style.transformOrigin = "left top";
+		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+		div.style.position = "absolute";
+
+		const textElement = this.text.renderHTML();
+		textElement.id = `${this.getId()}_text`;
+		textElement.style.maxWidth = `${width}px`;
+		textElement.style.overflow = "auto";
+		positionRelatively(textElement, div);
+		resetElementScale(textElement);
+		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
+		const [dx, dy] = [
+			(width - parseInt(textElement.style.width)) / scaleX / 2 - 1,
+			(height - parseInt(textElement.style.height)) / scaleY / 2 - 1,
+		];
+		translateElementBy(textElement, dx, dy);
+
+		div.appendChild(textElement);
+
+		return div;
 	}
 
 	getPaths(): Path | Paths {

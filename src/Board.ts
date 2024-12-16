@@ -652,7 +652,7 @@ export class Board {
 
 	serializeHtml(): string {
 		const items = this.items.getWholeHTML();
-		const body = `<body style="background-color: rgba(200, 200, 200, 0.2);"><div id="items">${items}</div></body>`;
+		const body = `<body ><div id="items">${items}</div></body>`;
 		const head = `
 		<head>
 			<meta charset="utf-8" />
@@ -662,11 +662,41 @@ export class Board {
 			<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
 				rel="stylesheet"
 			/>
+			<style>
+				::-webkit-scrollbar {
+					appearance: none;
+					width: 3px;
+					height: 3px
+				}
+				::-webkit-scrollbar-button {
+					display: none;
+				}
+				::-webkit-scrollbar-thumb {
+					display: block;
+					background-color: black;
+					border-radius: 2px;
+				}
+				body {
+					background-color: rgba(200, 200, 200, 0.2);
+				}
+			</style>
 		</head>`
 			.split("")
 			.filter(letter => letter !== "\t" && letter !== "\n")
 			.join("");
 		return `${head}${body}`;
+	}
+
+	exportHTML(): string {
+		const htmlContent = this.serializeHtml();
+		const blob = new Blob([htmlContent], { type: "text/html" });
+		const url = URL.createObjectURL(blob);
+		const anch = document.createElement("a");
+		anch.href = url;
+		anch.download = `${this.getBoardId()}.html`;
+		anch.click();
+		URL.revokeObjectURL(url);
+		return htmlContent;
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {

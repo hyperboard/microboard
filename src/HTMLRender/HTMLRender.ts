@@ -24,12 +24,35 @@ export function translateElementBy(
 	y: number,
 ): HTMLElement {
 	const [exX, exY] = getTranslationFromHTML(el);
-	const newX = exX + x;
-	const newY = exY + y;
+	const [newX, newY] = [exX + x, exY + y];
 
 	const [scaleX, scaleY] = getScaleFromHTML(el);
 	el.style.transform = `translate(${newX}px, ${newY}px) scale(${scaleX}, ${scaleY})`;
 
+	return el;
+}
+
+export function scaleElementBy(
+	el: HTMLElement,
+	scaleX: number,
+	scaleY: number,
+): HTMLElement {
+	const [currentScaleX, currentScaleY] = getScaleFromHTML(el);
+	const [newScaleX, newScaleY] = [
+		currentScaleX * scaleX,
+		currentScaleY * scaleY,
+	];
+
+	const [translateX, translateY] = getTranslationFromHTML(el);
+	el.style.transform = `translate(${translateX}px, ${translateY}px) scale(${newScaleX}, ${newScaleY})`;
+
+	return el;
+}
+
+export function resetElementScale(el: HTMLElement): HTMLElement {
+	const [x, y] = getTranslationFromHTML(el);
+
+	el.style.transform = `translate(${x}px, ${y}px) scale(1, 1)`;
 	return el;
 }
 

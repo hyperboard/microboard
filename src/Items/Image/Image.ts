@@ -265,15 +265,22 @@ export class ImageItem extends Mbr {
 
 	renderHTML(): HTMLDivElement {
 		const div = document.createElement("div");
-		div.id = this.getId();
-		div.style.backgroundImage = `url(${this.storageLink})`;
-		div.style.width = `${this.imageDimension.width}px`;
-		div.style.height = `${this.imageDimension.height}px`;
-
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
+		// const canvas = document.createElement('canvas');
+		// canvas.width = this.image.width;
+		// canvas.height = this.image.height;
+		// const ctx = canvas.getContext('2d')!;
+		// ctx.drawImage(this.image, 0, 0);
+		// const dataURL = canvas.toDataURL();
+		// div.style.backgroundImage = `url(${dataURL})`;
+		div.style.backgroundImage = `url(${this.storageLink})`;
+
+		div.id = this.getId();
+		div.style.width = `${this.imageDimension.width}px`;
+		div.style.height = `${this.imageDimension.height}px`;
 		div.style.transformOrigin = "top left";
 		div.style.transform = transform;
 		div.style.position = "absolute";

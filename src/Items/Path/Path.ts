@@ -439,6 +439,53 @@ export class Path implements Geometry, PathStylize {
 		ctx.stroke(this.path2d!);
 	}
 
+	renderHTML(): string {
+		if (this.segments.length === 0) {
+			return "";
+		}
+
+		let pathData = "";
+
+		const startPoint = this.segments[0].getStartPoint();
+		pathData += `M ${startPoint.x} ${startPoint.y} `;
+
+		for (const segment of this.segments) {
+			if (segment instanceof Line) {
+				const endPoint = segment.end;
+				pathData += `L ${endPoint.x} ${endPoint.y} `;
+			} else if (segment instanceof QuadraticBezier) {
+				const controlPoint = segment.control;
+				const endPoint = segment.end;
+				pathData += `Q ${controlPoint.x} ${controlPoint.y} ${endPoint.x} ${endPoint.y} `;
+			} else if (segment instanceof CubicBezier) {
+				const startControl = segment.startControl;
+				const endControl = segment.endControl;
+				const endPoint = segment.end;
+				pathData += `C ${startControl.x} ${startControl.y} ${endControl.x} ${endControl.y} ${endPoint.x} ${endPoint.y} `;
+			} else if (segment instanceof Arc) {
+				const {
+					radiusX,
+					radiusY,
+					rotation,
+					startAngle,
+					endAngle,
+					clockwise,
+				} = segment;
+				const largeArcFlag =
+					Math.abs(endAngle - startAngle) > Math.PI ? 1 : 0;
+				const sweepFlag = clockwise ? 1 : 0;
+				const endPoint = segment.getPoint(1);
+				pathData += `A ${radiusX} ${radiusY} ${rotation} ${largeArcFlag} ${sweepFlag} ${endPoint.x} ${endPoint.y} `;
+			}
+		}
+
+		if (this.isClosed()) {
+			pathData += "Z";
+		}
+
+		return pathData.trim();
+	}
+
 	transform(matrix: Matrix): void {
 		for (const segment of this.segments) {
 			segment.transform(matrix);
