@@ -205,10 +205,14 @@ export class Presence {
 	}
 
 	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
-		const PING_CLEANUP = 15_000;
+		// const PING_CLEANUP = 15_000;
 
 		let filteredUsers = Array.from(this.users.values()).filter(user =>
-			this.clearUserPresence(boardId, user, PING_CLEANUP),
+			this.clearInactiveUserSelection(
+				boardId,
+				user,
+				CURSORS_IDLE_CLEANUP_DELAY,
+			),
 		);
 
 		if (excludeSelf) {
@@ -229,7 +233,7 @@ export class Presence {
 		return Array.from(uniqueUsers.values());
 	}
 
-	clearUserPresence(
+	clearInactiveUserSelection(
 		boardId: string,
 		user: PresenceUser,
 		pingCleanup: number,
@@ -584,7 +588,10 @@ export class Presence {
 		}[] = [];
 
 		uniqueUsers.forEach(user => {
-			if (user.select) {
+			if (
+				user.select &&
+				Date.now() - user.lastActivity <= CURSORS_IDLE_CLEANUP_DELAY
+			) {
 				selects.push({
 					...user.select,
 					color: user.color,
@@ -675,6 +682,9 @@ export class Presence {
 		const selections: { selection: Item[]; color: string }[] = [];
 
 		uniqueUsers.forEach(user => {
+			if (Date.now() - user.lastActivity >= CURSORS_IDLE_CLEANUP_DELAY) {
+				return;
+			}
 			const items: Item[] = [];
 			for (const sel of user.selection) {
 				const foundItem = this.board.items.findById(sel);
