@@ -274,9 +274,9 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	updateElement(): void {
-		if (this.selection) {
-			Transforms.select(this.editor.editor, this.selection);
-		}
+		// if (this.selection) {
+		// 	Transforms.select(this.editor.editor, this.selection);
+		// }
 		if (this.updateRequired) {
 			return;
 		}
@@ -675,9 +675,7 @@ export class RichText extends Mbr implements Geometry {
 			this.editor.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontStyle(style);
-		if (selectionContext !== "EditTextUnderPointer") {
-			this.updateElement();
-		}
+		this.updateElement();
 		return ops;
 	}
 
@@ -713,9 +711,7 @@ export class RichText extends Mbr implements Geometry {
 			fontSize,
 			selectionContext,
 		);
-		if (selectionContext !== "EditTextUnderPointer") {
-			this.updateElement();
-		}
+		this.updateElement();
 		return ops;
 	}
 
