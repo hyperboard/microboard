@@ -400,6 +400,7 @@ export function createEvents(
 			date - pendingEvent.lastSentTime >= RESEND_INTERVAL
 		) {
 			if (firstSentTime && date - firstSentTime >= RESEND_INTERVAL * 5) {
+				board.presence.clear();
 				if (!notificationId) {
 					window.addEventListener(
 						"beforeunload",

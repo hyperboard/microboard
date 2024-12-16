@@ -205,12 +205,10 @@ export class Presence {
 	}
 
 	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
-		const now = Date.now();
 		const PING_CLEANUP = 15_000;
 
-		let filteredUsers = Array.from(this.users.values()).filter(
-			user =>
-				user.boardId === boardId && now - user.lastPing <= PING_CLEANUP,
+		let filteredUsers = Array.from(this.users.values()).filter(user =>
+			this.clearUserPresence(boardId, user, PING_CLEANUP),
 		);
 
 		if (excludeSelf) {
@@ -229,6 +227,25 @@ export class Presence {
 		});
 
 		return Array.from(uniqueUsers.values());
+	}
+
+	clearUserPresence(
+		boardId: string,
+		user: PresenceUser,
+		pingCleanup: number,
+	): boolean {
+		if (
+			user.boardId === boardId &&
+			Date.now() - user.lastPing <= pingCleanup
+		) {
+			return true;
+		}
+
+		const userCopy = { ...user };
+		userCopy.select = undefined;
+		userCopy.selection = [];
+		this.users.set(user.userId.toString(), userCopy);
+		return false;
 	}
 
 	getColors(): string[] {

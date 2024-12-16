@@ -819,19 +819,25 @@ export class Select extends Tool {
 			this.board.tools.publish();
 			this.clear();
 
-			this.board.presence.throttledEmit({
-				method: "DrawSelect",
+			// this.board.presence.throttledEmit({
+			// 	method: "DrawSelect",
+			// 	timestamp: Date.now(),
+			// 	size: {
+			// 		left: this.rect.left,
+			// 		top: this.rect.top,
+			// 		right: this.rect.right,
+			// 		bottom: this.rect.bottom,
+			// 	},
+			// });
+
+			this.board.presence.emit({
+				method: "CancelDrawSelect",
 				timestamp: Date.now(),
-				size: {
-					left: this.rect.left,
-					top: this.rect.top,
-					right: this.rect.right,
-					bottom: this.rect.bottom,
-				},
 			});
+
 			return false;
 		}
-		this.board.presence.throttledEmit({
+		this.board.presence.emit({
 			method: "CancelDrawSelect",
 			timestamp: Date.now(),
 		});
