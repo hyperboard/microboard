@@ -9,6 +9,7 @@ import {
 	Range,
 	Transforms,
 	BaseSelection,
+	Location,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
@@ -772,18 +773,30 @@ export class EditorContainer {
 		);
 	}
 
+	isEditorEmpty = (): boolean => {
+		const { children } = this.editor;
+		return children.length === 1 && Node.string(children[0]) === "";
+	};
+
 	insertCopiedText(text: string): boolean {
 		const lines = text.split(/\r\n|\r|\n/);
-		let split = false;
-
-		for (const line of lines) {
-			if (split) {
-				Transforms.splitNodes(this.editor, { always: true });
-			}
-
-			this.editor.insertText(line);
-			split = true;
+		const styles = Editor.marks(this.editor);
+		let insertLocation: Location | undefined = undefined;
+		if (this.isEditorEmpty()) {
+			insertLocation = { path: [0, 0], offset: lines[0].length };
+			this.editor.insertText(lines[0]);
 		}
+
+		const paragraphs: Node | Node[] = lines
+			.slice(this.isEditorEmpty() ? 1 : 0)
+			.map((line: string) => {
+				return {
+					type: "paragraph",
+					children: [{ text: line, ...styles }],
+				};
+			});
+
+		Transforms.insertNodes(this.editor, paragraphs, { at: insertLocation });
 		return true;
 	}
 
