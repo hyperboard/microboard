@@ -176,7 +176,7 @@ export class Presence {
 	}
 
 	emit(event: PresenceEventType): void {
-		if (this.events) {
+		if (this.events && this.board.getInterfaceType() === "edit") {
 			this.events.sendPresenceEvent(event);
 		}
 	}
@@ -205,14 +205,10 @@ export class Presence {
 	}
 
 	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
-		// const PING_CLEANUP = 15_000;
+		const PING_CLEANUP = 15_000;
 
 		let filteredUsers = Array.from(this.users.values()).filter(user =>
-			this.clearInactiveUserSelection(
-				boardId,
-				user,
-				CURSORS_IDLE_CLEANUP_DELAY,
-			),
+			this.clearInactiveUserSelection(boardId, user, PING_CLEANUP),
 		);
 
 		if (excludeSelf) {
