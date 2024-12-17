@@ -10,6 +10,8 @@ import {
 	SubscribeConfirmationMsg,
 	type ModeMsg,
 	ViewMode,
+	AiChatMsg,
+	ChatChunk,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -163,6 +165,40 @@ export function createEvents(
 	function disconnect(): void {
 		enforceMode("loading");
 		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
+	}
+
+	function handleAiChatMassage(massage: AiChatMsg) {
+		if (massage.type === "AiChat") {
+			const event = massage.event;
+			if (event.method === "ChatChunk") {
+				handleChatChunk(event);
+			}
+		}
+	}
+
+	messageRouter.addHandler<AiChatMsg>("AiChat", handleAiChatMassage);
+
+	function handleChatChunk(chunk: ChatChunk): void {
+		const itemId = chunk.itemId;
+		switch (chunk.type) {
+			case "chunk":
+				const item = board.items.getById(itemId);
+				if (item && item.itemType === "RichText") {
+					item.editor.insertAICopiedText(chunk.content || "");
+				}
+				break;
+			case "done":
+				console.log("Chat is done");
+				break;
+			case "end":
+				console.log("User's request handled");
+				break;
+			case "error":
+				console.error("Chat error:", chunk.error);
+				break;
+			default:
+				console.warn("Unknown chunk type:", chunk.type);
+		}
 	}
 
 	function handleModeMessage(message: ModeMsg): void {
