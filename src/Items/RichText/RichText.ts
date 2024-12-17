@@ -137,6 +137,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getFontSize.bind(this),
 			this.getTransformationScale.bind(this),
 			() => this.onLimitReached,
+			this.calcAutoSize.bind(this),
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -314,8 +315,8 @@ export class RichText extends Mbr implements Geometry {
 		this.updateRequired = false;
 	}
 
-	calcAutoSize(): void {
-		const nodes = this.getBlockNodes();
+	calcAutoSize(textNodes?: BlockNode[]): void {
+		const nodes = textNodes ? textNodes : this.getBlockNodes();
 		const container = this.getTransformedContainer();
 		const containerWidth = container.getWidth();
 		const containerHeight = container.getHeight();

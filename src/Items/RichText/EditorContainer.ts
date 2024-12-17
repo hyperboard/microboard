@@ -15,7 +15,13 @@ import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
 import { Subject } from "Subject";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { BlockNode, BlockType, ListType, ListTypes } from "./Editor/BlockNode";
+import {
+	BlockNode,
+	BlockType,
+	ListType,
+	ListTypes,
+	ParagraphNode,
+} from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { DefaultTextStyles } from "./RichText";
 import {
@@ -57,7 +63,7 @@ export class EditorContainer {
 		undo: () => void,
 		redo: () => void,
 		private getScale: () => number,
-		horisontalAlignment: HorisontalAlignment,
+		public horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
 		private getAutosize: () => boolean,
 		private autosizeEnable: () => void,
@@ -65,6 +71,7 @@ export class EditorContainer {
 		private getFontSize: () => number,
 		private getMatrixScale: () => number,
 		private getOnLimitReached: () => () => void,
+		private calcAutoSize: (textNodes?: BlockNode[]) => void,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -773,36 +780,77 @@ export class EditorContainer {
 		);
 	}
 
-	isEditorEmpty = (): boolean => {
-		const { children } = this.editor;
-		return children.length === 1 && Node.string(children[0]) === "";
-	};
+	getTextParagraphs(lines: string[]): ParagraphNode[] {
+		const newlines: ParagraphNode[] = [];
+
+		lines.forEach(line => {
+			if (!this.getAutosize()) {
+				newlines.push(this.createParagraphNode(line));
+				return;
+			}
+
+			const validText = this.getValidText(line, newlines);
+			if (validText.length > 0) {
+				newlines.push(this.createParagraphNode(validText));
+			} else {
+				this.getOnLimitReached()();
+			}
+		});
+
+		return newlines;
+	}
+
+	private getValidText(line: string, newlines: ParagraphNode[]): string {
+		let left = 0;
+		let right = line.length;
+		let validText = "";
+
+		while (left <= right) {
+			const mid = Math.floor((left + right) / 2);
+			const currentText = line.slice(0, mid);
+
+			const testLine = this.createParagraphNode(currentText);
+			this.calcAutoSize([...newlines, testLine]);
+			const relativeFontSize = this.getFontSize() / this.getMatrixScale();
+
+			if (relativeFontSize >= 10) {
+				validText = currentText;
+				left = mid + 1;
+			} else {
+				right = mid - 1;
+			}
+		}
+
+		return validText;
+	}
+
+	private createParagraphNode(text: string): ParagraphNode {
+		return {
+			type: "paragraph",
+			children: [{ text, ...Editor.marks(this.editor) }],
+			horisontalAlignment: this.horisontalAlignment,
+		};
+	}
 
 	insertCopiedText(text: string): boolean {
-		const lines = text.split(/\r\n|\r|\n/);
-		const styles = Editor.marks(this.editor);
-		const isPrevTextEmpty = this.isEditorEmpty();
+		const lines = this.getTextParagraphs(text.split(/\r\n|\r|\n/));
+		const isPrevTextEmpty = this.isEmpty();
 		let insertLocation: Location | undefined = undefined;
 
 		if (isPrevTextEmpty) {
-			insertLocation = { path: [0, 0], offset: lines[0].length };
-			this.editor.insertText(lines[0]);
+			const text = lines[0].children[0].text;
+			insertLocation = { path: [0, 0], offset: text.length };
+			this.editor.insertText(text);
 		}
 
-		const paragraphs: Node[] = lines
-			.slice(isPrevTextEmpty ? 1 : 0)
-			.map((line: string) => {
-				return {
-					type: "paragraph",
-					children: [{ text: line, ...styles }],
-				};
-			});
-
-		if (paragraphs.length !== 0) {
-			Transforms.insertNodes(this.editor, paragraphs, {
+		Transforms.insertNodes(
+			this.editor,
+			lines.slice(isPrevTextEmpty ? 1 : 0),
+			{
 				at: insertLocation,
-			});
-		}
+			},
+		);
+
 		return true;
 	}
 
