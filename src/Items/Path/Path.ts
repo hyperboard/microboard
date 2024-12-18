@@ -439,7 +439,7 @@ export class Path implements Geometry, PathStylize {
 		ctx.stroke(this.path2d!);
 	}
 
-	renderHTML(): string {
+	getSvgPath(): string {
 		if (this.segments.length === 0) {
 			return "";
 		}
@@ -484,6 +484,32 @@ export class Path implements Geometry, PathStylize {
 		}
 
 		return pathData.trim();
+	}
+
+	renderHTML(): SVGPathElement {
+		const pathElement = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"path",
+		);
+
+		pathElement.setAttribute("d", this.getSvgPath());
+		pathElement.setAttribute("fill", this.backgroundColor);
+		pathElement.setAttribute(
+			"fill-opacity",
+			this.backgroundOpacity.toString(),
+		);
+		pathElement.setAttribute("stroke", this.borderColor);
+		pathElement.setAttribute("stroke-width", this.borderWidth.toString());
+		pathElement.setAttribute(
+			"stroke-opacity",
+			this.borderOpacity.toString(),
+		);
+		pathElement.setAttribute(
+			"stroke-dasharray",
+			LinePatterns[this.borderStyle].join(", "),
+		);
+
+		return pathElement;
 	}
 
 	transform(matrix: Matrix): void {

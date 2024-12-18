@@ -221,8 +221,8 @@ export class Paths implements Geometry {
 		}
 	}
 
-	renderHTML(): string {
-		return this.paths.map(path => path.renderHTML()).join(" ");
+	renderHTML(): SVGPathElement[] {
+		return this.paths.map(path => path.renderHTML());
 	}
 
 	transform(matrix: Matrix): void {

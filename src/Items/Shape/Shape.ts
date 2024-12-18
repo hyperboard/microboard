@@ -480,33 +480,20 @@ export class Shape implements Geometry {
 		svg.setAttribute("width", `${unscaledWidth}px`);
 		svg.setAttribute("height", `${unscaledHeight}px`);
 		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-		svg.setAttribute("style", "position: absolute;");
+		svg.setAttribute("style", "position: absolute; overflow: visible;");
 
-		const pathElement = document.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"path",
-		);
-		pathElement.setAttribute(
-			"d",
-			Shapes[this.shapeType].path.copy().renderHTML(),
-		);
-		pathElement.setAttribute("fill", this.backgroundColor);
-		pathElement.setAttribute(
-			"fill-opacity",
-			this.backgroundOpacity.toString(),
-		);
-		pathElement.setAttribute("stroke", this.borderColor);
-		pathElement.setAttribute("stroke-width", this.borderWidth.toString());
-		pathElement.setAttribute(
-			"stroke-opacity",
-			this.borderOpacity.toString(),
-		);
-		pathElement.setAttribute(
-			"stroke-dasharray",
-			LinePatterns[this.borderStyle].join(", "),
-		);
-
-		svg.appendChild(pathElement);
+		const pathElement = Shapes[this.shapeType].path.copy().renderHTML();
+		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
+		paths.forEach(element => {
+			element.setAttribute("fill", this.backgroundColor);
+			element.setAttribute("stroke", this.borderColor);
+			element.setAttribute(
+				"stroke-dasharray",
+				LinePatterns[this.borderStyle].join(", "),
+			);
+			element.setAttribute("stroke-width", this.borderWidth.toString());
+		});
+		svg.append(...paths);
 		div.appendChild(svg);
 
 		div.id = this.getId();

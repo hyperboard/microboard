@@ -19,7 +19,7 @@ import { GeometricNormal } from "../GeometricNormal";
 import { Item } from "../Item";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
-import { BorderStyle, Path, Paths } from "../Path";
+import { BorderStyle, LinePatterns, Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Matrix, Transformation } from "../Transformation";
 import { ConnectorCommand } from "./ConnectorCommand";
@@ -725,6 +725,72 @@ export class Connector {
 			ctx.closePath();
 			ctx.stroke();
 		}
+	}
+
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("div");
+
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const mbr = this.getMbr();
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		const unscaledWidth = width / scaleX;
+		const unscaledHeight = height / scaleY;
+
+		const svg = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"svg",
+		);
+		svg.setAttribute("width", `${unscaledWidth}px`);
+		svg.setAttribute("height", `${unscaledHeight}px`);
+		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute("style", "position: absolute; overflow: visible;");
+
+		const lines = this.renderPathHTML(this.lines);
+		svg.append(...lines);
+
+		if (this.getStartPointerStyle() !== "None") {
+			const startPointer = this.renderPathHTML(this.startPointer.path);
+			svg.append(...startPointer);
+		}
+		if (this.getEndPointerStyle() !== "None") {
+			const endPointer = this.renderPathHTML(this.endPointer.path);
+			svg.append(...endPointer);
+		}
+
+		div.appendChild(svg);
+
+		div.id = this.getId();
+		div.style.width = unscaledWidth + "px";
+		div.style.height = unscaledHeight + "px";
+		div.style.transformOrigin = "left top";
+		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+		div.style.position = "absolute";
+
+		return div;
+	}
+
+	private renderPathHTML(path: Path | Paths): SVGPathElement[] {
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const pathElement = path.renderHTML();
+
+		if (Array.isArray(pathElement)) {
+			pathElement.forEach(element => {
+				element.setAttribute(
+					"transform",
+					`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
+				);
+			});
+		} else {
+			pathElement.setAttribute(
+				"transform",
+				`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
+			);
+		}
+
+		return Array.isArray(pathElement) ? pathElement : [pathElement];
 	}
 
 	getPaths(): Path {
