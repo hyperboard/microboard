@@ -752,10 +752,26 @@ export class Connector {
 
 		if (this.getStartPointerStyle() !== "None") {
 			const startPointer = this.renderPathHTML(this.startPointer.path);
+			if (
+				!(
+					this.startPointer.name.toLowerCase().includes("filled") ||
+					this.startPointer.name.toLowerCase().includes("arrow")
+				)
+			) {
+				startPointer.forEach(el => el.setAttribute("fill", "none"));
+			}
 			svg.append(...startPointer);
 		}
 		if (this.getEndPointerStyle() !== "None") {
 			const endPointer = this.renderPathHTML(this.endPointer.path);
+			if (
+				!(
+					this.endPointer.name.toLowerCase().includes("filled") ||
+					this.endPointer.name.toLowerCase().includes("arrow")
+				)
+			) {
+				endPointer.forEach(el => el.setAttribute("fill", "none"));
+			}
 			svg.append(...endPointer);
 		}
 
