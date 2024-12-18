@@ -21,6 +21,12 @@ import { RichText } from "../RichText";
 import { StickerCommand } from "./StickerCommand";
 import { StickerData, StickerOperation } from "./StickerOperation";
 import { LinkTo } from "../LinkTo/LinkTo";
+import {
+	positionRelatively,
+	resetElementScale,
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender";
 
 export const stickerColors = {
 	"Sky Blue": "rgb(174, 212, 250)",
@@ -334,6 +340,61 @@ export class Sticker implements Geometry {
 		this.renderShadow(context);
 		this.stickerPath.render(context);
 		this.text.render(context);
+	}
+
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("div");
+
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
+		const itemMbr = this.getMbr();
+		const height = itemMbr.getHeight();
+		const unscaledWidth = itemMbr.getWidth() / scaleX;
+		const unscaledHeight = height / scaleY;
+
+		div.id = this.getId();
+		div.style.backgroundColor = this.backgroundColor;
+		div.style.width = `${unscaledWidth}px`;
+		div.style.height = `${unscaledHeight}px`;
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+		div.style.boxShadow =
+			"0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)";
+
+		if (!this.text.isAutosize()) {
+			div.style.overflowY = "auto";
+			div.style.overflowX = "hidden";
+		}
+
+		const autoScale =
+			(this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
+		const textElement = this.text.renderHTML();
+		textElement.id = `${this.getId()}_text`;
+		textElement.style.overflow = "auto";
+		positionRelatively(textElement, div);
+		resetElementScale(textElement);
+		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
+		scaleElementBy(textElement, autoScale, autoScale);
+		textElement.style.maxWidth = `${(width / autoScale) * scaleX}px`;
+		textElement.style.width = `${parseInt(textElement.style.width) / (scaleX * autoScale)}px`;
+		const textHeight = this.text.layoutNodes.height * autoScale;
+		if (textHeight < height) {
+			const alignment = this.text.getVerticalAlignment();
+			if (alignment === "center") {
+				textElement.style.marginTop = `${(height - textHeight) / 2 / scaleY}px`;
+			} else if (alignment === "bottom") {
+				textElement.style.marginTop = `${(height - textHeight) / scaleY}px`;
+			} else {
+				textElement.style.marginTop = "0px";
+			}
+		}
+		textElement.style.height = "";
+
+		div.appendChild(textElement);
+
+		return div;
 	}
 
 	renderShadow(context: DrawingContext): void {
