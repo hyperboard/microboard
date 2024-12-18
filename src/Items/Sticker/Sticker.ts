@@ -378,7 +378,9 @@ export class Sticker implements Geometry {
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		scaleElementBy(textElement, autoScale, autoScale);
 		textElement.style.maxWidth = `${(width / autoScale) * scaleX}px`;
-		textElement.style.width = `${parseInt(textElement.style.width) / (scaleX * autoScale)}px`;
+		if (autoScale < 1) {
+			textElement.style.width = `${parseInt(textElement.style.width) / (scaleX * autoScale)}px`;
+		}
 		const textHeight = this.text.layoutNodes.height * autoScale;
 		if (textHeight < height) {
 			const alignment = this.text.getVerticalAlignment();
