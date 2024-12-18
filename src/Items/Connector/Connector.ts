@@ -37,6 +37,12 @@ import { getStartPointer, getEndPointer } from "./Pointers/index";
 import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
+import {
+	positionRelatively,
+	resetElementScale,
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -747,6 +753,40 @@ export class Connector {
 		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
 		svg.setAttribute("style", "position: absolute; overflow: visible;");
 
+		// todo fix clip
+		// const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+		// const clip = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		// clip.setAttribute("id", `${this.getId()}_clip`);
+
+		// const textMbr = this.text.getTransformedContainer();
+		// const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		// rect.setAttribute("x", `${textMbr.left}`);
+		// rect.setAttribute("y", `${textMbr.top}`);
+		// rect.setAttribute("width", `${textMbr.getWidth()}`);
+		// rect.setAttribute("height", `${textMbr.getHeight()}`);
+		// rect.setAttribute(
+		// 	"transform",
+		// 	`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
+		// );
+		// rect.setAttribute("fill", "black");
+
+		// const fullRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		// fullRect.setAttribute("x", `${this.getMbr().left}`);
+		// fullRect.setAttribute("y", `${this.getMbr().top}`);
+		// fullRect.setAttribute("width", `${this.getMbr().getWidth()}`);
+		// fullRect.setAttribute("height", `${this.getMbr().getHeight()}`);
+		// fullRect.setAttribute(
+		// 	"transform",
+		// 	`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
+		// );
+		// fullRect.setAttribute("fill", "white");
+
+		// clip.appendChild(fullRect);
+		// clip.appendChild(rect);
+		// svg.appendChild(clip);
+		// svg.setAttribute("clip-path", `url(#${this.getId()}_clip)`);
+		// svg.setAttribute("mask", `url(#${this.getId()}_clip)`);
+
 		const lines = this.renderPathHTML(this.lines);
 		svg.append(...lines);
 
@@ -784,6 +824,14 @@ export class Connector {
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 		div.style.position = "absolute";
 
+		const textElement = this.text.renderHTML();
+		textElement.id = `${this.getId()}_text`;
+		textElement.style.overflow = "auto";
+		positionRelatively(textElement, div);
+		resetElementScale(textElement);
+		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
+		div.appendChild(textElement);
+
 		return div;
 	}
 
@@ -791,20 +839,15 @@ export class Connector {
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
 		const pathElement = path.renderHTML();
+		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 
-		if (Array.isArray(pathElement)) {
-			pathElement.forEach(element => {
-				element.setAttribute(
-					"transform",
-					`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
-				);
-			});
-		} else {
-			pathElement.setAttribute(
+		paths.forEach(element => {
+			element.setAttribute(
 				"transform",
 				`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
 			);
-		}
+			// element.setAttribute("clip", `url(#${this.getId()}_clip)`);
+		});
 
 		return Array.isArray(pathElement) ? pathElement : [pathElement];
 	}
