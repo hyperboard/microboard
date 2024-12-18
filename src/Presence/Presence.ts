@@ -112,8 +112,15 @@ export class Presence {
 			100,
 		);
 
+		const bindedNeedDisableTrackingCheck =
+			this.getIsDisableTrackingNeeded.bind(this);
+
 		this.board.camera.subject.subscribe(_camera => {
 			throttleCameraEvent(this.board.camera);
+
+			if (bindedNeedDisableTrackingCheck()) {
+				this.disableTracking();
+			}
 		});
 
 		this.board.selection.subject.subscribe(selection => {
@@ -148,6 +155,23 @@ export class Presence {
 				shearY: camera.matrix.shearY,
 			});
 		}
+	}
+
+	getIsDisableTrackingNeeded(): boolean {
+		const trackedUser = this.trackedUser;
+		if (!trackedUser || !trackedUser.camera) {
+			return false;
+		}
+		return !this.board.camera.matrix.compare(
+			new Matrix(
+				trackedUser.camera.translateX,
+				trackedUser.camera.translateY,
+				trackedUser.camera.scaleX,
+				trackedUser.camera.scaleY,
+				trackedUser.camera.shearX,
+				trackedUser.camera.shearY,
+			),
+		);
 	}
 
 	setCurrentUser(userId: string): void {
@@ -429,7 +453,9 @@ export class Presence {
 		const userCopy = { ...user };
 		userCopy.camera = eventData;
 		this.updateUserMetaInfo(msg, userCopy);
+		this.users.set(msg.userId.toString(), userCopy);
 		if (this.trackedUser) {
+			this.trackedUser.camera = eventData;
 			this.board.camera.applyMatrix(
 				new Matrix(
 					eventData.translateX,
@@ -441,7 +467,6 @@ export class Presence {
 				),
 			);
 		}
-		this.users.set(msg.userId.toString(), userCopy);
 	}
 
 	processDrawSelect(msg: PresenceEventMsg<DrawSelectEvent>): void {

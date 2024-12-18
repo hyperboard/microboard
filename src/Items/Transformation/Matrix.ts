@@ -213,4 +213,17 @@ export class Matrix {
 	mirrorY(): Matrix {
 		return new Matrix(0, 0, -1, 1);
 	}
+
+	compare(matrix: Matrix): boolean {
+		const { translateX, translateY, scaleX, scaleY, shearX, shearY } =
+			matrix;
+		return (
+			this.translateX === translateX &&
+			this.translateY === translateY &&
+			this.scaleX === scaleX &&
+			this.scaleY === scaleY &&
+			this.shearX === shearX &&
+			this.shearY === shearY
+		);
+	}
 }
