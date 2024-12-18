@@ -235,6 +235,82 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("div");
+
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const mbr = this.getMbr();
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		const unscaledWidth = width / scaleX;
+		const unscaledHeight = height / scaleY;
+
+		const svg = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"svg",
+		);
+		svg.setAttribute("width", `${unscaledWidth}px`);
+		svg.setAttribute("height", `${unscaledHeight}px`);
+		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute("style", "position: absolute; overflow: visible;");
+
+		const pathElement = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"path",
+		);
+		pathElement.setAttribute("d", this.getPathData());
+		pathElement.setAttribute("stroke", this.borderColor);
+		pathElement.setAttribute("stroke-width", `${this.strokeWidth}`);
+		pathElement.setAttribute("fill", "none");
+
+		svg.appendChild(pathElement);
+
+		div.appendChild(svg);
+
+		div.id = this.getId();
+		div.style.width = unscaledWidth + "px";
+		div.style.height = unscaledHeight + "px";
+		div.style.transformOrigin = "left top";
+		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+		div.style.position = "absolute";
+
+		return div;
+	}
+
+	private getPathData(): string {
+		const points = this.points;
+		if (points.length < 2) {
+			return "";
+		}
+
+		let pathData = `M ${points[0].x} ${points[0].y}`;
+
+		if (points.length < 3) {
+			pathData += ` L ${points[0].x + 0.5} ${points[0].y}`;
+		} else {
+			let j = 1;
+			for (; j < points.length - 2; j++) {
+				const cx = (points[j].x + points[j + 1].x) / 2;
+				const cy = (points[j].y + points[j + 1].y) / 2;
+				pathData += ` Q ${points[j].x} ${points[j].y} ${cx} ${cy}`;
+			}
+
+			const x =
+				points[j].x === points[j + 1].x && isSafari()
+					? points[j + 1].x + 0.01
+					: points[j + 1].x;
+			const y =
+				points[j].y === points[j + 1].y && isSafari()
+					? points[j + 1].y + 0.01
+					: points[j + 1].y;
+
+			pathData += ` Q ${points[j].x} ${points[j].y} ${x} ${y}`;
+		}
+
+		return pathData;
+	}
+
 	getPath(): Path {
 		const { left, top, right, bottom } = this.getMbr();
 		const leftTop = new Point(left, top);
