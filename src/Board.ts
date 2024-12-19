@@ -77,6 +77,9 @@ export class Board {
 
 	/* Connect to the server to recieve the events*/
 	async connect(connection: Connection): Promise<void> {
+		if (this.getBoardId() === "blank") {
+			return;
+		}
 		const currIndex = this.getSnapshot().lastIndex;
 		// temporaly disable snapshot cache
 		// TODO: reenable when fixed multiple snapshots for one board
