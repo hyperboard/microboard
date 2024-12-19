@@ -79,7 +79,7 @@ export class Presence {
 	readonly board: Board;
 	trackedUser: PresenceUser | null = null;
 	private cursorsEnabled = true;
-	private context: DrawingContext;
+	private drawingContext: DrawingContext | null = null;
 	private currentUserId: string | null = null;
 	users: Map<string, PresenceUser> = new Map();
 	followers: string[] = [];
@@ -112,13 +112,13 @@ export class Presence {
 			150,
 		);
 
-		const bindedNeedDisableTrackingCheck =
+		const checkIsDisableTrackingNeeded =
 			this.getIsDisableTrackingNeeded.bind(this);
 
 		this.board.camera.subject.subscribe(_camera => {
 			throttleCameraEvent(this.board.camera);
 
-			if (bindedNeedDisableTrackingCheck()) {
+			if (checkIsDisableTrackingNeeded()) {
 				this.disableTracking();
 			}
 		});
@@ -818,7 +818,11 @@ export class Presence {
 		}
 
 		const renderLoop = (): void => {
-			const context = this.context;
+			const context = this.drawingContext;
+			if (!context) {
+				this.stopPointerRendering();
+				return;
+			}
 			const ctx = context.cursorCtx;
 			if (!ctx) {
 				this.stopPointerRendering();
@@ -1039,7 +1043,7 @@ export class Presence {
 
 	render(context: DrawingContext): void {
 		if (context) {
-			this.context = context;
+			this.drawingContext = context;
 			this.renderPointer(context);
 			this.renderSelection(context);
 			this.renderSelect(context);
