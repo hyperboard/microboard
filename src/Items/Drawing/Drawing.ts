@@ -235,8 +235,8 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	renderHTML(): HTMLDivElement {
-		const div = document.createElement("div");
+	renderHTML(): HTMLElement {
+		const div = document.createElement("drawing");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;

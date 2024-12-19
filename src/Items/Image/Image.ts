@@ -263,8 +263,8 @@ export class ImageItem extends Mbr {
 		ctx.restore();
 	}
 
-	renderHTML(): HTMLDivElement {
-		const div = document.createElement("div");
+	renderHTML(): HTMLElement {
+		const div = document.createElement("image-item");
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;

@@ -43,6 +43,7 @@ import { ItemsMap } from "./Validators";
 import { Group } from "./Items/Group";
 import { Presence } from "./Presence/Presence";
 import { Comment } from "./Items/Comment";
+import { getPublicUrl } from "Config";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -654,9 +655,13 @@ export class Board {
 		return this.copy();
 	}
 
-	serializeHtml(): string {
+	async serializeHtml(): Promise<string> {
 		const items = this.items.getWholeHTML();
-		const body = `<body ><div id="items">${items}</div></body>`;
+		const script = await fetch(
+			new URL(getPublicUrl("/customWebComponents.js")),
+		);
+		const customTagsScript = await script.text();
+		const body = `<body><div id="items">${items}</div><script>${customTagsScript}</script></body>`;
 		const head = `
 		<head>
 			<meta charset="utf-8" />
@@ -684,16 +689,16 @@ export class Board {
 					background-color: rgba(200, 200, 200, 0.2);
 				}
 			</style>
-		</head>`
-			.split("")
-			.filter(letter => letter !== "\t" && letter !== "\n")
-			.join("");
+		</head>`.replace(/\t|\n/g, "");
 		return `${head}${body}`;
 	}
 
-	exportHTML(): string {
-		const htmlContent = this.serializeHtml();
-		const blob = new Blob([htmlContent], { type: "text/html" });
+	/** Saves boardId.html file and returns stringed html */
+	async exportHTML(): Promise<string> {
+		const htmlContent = await this.serializeHtml();
+		const blob = new Blob([htmlContent], {
+			type: "text/html;charset=utf-8",
+		});
 		const url = URL.createObjectURL(blob);
 		const anch = document.createElement("a");
 		anch.href = url;

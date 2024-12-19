@@ -1021,7 +1021,7 @@ export class RichText extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	renderHTML(): HTMLDivElement {
+	renderHTML(): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
 				const text = escapeHtml(node.text);
@@ -1098,7 +1098,7 @@ export class RichText extends Mbr implements Geometry {
 		const transformedWidth = this.getTransformedContainer().getWidth();
 		const transformedHeight = this.getTransformedContainer().getHeight();
 
-		const div = document.createElement("div");
+		const div = document.createElement("rich-text");
 		div.id = this.getId();
 		div.style.width = `${transformedWidth + 5}px`;
 		div.style.height = `${transformedHeight}px`;

@@ -736,8 +736,8 @@ export class Frame implements Geometry {
 		}
 	}
 
-	renderHTML(): HTMLDivElement {
-		const div = document.createElement("div");
+	renderHTML(): HTMLElement {
+		const div = document.createElement("frame-item");
 		div.id = this.getId();
 
 		div.style.backgroundColor = this.backgroundColor;
