@@ -121,6 +121,7 @@ export class Board {
 		this.index = new SpatialIndex(this.camera, this.pointer);
 		this.items = this.index.items;
 		this.selection.events = this.events;
+		this.presence.events = this.events;
 	}
 
 	getNewItemId(): string {

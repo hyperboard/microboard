@@ -162,6 +162,6 @@ export class AddSticker extends BoardTool {
 	}
 
 	private setLastSticker(lastSticker: Sticker): void {
-		tempStorage.setStickerData(lastSticker);
+		tempStorage.setStickerData(lastSticker.serialize());
 	}
 }
