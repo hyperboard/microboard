@@ -911,9 +911,7 @@ export class Board {
 					firstVisit &&
 					firstVisit.minId === this.getBoardId()
 				) {
-					console.error(
-						`Not enough place in localStorage for ${this.getBoardId()} snapshot`,
-					);
+					return;
 				}
 			}
 		};

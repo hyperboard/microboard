@@ -276,7 +276,7 @@ export function createEvents(
 	function handleCreateSnapshotRequestMessage(): void {
 		const snapshot = log.getSnapshot();
 		connection.publishSnapshot(board.getBoardId(), snapshot);
-		board.saveSnapshot(snapshot);
+		// board.saveSnapshot(snapshot);
 	}
 
 	messageRouter.addHandler<SnapshotRequestMsg>(
@@ -324,7 +324,7 @@ export function createEvents(
 		} else {
 			board.deserialize(snapshot);
 		}
-		board.saveSnapshot(snapshot);
+		// board.saveSnapshot(snapshot);
 	}
 
 	function handleBoardEventListApplication(events: SyncBoardEvent[]): void {
@@ -349,7 +349,7 @@ export function createEvents(
 			}
 		}
 
-		board.saveSnapshot();
+		// board.saveSnapshot();
 	}
 
 	function handleFirstBatchOfEvents(events: SyncBoardEvent[]): void {
