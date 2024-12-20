@@ -49,6 +49,7 @@ export interface EventsLog {
 
 interface EventsList {
 	addConfirmedRecords(records: HistoryRecord[]): void;
+	setConfirmedRecords(records: HistoryRecord[]): void;
 	addNewRecords(records: HistoryRecord[]): void;
 	confirmSentRecords(records: BoardEvent[]): void;
 	getConfirmedRecords(): HistoryRecord[];
@@ -71,7 +72,7 @@ function createEventsList(
 	createCommand: (BoardOps) => Command,
 	board,
 ): EventsList {
-	const confirmedRecords: HistoryRecord[] = [];
+	let confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
 
@@ -115,7 +116,9 @@ function createEventsList(
 			});
 			confirmedRecords.push(...records);
 		},
-
+		setConfirmedRecords(records: HistoryRecord[]): void {
+			confirmedRecords = [...records];
+		},
 		addNewRecords(records: HistoryRecord[]): void {
 			for (const record of records) {
 				if (newRecords.length > 0) {
@@ -154,11 +157,22 @@ function createEventsList(
 				records[i].event.order = events[i].order;
 			}
 
+			const confirmedEvents = confirmedRecords.map(rec => rec.event);
+			const recordEvents = records.map(record => record.event);
+			const toMerge: BoardEvent[] = [
+				...confirmedEvents,
+				...recordEvents,
+			];
+			const mergedEvents = mergeEvents(toMerge);
+			confirmedRecords = mergedEvents.map(event => ({
+				event,
+				command: createCommand(event.body.operation),
+			}));
+
 			syncLog.push({
 				msg: "confirmed",
 				records: [...records],
 			});
-			confirmedRecords.push(...records);
 			recordsToSend.splice(0, records.length);
 		},
 
@@ -439,7 +453,6 @@ export function createEventsLog(board: Board): EventsLog {
 		list.revertUnconfirmed();
 
 		const transformed: BoardEvent[] = [];
-
 		for (const event of events) {
 			if (
 				event.lastKnownOrder !== undefined &&
@@ -454,7 +467,6 @@ export function createEventsLog(board: Board): EventsLog {
 						evnt.order > event.lastKnownOrder &&
 						evnt.order <= event.order,
 				);
-				// const transf = transformEvents(confirmed, [event], board);
 				const transf = transformEvents(confirmed, [event]);
 				transformed.push(...transf);
 			} else {
@@ -462,14 +474,22 @@ export function createEventsLog(board: Board): EventsLog {
 			}
 		}
 
-		const mergedEvents = mergeEvents(transformed);
-		for (const event of mergedEvents) {
+		const confirmed = list.getConfirmedRecords().map(rec => rec.event);
+		const mergedEvents = mergeEvents([...confirmed, ...transformed]);
+		const newRecords: HistoryRecord[] = mergedEvents.map(event => ({
+			event,
+			command: createCommand(board, event.body.operation),
+		}));
+
+		const newMergedEvents = mergeEvents([...transformed]);
+		for (const event of newMergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			list.addConfirmedRecords([record]);
 			list.justConfirmed.push(record);
 		}
+
+		list.setConfirmedRecords(newRecords);
 		list.applyUnconfirmed();
 	}
 
