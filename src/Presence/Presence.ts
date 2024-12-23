@@ -836,8 +836,13 @@ export class Presence {
 			ctx.font = `${14 * scale}px Arial`;
 			ctx.textAlign = "left";
 			ctx.textBaseline = "middle";
-			// FIXME: Rewrite to not use fixed numbers;
-			ctx.clearRect(-20000, -20000, 40_000, 40_000);
+			const cameraMbr = this.board.camera.getMbr();
+			ctx.clearRect(
+				cameraMbr.left,
+				cameraMbr.top,
+				cameraMbr.getWidth(),
+				cameraMbr.getHeight(),
+			);
 
 			Object.values(cursors).forEach(cursor => {
 				this.saveImageCache(cursor);
