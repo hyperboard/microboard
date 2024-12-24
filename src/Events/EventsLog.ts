@@ -49,7 +49,6 @@ export interface EventsLog {
 
 interface EventsList {
 	addConfirmedRecords(records: HistoryRecord[]): void;
-	setConfirmedRecords(records: HistoryRecord[]): void;
 	addNewRecords(records: HistoryRecord[]): void;
 	confirmSentRecords(records: BoardEvent[]): void;
 	getConfirmedRecords(): HistoryRecord[];
@@ -72,7 +71,7 @@ function createEventsList(
 	createCommand: (BoardOps) => Command,
 	board,
 ): EventsList {
-	let confirmedRecords: HistoryRecord[] = [];
+	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
 
@@ -116,9 +115,6 @@ function createEventsList(
 			});
 			confirmedRecords.push(...records);
 		},
-		setConfirmedRecords(records: HistoryRecord[]): void {
-			confirmedRecords = [...records];
-		},
 		addNewRecords(records: HistoryRecord[]): void {
 			for (const record of records) {
 				if (newRecords.length > 0) {
@@ -157,14 +153,13 @@ function createEventsList(
 				records[i].event.order = events[i].order;
 			}
 
-			const confirmedEvents = confirmedRecords.map(rec => rec.event);
 			const recordEvents = records.map(record => record.event);
+			const lastConfirmedEvent = confirmedRecords.pop()?.event;
 			const toMerge: BoardEvent[] = [
-				confirmedEvents[confirmedEvents.length - 1],
+				...(lastConfirmedEvent ? [lastConfirmedEvent] : []),
 				...recordEvents,
 			];
 			const mergedEvents = mergeEvents(toMerge);
-			confirmedRecords.pop();
 			mergedEvents.forEach(event => {
 				const record = {
 					event,
@@ -480,30 +475,27 @@ export function createEventsLog(board: Board): EventsLog {
 		}
 
 		const confirmedRecords: HistoryRecord[] = list.getConfirmedRecords();
-		const confirmedEvents = confirmedRecords.map(rec => rec.event);
+		const lastConfirmedRecord = confirmedRecords.pop();
+		const lastConfirmedEvent = lastConfirmedRecord?.event;
 		const mergedEvents = mergeEvents([
-			confirmedEvents[confirmedEvents.length - 1],
-			...transformed,
+			...(lastConfirmedEvent ? [lastConfirmedEvent] : []),
+			...events,
 		]);
-
-		confirmedRecords.pop();
-		list.setConfirmedRecords(confirmedRecords);
-		mergedEvents.forEach(event => {
-			const record = {
-				event,
-				command: createCommand(board, event.body.operation),
-			};
-
-			list.addConfirmedRecords([record]);
-		});
-
-		const newMergedEvents = mergeEvents([...transformed]);
-		for (const event of newMergedEvents) {
+		mergedEvents.forEach((event, index) => {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
+			list.addConfirmedRecords([record]);
+			if (
+				lastConfirmedRecord &&
+				index === 0 &&
+				lastConfirmedEvent?.body.operation.class === "Board" &&
+				lastConfirmedEvent.body.operation.method === "remove"
+			) {
+				lastConfirmedRecord?.command.revert();
+			}
 			command.apply();
 			list.justConfirmed.push(record);
-		}
+		});
 
 		list.applyUnconfirmed();
 	}
