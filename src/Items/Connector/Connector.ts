@@ -295,12 +295,15 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	setStartPoint(point: ControlPoint, timestamp?: number): void {
+	setStartPoint(
+		point: ControlPoint | ControlPointData,
+		timestamp?: number,
+	): void {
 		this.emit({
 			class: "Connector",
 			method: "setStartPoint",
 			item: [this.id],
-			startPointData: point.serialize(),
+			startPointData: "serialize" in point ? point.serialize() : point,
 			timestamp,
 		});
 	}
@@ -329,12 +332,15 @@ export class Connector {
 		}
 	}
 
-	setEndPoint(point: ControlPoint, timestamp?: number): void {
+	setEndPoint(
+		point: ControlPoint | ControlPointData,
+		timestamp?: number,
+	): void {
 		this.emit({
 			class: "Connector",
 			method: "setEndPoint",
 			item: [this.id],
-			endPointData: point.serialize(),
+			endPointData: "serialize" in point ? point.serialize() : point,
 			timestamp,
 		});
 	}
@@ -823,8 +829,59 @@ export class Connector {
 		div.style.transformOrigin = "left top";
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 		div.style.position = "absolute";
+		div.setAttribute("data-line-color", this.lineColor);
+		div.setAttribute("data-line-width", this.lineWidth.toString());
+		div.setAttribute("data-line-style", this.lineStyle);
+		div.setAttribute("data-border-style", this.borderStyle);
+		div.setAttribute(
+			"data-start-pointer-style",
+			this.getStartPointerStyle(),
+		);
+		div.setAttribute("data-start-point-type", this.startPoint.pointType);
+		div.setAttribute(
+			"data-start-point-item",
+			(this.startPoint.pointType !== "Board" &&
+				this.startPoint.item.getId()) ||
+				"",
+		);
+		div.setAttribute(
+			"data-start-point-relative-x",
+			("relativePoint" in this.startPoint &&
+				this.startPoint.relativePoint.x.toString()) ||
+				"",
+		);
+		div.setAttribute(
+			"data-start-point-relative-y",
+			("relativePoint" in this.startPoint &&
+				this.startPoint.relativePoint.y.toString()) ||
+				"",
+		);
+		div.setAttribute("data-start-point-x", this.startPoint.x.toString());
+		div.setAttribute("data-start-point-y", this.startPoint.y.toString());
+		div.setAttribute("data-end-pointer-style", this.getEndPointerStyle());
+		div.setAttribute("data-end-point-type", this.endPoint.pointType);
+		div.setAttribute(
+			"data-end-point-item",
+			(this.endPoint.pointType !== "Board" &&
+				this.endPoint.item.getId()) ||
+				"",
+		);
+		div.setAttribute(
+			"data-end-point-relative-x",
+			("relativePoint" in this.endPoint &&
+				this.endPoint.relativePoint.x.toString()) ||
+				"",
+		);
+		div.setAttribute(
+			"data-end-point-relative-y",
+			("relativePoint" in this.endPoint &&
+				this.endPoint.relativePoint.y.toString()) ||
+				"",
+		);
+		div.setAttribute("data-end-point-x", this.endPoint.x.toString());
+		div.setAttribute("data-end-point-y", this.endPoint.y.toString());
 
-		const textElement = this.text.renderHTML();
+		const textElement = this.text.renderHTML(false);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.overflow = "auto";
 		positionRelatively(textElement, div);

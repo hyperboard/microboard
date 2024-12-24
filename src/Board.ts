@@ -26,7 +26,6 @@ import {
 	FrameData,
 	Item,
 	ItemData,
-	ItemsLocalCounter,
 	Matrix,
 	Mbr,
 } from "./Items";
@@ -44,6 +43,7 @@ import { Group } from "./Items/Group";
 import { Presence } from "./Presence/Presence";
 import { Comment } from "./Items/Comment";
 import { getPublicUrl } from "Config";
+import { parsersHTML } from "./parserHTML";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -514,6 +514,17 @@ export class Board {
 		return factory(id, data, this);
 	}
 
+	parseHTML(
+		el: HTMLElement,
+	): ItemData | { data: FrameData; childrenMap: { [id: string]: ItemData } } {
+		const parser = parsersHTML[el.tagName.toLowerCase()];
+		if (!parser) {
+			throw new Error(`Unknown element tag: ${el.tagName.toLowerCase()}`);
+		}
+
+		return parser(el);
+	}
+
 	add<T extends Item>(item: T, timeStamp?: number): T {
 		const id = this.getNewItemId();
 		this.emit({
@@ -706,6 +717,118 @@ export class Board {
 		anch.click();
 		URL.revokeObjectURL(url);
 		return htmlContent;
+	}
+
+	// todo move into UI
+	async uploadHTML(): Promise<string | undefined> {
+		return new Promise((resolve, reject) => {
+			const input = document.createElement("input");
+			input.type = "file";
+			input.accept = ".html";
+
+			input.onchange = async (event: Event) => {
+				const file = (event.target as HTMLInputElement).files?.[0];
+				if (file) {
+					const reader = new FileReader();
+					reader.onload = ev => {
+						const htmlContent = ev.target?.result as string;
+						resolve(htmlContent);
+					};
+					reader.onerror = () => {
+						reject(new Error("Failed to read file"));
+					};
+					reader.readAsText(file);
+				} else {
+					resolve(undefined);
+				}
+			};
+
+			input.click();
+		});
+	}
+
+	async deserializeHTML(): Promise<Document | undefined> {
+		const stringedHtml = await this.uploadHTML();
+		if (!stringedHtml) {
+			return;
+		}
+
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(stringedHtml, "text/html");
+		const items = doc.body.querySelector("#items");
+		if (items) {
+			const els = Array.from(items.children).filter(
+				child =>
+					child.tagName.toLowerCase() === "rich-text" ||
+					child.tagName.toLowerCase() === "shape" ||
+					child.tagName.toLowerCase() === "sticker" ||
+					child.tagName.toLowerCase() === "image-item" ||
+					child.tagName.toLowerCase() === "connector" ||
+					child.tagName.toLowerCase() === "frame-item",
+			);
+
+			const idsMap = {};
+			const addedConnectors: { item: Connector; data: ConnectorData }[] =
+				[];
+			const data = els.map(el => this.parseHTML(el as HTMLElement));
+			for (const parsedData of data) {
+				if ("childrenMap" in parsedData) {
+					// Frame
+					const addedChildren = Object.values(
+						parsedData.childrenMap,
+					).map((childData: ItemData & { id: string }) => {
+						const created = this.createItem(
+							this.getNewItemId(),
+							childData,
+						);
+						const added = this.add(created);
+						idsMap[childData.id] = added.getId();
+						if (added.itemType === "Connector") {
+							addedConnectors.push({
+								item: added,
+								data: childData,
+							});
+						}
+						return added;
+					});
+					parsedData.data.children = addedChildren.map(item =>
+						item.getId(),
+					);
+					const addedFrame = this.add(
+						this.createItem(this.getNewItemId(), parsedData.data),
+					);
+					idsMap[parsedData.data.id] = addedFrame.getId();
+				} else {
+					const added = this.add(
+						this.createItem(this.getNewItemId(), parsedData),
+					);
+					if (added.itemType === "Connector") {
+						addedConnectors.push({
+							item: added,
+							data: parsedData,
+						});
+					}
+					idsMap[parsedData.id] = added.getId();
+				}
+			}
+			addedConnectors.forEach(connector => {
+				const startData = {
+					...connector.data.startPoint,
+					...("itemId" in connector.data.startPoint
+						? { itemId: idsMap[connector.data.startPoint.itemId] }
+						: {}),
+				};
+				const endData = {
+					...connector.data.endPoint,
+					...("itemId" in connector.data.endPoint
+						? { itemId: idsMap[connector.data.endPoint.itemId] }
+						: {}),
+				};
+
+				connector.item.setStartPoint(startData);
+				connector.item.setEndPoint(endData);
+			});
+		}
 	}
 
 	deserialize(snapshot: BoardSnapshot): void {

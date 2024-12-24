@@ -9,6 +9,7 @@ import {
 	Frame,
 	FrameData,
 	Point,
+	ItemType,
 } from "./Items";
 import { Item, ItemData } from "./Items";
 import { ImageItem, ImageItemData } from "./Items/Image";
@@ -23,9 +24,8 @@ import { Comment } from "./Items/Comment";
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
 }
-interface ItemFactories {
-	[key: string]: ItemFactory;
-}
+
+export type ItemFactories = Record<ItemType, ItemFactory>;
 export const itemFactories: ItemFactories = {
 	Sticker: createSticker,
 	Shape: createShape,

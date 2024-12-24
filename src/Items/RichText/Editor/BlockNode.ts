@@ -20,6 +20,7 @@ export type ParagraphNode = {
 	type: "paragraph";
 	children: TextNode[];
 	horisontalAlignment?: HorisontalAlignment;
+	lineHeight?: number;
 };
 
 export type HeadingNode = {

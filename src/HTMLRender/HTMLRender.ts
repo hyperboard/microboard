@@ -59,11 +59,42 @@ export function resetElementScale(el: HTMLElement): HTMLElement {
 export function positionRelatively(
 	toPosition: HTMLElement,
 	positionBy: HTMLElement,
-): void {
+): HTMLElement {
 	const [translateX, translateY] = getTranslationFromHTML(toPosition);
 	const [frameX, frameY] = getTranslationFromHTML(positionBy);
 	const [dx, dy] = [translateX - frameX, translateY - frameY];
 
 	const [scaleX, scaleY] = getScaleFromHTML(toPosition);
 	toPosition.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+
+	return toPosition;
 }
+
+export function positionAbsolutely(
+	toPosition: HTMLElement,
+	positionBy: HTMLElement,
+): HTMLElement {
+	const [translateX, translateY] = getTranslationFromHTML(toPosition);
+	const [frameX, frameY] = getTranslationFromHTML(positionBy);
+	const [dx, dy] = [translateX + frameX, translateY + frameY];
+
+	const [scaleX, scaleY] = getScaleFromHTML(toPosition);
+	toPosition.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+
+	return toPosition;
+}
+
+// export function scaleRelatively(
+// 	toScale: HTMLElement,
+// 	scaleBy: HTMLElement,
+// ): void {
+// 	const [currentScaleX, currentScaleY] = getScaleFromHTML(toScale);
+// 	const [referenceScaleX, referenceScaleY] = getScaleFromHTML(scaleBy);
+// 	const [newScaleX, newScaleY] = [
+// 		currentScaleX / referenceScaleX,
+// 		currentScaleY / referenceScaleY,
+// 	];
+
+// 	const [translateX, translateY] = getTranslationFromHTML(toScale);
+// 	toScale.style.transform = `translate(${translateX * newScaleX}px, ${translateY * newScaleY}px) scale(${newScaleX}, ${newScaleY})`;
+// }

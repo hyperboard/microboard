@@ -39,7 +39,6 @@ import { Camera } from "Board/Camera";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
 import { getBlockNodesOld } from "./CanvasText/oldRender";
-import { CSSProperties } from "react";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -50,7 +49,7 @@ export type DefaultTextStyles = {
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;
-	"line-through": boolean;
+	lineThrough: boolean;
 };
 
 let isEditInProcessValue = false;
@@ -985,7 +984,6 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
-		// await this.updateElement();
 		this.updateElement();
 		this.subject.publish(this);
 		return this;
@@ -1021,7 +1019,7 @@ export class RichText extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	renderHTML(): HTMLElement {
+	renderHTML(enablePlaceholder = true): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
 				const text = escapeHtml(node.text);
@@ -1031,7 +1029,7 @@ export class RichText extends Mbr implements Geometry {
 				span.style.fontStyle = node.italic ? "italic" : "";
 				span.style.textDecoration = [
 					node.underline ? "underline" : "",
-					node["line-through"] ? "line-through" : "",
+					node.lineThrough ? "line-through" : "",
 				]
 					.filter(Boolean)
 					.join(" ");
@@ -1088,7 +1086,9 @@ export class RichText extends Mbr implements Geometry {
 				.replace(/'/g, "&#039;");
 		};
 
-		const elements = this.editor.editor.children.map(renderNode);
+		const elements = enablePlaceholder
+			? this.getBlockNodes().map(renderNode)
+			: this.editor.editor.children.map(renderNode);
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -1107,6 +1107,9 @@ export class RichText extends Mbr implements Geometry {
 		div.style.position = "absolute";
 		div.style.overflow = "hidden";
 		div.style.overflowWrap = "break-word";
+		div.style.maxWidth = this.getMaxWidth()
+			? `${this.getMaxWidth()}px`
+			: "";
 		if (this.layoutNodes.height < transformedHeight) {
 			const alignment = this.getVerticalAlignment();
 			if (alignment === "center") {
@@ -1115,6 +1118,18 @@ export class RichText extends Mbr implements Geometry {
 				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
 			}
 		}
+
+		div.setAttribute(
+			"data-vertical-alignment",
+			this.getVerticalAlignment(),
+		);
+		div.setAttribute("data-placeholder-text", this.placeholderText);
+		div.setAttribute(
+			"data-real-size",
+			this.autoSize ? "auto" : this.getFontSize().toString(),
+		);
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+
 		div.append(...elements);
 
 		return div;

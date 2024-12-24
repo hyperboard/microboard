@@ -13,7 +13,7 @@ import { Geometry } from "../Geometry";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
-import { FrameData, FrameOperation } from "./FrameOperation";
+import { FrameOperation } from "./FrameOperation";
 import { Frames, FrameType } from "./Basic";
 import { GeometricNormal } from "../GeometricNormal";
 import { FrameCommand } from "./FrameCommand";
@@ -30,8 +30,14 @@ import {
 import { FRAME_TITLE_COLOR } from "View/Items/Frame";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { positionRelatively, translateElementBy } from "Board/HTMLRender";
-const defaultFrameData = new FrameData();
+import {
+	positionRelatively,
+	resetElementScale,
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender";
+import { DefaultFrameData, FrameData } from "./FrameData";
+const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {
 	readonly itemType = "Frame";
@@ -747,21 +753,34 @@ export class Frame implements Geometry {
 		div.style.borderWidth = `${this.borderWidth}px`;
 		div.style.borderStyle = this.borderStyle;
 
-		const { translateX, translateY } = this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
 
+		// const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
 		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(1, 1)`;
 
-		const transformedWidth = this.getMbr().getWidth();
-		const transformedHeight = this.getMbr().getHeight();
+		const width = this.getMbr().getWidth();
+		const height = this.getMbr().getHeight();
+		// const path = Frames[this.shapeType].path.copy();
+		// const unscaledMbr = path.getMbr();
+		// const unscaledWidth = unscaledMbr.getWidth();
+		// const unscaledHeight = unscaledMbr.getHeight();
 
-		div.style.width = `${transformedWidth}px`;
-		div.style.height = `${transformedHeight}px`;
+		// div.style.width = `${unscaledWidth}px`;
+		// div.style.height = `${unscaledHeight}px`;
+		div.style.width = `${width}px`;
+		div.style.height = `${height}px`;
 		div.style.transformOrigin = "top left";
 		div.style.transform = transform;
 		div.style.position = "absolute";
+		// div.setAttribute("data-shape-type", this.shapeType);
 
 		const textElement = this.text.renderHTML();
 		textElement.style.transform = `translate(0px, -30px) scale(1, 1)`;
+		// positionRelatively(textElement,  div);
+		// resetElementScale(textElement);
+		// scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
+		// translateElementBy(textElement, 0, -45 / scaleY);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.overflow = "visible";
 		div.appendChild(textElement);

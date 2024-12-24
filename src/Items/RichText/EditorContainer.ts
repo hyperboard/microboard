@@ -675,7 +675,7 @@ export class EditorContainer {
 				styles.push("underline");
 			}
 
-			if (n["line-through"]) {
+			if (n.lineThrough) {
 				styles.push("line-through");
 			}
 			return styles;
@@ -709,7 +709,7 @@ export class EditorContainer {
 					styles.push("underline");
 				}
 
-				if (node["line-through"]) {
+				if (node.lineThrough) {
 					styles.push("line-through");
 				}
 				acc.push(styles);

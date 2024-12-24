@@ -32,6 +32,8 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender";
+import { UiDivButton } from "View/Ui/UiButton";
+import { DOMSVGFactory } from "@bundled-es-modules/pdfjs-dist/types/src/display/display_utils";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -502,6 +504,15 @@ export class Shape implements Geometry {
 		div.style.transformOrigin = "left top";
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 		div.style.position = "absolute";
+		div.setAttribute("data-shape-type", this.shapeType);
+		div.setAttribute("fill", this.backgroundColor);
+		div.setAttribute("stroke", this.borderColor);
+		div.setAttribute("data-border-style", this.borderStyle);
+		div.setAttribute(
+			"stroke-dasharray",
+			LinePatterns[this.borderStyle].join(", "),
+		);
+		div.setAttribute("stroke-width", this.borderWidth.toString());
 
 		const textElement = this.text.renderHTML();
 		textElement.id = `${this.getId()}_text`;

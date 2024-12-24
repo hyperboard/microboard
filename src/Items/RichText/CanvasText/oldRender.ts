@@ -192,7 +192,7 @@ function getTextStyle(data: TextNode): LeafStyle {
 	if (data.underline) {
 		styles.push("underline");
 	}
-	if (data["line-through"]) {
+	if (data.lineThrough) {
 		styles.push("line-through");
 	}
 	if (data.subscript) {
