@@ -613,13 +613,44 @@ export class Items {
 		const restHTML = rest
 			.map(item => "renderHTML" in item && item.renderHTML())
 			.filter(item => !!item)
-			.map(item =>
-				translateElementBy(
+			.map(item => {
+				if (item.tagName.toLowerCase() === "connector") {
+					const startX = parseFloat(
+						item.getAttribute("data-start-point-x") || "0",
+					);
+					const startY = parseFloat(
+						item.getAttribute("data-start-point-y") || "0",
+					);
+					const endX = parseFloat(
+						item.getAttribute("data-end-point-x") || "0",
+					);
+					const endY = parseFloat(
+						item.getAttribute("data-end-point-y") || "0",
+					);
+
+					item.setAttribute(
+						"data-start-point-x",
+						(startX - lowestCoordinates.left).toString(),
+					);
+					item.setAttribute(
+						"data-start-point-y",
+						(startY - lowestCoordinates.top).toString(),
+					);
+					item.setAttribute(
+						"data-end-point-x",
+						(endX - lowestCoordinates.left).toString(),
+					);
+					item.setAttribute(
+						"data-end-point-y",
+						(endY - lowestCoordinates.top).toString(),
+					);
+				}
+				return translateElementBy(
 					item,
 					-lowestCoordinates.left,
 					-lowestCoordinates.top,
-				),
-			);
+				);
+			});
 
 		for (const item of restHTML) {
 			const parentFrameId = childrenMap.get(item.id);
