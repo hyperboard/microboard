@@ -313,6 +313,12 @@ export class Select extends Tool {
 
 			return false;
 		}
+
+		const isHoverLocked = hover.every(item => item.transformation.isLocked);
+		if (isHoverLocked) {
+			return false;
+		}
+
 		this.board.presence.throttledEmit({
 			method: "CancelDrawSelect",
 			timestamp: Date.now(),
