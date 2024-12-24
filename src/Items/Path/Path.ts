@@ -471,11 +471,32 @@ export class Path implements Geometry, PathStylize {
 					endAngle,
 					clockwise,
 				} = segment;
-				const largeArcFlag =
-					Math.abs(endAngle - startAngle) > Math.PI ? 1 : 0;
-				const sweepFlag = clockwise ? 1 : 0;
-				const endPoint = segment.getPoint(1);
-				pathData += `A ${radiusX} ${radiusY} ${rotation} ${largeArcFlag} ${sweepFlag} ${endPoint.x} ${endPoint.y} `;
+
+				let arcSpan = endAngle - startAngle;
+				while (arcSpan < 0) {
+					arcSpan += 2 * Math.PI;
+				}
+				while (arcSpan > 2 * Math.PI) {
+					arcSpan -= 2 * Math.PI;
+				}
+
+				const isFullCircle = Math.abs(arcSpan - 2 * Math.PI) < 1e-7;
+
+				if (isFullCircle) {
+					// split into two half-circles so browser can draw it correctly
+					const midPoint = segment.getPoint(0.5);
+					const sweepFlag = clockwise ? 1 : 0;
+					const largeArcFlag = 0;
+					const endPoint = segment.getPoint(1);
+
+					pathData += `A ${radiusX} ${radiusY} ${rotation} ${largeArcFlag} ${sweepFlag} ${midPoint.x} ${midPoint.y} `;
+					pathData += `A ${radiusX} ${radiusY} ${rotation} ${largeArcFlag} ${sweepFlag} ${endPoint.x} ${endPoint.y} `;
+				} else {
+					const largeArcFlag = Math.abs(arcSpan) > Math.PI ? 1 : 0;
+					const sweepFlag = clockwise ? 1 : 0;
+					const endPoint = segment.getPoint(1);
+					pathData += `A ${radiusX} ${radiusY} ${rotation} ${largeArcFlag} ${sweepFlag} ${endPoint.x} ${endPoint.y} `;
+				}
 			}
 		}
 
