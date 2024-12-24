@@ -24,6 +24,7 @@ import { ConnectorPointerStyle } from "./Items/Connector/Pointers/Pointers";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
 import { ConnectorLineStyle } from "./Items/Connector";
 import { ConnectionLineWidth } from "./Items/Connector/Connector";
+import { DrawingData } from "./Items/Drawing";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -48,7 +49,7 @@ export const parsersHTML: TagFactories = {
 	"rich-text": parseHTMLRichText,
 	connector: parseHTMLConnector,
 	"image-item": parseHTMLImage,
-	// "drawing": createDrawing,
+	drawing: parseHTMLDrawing,
 	"frame-item": parseHTMLFrame,
 };
 
@@ -355,4 +356,46 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
 	}
 
 	return connectorData;
+}
+
+function parseHTMLDrawing(el: HTMLElement): DrawingData & { id: string } {
+	const svg = el.querySelector("svg");
+	const pathElement = svg?.querySelector("path");
+	const pathData = pathElement?.getAttribute("d");
+	if (!pathData || !pathElement || !svg) {
+		throw new Error(`<drawing> with id ${el.id} wrong format`);
+	}
+
+	const points: { x: number; y: number }[] = [];
+	const commands = pathData.match(/[MLQ][^MLQ]*/g) || [];
+
+	for (const command of commands) {
+		const type = command[0];
+		const coords = command.slice(1).trim().split(/\s+/).map(Number);
+
+		if (type === "M" || type === "L") {
+			for (let i = 0; i < coords.length; i += 2) {
+				const point = { x: coords[i], y: coords[i + 1] };
+				points.push(point);
+			}
+		} else if (type === "Q") {
+			for (let i = 0; i < coords.length; i += 4) {
+				const endPoint = { x: coords[i], y: coords[i + 1] };
+				points.push(endPoint);
+			}
+		}
+	}
+
+	const transformation = getTransformationData(el);
+
+	return {
+		id: el.id,
+		itemType: "Drawing",
+		points,
+		transformation,
+		strokeStyle: pathElement.getAttribute("stroke") || "",
+		strokeWidth: parseFloat(
+			pathElement.getAttribute("stroke-width") || "1",
+		),
+	};
 }

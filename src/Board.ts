@@ -747,7 +747,7 @@ export class Board {
 		});
 	}
 
-	async deserializeHTML(): Promise<Document | undefined> {
+	async deserializeHTML(): Promise<void> {
 		const stringedHtml = await this.uploadHTML();
 		if (!stringedHtml) {
 			return;
@@ -757,20 +757,12 @@ export class Board {
 		const doc = parser.parseFromString(stringedHtml, "text/html");
 		const items = doc.body.querySelector("#items");
 		if (items) {
-			const els = Array.from(items.children).filter(
-				child =>
-					child.tagName.toLowerCase() === "rich-text" ||
-					child.tagName.toLowerCase() === "shape" ||
-					child.tagName.toLowerCase() === "sticker" ||
-					child.tagName.toLowerCase() === "image-item" ||
-					child.tagName.toLowerCase() === "connector" ||
-					child.tagName.toLowerCase() === "frame-item",
-			);
-
 			const idsMap = {};
 			const addedConnectors: { item: Connector; data: ConnectorData }[] =
 				[];
-			const data = els.map(el => this.parseHTML(el as HTMLElement));
+			const data = Array.from(items.children).map(el =>
+				this.parseHTML(el as HTMLElement),
+			);
 			for (const parsedData of data) {
 				if ("childrenMap" in parsedData) {
 					// Frame
