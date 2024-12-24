@@ -142,14 +142,14 @@ function parseHTMLRichText(
 		itemType: "RichText",
 		placeholderText: el.getAttribute("data-placeholder-text") || "",
 		realSize: (el.getAttribute("data-real-size") === "auto" && "auto") || 0,
-		linkTo: el.getAttribute("data-link-to") || "",
+		linkTo: el.getAttribute("data-link-to") || undefined,
 		maxWidth: parseInt(el.style.maxWidth),
 		verticalAlignment:
 			(el.getAttribute("data-vertical-alignment") as VerticalAlignment) ||
 			"top",
-		children: Array.from(el.children).map(child =>
-			parseNode(child as HTMLElement),
-		),
+		children: Array.from(el.children)
+			.filter(child => !child.classList.contains("link-object"))
+			.map(child => parseNode(child as HTMLElement)),
 	};
 
 	if (options) {
@@ -179,6 +179,7 @@ function parseHTMLFrame(el: HTMLElement): {
 		children: [],
 		borderOpacity: 1,
 		borderStyle: (el.style.borderStyle as BorderStyle) || "",
+		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
 
 	const defaultPath = Frames["Custom"].path.copy();
@@ -199,7 +200,11 @@ function parseHTMLFrame(el: HTMLElement): {
 	}
 
 	const childrenMap = Array.from(el.children)
-		.filter(child => child.id !== `${el.id}_text`)
+		.filter(
+			child =>
+				child.id !== `${el.id}_text` &&
+				!child.classList.contains("link-object"),
+		)
 		.map(child => positionAbsolutely(child as HTMLElement, el))
 		.reduce((acc: { [id: string]: ItemData }, child) => {
 			acc[child.id] = parsersHTML[child.tagName.toLowerCase()](
@@ -226,6 +231,7 @@ function parseHTMLShape(el: HTMLElement): ShapeData & { id: string } {
 			(el.getAttribute("data-border-style") as BorderStyle) || "",
 		transformation: getTransformationData(el),
 		text: new DefaultRichTextData(),
+		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
 
 	const textElement = el.querySelector(`#${CSS.escape(el.id)}_text`);
@@ -248,7 +254,7 @@ function parseHTMLSticker(el: HTMLElement): StickerData & { id: string } {
 		backgroundColor: el.style.backgroundColor || "",
 		transformation,
 		text: new DefaultRichTextData(),
-		linkTo: new LinkTo(),
+		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
 
 	const textElement = el.querySelector(`#${CSS.escape(el.id)}_text`);
@@ -274,7 +280,7 @@ function parseHTMLImage(el: HTMLElement): ImageItemData & { id: string } {
 			height: parseInt(el.style.height),
 		},
 		storageLink: el.style.backgroundImage.slice(5, -2), // Remove 'url("")'
-		linkTo: "",
+		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
 
 	return imageItemData;
@@ -343,7 +349,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
 		borderStyle:
 			(el.getAttribute("data-border-style") as BorderStyle) || "",
 		text: new DefaultRichTextData(),
-		linkTo: new LinkTo(),
+		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
 
 	const textElement = el.querySelector(`#${CSS.escape(el.id)}_text`);

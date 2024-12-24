@@ -11,6 +11,10 @@ import { Placeholder } from "../Placeholder";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { storageURL } from "./ImageHelpers";
+import {
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender/HTMLRender";
 
 export interface ImageItemData {
 	itemType: "Image";
@@ -285,6 +289,19 @@ export class ImageItem extends Mbr {
 		div.style.transform = transform;
 		div.style.position = "absolute";
 		div.style.backgroundSize = "cover";
+
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(this.getMbr().getWidth() - parseInt(linkElement.style.width)) /
+					scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
 
 		return div;
 	}

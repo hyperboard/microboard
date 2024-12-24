@@ -39,6 +39,10 @@ import { Camera } from "Board/Camera";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
 import { getBlockNodesOld } from "./CanvasText/oldRender";
+import {
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender/HTMLRender";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -1129,6 +1133,21 @@ export class RichText extends Mbr implements Geometry {
 			this.autoSize ? "auto" : this.getFontSize().toString(),
 		);
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+
+		if (
+			this.getLinkTo() &&
+			(this.insideOf === "RichText" || !this.insideOf)
+		) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(this.getMbr().getWidth() - parseInt(linkElement.style.width)) /
+					scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
 
 		div.append(...elements);
 

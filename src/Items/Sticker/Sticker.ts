@@ -173,7 +173,7 @@ export class Sticker implements Geometry {
 			this.text.deserialize(data.text);
 		}
 		this.text.updateElement();
-		this.linkTo.deserialize(data.linkTo?.link);
+		this.linkTo.deserialize(data.linkTo);
 		// this.transformPath();
 		this.subject.publish(this);
 		return this;
@@ -395,6 +395,18 @@ export class Sticker implements Geometry {
 		textElement.style.height = "";
 
 		div.appendChild(textElement);
+
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(width - parseInt(linkElement.style.width)) / scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
 
 		return div;
 	}

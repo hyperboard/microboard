@@ -888,6 +888,20 @@ export class Connector {
 		resetElementScale(textElement);
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		div.appendChild(textElement);
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		//TODO make correct position
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(this.endPointer.path.getMbr().getWidth() -
+					parseInt(linkElement.style.width)) /
+					scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
 
 		return div;
 	}
@@ -940,7 +954,7 @@ export class Connector {
 			lineWidth: this.lineWidth,
 			text: text,
 			borderStyle: this.borderStyle,
-			linkTo: this.linkTo,
+			linkTo: this.getLinkTo(),
 		};
 	}
 
@@ -960,7 +974,7 @@ export class Connector {
 		if (data.text) {
 			this.text.deserialize(data.text);
 		}
-		this.linkTo.deserialize(data.linkTo?.link);
+		this.linkTo.deserialize(data.linkTo);
 		this.startPointerStyle =
 			data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;

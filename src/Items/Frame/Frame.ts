@@ -785,6 +785,17 @@ export class Frame implements Geometry {
 		textElement.style.overflow = "visible";
 		div.appendChild(textElement);
 
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			translateElementBy(
+				linkElement,
+				width - parseInt(linkElement.style.width),
+				0,
+			);
+			div.appendChild(linkElement);
+		}
+
 		return div;
 	}
 

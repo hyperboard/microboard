@@ -1,14 +1,13 @@
 import { stickerColors } from ".";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
-import { LinkTo } from "../LinkTo/LinkTo";
 
 export class StickerData {
 	readonly itemType = "Sticker";
 	constructor(
 		public backgroundColor = stickerColors["Sky Blue"],
 		public transformation = new DefaultTransformationData(),
-		public linkTo: LinkTo = new LinkTo(),
+		public linkTo?: string,
 		public text = new DefaultRichTextData([], "center", undefined),
 	) {}
 }

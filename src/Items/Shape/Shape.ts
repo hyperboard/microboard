@@ -527,6 +527,18 @@ export class Shape implements Geometry {
 		];
 		translateElementBy(textElement, dx, dy);
 
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(width - parseInt(linkElement.style.width)) / scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
+
 		div.appendChild(textElement);
 
 		return div;

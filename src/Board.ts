@@ -671,8 +671,12 @@ export class Board {
 		const script = await fetch(
 			new URL(getPublicUrl("/customWebComponents.js")),
 		);
+		const loadLinksImages = await fetch(
+			new URL(getPublicUrl("/loadLinksImages.js")),
+		);
 		const customTagsScript = await script.text();
-		const body = `<body><div id="items">${items}</div><script>${customTagsScript}</script></body>`;
+		const loadLinksImagesScript = await loadLinksImages.text();
+		const body = `<body><div id="items">${items}</div><script>${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
 		const head = `
 		<head>
 			<meta charset="utf-8" />

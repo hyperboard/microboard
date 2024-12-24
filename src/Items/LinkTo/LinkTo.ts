@@ -2,6 +2,7 @@ import { SubjectOperation } from "SubjectOperation";
 import { LinkToOperation } from "./LinkToOperation";
 import { Events } from "../../Events";
 import { LinkToCommand } from "./LinkToCommand";
+import { Matrix } from "Board/Items/Transformation/Matrix";
 
 export class LinkTo {
 	readonly subject = new SubjectOperation<LinkTo, LinkToOperation>();
@@ -67,5 +68,40 @@ export class LinkTo {
 			item: [this.id],
 			link: undefined,
 		});
+	}
+
+	renderHTML(): HTMLDivElement {
+		const div = document.createElement("link-item");
+		div.classList.add("link-object");
+		div.id = this.id;
+		div.style.width = `24px`;
+		div.style.height = `24px`;
+		div.style.transformOrigin = "top left";
+		div.style.position = "absolute";
+		div.style.backgroundColor = "#FFFFFF";
+		div.style.borderRadius = "2px";
+		const link = document.createElement("a");
+		link.style.position = "absolute";
+		link.style.width = `100%`;
+		link.style.height = `100%`;
+		link.style.borderRadius = "2px";
+		link.style.display = "flex";
+		link.style.justifyContent = "center";
+		link.style.alignItems = "center";
+		link.setAttribute("target", "_blank");
+		if (this.link) {
+			link.href = this.link;
+			const image = document.createElement("img");
+			image.id = this.id;
+			image.classList.add("link-image");
+			image.src = `${new URL(this.link).origin}/favicon.ico`;
+			image.width = 20;
+			image.height = 20;
+			image.style.display = "block";
+			link.appendChild(image);
+		}
+
+		div.appendChild(link);
+		return div;
 	}
 }
