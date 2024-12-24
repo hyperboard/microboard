@@ -666,7 +666,7 @@ export class Board {
 		return this.copy();
 	}
 
-	async serializeHtml(): Promise<string> {
+	async serializeHTML(): Promise<string> {
 		const items = this.items.getWholeHTML();
 		const script = await fetch(
 			new URL(getPublicUrl("/customWebComponents.js")),
@@ -704,57 +704,9 @@ export class Board {
 		return `${head}${body}`;
 	}
 
-	/** Saves boardId.html file and returns stringed html */
-	async exportHTML(): Promise<string> {
-		const htmlContent = await this.serializeHtml();
-		const blob = new Blob([htmlContent], {
-			type: "text/html;charset=utf-8",
-		});
-		const url = URL.createObjectURL(blob);
-		const anch = document.createElement("a");
-		anch.href = url;
-		anch.download = `${this.getBoardId()}.html`;
-		anch.click();
-		URL.revokeObjectURL(url);
-		return htmlContent;
-	}
-
-	// todo move into UI
-	async uploadHTML(): Promise<string | undefined> {
-		return new Promise((resolve, reject) => {
-			const input = document.createElement("input");
-			input.type = "file";
-			input.accept = ".html";
-
-			input.onchange = async (event: Event) => {
-				const file = (event.target as HTMLInputElement).files?.[0];
-				if (file) {
-					const reader = new FileReader();
-					reader.onload = ev => {
-						const htmlContent = ev.target?.result as string;
-						resolve(htmlContent);
-					};
-					reader.onerror = () => {
-						reject(new Error("Failed to read file"));
-					};
-					reader.readAsText(file);
-				} else {
-					resolve(undefined);
-				}
-			};
-
-			input.click();
-		});
-	}
-
-	async deserializeHTML(): Promise<void> {
-		const stringedHtml = await this.uploadHTML();
-		if (!stringedHtml) {
-			return;
-		}
-
+	deserializeHTML(stringedHTML: string): void {
 		const parser = new DOMParser();
-		const doc = parser.parseFromString(stringedHtml, "text/html");
+		const doc = parser.parseFromString(stringedHTML, "text/html");
 		const items = doc.body.querySelector("#items");
 		if (items) {
 			const idsMap = {};
