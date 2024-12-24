@@ -484,16 +484,11 @@ export function createEventsLog(board: Board): EventsLog {
 		mergedEvents.forEach((event, index) => {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
-			list.addConfirmedRecords([record]);
-			if (
-				lastConfirmedRecord &&
-				index === 0 &&
-				lastConfirmedEvent?.body.operation.class === "Board" &&
-				lastConfirmedEvent.body.operation.method === "remove"
-			) {
+			if (lastConfirmedRecord && index === 0) {
 				lastConfirmedRecord?.command.revert();
 			}
 			command.apply();
+			list.addConfirmedRecords([record]);
 			list.justConfirmed.push(record);
 		});
 
