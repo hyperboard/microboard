@@ -403,5 +403,6 @@ function parseHTMLDrawing(el: HTMLElement): DrawingData & { id: string } {
 		strokeWidth: parseFloat(
 			pathElement.getAttribute("stroke-width") || "1",
 		),
+		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
 }

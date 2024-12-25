@@ -363,11 +363,6 @@ export class Sticker implements Geometry {
 		div.style.boxShadow =
 			"0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)";
 
-		if (!this.text.isAutosize()) {
-			div.style.overflowY = "auto";
-			div.style.overflowX = "hidden";
-		}
-
 		const autoScale =
 			(this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
 		const textElement = this.text.renderHTML();
@@ -392,9 +387,6 @@ export class Sticker implements Geometry {
 				textElement.style.marginTop = "0px";
 			}
 		}
-		textElement.style.height = "";
-
-		div.appendChild(textElement);
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
@@ -402,11 +394,13 @@ export class Sticker implements Geometry {
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
-				(width - parseInt(linkElement.style.width)) / scaleX,
+				unscaledWidth - parseInt(linkElement.style.width) / scaleX,
 				0,
 			);
 			div.appendChild(linkElement);
 		}
+
+		div.appendChild(textElement);
 
 		return div;
 	}

@@ -3,7 +3,7 @@ import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
-import { BorderStyle, BorderWidth, Path, Paths, scalePatterns } from "../Path";
+import { BorderStyle, BorderWidth, Path, scalePatterns } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
 import { DrawingCommand } from "./DrawingCommand";
@@ -12,6 +12,10 @@ import { TransformationData } from "../Transformation/TransformationData";
 import { Geometry } from "../Geometry";
 import { isSafari } from "App/isSafari";
 import { LinkTo } from "../LinkTo/LinkTo";
+import {
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender/HTMLRender";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -279,6 +283,18 @@ export class Drawing extends Mbr implements Geometry {
 		div.style.transformOrigin = "left top";
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 		div.style.position = "absolute";
+
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(width - parseInt(linkElement.style.width)) / scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
 
 		return div;
 	}

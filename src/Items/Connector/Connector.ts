@@ -878,19 +878,6 @@ export class Connector {
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		div.appendChild(textElement);
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
-		// TODO make correct position
-		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
-			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
-			translateElementBy(
-				linkElement,
-				(this.endPointer.path.getMbr().getWidth() -
-					parseInt(linkElement.style.width)) /
-					scaleX,
-				0,
-			);
-			div.appendChild(linkElement);
-		}
 
 		return div;
 	}

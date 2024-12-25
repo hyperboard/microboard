@@ -80,6 +80,7 @@ export class LinkTo {
 		div.style.position = "absolute";
 		div.style.backgroundColor = "#FFFFFF";
 		div.style.borderRadius = "2px";
+		div.style.zIndex = "1";
 		const link = document.createElement("a");
 		link.style.position = "absolute";
 		link.style.width = `100%`;
