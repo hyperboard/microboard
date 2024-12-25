@@ -173,7 +173,12 @@ export class Sticker implements Geometry {
 			this.text.deserialize(data.text);
 		}
 		this.text.updateElement();
-		this.linkTo.deserialize(data.linkTo);
+		const linkTo = data.linkTo;
+		if (linkTo) {
+			this.linkTo.deserialize(
+				typeof linkTo === "string" ? linkTo : linkTo.link,
+			);
+		}
 		// this.transformPath();
 		this.subject.publish(this);
 		return this;

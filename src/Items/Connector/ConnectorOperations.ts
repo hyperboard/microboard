@@ -14,7 +14,7 @@ export class ConnectorData {
 	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";
 	lineColor = "";
-	linkTo?: string;
+	linkTo?: string | LinkTo;
 	lineWidth: ConnectionLineWidth = 1;
 	borderStyle: BorderStyle = "solid";
 	transformation = new DefaultTransformationData();

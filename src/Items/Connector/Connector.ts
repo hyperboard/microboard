@@ -930,7 +930,7 @@ export class Connector {
 			lineWidth: this.lineWidth,
 			text: text,
 			borderStyle: this.borderStyle,
-			linkTo: this.getLinkTo(),
+			linkTo: this.linkTo.serialize(),
 		};
 	}
 
@@ -950,7 +950,12 @@ export class Connector {
 		if (data.text) {
 			this.text.deserialize(data.text);
 		}
-		this.linkTo.deserialize(data.linkTo);
+		const linkTo = data.linkTo;
+		if (linkTo) {
+			this.linkTo.deserialize(
+				typeof linkTo === "string" ? linkTo : linkTo.link,
+			);
+		}
 		this.startPointerStyle =
 			data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;
