@@ -482,6 +482,8 @@ export class Shape implements Geometry {
 		svg.setAttribute("width", `${unscaledWidth}px`);
 		svg.setAttribute("height", `${unscaledHeight}px`);
 		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute("transform-origin", "0 0");
+		svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
 		svg.setAttribute("style", "position: absolute; overflow: visible;");
 
 		const pathElement = Shapes[this.shapeType].path.copy().renderHTML();
@@ -494,6 +496,8 @@ export class Shape implements Geometry {
 				LinePatterns[this.borderStyle].join(", "),
 			);
 			element.setAttribute("stroke-width", this.borderWidth.toString());
+			element.setAttribute("transform-origin", "0 0");
+			element.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
 		});
 		svg.append(...paths);
 		div.appendChild(svg);
