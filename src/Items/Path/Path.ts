@@ -520,6 +520,7 @@ export class Path implements Geometry, PathStylize {
 			this.backgroundOpacity.toString(),
 		);
 		pathElement.setAttribute("stroke", this.borderColor);
+		pathElement.setAttribute("vector-effect", "non-scaling-stroke");
 		pathElement.setAttribute("stroke-width", this.borderWidth.toString());
 		pathElement.setAttribute(
 			"stroke-opacity",

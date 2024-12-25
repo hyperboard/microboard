@@ -254,6 +254,8 @@ export class Drawing extends Mbr implements Geometry {
 		svg.setAttribute("height", `${unscaledHeight}px`);
 		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
 		svg.setAttribute("style", "position: absolute; overflow: visible;");
+		// svg.setAttribute("transform-origin", "0 0");
+		// svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
 
 		const pathElement = document.createElementNS(
 			"http://www.w3.org/2000/svg",
@@ -263,6 +265,9 @@ export class Drawing extends Mbr implements Geometry {
 		pathElement.setAttribute("stroke", this.borderColor);
 		pathElement.setAttribute("stroke-width", `${this.strokeWidth}`);
 		pathElement.setAttribute("fill", "none");
+		// pathElement.setAttribute("transform-origin", "0 0");
+		// pathElement.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
+		// pathElement.setAttribute("vector-effect", "non-scaling-stroke");
 
 		svg.appendChild(pathElement);
 
