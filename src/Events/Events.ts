@@ -92,6 +92,7 @@ export interface Events {
 	canUndo(): boolean;
 	canRedo(): boolean;
 	getNotificationId(): string | null;
+	getSaveFileTimeout(): NodeJS.Timeout | null;
 	removeBeforeUnloadListener(): void;
 	sendPresenceEvent(event: PresenceEventType): void;
 }
@@ -119,6 +120,7 @@ export function createEvents(
 	const RESEND_INTERVAL = 1000; // 1 секунда
 	let publishIntervalTimer: NodeJS.Timeout | null = null;
 	let resendIntervalTimer: NodeJS.Timeout | null = null;
+	let saveFileTimeout: NodeJS.Timeout | null = null;
 	let notificationId: null | string = null;
 
 	const beforeUnloadListener = (event: BeforeUnloadEvent): void => {
@@ -558,6 +560,19 @@ export function createEvents(
 		log.push(record);
 		setLatestUserEvent(operation, userId);
 		subject.publish(event);
+
+		if (board.getBoardId().includes("local")) {
+			if (saveFileTimeout) {
+				clearTimeout(saveFileTimeout);
+			}
+			saveFileTimeout = setTimeout(async () => {
+				if (board.saveEditingFile) {
+					await board.saveEditingFile();
+				}
+				saveFileTimeout = null;
+				subject.publish(event);
+			}, 1000);
+		}
 	}
 
 	const operationHandlers: Record<string, (eventId: string) => void | false> =
@@ -743,6 +758,7 @@ export function createEvents(
 			window.removeEventListener("beforeunload", beforeUnloadListener);
 		},
 		getNotificationId: () => notificationId,
+		getSaveFileTimeout: () => saveFileTimeout,
 		sendPresenceEvent,
 	};
 

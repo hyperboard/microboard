@@ -70,6 +70,7 @@ export class Board {
 	constructor(
 		private boardId = "",
 		private accessKey?: string,
+		public saveEditingFile?: () => Promise<void>,
 	) {
 		this.selection = new Selection(this, this.events);
 		this.presence = new Presence(this);
@@ -1336,7 +1337,7 @@ export class Board {
 			.reduce((max, num) => Math.max(max, num), 0);
 	}
 
-	setInterfaceType(interfaceType: InterfaceType) {
+	setInterfaceType(interfaceType: InterfaceType): void {
 		this.interfaceType = interfaceType;
 		this.tools.navigate();
 		this.tools.publish();
