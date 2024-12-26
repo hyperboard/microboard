@@ -20,6 +20,8 @@ import { Board } from "./Board";
 import { Placeholder, PlaceholderData } from "./Items/Placeholder/Placeholder";
 import { Group, GroupData } from "./Items/Group";
 import { Comment } from "./Items/Comment";
+import { AINode } from "Board/Items/AINode/AINode";
+import { AINodeData } from "Board/Items/AINode/AINodeData";
 
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
@@ -37,6 +39,7 @@ export const itemFactories: ItemFactories = {
 	Placeholder: createPlaceholder,
 	Comment: createComment,
 	Group: createGroup,
+	AINode: createAINode,
 };
 
 function createSticker(id: string, data: ItemData, board: Board): Sticker {
@@ -49,12 +52,27 @@ function createSticker(id: string, data: ItemData, board: Board): Sticker {
 
 function createComment(id: string, data: ItemData, board: Board): Comment {
 	if (!isCommentData(data)) {
-		throw new Error("Invalid data for CommentContainer");
+		throw new Error("Invalid data for Comment");
 	}
 	const comment = new Comment(new Point(), board.events)
 		.setId(id)
 		.deserialize(data);
 	return comment;
+}
+
+function createAINode(id: string, data: ItemData, board: Board): AINode {
+	if (!isAINodeData(data)) {
+		throw new Error("Invalid data for AINode");
+	}
+	const nodeData = data as AINodeData;
+	const node = new AINode(
+		nodeData.isUserRequest,
+		nodeData.parentNodeId,
+		board.events,
+	)
+		.setId(id)
+		.deserialize(data);
+	return node;
 }
 
 function createShape(id: string, data: ItemData, board: Board): Shape {
@@ -147,6 +165,10 @@ function isStickerData(data: ItemData): data is StickerData {
 
 function isCommentData(data: ItemData): data is ItemData {
 	return data.itemType === "Comment";
+}
+
+function isAINodeData(data: ItemData): data is ItemData {
+	return data.itemType === "AINode";
 }
 
 function isShapeData(data: ItemData): data is ShapeData {

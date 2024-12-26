@@ -43,7 +43,6 @@ export class Shape implements Geometry {
 	readonly itemType = "Shape";
 	parent = "Board";
 	readonly transformation: Transformation;
-	readonly pinnedComment?: Comment;
 	private path: Path | Paths;
 	private textContainer: Mbr;
 	readonly text: RichText;

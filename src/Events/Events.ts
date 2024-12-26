@@ -185,8 +185,8 @@ export function createEvents(
 		switch (chunk.type) {
 			case "chunk":
 				const item = board.items.getById(itemId);
-				if (item && item.itemType === "RichText") {
-					item.editor.insertAICopiedText(chunk.content || "");
+				if (item && item.itemType === "AINode") {
+					item.text.editor.insertAICopiedText(chunk.content || "");
 				}
 				break;
 			case "done":

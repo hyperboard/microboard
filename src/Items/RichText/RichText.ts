@@ -168,7 +168,12 @@ export class RichText extends Mbr implements Geometry {
 				}
 			},
 		);
-		if (!insideOf || insideOf === "RichText" || insideOf === "Connector") {
+		if (
+			!insideOf ||
+			insideOf === "RichText" ||
+			insideOf === "Connector" ||
+			insideOf === "AINode"
+		) {
 			this.shrinkWidth = true;
 		}
 		this.linkTo.subject.subscribe(() => {

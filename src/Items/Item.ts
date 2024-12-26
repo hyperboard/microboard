@@ -10,6 +10,8 @@ import { Shape, ShapeData } from "./Shape";
 import { Sticker } from "./Sticker";
 import { StickerData } from "./Sticker/StickerOperation";
 import { Comment, CommentData } from "./Comment";
+import { AINode } from "Board/Items/AINode/AINode";
+import { AINodeData } from "Board/Items/AINode/AINodeData";
 
 export type Item =
 	| RichText
@@ -21,7 +23,8 @@ export type Item =
 	| Frame
 	| Placeholder
 	| Comment
-	| Group;
+	| Group
+	| AINode;
 
 export type ItemType = Item["itemType"];
 export type ItemData =
@@ -34,4 +37,5 @@ export type ItemData =
 	| FrameData
 	| PlaceholderData
 	| CommentData
-	| GroupData;
+	| GroupData
+	| AINodeData;
