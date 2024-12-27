@@ -13,6 +13,7 @@ import { Group } from "Board/Items/Group/Group.js";
 import { Comment } from "Board/Items/Comment/Comment";
 import { Selection } from "Board/Selection/index.js";
 import { SelectionItems } from "Board/Selection/SelectionItems.js";
+import { RELATIVE_ALIGNMENT_COLOR } from "../RelativeAlignment/RelativeAlignment.js";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -985,7 +986,7 @@ export class Select extends Tool {
 
 		if (this.snapLine && isShift) {
 			context.ctx.save();
-			context.ctx.strokeStyle = "rgba(0, 0, 255, 1)";
+			context.ctx.strokeStyle = RELATIVE_ALIGNMENT_COLOR;
 			context.ctx.lineWidth = 1 / this.board.camera.getScale();
 			context.ctx.setLineDash([10, 5]);
 
