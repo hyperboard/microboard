@@ -44,6 +44,7 @@ import { Presence } from "./Presence/Presence";
 import { Comment } from "./Items/Comment";
 import { getPublicUrl } from "Config";
 import { parsersHTML } from "./parserHTML";
+import { AINode } from "Board/Items/AINode/AINode";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -1134,6 +1135,18 @@ export class Board {
 				this.remove(comment);
 			}
 		}
+	}
+
+	getParentAINodes(node: AINode): AINode[] {
+		const parentId = node.getParentId();
+		if (!parentId) {
+			return [];
+		}
+		const parentItem = this.items.findById(parentId);
+		if (!parentItem || parentItem.itemType !== "AINode") {
+			return [];
+		}
+		return [parentItem, ...this.getParentAINodes(parentItem)];
 	}
 
 	duplicate(itemsMap: { [key: string]: ItemData }): void {

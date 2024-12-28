@@ -290,7 +290,7 @@ export class Comment implements Geometry {
 
 	getUnreadMessages(username = "anonymous"): Message[] | null {
 		const unreadMessages = this.thread.filter(
-			mes => !mes.readers.includes(username),
+			mes => mes && !mes.readers.includes(username),
 		);
 		if (unreadMessages.length === 0) {
 			return null;
