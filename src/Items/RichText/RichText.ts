@@ -31,14 +31,13 @@ import { LayoutBlockNodes } from "./CanvasText";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
-import { getBlockNodes } from "./RichTextCanvasRenderer";
+import { getBlockNodes } from "./CanvasText";
 import { RichTextCommand } from "./RichTextCommand";
 import { RichTextOperation } from "./RichTextOperations";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { Camera } from "Board/Camera";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
-import { getBlockNodesOld } from "./CanvasText/oldRender";
 import {
 	scaleElementBy,
 	translateElementBy,
@@ -180,45 +179,17 @@ export class RichText extends Mbr implements Geometry {
 			this.updateElement();
 			this.subject.publish(this);
 		});
-		this.layoutNodes = this.calcBlockNodes({
-			nodes: this.getBlockNodes(),
-			maxWidth: this.getMaxWidth() || 0,
-			shrink: this.shrinkWidth,
-			isFrame: this.insideOf === "Frame",
-		});
-		// this.layoutNodes = getBlockNodes(
-		// 	this.getBlockNodes(),
-		// 	this.getMaxWidth() || 0,
-		// 	this.shrinkWidth,
-		// 	this.insideOf === "Frame",
-		// );
+		this.layoutNodes = getBlockNodes(
+			this.getBlockNodes(),
+			this.getMaxWidth() || 0,
+			this.shrinkWidth,
+			this.insideOf === "Frame",
+		);
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
 			path: [0, 0],
 		});
 		this.setClipPath();
-	}
-
-	calcBlockNodes(data: {
-		nodes: BlockNode[];
-		maxWidth: number;
-		shrink?: boolean;
-		isFrame?: boolean;
-	}): LayoutBlockNodes {
-		if (window.customTextRender) {
-			return getBlockNodesOld(
-				data.nodes,
-				data.maxWidth || Infinity,
-				this.insideOf,
-			);
-		}
-
-		return getBlockNodes(
-			data.nodes,
-			data.maxWidth,
-			data.shrink,
-			data.isFrame,
-		);
 	}
 
 	getBlockNodes(): BlockNode[] {
@@ -293,19 +264,12 @@ export class RichText extends Mbr implements Geometry {
 		if (this.autoSize) {
 			this.calcAutoSize();
 		} else {
-			// const nodes = getBlockNodes(
-			// 	this.getBlockNodes(),
-			// 	this.getMaxWidth() || 0,
-			// 	this.shrinkWidth,
-			// 	this.insideOf === "Frame",
-			// );
-			// this.layoutNodes = nodes;
-			this.layoutNodes = this.calcBlockNodes({
-				nodes: this.getBlockNodes(),
-				maxWidth: this.getMaxWidth() || 0,
-				shrink: this.shrinkWidth,
-				isFrame: this.insideOf === "Frame",
-			});
+			this.layoutNodes = getBlockNodes(
+				this.getBlockNodes(),
+				this.getMaxWidth() || 0,
+				this.shrinkWidth,
+				this.insideOf === "Frame",
+			);
 			if (
 				this.containerMaxWidth &&
 				this.layoutNodes.width >= this.containerMaxWidth
@@ -341,11 +305,7 @@ export class RichText extends Mbr implements Geometry {
 			containerHeight / optimal.bestMaxHeight,
 		);
 
-		// this.layoutNodes = getBlockNodes(nodes, containerWidth / textScale);
-		this.layoutNodes = this.calcBlockNodes({
-			nodes,
-			maxWidth: containerWidth / textScale,
-		});
+		this.layoutNodes = getBlockNodes(nodes, containerWidth / textScale);
 
 		this.autoSizeScale = textScale;
 		// this.maxWidth = maxWidth;
@@ -1031,7 +991,8 @@ export class RichText extends Mbr implements Geometry {
 	renderHTML(enablePlaceholder = true): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
-				const text = escapeHtml(node.text);
+				const text =
+					node.text === "" ? "\u00A0" : escapeHtml(node.text);
 				const span = document.createElement("span");
 				span.textContent = text;
 				span.style.fontWeight = node.bold ? "700" : "400";

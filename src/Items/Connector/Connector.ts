@@ -741,7 +741,7 @@ export class Connector {
 	}
 
 	renderHTML(): HTMLElement {
-		const div = document.createElement("connector");
+		const div = document.createElement("connector-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;

@@ -29,13 +29,16 @@ import {
 } from "Board/HTMLRender";
 
 export const stickerColors = {
-	"Sky Blue": "rgb(174, 212, 250)",
-	"Pale Yellow": "rgb(252, 245, 174)",
-	"Sage Green": "rgb(175, 214, 167)",
-	Lavender: "rgb(233, 191, 233)",
-	"Aqua Cyan": "rgb(171, 221, 221)",
-	"Pastel Red": "rgb(246, 168, 168)",
-	"Light Gray": "rgb(230, 230, 230)",
+	Purple: "rgb(233, 208, 255)",
+	Pink: "rgb(255, 209, 211)",
+	"Sky Blue": "rgb(206, 228, 255)",
+	Blue: "rgb(205, 250, 255)",
+	Green: "rgb(203, 232, 150)",
+	"Light Green": "rgb(180, 241, 198)",
+	Orange: "rgb(255, 180, 126)",
+	Yellow: "rgb(255, 235, 163)",
+	"Light Gray": "rgb(231, 232, 238)",
+	Gray: "rgb(156, 156, 156)",
 } as { [color: string]: string };
 
 const width = 200;
@@ -348,7 +351,7 @@ export class Sticker implements Geometry {
 	}
 
 	renderHTML(): HTMLElement {
-		const div = document.createElement("sticker");
+		const div = document.createElement("sticker-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;

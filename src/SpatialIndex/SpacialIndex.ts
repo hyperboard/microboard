@@ -614,7 +614,7 @@ export class Items {
 			.map(item => "renderHTML" in item && item.renderHTML())
 			.filter(item => !!item)
 			.map(item => {
-				if (item.tagName.toLowerCase() === "connector") {
+				if (item.tagName.toLowerCase() === "connector-item") {
 					const startX = parseFloat(
 						item.getAttribute("data-start-point-x") || "0",
 					);

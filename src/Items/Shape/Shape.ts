@@ -464,7 +464,7 @@ export class Shape implements Geometry {
 	}
 
 	renderHTML(): HTMLElement {
-		const div = document.createElement("shape");
+		const div = document.createElement("shape-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;

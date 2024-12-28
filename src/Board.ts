@@ -675,9 +675,11 @@ export class Board {
 		const loadLinksImages = await fetch(
 			new URL(getPublicUrl("/loadLinksImages.js")),
 		);
+		const builtCSS = await fetch(new URL(getPublicUrl("/index.css")));
 		const customTagsScript = await script.text();
 		const loadLinksImagesScript = await loadLinksImages.text();
-		const body = `<body><div id="items">${items}</div><script>${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
+		const css = await builtCSS.text();
+		const body = `<body><div id="items">${items}</div><script type="module">${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
 		const head = `
 		<head>
 			<meta charset="utf-8" />
@@ -687,6 +689,7 @@ export class Board {
 			<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
 				rel="stylesheet"
 			/>
+			<style>${css}</style>
 			<style>
 				::-webkit-scrollbar {
 					appearance: none;

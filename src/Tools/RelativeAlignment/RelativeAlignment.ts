@@ -6,7 +6,7 @@ import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
 import { CanvasDrawer } from "Board/drawMbrOnCanvas";
 
-const COLOR = "#4778F5";
+export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
 
 type SnapAlignment = {
 	offset: number;
@@ -558,7 +558,7 @@ export class AlignmentHelper {
 		context.ctx.lineWidth = lineWidth;
 
 		snapLines.verticalLines.forEach(line => {
-			context.ctx.strokeStyle = COLOR;
+			context.ctx.strokeStyle = RELATIVE_ALIGNMENT_COLOR;
 			context.ctx.setLineDash([5, 5]);
 			context.ctx.beginPath();
 			context.ctx.moveTo(line.start.x, line.start.y);
@@ -567,7 +567,7 @@ export class AlignmentHelper {
 		});
 
 		snapLines.horizontalLines.forEach(line => {
-			context.ctx.strokeStyle = COLOR;
+			context.ctx.strokeStyle = RELATIVE_ALIGNMENT_COLOR;
 			context.ctx.setLineDash([5, 5]);
 			context.ctx.beginPath();
 			context.ctx.moveTo(line.start.x, line.start.y);
