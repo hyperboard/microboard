@@ -36,14 +36,16 @@ export const defaultCursors = [
 	"no-drop",
 	"none",
 	"progress",
-	"sticker-blue",
-	"sticker-yellow",
-	"sticker-green",
-	"sticker-red",
 	"sticker-purple",
-	"sticker-light-blue",
+	"sticker-pink",
+	"sticker-sky-blue",
+	"sticker-blue",
+	"sticker-green",
+	"sticker-light-green",
+	"sticker-orange",
+	"sticker-yellow",
+	"sticker-light-gray",
 	"sticker-gray",
-	"sticker-black",
 ] as const;
 
 export const customCursors = ["pen", "eraser", "comment"] as const;
