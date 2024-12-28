@@ -991,7 +991,8 @@ export class RichText extends Mbr implements Geometry {
 	renderHTML(enablePlaceholder = true): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
-				const text = escapeHtml(node.text);
+				const text =
+					node.text === "" ? "\u00A0" : escapeHtml(node.text);
 				const span = document.createElement("span");
 				span.textContent = text;
 				span.style.fontWeight = node.bold ? "700" : "400";
