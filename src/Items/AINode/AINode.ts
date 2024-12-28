@@ -106,12 +106,9 @@ export class AINode implements Geometry {
 	private transformPath(): void {
 		const { left, right, top, bottom } =
 			this.text.getTransformedContainer();
-		const segments = new Mbr(
-			left - 10,
-			top - 10,
-			right + 10,
-			bottom + 10,
-		).getLines();
+		this.text.left += 10;
+		this.text.top += 10;
+		const segments = new Mbr(left, top, right + 20, bottom + 20).getLines();
 		this.path = new Path(segments, true, "rgb(255, 255, 255)", "none");
 	}
 
@@ -172,7 +169,9 @@ export class AINode implements Geometry {
 	}
 
 	getPath(): Path | Paths {
-		return this.path.copy();
+		const copy = this.path.copy();
+		copy.setBackgroundColor("none");
+		return copy;
 	}
 
 	apply(op: Operation): void {
@@ -190,6 +189,18 @@ export class AINode implements Geometry {
 				return;
 		}
 		this.subject.publish(this);
+	}
+
+	getSnapAnchorPoints(): Point[] {
+		const mbr = this.getMbr();
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		return [
+			new Point(mbr.left + width / 2, mbr.top),
+			new Point(mbr.left + width / 2, mbr.bottom),
+			new Point(mbr.left, mbr.top + height / 2),
+			new Point(mbr.right, mbr.top + height / 2),
+		];
 	}
 
 	getDistanceToPoint(point: Point): number {

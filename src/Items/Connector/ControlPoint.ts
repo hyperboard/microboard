@@ -183,6 +183,7 @@ export function getControlPoint(
 		return new BoardPoint(Math.round(data.x), Math.round(data.y));
 	} else {
 		const item = findItem(data.itemId);
+		console.log(item);
 
 		if (!item) {
 			console.warn(
@@ -222,12 +223,13 @@ export function getControlPoint(
 }
 
 export function toRelativePoint(point: Point, item: Item): Point {
-	const mbr = item.getMbr();
-	const scaleX = (mbr.right - mbr.left) / 100;
-	const scaleY = (mbr.bottom - mbr.top) / 100;
-	const translateX = mbr.left;
-	const translateY = mbr.top;
-	const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
+	const matrix = item.transformation?.matrix || new Matrix();
+	// const mbr = item.getMbr();
+	// const scaleX = (mbr.right - mbr.left) / 100;
+	// const scaleY = (mbr.bottom - mbr.top) / 100;
+	// const translateX = mbr.left;
+	// const translateY = mbr.top;
+	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
 	const inverse = matrix.getInverse();
 	point = point.copy();
 	point.transform(inverse);
@@ -235,12 +237,13 @@ export function toRelativePoint(point: Point, item: Item): Point {
 }
 
 function fromRelativePoint(relativePoint: Point, item: Item): Point {
-	const mbr = item.getMbr();
-	const scaleX = (mbr.right - mbr.left) / 100;
-	const scaleY = (mbr.bottom - mbr.top) / 100;
-	const translateX = mbr.left;
-	const translateY = mbr.top;
-	const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
+	const matrix = item.transformation?.matrix || new Matrix();
+	// const mbr = item.getMbr();
+	// const scaleX = item.transformation?.getScale().x || 1;
+	// const scaleY = item.transformation?.getScale().y || 1;
+	// const translateX = mbr.left;
+	// const translateY = mbr.top;
+	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
 	const point = relativePoint.copy();
 	point.transform(matrix);
 	return point;

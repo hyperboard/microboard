@@ -112,6 +112,7 @@ export class Connector {
 			this.startPointerStyle,
 			this.lineStyle,
 			this.lines,
+			this.lineWidth * 0.1 + 0.3,
 		);
 		this.endPointer = getEndPointer(
 			this.endPoint,
