@@ -1,4 +1,4 @@
-import { Descendant, Text } from "slate";
+import { Descendant } from "slate";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
 	ItemType,
@@ -11,14 +11,12 @@ import {
 } from "./Items";
 import { HorisontalAlignment, VerticalAlignment } from "./Items/Alignment";
 import { TransformationData } from "./Items/Transformation";
-import { Frames, FrameType } from "./Items/Frame/Basic";
+import { Frames } from "./Items/Frame/Basic";
 import { BorderStyle } from "./Items/Path";
-import { positionAbsolutely, positionRelatively } from "./HTMLRender";
+import { positionAbsolutely } from "./HTMLRender";
 import { ShapeType } from "./Items/Shape";
 import { DefaultRichTextData } from "./Items/RichText/RichTextData";
-import { TextNode } from "./Items/RichText/Editor/TextNode";
 import { StickerData } from "./Items/Sticker/StickerOperation";
-import { LinkTo } from "./Items/LinkTo/LinkTo";
 import { ImageItemData } from "./Items/Image";
 import { ConnectorPointerStyle } from "./Items/Connector/Pointers/Pointers";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
@@ -28,12 +26,12 @@ import { DrawingData } from "./Items/Drawing";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
-	Sticker: "sticker",
-	Shape: "shape",
+	Sticker: "sticker-item",
+	Shape: "shape-item",
 	RichText: "rich-text",
-	Connector: "connector",
+	Connector: "connector-item",
 	Image: "image-item",
-	Drawing: "drawing",
+	Drawing: "drawing-item",
 	Frame: "frame-item",
 	Placeholder: "",
 	Comment: "",
@@ -44,12 +42,12 @@ type TagFactories = {
 	[K in keyof MapTagByType as MapTagByType[K]]: (el: HTMLElement) => ItemData;
 };
 export const parsersHTML: TagFactories = {
-	sticker: parseHTMLSticker,
-	shape: parseHTMLShape,
+	"sticker-item": parseHTMLSticker,
+	"shape-item": parseHTMLShape,
 	"rich-text": parseHTMLRichText,
-	connector: parseHTMLConnector,
+	"connector-item": parseHTMLConnector,
 	"image-item": parseHTMLImage,
-	drawing: parseHTMLDrawing,
+	"drawing-item": parseHTMLDrawing,
 	"frame-item": parseHTMLFrame,
 };
 

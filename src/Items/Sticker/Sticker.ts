@@ -351,7 +351,7 @@ export class Sticker implements Geometry {
 	}
 
 	renderHTML(): HTMLElement {
-		const div = document.createElement("sticker");
+		const div = document.createElement("sticker-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;

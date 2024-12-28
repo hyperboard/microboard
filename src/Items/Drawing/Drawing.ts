@@ -240,7 +240,7 @@ export class Drawing extends Mbr implements Geometry {
 	}
 
 	renderHTML(): HTMLElement {
-		const div = document.createElement("drawing");
+		const div = document.createElement("drawing-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;

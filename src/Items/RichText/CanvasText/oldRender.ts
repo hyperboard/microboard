@@ -5,7 +5,7 @@ import { LayoutBlockNodes } from ".";
 
 type Ctx = CanvasRenderingContext2D;
 
-export function getBlockNodesOld(
+export function getBlockNodes(
 	data: BlockNode[],
 	maxWidth = Infinity,
 	insideOf?: string,

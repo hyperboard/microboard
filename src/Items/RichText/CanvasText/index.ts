@@ -1,10 +1,29 @@
 import * as flow from "dropflow";
 import { Descendant } from "slate";
 import { BlockNode } from "../Editor/BlockNode";
-import { DEFAULT_TEXT_STYLES, loadFonts } from "View/Items/RichText";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { TextNode } from "../Editor/TextNode";
+import { getApiUrl } from "Config";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
+
+async function loadFonts(): Promise<void> {
+	await flow.registerFont(
+		new URL(`${getApiUrl()}/fonts/OpenSans-Regular.ttf`, import.meta.url),
+	);
+	await flow.registerFont(
+		new URL(`${getApiUrl()}/fonts/OpenSans-Bold.ttf`, import.meta.url),
+	);
+	await flow.registerFont(
+		new URL(`${getApiUrl()}/fonts/OpenSans-Italic.ttf`, import.meta.url),
+	);
+	await flow.registerFont(
+		new URL(
+			`${getApiUrl()}/fonts/OpenSans-BoldItalic.ttf`,
+			import.meta.url,
+		),
+	);
+}
 
 await loadFonts();
 
