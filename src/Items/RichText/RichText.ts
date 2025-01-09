@@ -753,16 +753,18 @@ export class RichText extends Mbr implements Geometry {
 		return marks?.fontFamily ?? this.initialTextStyles.fontFamily;
 	}
 
+	// TODO exclude scale from font size calculation
 	getFontSize(): number {
 		const marks = this.editor.getSelectionMarks();
 		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
 		if (this.autoSize) {
 			return fontSize * this.autoSizeScale;
-		} else if (this.isInShape) {
-			return fontSize;
-		} else {
-			return fontSize * this.transformation.getScale().x;
 		}
+		if (this.isInShape) {
+			return fontSize;
+		}
+
+		return fontSize * this.transformation.getScale().x;
 	}
 
 	getMinFontSize(): number {
