@@ -34,6 +34,7 @@ import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 import AlignmentHelper from "Board/Tools/RelativeAlignment";
 import { Comment } from "Board/Items/Comment/Comment";
+import { AINode } from "Board/Items/AINode/AINode";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -340,14 +341,49 @@ export class Transformer extends Tool {
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
 			this.mbr = single.getMbr();
-		} else {
-			const items = this.selection.items.list();
-			const containsStickerOrText = items.some(
-				item =>
-					item.itemType === "Sticker" || item.itemType === "RichText",
+		} else if (single instanceof AINode) {
+			const { matrix, mbr: resizedMbr } = getProportionalResize(
+				this.resizeType,
+				this.board.pointer.point,
+				mbr,
+				this.oppositePoint,
 			);
 
-			if (containsStickerOrText && (isWidth || isHeight)) {
+			if (isWidth) {
+				single.text.editor.setMaxWidth(
+					resizedMbr.getWidth() / single.text.getScale(),
+				);
+				single.text.transformation.translateBy(matrix.translateX, 0);
+				matrix.translateY = 0;
+				matrix.scaleY = 1;
+			} else {
+				single.text.transformation.scaleByTranslateBy(
+					{ x: matrix.scaleX, y: matrix.scaleY },
+					{ x: matrix.translateX, y: matrix.translateY },
+					this.beginTimeStamp,
+				);
+			}
+			if (followingComments) {
+				const translation = this.handleMultipleItemsResize(
+					{ matrix, mbr: resizedMbr },
+					mbr,
+					isWidth,
+					isHeight,
+					followingComments,
+				);
+				this.selection.transformMany(translation, this.beginTimeStamp);
+			}
+			this.mbr = single.getMbr();
+		} else {
+			const items = this.selection.items.list();
+			const includesStickerOrTextOrNode = items.some(
+				item =>
+					item.itemType === "Sticker" ||
+					item.itemType === "RichText" ||
+					item.itemType === "AINode",
+			);
+
+			if (includesStickerOrTextOrNode && (isWidth || isHeight)) {
 				return false;
 			}
 
@@ -357,7 +393,7 @@ export class Transformer extends Tool {
 
 			const shouldBeProportionalResize =
 				isIncludesFixedFrame ||
-				containsStickerOrText ||
+				includesStickerOrTextOrNode ||
 				this.isShiftPressed ||
 				(!isWidth && !isHeight);
 
@@ -537,6 +573,37 @@ export class Transformer extends Tool {
 				if (isWidth) {
 					item.editor.setMaxWidth(
 						(item.getWidth() / item.transformation.getScale().x) *
+							matrix.scaleX,
+					);
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: matrix.translateX, y: 0 },
+						scale: { x: matrix.scaleX, y: matrix.scaleX },
+					};
+				} else if (isHeight) {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: 1, y: 1 },
+					};
+				} else {
+					translation[item.getId()] = {
+						class: "Transformation",
+						method: "scaleByTranslateBy",
+						item: [item.getId()],
+						translate: { x: translateX, y: translateY },
+						scale: { x: matrix.scaleX, y: matrix.scaleX },
+					};
+				}
+			} else if (item instanceof AINode) {
+				if (isWidth) {
+					item.text.editor.setMaxWidth(
+						(item.text.getWidth() /
+							item.transformation.getScale().x) *
 							matrix.scaleX,
 					);
 					translation[item.getId()] = {

@@ -31,6 +31,7 @@ import {
 	UserJoinMsg,
 } from "Board/Presence/Events";
 import i18n from "Lang";
+import { getControlPointData } from "Board/Selection/QuickAddButtons/quickAddHelpers";
 
 export interface BoardEvent {
 	order: number;
@@ -182,23 +183,45 @@ export function createEvents(
 
 	function handleChatChunk(chunk: ChatChunk): void {
 		const itemId = chunk.itemId;
+		const item = board.items.getById(itemId);
+		if (!item || item.itemType !== "AINode") {
+			return;
+		}
+		const connector = board.items.getConnectorsByItemIds(
+			item.getParentId(),
+			item.getId(),
+		)[0];
 		switch (chunk.type) {
 			case "chunk":
-				const item = board.items.getById(itemId);
-				if (item && item.itemType === "AINode") {
-					item.text.editor.insertAICopiedText(chunk.content || "");
+				item.text.editor.insertAICopiedText(chunk.content || "");
+				const adjustmentPoint = item.getAdjustmentPoint();
+				if (adjustmentPoint) {
+					const centerX = item.getMbr().getCenter().x;
+					if (centerX > adjustmentPoint.x) {
+						item.transformation.translateBy(
+							adjustmentPoint.x - centerX,
+							0,
+						);
+					}
+					if (connector) {
+						connector.setEndPoint(getControlPointData(item, 2));
+					}
 				}
 				break;
 			case "done":
+				item.removeAdjustmentPoint();
 				console.log("Chat is done");
 				break;
 			case "end":
+				item.removeAdjustmentPoint();
 				console.log("User's request handled");
 				break;
 			case "error":
+				item.text.editor.insertAICopiedText("Error");
 				console.error("Chat error:", chunk.error);
 				break;
 			default:
+				item.text.editor.insertAICopiedText("Error");
 				console.warn("Unknown chunk type:", chunk.type);
 		}
 	}

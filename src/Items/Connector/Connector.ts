@@ -604,6 +604,20 @@ export class Connector {
 		);
 	}
 
+	getConnectedItems(): { startItem?: Item; endItem?: Item } {
+		const connectedItems: { startItem?: Item; endItem?: Item } = {
+			startItem: undefined,
+			endItem: undefined,
+		};
+		if (this.startPoint.pointType !== "Board") {
+			connectedItems.startItem = this.startPoint.item;
+		}
+		if (this.endPoint.pointType !== "Board") {
+			connectedItems.endItem = this.endPoint.item;
+		}
+		return connectedItems;
+	}
+
 	isConnectedOnePoint(): boolean {
 		return (
 			this.startPoint.pointType !== "Board" ||

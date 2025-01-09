@@ -562,6 +562,49 @@ export class Items {
 		return this.index.getLastZIndex();
 	}
 
+	getConnectorsByItemIds(
+		startPointerItemId?: string,
+		endPointerItemId?: string,
+	): Connector[] {
+		if (!startPointerItemId && !endPointerItemId) {
+			return [];
+		}
+		return this.listAll().filter(item => {
+			if (item.itemType !== "Connector" || !item.isConnected()) {
+				return false;
+			}
+			const { startItem, endItem } = item.getConnectedItems();
+			if (startPointerItemId && endPointerItemId) {
+				if (
+					startPointerItemId &&
+					startItem &&
+					startItem.getId() === startPointerItemId &&
+					endPointerItemId &&
+					endItem &&
+					endItem.getId() === endPointerItemId
+				) {
+					return true;
+				}
+				return false;
+			}
+			if (
+				startPointerItemId &&
+				startItem &&
+				startItem.getId() === startPointerItemId
+			) {
+				return true;
+			}
+			if (
+				endPointerItemId &&
+				endItem &&
+				endItem.getId() === endPointerItemId
+			) {
+				return true;
+			}
+			return false;
+		}) as Connector[];
+	}
+
 	render(context: DrawingContext): void {
 		const frames = this.getFramesInView();
 		const rest = this.getItemsInView();

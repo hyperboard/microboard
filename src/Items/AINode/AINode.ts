@@ -11,7 +11,7 @@ import { Path } from "Board/Items/Path/Path";
 import { Paths } from "Board/Items/Path/Paths";
 import { LinkTo } from "Board/Items/LinkTo/LinkTo";
 import { Subject } from "Subject";
-import { AINodeData, AINodeShape } from "Board/Items/AINode/AINodeData";
+import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { Operation } from "Board/Events/EventsOperations";
 import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
 
@@ -25,6 +25,7 @@ export class AINode implements Geometry {
 	readonly subject = new Subject<AINode>();
 	private parentNodeId?: string;
 	private isUserRequest: boolean;
+	private adjustmentPoint: Point | null = null;
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
@@ -44,12 +45,10 @@ export class AINode implements Geometry {
 			this.transformation,
 			this.linkTo,
 			"\u00A0",
-			true,
+			false,
 			false,
 			"AINode",
 		);
-
-		this.transformPath();
 
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
@@ -106,8 +105,14 @@ export class AINode implements Geometry {
 	private transformPath(): void {
 		const { left, right, top, bottom } =
 			this.text.getTransformedContainer();
-		this.text.left += 10;
-		this.text.top += 10;
+		if (
+			!this.path ||
+			(this.text.left < this.path.getMbr().left + 10 &&
+				this.text.top < this.path.getMbr().top + 10)
+		) {
+			this.text.left += 10;
+			this.text.top += 10;
+		}
 		const segments = new Mbr(left, top, right + 20, bottom + 20).getLines();
 		this.path = new Path(segments, true, "rgb(255, 255, 255)", "none");
 	}
@@ -120,6 +125,7 @@ export class AINode implements Geometry {
 			linkTo: this.linkTo.serialize(),
 			parentNodeId: this.parentNodeId,
 			isUserRequest: this.isUserRequest,
+			adjustmentPoint: this.adjustmentPoint,
 		};
 	}
 
@@ -135,7 +141,13 @@ export class AINode implements Geometry {
 		if (data.isUserRequest) {
 			this.isUserRequest = data.isUserRequest;
 		}
+		if (data.adjustmentPoint) {
+			this.adjustmentPoint = data.adjustmentPoint;
+		} else {
+			this.adjustmentPoint = null;
+		}
 		this.parentNodeId = data.parentNodeId;
+		this.transformPath();
 		this.subject.publish(this);
 		return this;
 	}
@@ -160,6 +172,14 @@ export class AINode implements Geometry {
 		return this.parentNodeId;
 	}
 
+	getAdjustmentPoint(): Point | null {
+		return this.adjustmentPoint;
+	}
+
+	removeAdjustmentPoint(): void {
+		this.adjustmentPoint = null;
+	}
+
 	getIsUserRequest(): boolean {
 		return this.isUserRequest;
 	}
@@ -180,7 +200,7 @@ export class AINode implements Geometry {
 				this.text.apply(op);
 				break;
 			case "Transformation":
-				this.transformation.apply(op);
+				this.text.transformation.apply(op);
 				break;
 			case "LinkTo":
 				this.linkTo.apply(op);

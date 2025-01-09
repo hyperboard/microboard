@@ -850,6 +850,7 @@ export class EditorContainer {
 				at: insertLocation,
 			},
 		);
+		this.subject.publish(this);
 
 		return true;
 	}

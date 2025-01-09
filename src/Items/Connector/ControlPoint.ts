@@ -183,7 +183,6 @@ export function getControlPoint(
 		return new BoardPoint(Math.round(data.x), Math.round(data.y));
 	} else {
 		const item = findItem(data.itemId);
-		console.log(item);
 
 		if (!item) {
 			console.warn(
