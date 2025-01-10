@@ -184,15 +184,15 @@ export function createEvents(
 	function handleChatChunk(chunk: ChatChunk): void {
 		const itemId = chunk.itemId;
 		const item = board.items.getById(itemId);
-		if (!item || item.itemType !== "AINode") {
-			return;
-		}
-		const connector = board.items.getConnectorsByItemIds(
-			item.getParentId(),
-			item.getId(),
-		)[0];
 		switch (chunk.type) {
 			case "chunk":
+				if (!item || item.itemType !== "AINode") {
+					return;
+				}
+				const connector = board.items.getConnectorsByItemIds(
+					item.getParentId(),
+					item.getId(),
+				)[0];
 				item.text.editor.insertAICopiedText(chunk.content || "");
 				const adjustmentPoint = item.getAdjustmentPoint();
 				if (adjustmentPoint) {
@@ -209,20 +209,36 @@ export function createEvents(
 				}
 				break;
 			case "done":
+				if (!item || item.itemType !== "AINode") {
+					console.log("Chat is done");
+					return;
+				}
+				board.selection.items.removeAll();
+				board.selection.add(item);
 				item.removeAdjustmentPoint();
-				console.log("Chat is done");
 				break;
 			case "end":
+				if (!item || item.itemType !== "AINode") {
+					console.log("User's request handled");
+					return;
+				}
+				board.selection.items.removeAll();
+				board.selection.add(item);
 				item.removeAdjustmentPoint();
-				console.log("User's request handled");
 				break;
 			case "error":
+				if (!item || item.itemType !== "AINode") {
+					console.error("Chat error:", chunk.error);
+					return;
+				}
 				item.text.editor.insertAICopiedText("Error");
-				console.error("Chat error:", chunk.error);
 				break;
 			default:
+				if (!item || item.itemType !== "AINode") {
+					console.warn("Unknown chunk type:", chunk.type);
+					return;
+				}
 				item.text.editor.insertAICopiedText("Error");
-				console.warn("Unknown chunk type:", chunk.type);
 		}
 	}
 

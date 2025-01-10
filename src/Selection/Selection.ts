@@ -15,7 +15,6 @@ import {
 	Frame,
 	Item,
 	ItemData,
-	ItemType,
 	Mbr,
 	RichText,
 	Shape,
@@ -29,11 +28,14 @@ import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { t } from "i18next";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import { ConnectionLineWidth } from "Board/Items/Connector/Connector";
 import { CONNECTOR_COLOR } from "../../View/Items/Connector";
 import { ItemOp } from "Board/Items/RichText/RichTextOperations";
 import { tempStorage } from "App/SessionStorage";
 import { Tool } from "Board/Tools/Tool";
+import {
+	AINode,
+	CONTEXT_NODE_HIGHLIGHT_COLOR,
+} from "Board/Items/AINode/AINode";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -1318,6 +1320,31 @@ export class Selection {
 		this.setContext("EditUnderPointer");
 	}
 
+	getMostNestedAINodeWithParents(): {
+		node: AINode;
+		parents: AINode[];
+	} | null {
+		const AINodes = this.items.getItemsByItemTypes(["AINode"]);
+		if (!AINodes.length) {
+			return null;
+		}
+
+		let mostNestedNode = AINodes[0];
+		let mostNestedNodeParents: AINode[] = [];
+		let currentParentsCount = -1;
+
+		AINodes.forEach(node => {
+			const parents = this.board.getParentAINodes(node);
+			if (parents.length > currentParentsCount) {
+				currentParentsCount = parents.length;
+				mostNestedNode = node;
+				mostNestedNodeParents = parents;
+			}
+		});
+
+		return { node: mostNestedNode, parents: mostNestedNodeParents };
+	}
+
 	renderItemMbr(
 		context: DrawingContext,
 		item: Item,
@@ -1355,6 +1382,33 @@ export class Selection {
 			if (!isLocked) {
 				this.quickAddButtons.render(context);
 			}
+		}
+
+		const nodeWithParents = this.getMostNestedAINodeWithParents();
+		if (nodeWithParents) {
+			const contextRange = nodeWithParents.node.getContextRange();
+			const parents = nodeWithParents.parents;
+			const contextNodes: AINode[] = [];
+			let assistantMessagesCount = 0;
+			for (
+				let i = 0;
+				assistantMessagesCount < contextRange && i < parents.length;
+				i++
+			) {
+				if (parents[i].getIsUserRequest()) {
+					contextNodes.push(parents[i]);
+				} else {
+					contextNodes.push(parents[i]);
+					assistantMessagesCount++;
+				}
+			}
+
+			contextNodes.forEach(node => {
+				const nodeRect = node.getMbr();
+				nodeRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
+				nodeRect.strokeWidth = 2;
+				nodeRect.render(context);
+			});
 		}
 	}
 }

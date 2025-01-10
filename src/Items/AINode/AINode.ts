@@ -15,6 +15,8 @@ import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { Operation } from "Board/Events/EventsOperations";
 import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
 
+export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(135, 61, 230, 0.3)";
+
 export class AINode implements Geometry {
 	readonly itemType = "AINode";
 	parent = "Board";
@@ -26,6 +28,7 @@ export class AINode implements Geometry {
 	private parentNodeId?: string;
 	private isUserRequest: boolean;
 	private adjustmentPoint: Point | null = null;
+	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
@@ -167,6 +170,10 @@ export class AINode implements Geometry {
 	// setParentId(id: string): void {
 	//     this.parentNodeId = id;
 	// }
+
+	getContextRange(): number {
+		return this.contextRange;
+	}
 
 	getParentId(): string | undefined {
 		return this.parentNodeId;
