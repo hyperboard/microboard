@@ -245,43 +245,6 @@ export class Sticker implements Geometry {
 	private applyBackgroundColor(backgroundColor: string): void {
 		this.backgroundColor = backgroundColor;
 		this.stickerPath.setBackgroundColor(backgroundColor);
-
-		// @ts-expect-error
-		if (import.meta.env.INTEGRATION_UI === "microboard") {
-			if (this.text.isEmpty()) {
-				this.text = new RichText(
-					this.textContainer,
-					this.id,
-					this.events,
-					this.transformation,
-					this.linkTo,
-					"\u00A0",
-					false,
-					true,
-					this.itemType,
-					{
-						...DEFAULT_TEXT_STYLES,
-						fontColor: isDarkColor(backgroundColor)
-							? "rgb(255, 255, 255)"
-							: DEFAULT_TEXT_STYLES.fontColor,
-					},
-				);
-			} else if (
-				this.text.getFontColor() === DEFAULT_TEXT_STYLES.fontColor ||
-				this.text.getFontColor() === "rgb(255, 255, 255)"
-			) {
-				const selection = this.text.getCurrentSelection();
-				if (selection) {
-					this.text.editor.selectWholeText();
-				}
-				this.text.applySelectionFontColor(
-					isDarkColor(backgroundColor)
-						? "rgb(255, 255, 255)"
-						: DEFAULT_TEXT_STYLES.fontColor,
-				);
-				this.text.restoreSelection(selection);
-			}
-		}
 	}
 
 	setBackgroundColor(backgroundColor: string): void {
