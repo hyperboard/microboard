@@ -184,6 +184,7 @@ export function createEvents(
 	function handleChatChunk(chunk: ChatChunk): void {
 		const itemId = chunk.itemId;
 		const item = board.items.getById(itemId);
+		console.log("chunk", chunk);
 		switch (chunk.type) {
 			case "chunk":
 				if (!item || item.itemType !== "AINode") {
