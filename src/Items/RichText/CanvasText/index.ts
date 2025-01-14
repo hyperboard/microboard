@@ -247,7 +247,7 @@ function createFlowList(
 				"div",
 				{ style: listItem.style },
 				listItem.children.map((child, childIndex) => {
-					let mark: string = "";
+					let mark = "";
 					if (childIndex === 0) {
 						if (isNumberedList) {
 							mark = (listItemIndex + 1).toString() + ". ";

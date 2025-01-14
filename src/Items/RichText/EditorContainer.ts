@@ -893,7 +893,9 @@ export class EditorContainer {
 			.use(markdown)
 			.use(slate)
 			.process(text, (err, file) => {
-				if (err) throw err;
+				if (err) {
+					throw err;
+				}
 				// const isPrevTextEmpty = this.isEmpty();
 				//
 				// let insertLocation: Location | undefined = undefined;

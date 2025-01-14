@@ -120,7 +120,7 @@ export class AINode implements Geometry {
 		this.path = new Path(segments, true, "rgb(255, 255, 255)", "none");
 	}
 
-	serialize(isCopy: boolean = false): AINodeData {
+	serialize(isCopy = false): AINodeData {
 		return {
 			itemType: "AINode",
 			transformation: this.transformation.serialize(),

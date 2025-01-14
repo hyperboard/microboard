@@ -349,8 +349,8 @@ function validateAINodeData(data: any): data is PlaceholderData {
 		data.hasOwnProperty("transformation") &&
 		data.hasOwnProperty("text") &&
 		typeof data.isUserRequest === "boolean" &&
-		validateTransformationData(data.transformation) &&
-		validateRichTextData(data.text);
+		validateTransformationData(data.transformation);
+	// validateRichTextData(data.text);
 	return isValid;
 }
 
