@@ -227,8 +227,7 @@ export class RichText extends Mbr implements Geometry {
 			return;
 		}
 		const maxWidth = this.getMaxWidth();
-		const shouldUpdateLayout =
-			this.getTextWidth() > (maxWidth || 0) || this.hasWraps();
+		const shouldUpdateLayout = this.getTextWidth() > (maxWidth || 0);
 		if (shouldUpdateLayout) {
 			this.updateElement();
 		} else {
