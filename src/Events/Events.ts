@@ -216,6 +216,7 @@ export function createEvents(
 				board.selection.items.removeAll();
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
+				item.getRichText().editor.deserializeMarkdown();
 				break;
 			case "end":
 				if (!item || item.itemType !== "AINode") {
@@ -225,6 +226,7 @@ export function createEvents(
 				board.selection.items.removeAll();
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
+				item.getRichText().editor.deserializeMarkdown();
 				break;
 			case "error":
 				if (!item || item.itemType !== "AINode") {

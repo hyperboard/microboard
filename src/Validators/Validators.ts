@@ -53,6 +53,7 @@ const itemValidators: Record<string, (data: any) => boolean> = {
 	Drawing: validateDrawingData,
 	Frame: validateFrameData,
 	Placeholder: validatePlaceholderData,
+	AINode: validateAINodeData,
 };
 
 function validateItemData(itemData: any): boolean {
@@ -338,6 +339,18 @@ function validatePlaceholderData(data: any): data is PlaceholderData {
 		typeof data.icon === "string" &&
 		typeof data.miroData === "object" &&
 		validateTransformationData(data.transformation);
+	return isValid;
+}
+
+function validateAINodeData(data: any): data is PlaceholderData {
+	const isValid =
+		data.hasOwnProperty("itemType") &&
+		data.hasOwnProperty("isUserRequest") &&
+		data.hasOwnProperty("transformation") &&
+		data.hasOwnProperty("text") &&
+		typeof data.isUserRequest === "boolean" &&
+		validateTransformationData(data.transformation) &&
+		validateRichTextData(data.text);
 	return isValid;
 }
 

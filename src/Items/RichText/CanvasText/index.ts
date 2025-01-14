@@ -1,27 +1,29 @@
 import * as flow from "dropflow";
 import { Descendant } from "slate";
-import { BlockNode } from "../Editor/BlockNode";
+import {
+	BlockNode,
+	BulletedListNode,
+	NumberedListNode,
+} from "../Editor/BlockNode";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { TextNode } from "../Editor/TextNode";
-import { getApiUrl } from "Config";
+import { getPublicUrl } from "Config";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
 async function loadFonts(): Promise<void> {
 	await flow.registerFont(
-		new URL(`${getApiUrl()}/fonts/OpenSans-Regular.ttf`, import.meta.url),
+		new URL(getPublicUrl("/fonts/OpenSans-Regular.ttf")),
+	);
+	await flow.registerFont(new URL(getPublicUrl("/fonts/OpenSans-Bold.ttf")));
+	await flow.registerFont(
+		new URL(getPublicUrl("/fonts/OpenSans-Italic.ttf")),
 	);
 	await flow.registerFont(
-		new URL(`${getApiUrl()}/fonts/OpenSans-Bold.ttf`, import.meta.url),
+		new URL(getPublicUrl("/fonts/OpenSans-BoldItalic.ttf")),
 	);
 	await flow.registerFont(
-		new URL(`${getApiUrl()}/fonts/OpenSans-Italic.ttf`, import.meta.url),
-	);
-	await flow.registerFont(
-		new URL(
-			`${getApiUrl()}/fonts/OpenSans-BoldItalic.ttf`,
-			import.meta.url,
-		),
+		new URL(getPublicUrl("/fonts/RobotoMono-Regular.ttf")),
 	);
 }
 
@@ -81,70 +83,123 @@ function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
 	};
 }
 
-function convertSlateToDropflow(
-	slateNodes: BlockNode[],
+function convertNoneListNode(
+	node: BlockNode,
 	maxWidth: number,
 ): DropflowNodeData[] {
-	const dropflowNodes: DropflowNodeData[] = [];
-	for (const node of slateNodes) {
-		if (node.type === "paragraph") {
-			const paragraphStyle: flow.DeclaredStyle = {
-				textAlign: node.horisontalAlignment || "left",
-				fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
-			};
+	const newDropflowNodes: DropflowNodeData[] = [];
 
-			let currNode: DropflowNodeData = {
-				style: paragraphStyle,
-				children: [],
-			};
+	const paragraphStyle: flow.DeclaredStyle = {
+		textAlign: node.horisontalAlignment || "left",
+		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
+	};
 
-			for (const child of node.children) {
-				const childStyle = getChildStyle(child, maxWidth);
-				const textParts = child.text.split("\n");
-				if (textParts.length === 1) {
-					currNode.children.push({
-						style: childStyle,
-						text: textParts[0],
-					});
-				} else {
-					currNode.children.push({
-						style: childStyle,
-						text: textParts[0],
-					});
-					dropflowNodes.push(currNode);
+	let currNode: DropflowNodeData = {
+		style: paragraphStyle,
+		children: [],
+	};
 
-					textParts.forEach((text, idx) => {
-						if (idx > 0 && idx < textParts.length - 1) {
-							dropflowNodes.push({
-								style: paragraphStyle,
-								children: [{ style: childStyle, text }],
-							});
-						}
-					});
-					currNode = {
+	for (const child of node.children) {
+		const childStyle = getChildStyle(child, maxWidth);
+		if (node.type === "code_block") {
+			childStyle.fontWeight = 400;
+			childStyle.fontFamily = ["Roboto Mono", "monospace"];
+		}
+
+		let textParts = [""];
+		if (child.text && child.text.length !== 0) {
+			textParts = child.text.split("\n");
+		} else if (child.link) {
+			textParts = child.link.split("\n");
+		}
+		if (textParts.length === 1) {
+			currNode.children.push({
+				style: childStyle,
+				text: textParts[0],
+			});
+		} else {
+			currNode.children.push({
+				style: childStyle,
+				text: textParts[0],
+			});
+			newDropflowNodes.push(currNode);
+
+			textParts.forEach((text, idx) => {
+				if (idx > 0 && idx < textParts.length - 1) {
+					newDropflowNodes.push({
 						style: paragraphStyle,
-						children: [
-							{
-								text: textParts[textParts.length - 1],
-								style: childStyle,
-							},
-						],
-					};
+						children: [{ style: childStyle, text }],
+					});
 				}
-			}
+			});
+			currNode = {
+				style: paragraphStyle,
+				children: [
+					{
+						text: textParts[textParts.length - 1],
+						style: childStyle,
+					},
+				],
+			};
+		}
+	}
+	newDropflowNodes.push(currNode);
+	return newDropflowNodes;
+}
 
-			dropflowNodes.push(currNode);
+function convertListNode(
+	node: BulletedListNode | NumberedListNode,
+	maxWidth: number,
+): DropflowNodeData[] {
+	const newDropflowListNodes: DropflowNodeData[] = [];
+
+	for (const listItem of node.children) {
+		for (const child of listItem.children) {
+			newDropflowListNodes.push(...convertNoneListNode(child, maxWidth));
+		}
+	}
+	return newDropflowListNodes;
+}
+
+function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number) {
+	const dropflowNodes: { type: string; nodes: DropflowNodeData[] }[] = [];
+	for (const node of slateNodes) {
+		switch (node.type) {
+			case "heading_one":
+			case "heading_two":
+			case "heading_three":
+			case "paragraph":
+				dropflowNodes.push({
+					type: "paragraphNodes",
+					nodes: convertNoneListNode(node, maxWidth),
+				});
+				break;
+			case "code_block":
+				dropflowNodes.push({
+					type: "codeNodes",
+					nodes: convertNoneListNode(node, maxWidth),
+				});
+				break;
+			case "ol_list":
+				dropflowNodes.push({
+					type: "numberedListNodes",
+					nodes: convertListNode(node, maxWidth),
+				});
+				break;
+			case "ul_list":
+				dropflowNodes.push({
+					type: "bulletedListNodes",
+					nodes: convertListNode(node, maxWidth),
+				});
+				break;
 		}
 	}
 
 	return dropflowNodes;
 }
 
-function createFlowDiv(
-	dropflowNodes: {
-		style: flow.DeclaredStyle;
-		children: { style: flow.DeclaredStyle; text: string }[];
-	}[],
+function createRootDiv(
+	children: flow.HTMLElement[],
 	maxWidth: number,
 ): flow.HTMLElement {
 	return flow.h(
@@ -156,13 +211,71 @@ function createFlowDiv(
 				fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
 			},
 		},
-		dropflowNodes.map(paragraph =>
+		children,
+	);
+}
+
+function createFlowDiv(
+	dropflowNodes: {
+		style: flow.DeclaredStyle;
+		children: { style: flow.DeclaredStyle; text: string }[];
+	}[],
+): flow.HTMLElement[] {
+	return dropflowNodes.map(paragraph =>
+		flow.h(
+			"div",
+			{ style: paragraph.style },
+			paragraph.children.map(child =>
+				flow.h("span", { style: child.style }, [child.text]),
+			),
+		),
+	);
+}
+
+function createFlowList(
+	dropflowNodes: {
+		style: flow.DeclaredStyle;
+		children: { style: flow.DeclaredStyle; text: string }[];
+	}[],
+	isNumberedList: boolean,
+): flow.HTMLElement {
+	return flow.h(
+		"div",
+		{},
+		dropflowNodes.map((listItem, listItemIndex) =>
 			flow.h(
 				"div",
-				{ style: paragraph.style },
-				paragraph.children.map(child =>
-					flow.h("span", { style: child.style }, [child.text]),
-				),
+				{ style: listItem.style },
+				listItem.children.map((child, childIndex) => {
+					let mark: string = "";
+					if (childIndex === 0) {
+						if (isNumberedList) {
+							mark = (listItemIndex + 1).toString() + ". ";
+						} else {
+							mark = "• ";
+						}
+					}
+					return flow.h("span", { style: child.style }, [
+						mark + child.text,
+					]);
+				}),
+			),
+		),
+	);
+}
+
+function createFlowCode(
+	dropflowNodes: {
+		style: flow.DeclaredStyle;
+		children: { style: flow.DeclaredStyle; text: string }[];
+	}[],
+): flow.HTMLElement[] {
+	return dropflowNodes.map(listItem =>
+		flow.h(
+			"div",
+			{ style: listItem.style },
+			listItem.children.map(child =>
+				flow.h("span", { style: child.style }, [child.text]),
 			),
 		),
 	);
@@ -231,7 +344,12 @@ export function getBlockNodes(
 					...des,
 					children: des.children.map(child => ({
 						...child,
-						text: child.text.length === 0 ? "1" : child.text,
+						text:
+							child.text?.length !== 0
+								? child.text
+								: child.link
+									? child.link
+									: "1",
 					})),
 				}) ||
 				des,
@@ -262,9 +380,28 @@ export function getBlockNodes(
 		);
 	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
-	const divs = createFlowDiv(dropflowNodes, maxWidth);
+	const childNodes = dropflowNodes.flatMap(node => {
+		switch (node.type) {
+			case "paragraphNodes": {
+				return createFlowDiv(node.nodes);
+			}
+			case "codeNodes": {
+				return createFlowCode(node.nodes);
+			}
+			case "numberedListNodes": {
+				return createFlowList(node.nodes, true);
+			}
+			case "bulletedListNodes": {
+				return createFlowList(node.nodes, false);
+			}
+			default:
+				return createFlowDiv(node.nodes);
+		}
+	});
 
-	const rootElement = flow.dom(divs);
+	const rootDiv = createRootDiv(childNodes, maxWidth);
+
+	const rootElement = flow.dom(rootDiv);
 
 	const generated = flow.generate(rootElement);
 	flow.layout(generated);
@@ -306,6 +443,7 @@ export function getBlockNodes(
 
 const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+
 function getOneCharacterMaxWidth(data: Descendant[]): number {
 	let maxWidth = 0;
 

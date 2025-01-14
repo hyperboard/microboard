@@ -32,6 +32,9 @@ import {
 } from "./RichTextOperations";
 import { Node } from "slate";
 import { isTextEmpty } from "./isTextEmpty";
+import markdown from "remark-parse";
+import slate from "remark-slate";
+import { unified } from "unified";
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
 export class EditorContainer {
@@ -850,6 +853,86 @@ export class EditorContainer {
 				at: insertLocation,
 			},
 		);
+		this.subject.publish(this);
+
+		return true;
+	}
+
+	setNodeChildrenStyles(node: BlockNode) {
+		let fontStyles = Editor.marks(this.editor);
+		switch (node.type) {
+			case "heading_one":
+				fontStyles = { ...fontStyles, bold: true, fontSize: 22 };
+				break;
+			case "heading_two":
+				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
+				break;
+			case "heading_three":
+				fontStyles = { ...fontStyles, bold: true, fontSize: 16 };
+				break;
+		}
+		node.children = node.children.map(children => ({
+			...fontStyles,
+			...children,
+		}));
+		node.horisontalAlignment = this.horisontalAlignment;
+	}
+
+	deserializeMarkdown() {
+		const children = this.getText()[0]?.children[0];
+		if (!children) {
+			return;
+		}
+		let text = children.text;
+
+		if (text.startsWith("```markdown")) {
+			text = text.slice(11, -4);
+		}
+
+		unified()
+			.use(markdown)
+			.use(slate)
+			.process(text, (err, file) => {
+				if (err) throw err;
+				// const isPrevTextEmpty = this.isEmpty();
+				//
+				// let insertLocation: Location | undefined = undefined;
+
+				// if (isPrevTextEmpty) {
+				// 	insertLocation = { path: [0, 0], offset: 0 }; // Начало пути в редакторе
+				// }
+				console.log("result", file.result);
+				this.clearText();
+				Transforms.insertNodes(
+					this.editor,
+					file.result.map((item: BlockNode) => {
+						if (
+							item.type === "ol_list" ||
+							item.type === "ul_list"
+						) {
+							for (const listItem of item.children) {
+								for (const listItemChild of listItem.children) {
+									this.setNodeChildrenStyles(listItemChild);
+								}
+							}
+						} else {
+							this.setNodeChildrenStyles(item);
+						}
+						return item;
+					}),
+					{
+						at: { path: [0, 0], offset: 0 },
+					},
+				);
+			});
+
+		// const processor = remark().use(remarkSlate);
+		// // console.log(text[0].children[0].text)
+		// const vFile = processor.processSync(`# Заголовок\n\nТекст с **жирным** выделением.`);
+		// console.log(vFile)
+		// const slateNodes = processor.runSync(vFile)
+		// console.log(slateNodes)
+
 		this.subject.publish(this);
 
 		return true;

@@ -14,8 +14,9 @@ export const TextStyles = [
 export type TextStyle = (typeof TextStyles)[number];
 
 export type TextNode = {
-	type: "text";
+	type: "text" | "link";
 	text: string;
+	link?: string;
 	styles?: TextStyle[];
 	bold: boolean;
 	italic: boolean;

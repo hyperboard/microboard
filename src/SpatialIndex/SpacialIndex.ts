@@ -104,7 +104,7 @@ export class SpatialIndex {
 
 	copy(): (ItemData & { id: string })[] {
 		const itemsData = this.itemsArray.map(item => ({
-			...item.serialize(),
+			...item.serialize(true),
 			id: item.getId(),
 		}));
 		const framesData = this.framesArray.map(item => ({
