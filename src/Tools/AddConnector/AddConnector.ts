@@ -6,12 +6,17 @@ import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { BoardTool } from "../BoardTool";
+import type { ConnectionLineWidth } from "Board/Items/Connector/Connector";
+import type { BorderStyle } from "Board/Items/Path";
 
 export class AddConnector extends BoardTool {
 	connector: Connector | null = null;
 	lineStyle: ConnectorLineStyle = "curved";
 	startPointer?: ConnectorPointerStyle;
 	endPointer?: ConnectorPointerStyle;
+	lineColor?: string;
+	lineWidth?: ConnectionLineWidth;
+	strokeStyle?: BorderStyle;
 
 	snap: ConnectorSnap;
 
@@ -30,6 +35,18 @@ export class AddConnector extends BoardTool {
 		this.setCursor();
 
 		const storage = new SessionStorage();
+		const stroke = storage.getConnectorStrokeStyle();
+		if (stroke) {
+			this.strokeStyle = stroke;
+		}
+		const lineWidth = storage.getConnectorLineWidth();
+		if (lineWidth) {
+			this.lineWidth = lineWidth;
+		}
+		const savedColor = storage.getConnectorFillColor();
+		if (savedColor) {
+			this.lineColor = savedColor;
+		}
 		const savedStyle = storage.getConnectorLineStyle();
 		if (savedStyle) {
 			this.lineStyle = savedStyle;
@@ -59,6 +76,9 @@ export class AddConnector extends BoardTool {
 				this.lineStyle,
 				this.startPointer,
 				this.endPointer,
+				this.lineColor,
+				this.lineWidth,
+				this.strokeStyle,
 			);
 		}
 	}
@@ -79,6 +99,9 @@ export class AddConnector extends BoardTool {
 				this.lineStyle,
 				this.startPointer,
 				this.endPointer,
+				this.lineColor,
+				this.lineWidth,
+				this.strokeStyle,
 			);
 		} else {
 			this.connector.setEndPoint(point);

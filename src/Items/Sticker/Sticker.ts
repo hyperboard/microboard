@@ -27,6 +27,7 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender";
+import { SessionStorage } from "App/SessionStorage";
 
 export const stickerColors = {
 	Purple: "rgb(233, 208, 255)",
@@ -157,6 +158,11 @@ export class Sticker implements Geometry {
 		}
 	}
 
+	saveStickerData() {
+		const storage = new SessionStorage();
+		storage.setStickerData(this.serialize());
+	}
+
 	serialize(): StickerData {
 		return {
 			itemType: "Sticker",
@@ -196,6 +202,7 @@ export class Sticker implements Geometry {
 		this.textContainer.transform(this.transformation.matrix);
 		// this.text.setContainer(this.textContainer);
 		this.stickerPath.setBackgroundColor(this.backgroundColor);
+		this.saveStickerData();
 	}
 
 	setId(id: string): this {
@@ -441,6 +448,7 @@ export class Sticker implements Geometry {
 		}
 		this.transformation.translateTo(x, y);
 		this.transformation.scaleTo(l, l);
+		this.saveStickerData();
 	}
 	transformToCenter(pt: Point, newWidth?: number) {
 		if (newWidth) {
@@ -520,17 +528,7 @@ export class Sticker implements Geometry {
 			);
 		}
 		res.mbr = this.getMbr();
-
-		sessionStorage.setItem(
-			"lastSticker",
-			JSON.stringify({
-				backgroundColor: this.backgroundColor,
-				id: this.id,
-				itemType: this.itemType,
-				parent: this.parent,
-				stickerPath: this.stickerPath,
-			}),
-		);
+		this.saveStickerData();
 
 		return res;
 	}

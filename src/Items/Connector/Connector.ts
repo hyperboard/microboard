@@ -62,10 +62,10 @@ export class Connector {
 	private id = "";
 	readonly transformation: Transformation;
 	private middlePoints: BoardPoint[] = [];
-	private lineColor = CONNECTOR_COLOR;
+	private lineColor: string;
 	readonly linkTo: LinkTo;
-	private lineWidth: ConnectionLineWidth = CONNECTOR_LINE_WIDTH;
-	private borderStyle: BorderStyle = CONNECTOR_BORDER_STYLE;
+	private lineWidth: ConnectionLineWidth;
+	private borderStyle: BorderStyle;
 	readonly subject = new Subject<Connector>();
 	lines = new Path([new Line(new Point(), new Point())]);
 	startPointer: Pointer;
@@ -82,9 +82,15 @@ export class Connector {
 		private lineStyle: ConnectorLineStyle = "straight",
 		private startPointerStyle: ConnectorPointerStyle = "None",
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
+		lineColor?: string,
+		lineWidth?: ConnectionLineWidth,
+		strokeStyle?: BorderStyle,
 	) {
 		this.transformation = new Transformation(this.id, this.events);
 		this.linkTo = new LinkTo(this.id, this.events);
+		this.lineColor = lineColor ?? CONNECTOR_COLOR;
+		this.lineWidth = lineWidth ?? CONNECTOR_LINE_WIDTH;
+		this.borderStyle = strokeStyle ?? CONNECTOR_BORDER_STYLE;
 		this.text = new RichText(
 			this.getMbr(),
 			this.id,
