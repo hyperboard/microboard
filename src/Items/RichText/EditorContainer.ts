@@ -896,14 +896,7 @@ export class EditorContainer {
 				if (err) {
 					throw err;
 				}
-				// const isPrevTextEmpty = this.isEmpty();
-				//
-				// let insertLocation: Location | undefined = undefined;
 
-				// if (isPrevTextEmpty) {
-				// 	insertLocation = { path: [0, 0], offset: 0 }; // Начало пути в редакторе
-				// }
-				console.log("result", file.result);
 				this.clearText();
 				Transforms.insertNodes(
 					this.editor,
@@ -927,13 +920,6 @@ export class EditorContainer {
 					},
 				);
 			});
-
-		// const processor = remark().use(remarkSlate);
-		// // console.log(text[0].children[0].text)
-		// const vFile = processor.processSync(`# Заголовок\n\nТекст с **жирным** выделением.`);
-		// console.log(vFile)
-		// const slateNodes = processor.runSync(vFile)
-		// console.log(slateNodes)
 
 		this.subject.publish(this);
 

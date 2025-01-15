@@ -184,30 +184,12 @@ export function createEvents(
 	function handleChatChunk(chunk: ChatChunk): void {
 		const itemId = chunk.itemId;
 		const item = board.items.getById(itemId);
-		console.log("chunk", chunk);
 		switch (chunk.type) {
 			case "chunk":
 				if (!item || item.itemType !== "AINode") {
 					return;
 				}
-				const connector = board.items.getConnectorsByItemIds(
-					item.getParentId(),
-					item.getId(),
-				)[0];
 				item.text.editor.insertAICopiedText(chunk.content || "");
-				const adjustmentPoint = item.getAdjustmentPoint();
-				if (adjustmentPoint) {
-					const centerX = item.getMbr().getCenter().x;
-					if (centerX > adjustmentPoint.x) {
-						item.transformation.translateBy(
-							adjustmentPoint.x - centerX,
-							0,
-						);
-					}
-					if (connector) {
-						connector.setEndPoint(getControlPointData(item, 2));
-					}
-				}
 				break;
 			case "done":
 				if (!item || item.itemType !== "AINode") {
