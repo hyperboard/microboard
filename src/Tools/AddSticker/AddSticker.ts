@@ -19,7 +19,10 @@ export class AddSticker extends BoardTool {
 	constructor(board: Board) {
 		super(board);
 		const lastSticker = this.getLastSticker();
-		this.sticker = lastSticker ?? new Sticker();
+		this.sticker = new Sticker(
+			undefined,
+			lastSticker?.getBackgroundColor(),
+		);
 
 		this.setCursor(this.sticker.getBackgroundColor());
 	}
