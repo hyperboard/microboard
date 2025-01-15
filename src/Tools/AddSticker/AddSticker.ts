@@ -21,6 +21,7 @@ export class AddSticker extends BoardTool {
 		const lastSticker = this.getLastSticker();
 		this.sticker = new Sticker(
 			undefined,
+			"",
 			lastSticker?.getBackgroundColor(),
 		);
 
