@@ -22,7 +22,7 @@ import {
 	ListTypes,
 	ParagraphNode,
 } from "./Editor/BlockNode";
-import { TextNode, TextStyle } from "./Editor/TextNode";
+import { LinkNode, TextNode, TextStyle } from "./Editor/TextNode";
 import { DefaultTextStyles } from "./RichText";
 import {
 	RichTextOperation,
@@ -858,24 +858,51 @@ export class EditorContainer {
 		return true;
 	}
 
+	convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
+		if (node.type === "text" || !node.type) {
+			return node;
+		}
+		const link = node.link;
+		const nodeCopy = { ...node };
+		delete nodeCopy.children;
+		return { ...nodeCopy, type: "text", text: link };
+	};
+
 	setNodeChildrenStyles(node: BlockNode) {
 		let fontStyles = Editor.marks(this.editor);
 		switch (node.type) {
 			case "heading_one":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 22 };
-				break;
-			case "heading_two":
 				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
 				break;
-			case "heading_three":
+			case "heading_two":
 				fontStyles = { ...fontStyles, bold: true, fontSize: 16 };
 				break;
+			case "heading_three":
+				fontStyles = { ...fontStyles, bold: true, fontSize: 15 };
+				break;
 		}
-		node.children = node.children.map(children => ({
-			...fontStyles,
-			...children,
-		}));
+
+		node.children = node.children
+			.map((children: TextNode | LinkNode) => {
+				return this.convertLinkNodeToTextNode(children);
+			})
+			.map((children: TextNode) => ({
+				...fontStyles,
+				...children,
+			}));
 		node.horisontalAlignment = this.horisontalAlignment;
+	}
+
+	setNodeStyles(item: BlockNode) {
+		if (item.type === "ol_list" || item.type === "ul_list") {
+			for (const listItem of item.children) {
+				for (const listItemChild of listItem.children) {
+					this.setNodeStyles(listItemChild);
+				}
+			}
+		} else {
+			this.setNodeChildrenStyles(item);
+		}
 	}
 
 	deserializeMarkdown() {
@@ -901,18 +928,7 @@ export class EditorContainer {
 				Transforms.insertNodes(
 					this.editor,
 					file.result.map((item: BlockNode) => {
-						if (
-							item.type === "ol_list" ||
-							item.type === "ul_list"
-						) {
-							for (const listItem of item.children) {
-								for (const listItemChild of listItem.children) {
-									this.setNodeChildrenStyles(listItemChild);
-								}
-							}
-						} else {
-							this.setNodeChildrenStyles(item);
-						}
+						this.setNodeStyles(item);
 						return item;
 					}),
 					{

@@ -6,7 +6,7 @@ import {
 	NumberedListNode,
 } from "../Editor/BlockNode";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
-import { TextNode } from "../Editor/TextNode";
+import { LinkNode, TextNode } from "../Editor/TextNode";
 import { getPublicUrl } from "Config";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
@@ -38,6 +38,17 @@ interface DropflowChild {
 	style: flow.DeclaredStyle;
 	text: string;
 }
+
+//needed while we cant create hyperlink
+const convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
+	if (node.type === "text" || !node.type) {
+		return node;
+	}
+	const link = node.link;
+	const nodeCopy = { ...node };
+	delete nodeCopy.children;
+	return { ...nodeCopy, type: "text", text: link };
+};
 
 function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
 	const fontSize = typeof child.fontSize === "number" ? child.fontSize : 14;
@@ -106,12 +117,8 @@ function convertNoneListNode(
 			childStyle.fontFamily = ["Roboto Mono", "monospace"];
 		}
 
-		let textParts = [""];
-		if (child.text && child.text.length !== 0) {
-			textParts = child.text.split("\n");
-		} else if (child.link) {
-			textParts = child.link.split("\n");
-		}
+		const textParts = convertLinkNodeToTextNode(child).text.split("\n");
+
 		if (textParts.length === 1) {
 			currNode.children.push({
 				style: childStyle,
@@ -155,6 +162,12 @@ function convertListNode(
 
 	for (const listItem of node.children) {
 		for (const child of listItem.children) {
+			if (child.type === "ul_list" || child.type === "ol_list") {
+				newDropflowListNodes[
+					newDropflowListNodes.length - 1
+				].children.push(...convertListNode(child, maxWidth));
+				continue;
+			}
 			newDropflowListNodes.push(...convertNoneListNode(child, maxWidth));
 		}
 	}
@@ -235,9 +248,12 @@ function createFlowDiv(
 function createFlowList(
 	dropflowNodes: {
 		style: flow.DeclaredStyle;
-		children: { style: flow.DeclaredStyle; text: string }[];
+		children:
+			| DropflowChild[]
+			| { style: flow.DeclaredStyle; children: DropflowChild[] }[];
 	}[],
 	isNumberedList: boolean,
+	isNested = false,
 ): flow.HTMLElement {
 	return flow.h(
 		"div",
@@ -247,17 +263,25 @@ function createFlowList(
 				"div",
 				{ style: listItem.style },
 				listItem.children.map((child, childIndex) => {
-					let mark = "";
+					let mark = isNested ? "			" : "";
 					if (childIndex === 0) {
 						if (isNumberedList) {
-							mark = (listItemIndex + 1).toString() + ". ";
+							mark += (listItemIndex + 1).toString() + ". ";
 						} else {
-							mark = "• ";
+							mark += "•  ";
 						}
 					}
-					return flow.h("span", { style: child.style }, [
-						mark + child.text,
-					]);
+					let childNode;
+					if (child.text || child.text === "") {
+						childNode = mark + child.text;
+					} else {
+						childNode = createFlowList(
+							[child],
+							isNumberedList,
+							true,
+						);
+					}
+					return flow.h("span", { style: child.style }, [childNode]);
 				}),
 			),
 		),
@@ -297,7 +321,10 @@ function sliceTextByWidth(
 	data: BlockNode[],
 	maxWidth: number,
 ): LayoutBlockNodes {
-	const text = data[0].type === "paragraph" ? data[0].children[0].text : "";
+	const text =
+		data[0].type === "paragraph"
+			? convertLinkNodeToTextNode(data[0].children[0]).text
+			: "";
 	const newData: BlockNode = JSON.parse(JSON.stringify(data[0]));
 	let currentText = "";
 	let currentWidth = 0;
@@ -321,7 +348,7 @@ function sliceTextByWidth(
 	}
 
 	if (newData.type === "paragraph") {
-		newData.children[0].text = currentText;
+		convertLinkNodeToTextNode(newData.children[0]).text = currentText;
 	}
 
 	return getBlockNodes([newData], maxWidth);
@@ -453,11 +480,16 @@ function getOneCharacterMaxWidth(data: Descendant[]): number {
 		}
 
 		for (const child of desc.children) {
-			if (typeof child.fontSize === "number" && child.text.length === 1) {
+			if (
+				typeof child.fontSize === "number" &&
+				convertLinkNodeToTextNode(child).text.length === 1
+			) {
 				const bold = (child.bold && "bold") || "";
 				const italic = (child.italic && "italic") || "";
 				context.font = `${bold} ${italic} ${child.fontSize}px ${child.fontFamily}`;
-				const metrics = context.measureText(child.text);
+				const metrics = context.measureText(
+					convertLinkNodeToTextNode(child).text,
+				);
 				if (metrics.width > maxWidth) {
 					maxWidth = metrics.width;
 				}

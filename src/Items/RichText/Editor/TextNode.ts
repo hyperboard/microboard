@@ -14,10 +14,29 @@ export const TextStyles = [
 export type TextStyle = (typeof TextStyles)[number];
 
 export type TextNode = {
-	type: "text" | "link";
+	type: "text";
 	text: string;
-	link?: string;
 	styles?: TextStyle[];
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	overline: boolean;
+	lineThrough: boolean;
+	subscript: boolean;
+	superscript: boolean;
+	fontFamily?: string;
+	fontColor?: string;
+	fontSize?: number | "auto";
+	fontHighlight?: string;
+	enableAuto?: boolean;
+	horisontalAlignment?: HorisontalAlignment;
+};
+
+export type LinkNode = {
+	type: "link";
+	link: string;
+	styles?: TextStyle[];
+	children?: TextNode[];
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;

@@ -1,5 +1,5 @@
 import { HorisontalAlignment } from "../../Alignment";
-import { TextNode } from "./TextNode";
+import { LinkNode, TextNode } from "./TextNode";
 
 export const ListTypes = ["ol_list", "ul_list"] as const;
 
@@ -21,7 +21,7 @@ export type BlockType = (typeof BlockTypes)[number];
 
 export type ParagraphNode = {
 	type: "paragraph";
-	children: TextNode[];
+	children: TextNode[] | LinkNode[];
 	horisontalAlignment?: HorisontalAlignment;
 	lineHeight?: number;
 };

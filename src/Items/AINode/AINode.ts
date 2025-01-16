@@ -110,14 +110,24 @@ export class AINode implements Geometry {
 			this.text.getTransformedContainer();
 		if (
 			!this.path ||
-			(this.text.left < this.path.getMbr().left + 10 &&
-				this.text.top < this.path.getMbr().top + 10)
+			(this.text.left < this.path.getMbr().left + 20 &&
+				this.text.top < this.path.getMbr().top + 20)
 		) {
-			this.text.left += 10;
-			this.text.top += 10;
+			this.text.left += 20;
+			this.text.top += 20;
 		}
-		const segments = new Mbr(left, top, right + 20, bottom + 20).getLines();
-		this.path = new Path(segments, true, "rgb(255, 255, 255)", "none");
+		const segments = new Mbr(
+			left,
+			top,
+			right + 40,
+			bottom + (bottom - top > 400 ? 60 : 40),
+		).getLines();
+		this.path = new Path(
+			segments,
+			true,
+			"rgb(255, 255, 255)",
+			"rgba(222, 224, 227, 1)",
+		);
 	}
 
 	serialize(isCopy = false): AINodeData {
