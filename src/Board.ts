@@ -54,6 +54,7 @@ export class Board {
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
+	isAIGenerating = false;
 
 	readonly camera: Camera = new Camera(this.pointer);
 	readonly presence: Presence;

@@ -31,7 +31,6 @@ import {
 	UserJoinMsg,
 } from "Board/Presence/Events";
 import i18n from "Lang";
-import { getControlPointData } from "Board/Selection/QuickAddButtons/quickAddHelpers";
 
 export interface BoardEvent {
 	order: number;
@@ -200,6 +199,7 @@ export function createEvents(
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
 				item.getRichText().editor.deserializeMarkdown();
+				board.isAIGenerating = false;
 				break;
 			case "end":
 				if (!item || item.itemType !== "AINode") {
@@ -210,6 +210,7 @@ export function createEvents(
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
 				item.getRichText().editor.deserializeMarkdown();
+				board.isAIGenerating = false;
 				break;
 			case "error":
 				if (!item || item.itemType !== "AINode") {
@@ -217,6 +218,7 @@ export function createEvents(
 					return;
 				}
 				item.text.editor.insertAICopiedText("Error");
+				board.isAIGenerating = false;
 				break;
 			default:
 				if (!item || item.itemType !== "AINode") {
