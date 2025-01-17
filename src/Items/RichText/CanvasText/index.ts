@@ -39,7 +39,7 @@ interface DropflowChild {
 	text: string;
 }
 
-//needed while we cant create hyperlink
+// needed while we cant create hyperlink
 const convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
 	if (node.type === "text" || !node.type) {
 		return node;
@@ -165,7 +165,7 @@ function convertListNode(
 			if (child.type === "ul_list" || child.type === "ol_list") {
 				newDropflowListNodes[
 					newDropflowListNodes.length - 1
-				].children.push(...convertListNode(child, maxWidth));
+				].children.push(convertListNode(child, maxWidth));
 				continue;
 			}
 			newDropflowListNodes.push(...convertNoneListNode(child, maxWidth));
@@ -275,11 +275,8 @@ function createFlowList(
 					if (child.text || child.text === "") {
 						childNode = mark + child.text;
 					} else {
-						childNode = createFlowList(
-							[child],
-							isNumberedList,
-							true,
-						);
+						console.log(child);
+						childNode = createFlowList(child, isNumberedList, true);
 					}
 					return flow.h("span", { style: child.style }, [childNode]);
 				}),
