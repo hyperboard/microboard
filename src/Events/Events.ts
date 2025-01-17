@@ -193,6 +193,7 @@ export function createEvents(
 			case "done":
 				if (!item || item.itemType !== "AINode") {
 					console.log("Chat is done");
+					board.isAIGenerating = false;
 					return;
 				}
 				board.selection.items.removeAll();
@@ -204,6 +205,7 @@ export function createEvents(
 			case "end":
 				if (!item || item.itemType !== "AINode") {
 					console.log("User's request handled");
+					board.isAIGenerating = false;
 					return;
 				}
 				board.selection.items.removeAll();
@@ -213,19 +215,21 @@ export function createEvents(
 				board.isAIGenerating = false;
 				break;
 			case "error":
-				if (!item || item.itemType !== "AINode") {
-					console.error("Chat error:", chunk.error);
-					return;
-				}
-				item.text.editor.insertAICopiedText("Error");
+				// if (!item || item.itemType !== "AINode") {
+				// 	console.error("Chat error:", chunk.error);
+				// 	return;
+				// }
+				// item.text.editor.insertAICopiedText("Error");
 				board.isAIGenerating = false;
+				console.log(board.isAIGenerating);
 				break;
 			default:
-				if (!item || item.itemType !== "AINode") {
-					console.warn("Unknown chunk type:", chunk.type);
-					return;
-				}
-				item.text.editor.insertAICopiedText("Error");
+				// if (!item || item.itemType !== "AINode") {
+				// 	console.warn("Unknown chunk type:", chunk.type);
+				// 	return;
+				// }
+				// item.text.editor.insertAICopiedText("Error");
+				board.isAIGenerating = false;
 		}
 	}
 
