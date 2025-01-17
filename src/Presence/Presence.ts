@@ -35,6 +35,7 @@ export const CURSORS_ANIMATION_DURATION = Math.ceil(
 export const PRESENCE_CLEANUP_USER_TIMER = 180_000; // Matching Redis ttl
 export const PRESENCE_CLEANUP_IDLE_TIMER = 60_000;
 export const CURSORS_IDLE_CLEANUP_DELAY = 10_000;
+const PING_CLEANUP = 15_000;
 
 interface Cursor {
 	x: number;
@@ -229,10 +230,8 @@ export class Presence {
 	}
 
 	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
-		const PING_CLEANUP = 15_000;
-
-		let filteredUsers = Array.from(this.users.values()).filter(user =>
-			this.clearInactiveUserSelection(boardId, user, PING_CLEANUP),
+		let filteredUsers = Array.from(this.users.values()).filter(
+			user => user.boardId === boardId,
 		);
 
 		if (excludeSelf) {
@@ -251,25 +250,6 @@ export class Presence {
 		});
 
 		return Array.from(uniqueUsers.values());
-	}
-
-	clearInactiveUserSelection(
-		boardId: string,
-		user: PresenceUser,
-		pingCleanup: number,
-	): boolean {
-		if (
-			user.boardId === boardId &&
-			Date.now() - user.lastPing <= pingCleanup
-		) {
-			return true;
-		}
-
-		const userCopy = { ...user };
-		userCopy.select = undefined;
-		userCopy.selection = [];
-		this.users.set(user.userId.toString(), userCopy);
-		return false;
 	}
 
 	getColors(): string[] {
