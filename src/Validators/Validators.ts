@@ -149,6 +149,7 @@ function validateTransformationData(transformationData: any): boolean {
 
 export function validateRichTextData(richTextData: any): boolean {
 	// Validate the presence and types of properties in RichTextData
+	console.log(validateChildren(richTextData.children));
 	const isValid =
 		richTextData.hasOwnProperty("children") &&
 		Array.isArray(richTextData.children) &&
@@ -204,16 +205,19 @@ function validateDescendant(descendant: any): descendant is Descendant {
 
 	switch (descendant.type) {
 		case "paragraph":
+		case "code_block":
 			return validateParagraphNode(descendant);
-		case "heading":
+		case "heading_one":
+		case "heading_two":
+		case "heading_three":
 			return validateHeadingNode(descendant);
 		case "block-quote":
 			return validateBlockQuoteNode(descendant);
-		case "bulleted-list":
+		case "ul_list":
 			return validateBulletedListNode(descendant);
-		case "numbered-list":
+		case "ol_list":
 			return validateNumberedListNode(descendant);
-		case "list-item":
+		case "list_item":
 			return validateListItemNode(descendant);
 		default:
 			return false;
@@ -233,10 +237,8 @@ function validateParagraphNode(node: any): node is ParagraphNode {
 function validateHeadingNode(node: any): node is HeadingNode {
 	return (
 		node.hasOwnProperty("type") &&
-		node.hasOwnProperty("level") &&
 		node.hasOwnProperty("children") &&
 		typeof node.type === "string" &&
-		typeof node.level === "number" &&
 		Array.isArray(node.children) &&
 		node.children.every((child: any) => validateTextNode(child))
 	);
