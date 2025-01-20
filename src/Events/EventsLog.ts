@@ -152,7 +152,7 @@ function createEventsList(
 			for (let i = 0; i < records.length; i++) {
 				records[i].event.order = events[i].order;
 			}
-
+			/*
 			const recordEvents = records.map(record => record.event);
 			const lastConfirmedEvent = confirmedRecords.pop()?.event;
 			const toMerge: BoardEvent[] = [
@@ -168,11 +168,12 @@ function createEventsList(
 
 				confirmedRecords.push(record);
 			});
-
+			*/
 			syncLog.push({
 				msg: "confirmed",
 				records: [...records],
 			});
+			confirmedRecords.push(...records);
 			recordsToSend.splice(0, records.length);
 		},
 
