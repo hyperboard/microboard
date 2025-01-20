@@ -116,14 +116,21 @@ export class AINode implements Geometry {
 			this.text.left += 20;
 			this.text.top += 20;
 		}
-		const segments = new Mbr(
-			left,
-			top,
-			right + 40,
-			bottom + (bottom - top > 400 ? 60 : 40),
-		).getLines();
+		const nodeRight = right + 40;
+		const nodeBottom = bottom + (bottom - top > 400 ? 60 : 40);
 		this.path = new Path(
-			segments,
+			[
+				new Line(new Point(left, top), new Point(nodeRight, top)),
+				new Line(
+					new Point(nodeRight, top),
+					new Point(nodeRight, nodeBottom),
+				),
+				new Line(
+					new Point(nodeRight, nodeBottom),
+					new Point(left, nodeBottom),
+				),
+				new Line(new Point(left, nodeBottom), new Point(left, top)),
+			],
 			true,
 			"rgb(255, 255, 255)",
 			"rgba(222, 224, 227, 1)",

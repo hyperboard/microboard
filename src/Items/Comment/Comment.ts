@@ -302,6 +302,10 @@ export class Comment implements Geometry {
 		return this.usersUnreadMarks.some(u => u === username);
 	}
 
+	isClosed(): boolean {
+		return false;
+	}
+
 	markMessagesAsRead(messageIds: string[], username?: string): void {
 		if (!username) {
 			return this.applyReadMessages(messageIds, "anonymous");
