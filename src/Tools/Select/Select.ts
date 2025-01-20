@@ -12,7 +12,6 @@ import AlignmentHelper from "../RelativeAlignment";
 import { Group } from "Board/Items/Group/Group.js";
 import { Comment } from "Board/Items/Comment/Comment";
 import { Selection } from "Board/Selection/index.js";
-import { SelectionItems } from "Board/Selection/SelectionItems.js";
 import { RELATIVE_ALIGNMENT_COLOR } from "../RelativeAlignment/RelativeAlignment.js";
 
 export class Select extends Tool {
@@ -253,8 +252,11 @@ export class Select extends Tool {
 			hover.push(hoveredItem);
 		}
 
+		const isHoverAiInput =
+			hover.length === 1 && hover[0].itemType === "AINode";
 		const isLocked = this.board.selection.getIsLockedSelection();
-		if (isLocked) {
+
+		if (isLocked && !(isHoverAiInput && this.board.isAIGenerating)) {
 			return false;
 		}
 
@@ -780,7 +782,9 @@ export class Select extends Tool {
 					this.board.selection.getContext() === "EditUnderPointer" &&
 					curr &&
 					topItem === curr &&
-					!this.board.selection.getIsLockedSelection()
+					!this.board.selection.getIsLockedSelection() &&
+					curr.itemType !== "AINode" &&
+					!this.board.isAIGenerating
 				) {
 					curr
 						.getRichText()
@@ -906,7 +910,11 @@ export class Select extends Tool {
 			return false;
 		}
 		const toEdit = this.board.selection.items.getSingle();
-		if (toEdit?.transformation.isLocked) {
+		if (
+			toEdit?.transformation.isLocked ||
+			(toEdit?.itemType === "AINode" &&
+			this.board.isAIGenerating)
+		) {
 			return false;
 		}
 
