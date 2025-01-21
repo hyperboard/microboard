@@ -12,6 +12,7 @@ import {
 	ViewMode,
 	AiChatMsg,
 	ChatChunk,
+	GenerateImageResponse,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -31,6 +32,9 @@ import {
 	UserJoinMsg,
 } from "Board/Presence/Events";
 import i18n from "Lang";
+import { prepareImage } from "Board/Items/Image/ImageHelpers";
+import { ImageItem } from "Board/Items/Image";
+import { getControlPointData } from "Board/Selection/QuickAddButtons";
 
 export interface BoardEvent {
 	order: number;
@@ -172,8 +176,12 @@ export function createEvents(
 	function handleAiChatMassage(massage: AiChatMsg) {
 		if (massage.type === "AiChat") {
 			const event = massage.event;
-			if (event.method === "ChatChunk") {
-				handleChatChunk(event);
+			switch (event.method) {
+				case "ChatChunk":
+					handleChatChunk(event);
+					break;
+				case "GenerateImage":
+					handleImageGenerate(event);
 			}
 		}
 	}
@@ -233,6 +241,57 @@ export function createEvents(
 		}
 	}
 
+	function handleImageGenerate(response: GenerateImageResponse) {
+		if (response.status === "completed" && response.base64) {
+			prepareImage(response.base64)
+				.then(imageData => {
+					const image = new ImageItem(
+						imageData,
+						board,
+						undefined,
+						"",
+					);
+					const boardImage = board.add(image);
+					boardImage.doOnceOnLoad(() => {
+						const viewportMbr = board.camera.getMbr();
+						const scale = 1;
+						const viewportCenter = viewportMbr.getCenter();
+						boardImage.transformation.translateTo(
+							viewportCenter.x,
+							viewportCenter.y,
+						);
+						boardImage.transformation.scaleTo(scale, scale);
+						board.selection.removeAll();
+						board.selection.add(boardImage);
+
+						const requestNode = board.items.getById(
+							response.itemId,
+						);
+						if (requestNode) {
+							const connectorData = {
+								startPoint: getControlPointData(requestNode, 3),
+								endPoint: getControlPointData(boardImage, 2),
+							};
+							board.add(
+								board.createItem(
+									board.getNewItemId(),
+									connectorData,
+								),
+							);
+						}
+					});
+				})
+				.catch(er => {
+					console.error("Could not create image from response:", er);
+				});
+			board.isAIGenerating = false;
+		} else if (response.status === "error") {
+			console.error("Image generation error:", response.message);
+			board.isAIGenerating = false;
+		} else {
+			console.warn("Unhandled image generation status:", response.status);
+		}
+	}
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
 			enforceMode(message.mode);
