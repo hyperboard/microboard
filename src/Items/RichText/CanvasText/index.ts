@@ -253,7 +253,7 @@ function createFlowList(
 			| { style: flow.DeclaredStyle; children: DropflowChild[] }[];
 	}[],
 	isNumberedList: boolean,
-	isNested = false,
+	nestingLevel = 0,
 ): flow.HTMLElement {
 	return flow.h(
 		"div",
@@ -263,7 +263,12 @@ function createFlowList(
 				"div",
 				{ style: listItem.style },
 				listItem.children.map((child, childIndex) => {
-					let mark = isNested ? "			" : "";
+					let mark = "";
+					if (nestingLevel) {
+						for (let i = 0; i < nestingLevel; i++) {
+							mark += "			";
+						}
+					}
 					if (childIndex === 0) {
 						if (isNumberedList) {
 							mark += (listItemIndex + 1).toString() + ". ";
@@ -276,7 +281,11 @@ function createFlowList(
 						childNode = mark + child.text;
 					} else {
 						console.log(child);
-						childNode = createFlowList(child, isNumberedList, true);
+						childNode = createFlowList(
+							child,
+							isNumberedList,
+							nestingLevel + 1,
+						);
 					}
 					return flow.h("span", { style: child.style }, [childNode]);
 				}),
