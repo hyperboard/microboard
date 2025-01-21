@@ -263,22 +263,6 @@ export function createEvents(
 						boardImage.transformation.scaleTo(scale, scale);
 						board.selection.removeAll();
 						board.selection.add(boardImage);
-
-						const requestNode = board.items.getById(
-							response.itemId,
-						);
-						if (requestNode) {
-							const connectorData = {
-								startPoint: getControlPointData(requestNode, 3),
-								endPoint: getControlPointData(boardImage, 2),
-							};
-							board.add(
-								board.createItem(
-									board.getNewItemId(),
-									connectorData,
-								),
-							);
-						}
 					});
 				})
 				.catch(er => {
