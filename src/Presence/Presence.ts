@@ -231,7 +231,10 @@ export class Presence {
 
 	getUsers(boardId: string, excludeSelf = false): PresenceUser[] {
 		let filteredUsers = Array.from(this.users.values()).filter(
-			user => user.boardId === boardId,
+			user =>
+				user.boardId === boardId &&
+				(user.lastPing > Date.now() - PING_CLEANUP ||
+					user.lastActivity > Date.now() - PING_CLEANUP),
 		);
 
 		if (excludeSelf) {
