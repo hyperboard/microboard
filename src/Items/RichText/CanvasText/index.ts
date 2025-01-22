@@ -39,6 +39,18 @@ interface DropflowChild {
 	text: string;
 }
 
+interface ListCreationData {
+	isNumberedList: boolean;
+	listLevel: number;
+	index: number;
+	nodeIndex?: number;
+}
+
+interface DropflowNodeWithType {
+	type: string;
+	nodes: DropflowNodeData[];
+}
+
 // needed while we cant create hyperlink
 const convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
 	if (node.type === "text" || !node.type) {
@@ -50,7 +62,10 @@ const convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
 	return { ...nodeCopy, type: "text", text: link };
 };
 
-function getChildStyle(child: TextNode, maxWidth: number): flow.DeclaredStyle {
+function getChildStyle(
+	child: TextNode | LinkNode,
+	maxWidth: number,
+): flow.DeclaredStyle {
 	const fontSize = typeof child.fontSize === "number" ? child.fontSize : 14;
 	return {
 		fontWeight: child.bold ? 800 : 400,
@@ -157,25 +172,25 @@ function convertNoneListNode(
 function convertListNode(
 	node: BulletedListNode | NumberedListNode,
 	maxWidth: number,
-): DropflowNodeData[] {
-	const newDropflowListNodes: DropflowNodeData[] = [];
+): { type: string; nodes: DropflowNodeData[] | DropflowNodeWithType[] }[][] {
+	const newDropflowListNodes: {
+		type: string;
+		nodes: DropflowNodeData[] | DropflowNodeWithType[];
+	}[][] = [];
 
 	for (const listItem of node.children) {
-		for (const child of listItem.children) {
-			if (child.type === "ul_list" || child.type === "ol_list") {
-				newDropflowListNodes[
-					newDropflowListNodes.length - 1
-				].children.push(convertListNode(child, maxWidth));
-				continue;
-			}
-			newDropflowListNodes.push(...convertNoneListNode(child, maxWidth));
-		}
+		newDropflowListNodes.push(
+			convertSlateToDropflow(listItem.children, maxWidth),
+		);
 	}
 	return newDropflowListNodes;
 }
 
 function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number) {
-	const dropflowNodes: { type: string; nodes: DropflowNodeData[] }[] = [];
+	const dropflowNodes: {
+		type: string;
+		nodes: DropflowNodeData[] | DropflowNodeWithType[];
+	}[] = [];
 	for (const node of slateNodes) {
 		switch (node.type) {
 			case "heading_one":
@@ -233,81 +248,83 @@ function createFlowDiv(
 		style: flow.DeclaredStyle;
 		children: { style: flow.DeclaredStyle; text: string }[];
 	}[],
+	listData: ListCreationData | null = null,
 ): flow.HTMLElement[] {
 	return dropflowNodes.map(paragraph =>
 		flow.h(
 			"div",
 			{ style: paragraph.style },
-			paragraph.children.map(child =>
-				flow.h("span", { style: child.style }, [child.text]),
-			),
+			paragraph.children.map((child, childIndex) => {
+				let text = child.text;
+				if (listData) {
+					text =
+						getListMark(
+							listData.listLevel,
+							listData.isNumberedList,
+							listData.index,
+							childIndex + (listData.nodeIndex || 0),
+						) + text;
+				}
+				return flow.h("span", { style: child.style }, [text]);
+			}),
 		),
 	);
 }
 
-function createFlowList(
-	dropflowNodes: {
-		style: flow.DeclaredStyle;
-		children:
-			| DropflowChild[]
-			| { style: flow.DeclaredStyle; children: DropflowChild[] }[];
-	}[],
+function getListMark(
+	nestingLevel: number,
 	isNumberedList: boolean,
-	nestingLevel = 0,
+	listItemIndex: number,
+	nodeIndex: number,
+) {
+	let mark = "";
+	if (nestingLevel > 1) {
+		for (let i = 1; i < nestingLevel; i++) {
+			mark += "			  ";
+		}
+	}
+	if (isNumberedList) {
+		if (nodeIndex === 0) {
+			mark += (listItemIndex + 1).toString() + ". ";
+		}
+	} else {
+		if (nodeIndex === 0) {
+			mark += "•  ";
+		}
+	}
+
+	return mark;
+}
+
+function createFlowList(
+	dropflowNodes: DropflowNodeWithType[],
+	isNumberedList: boolean,
+	listData: ListCreationData | null = null,
 ): flow.HTMLElement {
 	return flow.h(
 		"div",
 		{},
-		dropflowNodes.map((listItem, listItemIndex) =>
-			flow.h(
+		dropflowNodes.map((listItem, listItemIndex) => {
+			let listCreationData: null | ListCreationData = null;
+			if (listData) {
+				listCreationData = {
+					...listData,
+					listLevel: listData.listLevel + 1,
+					index: listItemIndex,
+				};
+			} else {
+				listCreationData = {
+					listLevel: 1,
+					isNumberedList,
+					index: listItemIndex,
+				};
+			}
+			return flow.h(
 				"div",
-				{ style: listItem.style },
-				listItem.children.map((child, childIndex) => {
-					let mark = "";
-					if (nestingLevel) {
-						for (let i = 0; i < nestingLevel; i++) {
-							mark += "			";
-						}
-					}
-					if (childIndex === 0) {
-						if (isNumberedList) {
-							mark += (listItemIndex + 1).toString() + ". ";
-						} else {
-							mark += "•  ";
-						}
-					}
-					let childNode;
-					if (child.text || child.text === "") {
-						childNode = mark + child.text;
-					} else {
-						console.log(child);
-						childNode = createFlowList(
-							child,
-							isNumberedList,
-							nestingLevel + 1,
-						);
-					}
-					return flow.h("span", { style: child.style }, [childNode]);
-				}),
-			),
-		),
-	);
-}
-
-function createFlowCode(
-	dropflowNodes: {
-		style: flow.DeclaredStyle;
-		children: { style: flow.DeclaredStyle; text: string }[];
-	}[],
-): flow.HTMLElement[] {
-	return dropflowNodes.map(listItem =>
-		flow.h(
-			"div",
-			{ style: listItem.style },
-			listItem.children.map(child =>
-				flow.h("span", { style: child.style }, [child.text]),
-			),
-		),
+				{},
+				getElementsByNodes(listItem, listCreationData),
+			);
+		}),
 	);
 }
 
@@ -358,6 +375,36 @@ function sliceTextByWidth(
 	}
 
 	return getBlockNodes([newData], maxWidth);
+}
+
+function getElementsByNodes(
+	dropflowNodes: {
+		type: string;
+		nodes: DropflowNodeData[] | DropflowNodeWithType[];
+	}[],
+	listData: ListCreationData | null = null,
+) {
+	return dropflowNodes.flatMap((node, index) => {
+		let listCreationData: null | ListCreationData = null;
+		if (listData) {
+			if (index > 0) {
+				listCreationData = { ...listData, nodeIndex: index };
+			} else {
+				listCreationData = { ...listData, nodeIndex: index };
+			}
+		}
+
+		switch (node.type) {
+			case "numberedListNodes": {
+				return createFlowList(node.nodes, true, listCreationData);
+			}
+			case "bulletedListNodes": {
+				return createFlowList(node.nodes, false, listCreationData);
+			}
+			default:
+				return createFlowDiv(node.nodes, listCreationData);
+		}
+	});
 }
 
 export function getBlockNodes(
@@ -413,26 +460,8 @@ export function getBlockNodes(
 		);
 	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
-	const childNodes = dropflowNodes.flatMap(node => {
-		switch (node.type) {
-			case "paragraphNodes": {
-				return createFlowDiv(node.nodes);
-			}
-			case "codeNodes": {
-				return createFlowCode(node.nodes);
-			}
-			case "numberedListNodes": {
-				return createFlowList(node.nodes, true);
-			}
-			case "bulletedListNodes": {
-				return createFlowList(node.nodes, false);
-			}
-			default:
-				return createFlowDiv(node.nodes);
-		}
-	});
 
-	const rootDiv = createRootDiv(childNodes, maxWidth);
+	const rootDiv = createRootDiv(getElementsByNodes(dropflowNodes), maxWidth);
 
 	const rootElement = flow.dom(rootDiv);
 
