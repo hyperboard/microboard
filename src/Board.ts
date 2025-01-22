@@ -107,6 +107,7 @@ export class Board {
 		);
 		this.selection.events = this.events;
 		if (snapshot && currIndex === 0) {
+			console.log(snapshot, "boardSnapsho");
 			this.deserialize(snapshot);
 		}
 		this.resolveConnecting();
@@ -787,6 +788,7 @@ export class Board {
 		}
 	}
 	deserialize(snapshot: BoardSnapshot): void {
+		console.log(snapshot, "snapshot");
 		const { events, items } = snapshot;
 		this.index.clear();
 		const createdConnectors: Record<

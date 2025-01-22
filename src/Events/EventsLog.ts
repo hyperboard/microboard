@@ -346,7 +346,7 @@ export function createEventsLog(board: Board): EventsLog {
 
 	function deserialize(events: SyncBoardEvent[]): void {
 		list.clear();
-
+		console.log(events);
 		for (const event of events) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
