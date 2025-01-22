@@ -945,7 +945,14 @@ export class EditorContainer {
 	insertAICopiedText(text: string): boolean {
 		const lines = text.split(/\r\n|\r|\n/);
 		const combinedText = lines.join("\n"); // Объединяем строки в один текст
-		const styles = Editor.marks(this.editor);
+		const prevText: string = this.getText()[0]?.children[0]?.text;
+		if (
+			prevText &&
+			(prevText.startsWith("Generating response…												") ||
+				prevText.startsWith("Генерация ответа…												"))
+		) {
+			this.clearText();
+		}
 		const isPrevTextEmpty = this.isEmpty();
 		let insertLocation: Location | undefined = undefined;
 
