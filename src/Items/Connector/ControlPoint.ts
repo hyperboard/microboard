@@ -2,6 +2,7 @@ import { Point } from "../Point";
 import { Item } from "../Item";
 import { Connector } from "./Connector";
 import { Matrix } from "../Transformation";
+import { RichText } from "../RichText";
 
 interface BoardPointData {
 	pointType: "Board";
@@ -245,5 +246,11 @@ function fromRelativePoint(relativePoint: Point, item: Item): Point {
 	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
 	const point = relativePoint.copy();
 	point.transform(matrix);
+
+	// TODO fix richtext width transformation. The connector needs a modified scaleX 
+	if (item instanceof RichText) {
+		return item.getNearestEdgePointTo(point);
+	}
+
 	return point;
 }
