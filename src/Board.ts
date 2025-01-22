@@ -45,6 +45,7 @@ import { Comment } from "./Items/Comment";
 import { getPublicUrl } from "Config";
 import { parsersHTML } from "./parserHTML";
 import { AINode } from "Board/Items/AINode/AINode";
+import { ImageItem } from "./Items/Image";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -54,7 +55,8 @@ export class Board {
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
-	isAIGenerating = false;
+	AIGeneratingOnItem: string | undefined = undefined;
+	AIImagePlaceholder: ImageItem | undefined = undefined;
 
 	readonly camera: Camera = new Camera(this.pointer);
 	readonly presence: Presence;
@@ -784,7 +786,6 @@ export class Board {
 			});
 		}
 	}
-
 	deserialize(snapshot: BoardSnapshot): void {
 		const { events, items } = snapshot;
 		this.index.clear();

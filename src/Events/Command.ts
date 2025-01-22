@@ -21,6 +21,8 @@ import { GroupCommand } from "Board/Items/Group/GroupCommand";
 import { Group } from "Board/Items/Group";
 import { PlaceholderCommand } from "Board/Items/Placeholder/PlaceholderCommand";
 import { Placeholder } from "Board/Items/Placeholder";
+import { ImageCommand } from "Board/Items/Image/ImageCommand";
+import { ImageItem } from "Board/Items/Image";
 
 export interface Command {
 	apply(): void;
@@ -167,6 +169,14 @@ export function createCommand(board: Board, operation: Operation): Command {
 							items.filter(
 								(item): item is Group =>
 									item.itemType === "Group",
+							),
+							operation,
+						);
+					case "Image":
+						return new ImageCommand(
+							items.filter(
+								(item): item is ImageItem =>
+									item.itemType === "Image",
 							),
 							operation,
 						);

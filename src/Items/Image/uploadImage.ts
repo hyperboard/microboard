@@ -48,7 +48,7 @@ export function uploadImage(file: File, board: Board) {
 											const image = new ImageItem(
 												imageData,
 												board,
-												undefined,
+												board.events,
 												"",
 											);
 											const boardImage = board.add(image);
@@ -122,7 +122,7 @@ export function uploadImage(file: File, board: Board) {
 					const image = new ImageItem(
 						imageData,
 						board,
-						undefined,
+						board.events,
 						"",
 					);
 					image.doOnceBeforeOnLoad(() => {

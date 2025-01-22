@@ -15,6 +15,8 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
+import { ImageOperation } from "./ImageOperation";
+import { ImageCommand } from "./ImageCommand";
 
 export interface ImageItemData {
 	itemType: "Image";
@@ -86,7 +88,7 @@ export class ImageItem extends Mbr {
 	constructor(
 		{ base64, storageLink, imageDimension }: ImageConstructorData,
 		board: Board,
-		events?: Events,
+		private events?: Events,
 		private id = "",
 	) {
 		super();
@@ -214,13 +216,17 @@ export class ImageItem extends Mbr {
 		}
 	}
 
-	deserialize(data: ImageItemData): ImageItem {
-		this.transformation.deserialize(data.transformation);
+	deserialize(data: Partial<ImageItemData>): ImageItem {
+		console.log("deserialize");
+		if (data.transformation) {
+			this.transformation.deserialize(data.transformation);
+		}
 		this.linkTo.deserialize(data.linkTo);
 		this.image.onload = () => {
 			this.setCoordinates();
 			this.shootLoadCallbacks();
 		};
+
 		this.image = getPlaceholderImage(
 			this.board,
 			data.imageDimension,
@@ -228,13 +234,28 @@ export class ImageItem extends Mbr {
 		);
 
 		const storageImage = new Image();
+
 		storageImage.onload = () => {
-			this.image = storageImage;
-			this.subject.publish(this);
+			if (!this.updated) {
+				console.log("storageImage");
+				this.image = storageImage;
+				this.subject.publish(this);
+			}
 		};
+
 		storageImage.onerror = this.onError;
 		storageImage.src = this.storageLink;
 		return this;
+	}
+
+	emit(operation: ImageOperation): void {
+		if (this.events) {
+			const command = new ImageCommand([this], operation);
+			command.apply();
+			this.events.emit(operation, command);
+		} else {
+			this.apply(operation);
+		}
 	}
 
 	setStorageLink(src: string): void {
@@ -252,6 +273,17 @@ export class ImageItem extends Mbr {
 				break;
 			case "LinkTo":
 				this.linkTo.apply(op);
+				break;
+			case "Image":
+				// this.deserialize(op.data);
+				if (op.data.base64) {
+					this.image.src = op.data.base64;
+				}
+				this.setStorageLink(op.data.storageLink);
+				this.setDimensions(op.data.imageDimension);
+				this.updated = true;
+				this.subject.publish(this);
+				console.log("this.deserialize(op.data)", op.data);
 				break;
 		}
 	}

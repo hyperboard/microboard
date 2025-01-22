@@ -33,8 +33,6 @@ import {
 } from "Board/Presence/Events";
 import i18n from "Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
-import { ImageItem } from "Board/Items/Image";
-import { getControlPointData } from "Board/Selection/QuickAddButtons";
 
 export interface BoardEvent {
 	order: number;
@@ -201,35 +199,42 @@ export function createEvents(
 			case "done":
 				if (!item || item.itemType !== "AINode") {
 					console.log("Chat is done");
-					board.isAIGenerating = false;
+					board.AIGeneratingOnItem = undefined;
 					return;
 				}
 				board.selection.items.removeAll();
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
 				item.getRichText().editor.deserializeMarkdown();
-				board.isAIGenerating = false;
+				board.AIGeneratingOnItem = undefined;
 				break;
 			case "end":
 				if (!item || item.itemType !== "AINode") {
 					console.log("User's request handled");
-					board.isAIGenerating = false;
+					board.AIGeneratingOnItem = undefined;
 					return;
 				}
 				board.selection.items.removeAll();
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
 				item.getRichText().editor.deserializeMarkdown();
-				board.isAIGenerating = false;
+				board.AIGeneratingOnItem = undefined;
 				break;
 			case "error":
 				// if (!item || item.itemType !== "AINode") {
 				// 	console.error("Chat error:", chunk.error);
 				// 	return;
 				// }
-				// item.text.editor.insertAICopiedText("Error");
-				board.isAIGenerating = false;
-				console.log(board.isAIGenerating);
+				// item.text.editor.insertAICopiedText("Error");\
+				if (board.AIGeneratingOnItem) {
+					const item = board.items.getById(board.AIGeneratingOnItem);
+					if (item) {
+						board.selection.add(item);
+					}
+				}
+
+				board.AIGeneratingOnItem = undefined;
+				console.log(board.AIGeneratingOnItem);
 				break;
 			default:
 				// if (!item || item.itemType !== "AINode") {
@@ -237,7 +242,13 @@ export function createEvents(
 				// 	return;
 				// }
 				// item.text.editor.insertAICopiedText("Error");
-				board.isAIGenerating = false;
+				if (board.AIGeneratingOnItem) {
+					const item = board.items.getById(board.AIGeneratingOnItem);
+					if (item) {
+						board.selection.add(item);
+					}
+				}
+				board.AIGeneratingOnItem = undefined;
 		}
 	}
 
@@ -245,33 +256,27 @@ export function createEvents(
 		if (response.status === "completed" && response.base64) {
 			prepareImage(response.base64)
 				.then(imageData => {
-					const image = new ImageItem(
+					console.log(
+						"imageData",
 						imageData,
-						board,
-						undefined,
-						"",
+						board.AIImagePlaceholder,
 					);
-					const boardImage = board.add(image);
-					boardImage.doOnceOnLoad(() => {
-						const viewportMbr = board.camera.getMbr();
-						const scale = 1;
-						const viewportCenter = viewportMbr.getCenter();
-						boardImage.transformation.translateTo(
-							viewportCenter.x,
-							viewportCenter.y,
-						);
-						boardImage.transformation.scaleTo(scale, scale);
-						board.selection.removeAll();
-						board.selection.add(boardImage);
+
+					board.AIImagePlaceholder?.emit({
+						class: "Image",
+						item: [board.AIImagePlaceholder.getId()],
+						method: "updateImageData",
+						data: imageData,
 					});
+					// заменить на эмитер там есть set на самом деле это apply
 				})
 				.catch(er => {
 					console.error("Could not create image from response:", er);
 				});
-			board.isAIGenerating = false;
+			board.AIGeneratingOnItem = undefined;
 		} else if (response.status === "error") {
 			console.error("Image generation error:", response.message);
-			board.isAIGenerating = false;
+			board.AIGeneratingOnItem = undefined;
 		} else {
 			console.warn("Unhandled image generation status:", response.status);
 		}

@@ -10,6 +10,7 @@ import { LinkToOperation } from "../Items/LinkTo/LinkToOperation";
 import { PlaceholderOperation } from "Board/Items/Placeholder/PlaceholderOperation";
 import { GroupOperation } from "Board/Items/Group/GroupOperation";
 import { CommentOperation } from "../Items/Comment";
+import { ImageOperation } from "Board/Items/Image";
 
 interface Undo {
 	class: "Events";
@@ -36,7 +37,8 @@ export type ItemOperation =
 	| FrameOperation
 	| PlaceholderOperation
 	| GroupOperation
-	| CommentOperation;
+	| CommentOperation
+	| ImageOperation;
 
 export type UndoableOperation = BoardOps | ItemOperation;
 
