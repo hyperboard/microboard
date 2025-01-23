@@ -3,6 +3,7 @@ import { Item } from "../Item";
 import { Connector } from "./Connector";
 import { Matrix } from "../Transformation";
 import { RichText } from "../RichText";
+import { AINode } from "../AINode";
 
 interface BoardPointData {
 	pointType: "Board";
@@ -248,7 +249,7 @@ function fromRelativePoint(relativePoint: Point, item: Item): Point {
 	point.transform(matrix);
 
 	// TODO fix richtext width transformation. The connector needs a modified scaleX 
-	if (item instanceof RichText) {
+	if (item instanceof RichText || item instanceof AINode) {
 		return item.getNearestEdgePointTo(point);
 	}
 

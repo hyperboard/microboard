@@ -162,6 +162,7 @@ export class RichText extends Mbr implements Geometry {
 							this.getTransformedContainer().getWidth(),
 						);
 						this.shrinkWidth = true;
+						this.isInShape = false;
 					}
 
 					if (!this.isInShape) {

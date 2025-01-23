@@ -33,6 +33,7 @@ import {
 } from "Board/Presence/Events";
 import i18n from "Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
+import { DEFAULT_MAX_NODE_WIDTH } from "View/AIInput/utils";
 
 export interface BoardEvent {
 	order: number;
@@ -217,6 +218,11 @@ export function createEvents(
 				board.selection.items.removeAll();
 				board.selection.add(item);
 				item.removeAdjustmentPoint();
+				const itemWidth = item.getMbr().getWidth();
+				if (itemWidth < DEFAULT_MAX_NODE_WIDTH) {
+					const offset = (DEFAULT_MAX_NODE_WIDTH - itemWidth) / 2;
+					item.transformation.translateBy(offset, 0);
+				}
 				item.getRichText().editor.deserializeMarkdown();
 				board.AIGeneratingOnItem = undefined;
 				break;
