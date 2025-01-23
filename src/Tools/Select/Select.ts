@@ -256,7 +256,7 @@ export class Select extends Tool {
 			hover.length === 1 && hover[0].itemType === "AINode";
 		const isLocked = this.board.selection.getIsLockedSelection();
 
-		if (isLocked && !(isHoverAiInput && this.board.isAIGenerating)) {
+		if (isLocked && !(isHoverAiInput && !!this.board.AIGeneratingOnItem)) {
 			return false;
 		}
 
@@ -784,7 +784,7 @@ export class Select extends Tool {
 					topItem === curr &&
 					!this.board.selection.getIsLockedSelection() &&
 					curr.itemType !== "AINode" &&
-					!this.board.isAIGenerating
+					!this.board.AIGeneratingOnItem
 				) {
 					curr
 						.getRichText()
@@ -913,7 +913,7 @@ export class Select extends Tool {
 		if (
 			toEdit?.transformation.isLocked ||
 			(toEdit?.itemType === "AINode" &&
-			this.board.isAIGenerating)
+			!!this.board.AIGeneratingOnItem)
 		) {
 			return false;
 		}
