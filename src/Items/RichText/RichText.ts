@@ -157,6 +157,13 @@ export class RichText extends Mbr implements Geometry {
 					op.method === "scaleBy" ||
 					op.method === "scaleByTranslateBy"
 				) {
+					if (this.insideOf === "AINode") {
+						this.setMaxWidth(
+							this.getTransformedContainer().getWidth(),
+						);
+						this.shrinkWidth = true;
+					}
+
 					if (!this.isInShape) {
 						this.transformCanvas();
 					} else {
@@ -373,13 +380,9 @@ export class RichText extends Mbr implements Geometry {
 
 	transformCanvas(): void {
 		if (!this.isContainerSet) {
-			this.container = new Mbr(
-				0,
-				0,
-				this.layoutNodes.width,
-				this.layoutNodes.height,
-			);
+			const { width, height } = this.layoutNodes;
 			const transformed = this.getTransformedContainer();
+			this.container = new Mbr(0, 0, width, height);
 			this.left = transformed.left;
 			this.top = transformed.top;
 			this.right = transformed.right;
