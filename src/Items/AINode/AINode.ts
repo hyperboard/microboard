@@ -27,6 +27,7 @@ export class AINode implements Geometry {
 	readonly subject = new Subject<AINode>();
 	private parentNodeId?: string;
 	private isUserRequest: boolean;
+	private contextItems: string[] = [];
 	private adjustmentPoint: Point | null = null;
 	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
@@ -34,9 +35,11 @@ export class AINode implements Geometry {
 	constructor(
 		isUserRequest = false,
 		parentNodeId?: string,
+		contextItems: string[] = [],
 		private events?: Events,
 		private id = "",
 	) {
+		this.contextItems = contextItems;
 		this.isUserRequest = isUserRequest;
 		this.parentNodeId = parentNodeId;
 		this.transformation = new Transformation(this.id, this.events);
@@ -146,6 +149,7 @@ export class AINode implements Geometry {
 			parentNodeId: isCopy ? undefined : this.parentNodeId,
 			isUserRequest: this.isUserRequest,
 			adjustmentPoint: isCopy ? null : this.adjustmentPoint,
+			contextItems: this.contextItems,
 		};
 	}
 
@@ -166,6 +170,10 @@ export class AINode implements Geometry {
 		} else {
 			this.adjustmentPoint = null;
 		}
+		if (data.contextItems) {
+			this.contextItems = data.contextItems;
+		}
+
 		this.parentNodeId = data.parentNodeId;
 		this.transformPath();
 		this.subject.publish(this);
@@ -182,6 +190,10 @@ export class AINode implements Geometry {
 
 	getId(): string {
 		return this.id;
+	}
+
+	getContextItems(): string[] {
+		return this.contextItems;
 	}
 
 	// setParentId(id: string): void {

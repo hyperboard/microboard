@@ -14,6 +14,7 @@ export interface AINodeData {
 	parentNodeId?: string;
 	isUserRequest: boolean;
 	adjustmentPoint: Point | null;
+	contextItems: string[];
 }
 
 const convexity = 2;

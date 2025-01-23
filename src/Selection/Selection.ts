@@ -143,6 +143,19 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
+		if (
+			this.items.isEmpty() &&
+			!Array.isArray(value) &&
+			value.itemType === "AINode"
+		) {
+			const contextItemsIds = value.getContextItems();
+			if (contextItemsIds.length) {
+				const contextItems = this.board.items
+					.listAll()
+					.filter(item => contextItemsIds.includes(item.getId()));
+				this.add(contextItems);
+			}
+		}
 		this.items.add(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
