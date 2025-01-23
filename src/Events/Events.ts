@@ -34,6 +34,7 @@ import {
 import i18n from "Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
 import { DEFAULT_MAX_NODE_WIDTH } from "View/AIInput/utils";
+import { t } from "i18next";
 
 export interface BoardEvent {
 	order: number;
@@ -227,27 +228,29 @@ export function createEvents(
 				board.AIGeneratingOnItem = undefined;
 				break;
 			case "error":
-				// if (!item || item.itemType !== "AINode") {
-				// 	console.error("Chat error:", chunk.error);
-				// 	return;
-				// }
-				// item.text.editor.insertAICopiedText("Error");\
 				if (board.AIGeneratingOnItem) {
 					const item = board.items.getById(board.AIGeneratingOnItem);
 					if (item) {
 						board.selection.add(item);
 					}
 				}
-
+				notify({
+					header: t("AIInput.textGenerationError.header"),
+					body: t("AIInput.textGenerationError.body"),
+					footer: t("AIInput.textGenerationError.footer"),
+					variant: "error",
+					duration: 4000,
+				});
 				board.AIGeneratingOnItem = undefined;
-				console.log(board.AIGeneratingOnItem);
 				break;
 			default:
-				// if (!item || item.itemType !== "AINode") {
-				// 	console.warn("Unknown chunk type:", chunk.type);
-				// 	return;
-				// }
-				// item.text.editor.insertAICopiedText("Error");
+				notify({
+					header: t("AIInput.textGenerationError.header"),
+					body: t("AIInput.textGenerationError.body"),
+					footer: t("AIInput.textGenerationError.footer"),
+					variant: "error",
+					duration: 4000,
+				});
 				if (board.AIGeneratingOnItem) {
 					const item = board.items.getById(board.AIGeneratingOnItem);
 					if (item) {
@@ -278,14 +281,29 @@ export function createEvents(
 				})
 				.catch(er => {
 					console.error("Could not create image from response:", er);
+					notify({
+						header: t("AIInput.imageGenerationError.header"),
+						body: t("AIInput.imageGenerationError.body"),
+						footer: t("AIInput.imageGenerationError.footer"),
+						variant: "error",
+						duration: 4000,
+					});
 				});
 			board.AIGeneratingOnItem = undefined;
+			return;
 		} else if (response.status === "error") {
 			console.error("Image generation error:", response.message);
 			board.AIGeneratingOnItem = undefined;
 		} else {
 			console.warn("Unhandled image generation status:", response.status);
 		}
+		notify({
+			header: t("AIInput.imageGenerationError.header"),
+			body: t("AIInput.imageGenerationError.body"),
+			footer: t("AIInput.imageGenerationError.footer"),
+			variant: "error",
+			duration: 4000,
+		});
 	}
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
