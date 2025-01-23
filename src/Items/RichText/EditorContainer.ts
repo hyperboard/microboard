@@ -864,8 +864,12 @@ export class EditorContainer {
 		}
 		const link = node.link;
 		const nodeCopy = { ...node };
+		let text = link;
+		if (!link.trim()) {
+			text = node.children ? node.children[0].text : "";
+		}
 		delete nodeCopy.children;
-		return { ...nodeCopy, type: "text", text: link };
+		return { ...nodeCopy, type: "text", text };
 	};
 
 	setNodeChildrenStyles(node: BlockNode) {
@@ -875,10 +879,16 @@ export class EditorContainer {
 				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
 				break;
 			case "heading_two":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 16 };
+				fontStyles = { ...fontStyles, bold: true, fontSize: 17 };
 				break;
 			case "heading_three":
+				fontStyles = { ...fontStyles, bold: true, fontSize: 16 };
+				break;
+			case "heading_four":
 				fontStyles = { ...fontStyles, bold: true, fontSize: 15 };
+				break;
+			case "heading_five":
+				fontStyles = { ...fontStyles, bold: true, fontSize: 14 };
 				break;
 		}
 

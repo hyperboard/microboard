@@ -196,6 +196,8 @@ function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number) {
 			case "heading_one":
 			case "heading_two":
 			case "heading_three":
+			case "heading_four":
+			case "heading_five":
 			case "paragraph":
 				dropflowNodes.push({
 					type: "paragraphNodes",

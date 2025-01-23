@@ -51,6 +51,18 @@ export type HeadingThreeNode = {
 	horisontalAlignment?: HorisontalAlignment;
 };
 
+export type HeadingFourNode = {
+	type: "heading_four";
+	children: TextNode[];
+	horisontalAlignment?: HorisontalAlignment;
+};
+
+export type HeadingFiveNode = {
+	type: "heading_five";
+	children: TextNode[];
+	horisontalAlignment?: HorisontalAlignment;
+};
+
 export type BlockQuoteNode = {
 	type: "block-quote";
 	children: TextNode[];
@@ -83,6 +95,8 @@ export type BlockNode =
 	| HeadingOneNode
 	| HeadingTwoNode
 	| HeadingThreeNode
+	| HeadingFourNode
+	| HeadingFiveNode
 	| BlockQuoteNode
 	| BulletedListNode
 	| NumberedListNode

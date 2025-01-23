@@ -191,6 +191,7 @@ function validateChildren(children: any): children is Descendant[] {
 	for (const child of children) {
 		const isValidDescendant = validateDescendant(child);
 		if (!isValidDescendant) {
+			console.log(child);
 			return false;
 		}
 	}
@@ -210,6 +211,8 @@ function validateDescendant(descendant: any): descendant is Descendant {
 		case "heading_one":
 		case "heading_two":
 		case "heading_three":
+		case "heading_four":
+		case "heading_five":
 			return validateHeadingNode(descendant);
 		case "block-quote":
 			return validateBlockQuoteNode(descendant);
