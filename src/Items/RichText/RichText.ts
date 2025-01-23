@@ -382,8 +382,8 @@ export class RichText extends Mbr implements Geometry {
 	transformCanvas(): void {
 		if (!this.isContainerSet) {
 			const { width, height } = this.layoutNodes;
-			const transformed = this.getTransformedContainer();
 			this.container = new Mbr(0, 0, width, height);
+			const transformed = this.getTransformedContainer();
 			this.left = transformed.left;
 			this.top = transformed.top;
 			this.right = transformed.right;
