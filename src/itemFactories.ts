@@ -68,6 +68,7 @@ function createAINode(id: string, data: ItemData, board: Board): AINode {
 	const node = new AINode(
 		nodeData.isUserRequest,
 		nodeData.parentNodeId,
+		nodeData.contextItems,
 		board.events,
 	)
 		.setId(id)
