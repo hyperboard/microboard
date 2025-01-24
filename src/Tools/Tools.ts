@@ -13,7 +13,7 @@ import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
-import { Item, Point } from "Board/Items";
+import { Frame, Item, Point } from "Board/Items";
 import { Eraser } from "./Eraser";
 import { AddComment } from "./AddComment";
 
@@ -286,6 +286,47 @@ export class Tools extends ToolContext {
 	publish(): void {
 		this.board.isBoardMenuOpen = false;
 		this.subject.publish(this);
+	}
+
+	sortFrames(): Frame[] {
+		const frames = this.board.items.listFrames();
+		const sortedFrames = frames.sort(
+			(fr1, fr2) => fr1.getMbr().left - fr2.getMbr().top,
+		);
+		return sortedFrames;
+	}
+
+	getNewFrameIndex(frames: Frame[], direction: "next" | "prev"): number {
+		const currentFrameId = localStorage.getItem(`lastVisitedFrame`);
+		const currentFrameIndex = !currentFrameId
+			? 0
+			: frames.findIndex(frame => frame.getId() === currentFrameId);
+
+		const newIndex =
+			direction === "prev"
+				? currentFrameIndex - 1
+				: currentFrameIndex + 1;
+
+		return (newIndex + frames.length) % frames.length;
+	}
+
+	frameNavigation(direction: "next" | "prev"): void {
+		if (this.board.getInterfaceType() !== "edit") {
+			this.tool = new Navigate(this.board);
+			return;
+		}
+
+		const frames = this.sortFrames();
+		if (frames.length === 0) {
+			return;
+		}
+
+		const newFrameIndex = this.getNewFrameIndex(frames, direction);
+		const frameMbr = frames[newFrameIndex]?.getMbr();
+		const zoomOffset = (600 / frameMbr.getWidth()) * 30;
+
+		this.board.camera.zoomToFit(frameMbr, zoomOffset);
+		localStorage.setItem(`lastVisitedFrame`, frames[newFrameIndex].getId());
 	}
 
 	render(context: DrawingContext): void {
