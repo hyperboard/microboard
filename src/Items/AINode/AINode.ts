@@ -14,6 +14,12 @@ import { Subject } from "Subject";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { Operation } from "Board/Events/EventsOperations";
 import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
+import {
+	positionRelatively,
+	resetElementScale,
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender/HTMLRender";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 
@@ -28,7 +34,6 @@ export class AINode implements Geometry {
 	private parentNodeId?: string;
 	private isUserRequest: boolean;
 	private contextItems: string[] = [];
-	private adjustmentPoint: Point | null = null;
 	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
 
@@ -148,7 +153,6 @@ export class AINode implements Geometry {
 			linkTo: this.linkTo.serialize(),
 			parentNodeId: isCopy ? undefined : this.parentNodeId,
 			isUserRequest: this.isUserRequest,
-			adjustmentPoint: isCopy ? null : this.adjustmentPoint,
 			contextItems: this.contextItems,
 		};
 	}
@@ -164,11 +168,6 @@ export class AINode implements Geometry {
 		this.linkTo.deserialize(data.linkTo);
 		if (data.isUserRequest) {
 			this.isUserRequest = data.isUserRequest;
-		}
-		if (data.adjustmentPoint) {
-			this.adjustmentPoint = data.adjustmentPoint;
-		} else {
-			this.adjustmentPoint = null;
 		}
 		if (data.contextItems) {
 			this.contextItems = data.contextItems;
@@ -206,10 +205,6 @@ export class AINode implements Geometry {
 
 	getParentId(): string | undefined {
 		return this.parentNodeId;
-	}
-
-	getAdjustmentPoint(): Point | null {
-		return this.adjustmentPoint;
 	}
 
 	removeAdjustmentPoint(): void {
@@ -350,5 +345,68 @@ export class AINode implements Geometry {
 		this.renderShadow(context);
 		this.path.render(context);
 		this.text.render(context);
+	}
+
+	renderHTML(): HTMLElement {
+		const div = document.createElement("ainode-item");
+
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const mbr = this.getMbr();
+		const width = mbr.getWidth();
+		const height = mbr.getHeight();
+		const unscaledWidth = width;
+		const unscaledHeight = height;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
+
+		div.id = this.getId();
+		div.style.backgroundColor = "rgb(255, 255, 255)";
+		div.style.border = "1px solid rgba(222, 224, 227, 1)";
+		div.style.width = `${unscaledWidth}px`;
+		div.style.height = `${unscaledHeight}px`;
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+		div.style.boxShadow =
+			"0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)";
+		if (this.parentNodeId) {
+			div.setAttribute("parent-node-id", this.parentNodeId);
+		}
+		if (this.isUserRequest) {
+			div.setAttribute("is-user-request", "true");
+		}
+		if (this.contextItems.length) {
+			div.setAttribute("context-items", this.contextItems.join(","));
+		}
+		div.setAttribute("context-range", this.contextRange.toString());
+
+		const textElement = this.text.renderHTML();
+		textElement.id = `${this.getId()}_text`;
+		textElement.style.maxWidth = `${width}px`;
+		textElement.style.overflow = "auto";
+		positionRelatively(textElement, div);
+		resetElementScale(textElement);
+		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
+		const [dx, dy] = [
+			(width - parseInt(textElement.style.width)) / scaleX / 2 - 1,
+			(height - parseInt(textElement.style.height)) / scaleY / 2 - 1,
+		];
+		translateElementBy(textElement, dx, dy);
+
+		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		if (this.getLinkTo()) {
+			const linkElement = this.linkTo.renderHTML();
+			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			translateElementBy(
+				linkElement,
+				(width - parseInt(linkElement.style.width)) / scaleX,
+				0,
+			);
+			div.appendChild(linkElement);
+		}
+
+		div.appendChild(textElement);
+
+		return div;
 	}
 }

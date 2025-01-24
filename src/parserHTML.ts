@@ -23,6 +23,7 @@ import { ControlPointData } from "./Items/Connector/ControlPoint";
 import { ConnectorLineStyle } from "./Items/Connector";
 import { ConnectionLineWidth } from "./Items/Connector/Connector";
 import { DrawingData } from "./Items/Drawing";
+import { AINodeData } from "Board/Items/AINode/AINodeData";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -33,6 +34,7 @@ export const tagByType: MapTagByType = {
 	Image: "image-item",
 	Drawing: "drawing-item",
 	Frame: "frame-item",
+	AINode: "ainode-item",
 	Placeholder: "",
 	Comment: "",
 	Group: "",
@@ -49,6 +51,7 @@ export const parsersHTML: TagFactories = {
 	"image-item": parseHTMLImage,
 	"drawing-item": parseHTMLDrawing,
 	"frame-item": parseHTMLFrame,
+	"ainode-item": parseHTMLAINode,
 };
 
 function getTransformationData(el: HTMLElement): TransformationData {
@@ -403,4 +406,29 @@ function parseHTMLDrawing(el: HTMLElement): DrawingData & { id: string } {
 		),
 		linkTo: el.getAttribute("data-link-to") || undefined,
 	};
+}
+
+function parseHTMLAINode(el: HTMLElement): AINodeData & { id: string } {
+	const aiNodeData: AINodeData & { id: string } = {
+		id: el.id,
+		itemType: "AINode",
+		parentNodeId: el.getAttribute("parent-node-id") || undefined,
+		isUserRequest: !!el.getAttribute("is-user-request") || false,
+		contextItems: el.getAttribute("context-items")
+			? el.getAttribute("context-items")!.split(",")
+			: [],
+		transformation: getTransformationData(el),
+		text: new DefaultRichTextData(),
+		linkTo: el.getAttribute("data-link-to") || undefined,
+	};
+
+	const textElement = el.querySelector(`#${CSS.escape(el.id)}_text`);
+	if (textElement) {
+		aiNodeData.text = parseHTMLRichText(textElement as HTMLElement, {
+			insideOf: "Shape",
+			realTransformation: aiNodeData.transformation,
+		});
+	}
+
+	return aiNodeData;
 }

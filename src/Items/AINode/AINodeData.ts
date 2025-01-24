@@ -13,7 +13,6 @@ export interface AINodeData {
 	linkTo?: string;
 	parentNodeId?: string;
 	isUserRequest: boolean;
-	adjustmentPoint: Point | null;
 	contextItems: string[];
 }
 
