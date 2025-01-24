@@ -143,19 +143,6 @@ export class Selection {
 	);
 
 	add(value: Item | Item[]): void {
-		if (
-			this.items.isEmpty() &&
-			!Array.isArray(value) &&
-			value.itemType === "AINode"
-		) {
-			const contextItemsIds = value.getContextItems();
-			if (contextItemsIds.length) {
-				const contextItems = this.board.items
-					.listAll()
-					.filter(item => contextItemsIds.includes(item.getId()));
-				this.add(contextItems);
-			}
-		}
 		this.items.add(value);
 		if (Array.isArray(value)) {
 			for (const item of value) {
@@ -1397,11 +1384,21 @@ export class Selection {
 			}
 		}
 
+		const contextItems: Item[] = [];
+		if (single && single.itemType === "AINode") {
+			const contextItemsIds = single.getContextItems();
+			if (contextItemsIds.length) {
+				const newContextItems = this.board.items
+					.listAll()
+					.filter(item => contextItemsIds.includes(item.getId()));
+				contextItems.push(...newContextItems);
+			}
+		}
+
 		const nodeWithParents = this.getMostNestedAINodeWithParents();
 		if (nodeWithParents) {
 			const contextRange = nodeWithParents.node.getContextRange();
 			const parents = nodeWithParents.parents;
-			const contextNodes: AINode[] = [];
 			let assistantMessagesCount = 0;
 			for (
 				let i = 0;
@@ -1409,19 +1406,19 @@ export class Selection {
 				i++
 			) {
 				if (parents[i].getIsUserRequest()) {
-					contextNodes.push(parents[i]);
+					contextItems.push(parents[i]);
 				} else {
-					contextNodes.push(parents[i]);
+					contextItems.push(parents[i]);
 					assistantMessagesCount++;
 				}
 			}
-
-			contextNodes.forEach(node => {
-				const nodeRect = node.getMbr();
-				nodeRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
-				nodeRect.strokeWidth = 2;
-				nodeRect.render(context);
-			});
 		}
+
+		contextItems.forEach(item => {
+			const itemRect = item.getMbr();
+			itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
+			itemRect.strokeWidth = 2;
+			itemRect.render(context);
+		});
 	}
 }

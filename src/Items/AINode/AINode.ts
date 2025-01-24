@@ -15,7 +15,7 @@ import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { Operation } from "Board/Events/EventsOperations";
 import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
 
-export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(135, 61, 230, 0.3)";
+export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 
 export class AINode implements Geometry {
 	readonly itemType = "AINode";
