@@ -323,10 +323,14 @@ export class Tools extends ToolContext {
 
 		const newFrameIndex = this.getNewFrameIndex(frames, direction);
 		const frameMbr = frames[newFrameIndex]?.getMbr();
-		const zoomOffset = (600 / frameMbr.getWidth()) * 30;
+		const zoomOffset = 15;
 
 		this.board.camera.zoomToFit(frameMbr, zoomOffset);
+		this.board.selection.removeAll();
+		this.board.selection.items.removeAll();
+		this.board.selection.items.add(frames[newFrameIndex]);
 		localStorage.setItem(`lastVisitedFrame`, frames[newFrameIndex].getId());
+		this.publish();
 	}
 
 	render(context: DrawingContext): void {
