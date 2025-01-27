@@ -25,6 +25,9 @@ async function loadFonts(): Promise<void> {
 	await flow.registerFont(
 		new URL(getPublicUrl("/fonts/RobotoMono-Regular.ttf")),
 	);
+	await flow.registerFont(
+		new URL(getPublicUrl("/fonts/NotoColorEmoji-Regular.ttf")),
+	);
 }
 
 await loadFonts();
@@ -85,7 +88,7 @@ function getChildStyle(
 					})()
 				: { r: 0, g: 0, b: 0, a: 1 },
 		fontSize,
-		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
+		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
 		whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
 		overflowWrap: "break-word",
 		backgroundColor:
@@ -117,7 +120,7 @@ function convertNoneListNode(
 
 	const paragraphStyle: flow.DeclaredStyle = {
 		textAlign: node.horisontalAlignment || "left",
-		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
+		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
 	};
 
 	let currNode: DropflowNodeData = {
@@ -238,7 +241,10 @@ function createRootDiv(
 			style: {
 				lineHeight: 1.4,
 				width: maxWidth === Infinity ? "auto" : maxWidth,
-				fontFamily: [DEFAULT_TEXT_STYLES.fontFamily],
+				fontFamily: [
+					DEFAULT_TEXT_STYLES.fontFamily,
+					"Noto Color Emoji",
+				],
 			},
 		},
 		children,
@@ -454,11 +460,13 @@ export function getBlockNodes(
 			singleLineHeight,
 			maxWidth,
 		);
-		const biggetOneSymbolWidth = getOneCharacterMaxWidth(data);
+		const biggestOneSymbolWidth = getOneCharacterMaxWidth(data);
 
 		return getBlockNodes(
 			data,
-			bestWidth > biggetOneSymbolWidth ? bestWidth : biggetOneSymbolWidth,
+			bestWidth > biggestOneSymbolWidth
+				? bestWidth
+				: biggestOneSymbolWidth,
 		);
 	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
