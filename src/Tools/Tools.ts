@@ -290,24 +290,43 @@ export class Tools extends ToolContext {
 
 	sortFrames(): Frame[] {
 		const frames = this.board.items.listFrames();
-		const sortedFrames = frames.sort(
-			(fr1, fr2) => fr1.getMbr().left - fr2.getMbr().top,
-		);
+		const sortedFrames = frames.sort((fr1, fr2) => {
+			const mbr1 = fr1.getMbr();
+			const mbr2 = fr2.getMbr();
+
+			if (mbr1.left !== mbr2.left) {
+				return mbr1.left - mbr2.left;
+			}
+
+			return mbr1.top - mbr2.top;
+		});
 		return sortedFrames;
 	}
 
 	getNewFrameIndex(frames: Frame[], direction: "next" | "prev"): number {
 		const currentFrameId = localStorage.getItem(`lastVisitedFrame`);
-		const currentFrameIndex = !currentFrameId
-			? 0
-			: frames.findIndex(frame => frame.getId() === currentFrameId);
+		let currentFrameIndex = frames.findIndex(
+			frame => frame.getId() === currentFrameId,
+		);
+
+		if (currentFrameIndex < 0) {
+			currentFrameIndex = 0;
+		}
 
 		const newIndex =
 			direction === "prev"
 				? currentFrameIndex - 1
 				: currentFrameIndex + 1;
 
-		return (newIndex + frames.length) % frames.length;
+		if (direction === "prev" && newIndex < 0) {
+			return frames.length - 1;
+		}
+
+		if (direction === "next" && newIndex > frames.length - 1) {
+			return 0;
+		}
+
+		return newIndex;
 	}
 
 	frameNavigation(direction: "next" | "prev"): void {
