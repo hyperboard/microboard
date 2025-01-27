@@ -35,6 +35,7 @@ import i18n from "Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
 import { DEFAULT_MAX_NODE_WIDTH } from "View/AIInput/utils";
 import { t } from "i18next";
+import { ImageItem } from "Board/Items/Image";
 
 export interface BoardEvent {
 	order: number;
@@ -265,19 +266,27 @@ export function createEvents(
 		if (response.status === "completed" && response.base64) {
 			prepareImage(response.base64)
 				.then(imageData => {
-					console.log(
-						"imageData",
-						imageData,
-						board.AIImagePlaceholder,
-					);
-
-					board.AIImagePlaceholder?.emit({
-						class: "Image",
-						item: [board.AIImagePlaceholder.getId()],
-						method: "updateImageData",
-						data: imageData,
-					});
-					// заменить на эмитер там есть set на самом деле это apply
+					const placeholderId = board.AIImagePlaceholder?.getId();
+					if (placeholderId) {
+						const placeholderNode =
+							board.items.getById(placeholderId);
+						if (placeholderNode) {
+							const imageItem = new ImageItem(
+								{
+									base64: imageData.base64,
+									imageDimension: imageData.imageDimension,
+									storageLink: imageData.storageLink,
+								},
+								board,
+								board.events,
+							);
+							console.log("imageItem", imageItem);
+							imageItem.setId(placeholderId);
+							board.remove(placeholderNode);
+							board.add(imageItem);
+						}
+					}
+					board.AIGeneratingOnItem = undefined;
 				})
 				.catch(er => {
 					console.error("Could not create image from response:", er);
