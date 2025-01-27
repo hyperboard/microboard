@@ -86,19 +86,75 @@ export class Camera {
 	view(_left: number, _top: number, _scale: number): void {}
 
 	zoomRelativeToPointerBy(scale: number): void {
-		this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y);
+		this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y, 0);
 	}
 
-	zoomRelativeToPointBy(scale: number, x: number, y: number): void {
-		const boardPointX = (x - this.matrix.translateX) / this.matrix.scaleX;
-		const boardPointY = (y - this.matrix.translateY) / this.matrix.scaleX;
-		this.matrix.scaleX *= scale;
-		this.matrix.scaleY *= scale;
-		this.matrix.scaleX = this.limitScale(this.matrix.scaleX);
-		this.matrix.scaleY = this.limitScale(this.matrix.scaleY);
-		this.matrix.translateX = x - boardPointX * this.matrix.scaleX;
-		this.matrix.translateY = y - boardPointY * this.matrix.scaleY;
-		this.subject.publish(this);
+	zoomRelativeToPointBy(
+		scale: number,
+		x: number,
+		y: number,
+		duration = 400,
+	): void {
+		const startScaleX = this.matrix.scaleX;
+		const startScaleY = this.matrix.scaleY;
+		const startTranslateX = this.matrix.translateX;
+		const startTranslateY = this.matrix.translateY;
+
+		const boardPointX = (x - startTranslateX) / startScaleX;
+		const boardPointY = (y - startTranslateY) / startScaleY;
+		const targetScaleX = startScaleX * scale;
+		const targetScaleY = startScaleY * scale;
+		const targetTranslateX = x - boardPointX * targetScaleX;
+		const targetTranslateY = y - boardPointY * targetScaleY;
+
+		const finalScaleX = this.limitScale(targetScaleX);
+		const finalScaleY = this.limitScale(targetScaleY);
+
+		// If duration is 0, apply changes instantly without animation
+		if (duration === 0) {
+			this.matrix.translateX = targetTranslateX;
+			this.matrix.translateY = targetTranslateY;
+			this.matrix.scaleX = finalScaleX;
+			this.matrix.scaleY = finalScaleY;
+			this.subject.publish(this);
+			return;
+		}
+
+		const startTime = performance.now();
+
+		const animate = (currentTime: number): void => {
+			const progress = Math.min((currentTime - startTime) / duration, 1);
+			const easedProgress = this.easeOutQuad(progress);
+
+			this.matrix.translateX = this.lerp(
+				startTranslateX,
+				targetTranslateX,
+				easedProgress,
+			);
+			this.matrix.translateY = this.lerp(
+				startTranslateY,
+				targetTranslateY,
+				easedProgress,
+			);
+			this.matrix.scaleX = this.lerp(
+				startScaleX,
+				finalScaleX,
+				easedProgress,
+			);
+			this.matrix.scaleY = this.lerp(
+				startScaleY,
+				finalScaleY,
+				easedProgress,
+			);
+
+			this.subject.publish(this);
+
+			if (progress < 1) {
+				requestAnimationFrame(animate);
+			}
+		};
+
+		requestAnimationFrame(animate);
 	}
 
 	saveDownEvent(event: PointerEvent): void {
@@ -309,12 +365,12 @@ export class Camera {
 		this.zoomToViewCenter(newScale);
 	}
 
-	viewRectangle(mbr: Mbr, offsetInPercent = 10): void {
+	viewRectangle(mbr: Mbr, offsetInPercent = 10, duration = 500): void {
 		if (mbr.left === mbr.right && mbr.bottom === mbr.top) {
-			mbr.left = mbr.left - 100;
-			mbr.right = mbr.right + 100;
-			mbr.top = mbr.top - 100;
-			mbr.bottom = mbr.bottom + 100;
+			mbr.left -= 100;
+			mbr.right += 100;
+			mbr.top -= 100;
+			mbr.bottom += 100;
 		}
 		const offsetY = (mbr.getHeight() * offsetInPercent) / 100;
 		const offsetX = (mbr.getWidth() * offsetInPercent) / 100;
@@ -331,30 +387,68 @@ export class Camera {
 		const scaleY = this.window.height / mbrHeight;
 
 		// Choose the smaller scale value to maintain the aspect ratio
-		let scale = Math.min(scaleX, scaleY);
+		let targetScale = Math.min(scaleX, scaleY);
 
 		// Ensure the scale is not less than the minimum scale
-		scale = Math.max(scale, this.minScale);
-		scale = Math.min(scale, this.maxScale);
+		targetScale = Math.max(targetScale, this.minScale);
+		targetScale = Math.min(targetScale, this.maxScale);
 
 		// Calculate the translation values
 		// Center the Mbr in the view
 		const translationX =
-			this.window.width / 2 - (mbrWithOffset.left + mbrWidth / 2) * scale;
+			this.window.width / 2 -
+			(mbrWithOffset.left + mbrWidth / 2) * targetScale;
 		const translationY =
 			this.window.height / 2 -
-			(mbrWithOffset.top + mbrHeight / 2) * scale;
+			(mbrWithOffset.top + mbrHeight / 2) * targetScale;
 
-		this.matrix.translateX = translationX;
-		this.matrix.translateY = translationY;
-		this.matrix.scaleX = scale;
-		this.matrix.scaleY = scale;
+		const startTranslationX = this.matrix.translateX;
+		const startTranslationY = this.matrix.translateY;
+		const startScale = this.matrix.scaleX;
 
-		this.subject.publish(this);
+		const startTime = performance.now();
+
+		const animate = (currentTime: number): void => {
+			const progress = Math.min((currentTime - startTime) / duration, 1);
+			const easedProgress = this.easeOutQuad(progress);
+
+			this.matrix.translateX = this.lerp(
+				startTranslationX,
+				translationX,
+				easedProgress,
+			);
+			this.matrix.translateY = this.lerp(
+				startTranslationY,
+				translationY,
+				easedProgress,
+			);
+			this.matrix.scaleX = this.lerp(
+				startScale,
+				targetScale,
+				easedProgress,
+			);
+			this.matrix.scaleY = this.matrix.scaleX;
+
+			this.subject.publish(this);
+
+			if (progress < 1) {
+				requestAnimationFrame(animate);
+			}
+		};
+
+		requestAnimationFrame(animate);
 	}
 
-	zoomToFit(rect: Mbr, offsetInPercent = 10): void {
-		this.viewRectangle(rect, offsetInPercent);
+	private lerp(a: number, b: number, time: number): number {
+		return a + (b - a) * time;
+	}
+
+	private easeOutQuad(time: number): number {
+		return time * (2 - time);
+	}
+
+	zoomToFit(rect: Mbr, offsetInPercent = 10, duration = 480): void {
+		this.viewRectangle(rect, offsetInPercent, duration);
 	}
 
 	getViewPointer(): { x: number; y: number } {

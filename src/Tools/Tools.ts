@@ -342,7 +342,7 @@ export class Tools extends ToolContext {
 
 		const newFrameIndex = this.getNewFrameIndex(frames, direction);
 		const frameMbr = frames[newFrameIndex]?.getMbr();
-		const zoomOffset = 15;
+		const zoomOffset = 25;
 
 		this.board.camera.zoomToFit(frameMbr, zoomOffset);
 		this.board.selection.removeAll();
