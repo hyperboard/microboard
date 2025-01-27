@@ -33,17 +33,17 @@ interface SetItemToFollow extends CommentBase {
 interface MarkMessagesAsRead extends CommentBase {
 	method: "markMessagesAsRead";
 	messageIds: string[];
-	username: string;
+	userId: number;
 }
 
 interface MarkThreadAsUnread extends CommentBase {
 	method: "markThreadAsUnread";
-	username: string;
+	userId: number;
 }
 
 interface MarkThreadAsRead extends CommentBase {
 	method: "markThreadAsRead";
-	username: string;
+	userId: number;
 }
 
 export type CommentOperation =

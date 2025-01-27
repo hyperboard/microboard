@@ -589,11 +589,20 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	getTextString(): string {
-		return this.getText()
-			.filter(desc => desc.type === "paragraph")
-			.flatMap(paragraph => paragraph.children)
-			.map(node => node.text)
-			.join("\n");
+		const getRows = (descendants: Descendant[]) => {
+			const rows: string[] = [];
+			for (const descendant of descendants) {
+				if ("children" in descendant) {
+					rows.push(...getRows(descendant.children));
+				}
+				if ("text" in descendant) {
+					rows.push(descendant.text);
+				}
+			}
+
+			return rows;
+		};
+		return getRows(this.getText()).join("\n");
 	}
 
 	getScale = (): number => {
@@ -805,14 +814,11 @@ export class RichText extends Mbr implements Geometry {
 		const blockNode = this.editor.getSelectedBlockNode()
 			? this.editor.getSelectedBlockNode()
 			: this.editor.editor.children[0];
-		switch (blockNode?.type) {
-			case "paragraph":
-			case "heading":
-			case "block-quote":
-				return blockNode.horisontalAlignment;
-			default:
-				return "center";
+
+		if (blockNode && "horisontalAlignment" in blockNode) {
+			return blockNode.horisontalAlignment;
 		}
+		return "center";
 	}
 
 	getVerticalAlignment(): VerticalAlignment {

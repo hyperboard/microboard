@@ -357,7 +357,7 @@ function sliceTextByWidth(
 	for (let i = 0; i < text.length; i++) {
 		currentText += text[i];
 		currentWidth =
-			(data[0].type === "paragraph" &&
+			(data[0].type &&
 				typeof data[0].children[0].fontSize === "number" &&
 				measureText(
 					data[0].children[0].fontSize,
@@ -512,23 +512,29 @@ function getOneCharacterMaxWidth(data: Descendant[]): number {
 	let maxWidth = 0;
 
 	for (const desc of data) {
-		if (desc.type !== "paragraph") {
-			continue;
-		}
-
-		for (const child of desc.children) {
-			if (
-				typeof child.fontSize === "number" &&
-				convertLinkNodeToTextNode(child).text.length === 1
-			) {
-				const bold = (child.bold && "bold") || "";
-				const italic = (child.italic && "italic") || "";
-				context.font = `${bold} ${italic} ${child.fontSize}px ${child.fontFamily}`;
-				const metrics = context.measureText(
-					convertLinkNodeToTextNode(child).text,
-				);
-				if (metrics.width > maxWidth) {
-					maxWidth = metrics.width;
+		if ("children" in desc) {
+			for (const child of desc.children) {
+				if (
+					child.type === "text" &&
+					typeof child.fontSize === "number" &&
+					convertLinkNodeToTextNode(child).text.length === 1
+				) {
+					const bold = (child.bold && "bold") || "";
+					const italic = (child.italic && "italic") || "";
+					context.font = `${bold} ${italic} ${child.fontSize}px ${child.fontFamily}`;
+					const metrics = context.measureText(
+						convertLinkNodeToTextNode(child).text,
+					);
+					if (metrics.width > maxWidth) {
+						maxWidth = metrics.width;
+					}
+				} else if ("children" in child) {
+					const currWidth = getOneCharacterMaxWidth(
+						child.children || [],
+					);
+					if (currWidth > maxWidth) {
+						maxWidth = currWidth;
+					}
 				}
 			}
 		}

@@ -69,7 +69,7 @@ export class CommentCommand implements Command {
 						messageIds: comment
 							.getThread()
 							.filter(mes => op.messageIds.includes(mes.id)),
-						username: op.username,
+						userId: op.userId,
 					};
 				});
 			case "markThreadAsUnread":
@@ -77,7 +77,7 @@ export class CommentCommand implements Command {
 				return mapItemsByOperation(this.comment, comment => {
 					return {
 						...this.operation,
-						username: op.username,
+						userId: op.userId,
 					};
 				});
 		}

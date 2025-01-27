@@ -15,6 +15,7 @@ import { LinkTo } from "../LinkTo/LinkTo";
 
 export interface Commentator {
 	username: string;
+	id: number;
 	avatar?: string;
 }
 
@@ -23,7 +24,7 @@ export interface Message {
 	text: string;
 	id: string;
 	commentator: Commentator;
-	readers: string[];
+	readers: number[];
 }
 
 export interface CommentData {
@@ -32,10 +33,12 @@ export interface CommentData {
 	thread: Message[];
 	commentators: Commentator[];
 	transformation: TransformationData;
-	usersUnreadMarks: string[];
+	usersUnreadMarks: number[];
 	resolved: boolean;
 	itemToFollow?: string;
 }
+
+const ANONYMOUS_ID = 9_999_999_999;
 
 export class Comment implements Geometry {
 	readonly itemType = "Comment";
@@ -43,7 +46,7 @@ export class Comment implements Geometry {
 	readonly transformation: Transformation;
 	private commentators: Commentator[] = [];
 	private thread: Message[] = [];
-	private usersUnreadMarks: string[] = [];
+	private usersUnreadMarks: number[] = [];
 	private resolved = false;
 	private itemToFollow?: string;
 	readonly subject = new Subject<Comment>();
@@ -158,7 +161,7 @@ export class Comment implements Geometry {
 				this.thread = [...this.thread, op.message];
 				if (
 					!this.commentators.some(
-						c => c.username === op.message.commentator.username,
+						c => c.id === op.message.commentator.id,
 					)
 				) {
 					this.commentators = [
@@ -188,20 +191,25 @@ export class Comment implements Geometry {
 				this.itemToFollow = op.itemId;
 				break;
 			case "markMessagesAsRead":
-				this.applyReadMessages(op.messageIds, op.username);
+				this.applyReadMessages(op.messageIds, op.userId);
 				break;
 			case "markThreadAsUnread":
-				this.usersUnreadMarks = [...this.usersUnreadMarks, op.username];
+				this.usersUnreadMarks = [...this.usersUnreadMarks, op.userId];
 				break;
 			case "markThreadAsRead":
 				this.usersUnreadMarks = this.usersUnreadMarks.filter(
-					username => username !== op.username,
+					userId => userId !== op.userId,
 				);
 				break;
 		}
 	}
 
-	saveMessage(text: string, username: string, avatar?: string): void {
+	saveMessage(
+		text: string,
+		username: string,
+		id: number,
+		avatar?: string,
+	): void {
 		this.emit({
 			class: "Comment",
 			method: "createMessage",
@@ -211,10 +219,11 @@ export class Comment implements Geometry {
 				id: this.generateMessageId(),
 				commentator: {
 					username,
+					id,
 					avatar,
 				},
 				date: new Date(),
-				readers: [username],
+				readers: [id],
 			},
 		});
 		if (this.getResolved()) {
@@ -260,21 +269,21 @@ export class Comment implements Geometry {
 		});
 	}
 
-	markThreadAsUnread(username: string): void {
+	markThreadAsUnread(userId: number): void {
 		this.emit({
 			class: "Comment",
 			method: "markThreadAsUnread",
 			item: [this.id],
-			username,
+			userId,
 		});
 	}
 
-	markThreadAsRead(username: string): void {
+	markThreadAsRead(userId: number): void {
 		this.emit({
 			class: "Comment",
 			method: "markThreadAsRead",
 			item: [this.id],
-			username,
+			userId,
 		});
 	}
 
@@ -288,9 +297,9 @@ export class Comment implements Geometry {
 		}
 	}
 
-	getUnreadMessages(username = "anonymous"): Message[] | null {
+	getUnreadMessages(userId = ANONYMOUS_ID): Message[] | null {
 		const unreadMessages = this.thread.filter(
-			mes => mes && !mes.readers.includes(username),
+			mes => mes && !mes.readers.includes(userId),
 		);
 		if (unreadMessages.length === 0) {
 			return null;
@@ -298,17 +307,17 @@ export class Comment implements Geometry {
 		return unreadMessages;
 	}
 
-	getIsThreadMarkedAsUnread(username: string) {
-		return this.usersUnreadMarks.some(u => u === username);
+	getIsThreadMarkedAsUnread(userId: number) {
+		return this.usersUnreadMarks.some(id => id === userId);
 	}
 
 	isClosed(): boolean {
 		return false;
 	}
 
-	markMessagesAsRead(messageIds: string[], username?: string): void {
-		if (!username) {
-			return this.applyReadMessages(messageIds, "anonymous");
+	markMessagesAsRead(messageIds: string[], userId?: number): void {
+		if (!userId) {
+			return this.applyReadMessages(messageIds, ANONYMOUS_ID);
 		}
 
 		this.emit({
@@ -316,15 +325,15 @@ export class Comment implements Geometry {
 			method: "markMessagesAsRead",
 			item: [this.id],
 			messageIds,
-			username,
+			userId,
 		});
 	}
 
-	applyReadMessages(messageIds: string[], username: string) {
+	applyReadMessages(messageIds: string[], userId: number) {
 		const readMessages = this.thread.filter(mes =>
 			messageIds.includes(mes.id),
 		);
-		readMessages.forEach(mes => mes.readers.push(username));
+		readMessages.forEach(mes => mes.readers.push(userId));
 	}
 
 	isInView(rect: Mbr): boolean {
@@ -380,26 +389,10 @@ export class Comment implements Geometry {
 	}
 
 	isEnclosedBy(rect: Mbr): boolean {
-		// const anchor = this.anchor;
-		// const tolerance = 50 * this.transformation.getScale().x
-		// return (
-		// 	anchor.x > rect.left - tolerance &&
-		// 	anchor.x < rect.right + tolerance &&
-		// 	anchor.y > rect.top - tolerance &&
-		// 	anchor.y < rect.bottom + tolerance
-		// );
 		return false;
 	}
 
 	isEnclosedOrCrossedBy(rect: Mbr): boolean {
-		// const anchor = this.anchor;
-		// const tolerance = 50 * this.transformation.getScale().x
-		// return (
-		// 	anchor.x > rect.left - tolerance &&
-		// 	anchor.x < rect.right + tolerance &&
-		// 	anchor.y > rect.top - tolerance &&
-		// 	anchor.y < rect.bottom + tolerance
-		// );
 		return false;
 	}
 
@@ -408,10 +401,6 @@ export class Comment implements Geometry {
 	}
 
 	isUnderPoint(point: Point): boolean {
-		// const diffX = point.x - this.anchor.x;
-		// const diffY = point.y - this.anchor.y;
-		// const tolerance = 50 * this.transformation.getScale().x
-		// return diffX < tolerance && diffX > -tolerance && diffY < tolerance && diffY > -tolerance;
 		return false;
 	}
 

@@ -14,6 +14,8 @@ export const BlockTypes = [
 	"heading_one",
 	"heading_two",
 	"heading_three",
+	"heading_four",
+	"heading_five",
 	"block-quote",
 ] as const;
 
