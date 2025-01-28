@@ -27,4 +27,5 @@ export const Cross = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => Cross.path.copy(),
+	useMbrUnderPointer: false,
 };

@@ -47,6 +47,7 @@ export const SpeachBubble = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => createSpeachBubblePath(mbr).copy(),
+	useMbrUnderPointer: false,
 };
 
 const convexity = 2;

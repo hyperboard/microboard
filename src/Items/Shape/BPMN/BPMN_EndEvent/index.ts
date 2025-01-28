@@ -18,4 +18,5 @@ export const BPMN_EndEvent = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_EndEvent.path.copy(),
+	useMbrUnderPointer: false,
 };

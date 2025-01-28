@@ -35,4 +35,5 @@ export const BPMN_DataObject = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_DataObject.path.copy(),
+	useMbrUnderPointer: false,
 };

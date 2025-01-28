@@ -92,6 +92,7 @@ export const BPMN_Transaction = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => createBPMN_TransactionPath(mbr).copy(),
+	useMbrUnderPointer: false,
 };
 
 const convexity = 2;

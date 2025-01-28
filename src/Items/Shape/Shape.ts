@@ -415,6 +415,9 @@ export class Shape implements Geometry {
 	}
 
 	isUnderPoint(point: Point, tolerance = 5): boolean {
+		if (Shapes[this.shapeType].useMbrUnderPointer) {
+			return this.mbr.isUnderPoint(point);
+		}
 		if (
 			this.text.isEmpty() &&
 			(this.backgroundOpacity === 0 ||

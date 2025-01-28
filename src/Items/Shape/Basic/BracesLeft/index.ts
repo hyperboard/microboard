@@ -26,4 +26,5 @@ export const BracesLeft = {
 	),
 	anchorPoints: [],
 	createPath: (mbr: Mbr) => BracesLeft.path.copy(),
+	useMbrUnderPointer: true,
 };

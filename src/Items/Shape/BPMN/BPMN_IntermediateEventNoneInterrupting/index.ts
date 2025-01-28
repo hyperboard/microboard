@@ -24,4 +24,5 @@ export const BPMN_IntermediateEventNoneInterrupting = {
 	],
 	createPath: (mbr: Mbr) =>
 		BPMN_IntermediateEventNoneInterrupting.path.copy(),
+	useMbrUnderPointer: false,
 };

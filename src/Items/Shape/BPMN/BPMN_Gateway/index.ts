@@ -48,4 +48,5 @@ export const BPMN_Gateway = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_Gateway.path.copy(),
+	useMbrUnderPointer: false,
 };

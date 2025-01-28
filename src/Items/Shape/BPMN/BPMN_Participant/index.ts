@@ -28,4 +28,5 @@ export const BPMN_Participant = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_Participant.path.copy(),
+	useMbrUnderPointer: false,
 };
