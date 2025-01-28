@@ -19,4 +19,5 @@ export const Trapezoid = {
 		new Point(45, 100),
 	],
 	createPath: (mbr: Mbr) => Trapezoid.path.copy(),
+	useMbrUnderPointer: false,
 };

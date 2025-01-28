@@ -25,4 +25,5 @@ export const Hexagon = {
 		new Point(25, 12),
 	],
 	createPath: (mbr: Mbr) => Hexagon.path.copy(),
+	useMbrUnderPointer: false,
 };

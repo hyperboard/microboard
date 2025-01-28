@@ -47,6 +47,7 @@ export const BPMN_Task = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => createBPMN_TaskPath(mbr).copy(),
+	useMbrUnderPointer: false,
 };
 
 const convexity = 2;

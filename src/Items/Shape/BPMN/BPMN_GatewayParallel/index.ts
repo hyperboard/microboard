@@ -54,4 +54,5 @@ export const BPMN_GatewayParallel = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_GatewayParallel.path.copy(),
+	useMbrUnderPointer: false,
 };

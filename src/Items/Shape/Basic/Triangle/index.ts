@@ -20,4 +20,5 @@ export const Triangle = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => Triangle.path.copy(),
+	useMbrUnderPointer: false,
 };

@@ -43,6 +43,7 @@ export const RoundedRectangle = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => createRoundedRectanglePath(mbr).copy(),
+	useMbrUnderPointer: false,
 };
 
 const convexity = 2;

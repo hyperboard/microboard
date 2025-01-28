@@ -23,4 +23,5 @@ export const BPMN_Group = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_Group.path.copy(),
+	useMbrUnderPointer: false,
 };

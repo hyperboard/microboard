@@ -18,4 +18,5 @@ export const BPMN_StartEventNoneInterrupting = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_StartEventNoneInterrupting.path.copy(),
+	useMbrUnderPointer: false,
 };

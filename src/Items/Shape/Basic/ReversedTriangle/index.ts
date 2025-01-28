@@ -20,4 +20,5 @@ export const ReversedTriangle = {
 		new Point(100, 0),
 	],
 	createPath: (mbr: Mbr) => ReversedTriangle.path.copy(),
+	useMbrUnderPointer: false,
 };

@@ -84,4 +84,5 @@ export const BPMN_DataStore = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => BPMN_DataStore.path.copy(),
+	useMbrUnderPointer: false,
 };

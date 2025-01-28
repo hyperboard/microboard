@@ -76,6 +76,7 @@ export const BPMN_EventSubprocess = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => createBPMN_SubprocessExpandedPath(mbr).copy(),
+	useMbrUnderPointer: false,
 };
 
 const convexity = 2;

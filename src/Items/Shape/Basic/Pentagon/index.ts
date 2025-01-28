@@ -21,4 +21,5 @@ export const Pentagon = {
 		new Point(10, 95),
 	],
 	createPath: (mbr: Mbr) => Pentagon.path.copy(),
+	useMbrUnderPointer: false,
 };

@@ -95,6 +95,10 @@ export class Path implements Geometry, PathStylize {
 		private shadowBlur: number = 0,
 		private shadowOffsetX: number = 0,
 		private shadowOffsetY: number = 0,
+		private paddingTop: number = 0,
+		private paddingRight: number = 0,
+		private paddingBottom: number = 0,
+		private paddingLeft: number = 0,
 	) {
 		this.linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
 		this.updateCache();
@@ -198,10 +202,10 @@ export class Path implements Geometry, PathStylize {
 
 	private updateCache(): void {
 		const { left, top, right, bottom } = this.getMbr();
-		this.x = left;
-		this.y = top;
-		this.width = right - left;
-		this.height = bottom - top;
+		this.x = left - this.paddingLeft; // Adjust for left padding
+		this.y = top - this.paddingTop; // Adjust for top padding
+		this.width = right - left + this.paddingLeft + this.paddingRight; // Adjust for horizontal padding
+		this.height = bottom - top + this.paddingTop + this.paddingBottom; // Adjust for vertical padding
 		if (!Path2D) {
 			return;
 		}
@@ -298,11 +302,10 @@ export class Path implements Geometry, PathStylize {
 		for (let i = 1, len = this.segments.length; i < len; i++) {
 			mbr.combine(this.segments[i].getMbr());
 		}
-		const offset = this.borderWidth / 2;
-		mbr.left -= offset;
-		mbr.top -= offset;
-		mbr.right += offset;
-		mbr.bottom += offset;
+		mbr.left -= this.borderWidth / 2 + this.paddingLeft;
+		mbr.top -= this.borderWidth / 2 + this.paddingTop;
+		mbr.right += this.borderWidth / 2 + this.paddingRight;
+		mbr.bottom += this.borderWidth / 2 + this.paddingBottom;
 		return mbr;
 	}
 
@@ -565,6 +568,10 @@ export class Path implements Geometry, PathStylize {
 			this.shadowBlur,
 			this.shadowOffsetX,
 			this.shadowOffsetY,
+			this.paddingTop, // Include top padding in the copy
+			this.paddingRight, // Include right padding in the copy
+			this.paddingBottom, // Include bottom padding in the copy
+			this.paddingLeft, // Include left padding in the copy
 		);
 	}
 

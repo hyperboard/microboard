@@ -27,4 +27,5 @@ export const Octagon = {
 		new Point(12, 88),
 	],
 	createPath: (mbr: Mbr) => Octagon.path.copy(),
+	useMbrUnderPointer: false,
 };

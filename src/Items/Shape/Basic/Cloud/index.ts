@@ -115,4 +115,5 @@ export const Cloud = {
 		new Point(15, 90),
 	],
 	createPath: (mbr: Mbr) => Cloud.path.copy(),
+	useMbrUnderPointer: false,
 };

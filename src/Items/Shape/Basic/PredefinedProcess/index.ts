@@ -23,4 +23,5 @@ export const PredefinedProcess = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => PredefinedProcess.path.copy(),
+	useMbrUnderPointer: false,
 };

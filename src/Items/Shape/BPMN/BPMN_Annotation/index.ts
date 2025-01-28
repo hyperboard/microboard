@@ -21,4 +21,5 @@ export const BPMN_Annotation = {
 	),
 	anchorPoints: [],
 	createPath: (mbr: Mbr) => BPMN_Annotation.path.copy(),
+	useMbrUnderPointer: false,
 };

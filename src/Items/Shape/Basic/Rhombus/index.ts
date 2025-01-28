@@ -23,4 +23,5 @@ export const Rhombus = {
 		new Point(50, 100),
 	],
 	createPath: (mbr: Mbr) => Rhombus.path.copy(),
+	useMbrUnderPointer: false,
 };
