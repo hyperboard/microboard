@@ -88,6 +88,7 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
+		if (this.board.keyboard.isShift) return false;
 		const increasedSnapThreshold = 2;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
@@ -156,18 +157,18 @@ export class Select extends Tool {
 		const dx2 = line2.end.x - line2.start.x;
 		const dy2 = line2.end.y - line2.start.y;
 
-		const dotProduct = dx1 * dx2 + dy1 * dy2;
-		const magnitude1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-		const magnitude2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+		const angle1 = Math.atan2(dy1, dx1);
+		const angle2 = Math.atan2(dy2, dx2);
+		let angleDiff = (angle2 - angle1) * (180 / Math.PI);
 
-		const angle = Math.acos(dotProduct / (magnitude1 * magnitude2));
-		return angle * (180 / Math.PI); // Конвертация в градусы
+		angleDiff = angleDiff < 0 ? angleDiff + 360 : angleDiff;
+		return Math.min(angleDiff, 360 - angleDiff);
 	}
 
 	private handleShiftGuidelines(item: Item, mousePosition: Point): void {
 		if (item) {
 			if (!this.originalCenter) {
-				this.originalCenter = item.getMbr().getCenter();
+				this.originalCenter = item.getMbr().getCenter().copy();
 				this.guidelines = this.alignmentHelper.generateGuidelines(
 					this.originalCenter,
 				).lines;
@@ -209,16 +210,9 @@ export class Select extends Tool {
 				const newEndY =
 					this.originalCenter.y + snapDirectionY * mainLineLength;
 
-				const threshold = 0;
-				const translateX =
-					Math.abs(newEndX - item.getMbr().getCenter().x) > threshold
-						? newEndX - item.getMbr().getCenter().x
-						: 0;
-				const translateY =
-					Math.abs(newEndY - item.getMbr().getCenter().y) > threshold
-						? newEndY - item.getMbr().getCenter().y
-						: 0;
-
+				const threshold = Infinity; // Убрали ограничение
+				const translateX = newEndX - item.getMbr().getCenter().x;
+				const translateY = newEndY - item.getMbr().getCenter().y;
 				item.transformation.translateBy(
 					translateX,
 					translateY,
@@ -912,8 +906,7 @@ export class Select extends Tool {
 		const toEdit = this.board.selection.items.getSingle();
 		if (
 			toEdit?.transformation.isLocked ||
-			(toEdit?.itemType === "AINode" &&
-			!!this.board.AIGeneratingOnItem)
+			(toEdit?.itemType === "AINode" && !!this.board.AIGeneratingOnItem)
 		) {
 			return false;
 		}
