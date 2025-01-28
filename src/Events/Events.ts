@@ -280,8 +280,22 @@ export function createEvents(
 								board,
 								board.events,
 							);
-							console.log("imageItem", imageItem);
+							const placeholderMbr = placeholderNode.getMbr();
+							const placeholderCenterX =
+								placeholderMbr.left +
+								placeholderMbr.getWidth() / 2;
+
+							const imageCenterX =
+								placeholderCenterX -
+								imageData.imageDimension.width / 2;
+							const imageTopY = placeholderMbr.top;
+
+							imageItem.transformation.translateTo(
+								imageCenterX,
+								imageTopY,
+							);
 							imageItem.setId(placeholderId);
+
 							board.remove(placeholderNode);
 							board.add(imageItem);
 						}

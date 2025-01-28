@@ -217,7 +217,6 @@ export class ImageItem extends Mbr {
 	}
 
 	deserialize(data: Partial<ImageItemData>): ImageItem {
-		console.log("deserialize");
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
@@ -237,7 +236,6 @@ export class ImageItem extends Mbr {
 
 		storageImage.onload = () => {
 			if (!this.updated) {
-				console.log("storageImage");
 				this.image = storageImage;
 				this.subject.publish(this);
 			}
@@ -283,7 +281,6 @@ export class ImageItem extends Mbr {
 				this.setDimensions(op.data.imageDimension);
 				this.updated = true;
 				this.subject.publish(this);
-				console.log("this.deserialize(op.data)", op.data);
 				break;
 		}
 	}

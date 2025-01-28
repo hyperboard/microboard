@@ -993,6 +993,15 @@ export class Connector {
 		return this;
 	}
 
+	getConnectorById(
+		items: Item[],
+		connectorId: string,
+	): Connector | undefined {
+		return items.find(
+			item => item instanceof Connector && item.getId() === connectorId,
+		) as Connector;
+	}
+
 	updateTitle(): void {
 		const selection = this.board.selection;
 		const isConnectorSelected = selection.items.findById(this.id);
