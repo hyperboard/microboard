@@ -88,7 +88,9 @@ export class Select extends Tool {
 	}
 
 	private handleSnapping(item: Item): boolean {
-		if (this.board.keyboard.isShift) return false;
+		if (this.board.keyboard.isShift) {
+			return false;
+		}
 		const increasedSnapThreshold = 2;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
