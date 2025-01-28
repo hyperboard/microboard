@@ -13,6 +13,11 @@ export class DrawingCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
+	merge(op: DrawingOperation): this {
+		this.operation = op;
+		return this;
+	}
+
 	apply(): void {
 		for (const item of this.item) {
 			item.apply(this.operation);

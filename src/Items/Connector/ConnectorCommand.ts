@@ -14,6 +14,11 @@ export class ConnectorCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
+	merge(op: ConnectorOperation): this {
+		this.operation = op;
+		return this;
+	}
+
 	apply(): void {
 		for (const connector of this.connector) {
 			connector.apply(this.operation);

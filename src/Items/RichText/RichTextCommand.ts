@@ -136,6 +136,12 @@ export class RichTextCommand implements Command {
 			}
 		}
 	}
+
+	merge(op: RichTextOperation): this {
+		this.operation = op;
+		this.reverse = this.getReverse();
+		return this;
+	}
 }
 
 type TextEdits = {

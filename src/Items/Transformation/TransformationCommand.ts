@@ -18,6 +18,12 @@ export class TransformationCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
+	merge(op: TransformationOperation): this {
+		this.operation = op;
+		this.reverse = this.getReverse();
+		return this;
+	}
+
 	apply(): void {
 		for (const transformation of this.transformation) {
 			transformation.apply(this.operation);

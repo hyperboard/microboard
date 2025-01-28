@@ -13,6 +13,11 @@ export class ShapeCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
+	merge(op: ShapeOperation): this {
+		this.operation = op;
+		return this;
+	}
+
 	apply(): void {
 		for (const shape of this.shape) {
 			shape.apply(this.operation);

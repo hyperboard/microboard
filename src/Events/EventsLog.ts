@@ -107,6 +107,14 @@ function createEventsList(
 
 		return false;
 	}
+	function mergeAndPushConfirmedRecords(records: HistoryRecord[]): void {
+		const lastConfirmedRecord = confirmedRecords.pop();
+		const recordsToMerge = lastConfirmedRecord
+			? [lastConfirmedRecord, ...records]
+			: records;
+		const mergedRecords = mergeRecords(recordsToMerge);
+		confirmedRecords.push(...mergedRecords);
+	}
 	return {
 		isAllEventsConfirmed(): boolean {
 			return newRecords.length === 0 && recordsToSend.length === 0;
@@ -117,7 +125,8 @@ function createEventsList(
 				msg: "confirmed",
 				records: [...records],
 			});
-			confirmedRecords.push(...records);
+			mergeAndPushConfirmedRecords(records);
+			// confirmedRecords.push(...records);
 		},
 
 		addNewRecords(records: HistoryRecord[]): void {
@@ -162,8 +171,7 @@ function createEventsList(
 				msg: "confirmed",
 				records: [...records],
 			});
-
-			confirmedRecords.push(...records);
+			mergeAndPushConfirmedRecords(records);
 			recordsToSend.splice(0, records.length);
 		},
 
@@ -660,6 +668,62 @@ export function createEventsLog(board: Board): EventsLog {
 		getLatestOrder,
 		getLastConfirmed,
 	};
+}
+
+function mergeRecords(records: HistoryRecord[]): HistoryRecord[] {
+	if (records.length < 2) {
+		return records;
+	}
+
+	const mergedRecords: HistoryRecord[] = [];
+	let previous: HistoryRecord | null = null;
+
+	for (const record of records) {
+		if (!previous) {
+			previous = record;
+			continue;
+		}
+
+		const mergedEventOperation = mergeOperations(
+			previous.event.body.operation,
+			record.event.body.operation,
+		);
+
+		if (!mergedEventOperation) {
+			mergedRecords.push(previous);
+			previous = record;
+		} else {
+			const mergedCommand = record.command.merge
+				? previous.command.merge(mergedEventOperation)
+				: previous.command;
+
+			previous = {
+				event: {
+					...record.event,
+					body: {
+						...record.event.body,
+						operation: mergedEventOperation,
+					},
+				},
+				command: mergedCommand,
+			};
+		}
+	}
+
+	if (previous) {
+		mergedRecords.push(previous);
+	}
+
+	return mergedRecords;
+}
+
+function createMergedRecord(
+	record: HistoryRecord,
+	mergedEventOperation: Operation,
+	mergedCommandOperation: Operation,
+	mergedCommandReverse: Operation,
+): HistoryRecord {
+	return;
 }
 
 /**

@@ -537,7 +537,15 @@ export class AlignmentHelper {
 			);
 			this.board.selection.transformMany(translation, timeStamp);
 		} else {
-			item.transformation.translateBy(x, y);
+			const key = item.getId();
+			const transformMap = {};
+			transformMap[key] = {
+				method: "translateBy",
+				x,
+				y,
+				timeStamp,
+			};
+			this.board.selection.transformMany(transformMap, timeStamp);
 		}
 	}
 

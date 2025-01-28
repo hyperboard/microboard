@@ -168,4 +168,9 @@ export class BoardCommand implements Command {
 			}
 		}
 	}
+
+	merge(op: BoardOps): this {
+		this.operation = op;
+		return this;
+	}
 }

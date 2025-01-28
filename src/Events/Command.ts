@@ -197,6 +197,10 @@ export function createCommand(board: Board, operation: Operation): Command {
 class NoOpCommand {
 	constructor(public reason: string) {}
 
+	merge(_op: unknown): this {
+		return this;
+	}
+
 	apply(): void {
 		console.warn(`NoOpCommand applied due to: ${this.reason}`);
 	}
