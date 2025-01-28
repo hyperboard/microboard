@@ -244,7 +244,6 @@ export function createEvents(
 				notify({
 					header: t("AIInput.textGenerationError.header"),
 					body: t("AIInput.textGenerationError.body"),
-					footer: t("AIInput.textGenerationError.footer"),
 					variant: "error",
 					duration: 4000,
 				});
@@ -255,7 +254,6 @@ export function createEvents(
 				notify({
 					header: t("AIInput.textGenerationError.header"),
 					body: t("AIInput.textGenerationError.body"),
-					footer: t("AIInput.textGenerationError.footer"),
 					variant: "error",
 					duration: 4000,
 				});
@@ -316,7 +314,6 @@ export function createEvents(
 					notify({
 						header: t("AIInput.imageGenerationError.header"),
 						body: t("AIInput.imageGenerationError.body"),
-						footer: t("AIInput.imageGenerationError.footer"),
 						variant: "error",
 						duration: 4000,
 					});
@@ -332,7 +329,6 @@ export function createEvents(
 		notify({
 			header: t("AIInput.imageGenerationError.header"),
 			body: t("AIInput.imageGenerationError.body"),
-			footer: t("AIInput.imageGenerationError.footer"),
 			variant: "error",
 			duration: 4000,
 		});
