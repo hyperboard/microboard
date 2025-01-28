@@ -617,6 +617,7 @@ export function createEvents(
 			currentSequenceNumber++;
 			pendingEvent.event.order = msg.order;
 			log.confirmEvent(pendingEvent.event);
+			subject.publish({} as any);
 			pendingEvent = null;
 			firstSentTime = null;
 		}

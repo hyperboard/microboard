@@ -65,6 +65,7 @@ interface EventsList {
 	syncLogSubject: SyncLogSubject;
 	clear(): void;
 	removeUnconfirmedEventsByItems(itemIds: string[]): void;
+	isAllEventsConfirmed(): boolean;
 }
 
 function createEventsList(
@@ -106,8 +107,11 @@ function createEventsList(
 
 		return false;
 	}
-
 	return {
+		isAllEventsConfirmed(): boolean {
+			return newRecords.length === 0 && recordsToSend.length === 0;
+		},
+
 		addConfirmedRecords(records: HistoryRecord[]): void {
 			syncLog.push({
 				msg: "confirmed",
@@ -115,6 +119,7 @@ function createEventsList(
 			});
 			confirmedRecords.push(...records);
 		},
+
 		addNewRecords(records: HistoryRecord[]): void {
 			for (const record of records) {
 				if (newRecords.length > 0) {
@@ -152,27 +157,12 @@ function createEventsList(
 			for (let i = 0; i < records.length; i++) {
 				records[i].event.order = events[i].order;
 			}
-			/*
-			const recordEvents = records.map(record => record.event);
-			const lastConfirmedEvent = confirmedRecords.pop()?.event;
-			const toMerge: BoardEvent[] = [
-				...(lastConfirmedEvent ? [lastConfirmedEvent] : []),
-				...recordEvents,
-			];
-			const mergedEvents = mergeEvents(toMerge);
-			mergedEvents.forEach(event => {
-				const record = {
-					event,
-					command: createCommand(event.body.operation),
-				};
 
-				confirmedRecords.push(record);
-			});
-			*/
 			syncLog.push({
 				msg: "confirmed",
 				records: [...records],
 			});
+
 			confirmedRecords.push(...records);
 			recordsToSend.splice(0, records.length);
 		},
@@ -346,7 +336,7 @@ export function createEventsLog(board: Board): EventsLog {
 
 	function deserialize(events: SyncBoardEvent[]): void {
 		list.clear();
-		console.log(events);
+
 		for (const event of events) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
@@ -434,6 +424,7 @@ export function createEventsLog(board: Board): EventsLog {
 
 	// function handleEventsInsertion(events: BoardEvent[]): void {
 	function handleEventsInsertion(events: SyncBoardEvent[]): void {
+		list;
 		const toDelete = TransformConnectorHelper.handleRemoveSnappedObject(
 			board,
 			events,
@@ -452,8 +443,8 @@ export function createEventsLog(board: Board): EventsLog {
 
 		list.revertUnconfirmed();
 
-		/*
 		const transformed: BoardEvent[] = [];
+
 		for (const event of events) {
 			if (
 				event.lastKnownOrder !== undefined &&
@@ -468,44 +459,26 @@ export function createEventsLog(board: Board): EventsLog {
 						evnt.order > event.lastKnownOrder &&
 						evnt.order <= event.order,
 				);
+				// const transf = transformEvents(confirmed, [event], board);
 				const transf = transformEvents(confirmed, [event]);
 				transformed.push(...transf);
 			} else {
 				transformed.push(event);
 			}
 		}
-		*/
-		/*
-		const confirmedRecords: HistoryRecord[] = list.getConfirmedRecords();
-		const lastConfirmedRecord = confirmedRecords.pop();
-		const lastConfirmedEvent = lastConfirmedRecord?.event;
-		const mergedEvents = mergeEvents([
-			...(lastConfirmedEvent ? [lastConfirmedEvent] : []),
-			...events,
-		]);
-		if (lastConfirmedRecord) {
-			lastConfirmedRecord.command.revert();
-		}
-		const records: HistoryRecord[] = [];
+
+		const mergedEvents = mergeEvents(transformed);
 		for (const event of mergedEvents) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
-			records.push(record);
+			list.addConfirmedRecords([record]);
+			list.justConfirmed.push(record);
 		}
-		*/
-		const records: HistoryRecord[] = [];
-		for (const event of events) {
-			const command = createCommand(board, event.body.operation);
-			const record = { event, command };
-			command.apply();
-			records.push(record);
-		}
-		list.addConfirmedRecords(records);
-		list.justConfirmed.push(...records);
 		list.applyUnconfirmed();
 	}
 
+	// TODO: rethink this function
 	function confirmEvent(event: BoardEventPack): void {
 		const events = expandEvents([event]);
 		list.confirmSentRecords(events);
@@ -550,12 +523,20 @@ export function createEventsLog(board: Board): EventsLog {
 	function getUndoRecord(userId: number): HistoryRecord | null {
 		let counter = 0;
 
+		/*
 		const timeStampMap = createTimeStampAmountMap(
 			list.backwardIterable(),
 			rec => rec.event.body.userId === userId,
 		);
+		*/
 
-		for (const record of list.backwardIterable()) {
+		const isAllEventsConfirmed = list.isAllEventsConfirmed();
+
+		if (!isAllEventsConfirmed) {
+			return null;
+		}
+
+		for (const record of list.getConfirmedRecords().slice().reverse()) {
 			if (record.event.body.userId !== userId) {
 				continue;
 			}
@@ -564,13 +545,15 @@ export function createEventsLog(board: Board): EventsLog {
 				const undid = getRecordById(
 					record.event.body.operation.eventId,
 				);
+				/*
 				const stamp = undid && getTimeStamp(undid);
 				if (stamp) {
 					const mappedAmount = timeStampMap.get(stamp);
 					counter += mappedAmount || 1;
 				} else {
-					counter++;
-				}
+				*/
+				counter++;
+				// }
 			} else if (counter === 0) {
 				return record;
 			} else {
@@ -637,11 +620,13 @@ export function createEventsLog(board: Board): EventsLog {
 	function getRecordById(id: string): HistoryRecord | undefined {
 		for (const record of list.forwardIterable()) {
 			if (record.event.body.eventId === id) {
+				/*
 				const timeStamp = getTimeStamp(record);
 				if (timeStamp) {
 					const mergedRecord = mergeRecordsByTimestamp(timeStamp);
 					return mergedRecord ?? record;
 				}
+				*/
 				return record;
 			}
 		}
