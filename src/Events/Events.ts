@@ -200,6 +200,7 @@ export function createEvents(
 				item.text.editor.insertAICopiedText(chunk.content || "");
 				break;
 			case "done":
+				board.camera.unsubscribeFromItem();
 				if (!item || item.itemType !== "AINode") {
 					console.log("Chat is done");
 					board.AIGeneratingOnItem = undefined;
@@ -207,11 +208,13 @@ export function createEvents(
 				}
 				board.selection.items.removeAll();
 				board.selection.add(item);
-				item.removeAdjustmentPoint();
+				board.camera.unsubscribeFromItem();
+				board.camera.zoomToFit(item.getMbr(), 20);
 				item.getRichText().editor.deserializeMarkdown();
 				board.AIGeneratingOnItem = undefined;
 				break;
 			case "end":
+				board.camera.unsubscribeFromItem();
 				if (!item || item.itemType !== "AINode") {
 					console.log("User's request handled");
 					board.AIGeneratingOnItem = undefined;
@@ -219,20 +222,23 @@ export function createEvents(
 				}
 				board.selection.items.removeAll();
 				board.selection.add(item);
-				item.removeAdjustmentPoint();
 				const itemWidth = item.getMbr().getWidth();
 				if (itemWidth < DEFAULT_MAX_NODE_WIDTH) {
 					const offset = (DEFAULT_MAX_NODE_WIDTH - itemWidth) / 2;
 					item.transformation.translateBy(offset, 0);
 				}
 				item.getRichText().editor.deserializeMarkdown();
+				board.camera.zoomToFit(item.getMbr(), 20);
 				board.AIGeneratingOnItem = undefined;
 				break;
 			case "error":
+				board.camera.unsubscribeFromItem();
 				if (board.AIGeneratingOnItem) {
 					const item = board.items.getById(board.AIGeneratingOnItem);
 					if (item) {
+						board.selection.removeAll();
 						board.selection.add(item);
+						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
 				notify({
@@ -245,6 +251,7 @@ export function createEvents(
 				board.AIGeneratingOnItem = undefined;
 				break;
 			default:
+				board.camera.unsubscribeFromItem();
 				notify({
 					header: t("AIInput.textGenerationError.header"),
 					body: t("AIInput.textGenerationError.body"),
@@ -255,7 +262,9 @@ export function createEvents(
 				if (board.AIGeneratingOnItem) {
 					const item = board.items.getById(board.AIGeneratingOnItem);
 					if (item) {
+						board.selection.removeAll();
 						board.selection.add(item);
+						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
 				board.AIGeneratingOnItem = undefined;

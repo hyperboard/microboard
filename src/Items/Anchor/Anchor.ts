@@ -53,15 +53,17 @@ export class Anchor extends Mbr {
 
 		switch (type) {
 			case "rect":
-				renderAnchor(
-					ctx,
-					center,
-					this.getWidth(),
-					this.borderColor,
-					this.backgroundColor,
-					this.strokeWidth,
-					scale,
-				);
+				try {
+					renderAnchor(
+						ctx,
+						center,
+						this.getWidth(),
+						this.borderColor,
+						this.backgroundColor,
+						this.strokeWidth,
+						scale,
+					);
+				} catch {}
 				break;
 			case "circle":
 				renderCircleAnchor(

@@ -207,10 +207,6 @@ export class AINode implements Geometry {
 		return this.parentNodeId;
 	}
 
-	removeAdjustmentPoint(): void {
-		this.adjustmentPoint = null;
-	}
-
 	getIsUserRequest(): boolean {
 		return this.isUserRequest;
 	}

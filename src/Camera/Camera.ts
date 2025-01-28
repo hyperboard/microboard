@@ -1,7 +1,10 @@
-import { Matrix, Mbr, Point } from "Board/Items";
+import { Item, Matrix, Mbr, Point } from "Board/Items";
 import { Pointer } from "Board/Pointer";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
+import { AINode } from "Board/Items/AINode/AINode";
+import { throttle, throttleWithDebounce } from "shared/utils/throttle";
+import { ControlPoint } from "Board/Items/Connector/ControlPoint";
 
 export class Camera {
 	subject = new Subject<Camera>();
@@ -27,11 +30,19 @@ export class Camera {
 	private previousDistance: number | null = null;
 	private previousPositions: { point1: Point; point2: Point } | null = null;
 	boardId = "";
+	private obsevableItem: Item | null = null;
+	private throttledZoom: (mbr: Mbr) => void;
 
 	constructor(private boardPointer = new Pointer()) {
 		this.subject.subscribe((_camera: Camera) => {
 			this.saveMatrixSnapshot();
 		});
+
+		this.throttledZoom = throttle((mbr: Mbr) => {
+			if (mbr.getHeight() > 40 && this.obsevableItem) {
+				this.zoomToFit(mbr, 20, 350);
+			}
+		}, 400);
 	}
 
 	getMbr(): Mbr {
@@ -51,6 +62,24 @@ export class Camera {
 		const mbr = new Mbr(0, 0, width, heigth);
 		return mbr;
 	}
+
+	unsubscribeFromItem(): void {
+		if (this.obsevableItem) {
+			this.obsevableItem.subject.unsubscribe(this.observeItem);
+			this.obsevableItem = null;
+		}
+	}
+
+	subscribeToItem(item: Item): void {
+		this.obsevableItem = item;
+		this.obsevableItem.subject.subscribe(this.observeItem);
+	}
+
+	private observeItem = (): void => {
+		if (this.obsevableItem) {
+			this.throttledZoom(this.obsevableItem.getMbr());
+		}
+	};
 
 	private getScaleOneLevelIn(scale: number): number {
 		let index = this.scaleLevels.length - 1;
