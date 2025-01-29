@@ -36,6 +36,8 @@ import { prepareImage } from "Board/Items/Image/ImageHelpers";
 import { DEFAULT_MAX_NODE_WIDTH } from "View/AIInput/utils";
 import { t } from "i18next";
 import { ImageItem } from "Board/Items/Image";
+import { Connector } from "Board/Items";
+import { getControlPointData } from "Board/Selection/QuickAddButtons";
 
 export interface BoardEvent {
 	order: number;
@@ -304,34 +306,38 @@ export function createEvents(
 							imageItem.setId(placeholderId);
 
 							board.remove(placeholderNode);
-							board.add(imageItem);
+							const newImageAI = board.add(imageItem);
+							if (board.AIImageConnectorID) {
+								const oldIdConnector = board.items.getById(
+									board.AIImageConnectorID,
+								) as Connector;
+								setTimeout(() => {
+									oldIdConnector.setEndPoint(
+										getControlPointData(newImageAI, 2),
+									);
+								}, 100);
+							}
 						}
 					}
 					board.AIGeneratingOnItem = undefined;
 				})
 				.catch(er => {
 					console.error("Could not create image from response:", er);
-					notify({
-						header: t("AIInput.imageGenerationError.header"),
-						body: t("AIInput.imageGenerationError.body"),
-						variant: "error",
-						duration: 4000,
-					});
 				});
 			board.AIGeneratingOnItem = undefined;
 			return;
 		} else if (response.status === "error") {
 			console.error("Image generation error:", response.message);
+			notify({
+				header: t("AIInput.imageGenerationError.header"),
+				body: t("AIInput.imageGenerationError.body"),
+				variant: "error",
+				duration: 4000,
+			});
 			board.AIGeneratingOnItem = undefined;
 		} else {
 			console.warn("Unhandled image generation status:", response.status);
 		}
-		notify({
-			header: t("AIInput.imageGenerationError.header"),
-			body: t("AIInput.imageGenerationError.body"),
-			variant: "error",
-			duration: 4000,
-		});
 	}
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
