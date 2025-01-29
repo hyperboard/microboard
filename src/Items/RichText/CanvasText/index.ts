@@ -115,16 +115,30 @@ function getChildStyle(
 function convertNoneListNode(
 	node: BlockNode,
 	maxWidth: number,
+	isFirstNode: boolean,
 ): DropflowNodeData[] {
 	const newDropflowNodes: DropflowNodeData[] = [];
+	let padding = 0;
+	if (
+		!isFirstNode &&
+		(node.type === "heading_one" ||
+			node.type === "heading_two" ||
+			node.type === "heading_three" ||
+			node.type === "heading_four" ||
+			node.type === "heading_five" ||
+			node.type === "paragraph")
+	) {
+		padding = 0.5;
+	}
 
-	const paragraphStyle: flow.DeclaredStyle = {
+	const nodeStyle: flow.DeclaredStyle = {
 		textAlign: node.horisontalAlignment || "left",
 		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
+		paddingTop: { value: padding, unit: "em" },
 	};
 
 	let currNode: DropflowNodeData = {
-		style: paragraphStyle,
+		style: nodeStyle,
 		children: [],
 	};
 
@@ -152,13 +166,13 @@ function convertNoneListNode(
 			textParts.forEach((text, idx) => {
 				if (idx > 0 && idx < textParts.length - 1) {
 					newDropflowNodes.push({
-						style: paragraphStyle,
+						style: nodeStyle,
 						children: [{ style: childStyle, text }],
 					});
 				}
 			});
 			currNode = {
-				style: paragraphStyle,
+				style: nodeStyle,
 				children: [
 					{
 						text: textParts[textParts.length - 1],
@@ -183,18 +197,23 @@ function convertListNode(
 
 	for (const listItem of node.children) {
 		newDropflowListNodes.push(
-			convertSlateToDropflow(listItem.children, maxWidth),
+			convertSlateToDropflow(listItem.children, maxWidth, true),
 		);
 	}
 	return newDropflowListNodes;
 }
 
-function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number) {
+function convertSlateToDropflow(
+	slateNodes: BlockNode[],
+	maxWidth: number,
+	areNodesFromList = false,
+) {
 	const dropflowNodes: {
 		type: string;
 		nodes: DropflowNodeData[] | DropflowNodeWithType[];
 	}[] = [];
-	for (const node of slateNodes) {
+	for (let i = 0; i < slateNodes.length; i++) {
+		const node = slateNodes[i];
 		switch (node.type) {
 			case "heading_one":
 			case "heading_two":
@@ -204,13 +223,21 @@ function convertSlateToDropflow(slateNodes: BlockNode[], maxWidth: number) {
 			case "paragraph":
 				dropflowNodes.push({
 					type: "paragraphNodes",
-					nodes: convertNoneListNode(node, maxWidth),
+					nodes: convertNoneListNode(
+						node,
+						maxWidth,
+						i === 0 && !areNodesFromList,
+					),
 				});
 				break;
 			case "code_block":
 				dropflowNodes.push({
 					type: "codeNodes",
-					nodes: convertNoneListNode(node, maxWidth),
+					nodes: convertNoneListNode(
+						node,
+						maxWidth,
+						i === 0 && !areNodesFromList,
+					),
 				});
 				break;
 			case "ol_list":
@@ -261,7 +288,7 @@ function createFlowDiv(
 	return dropflowNodes.map(paragraph =>
 		flow.h(
 			"div",
-			{ style: paragraph.style },
+			{ style: { ...paragraph.style } },
 			paragraph.children.map((child, childIndex) => {
 				let text = child.text;
 				if (listData) {
