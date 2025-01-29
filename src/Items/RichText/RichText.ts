@@ -477,17 +477,14 @@ export class RichText extends Mbr implements Geometry {
 
 	emitWithoutApplying = (op: RichTextOperation): void => {
 		if (this.events) {
-			const command = new RichTextCommand([this], op);
-			this.events.emit(op, command);
+			this.events.emit(op);
 		}
 		// this.updateElement();
 	};
 
 	emit = (op: RichTextOperation): void => {
 		if (this.events) {
-			const command = new RichTextCommand([this], op);
-			command.apply();
-			this.events.emit(op, command);
+			this.events.emitAndApply(op);
 		} else {
 			this.apply(op);
 		}

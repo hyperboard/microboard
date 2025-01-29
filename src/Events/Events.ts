@@ -17,7 +17,7 @@ import {
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
 import { Subject } from "Subject";
-import { Command } from "./Command";
+import { Command, createCommand } from "./Command";
 import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
 import { SyncLog, SyncLogSubject } from "./SyncLog";
@@ -92,7 +92,8 @@ export interface Events {
 	syncLogSubject: SyncLogSubject;
 	getSnapshot(): BoardSnapshot;
 	disconnect(): void;
-	emit(operation: Operation, command: Command): void;
+	emit(operation: Operation, command?: Command): void;
+	emitAndApply(operation: Operation, command?: Command): void;
 	apply(operation: EventsOperation): void | false;
 	undo(): void;
 	redo(): void;
@@ -684,7 +685,7 @@ export function createEvents(
 		board.camera.setBoardId(board.getBoardId());
 	}
 
-	function emit(operation: Operation, command: Command): void {
+	function emit(operation: Operation, command?: Command): void {
 		const userId = getUserId();
 		const body = {
 			eventId: getNextEventId(),
@@ -693,7 +694,10 @@ export function createEvents(
 			operation: operation,
 		} as BoardEventBody;
 		const event = { order: 0, body };
-		const record = { event, command };
+		const record = {
+			event,
+			command: command || createCommand(board, operation),
+		};
 		log.push(record);
 		setLatestUserEvent(operation, userId);
 		subject.publish(event);
@@ -710,6 +714,12 @@ export function createEvents(
 				subject.publish(event);
 			}, 1000);
 		}
+	}
+
+	function emitAndApply(operation: Operation, command?: Command): void {
+		const definedCommand = command || createCommand(board, operation);
+		definedCommand.apply();
+		emit(operation, definedCommand);
 	}
 
 	const operationHandlers: Record<string, (eventId: string) => void | false> =
@@ -886,6 +896,7 @@ export function createEvents(
 		getAll: () => log.getList().map(record => record.event),
 		disconnect,
 		emit,
+		emitAndApply,
 		apply,
 		undo,
 		redo,

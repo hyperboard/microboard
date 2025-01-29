@@ -140,11 +140,8 @@ export function createCommand(board: Board, operation: Operation): Command {
 							return new RichTextGroupCommand(texts, operation);
 						} else {
 							return new RichTextCommand(
-								items.map(item =>
-									item.itemType === "RichText"
-										? item
-										: item.text,
-								),
+								board,
+								items.map(item => item.getId()),
 								operation,
 							);
 						}

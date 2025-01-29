@@ -1,31 +1,42 @@
+import { Board } from "Board";
 import { RichText } from "./RichText";
 import { GroupEdit, RichTextOperation } from "./RichTextOperations";
 import { Command } from "Board/Events";
 import { Operation } from "slate";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export class RichTextCommand implements Command {
-	private reverse: { item: RichText; operation: RichTextOperation }[];
+	private reverse: { item: string; operation: RichTextOperation }[];
 
 	constructor(
-		private richText: RichText[],
+		private board: Board,
+		private richText: string[],
 		private operation: RichTextOperation,
 	) {
 		this.reverse = this.getReverse();
 	}
 
 	apply(): void {
-		for (const richText of this.richText) {
+		for (const id of this.richText) {
+			const richText = this.board.items.getById(id);
+			if (!richText) {
+				continue;
+			}
 			richText.apply(this.operation);
 		}
 	}
 
 	revert(): void {
 		for (const { item, operation } of this.reverse) {
-			item.apply(operation);
+			const richText = this.board.items.getById(item);
+			if (!richText) {
+				continue;
+			}
+			richText.apply(operation);
 		}
 	}
 
-	getReverse(): { item: RichText; operation: RichTextOperation }[] {
+	getReverse(): { item: string; operation: RichTextOperation }[] {
 		const items = Array.isArray(this.richText)
 			? this.richText
 			: [this.richText];
@@ -51,89 +62,130 @@ export class RichTextCommand implements Command {
 				});
 			// should replace whole text ops with selection ops
 			// and handle them the same way, or the reverse ops would be incorrect
-			case "setFontColor": {
-				return items.map(richText => {
-					const operation = {
+			case "setFontColor":
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						fontColor: richText.getFontColor() || "",
-					};
-					return { item: richText, operation };
-				});
-			}
+						fontColor:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getFontColor() ||
+							DEFAULT_TEXT_STYLES.fontColor,
+					},
+				}));
+
 			case "setBlockType":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						type: richText.getBlockType(),
-					};
-					return { item: richText, operation };
-				});
+						type:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getBlockType() || "paragraph",
+					},
+				}));
+
 			case "setFontStyle":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						fontStyleList: richText.getFontStyles(),
-					};
-					return { item: richText, operation };
-				});
+						fontStyleList:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getFontStyles() || [],
+					},
+				}));
+
 			case "setFontFamily":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						fontFamily: richText.getFontFamily(),
-					};
-					return { item: richText, operation };
-				});
+						fontFamily:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getFontFamily() ||
+							DEFAULT_TEXT_STYLES.fontFamily,
+					},
+				}));
+
 			case "setFontSize":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						fontSize: richText.getFontSize(),
-					};
-					return { item: richText, operation };
-				});
+						fontSize:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getFontSize() || DEFAULT_TEXT_STYLES.fontSize,
+					},
+				}));
+
 			case "setFontHighlight":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						fontHighlight: richText.getFontHighlight(),
-					};
-					return { item: richText, operation };
-				});
+						fontHighlight:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getFontHighlight() ||
+							DEFAULT_TEXT_STYLES.fontHighlight,
+					},
+				}));
+
 			case "setHorisontalAlignment":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
 						horisontalAlignment:
-							richText.getHorisontalAlignment() ?? "left",
-					};
-					return { item: richText, operation };
-				});
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getHorisontalAlignment() ?? "left",
+					},
+				}));
+
 			case "setVerticalAlignment":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						verticalAlignment: richText.getVerticalAlignment(),
-					};
-					return { item: richText, operation };
-				});
+						verticalAlignment:
+							this.board.items
+								.getById(id)
+								?.getRichText()
+								?.getVerticalAlignment() || "top",
+					},
+				}));
 
 			case "setMaxWidth":
-				return items.map(richText => {
-					const operation = {
+				return items.map(id => ({
+					item: id,
+					operation: {
 						...this.operation,
-						maxWidth: richText.getMaxWidth(),
-					};
-					return { item: richText, operation };
-				});
-			default: {
-				return items.map(richText => {
-					const operation = {
-						...this.operation,
-					};
-					return { item: richText, operation };
-				});
-			}
+						maxWidth: this.board.items
+							.getById(id)
+							?.getRichText()
+							?.getMaxWidth(),
+					},
+				}));
+
+			default:
+				return items.map(id => ({
+					item: id,
+					operation: { ...this.operation },
+				}));
 		}
 	}
 
