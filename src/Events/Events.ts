@@ -316,7 +316,7 @@ export function createEvents(
 									oldIdConnector.setEndPoint(
 										getControlPointData(newImageAI, 2),
 									);
-								}, 100);
+								}, 1000);
 							}
 						}
 					}
