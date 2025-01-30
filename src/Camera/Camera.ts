@@ -29,15 +29,21 @@ export class Camera {
 	private previousPositions: { point1: Point; point2: Point } | null = null;
 	boardId = "";
 	private observableItem: Item | null = null;
-	private throttledZoom: (mbr: Mbr) => void;
+	private throttledZoom: () => void;
+	private isAnimating = false;
 
 	constructor(private boardPointer = new Pointer()) {
 		this.subject.subscribe((_camera: Camera) => {
 			this.saveMatrixSnapshot();
 		});
 
-		this.throttledZoom = throttle((mbr: Mbr) => {
-			if (mbr.getHeight() > 40 && this.observableItem) {
+		this.throttledZoom = throttle(() => {
+			if (!this.observableItem) {
+				return;
+			}
+			const mbr = this.observableItem.getMbr();
+			if (mbr.getHeight() > 40) {
+				console.log(mbr);
 				this.zoomToFit(mbr, 20, 350);
 			}
 		}, 400);
@@ -75,7 +81,7 @@ export class Camera {
 
 	private observeItem = (): void => {
 		if (this.observableItem) {
-			this.throttledZoom(this.observableItem.getMbr());
+			this.throttledZoom();
 		}
 	};
 
@@ -393,6 +399,15 @@ export class Camera {
 	}
 
 	viewRectangle(mbr: Mbr, offsetInPercent = 10, duration = 500): void {
+		if (duration <= 0) {
+			duration = 1;
+		}
+
+		if (this.isAnimating) {
+			return; // Если анимация уже выполняется, выходим
+		}
+		this.isAnimating = true;
+
 		if (mbr.left === mbr.right && mbr.bottom === mbr.top) {
 			mbr.left -= 100;
 			mbr.right += 100;
@@ -444,9 +459,11 @@ export class Camera {
 
 		const startTime = performance.now();
 
-		const animate = (currentTime: number): void => {
+		const animate = (): void => {
+			const currentTime = performance.now();
 			const progress = Math.min((currentTime - startTime) / duration, 1);
 			const easedProgress = this.easeOutQuad(progress);
+			console.log(startTranslationX, startTranslationY);
 
 			this.matrix.translateX = this.lerp(
 				startTranslationX,
@@ -469,6 +486,8 @@ export class Camera {
 
 			if (progress < 1) {
 				requestAnimationFrame(animate);
+			} else {
+				this.isAnimating = false;
 			}
 		};
 
