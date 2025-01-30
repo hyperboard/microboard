@@ -206,7 +206,7 @@ export function createEvents(
 				board.camera.unsubscribeFromItem();
 				if (!item || item.itemType !== "AINode") {
 					console.log("Chat is done");
-					board.aIGeneratingOnItem = undefined;
+					board.aiGeneratingOnItem = undefined;
 					return;
 				}
 				board.selection.items.removeAll();
@@ -214,13 +214,13 @@ export function createEvents(
 				board.camera.unsubscribeFromItem();
 				board.camera.zoomToFit(item.getMbr(), 20);
 				item.getRichText().editor.deserializeMarkdown();
-				board.aIGeneratingOnItem = undefined;
+				board.aiGeneratingOnItem = undefined;
 				break;
 			case "end":
 				board.camera.unsubscribeFromItem();
 				if (!item || item.itemType !== "AINode") {
 					console.log("User's request handled");
-					board.aIGeneratingOnItem = undefined;
+					board.aiGeneratingOnItem = undefined;
 					return;
 				}
 				board.selection.items.removeAll();
@@ -232,12 +232,12 @@ export function createEvents(
 				}
 				item.getRichText().editor.deserializeMarkdown();
 				board.camera.zoomToFit(item.getMbr(), 20);
-				board.aIGeneratingOnItem = undefined;
+				board.aiGeneratingOnItem = undefined;
 				break;
 			case "error":
 				board.camera.unsubscribeFromItem();
-				if (board.aIGeneratingOnItem) {
-					const item = board.items.getById(board.aIGeneratingOnItem);
+				if (board.aiGeneratingOnItem) {
+					const item = board.items.getById(board.aiGeneratingOnItem);
 					if (item) {
 						board.selection.removeAll();
 						board.selection.add(item);
@@ -250,7 +250,7 @@ export function createEvents(
 					variant: "error",
 					duration: 4000,
 				});
-				board.aIGeneratingOnItem = undefined;
+				board.aiGeneratingOnItem = undefined;
 				break;
 			default:
 				board.camera.unsubscribeFromItem();
@@ -260,15 +260,15 @@ export function createEvents(
 					variant: "error",
 					duration: 4000,
 				});
-				if (board.aIGeneratingOnItem) {
-					const item = board.items.getById(board.aIGeneratingOnItem);
+				if (board.aiGeneratingOnItem) {
+					const item = board.items.getById(board.aiGeneratingOnItem);
 					if (item) {
 						board.selection.removeAll();
 						board.selection.add(item);
 						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
-				board.aIGeneratingOnItem = undefined;
+				board.aiGeneratingOnItem = undefined;
 		}
 	}
 
@@ -276,7 +276,7 @@ export function createEvents(
 		if (response.status === "completed" && response.base64) {
 			prepareImage(response.base64)
 				.then(imageData => {
-					const placeholderId = board.aIImagePlaceholder?.getId();
+					const placeholderId = board.aiImagePlaceholder?.getId();
 					if (placeholderId) {
 						const placeholderNode =
 							board.items.getById(placeholderId);
@@ -308,9 +308,9 @@ export function createEvents(
 
 							board.remove(placeholderNode);
 							const newImageAI = board.add(imageItem);
-							if (board.aIImageConnectorID) {
+							if (board.aiImageConnectorID) {
 								const oldIdConnector = board.items.getById(
-									board.aIImageConnectorID,
+									board.aiImageConnectorID,
 								) as Connector;
 								setTimeout(() => {
 									oldIdConnector.setEndPoint(
@@ -320,12 +320,12 @@ export function createEvents(
 							}
 						}
 					}
-					board.aIGeneratingOnItem = undefined;
+					board.aiGeneratingOnItem = undefined;
 				})
 				.catch(er => {
 					console.error("Could not create image from response:", er);
 				});
-			board.aIGeneratingOnItem = undefined;
+			board.aiGeneratingOnItem = undefined;
 			return;
 		} else if (response.status === "error") {
 			console.error("Image generation error:", response.message);
@@ -335,7 +335,7 @@ export function createEvents(
 				variant: "error",
 				duration: 4000,
 			});
-			board.aIGeneratingOnItem = undefined;
+			board.aiGeneratingOnItem = undefined;
 		} else {
 			console.warn("Unhandled image generation status:", response.status);
 		}

@@ -55,9 +55,9 @@ export class Board {
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
-	aIGeneratingOnItem: string | undefined = undefined;
-	aIImagePlaceholder: ImageItem | undefined = undefined;
-	aIImageConnectorID: string | undefined = undefined;
+	aiGeneratingOnItem: string | undefined = undefined;
+	aiImagePlaceholder: ImageItem | undefined = undefined;
+	aiImageConnectorID: string | undefined = undefined;
 	readonly camera: Camera = new Camera(this.pointer);
 	readonly presence: Presence;
 	index = new SpatialIndex(this.camera, this.pointer);
