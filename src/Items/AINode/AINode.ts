@@ -113,7 +113,7 @@ export class AINode implements Geometry {
 	//     return textRect;
 	// }
 
-	private transformPath(): void {
+	transformPath(): void {
 		const { left, right, top, bottom } =
 			this.text.getTransformedContainer();
 		if (
