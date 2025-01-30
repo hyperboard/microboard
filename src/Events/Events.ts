@@ -309,16 +309,18 @@ export function createEvents(
 
 							board.remove(placeholderNode);
 							const newImageAI = board.add(imageItem);
-							if (board.aiImageConnectorID) {
-								const oldIdConnector = board.items.getById(
-									board.aiImageConnectorID,
-								) as Connector;
-								setTimeout(() => {
+
+							newImageAI.doOnceOnLoad(() => {
+								if (board.aiImageConnectorID) {
+									const oldIdConnector = board.items.getById(
+										board.aiImageConnectorID,
+									) as Connector;
+
 									oldIdConnector.setEndPoint(
 										getControlPointData(newImageAI, 2),
 									);
-								}, 1000);
-							}
+								}
+							});
 						}
 					}
 					board.aiGeneratingOnItem = undefined;
