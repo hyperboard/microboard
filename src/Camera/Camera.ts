@@ -433,6 +433,15 @@ export class Camera {
 		const startTranslationY = this.matrix.translateY;
 		const startScale = this.matrix.scaleX;
 
+		if (duration === 0) {
+			this.matrix.translateX = translationX;
+			this.matrix.translateY = translationY;
+			this.matrix.scaleX = targetScale;
+			this.matrix.scaleY = targetScale;
+			this.subject.publish(this);
+			return;
+		}
+
 		const startTime = performance.now();
 
 		const animate = (currentTime: number): void => {

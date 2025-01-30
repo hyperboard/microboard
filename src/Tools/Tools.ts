@@ -344,7 +344,7 @@ export class Tools extends ToolContext {
 		const frameMbr = frames[newFrameIndex]?.getMbr();
 		const zoomOffset = 25;
 
-		this.board.camera.zoomToFit(frameMbr, zoomOffset);
+		this.board.camera.zoomToFit(frameMbr, zoomOffset, 0);
 		this.board.selection.removeAll();
 		this.board.selection.items.removeAll();
 		this.board.selection.items.add(frames[newFrameIndex]);
