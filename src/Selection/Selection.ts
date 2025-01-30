@@ -554,27 +554,35 @@ export class Selection {
 		return items;
 	}
 
-	getText(): RichText | null {
+	getText(biggestFontSize = true): RichText | null {
 		if (this.items.isEmpty()) {
 			return null;
 		}
 		const items = this.items.list();
 		let maxRichText: RichText | null = null;
+		let minRichText: RichText | null = null;
 		const itemType = items[0].itemType;
 		for (const item of items) {
 			if (item.itemType !== itemType) {
 				return null;
 			}
 			const richText = item.getRichText();
-			if (
-				richText &&
-				richText.getFontSize() >
-					(maxRichText ? maxRichText.getFontSize() : 0)
-			) {
-				maxRichText = richText;
+			if (richText) {
+				if (
+					!maxRichText ||
+					richText.getFontSize() > maxRichText.getFontSize()
+				) {
+					maxRichText = richText;
+				}
+				if (
+					!minRichText ||
+					richText.getFontSize() < minRichText.getFontSize()
+				) {
+					minRichText = richText;
+				}
 			}
 		}
-		return maxRichText;
+		return biggestFontSize ? maxRichText : minRichText;
 	}
 
 	isTextEmpty(): boolean {
@@ -586,8 +594,8 @@ export class Selection {
 		return sticker?.text.isAutosize() || false;
 	}
 
-	getFontSize(): number {
-		const fontSize = this.getText()?.getFontSize() || 14;
+	getFontSize(biggest = true): number {
+		const fontSize = this.getText(biggest)?.getFontSize() || 14;
 		return Math.round(fontSize);
 	}
 
@@ -1075,7 +1083,6 @@ export class Selection {
 
 	setFontSize(size: number | "auto"): void {
 		const fontSize = size === "auto" ? size : toFiniteNumber(size);
-		const isMultiple = !this.items.isSingle();
 
 		const itemsOps: ItemOp[] = [];
 		for (const item of this.items.list()) {
@@ -1095,15 +1102,20 @@ export class Selection {
 				tempStorage.setFontSize(item.itemType, fontSize);
 			}
 		}
-		if (itemsOps.some(op => !op.ops.length)) {
+
+		// fixes empty sticker unable to change fontsize, needs to be fixed inside of text
+		const emptyOps = itemsOps.filter(op => !op.ops.length);
+		if (emptyOps.length) {
+			const ids = emptyOps.map(op => op.item);
 			this.emit({
 				class: "RichText",
 				method: "setFontSize",
-				item: this.items.ids(),
+				item: ids,
 				fontSize: size,
 				context: this.getContext(),
 			});
 		}
+
 		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",
