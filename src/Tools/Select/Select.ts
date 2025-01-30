@@ -252,7 +252,7 @@ export class Select extends Tool {
 			hover.length === 1 && hover[0].itemType === "AINode";
 		const isLocked = this.board.selection.getIsLockedSelection();
 
-		if (isLocked && !(isHoverAiInput && !!this.board.AIGeneratingOnItem)) {
+		if (isLocked && !(isHoverAiInput && !!this.board.aIGeneratingOnItem)) {
 			return false;
 		}
 
@@ -780,7 +780,7 @@ export class Select extends Tool {
 					topItem === curr &&
 					!this.board.selection.getIsLockedSelection() &&
 					curr.itemType !== "AINode" &&
-					!this.board.AIGeneratingOnItem
+					!this.board.aIGeneratingOnItem
 				) {
 					curr
 						.getRichText()
@@ -908,7 +908,7 @@ export class Select extends Tool {
 		const toEdit = this.board.selection.items.getSingle();
 		if (
 			toEdit?.transformation.isLocked ||
-			(toEdit?.itemType === "AINode" && !!this.board.AIGeneratingOnItem)
+			(toEdit?.itemType === "AINode" && !!this.board.aIGeneratingOnItem)
 		) {
 			return false;
 		}
