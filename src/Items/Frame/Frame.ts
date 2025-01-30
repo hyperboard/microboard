@@ -351,6 +351,8 @@ export class Frame implements Geometry {
 			Frame16x9: { x: 1.78, y: 1 },
 			Frame4x3: { x: 1.33, y: 1 },
 			Frame1x1: { x: 1, y: 1 },
+			Frame3x2: { x: 1.5, y: 1 },
+			Frame9x18: { x: 1, y: 2 },
 			Custom: { x: 1, y: 1 },
 		};
 		const proportionalScale = {
