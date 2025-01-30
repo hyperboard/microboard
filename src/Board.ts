@@ -1331,6 +1331,7 @@ export class Board {
 				0.99,
 				this.camera.getMbr().getCenter().x,
 				this.camera.getMbr().getCenter().y,
+				0,
 			);
 		}
 		if (!wasEnclosed) {

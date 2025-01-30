@@ -183,7 +183,7 @@ export class AddFrame extends BoardTool {
 				);
 				this.frame.transformation.scaleBy(min, min);
 			}
-			// this.board.fitMbrInView(this.frame.getMbr());
+			this.board.fitMbrInView(this.frame.getMbr());
 		}
 		const frameMbr = this.frame.getMbr();
 		this.board.items
