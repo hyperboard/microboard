@@ -53,11 +53,10 @@ export class Frame implements Geometry {
 	private canChangeRatio = true;
 	newShape: FrameType | null = null;
 	transformationRenderBlock?: boolean = undefined;
-	private board?: Board;
 
 	constructor(
+		private board: Board,
 		private getItemById: (id: string) => Item | undefined,
-		private events?: Events,
 		private id = "",
 		private name = "",
 		private shapeType = defaultFrameData.shapeType,
@@ -70,13 +69,13 @@ export class Frame implements Geometry {
 	) {
 		this.textContainer = Frames[this.shapeType].textBounds.copy();
 		this.path = Frames[this.shapeType].path.copy();
-		this.transformation = new Transformation(this.id, this.events);
-		this.linkTo = new LinkTo(this.id, this.events);
+		this.transformation = new Transformation(this.id, this.board.events);
+		this.linkTo = new LinkTo(this.id, this.board.events);
 
 		this.text = new RichText(
+			board,
 			this.textContainer,
 			this.id,
-			this.events,
 			this.transformation,
 			this.linkTo,
 			this.name,
@@ -499,10 +498,10 @@ export class Frame implements Geometry {
 	}
 
 	emit(operation: FrameOperation): void {
-		if (this.events) {
+		if (this.board.events) {
 			const command = new FrameCommand([this], operation);
 			command.apply();
-			this.events.emit(operation, command);
+			this.board.events.emit(operation, command);
 		} else {
 			this.apply(operation);
 		}

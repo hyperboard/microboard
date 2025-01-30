@@ -76,7 +76,6 @@ export class Connector {
 	private optionalFindItemFn?: FindItemFn;
 	constructor(
 		private board: Board,
-		private events?: Events,
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
 		private lineStyle: ConnectorLineStyle = "straight",
@@ -86,15 +85,15 @@ export class Connector {
 		lineWidth?: ConnectionLineWidth,
 		strokeStyle?: BorderStyle,
 	) {
-		this.transformation = new Transformation(this.id, this.events);
-		this.linkTo = new LinkTo(this.id, this.events);
+		this.transformation = new Transformation(this.id, this.board.events);
+		this.linkTo = new LinkTo(this.id, this.board.events);
 		this.lineColor = lineColor ?? CONNECTOR_COLOR;
 		this.lineWidth = lineWidth ?? CONNECTOR_LINE_WIDTH;
 		this.borderStyle = strokeStyle ?? CONNECTOR_BORDER_STYLE;
 		this.text = new RichText(
+			board,
 			this.getMbr(),
 			this.id,
-			this.events,
 			new Transformation(),
 			this.linkTo,
 			t("connector.textPlaceholder", {
@@ -225,10 +224,10 @@ export class Connector {
 	}
 
 	emit(operation: ConnectorOperation): void {
-		if (this.events) {
+		if (this.board.events) {
 			const command = new ConnectorCommand([this], operation);
 			command.apply();
-			this.events.emit(operation, command);
+			this.board.events.emit(operation, command);
 		} else {
 			this.apply(operation);
 		}

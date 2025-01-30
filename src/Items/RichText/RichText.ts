@@ -42,6 +42,7 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
+import { Board } from "Board";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -96,10 +97,10 @@ export class RichText extends Mbr implements Geometry {
 	private shrinkWidth = false;
 
 	constructor(
+		private board: Board,
 		public container: Mbr,
 		private id = "",
-		private events?: Events,
-		readonly transformation = new Transformation(id, events),
+		readonly transformation = new Transformation(id, board.events),
 		linkTo?: LinkTo,
 		public placeholderText = i18next.t("board.textPlaceholder"),
 		public isInShape = false,
@@ -108,7 +109,7 @@ export class RichText extends Mbr implements Geometry {
 		private initialTextStyles: DefaultTextStyles = DEFAULT_TEXT_STYLES,
 	) {
 		super();
-		this.linkTo = linkTo || new LinkTo(this.id, this.events);
+		this.linkTo = linkTo || new LinkTo(this.id, this.board.events);
 		this.editor = new EditorContainer(
 			id,
 			this.emit,
@@ -118,16 +119,16 @@ export class RichText extends Mbr implements Geometry {
 				this.subject.publish(this);
 			},
 			(): void => {
-				if (this.events) {
-					// this.events.undo(false);
-					this.events.undo();
+				if (this.board.events) {
+					// this.board.events.undo(false);
+					this.board.events.undo();
 				}
 			},
 
 			(): void => {
-				if (this.events) {
-					// this.events.redo(false);
-					this.events.redo();
+				if (this.board.events) {
+					// this.board.events.redo(false);
+					this.board.events.redo();
 				}
 			},
 			this.getScale,
@@ -140,6 +141,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getTransformationScale.bind(this),
 			() => this.onLimitReached,
 			this.calcAutoSize.bind(this),
+			board,
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
@@ -476,15 +478,15 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	emitWithoutApplying = (op: RichTextOperation): void => {
-		if (this.events) {
-			this.events.emit(op);
+		if (this.board.events) {
+			this.board.events.emit(op);
 		}
 		// this.updateElement();
 	};
 
 	emit = (op: RichTextOperation): void => {
-		if (this.events) {
-			this.events.emitAndApply(op);
+		if (this.board.events) {
+			this.board.events.emitAndApply(op);
 		} else {
 			this.apply(op);
 		}

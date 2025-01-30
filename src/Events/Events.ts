@@ -200,6 +200,7 @@ export function createEvents(
 				if (!item || item.itemType !== "AINode") {
 					return;
 				}
+				board.lastTextEdit = Date.now();
 				item.text.editor.insertAICopiedText(chunk.content || "");
 				break;
 			case "done":

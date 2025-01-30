@@ -35,6 +35,7 @@ import { isTextEmpty } from "./isTextEmpty";
 import markdown from "remark-parse";
 import slate from "remark-slate";
 import { unified } from "unified";
+import { Board } from "Board";
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
 export class EditorContainer {
@@ -58,6 +59,7 @@ export class EditorContainer {
 	shouldEmit = true;
 	private recordedOps: SlateOp[] | null = null;
 	readonly subject = new Subject<EditorContainer>();
+	lastKnownTimestamp = -1;
 
 	constructor(
 		private id: string,
@@ -75,6 +77,7 @@ export class EditorContainer {
 		private getMatrixScale: () => number,
 		private getOnLimitReached: () => () => void,
 		private calcAutoSize: (textNodes?: BlockNode[]) => void,
+		private board: Board,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;
@@ -143,13 +146,13 @@ export class EditorContainer {
 						}
 					}
 				}
-				this.recordedOps.push(operation);
+				this.recordedOps?.push(operation);
 				this.decorated.apply(operation);
 			} else {
 				if (operation.type === "set_selection") {
 					this.decorated.apply(operation);
 					this.subject.publish(this);
-				} else if (this.id !== "") {
+				} else {
 					if (
 						operation.type !== "remove_node" &&
 						operation.type !== "remove_text" &&
@@ -164,16 +167,26 @@ export class EditorContainer {
 							return;
 						}
 					}
-					this.emit({
-						class: "RichText",
-						method: "edit",
-						item: [this.id],
-						selection: JSON.parse(
-							JSON.stringify(this.editor.selection),
-						),
-						ops: [operation],
-					});
-				} else {
+
+					if (this.lastKnownTimestamp === this.board.lastTextEdit) {
+						this.recordedOps?.push(operation);
+					} else {
+						this.lastKnownTimestamp = this.board.lastTextEdit;
+						this.startOpRecording(operation);
+						setTimeout(() => {
+							const ops = this.stopOpRecordingAndGetOps();
+							this.emitWithoutApplying({
+								class: "RichText",
+								method: "edit",
+								item: [this.id],
+								selection: JSON.parse(
+									JSON.stringify(this.editor.selection),
+								),
+								ops,
+							});
+						});
+					}
+
 					this.decorated.apply(operation);
 				}
 			}
@@ -188,8 +201,8 @@ export class EditorContainer {
 		return this;
 	}
 
-	startOpRecording(): void {
-		this.recordedOps = [];
+	startOpRecording(op?: SlateOp): void {
+		this.recordedOps = op ? [op] : [];
 	}
 
 	getSelectionOp(method: SelectionMethod, ops: SlateOp[]): SelectionOp {

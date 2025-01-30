@@ -20,6 +20,7 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
+import { Board } from "Board";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 
@@ -38,21 +39,21 @@ export class AINode implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
+		private board: Board,
 		isUserRequest = false,
 		parentNodeId?: string,
 		contextItems: string[] = [],
-		private events?: Events,
 		private id = "",
 	) {
 		this.contextItems = contextItems;
 		this.isUserRequest = isUserRequest;
 		this.parentNodeId = parentNodeId;
-		this.transformation = new Transformation(this.id, this.events);
-		this.linkTo = new LinkTo(this.id, this.events);
+		this.transformation = new Transformation(this.id, this.board.events);
+		this.linkTo = new LinkTo(this.id, this.board.events);
 		this.text = new RichText(
+			this.board,
 			new Mbr(),
 			this.id,
-			this.events,
 			this.transformation,
 			this.linkTo,
 			"\u00A0",

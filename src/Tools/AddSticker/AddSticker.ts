@@ -14,13 +14,13 @@ export class AddSticker extends BoardTool {
 	bounds = new Mbr();
 
 	static defaultWidth?: number = undefined;
-	sticker = new Sticker(undefined, undefined);
+	sticker: Sticker;
 	isDown = false;
 	constructor(board: Board) {
 		super(board);
 		const lastSticker = this.getLastSticker();
 		this.sticker = new Sticker(
-			undefined,
+			board,
 			"",
 			lastSticker?.getBackgroundColor(),
 		);
@@ -155,7 +155,7 @@ export class AddSticker extends BoardTool {
 	private getLastSticker(): Sticker | null {
 		const lastSticker = tempStorage.getStickerData();
 		if (lastSticker) {
-			return new Sticker().deserialize(lastSticker);
+			return new Sticker(this.board).deserialize(lastSticker);
 		} else {
 			return null;
 		}

@@ -46,7 +46,7 @@ function createSticker(id: string, data: ItemData, board: Board): Sticker {
 	if (!isStickerData(data)) {
 		throw new Error("Invalid data for Sticker");
 	}
-	const sticker = new Sticker(board.events).setId(id).deserialize(data);
+	const sticker = new Sticker(board).setId(id).deserialize(data);
 	return sticker;
 }
 
@@ -66,10 +66,10 @@ function createAINode(id: string, data: ItemData, board: Board): AINode {
 	}
 	const nodeData = data as AINodeData;
 	const node = new AINode(
+		board,
 		nodeData.isUserRequest,
 		nodeData.parentNodeId,
 		nodeData.contextItems,
-		board.events,
 	)
 		.setId(id)
 		.deserialize(data);
@@ -80,7 +80,7 @@ function createShape(id: string, data: ItemData, board: Board): Shape {
 	if (!isShapeData(data)) {
 		throw new Error("Invalid data for Shape");
 	}
-	const shape = new Shape(board.events).setId(id).deserialize(data);
+	const shape = new Shape(board).setId(id).deserialize(data);
 	return shape;
 }
 
@@ -88,7 +88,7 @@ function createRichText(id: string, data: ItemData, board: Board): RichText {
 	if (!isRichTextData(data)) {
 		throw new Error("Invalid data for RichText");
 	}
-	const richText = new RichText(new Mbr(), id, board.events)
+	const richText = new RichText(board, new Mbr(), id)
 		.setId(id)
 		.deserialize(data);
 	return richText;
@@ -98,9 +98,7 @@ function createConnector(id: string, data: ItemData, board: Board): Connector {
 	if (!isConnectorData(data)) {
 		throw new Error("Invalid data for Connector");
 	}
-	const connector = new Connector(board, board.events)
-		.setId(id)
-		.deserialize(data);
+	const connector = new Connector(board).setId(id).deserialize(data);
 	return connector;
 }
 
@@ -126,7 +124,7 @@ function createFrame(id: string, data: ItemData, board: Board): Frame {
 	if (!isFrameData(data)) {
 		throw new Error("Invalid data for Drawing");
 	}
-	const frame = new Frame(board.items.getById.bind(board.items), board.events)
+	const frame = new Frame(board, board.items.getById.bind(board.items))
 		.setId(id)
 		.setBoard(board)
 		.deserialize(data);

@@ -16,8 +16,8 @@ export class AddFrame extends BoardTool {
 	constructor(private board: Board) {
 		super(board);
 		this.frame = new Frame(
+			board,
 			board.items.getById.bind(board.items),
-			undefined,
 			"",
 			`Frame ${this.board.getMaxFrameSerial() + 1}`,
 		);

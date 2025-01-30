@@ -28,6 +28,7 @@ import {
 	translateElementBy,
 } from "Board/HTMLRender";
 import { SessionStorage } from "App/SessionStorage";
+import { Board } from "Board";
 
 export const stickerColors = {
 	Purple: "rgb(233, 208, 255)",
@@ -85,16 +86,16 @@ export class Sticker implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
-		private events?: Events,
+		private board: Board,
 		private id = "",
 		private backgroundColor = defaultStickerData.backgroundColor,
 	) {
-		this.linkTo = new LinkTo(this.id, this.events);
-		this.transformation = new Transformation(this.id, this.events);
+		this.linkTo = new LinkTo(this.id, this.board.events);
+		this.transformation = new Transformation(this.id, this.board.events);
 		this.text = new RichText(
+			board,
 			this.textContainer,
 			this.id,
-			this.events,
 			this.transformation,
 			this.linkTo,
 			"\u00A0",
@@ -149,10 +150,10 @@ export class Sticker implements Geometry {
 	}
 
 	emit(operation: StickerOperation): void {
-		if (this.events) {
+		if (this.board.events) {
 			const command = new StickerCommand([this], operation);
 			command.apply();
-			this.events.emit(operation, command);
+			this.board.events.emit(operation, command);
 		} else {
 			this.apply(operation);
 		}

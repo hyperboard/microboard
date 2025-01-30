@@ -34,6 +34,7 @@ import {
 } from "Board/HTMLRender";
 import { UiDivButton } from "View/Ui/UiButton";
 import { DOMSVGFactory } from "@bundled-es-modules/pdfjs-dist/types/src/display/display_utils";
+import { Board } from "Board";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -51,7 +52,7 @@ export class Shape implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
-		private events?: Events,
+		private board: Board,
 		private id = "",
 		private shapeType = defaultShapeData.shapeType,
 		private backgroundColor = defaultShapeData.backgroundColor,
@@ -62,14 +63,14 @@ export class Shape implements Geometry {
 		private borderWidth = defaultShapeData.borderWidth,
 		private mbr = Shapes[shapeType].path.getMbr().copy(),
 	) {
-		this.linkTo = new LinkTo(this.id, this.events);
-		this.transformation = new Transformation(this.id, this.events);
+		this.linkTo = new LinkTo(this.id, this.board.events);
+		this.transformation = new Transformation(this.id, this.board.events);
 		this.path = Shapes[this.shapeType].path.copy();
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text = new RichText(
+			board,
 			this.textContainer,
 			this.id,
-			this.events,
 			this.transformation,
 			this.linkTo,
 			"\u00A0",
@@ -137,10 +138,10 @@ export class Shape implements Geometry {
 	}
 
 	emit(operation: ShapeOperation): void {
-		if (this.events) {
+		if (this.board.events) {
 			const command = new ShapeCommand([this], operation);
 			command.apply();
-			this.events.emit(operation, command);
+			this.board.events.emit(operation, command);
 		} else {
 			this.apply(operation);
 		}

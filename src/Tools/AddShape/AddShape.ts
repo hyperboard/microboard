@@ -25,7 +25,7 @@ export class AddShape extends BoardTool {
 		const data = tempStorage.getShapeData();
 		if (data) {
 			this.shape = new Shape(
-				undefined,
+				board,
 				"",
 				data.shapeType,
 				data.backgroundColor,
@@ -37,7 +37,7 @@ export class AddShape extends BoardTool {
 			);
 			this.setShapeType(data.shapeType);
 		} else {
-			this.shape = new Shape();
+			this.shape = new Shape(board);
 		}
 
 		this.handleKeyDownBound = this.handleKeyDown.bind(this);
@@ -70,7 +70,7 @@ export class AddShape extends BoardTool {
 			splittedCurrentType[0] !== splittedNewType[0] &&
 			!(splittedNewType.length === 1 && splittedCurrentType.length === 1)
 		) {
-			this.shape = new Shape();
+			this.shape = new Shape(this.board);
 		}
 		this.type = type;
 		this.board.tools.publish();

@@ -48,7 +48,7 @@ export class AddText extends BoardTool {
 		if (this.line) {
 			const board = this.board;
 
-			const richText = new RichText(new Mbr());
+			const richText = new RichText(this.board, new Mbr());
 			richText.transformation.translateTo(
 				this.bounds.left,
 				this.bounds.top,

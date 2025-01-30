@@ -42,7 +42,7 @@ export function quickAddItem(
 	connector: Connector,
 ): void {
 	const optionalShape = new Shape(
-		undefined,
+		board,
 		undefined,
 		type !== "copy" ? type : "Rectangle",
 	);
