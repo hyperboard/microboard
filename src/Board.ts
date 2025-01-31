@@ -108,7 +108,6 @@ export class Board {
 		);
 		this.selection.events = this.events;
 		if (snapshot && currIndex === 0) {
-			console.log(snapshot, "boardSnapsho");
 			this.deserialize(snapshot);
 		}
 		this.resolveConnecting();
@@ -789,7 +788,6 @@ export class Board {
 		}
 	}
 	deserialize(snapshot: BoardSnapshot): void {
-		console.log(snapshot, "snapshot");
 		const { events, items } = snapshot;
 		this.index.clear();
 		const createdConnectors: Record<
@@ -1264,21 +1262,17 @@ export class Board {
 
 	duplicate(itemsMap: { [key: string]: ItemData }): void {
 		const newItemIdMap: { [key: string]: string } = {};
-		console.log("itemsMap", itemsMap);
 		for (const itemId in itemsMap) {
 			// Generate new IDs for all the items being pasted
 			const newItemId = this.getNewItemId();
 			newItemIdMap[itemId] = newItemId;
-			console.log("itemId", itemId, "newItemId", newItemId);
 		}
 
-		console.log("newItemIdMap", newItemIdMap);
 		const replaceConnectorHeadItemId = (point: ControlPointData): void => {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
 					const newItemId = newItemIdMap[point.itemId];
-					// console.log('newItemId', newItemId, 'originalId', point.itemId)
 					if (newItemId) {
 						point.itemId = newItemId;
 					}

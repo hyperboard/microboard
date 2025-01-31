@@ -196,7 +196,6 @@ export class AddFrame extends BoardTool {
 			.filter(item => item.parent === "Board")
 			.filter(item => this.frame.handleNesting(item))
 			.forEach(item => this.frame.emitAddChild(item));
-		console.log("12");
 		const frame = this.board.add(this.frame);
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.editor.moveCursorToEndOfTheText();
@@ -207,7 +206,6 @@ export class AddFrame extends BoardTool {
 		this.board.selection.editText();
 		this.board.tools.select();
 		this.board.tools.publish();
-		console.log("13");
 	}
 
 	initTransformation(sx?: number, sy?: number): void {

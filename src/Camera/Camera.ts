@@ -43,7 +43,6 @@ export class Camera {
 			}
 			const mbr = this.observableItem.getMbr();
 			if (mbr.getHeight() > 40) {
-				console.log(mbr);
 				this.zoomToFit(mbr, 20, 350);
 			}
 		}, 400);
@@ -463,7 +462,6 @@ export class Camera {
 			const currentTime = performance.now();
 			const progress = Math.min((currentTime - startTime) / duration, 1);
 			const easedProgress = this.easeOutQuad(progress);
-			console.log(startTranslationX, startTranslationY);
 
 			this.matrix.translateX = this.lerp(
 				startTranslationX,
