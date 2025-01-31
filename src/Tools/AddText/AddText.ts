@@ -54,7 +54,7 @@ export class AddText extends BoardTool {
 				this.bounds.top,
 			);
 			richText.transformation.scaleBy(1, 1);
-			richText.editor.setMaxWidth(600);
+			richText.editor.maxWidth = 600;
 			richText.editor.setSelectionHorisontalAlignment("left");
 			richText.insideOf = richText.itemType;
 			const text = await board.add(richText);
