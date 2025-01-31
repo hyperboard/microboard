@@ -152,9 +152,6 @@ export class Frame implements Geometry {
 			if (!this.children.includes(childId) && foundItem) {
 				this.children.push(childId);
 				foundItem.parent = this.getId();
-				if (foundItem.itemType === "AINode") {
-					foundItem.transformPath();
-				}
 				this.updateMbr();
 				this.subject.publish(this);
 			} else if (!foundItem && !noWarn) {
