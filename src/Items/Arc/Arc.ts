@@ -96,15 +96,24 @@ export class Arc {
 		const localX = Math.cos(rotation) * dx + Math.sin(rotation) * dy;
 		const localY = -Math.sin(rotation) * dx + Math.cos(rotation) * dy;
 
-		const angle = Math.atan2(localY / radiusY, localX / radiusX);
+		let angle = Math.atan2(localY / radiusY, localX / radiusX);
+
+		// Normalize the angle to be within the arc's start and end angles
 		const startAngle = this.startAngle;
 		const endAngle = this.endAngle;
-		let parameter = (angle - startAngle) / (endAngle - startAngle);
-		if (parameter < 0) {
-			parameter = 0;
-		} else if (parameter > 1) {
-			parameter = 1;
+		if (endAngle < startAngle) {
+			angle = (angle + 2 * Math.PI) % (2 * Math.PI);
 		}
+
+		let parameter = (angle - startAngle) / (endAngle - startAngle);
+
+		// Adjust parameter to be within [0, 1]
+		if (parameter < 0) {
+			parameter += 1;
+		} else if (parameter > 1) {
+			parameter -= 1;
+		}
+
 		return parameter;
 	}
 

@@ -7,6 +7,7 @@ import {
 	Paths,
 	Matrix,
 	TransformationOperation,
+	Connector,
 } from "..";
 import { BasicShapes } from "./Basic";
 import { ShapeType } from "./index";
@@ -35,6 +36,12 @@ import {
 import { UiDivButton } from "View/Ui/UiButton";
 import { DOMSVGFactory } from "@bundled-es-modules/pdfjs-dist/types/src/display/display_utils";
 import { Board } from "Board";
+import { FixedConnectorPoint, FixedPoint } from "Board/Items/Connector";
+import { getControlPointData } from "Board/Selection/QuickAddButtons";
+import {
+	getControlPoint,
+	toRelativePoint,
+} from "Board/Items/Connector/ControlPoint";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -262,6 +269,46 @@ export class Shape implements Geometry {
 		this.shapeType = shapeType;
 		this.initPath();
 		this.transformPath();
+
+		for (const connector of this.board.items.listAll()) {
+			if (
+				connector instanceof Connector &&
+				(connector.getConnectedItems().endItem?.getId() ===
+					this.getId() ||
+					connector.getConnectedItems().startItem?.getId() ===
+						this.getId())
+			) {
+				if (
+					connector.getConnectedItems().endItem?.getId() ===
+					this.getId()
+				) {
+					const nearestPoint = this.getNearestEdgePointTo(
+						connector.getEndPoint().copy(),
+					);
+					connector.setEndPoint(
+						new FixedPoint(
+							this,
+							toRelativePoint(nearestPoint, this),
+						),
+					);
+				}
+
+				if (
+					connector.getConnectedItems().startItem?.getId() ===
+					this.getId()
+				) {
+					const nearestPoint = this.getNearestEdgePointTo(
+						connector.getStartPoint().copy(),
+					);
+					connector.setStartPoint(
+						new FixedPoint(
+							this,
+							toRelativePoint(nearestPoint, this),
+						),
+					);
+				}
+			}
+		}
 	}
 
 	setShapeType(shapeType: ShapeType): void {

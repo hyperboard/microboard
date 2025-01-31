@@ -1154,25 +1154,137 @@ export class Board {
 		return [parentItem, ...this.getParentAINodes(parentItem)];
 	}
 
+	// paste(itemsMap: ItemsMap, select = true): void {
+	// 	const newItemIdMap: { [key: string]: string } = {};
+
+	// 	for (const itemId in itemsMap) {
+	// 		// Generate new IDs for all the items being pasted
+	// 		const newItemId = this.getNewItemId();
+	// 		newItemIdMap[itemId] = newItemId;
+	// 	}
+
+	// 	// Replace connector
+	// 	function replaceConnectorItem(point: ControlPointData): void {
+	// 		switch (point.pointType) {
+	// 			case "Floating":
+	// 			case "Fixed":
+	// 				const newItemId = newItemIdMap[point.itemId];
+	// 				if (newItemId) {
+	// 					point.itemId = newItemId;
+	// 				}
+	// 				break;
+	// 		}
+	// 	}
+
+	// 	for (const itemId in itemsMap) {
+	// 		const itemData = itemsMap[itemId];
+
+	// 		if (itemData.itemType === "Connector") {
+	// 			replaceConnectorItem(itemData.startPoint);
+	// 			replaceConnectorItem(itemData.endPoint);
+	// 		}
+	// 	}
+
+	// 	const newMap: { [key: string]: ItemData } = {};
+	// 	// iterate over itemsMap to find the minimal translation
+	// 	let minX = Infinity;
+	// 	let minY = Infinity;
+	// 	for (const itemId in itemsMap) {
+	// 		const itemData = itemsMap[itemId];
+	// 		const { translateX, translateY } = itemData.transformation || {
+	// 			translateX: 0,
+	// 			translateY: 0,
+	// 		};
+
+	// 		if (translateX < minX) {
+	// 			minX = translateX;
+	// 		}
+
+	// 		if (translateY < minY) {
+	// 			minY = translateY;
+	// 		}
+	// 	}
+
+	// 	if (minX === Infinity) {
+	// 		minX = 0;
+	// 	}
+
+	// 	if (minY === Infinity) {
+	// 		minY = 0;
+	// 	}
+
+	// 	const { x, y } = this.pointer.point;
+
+	// 	for (const itemId in itemsMap) {
+	// 		const itemData = itemsMap[itemId];
+	// 		const newItemId = newItemIdMap[itemId];
+	// 		const { translateX, translateY } = itemData.transformation || {
+	// 			translateX: 0,
+	// 			translateY: 0,
+	// 		};
+	// 		if (itemData.itemType === "Connector") {
+	// 			if (itemData.startPoint.pointType === "Board") {
+	// 				itemData.startPoint.x += -minX + x;
+	// 				itemData.startPoint.y += -minY + y;
+	// 			}
+	// 			if (itemData.endPoint.pointType === "Board") {
+	// 				itemData.endPoint.x += -minX + x;
+	// 				itemData.endPoint.y += -minY + y;
+	// 			}
+	// 		} else if (itemData.transformation) {
+	// 			itemData.transformation.translateX = translateX - minX + x;
+	// 			itemData.transformation.translateY = translateY - minY + y;
+	// 		}
+	// 		if (itemData.itemType === "Frame") {
+	// 			// handle new id for children
+	// 			itemData.children = itemData.children.map(
+	// 				childId => newItemIdMap[childId],
+	// 			);
+	// 		}
+	// 		newMap[newItemId] = itemData;
+	// 	}
+
+	// 	this.emit({
+	// 		class: "Board",
+	// 		method: "paste",
+	// 		itemsMap: newMap,
+	// 		select,
+	// 	});
+
+	// 	const items = Object.keys(newMap)
+	// 		.map(id => this.items.getById(id))
+	// 		.filter(item => typeof item !== "undefined");
+	// 	this.handleNesting(items);
+	// 	this.selection.removeAll();
+	// 	this.selection.add(items);
+	// 	this.selection.setContext("EditUnderPointer");
+
+	// 	return;
+	// }
+
 	duplicate(itemsMap: { [key: string]: ItemData }): void {
 		const newItemIdMap: { [key: string]: string } = {};
+		console.log("itemsMap", itemsMap);
+		for (const itemId in itemsMap) {
+			// Generate new IDs for all the items being pasted
+			const newItemId = this.getNewItemId();
+			newItemIdMap[itemId] = newItemId;
+			console.log("itemId", itemId, "newItemId", newItemId);
+		}
 
+		console.log("newItemIdMap", newItemIdMap);
 		const replaceConnectorHeadItemId = (point: ControlPointData): void => {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
 					const newItemId = newItemIdMap[point.itemId];
+					// console.log('newItemId', newItemId, 'originalId', point.itemId)
 					if (newItemId) {
 						point.itemId = newItemId;
 					}
 					break;
 			}
 		};
-
-		for (const itemId in itemsMap) {
-			const newItemId = this.getNewItemId();
-			newItemIdMap[itemId] = newItemId;
-		}
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
@@ -1262,7 +1374,6 @@ export class Board {
 
 			newMap[newItemId] = itemData;
 		}
-
 		this.emit({
 			class: "Board",
 			method: "duplicate",

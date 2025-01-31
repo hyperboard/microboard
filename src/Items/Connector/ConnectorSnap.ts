@@ -88,7 +88,6 @@ export class ConnectorSnap {
 	pointerMove(): void {
 		this.setHover();
 		const nearest = this.getNearest();
-
 		if (this.isNearBorder(nearest)) {
 			this.snap.item = nearest;
 		} else {
@@ -291,6 +290,7 @@ export class ConnectorSnap {
 
 	render(context: DrawingContext): void {
 		const { path, anchors, point } = this.snap;
+
 		if (path) {
 			path.render(context);
 		}

@@ -29,6 +29,7 @@ import {
 	ControlPoint,
 	ControlPointData,
 	FindItemFn,
+	FixedPoint,
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
