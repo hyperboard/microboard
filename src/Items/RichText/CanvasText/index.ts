@@ -289,7 +289,7 @@ function createFlowDiv(
 		flow.h(
 			"div",
 			{ style: paragraph.style },
-			getChildSpanElements(paragraph, listData),
+			getChildSpanElements(paragraph, listData, listData?.nodeIndex || 0),
 		),
 	);
 }
@@ -300,9 +300,10 @@ function getChildSpanElements(
 		children: { style: flow.DeclaredStyle; text: string }[];
 	},
 	listData: ListCreationData | null,
+	nodeIndex: number,
 ) {
 	const childElements: flow.HTMLElement[] = [];
-	if (listData) {
+	if (listData && nodeIndex === 0) {
 		const paddingLeft =
 			listData.listLevel > 1 ? (listData.listLevel - 1) * 2.5 : 0;
 		childElements.push(
@@ -319,13 +320,27 @@ function getChildSpanElements(
 		);
 	}
 
-	childElements.push(
-		...paragraph.children.map(child => {
-			return flow.h("span", { style: child.style }, [child.text]);
-		}),
-	);
+	for (let i = 0; i < paragraph.children.length; i++) {
+		const child = paragraph.children[i];
+		const text = child.text;
+		if (
+			getIsLetter(text[text.length - 1]) &&
+			paragraph.children[i + 1] &&
+			getIsLetter(paragraph.children[i + 1].text[0])
+		) {
+			childElements.push(
+				flow.h("span", { style: child.style }, [text + " "]),
+			);
+			continue;
+		}
+		childElements.push(flow.h("span", { style: child.style }, [text]));
+	}
 
 	return childElements;
+}
+
+function getIsLetter(symbol: string) {
+	return /^[\p{L}]/u.test(symbol);
 }
 
 function getListMark(isNumberedList: boolean, listItemIndex: number) {
