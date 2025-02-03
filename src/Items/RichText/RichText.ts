@@ -240,6 +240,9 @@ export class RichText extends Mbr implements Geometry {
 		const shouldUpdateLayout = this.getTextWidth() > (maxWidth || 0);
 		if (shouldUpdateLayout) {
 			this.updateElement();
+			if (this.insideOf === "AINode") {
+				this.subject.publish(this);
+			}
 		} else {
 			this.transformCanvas();
 			this.recoordinate(maxWidth);
@@ -292,6 +295,9 @@ export class RichText extends Mbr implements Geometry {
 			this.editor.verticalAlignment,
 		);
 		this.transformCanvas();
+		if (this.insideOf === "AINode") {
+			this.subject.publish(this);
+		}
 
 		this.updateRequired = false;
 	}

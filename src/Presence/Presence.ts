@@ -24,6 +24,7 @@ import {
 	UserJoinMsg,
 } from "./Events";
 import { PRESENCE_COLORS } from "./consts";
+import { Selection } from "Board/Selection/Selection";
 
 const SECOND = 1000;
 const CURSOR_FPS = 3;
@@ -124,12 +125,14 @@ export class Presence {
 			}
 		});
 
-		this.board.selection.subject.subscribe(selection => {
-			this.emit({
-				method: "Selection",
-				selectedItems: selection.items.ids(),
-				timestamp: Date.now(),
-			});
+		const throttleSelectionEvent = throttleWithDebounce(
+			this.sendSelectionEvent.bind(this),
+			400,
+			400,
+		);
+
+		this.board.selection.subject.subscribe(_selection => {
+			throttleSelectionEvent(this.board.selection);
 		});
 	}
 
@@ -156,6 +159,14 @@ export class Presence {
 				shearY: camera.matrix.shearY,
 			});
 		}
+	}
+
+	private sendSelectionEvent(selection: Selection): void {
+		this.emit({
+			method: "Selection",
+			selectedItems: selection.items.ids(),
+			timestamp: Date.now(),
+		});
 	}
 
 	getIsDisableTrackingNeeded(): boolean {

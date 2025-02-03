@@ -103,6 +103,7 @@ export class AINode implements Geometry {
 			this.transformPath();
 			this.subject.publish(this);
 		});
+
 		this.linkTo.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
