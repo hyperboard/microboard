@@ -99,6 +99,10 @@ export class AINode implements Geometry {
 			this.transformPath();
 			this.subject.publish(this);
 		});
+		this.text.transformation.subject.subscribe(() => {
+			this.transformPath();
+			this.subject.publish(this);
+		});
 		this.linkTo.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
@@ -106,13 +110,6 @@ export class AINode implements Geometry {
 
 		this.transformPath();
 	}
-
-	// updateMbr(): Mbr {
-	//     const rect = this.path.getMbr();
-	//     const textRect = this.text.getMbr();
-	//     rect.combine([textRect]);
-	//     return textRect;
-	// }
 
 	transformPath(): void {
 		const { left, right, top, bottom } =
