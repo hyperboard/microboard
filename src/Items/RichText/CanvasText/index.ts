@@ -288,44 +288,52 @@ function createFlowDiv(
 	return dropflowNodes.map(paragraph =>
 		flow.h(
 			"div",
-			{ style: { ...paragraph.style } },
-			paragraph.children.map((child, childIndex) => {
-				let text = child.text;
-				if (listData) {
-					text =
-						getListMark(
-							listData.listLevel,
-							listData.isNumberedList,
-							listData.index,
-							childIndex + (listData.nodeIndex || 0),
-						) + text;
-				}
-				return flow.h("span", { style: child.style }, [text]);
-			}),
+			{ style: paragraph.style },
+			getChildSpanElements(paragraph, listData),
 		),
 	);
 }
 
-function getListMark(
-	nestingLevel: number,
-	isNumberedList: boolean,
-	listItemIndex: number,
-	nodeIndex: number,
+function getChildSpanElements(
+	paragraph: {
+		style: flow.DeclaredStyle;
+		children: { style: flow.DeclaredStyle; text: string }[];
+	},
+	listData: ListCreationData | null,
 ) {
-	let mark = "";
-	if (nestingLevel > 1) {
-		for (let i = 1; i < nestingLevel; i++) {
-			mark += "			  ";
-		}
+	const childElements: flow.HTMLElement[] = [];
+	if (listData) {
+		const paddingLeft =
+			listData.listLevel > 1 ? (listData.listLevel - 1) * 2.5 : 0;
+		childElements.push(
+			flow.h(
+				"span",
+				{
+					style: {
+						...paragraph.children[0].style,
+						paddingLeft: { value: paddingLeft, unit: "em" },
+					},
+				},
+				[getListMark(listData.isNumberedList, listData.index)],
+			),
+		);
 	}
+
+	childElements.push(
+		...paragraph.children.map(child => {
+			return flow.h("span", { style: child.style }, [child.text]);
+		}),
+	);
+
+	return childElements;
+}
+
+function getListMark(isNumberedList: boolean, listItemIndex: number) {
+	let mark = "";
 	if (isNumberedList) {
-		if (nodeIndex === 0) {
-			mark += (listItemIndex + 1).toString() + ". ";
-		}
+		mark += (listItemIndex + 1).toString() + ". ";
 	} else {
-		if (nodeIndex === 0) {
-			mark += "•  ";
-		}
+		mark += "•  ";
 	}
 
 	return mark;
