@@ -76,7 +76,6 @@ export class EditorContainer {
 		private getMatrixScale: () => number,
 		private getOnLimitReached: () => () => void,
 		private calcAutoSize: (textNodes?: BlockNode[]) => void,
-		private board: Board,
 	) {
 		this.editor = withHistory(withReact(createEditor()));
 		const editor = this.editor;

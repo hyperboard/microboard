@@ -141,7 +141,6 @@ export class RichText extends Mbr implements Geometry {
 			this.getTransformationScale.bind(this),
 			() => this.onLimitReached,
 			this.calcAutoSize.bind(this),
-			board,
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			this.subject.publish(this);
