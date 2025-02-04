@@ -65,7 +65,6 @@ export class Board {
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
 	private interfaceType: InterfaceType = "loading";
-	lastTextEdit = 0;
 
 	private resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {

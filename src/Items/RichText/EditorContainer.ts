@@ -59,7 +59,6 @@ export class EditorContainer {
 	shouldEmit = true;
 	private recordedOps: SlateOp[] | null = null;
 	readonly subject = new Subject<EditorContainer>();
-	lastKnownTimestamp = -1;
 
 	constructor(
 		private id: string,
@@ -168,13 +167,15 @@ export class EditorContainer {
 						}
 					}
 
-					if (this.lastKnownTimestamp === this.board.lastTextEdit) {
-						this.recordedOps?.push(operation);
+					if (this.recordedOps && this.recordedOps.length !== 0) {
+						this.recordedOps.push(operation);
 					} else {
-						this.lastKnownTimestamp = this.board.lastTextEdit;
 						this.startOpRecording(operation);
 						setTimeout(() => {
 							const ops = this.stopOpRecordingAndGetOps();
+							if (ops.length === 0) {
+								return;
+							}
 							this.emitWithoutApplying({
 								class: "RichText",
 								method: "edit",

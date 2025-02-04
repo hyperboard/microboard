@@ -290,7 +290,6 @@ export class Selection {
 		if (!text) {
 			return;
 		}
-		this.board.lastTextEdit = Date.now();
 		if (shouldReplace) {
 			text.editor.clearText();
 			text.editor.editor.insertText(shouldReplace);
