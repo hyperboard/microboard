@@ -244,6 +244,7 @@ export function createEvents(
 						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
+				console.log("Error AI generate", chunk.error);
 				notify({
 					header: t("AIInput.textGenerationError.header"),
 					body: t("AIInput.textGenerationError.body"),
