@@ -131,6 +131,12 @@ export function createEvents(
 	let saveFileTimeout: NodeJS.Timeout | null = null;
 	let notificationId: null | string = null;
 
+	const publishSnapshotBeforeUnload = () => {
+		handleCreateSnapshotRequestMessage();
+	};
+
+	window.addEventListener("beforeunload", publishSnapshotBeforeUnload);
+
 	const beforeUnloadListener = (event: BeforeUnloadEvent): void => {
 		event.preventDefault();
 		event.returnValue = "Do not leave the page to avoid losing data";
@@ -580,6 +586,10 @@ export function createEvents(
 			if (firstSentTime && date - firstSentTime >= RESEND_INTERVAL * 5) {
 				board.presence.clear();
 				if (!notificationId) {
+					window.removeEventListener(
+						"beforeunload",
+						publishSnapshotBeforeUnload,
+					);
 					window.addEventListener(
 						"beforeunload",
 						beforeUnloadListener,
@@ -628,6 +638,10 @@ export function createEvents(
 				);
 				toast.dismiss(notificationId);
 				notificationId = null;
+				window.addEventListener(
+					"beforeunload",
+					publishSnapshotBeforeUnload,
+				);
 			}
 			currentSequenceNumber++;
 			pendingEvent.event.order = msg.order;
@@ -907,6 +921,10 @@ export function createEvents(
 		canRedo,
 		removeBeforeUnloadListener: () => {
 			window.removeEventListener("beforeunload", beforeUnloadListener);
+			window.addEventListener(
+				"beforeunload",
+				publishSnapshotBeforeUnload,
+			);
 		},
 		getNotificationId: () => notificationId,
 		getSaveFileTimeout: () => saveFileTimeout,
