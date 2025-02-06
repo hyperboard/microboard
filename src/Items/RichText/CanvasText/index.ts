@@ -323,25 +323,25 @@ function getChildSpanElements(
 	for (let i = 0; i < paragraph.children.length; i++) {
 		const child = paragraph.children[i];
 		const text = child.text;
-		if (
-			getIsLetter(text[text.length - 1]) &&
-			paragraph.children[i + 1] &&
-			getIsLetter(paragraph.children[i + 1].text[0])
-		) {
-			childElements.push(
-				flow.h("span", { style: child.style }, [text + " "]),
-			);
-			continue;
-		}
+		// if (
+		// 	getIsLetter(text[text.length - 1]) &&
+		// 	paragraph.children[i + 1] &&
+		// 	getIsLetter(paragraph.children[i + 1].text[0])
+		// ) {
+		// 	childElements.push(
+		// 		flow.h("span", { style: child.style }, [text + " "]),
+		// 	);
+		// 	continue;
+		// }
 		childElements.push(flow.h("span", { style: child.style }, [text]));
 	}
 
 	return childElements;
 }
 
-function getIsLetter(symbol: string) {
-	return /^[\p{L}]/u.test(symbol);
-}
+// function getIsLetter(symbol: string) {
+// 	return /^[\p{L}]/u.test(symbol);
+// }
 
 function getListMark(isNumberedList: boolean, listItemIndex: number) {
 	let mark = "";

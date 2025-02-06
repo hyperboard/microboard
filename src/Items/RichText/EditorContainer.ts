@@ -36,6 +36,7 @@ import markdown from "remark-parse";
 import slate from "remark-slate";
 import { unified } from "unified";
 import { Board } from "Board";
+
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
 export class EditorContainer {
@@ -887,6 +888,7 @@ export class EditorContainer {
 
 	setNodeChildrenStyles(node: BlockNode) {
 		let fontStyles = Editor.marks(this.editor);
+
 		switch (node.type) {
 			case "heading_one":
 				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
@@ -909,10 +911,24 @@ export class EditorContainer {
 			.map((children: TextNode | LinkNode) => {
 				return this.convertLinkNodeToTextNode(children);
 			})
-			.map((children: TextNode) => ({
-				...fontStyles,
-				...children,
-			}));
+			.map((children: TextNode, index) => {
+				const nextChildren: TextNode = node.children[index + 1];
+				console.log("1", children);
+
+				const isNoSpaceBetweenNextTextAndCurrent =
+					nextChildren &&
+					nextChildren.text[nextChildren.text.length - 1] !== " " &&
+					!children.text.startsWith(" ");
+
+				if (isNoSpaceBetweenNextTextAndCurrent) {
+					children.text += " ";
+				}
+
+				return {
+					...fontStyles,
+					...children,
+				};
+			});
 		node.horisontalAlignment = this.horisontalAlignment;
 	}
 
