@@ -101,6 +101,9 @@ export class ImageItem extends Mbr {
 		this.image.crossOrigin = "anonymous";
 		this.image.onload = this.onLoad;
 		this.image.onerror = this.onError;
+		if (typeof base64 === "string") {
+			this.image.src = base64;
+		}
 		this.linkTo.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
