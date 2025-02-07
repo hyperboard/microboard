@@ -81,7 +81,7 @@ export class ImageItem extends Mbr {
 	loadCallbacks: ((image: ImageItem) => void)[] = [];
 	beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
-	private _storageLink: string;
+	private storageLink: string;
 	imageDimension: Dimension;
 	board: Board;
 
@@ -94,18 +94,13 @@ export class ImageItem extends Mbr {
 		super();
 		this.linkTo = new LinkTo(this.id, events);
 		this.board = board;
-		this.storageLink = storageLink;
+		this.setStorageLink(storageLink);
 		this.imageDimension = imageDimension;
 		this.transformation = new Transformation(id, events);
 		this.image = new Image();
 		this.image.crossOrigin = "anonymous";
 		this.image.onload = this.onLoad;
 		this.image.onerror = this.onError;
-		if (typeof base64 === "string") {
-			this.image.src = base64;
-		} else {
-			this.image.src = storageLink;
-		}
 		this.linkTo.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
@@ -113,19 +108,15 @@ export class ImageItem extends Mbr {
 		this.transformation.subject.subscribe(this.onTransform);
 	}
 
-	set storageLink(link: string) {
+	setStorageLink(link: string) {
 		try {
 			const url = new URL(link);
 			// If the link is a valid URL, replace its domain with window.location.origin
-			this._storageLink = `${window.location.origin}${url.pathname}`;
+			this.storageLink = `${window.location.origin}${url.pathname}`;
 		} catch (_) {
 			// If the link is not a valid URL, prepend it with storageUrl
-			this._storageLink = `${storageURL}/${link}`;
+			this.storageLink = `${storageURL}/${link}`;
 		}
-	}
-
-	get storageLink(): string {
-		return this._storageLink;
 	}
 
 	handleError = (): void => {
@@ -225,6 +216,9 @@ export class ImageItem extends Mbr {
 			this.setCoordinates();
 			this.shootLoadCallbacks();
 		};
+		if (data.storageLink) {
+			this.setStorageLink(data.storageLink);
+		}
 
 		this.image = getPlaceholderImage(
 			this.board,
@@ -235,10 +229,8 @@ export class ImageItem extends Mbr {
 		const storageImage = new Image();
 
 		storageImage.onload = () => {
-			if (!this.updated) {
-				this.image = storageImage;
-				this.subject.publish(this);
-			}
+			this.image = storageImage;
+			this.onLoad();
 		};
 
 		storageImage.onerror = this.onError;
@@ -254,10 +246,6 @@ export class ImageItem extends Mbr {
 		} else {
 			this.apply(operation);
 		}
-	}
-
-	setStorageLink(src: string): void {
-		this.storageLink = src;
 	}
 
 	setDimensions(dim: Dimension): void {
@@ -279,7 +267,6 @@ export class ImageItem extends Mbr {
 				}
 				this.setStorageLink(op.data.storageLink);
 				this.setDimensions(op.data.imageDimension);
-				this.updated = true;
 				this.subject.publish(this);
 				break;
 		}
