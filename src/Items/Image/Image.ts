@@ -223,6 +223,10 @@ export class ImageItem extends Mbr {
 			this.setStorageLink(data.storageLink);
 		}
 
+		if (this.image.src) {
+			return this;
+		}
+
 		this.image = getPlaceholderImage(
 			this.board,
 			data.imageDimension,
