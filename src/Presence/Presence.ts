@@ -1,13 +1,12 @@
-import { Subject } from "Subject";
 import { Board } from "Board/Board";
-import { Events } from "Board/Events";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Item, Matrix, Mbr } from "Board/Items";
 import { Camera } from "Board/Camera";
-import { throttleWithDebounce } from "shared/utils";
-import { isMicroboard } from "lib/isMicroboard";
-import { catmullRomInterpolate, rgbToRgba } from "./helpers";
+import { Events } from "Board/Events";
+import { Item, Matrix, Mbr } from "Board/Items";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { Selection } from "Board/Selection/Selection";
 import i18n from "Lang";
+import { Subject } from "Subject";
+import { throttleWithDebounce } from "shared/utils";
 import {
 	BringToMeEvent,
 	CameraEvent,
@@ -24,7 +23,7 @@ import {
 	UserJoinMsg,
 } from "./Events";
 import { PRESENCE_COLORS } from "./consts";
-import { Selection } from "Board/Selection/Selection";
+import { catmullRomInterpolate, rgbToRgba } from "./helpers";
 
 const SECOND = 1000;
 const CURSOR_FPS = 3;
@@ -794,11 +793,6 @@ export class Presence {
 	}
 
 	private renderPointer(context: DrawingContext): void {
-		if (!isMicroboard()) {
-			this.stopPointerRendering();
-			return;
-		}
-
 		if (this.isPointerRendering) {
 			return;
 		}
@@ -1019,9 +1013,6 @@ export class Presence {
 	}
 
 	private renderSelect(context: DrawingContext): void {
-		if (!isMicroboard()) {
-			return;
-		}
 		const selects = this.getSelects();
 		for (const select of selects) {
 			const mbr = new Mbr(

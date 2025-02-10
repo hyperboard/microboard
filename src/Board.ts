@@ -31,21 +31,22 @@ import {
 } from "./Items";
 import { ControlPointData } from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
+import { AINode } from "Board/Items/AINode/AINode";
+import { getPublicUrl } from "Config";
+import { Subject } from "Subject";
+import { Comment } from "./Items/Comment";
 import { DrawingContext } from "./Items/DrawingContext";
+import { Group } from "./Items/Group";
+import { ImageItem } from "./Items/Image";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
 import { Keyboard } from "./Keyboard";
+import { parsersHTML } from "./parserHTML";
 import { Pointer } from "./Pointer";
+import { Presence } from "./Presence/Presence";
 import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
-import { Group } from "./Items/Group";
-import { Presence } from "./Presence/Presence";
-import { Comment } from "./Items/Comment";
-import { getPublicUrl } from "Config";
-import { parsersHTML } from "./parserHTML";
-import { AINode } from "Board/Items/AINode/AINode";
-import { ImageItem } from "./Items/Image";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -65,6 +66,7 @@ export class Board {
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
 	private interfaceType: InterfaceType = "loading";
+	readonly subject = new Subject<void>();
 
 	private resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {
@@ -1470,6 +1472,7 @@ export class Board {
 	setInterfaceType(interfaceType: InterfaceType): void {
 		this.interfaceType = interfaceType;
 		this.tools.navigate();
+		this.subject.publish();
 		this.tools.publish();
 	}
 
