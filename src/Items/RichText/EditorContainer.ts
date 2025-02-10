@@ -35,7 +35,7 @@ import { isTextEmpty } from "./isTextEmpty";
 import markdown from "remark-parse";
 import slate from "remark-slate";
 import { unified } from "unified";
-import { Board } from "Board";
+import { t } from "i18next";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -888,7 +888,7 @@ export class EditorContainer {
 
 	setNodeChildrenStyles(node: BlockNode) {
 		let fontStyles = Editor.marks(this.editor);
-		
+
 		switch (node.type) {
 			case "heading_one":
 				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
@@ -949,7 +949,11 @@ export class EditorContainer {
 		if (!children) {
 			return;
 		}
+
 		let text = children.text;
+		if (text && text.startsWith(t("AIInput.generatingResponse"))) {
+			return;
+		}
 
 		if (text.startsWith("```markdown")) {
 			text = text.slice(11, -4);
@@ -985,11 +989,7 @@ export class EditorContainer {
 		const lines = text.split(/\r\n|\r|\n/);
 		const combinedText = lines.join("\n"); // Объединяем строки в один текст
 		const prevText: string = this.getText()[0]?.children[0]?.text;
-		if (
-			prevText &&
-			(prevText.startsWith("Generating response…												") ||
-				prevText.startsWith("Генерация ответа…												"))
-		) {
+		if (prevText && prevText.startsWith(t("AIInput.generatingResponse"))) {
 			this.clearText();
 		}
 		const isPrevTextEmpty = this.isEmpty();
