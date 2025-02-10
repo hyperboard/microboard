@@ -1271,6 +1271,7 @@ export class Board {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
+				case "FixedConnector":
 					const newItemId = newItemIdMap[point.itemId];
 					if (newItemId) {
 						point.itemId = newItemId;
@@ -1384,6 +1385,7 @@ export class Board {
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const items: Item[] = [];
+		console.log("apply paste", itemsMap);
 
 		const sortedItemsMap = Object.entries(itemsMap).sort(
 			([, dataA], [, dataB]) => {
@@ -1418,6 +1420,7 @@ export class Board {
 
 		sortedItemsMap.map(([id, data]) => {
 			if (data.itemType === "Connector") {
+				console.log(id, data);
 				return pasteItem(id, data);
 			}
 			return;
