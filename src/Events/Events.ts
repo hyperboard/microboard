@@ -13,6 +13,7 @@ import {
 	AiChatMsg,
 	ChatChunk,
 	GenerateImageResponse,
+	GenerateAudioResponse,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -183,15 +184,19 @@ export function createEvents(
 		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
 	}
 
-	function handleAiChatMassage(massage: AiChatMsg) {
-		if (massage.type === "AiChat") {
-			const event = massage.event;
+	function handleAiChatMassage(message: AiChatMsg): void {
+		if (message.type === "AiChat") {
+			const event = message.event;
 			switch (event.method) {
 				case "ChatChunk":
 					handleChatChunk(event);
 					break;
 				case "GenerateImage":
 					handleImageGenerate(event);
+					break;
+				case "GenerateAudio":
+					handleAudioGenerate(message.event);
+					break;
 			}
 		}
 	}
@@ -279,7 +284,54 @@ export function createEvents(
 		}
 	}
 
-	function handleImageGenerate(response: GenerateImageResponse) {
+	function handleAudioGenerate(response: GenerateAudioResponse): void {
+		function removePlaceholders(): void {
+			const connector = board.items.getById(
+				board.aiImageConnectorID || "",
+			);
+			if (connector) {
+				board.remove(connector);
+			}
+			const aiNode = board.items.getById(board.aiGeneratingOnItem || "");
+			if (aiNode) {
+				board.remove(aiNode);
+			}
+
+			board.aiGeneratingOnItem = undefined;
+			board.aiImageConnectorID = undefined;
+		}
+
+		if (response.status === "completed" && response.base64) {
+			const audioBlob = new Blob(
+				[
+					Uint8Array.from(window.atob(response.base64), ch =>
+						ch.charCodeAt(0),
+					),
+				],
+				{ type: "audio/wav" },
+			);
+			const audioUrl = URL.createObjectURL(audioBlob);
+			const link = document.createElement("a");
+			link.href = audioUrl;
+			link.download = "generated_audio.wav";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(audioUrl);
+			removePlaceholders();
+		} else if (response.status === "error") {
+			console.error("Audio generation error:", response.message);
+			notify({
+				header: t("AIInput.audioGenerationError.header"),
+				body: t("AIInput.audioGenerationError.body"),
+				variant: "error",
+				duration: 4000,
+			});
+			removePlaceholders();
+		}
+	}
+
+	function handleImageGenerate(response: GenerateImageResponse): void {
 		if (response.status === "completed" && response.base64) {
 			prepareImage(response.base64)
 				.then(imageData => {
@@ -349,6 +401,7 @@ export function createEvents(
 			console.warn("Unhandled image generation status:", response.status);
 		}
 	}
+
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
 			enforceMode(message.mode);
