@@ -888,7 +888,7 @@ export class EditorContainer {
 
 	setNodeChildrenStyles(node: BlockNode) {
 		let fontStyles = Editor.marks(this.editor);
-
+		
 		switch (node.type) {
 			case "heading_one":
 				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };

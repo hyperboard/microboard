@@ -787,6 +787,7 @@ export class Board {
 		}
 	}
 	deserialize(snapshot: BoardSnapshot): void {
+		console.log(snapshot, "snapshot");
 		const { events, items } = snapshot;
 		this.index.clear();
 		const createdConnectors: Record<
