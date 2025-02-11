@@ -118,23 +118,27 @@ function convertNoneListNode(
 	isFirstNode: boolean,
 ): DropflowNodeData[] {
 	const newDropflowNodes: DropflowNodeData[] = [];
-	let padding = 0;
-	if (
-		!isFirstNode &&
-		(node.type === "heading_one" ||
-			node.type === "heading_two" ||
-			node.type === "heading_three" ||
-			node.type === "heading_four" ||
-			node.type === "heading_five" ||
-			node.type === "paragraph")
-	) {
-		padding = 0.5;
-	}
+	// let padding = 0;
+	// if (
+	// 	!isFirstNode &&
+	// 	(node.type === "heading_one" ||
+	// 		node.type === "heading_two" ||
+	// 		node.type === "heading_three" ||
+	// 		node.type === "heading_four" ||
+	// 		node.type === "heading_five" ||
+	// 		node.type === "paragraph")
+	// ) {
+	// 	padding = 0.5;
+	// }
 
 	const nodeStyle: flow.DeclaredStyle = {
 		textAlign: node.horisontalAlignment || "left",
 		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
-		paddingTop: { value: padding, unit: "em" },
+		paddingTop: {
+			value: isFirstNode ? 0 : (node.paddingTop ?? 0),
+			unit: "em",
+		},
+		paddingBottom: { value: node.paddingBottom ?? 0, unit: "em" },
 	};
 
 	let currNode: DropflowNodeData = {

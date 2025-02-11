@@ -717,6 +717,14 @@ export class RichText extends Mbr implements Geometry {
 		return ops;
 	}
 
+	setPaddingTop(padding: number) {
+		this.editor.setPaddingTop(padding);
+	}
+
+	setPaddingBottom(padding: number) {
+		this.editor.setPaddingBottom(padding);
+	}
+
 	setEditorFocus(selectionContext?: SelectionContext): void {
 		this.editor.setEditorFocus(selectionContext);
 	}

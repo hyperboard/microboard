@@ -62,6 +62,8 @@ export class AINode implements Geometry {
 			"AINode",
 		);
 
+		this.text.setPaddingTop(0.5);
+
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				if (
@@ -337,6 +339,7 @@ export class AINode implements Geometry {
 		if (this.transformationRenderBlock) {
 			return;
 		}
+		this.text.setPaddingTop(0.5);
 		this.renderShadow(context);
 		this.path.render(context);
 		this.text.render(context);

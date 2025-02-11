@@ -29,6 +29,8 @@ export type TextNode = {
 	fontSize?: number | "auto";
 	fontHighlight?: string;
 	enableAuto?: boolean;
+	paddingTop?: number;
+	paddingBottom?: number;
 	horisontalAlignment?: HorisontalAlignment;
 };
 
@@ -50,4 +52,6 @@ export type LinkNode = {
 	fontHighlight?: string;
 	enableAuto?: boolean;
 	horisontalAlignment?: HorisontalAlignment;
+	paddingTop?: number;
+	paddingBottom?: number;
 };

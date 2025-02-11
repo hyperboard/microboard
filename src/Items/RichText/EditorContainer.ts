@@ -593,16 +593,16 @@ export class EditorContainer {
 			throw new Error("Nothing is selected");
 		}
 
-		const [match] = Editor.nodes(editor, {
-			at: Editor.unhangRange(editor, selection),
-			match: node => {
-				return (
-					!Editor.isEditor(node) &&
-					Element.isElement(node) &&
-					node.horisontalAlignment === horisontalAlignment
-				);
-			},
-		});
+		// const [match] = Editor.nodes(editor, {
+		// 	at: Editor.unhangRange(editor, selection),
+		// 	match: node => {
+		// 		return (
+		// 			!Editor.isEditor(node) &&
+		// 			Element.isElement(node) &&
+		// 			node.horisontalAlignment === horisontalAlignment
+		// 		);
+		// 	},
+		// });
 
 		if (selectionContext === "EditTextUnderPointer") {
 			ReactEditor.focus(editor);
@@ -612,6 +612,20 @@ export class EditorContainer {
 			horisontalAlignment: horisontalAlignment,
 		});
 		return this.stopOpRecordingAndGetOps();
+	}
+
+	setPaddingTop(paddingTop: number) {
+		const editor = this.editor;
+		Transforms.setNodes(editor, {
+			paddingTop,
+		});
+	}
+
+	setPaddingBottom(paddingBottom: number) {
+		const editor = this.editor;
+		Transforms.setNodes(editor, {
+			paddingBottom,
+		});
 	}
 
 	setEditorFocus(selectionContext?: string): void {
