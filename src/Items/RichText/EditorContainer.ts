@@ -126,9 +126,6 @@ export class EditorContainer {
 			}
 			const isRecordingOperations = this.recordedOps !== null;
 			if (isRecordingOperations) {
-				if (operation.type === "set_selection") {
-					return;
-				}
 				if (
 					operation.type === "set_node" &&
 					"fontSize" in operation.newProperties &&
