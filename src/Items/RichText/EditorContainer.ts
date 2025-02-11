@@ -910,7 +910,6 @@ export class EditorContainer {
 			})
 			.map((children: TextNode, index) => {
 				const nextChildren: TextNode = node.children[index + 1];
-				console.log("1", children);
 
 				const isNoSpaceBetweenNextTextAndCurrent =
 					nextChildren &&
@@ -941,20 +940,23 @@ export class EditorContainer {
 		}
 	}
 
-	deserializeMarkdown() {
-		const children = this.getText()[0]?.children[0];
-		if (!children) {
-			return;
-		}
-
-		let text = children.text;
+	deserializeMarkdown(text: string) {
 		if (text && text.startsWith(t("AIInput.generatingResponse"))) {
 			return;
 		}
 
 		if (text.startsWith("```markdown")) {
-			text = text.slice(11, -4);
+			text = text.slice(11);
 		}
+
+		const isPrevTextEmpty = this.isEmpty();
+
+		if (!isPrevTextEmpty) {
+			Transforms.removeNodes(this.editor, {
+				at: [this.getText().length - 1],
+			});
+		}
+		console.log(text);
 
 		unified()
 			.use(markdown)
@@ -964,7 +966,6 @@ export class EditorContainer {
 					throw err;
 				}
 
-				this.clearText();
 				Transforms.insertNodes(
 					this.editor,
 					file.result.map((item: BlockNode) => {
@@ -972,30 +973,56 @@ export class EditorContainer {
 						return item;
 					}),
 					{
-						at: { path: [0, 0], offset: 0 },
+						at: [this.getText().length],
 					},
 				);
 			});
 
 		this.subject.publish(this);
+		return true;
+	}
+
+	processMarkdown(chunk: string): boolean {
+		const prevText =
+			this.getText()[this.getText().length - 1]?.children[0]?.text;
+		if (prevText?.startsWith(t("AIInput.generatingResponse"))) {
+			this.clearText();
+		}
+
+		if (chunk.includes("\n\n")) {
+			this.insertAICopiedText(chunk.split("\n\n")[0]);
+			this.deserializeMarkdown(
+				this.getText()[this.getText().length - 1]?.children[0]?.text,
+			);
+
+			Transforms.insertNodes(this.editor, this.createParagraphNode(""), {
+				at: [this.getText().length],
+			});
+		} else {
+			this.insertAICopiedText(chunk);
+		}
 
 		return true;
 	}
 
 	insertAICopiedText(text: string): boolean {
 		const lines = text.split(/\r\n|\r|\n/);
-		const combinedText = lines.join("\n"); // Объединяем строки в один текст
-		const prevText: string = this.getText()[0]?.children[0]?.text;
-		if (prevText && prevText.startsWith(t("AIInput.generatingResponse"))) {
-			this.clearText();
-		}
+		const combinedText = lines.join("\n");
 		const isPrevTextEmpty = this.isEmpty();
-		let insertLocation: Location | undefined = undefined;
 
 		if (isPrevTextEmpty) {
-			insertLocation = { path: [0, 0], offset: combinedText.length };
 			this.editor.insertText(combinedText);
 		} else {
+			const lastParagraphPath = this.getText().length - 1;
+			const lastParagraph = this.getText()[lastParagraphPath];
+
+			const insertLocation = {
+				path: [lastParagraphPath, lastParagraph.children.length - 1],
+				offset: lastParagraph.children[
+					lastParagraph.children.length - 1
+				].text.length,
+			};
+
 			Transforms.insertText(this.editor, combinedText, {
 				at: insertLocation,
 			});

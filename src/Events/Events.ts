@@ -211,7 +211,7 @@ export function createEvents(
 				if (!item || item.itemType !== "AINode") {
 					return;
 				}
-				item.text.editor.insertAICopiedText(chunk.content || "");
+				item.text.editor.processMarkdown(chunk.content || "");
 				break;
 			case "done":
 				board.camera.unsubscribeFromItem();
@@ -224,7 +224,7 @@ export function createEvents(
 				board.selection.add(item);
 				board.camera.unsubscribeFromItem();
 				board.camera.zoomToFit(item.getMbr(), 20);
-				item.getRichText().editor.deserializeMarkdown();
+				// item.getRichText().editor.deserializeMarkdown();
 				board.aiGeneratingOnItem = undefined;
 				break;
 			case "end":
@@ -241,7 +241,7 @@ export function createEvents(
 					const offset = (DEFAULT_MAX_NODE_WIDTH - itemWidth) / 2;
 					item.transformation.translateBy(offset, 0);
 				}
-				item.getRichText().editor.deserializeMarkdown();
+				// item.getRichText().editor.deserializeMarkdown();
 				board.camera.zoomToFit(item.getMbr(), 20);
 				board.aiGeneratingOnItem = undefined;
 				break;
