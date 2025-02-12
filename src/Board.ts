@@ -1438,7 +1438,9 @@ export class Board {
 	/** zoomOutRelative to camera center until mbr can be viewed fully */
 	fitMbrInView(mbr: Mbr): void {
 		const wasEnclosed = mbr.isEnclosedBy(this.camera.getMbr());
-		while (!mbr.isEnclosedBy(this.camera.getMbr())) {
+		let i = 0;
+		while (!mbr.isEnclosedBy(this.camera.getMbr()) && i < 100) {
+			i++;
 			this.camera.zoomRelativeToPointBy(
 				0.99,
 				this.camera.getMbr().getCenter().x,
