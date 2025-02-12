@@ -211,39 +211,43 @@ export function createEvents(
 				if (!item || item.itemType !== "AINode") {
 					return;
 				}
+				if (!item.text.editor.stopProcessingMarkDownCb) {
+					item.text.editor.stopProcessingMarkDownCb = () => {
+						board.camera.unsubscribeFromItem();
+						board.selection.items.removeAll();
+						board.selection.add(item);
+						item.text.editor.selectWholeText();
+						const itemWidth = item.getMbr().getWidth();
+						if (itemWidth < DEFAULT_MAX_NODE_WIDTH) {
+							const offset =
+								(DEFAULT_MAX_NODE_WIDTH - itemWidth) / 2;
+							item.transformation.translateBy(offset, 0);
+						}
+						board.camera.zoomToFit(item.getMbr(), 20);
+						board.aiGeneratingOnItem = undefined;
+					};
+				}
 				item.text.editor.processMarkdown(chunk.content || "");
 				break;
 			case "done":
-				board.camera.unsubscribeFromItem();
 				if (!item || item.itemType !== "AINode") {
 					console.log("Chat is done");
 					board.aiGeneratingOnItem = undefined;
 					return;
 				}
-				board.selection.items.removeAll();
-				board.selection.add(item);
-				board.camera.unsubscribeFromItem();
-				board.camera.zoomToFit(item.getMbr(), 20);
-				// item.getRichText().editor.deserializeMarkdown();
-				board.aiGeneratingOnItem = undefined;
+				item.getRichText().editor.processMarkdown(
+					"StopProcessingMarkdown",
+				);
 				break;
 			case "end":
-				board.camera.unsubscribeFromItem();
 				if (!item || item.itemType !== "AINode") {
 					console.log("User's request handled");
 					board.aiGeneratingOnItem = undefined;
 					return;
 				}
-				board.selection.items.removeAll();
-				board.selection.add(item);
-				const itemWidth = item.getMbr().getWidth();
-				if (itemWidth < DEFAULT_MAX_NODE_WIDTH) {
-					const offset = (DEFAULT_MAX_NODE_WIDTH - itemWidth) / 2;
-					item.transformation.translateBy(offset, 0);
-				}
-				// item.getRichText().editor.deserializeMarkdown();
-				board.camera.zoomToFit(item.getMbr(), 20);
-				board.aiGeneratingOnItem = undefined;
+				item.getRichText().editor.processMarkdown(
+					"StopProcessingMarkdown",
+				);
 				break;
 			case "error":
 				board.camera.unsubscribeFromItem();

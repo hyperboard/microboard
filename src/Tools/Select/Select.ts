@@ -725,6 +725,16 @@ export class Select extends Tool {
 			curr.setItemToFollow(topItem.getId());
 		}
 
+		if (
+			curr &&
+			curr.itemType == "AINode" &&
+			this.board.aiGeneratingOnItem
+		) {
+			this.board.tools.publish();
+			this.clear();
+			return false;
+		}
+
 		if (!this.isMovedAfterDown) {
 			const { isCtrl, isShift } = this.board.keyboard;
 			const hovered = this.board.items.getUnderPointer();
@@ -778,9 +788,7 @@ export class Select extends Tool {
 					this.board.selection.getContext() === "EditUnderPointer" &&
 					curr &&
 					topItem === curr &&
-					!this.board.selection.getIsLockedSelection() &&
-					curr.itemType !== "AINode" &&
-					!this.board.aiGeneratingOnItem
+					!this.board.selection.getIsLockedSelection()
 				) {
 					curr
 						.getRichText()
