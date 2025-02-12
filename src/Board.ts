@@ -1035,6 +1035,7 @@ export class Board {
 			switch (point.pointType) {
 				case "Floating":
 				case "Fixed":
+				case "FixedConnector":
 					const newItemId = newItemIdMap[point.itemId];
 					if (newItemId) {
 						point.itemId = newItemId;
