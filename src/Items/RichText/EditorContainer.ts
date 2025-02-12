@@ -121,7 +121,6 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: SlateOp): void => {
-			console.log('operation', operation)
 			if (!this.shouldEmit) {
 				return;
 			}
@@ -136,8 +135,8 @@ export class EditorContainer {
 				//
 				// Therefore, we need to emit a set_selection event for text whose styles were changed before typing.
 				const [firstTextNode, secondTextNode] = editor.children[0].children;
-				const isFirstTextEmpty = firstTextNode.text === "";
-				const isSecondTextNotEmpty = secondTextNode.text !== "";
+				const isFirstTextEmpty = firstTextNode?.text === "";
+				const isSecondTextNotEmpty = secondTextNode?.text !== "";
 	
 				if (
 					operation.type === "set_selection" &&
