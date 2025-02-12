@@ -159,12 +159,12 @@ export class AINode implements Geometry {
 	}
 
 	deserialize(data: Partial<AINodeData>): this {
+		if (data.text) {
+			this.text.deserialize(data.text);
+		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 			this.transformPath();
-		}
-		if (data.text) {
-			this.text.deserialize(data.text);
 		}
 		this.linkTo.deserialize(data.linkTo);
 		if (data.isUserRequest) {
