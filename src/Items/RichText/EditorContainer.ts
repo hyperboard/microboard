@@ -121,11 +121,31 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: SlateOp): void => {
+			console.log('operation', operation)
 			if (!this.shouldEmit) {
 				return;
 			}
 			const isRecordingOperations = this.recordedOps !== null;
 			if (isRecordingOperations) {
+
+				// When creating an item with non-default text styles, Slate automatically adds an empty text node
+				// to the first paragraph. As soon as the user types the first character, Slate triggers the following operations:
+				//   1. insert_node
+				//   2. set_selection – this operation must be emitted to update the focus
+				//   3. remove_node
+				//
+				// Therefore, we need to emit a set_selection event for text whose styles were changed before typing.
+				const [firstTextNode, secondTextNode] = editor.children[0].children;
+				const isFirstTextEmpty = firstTextNode.text === "";
+				const isSecondTextNotEmpty = secondTextNode.text !== "";
+	
+				if (
+					operation.type === "set_selection" &&
+					!(isFirstTextEmpty && isSecondTextNotEmpty)
+				) {
+					return;
+				}
+
 				if (
 					operation.type === "set_node" &&
 					"fontSize" in operation.newProperties &&
