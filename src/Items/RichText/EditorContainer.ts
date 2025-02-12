@@ -36,6 +36,7 @@ import markdown from "remark-parse";
 import slate from "remark-slate";
 import { unified } from "unified";
 import { t } from "i18next";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -46,6 +47,10 @@ export class EditorContainer {
 	textScale = 1;
 	verticalAlignment: VerticalAlignment = "center";
 	textLength = 0;
+	private chunksQueue: string[] = [];
+	private isProcessingChunk = false;
+	private isProcessingListChunks = false;
+	stopProcessingMarkDownCb: (() => void) | null = null;
 
 	private decorated = {
 		realapply: (_operation: SlateOp): void => {},
@@ -126,7 +131,6 @@ export class EditorContainer {
 			}
 			const isRecordingOperations = this.recordedOps !== null;
 			if (isRecordingOperations) {
-
 				// When creating an item with non-default text styles, Slate automatically adds an empty text node
 				// to the first paragraph. As soon as the user types the first character, Slate triggers the following operations:
 				//   1. insert_node
@@ -134,8 +138,11 @@ export class EditorContainer {
 				//   3. remove_node
 				//
 				// Therefore, we need to emit a set_selection event for text whose styles were changed before typing.
-				const isFirstTextEmpty =  editor.children[0]?.children?.text === "";
-				const isSecondTextNotEmpty =  editor.children[0]?.children?.text !== "";
+				const [firstTextNode, secondTextNode] =
+					editor.children[0].children;
+				const isFirstTextEmpty = firstTextNode?.text === "";
+				const isSecondTextNotEmpty = secondTextNode?.text !== "";
+
 				if (
 					operation.type === "set_selection" &&
 					!(isFirstTextEmpty && isSecondTextNotEmpty)
@@ -915,7 +922,7 @@ export class EditorContainer {
 	};
 
 	setNodeChildrenStyles(node: BlockNode) {
-		let fontStyles = Editor.marks(this.editor);
+		let fontStyles = Editor.marks(this.editor) || DEFAULT_TEXT_STYLES;
 
 		switch (node.type) {
 			case "heading_one":
@@ -935,6 +942,12 @@ export class EditorContainer {
 				break;
 		}
 
+		function isSymbol(str: string) {
+			const symbolRegex = /^[^\w\s]$/;
+
+			return symbolRegex.test(str);
+		}
+
 		node.children = node.children
 			.map((children: TextNode | LinkNode) => {
 				return this.convertLinkNodeToTextNode(children);
@@ -944,8 +957,9 @@ export class EditorContainer {
 
 				const isNoSpaceBetweenNextTextAndCurrent =
 					nextChildren &&
-					nextChildren.text[nextChildren.text.length - 1] !== " " &&
-					!children.text.startsWith(" ");
+					children.text[children.text.length - 1] !== " " &&
+					!nextChildren.text.startsWith(" ") &&
+					!isSymbol(nextChildren.text[0]);
 
 				if (isNoSpaceBetweenNextTextAndCurrent) {
 					children.text += " ";
@@ -971,13 +985,31 @@ export class EditorContainer {
 		}
 	}
 
-	deserializeMarkdown(text: string) {
-		if (text && text.startsWith(t("AIInput.generatingResponse"))) {
-			return;
+	deserializeMarkdown(isNewParagraphNeeded: boolean) {
+		const lastNode = this.getText()[this.getText().length - 1];
+		if (lastNode.type !== "paragraph") {
+			this.subject.publish(this);
+			return true;
 		}
 
-		if (text.startsWith("```markdown")) {
-			text = text.slice(11);
+		let text: string | undefined = lastNode.children[0]?.text;
+
+		if (!text) {
+			Transforms.insertNodes(this.editor, this.createParagraphNode(""), {
+				at: [0],
+			});
+			this.subject.publish(this);
+			return true;
+		}
+
+		let isChunkStartsWithListSymbol = false;
+		let slicedListIndex = "";
+
+		const listItemRegex = /^(?!1\.\s)\d+\.\s/;
+		if (listItemRegex.test(text) && isNewParagraphNeeded) {
+			slicedListIndex = text.slice(0, 3);
+			text = text.slice(3);
+			isChunkStartsWithListSymbol = true;
 		}
 
 		const isPrevTextEmpty = this.isEmpty();
@@ -987,7 +1019,6 @@ export class EditorContainer {
 				at: [this.getText().length - 1],
 			});
 		}
-		console.log(text);
 
 		unified()
 			.use(markdown)
@@ -997,16 +1028,21 @@ export class EditorContainer {
 					throw err;
 				}
 
-				Transforms.insertNodes(
-					this.editor,
-					file.result.map((item: BlockNode) => {
-						this.setNodeStyles(item);
-						return item;
-					}),
-					{
-						at: [this.getText().length],
-					},
-				);
+				const nodes = file.result.map((item: BlockNode) => {
+					const nodeText: string | undefined = item.children[0].text;
+					if (nodeText) {
+						item.children[0].text = slicedListIndex + nodeText;
+					}
+					this.setNodeStyles(item);
+					return item;
+				});
+				if (isNewParagraphNeeded) {
+					nodes.push(this.createParagraphNode(""));
+				}
+
+				Transforms.insertNodes(this.editor, nodes, {
+					at: [this.getText().length],
+				});
 			});
 
 		this.subject.publish(this);
@@ -1014,29 +1050,59 @@ export class EditorContainer {
 	}
 
 	processMarkdown(chunk: string): boolean {
-		const prevText =
-			this.getText()[this.getText().length - 1]?.children[0]?.text;
-		if (prevText?.startsWith(t("AIInput.generatingResponse"))) {
-			this.clearText();
-		}
+		this.chunksQueue.push(chunk);
 
-		if (chunk.includes("\n\n")) {
-			this.insertAICopiedText(chunk.split("\n\n")[0]);
-			this.deserializeMarkdown(
-				this.getText()[this.getText().length - 1]?.children[0]?.text,
-			);
-
-			Transforms.insertNodes(this.editor, this.createParagraphNode(""), {
-				at: [this.getText().length],
-			});
-		} else {
-			this.insertAICopiedText(chunk);
+		if (!this.isProcessingChunk) {
+			this.processNextChunk();
 		}
 
 		return true;
 	}
 
-	insertAICopiedText(text: string): boolean {
+	private async processNextChunk() {
+		if (this.chunksQueue.length === 0) {
+			this.isProcessingChunk = false;
+			return;
+		}
+
+		this.isProcessingChunk = true;
+		const chunk = this.chunksQueue.shift()!;
+
+		if (chunk === "StopProcessingMarkdown") {
+			await this.deserializeMarkdownAsync(false);
+			this.isProcessingChunk = false;
+			if (this.stopProcessingMarkDownCb) {
+				this.stopProcessingMarkDownCb();
+				this.stopProcessingMarkDownCb = null;
+			}
+			return;
+		}
+
+		const prevText =
+			this.getText()?.[this.getText().length - 1]?.children[0]?.text;
+		if (prevText?.startsWith(t("AIInput.generatingResponse"))) {
+			this.clearText();
+		}
+
+		if (chunk.includes("\n\n")) {
+			this.insertChunk(chunk.split("\n\n")[0]);
+			await this.deserializeMarkdownAsync();
+		} else {
+			this.insertChunk(chunk);
+		}
+		setTimeout(() => this.processNextChunk(), 0);
+	}
+
+	private async deserializeMarkdownAsync(isNewParagraphNeeded = true) {
+		return new Promise(resolve => {
+			setTimeout(() => {
+				this.deserializeMarkdown(isNewParagraphNeeded);
+				resolve(true);
+			}, 0);
+		});
+	}
+
+	insertChunk(text: string): boolean {
 		const lines = text.split(/\r\n|\r|\n/);
 		const combinedText = lines.join("\n");
 		const isPrevTextEmpty = this.isEmpty();
@@ -1058,6 +1124,7 @@ export class EditorContainer {
 				at: insertLocation,
 			});
 		}
+		this.subject.publish(this);
 
 		return true;
 	}
