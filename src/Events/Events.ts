@@ -216,7 +216,6 @@ export function createEvents(
 						board.camera.unsubscribeFromItem();
 						board.selection.items.removeAll();
 						board.selection.add(item);
-						item.text.editor.selectWholeText();
 						const itemWidth = item.getMbr().getWidth();
 						if (itemWidth < DEFAULT_MAX_NODE_WIDTH) {
 							const offset =

@@ -138,11 +138,10 @@ export class EditorContainer {
 				//   3. remove_node
 				//
 				// Therefore, we need to emit a set_selection event for text whose styles were changed before typing.
-				const [firstTextNode, secondTextNode] =
-					editor.children[0].children;
-				const isFirstTextEmpty = firstTextNode?.text === "";
-				const isSecondTextNotEmpty = secondTextNode?.text !== "";
-
+				const isFirstTextEmpty =
+					editor.children[0]?.children?.text === "";
+				const isSecondTextNotEmpty =
+					editor.children[0]?.children?.text !== "";
 				if (
 					operation.type === "set_selection" &&
 					!(isFirstTextEmpty && isSecondTextNotEmpty)
@@ -1072,6 +1071,7 @@ export class EditorContainer {
 			await this.deserializeMarkdownAsync(false);
 			this.isProcessingChunk = false;
 			if (this.stopProcessingMarkDownCb) {
+				this.selectWholeText();
 				this.stopProcessingMarkDownCb();
 				this.stopProcessingMarkDownCb = null;
 			}
