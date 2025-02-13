@@ -519,7 +519,18 @@ export class Selection {
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}
 
-	copy(): { [key: string]: ItemData } {
+	copy(
+		skipImageBlobCopy = false,
+	):
+		| { [key: string]: ItemData }
+		| { imageElement: HTMLImageElement; width: number; height: number } {
+		const single = this.items.getSingle();
+		if (!skipImageBlobCopy && single && single.itemType === "Image") {
+			const width = single.getMbr().getWidth();
+			const height = single.getMbr().getHeight();
+			return { imageElement: single.image, width, height };
+		}
+
 		const copiedItemsMap: { [key: string]: ItemData } = {};
 		this.list().forEach(item => {
 			this.handleItemCopy(item, copiedItemsMap);
