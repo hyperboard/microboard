@@ -606,7 +606,10 @@ export class Frame implements Geometry {
 						}
 					}
 				});
-			this.board.fitMbrInView(this.getMbr());
+			this.board.camera.addToView(
+				this.getMbr(),
+				this.board.items.getInView(),
+			);
 		}
 		this.setCanChangeRatio(shapeType === "Custom");
 		this.updateMbr();

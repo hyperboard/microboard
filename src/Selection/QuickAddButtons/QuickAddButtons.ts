@@ -15,6 +15,7 @@ import { Selection } from "..";
 import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
+import { access } from "fs";
 
 export interface QuickAddButtons {
 	clear: () => void;
@@ -328,7 +329,10 @@ export function getQuickAddButtons(
 					selection.removeAll();
 					selection.add(addedItem);
 					board.selection.editText();
-					board.fitMbrInView(addedItem.getMbr());
+					board.camera.addToView(
+						addedItem.getMbr(),
+						board.items.getInView(),
+					);
 					button.resetState();
 				};
 

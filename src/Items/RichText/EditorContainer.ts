@@ -1011,7 +1011,7 @@ export class EditorContainer {
 			return true;
 		}
 
-		//sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
+		// sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
 		let slicedListIndex = "";
 
 		const numberedListItemRegex = /^(?!1\.\s)\d+\.\s/;

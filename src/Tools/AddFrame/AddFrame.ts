@@ -88,7 +88,7 @@ export class AddFrame extends BoardTool {
 		if (width < 2 && height < 2) {
 			this.frame.scaleLikeLastFrame();
 			this.transformToPointerCenter();
-			this.board.fitMbrInView(this.mbr);
+			this.board.camera.viewRectangle(this.mbr);
 		} else {
 			this.initTransformation(width / 100, height / 100);
 			localStorage.setItem(
@@ -183,7 +183,7 @@ export class AddFrame extends BoardTool {
 				);
 				this.frame.transformation.scaleBy(min, min);
 			}
-			this.board.fitMbrInView(this.frame.getMbr());
+			this.board.camera.viewRectangle(this.frame.getMbr());
 		}
 		const frameMbr = this.frame.getMbr();
 		this.board.items

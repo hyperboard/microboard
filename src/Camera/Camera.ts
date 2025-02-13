@@ -397,6 +397,19 @@ export class Camera {
 		this.zoomToViewCenter(newScale);
 	}
 
+	addToView(mbr: Mbr, inView: Item[]): void {
+		if (!mbr.isEnclosedBy(this.getMbr())) {
+			this.viewRectangle(
+				inView
+					.reduce(
+						(acc, item) => acc.combine(item.getMbr()),
+						inView[0]?.getMbr() ?? new Mbr(),
+					)
+					.combine(mbr),
+			);
+		}
+	}
+
 	viewRectangle(mbr: Mbr, offsetInPercent = 10, duration = 500): void {
 		if (duration <= 0) {
 			duration = 1;
