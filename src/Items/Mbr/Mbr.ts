@@ -222,6 +222,33 @@ export class Mbr implements Geometry {
 		}
 	}
 
+	getClosestEdgeCenterPoint(point: Point): Point {
+		const nearestPoint = this.getNearestPointOnPerimeter(point, false);
+		const { left, top, right, bottom } = this;
+		const itemWidthCenter = left + this.getWidth() / 2;
+		const itemHeightCenter = top + this.getHeight() / 2;
+
+		const distances = {
+			left: Math.abs(nearestPoint.x - left),
+			top: Math.abs(nearestPoint.y - top),
+			right: Math.abs(nearestPoint.x - right),
+			bottom: Math.abs(nearestPoint.y - bottom),
+		};
+		const minDistance = Math.min(...Object.values(distances));
+
+		switch (minDistance) {
+			case distances.top:
+				return new Point(itemWidthCenter, nearestPoint.y);
+			case distances.right:
+			case distances.left:
+				return new Point(nearestPoint.x, itemHeightCenter);
+			case distances.bottom:
+				return new Point(itemWidthCenter, nearestPoint.y);
+			default:
+				return nearestPoint;
+		}
+	}
+
 	isInside(point: Point): boolean {
 		const { x, y } = point;
 		const { left, top, right, bottom } = this;
