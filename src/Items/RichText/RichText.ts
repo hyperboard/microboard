@@ -1,14 +1,20 @@
-import { Events, Operation } from "Board/Events";
+import { Board } from "Board";
+import { Camera } from "Board/Camera";
+import { Operation } from "Board/Events";
+import {
+	scaleElementBy,
+	translateElementBy,
+} from "Board/HTMLRender/HTMLRender";
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
 import {
 	BaseSelection,
 	Descendant,
 	Editor,
-	Transforms,
-	Text,
-	Operation as SlateOp,
 	Element,
+	Operation as SlateOp,
+	Text,
+	Transforms,
 } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
@@ -18,7 +24,6 @@ import {
 	ItemType,
 	Matrix,
 	Mbr,
-	Path,
 	Point,
 	RichTextData,
 	Transformation,
@@ -27,22 +32,14 @@ import {
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
-import { LayoutBlockNodes } from "./CanvasText";
+import { LinkTo } from "../LinkTo/LinkTo";
+import { getBlockNodes, LayoutBlockNodes } from "./CanvasText";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
-import { getBlockNodes } from "./CanvasText";
-import { RichTextCommand } from "./RichTextCommand";
-import { RichTextOperation } from "./RichTextOperations";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { Camera } from "Board/Camera";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
-import {
-	scaleElementBy,
-	translateElementBy,
-} from "Board/HTMLRender/HTMLRender";
-import { Board } from "Board";
+import { RichTextOperation } from "./RichTextOperations";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -115,8 +112,7 @@ export class RichText extends Mbr implements Geometry {
 			this.emit,
 			(op: RichTextOperation) => {
 				this.emitWithoutApplying(op);
-				this.updateElement();
-				this.subject.publish(this);
+				// this.subject.publish(this);
 			},
 			(): void => {
 				if (this.board.events) {
@@ -141,8 +137,11 @@ export class RichText extends Mbr implements Geometry {
 			this.getTransformationScale.bind(this),
 			() => this.onLimitReached,
 			this.calcAutoSize.bind(this),
+			this.updateElement,
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
+			// this.updateElement();
+
 			this.subject.publish(this);
 		});
 		this.transformation.subject.subscribe(
@@ -266,7 +265,7 @@ export class RichText extends Mbr implements Geometry {
 		} catch {}
 	};
 
-	updateElement(): void {
+	updateElement = (): void => {
 		// if (this.selection) {
 		// 	Transforms.select(this.editor.editor, this.selection);
 		// }
@@ -299,7 +298,7 @@ export class RichText extends Mbr implements Geometry {
 		this.subject.publish(this);
 
 		this.updateRequired = false;
-	}
+	};
 
 	calcAutoSize(textNodes?: BlockNode[]): void {
 		const nodes = textNodes ? textNodes : this.getBlockNodes();

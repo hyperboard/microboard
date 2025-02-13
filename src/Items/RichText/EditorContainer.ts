@@ -1,19 +1,25 @@
+import { t } from "i18next";
 import { findCommonStrings } from "lib/findCommonStrings";
+import markdown from "remark-parse";
+import slate from "remark-slate";
 import {
 	BaseEditor,
+	BaseSelection,
 	createEditor,
 	Descendant,
 	Editor,
 	Element,
-	Operation as SlateOp,
-	Range,
-	Transforms,
-	BaseSelection,
 	Location,
+	Node,
+	Range,
+	Operation as SlateOp,
+	Transforms,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
 import { Subject } from "Subject";
+import { unified } from "unified";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import {
 	BlockNode,
@@ -23,6 +29,7 @@ import {
 	ParagraphNode,
 } from "./Editor/BlockNode";
 import { LinkNode, TextNode, TextStyle } from "./Editor/TextNode";
+import { isTextEmpty } from "./isTextEmpty";
 import { DefaultTextStyles } from "./RichText";
 import {
 	RichTextOperation,
@@ -30,13 +37,6 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { Node } from "slate";
-import { isTextEmpty } from "./isTextEmpty";
-import markdown from "remark-parse";
-import slate from "remark-slate";
-import { unified } from "unified";
-import { t } from "i18next";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -81,8 +81,10 @@ export class EditorContainer {
 		private getMatrixScale: () => number,
 		private getOnLimitReached: () => () => void,
 		private calcAutoSize: (textNodes?: BlockNode[]) => void,
+		private updateElement: () => void,
 	) {
-		this.editor = withHistory(withReact(createEditor()));
+		const baseEditor = createEditor();
+		this.editor = withHistory(withReact(baseEditor));
 		const editor = this.editor;
 		/** The editor must have initial descendants */
 		// horizontalAlignment for Shape - center, for RichText - left
@@ -103,6 +105,11 @@ export class EditorContainer {
 				],
 			},
 		];
+		const onChange = this.editor.onChange;
+		this.editor.onChange = () => {
+			this.updateElement();
+			onChange();
+		};
 		/** We save methods that we going to decorate */
 		this.decorated = {
 			realapply: editor.apply,
@@ -117,8 +124,9 @@ export class EditorContainer {
 						this.autosizeDisable();
 					}
 				}
+
 				this.decorated.realapply(op);
-				this.subject.publish(this);
+				// this.subject.publish(this);
 			},
 			undo: editor.undo,
 			redo: editor.redo,
