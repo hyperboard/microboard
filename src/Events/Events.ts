@@ -211,8 +211,8 @@ export function createEvents(
 				if (!item || item.itemType !== "AINode") {
 					return;
 				}
-				if (!item.text.editor.stopProcessingMarkDownCb) {
-					item.text.editor.stopProcessingMarkDownCb = () => {
+				if (!item.text.editor.getStopProcessingMarkDownCb()) {
+					item.text.editor.setStopProcessingMarkDownCb(() => {
 						board.camera.unsubscribeFromItem();
 						board.selection.items.removeAll();
 						board.selection.add(item);
@@ -224,13 +224,12 @@ export function createEvents(
 						}
 						board.camera.zoomToFit(item.getMbr(), 20);
 						board.aiGeneratingOnItem = undefined;
-					};
+					});
 				}
 				item.text.editor.processMarkdown(chunk.content || "");
 				break;
 			case "done":
 				if (!item || item.itemType !== "AINode") {
-					console.log("Chat is done");
 					board.aiGeneratingOnItem = undefined;
 					return;
 				}
@@ -240,7 +239,6 @@ export function createEvents(
 				break;
 			case "end":
 				if (!item || item.itemType !== "AINode") {
-					console.log("User's request handled");
 					board.aiGeneratingOnItem = undefined;
 					return;
 				}
@@ -253,6 +251,11 @@ export function createEvents(
 				if (board.aiGeneratingOnItem) {
 					const item = board.items.getById(board.aiGeneratingOnItem);
 					if (item) {
+						if (item.itemType === "AINode") {
+							item.getRichText().editor.setStopProcessingMarkDownCb(
+								null,
+							);
+						}
 						board.selection.removeAll();
 						board.selection.add(item);
 						board.camera.zoomToFit(item.getMbr(), 20);
@@ -278,6 +281,11 @@ export function createEvents(
 				if (board.aiGeneratingOnItem) {
 					const item = board.items.getById(board.aiGeneratingOnItem);
 					if (item) {
+						if (item.itemType === "AINode") {
+							item.getRichText().editor.setStopProcessingMarkDownCb(
+								null,
+							);
+						}
 						board.selection.removeAll();
 						board.selection.add(item);
 						board.camera.zoomToFit(item.getMbr(), 20);

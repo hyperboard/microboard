@@ -49,8 +49,7 @@ export class EditorContainer {
 	textLength = 0;
 	private chunksQueue: string[] = [];
 	private isProcessingChunk = false;
-	private isProcessingListChunks = false;
-	stopProcessingMarkDownCb: (() => void) | null = null;
+	private stopProcessingMarkDownCb: (() => void) | null = null;
 
 	private decorated = {
 		realapply: (_operation: SlateOp): void => {},
@@ -906,6 +905,14 @@ export class EditorContainer {
 		return true;
 	}
 
+	setStopProcessingMarkDownCb(cb: (() => void) | null) {
+		this.stopProcessingMarkDownCb = cb;
+	}
+
+	getStopProcessingMarkDownCb() {
+		return this.stopProcessingMarkDownCb;
+	}
+
 	convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
 		if (node.type === "text" || !node.type) {
 			return node;
@@ -972,14 +979,17 @@ export class EditorContainer {
 		node.horisontalAlignment = this.horisontalAlignment;
 	}
 
-	setNodeStyles(item: BlockNode) {
+	setNodeStyles(item: BlockNode, isPaddingTopNeeded: boolean) {
 		if (item.type === "ol_list" || item.type === "ul_list") {
 			for (const listItem of item.children) {
 				for (const listItemChild of listItem.children) {
-					this.setNodeStyles(listItemChild);
+					this.setNodeStyles(listItemChild, true);
 				}
 			}
 		} else {
+			if (isPaddingTopNeeded) {
+				item.paddingTop = 0.5;
+			}
 			this.setNodeChildrenStyles(item);
 		}
 	}
@@ -1001,14 +1011,13 @@ export class EditorContainer {
 			return true;
 		}
 
-		let isChunkStartsWithListSymbol = false;
+		//sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
 		let slicedListIndex = "";
 
-		const listItemRegex = /^(?!1\.\s)\d+\.\s/;
-		if (listItemRegex.test(text) && isNewParagraphNeeded) {
+		const numberedListItemRegex = /^(?!1\.\s)\d+\.\s/;
+		if (numberedListItemRegex.test(text) && isNewParagraphNeeded) {
 			slicedListIndex = text.slice(0, 3);
 			text = text.slice(3);
-			isChunkStartsWithListSymbol = true;
 		}
 
 		const isPrevTextEmpty = this.isEmpty();
@@ -1023,18 +1032,29 @@ export class EditorContainer {
 			.use(markdown)
 			.use(slate)
 			.process(text, (err, file) => {
-				if (err) {
+				if (err || !file) {
 					throw err;
 				}
 
-				const nodes = file.result.map((item: BlockNode) => {
-					const nodeText: string | undefined = item.children[0].text;
-					if (nodeText) {
-						item.children[0].text = slicedListIndex + nodeText;
-					}
-					this.setNodeStyles(item);
-					return item;
-				});
+				const nodes = (file.result as BlockNode[]).map(
+					(item: BlockNode, index) => {
+						if (index === 0) {
+							const nodeText: string | undefined =
+								item.children[0].text;
+							if (nodeText) {
+								item.children[0].text =
+									slicedListIndex + nodeText;
+							}
+							this.setNodeStyles(
+								item,
+								item.type !== "code_block",
+							);
+							return item;
+						}
+						this.setNodeStyles(item, false);
+						return item;
+					},
+				);
 				if (isNewParagraphNeeded) {
 					nodes.push(this.createParagraphNode(""));
 				}
