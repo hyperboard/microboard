@@ -524,7 +524,10 @@ export class Selection {
 		skipImageBlobCopy = false,
 	):
 		| { [key: string]: ItemData }
-		| { imageElement: HTMLImageElement; imageData: ImageItemData } {
+		| {
+				imageElement: HTMLImageElement;
+				imageData: { [key: string]: ItemData };
+		  } {
 		const copiedItemsMap: { [key: string]: ItemData } = {};
 		const single = this.items.getSingle();
 		if (!skipImageBlobCopy && single && single.itemType === "Image") {
