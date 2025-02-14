@@ -12,21 +12,76 @@ import { getPublicUrl } from "Config";
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
 async function loadFonts(): Promise<void> {
-	await flow.registerFont(
-		new URL(getPublicUrl("/fonts/OpenSans-Regular.ttf")),
-	);
-	await flow.registerFont(new URL(getPublicUrl("/fonts/OpenSans-Bold.ttf")));
-	await flow.registerFont(
-		new URL(getPublicUrl("/fonts/OpenSans-Italic.ttf")),
-	);
-	await flow.registerFont(
-		new URL(getPublicUrl("/fonts/OpenSans-BoldItalic.ttf")),
-	);
-	await flow.registerFont(
-		new URL(getPublicUrl("/fonts/RobotoMono-Regular.ttf")),
-	);
-	await flow.registerFont(
-		new URL(getPublicUrl("/fonts/NotoColorEmoji-Regular.ttf")),
+	function openFontDB(): Promise<IDBDatabase> {
+		return new Promise((resolve, reject) => {
+			const request = indexedDB.open("FontDB", 1);
+			request.onupgradeneeded = () => {
+				const db = request.result;
+				if (!db.objectStoreNames.contains("fonts")) {
+					db.createObjectStore("fonts");
+				}
+			};
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+	}
+
+	function storeFontInDB(
+		db: IDBDatabase,
+		key: string,
+		blob: Blob,
+	): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("fonts", "readwrite");
+			const store = transaction.objectStore("fonts");
+			const request = store.put(blob, key);
+			request.onsuccess = () => resolve();
+			request.onerror = () => reject(request.error);
+		});
+	}
+
+	function getFontFromDB(
+		db: IDBDatabase,
+		key: string,
+	): Promise<Blob | undefined> {
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction("fonts", "readonly");
+			const store = transaction.objectStore("fonts");
+			const request = store.get(key);
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+	}
+
+	const fonts = [
+		{ key: "OpenSans-Regular", path: "/fonts/OpenSans-Regular.ttf" },
+		{ key: "OpenSans-Bold", path: "/fonts/OpenSans-Bold.ttf" },
+		{ key: "OpenSans-Italic", path: "/fonts/OpenSans-Italic.ttf" },
+		{ key: "OpenSans-BoldItalic", path: "/fonts/OpenSans-BoldItalic.ttf" },
+		{ key: "RobotoMono-Regular", path: "/fonts/RobotoMono-Regular.ttf" },
+		{
+			key: "NotoColorEmoji-Regular",
+			path: "/fonts/NotoColorEmoji-Regular.ttf",
+		},
+	];
+
+	const db = await openFontDB();
+
+	await Promise.all(
+		fonts.map(async font => {
+			let fontBlob = await getFontFromDB(db, font.key);
+			if (!fontBlob) {
+				const response = await fetch(getPublicUrl(font.path));
+				if (!response.ok) {
+					throw new Error(`Failed to fetch font: ${font.path}`);
+				}
+
+				fontBlob = await response.blob();
+				await storeFontInDB(db, font.key, fontBlob);
+			}
+			const blobUrl = URL.createObjectURL(fontBlob);
+			await flow.registerFont(new URL(blobUrl));
+		}),
 	);
 }
 
