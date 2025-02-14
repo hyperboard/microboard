@@ -36,6 +36,7 @@ import {
 	AINode,
 	CONTEXT_NODE_HIGHLIGHT_COLOR,
 } from "Board/Items/AINode/AINode";
+import { ImageItemData } from "Board/Items/Image/Image";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -523,15 +524,14 @@ export class Selection {
 		skipImageBlobCopy = false,
 	):
 		| { [key: string]: ItemData }
-		| { imageElement: HTMLImageElement; width: number; height: number } {
+		| { imageElement: HTMLImageElement; imageData: ImageItemData } {
+		const copiedItemsMap: { [key: string]: ItemData } = {};
 		const single = this.items.getSingle();
 		if (!skipImageBlobCopy && single && single.itemType === "Image") {
-			const width = single.getMbr().getWidth();
-			const height = single.getMbr().getHeight();
-			return { imageElement: single.image, width, height };
+			this.handleItemCopy(single, copiedItemsMap);
+			return { imageElement: single.image, imageData: copiedItemsMap };
 		}
 
-		const copiedItemsMap: { [key: string]: ItemData } = {};
 		this.list().forEach(item => {
 			this.handleItemCopy(item, copiedItemsMap);
 		});

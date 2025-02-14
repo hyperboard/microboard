@@ -211,21 +211,6 @@ export function createEvents(
 				if (!item || item.itemType !== "AINode") {
 					return;
 				}
-				if (!item.text.editor.getStopProcessingMarkDownCb()) {
-					item.text.editor.setStopProcessingMarkDownCb(() => {
-						board.camera.unsubscribeFromItem();
-						board.selection.items.removeAll();
-						board.selection.add(item);
-						const itemWidth = item.getMbr().getWidth();
-						if (itemWidth < DEFAULT_MAX_NODE_WIDTH) {
-							const offset =
-								(DEFAULT_MAX_NODE_WIDTH - itemWidth) / 2;
-							item.transformation.translateBy(offset, 0);
-						}
-						board.camera.zoomToFit(item.getMbr(), 20);
-						board.aiGeneratingOnItem = undefined;
-					});
-				}
 				item.text.editor.processMarkdown(chunk.content || "");
 				break;
 			case "done":

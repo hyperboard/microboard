@@ -1019,6 +1019,10 @@ export class EditorContainer {
 			return true;
 		}
 
+		if (text.startsWith(t("AIInput.generatingResponse"))) {
+			return true;
+		}
+
 		// sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
 		let slicedListIndex = "";
 
