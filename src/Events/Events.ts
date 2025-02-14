@@ -527,42 +527,19 @@ export function createEvents(
 	function handleBoardEventListApplication(events: SyncBoardEvent[]): void {
 		const existinglist = log.getList();
 
-		const isFirstBatchOfEvents =
-			existinglist.length === 0 && events.length > 0;
+		const maxOrder = Math.max(
+			...existinglist.map(record => record.event.order),
+		);
 
-		if (isFirstBatchOfEvents) {
-			handleFirstBatchOfEvents(events);
-		} else {
-			const maxOrder = Math.max(
-				...existinglist.map(record => record.event.order),
-			);
+		const newEvents = events.filter(event => event.order > maxOrder);
 
-			const newEvents = events.filter(event => event.order > maxOrder);
-
-			if (newEvents.length > 0) {
-				log.insertEvents(newEvents);
-				latestServerOrder = log.getLatestOrder();
-				subject.publish(newEvents[0]);
-			}
+		if (newEvents.length > 0) {
+			log.insertEvents(newEvents);
+			latestServerOrder = log.getLatestOrder();
+			subject.publish(newEvents[0]);
 		}
 
 		// board.saveSnapshot();
-	}
-
-	function handleFirstBatchOfEvents(events: SyncBoardEvent[]): void {
-		log.insertEvents(events);
-		subject.publish(events[0]);
-		latestServerOrder = log.getLatestOrder();
-		handleCameraAdjustment();
-	}
-
-	function handleCameraAdjustment(): void {
-		if (!board.camera.useSavedSnapshot(board.getCameraSnapshot())) {
-			if (board.items.listAll().length > 0) {
-				const itemsMbr = board.items.getMbr();
-				board.camera.zoomToFit(itemsMbr);
-			}
-		}
 	}
 
 	function handleNewerEvents(
@@ -748,6 +725,11 @@ export function createEvents(
 			mbr.bottom += 50;
 			board.camera.zoomToFit(mbr);
 		}
+
+		if (board.items.getItemsInView().length === 0) {
+			board.camera.zoomToFit(board.items.getMbr());
+		}
+
 		board.camera.setBoardId(board.getBoardId());
 	}
 
