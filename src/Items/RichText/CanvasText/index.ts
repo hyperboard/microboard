@@ -59,10 +59,10 @@ async function loadFonts(): Promise<void> {
 		{ key: "OpenSans-Italic", path: "/fonts/OpenSans-Italic.ttf" },
 		{ key: "OpenSans-BoldItalic", path: "/fonts/OpenSans-BoldItalic.ttf" },
 		{ key: "RobotoMono-Regular", path: "/fonts/RobotoMono-Regular.ttf" },
-		{
-			key: "NotoColorEmoji-Regular",
-			path: "/fonts/NotoColorEmoji-Regular.ttf",
-		},
+		// {
+		//	key: "NotoColorEmoji-Regular",
+		//	path: "/fonts/NotoColorEmoji-Regular.ttf",
+		// },
 	];
 
 	const db = await openFontDB();
