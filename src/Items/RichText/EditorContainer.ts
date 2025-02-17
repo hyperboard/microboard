@@ -885,7 +885,7 @@ export class EditorContainer {
 	private createParagraphNode(text: string): ParagraphNode {
 		return {
 			type: "paragraph",
-			children: [{ text, ...Editor.marks(this.editor) }],
+			children: [{ type: "text", text, ...Editor.marks(this.editor) }],
 			horisontalAlignment: this.horisontalAlignment,
 		};
 	}
@@ -923,7 +923,7 @@ export class EditorContainer {
 
 	convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
 		if (node.type === "text" || !node.type) {
-			return node;
+			return { ...node, type: "text" };
 		}
 		const link = node.link;
 		const nodeCopy = { ...node };
