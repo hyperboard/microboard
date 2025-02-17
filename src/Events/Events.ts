@@ -729,7 +729,8 @@ export function createEvents(
 			board.camera.zoomToFit(mbr);
 		}
 
-		if (board.items.getItemsInView().length === 0) {
+		const cameraSnapshot = board.getCameraSnapshot();
+		if (board.items.getItemsInView().length === 0 || !cameraSnapshot) {
 			board.camera.zoomToFit(board.items.getMbr());
 		}
 
