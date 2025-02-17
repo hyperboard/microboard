@@ -222,11 +222,21 @@ export class Mbr implements Geometry {
 		}
 	}
 
-	getClosestEdgeCenterPoint(point: Point): Point {
+	getClosestEdgeCenterPoint(
+		point: Point,
+		prevEdge?: "top" | "bottom" | "right" | "left",
+	): Point {
 		const nearestPoint = this.getNearestPointOnPerimeter(point, false);
 		const { left, top, right, bottom } = this;
 		const itemWidthCenter = left + this.getWidth() / 2;
 		const itemHeightCenter = top + this.getHeight() / 2;
+
+		if (prevEdge) {
+			if (prevEdge === "top" || prevEdge === "bottom") {
+				return new Point(itemWidthCenter, nearestPoint.y);
+			}
+			return new Point(nearestPoint.x, itemHeightCenter);
+		}
 
 		const distances = {
 			left: Math.abs(nearestPoint.x - left),
@@ -234,16 +244,16 @@ export class Mbr implements Geometry {
 			right: Math.abs(nearestPoint.x - right),
 			bottom: Math.abs(nearestPoint.y - bottom),
 		};
+
 		const minDistance = Math.min(...Object.values(distances));
 
 		switch (minDistance) {
 			case distances.top:
+			case distances.bottom:
 				return new Point(itemWidthCenter, nearestPoint.y);
 			case distances.right:
 			case distances.left:
 				return new Point(nearestPoint.x, itemHeightCenter);
-			case distances.bottom:
-				return new Point(itemWidthCenter, nearestPoint.y);
 			default:
 				return nearestPoint;
 		}
