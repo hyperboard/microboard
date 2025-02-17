@@ -1452,7 +1452,10 @@ export class Board {
 
 	setInterfaceType(interfaceType: InterfaceType): void {
 		this.interfaceType = interfaceType;
-		this.tools.navigate();
+		const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+		if (!isMobile) {
+			this.tools.navigate();
+		}
 		this.subject.publish();
 		this.tools.publish();
 	}
