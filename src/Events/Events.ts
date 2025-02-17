@@ -374,6 +374,9 @@ export function createEvents(
 										getControlPointData(newImageAI, 2),
 									);
 								}
+								board.selection.removeAll();
+								board.selection.add(newImageAI);
+								board.camera.zoomToFit(newImageAI.getMbr());
 							});
 						}
 					}
