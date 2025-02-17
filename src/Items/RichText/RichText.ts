@@ -158,7 +158,7 @@ export class RichText extends Mbr implements Geometry {
 					op.method === "scaleBy" ||
 					op.method === "scaleByTranslateBy"
 				) {
-					this.setAINodeMaxWidth();
+					this.setAINodeShirkWidth();
 
 					if (!this.isInShape) {
 						this.transformCanvas();
@@ -166,7 +166,7 @@ export class RichText extends Mbr implements Geometry {
 						this.updateElement();
 					}
 				} else if (op.method === "deserialize") {
-					this.setAINodeMaxWidth();
+					this.setAINodeShirkWidth();
 					this.updateElement();
 				}
 			},
@@ -196,13 +196,11 @@ export class RichText extends Mbr implements Geometry {
 		this.setClipPath();
 	}
 
-	private setAINodeMaxWidth(): void {
+	private setAINodeShirkWidth(): void {
 		if (this.insideOf !== "AINode") {
 			return;
 		}
-		this.setMaxWidth(this.getTransformedContainer().getWidth());
 		this.shrinkWidth = true;
-		this.isInShape = false;
 	}
 
 	getBlockNodes(): BlockNode[] {
@@ -1160,7 +1158,11 @@ export class RichText extends Mbr implements Geometry {
 	autosizeDisable(): void {
 		this.autoSize = false;
 		this.autoSizeScale = 1;
-		if (this.insideOf && this.insideOf !== "RichText") {
+		if (
+			this.insideOf &&
+			this.insideOf !== "RichText" &&
+			this.insideOf !== "AINode"
+		) {
 			this.isInShape = true;
 		}
 	}

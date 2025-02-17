@@ -1,5 +1,4 @@
 import { Geometry } from "Board/Items/Geometry";
-import { Events } from "Board/Events/Events";
 import { Transformation } from "Board/Items/Transformation/Transformation";
 import { Mbr } from "Board/Items/Mbr/Mbr";
 import { GeometricNormal } from "Board/Items/GeometricNormal";
@@ -164,7 +163,6 @@ export class AINode implements Geometry {
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
-			this.transformPath();
 		}
 		this.linkTo.deserialize(data.linkTo);
 		if (data.isUserRequest) {
