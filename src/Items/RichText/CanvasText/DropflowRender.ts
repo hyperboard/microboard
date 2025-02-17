@@ -1,5 +1,4 @@
 import * as flow from "dropflow";
-import { Descendant } from "slate";
 import {
 	BlockNode,
 	BulletedListNode,
@@ -8,6 +7,9 @@ import {
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkNode, TextNode } from "../Editor/TextNode";
 import { getPublicUrl } from "Config";
+import { LayoutBlockNodes } from "./LayoutBlockNodes";
+import { convertLinkNodeToTextNode } from "./convertLinkNodeToTextNode";
+import { Descendant } from "slate";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
@@ -108,17 +110,6 @@ interface DropflowNodeWithType {
 	type: string;
 	nodes: DropflowNodeData[];
 }
-
-// needed while we cant create hyperlink
-const convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
-	if (node.type === "text" || !node.type) {
-		return node;
-	}
-	const link = node.link;
-	const nodeCopy = { ...node };
-	delete nodeCopy.children;
-	return { ...nodeCopy, type: "text", text: link };
-};
 
 function getChildStyle(
 	child: TextNode | LinkNode,
@@ -431,18 +422,6 @@ function createFlowList(
 	);
 }
 
-export interface LayoutBlockNodes {
-	nodes: [];
-	maxWidth: number;
-	width: number;
-	height: number;
-	render: (ctx: CanvasRenderingContext2D, scale?: number) => void;
-	// should remove?
-	realign: (newMaxWidht: number) => void;
-	// should remove?
-	recoordinate: (newMaxWidth?: number) => void;
-}
-
 function sliceTextByWidth(
 	data: BlockNode[],
 	maxWidth: number,
@@ -611,7 +590,7 @@ export function getBlockNodes(
 const canvas = document.createElement("canvas");
 const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-function getOneCharacterMaxWidth(data: Descendant[]): number {
+export function getOneCharacterMaxWidth(data: Descendant[]): number {
 	let maxWidth = 0;
 
 	for (const desc of data) {
@@ -646,12 +625,12 @@ function getOneCharacterMaxWidth(data: Descendant[]): number {
 	return maxWidth;
 }
 
-function measureText(fontSize, fontFamily, text): TextMetrics {
+export function measureText(fontSize, fontFamily, text): TextMetrics {
 	context.font = `${fontSize}px ${fontFamily}`;
 	return context.measureText(text);
 }
 
-function findMinimumWidthForSingleLineHeight(
+export function findMinimumWidthForSingleLineHeight(
 	data: BlockNode[],
 	singleLineHeight: number,
 	maxWidth: number,

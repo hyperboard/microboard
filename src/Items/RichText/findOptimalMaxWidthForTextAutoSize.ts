@@ -1,4 +1,4 @@
-import { getBlockNodes } from "./CanvasText";
+import { getBlockNodes } from "./CanvasText/Render";
 import { BlockNode } from "./Editor/BlockNode";
 
 export function findOptimalMaxWidthForTextAutoSize(
@@ -14,34 +14,40 @@ export function findOptimalMaxWidthForTextAutoSize(
 	const targetRatio = containerWidth / containerHeight;
 	let low = 0;
 	let high = initialMaxWidth * 10;
+
 	let bestMaxWidth = initialMaxWidth;
 	let bestMaxHeight = initialMaxWidth / targetRatio;
-	let didFound = false;
+	let didFoundWithinTolerance = false;
 
 	let closestRatioDifference = Infinity;
-	let closestWidth = initialMaxWidth;
-	let closestHeight = initialMaxWidth / targetRatio;
+	let closestNonBreakingWidth = initialMaxWidth;
+	let closestNonBreakingHeight = initialMaxWidth / targetRatio;
+	let foundNonBreakingValue = false;
 
 	for (let i = 0; i < 10 && low < high; i += 1) {
 		const mid = (low + high) / 2;
-		const { width: calcWidth, height: calcHeight } = getBlockNodes(
-			text,
-			mid,
-		);
+		const {
+			width: calcWidth,
+			height: calcHeight,
+			didBreakWords,
+		} = getBlockNodes(text, mid);
 
 		const currentRatio = calcWidth / calcHeight;
 		const ratioDifference = Math.abs(currentRatio - targetRatio);
 
-		if (ratioDifference < closestRatioDifference) {
-			closestRatioDifference = ratioDifference;
-			closestWidth = calcWidth;
-			closestHeight = calcHeight;
+		if (!didBreakWords) {
+			foundNonBreakingValue = true;
+			if (ratioDifference < closestRatioDifference) {
+				closestRatioDifference = ratioDifference;
+				closestNonBreakingWidth = calcWidth;
+				closestNonBreakingHeight = calcHeight;
+			}
 		}
 
-		if (ratioDifference <= tolerance) {
-			bestMaxWidth = mid;
+		if (ratioDifference <= tolerance && !didBreakWords) {
+			bestMaxWidth = calcWidth;
 			bestMaxHeight = calcHeight;
-			didFound = true;
+			didFoundWithinTolerance = true;
 			break;
 		}
 
@@ -52,16 +58,24 @@ export function findOptimalMaxWidthForTextAutoSize(
 		}
 	}
 
-	if (!didFound) {
-		const scale = Math.min(
-			containerWidth / closestWidth,
-			containerHeight / closestHeight,
-		);
+	if (didFoundWithinTolerance) {
+		return { bestMaxWidth, bestMaxHeight };
+	}
+
+	if (foundNonBreakingValue) {
 		return {
-			bestMaxWidth: initialMaxWidth / scale,
-			bestMaxHeight: initialMaxWidth / targetRatio / scale,
+			bestMaxWidth: closestNonBreakingWidth,
+			bestMaxHeight: closestNonBreakingHeight,
 		};
 	}
 
-	return { bestMaxWidth, bestMaxHeight };
+	// If we didn't find any non-breaking values, use scale with initial max width
+	const scale = Math.min(
+		containerWidth / initialMaxWidth,
+		containerHeight / (initialMaxWidth / targetRatio),
+	);
+	return {
+		bestMaxWidth: initialMaxWidth / scale,
+		bestMaxHeight: initialMaxWidth / targetRatio / scale,
+	};
 }

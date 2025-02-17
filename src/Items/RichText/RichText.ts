@@ -33,13 +33,14 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { getBlockNodes, LayoutBlockNodes } from "./CanvasText";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph } from "./getParagraph";
 import { RichTextOperation } from "./RichTextOperations";
+import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
+import { getBlockNodes } from "./CanvasText/Render";
 
 export type DefaultTextStyles = {
 	fontFamily: string;

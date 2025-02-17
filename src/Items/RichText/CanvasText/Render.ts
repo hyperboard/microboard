@@ -1,20 +1,23 @@
 import { BlockNode } from "../Editor/BlockNode";
 import { TextNode } from "../Editor/TextNode";
-
-import { LayoutBlockNodes } from ".";
+import { LayoutBlockNodes } from "./LayoutBlockNodes";
 
 type Ctx = CanvasRenderingContext2D;
 
 export function getBlockNodes(
 	data: BlockNode[],
 	maxWidth = Infinity,
-	insideOf?: string,
-	containerWidth?: number,
-	containerHeight?: number,
+	shrink = false,
+	isFrame = false, // Smell
 ): LayoutBlockNodes {
 	const nodes: LayoutBlockNode[] = [];
+	let didBreakWords = false;
 	for (const node of data) {
-		nodes.push(getBlockNode(node, maxWidth, insideOf === "Frame"));
+		const blockNode = getBlockNode(node, maxWidth, isFrame);
+		nodes.push(blockNode);
+	}
+	for (const node of nodes) {
+		didBreakWords = didBreakWords || node.didBreakWords;
 	}
 	setBlockNodesCoordinates(nodes);
 	let width = 0;
@@ -25,23 +28,17 @@ export function getBlockNodes(
 	}
 
 	function alignNodes(maxWidth: number): void {
-		if (containerWidth && containerHeight) {
-			align(
-				nodes,
-				maxWidth,
-				insideOf,
-				Math.min(containerWidth / width, containerHeight / height),
-			);
-		} else {
-			align(nodes, maxWidth, insideOf);
-		}
+		align(nodes, maxWidth);
 	}
+
 	alignNodes(maxWidth);
+
 	return {
 		nodes,
 		maxWidth,
 		width,
 		height,
+		didBreakWords,
 		render: (ctx, scale?: number) => {
 			renderBlockNodes(ctx, nodes, scale);
 		},
@@ -65,8 +62,12 @@ export function getBlockNodes(
 interface LayoutBlockNode {
 	type:
 		| "paragraph"
-		| "heading"
-		| "block-quote"
+		| "heading_one"
+		| "heading_two"
+		| "heading_three"
+		| "heading_four"
+		| "heading_five"
+		| "code_block"
 		| "bulleted-list"
 		| "numbered-list"
 		| "list-item"
@@ -77,6 +78,7 @@ interface LayoutBlockNode {
 	align: "left" | "center" | "right" | undefined;
 	width: number;
 	height: number;
+	didBreakWords: boolean;
 }
 
 const sliceTextByWidth = (
@@ -109,7 +111,7 @@ const sliceTextByWidth = (
 function getBlockNode(
 	data: BlockNode,
 	maxWidth: number,
-	isFrame?: boolean,
+	isFrame?: boolean, // Smell
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -119,6 +121,7 @@ function getBlockNode(
 		align: data.horisontalAlignment,
 		width: 0,
 		height: 0,
+		didBreakWords: false,
 	};
 	for (const child of data.children) {
 		switch (child.type) {
@@ -128,10 +131,13 @@ function getBlockNode(
 				getBlockNode(child, maxWidth); // TODO lists
 				break;
 			case "text":
-				const newChild = isFrame
-					? sliceTextByWidth(child, maxWidth)
-					: getTextNode(child);
-				node.children.push(newChild);
+				handleTextNode(isFrame, child, maxWidth, node);
+				break;
+			default:
+				if (typeof child.text === "string") {
+					handleTextNode(isFrame, child, maxWidth, node);
+				}
+				break;
 		}
 	}
 
@@ -145,6 +151,18 @@ interface LayoutTextNode {
 	text: string;
 	style: LeafStyle;
 	blocks: never[];
+}
+
+function handleTextNode(
+	isFrame: boolean | undefined,
+	child: TextNode,
+	maxWidth: number,
+	node: LayoutBlockNode,
+): void {
+	const newChild = isFrame
+		? sliceTextByWidth(child, maxWidth)
+		: getTextNode(child);
+	node.children.push(newChild);
 }
 
 function getTextNode(data: TextNode): LayoutTextNode {
@@ -241,7 +259,7 @@ function getFont(style: LeafStyle): string {
 function layoutBlockNode(blockNode: LayoutBlockNode, maxWidth: number): void {
 	const lines: LayoutTextBlock[][] = [];
 	for (const child of blockNode.children) {
-		layoutTextNode(lines, child, maxWidth);
+		layoutTextNode(blockNode, lines, child, maxWidth);
 	}
 	blockNode.lines = lines;
 	fillEmptyLines(blockNode);
@@ -249,6 +267,7 @@ function layoutBlockNode(blockNode: LayoutBlockNode, maxWidth: number): void {
 }
 
 function layoutTextNode(
+	blockNode,
 	lines: LayoutTextBlock[][],
 	textNode: LayoutTextNode,
 	maxWidth: number,
@@ -321,7 +340,7 @@ function layoutTextNode(
 						lines.push([]);
 
 						hasWrapped = true;
-
+						blockNode.didBreakWords = true;
 						// Insert the remaining part of the word at the start of the words array.
 						words.unshift(remainingPart);
 					} else {
@@ -596,45 +615,23 @@ function setBlockNodesCoordinates(nodes): void {
 	}
 }
 
-function align(
-	nodes: LayoutBlockNode[],
-	maxWidth: number,
-	insideOf?: string,
-	scale?: number,
-): void {
+function align(nodes: LayoutBlockNode[], maxWidth: number, scale = 1): void {
 	const maxNodeWidth = nodes.reduce((acc, node) => {
 		if (node.width > acc) {
 			return node.width;
 		}
 		return acc;
 	}, -1);
+	const alignnentWidth = maxWidth === Infinity ? maxNodeWidth : maxWidth;
 	for (const node of nodes) {
 		switch (node.align) {
 			case "left":
 				break;
 			case "center":
-				if (insideOf === "RichText" || insideOf === "Connector") {
-					alignToCenter(node, maxNodeWidth);
-				} else if (insideOf === "Shape" || insideOf === "Sticker") {
-					alignToCenter(node, maxWidth, scale);
-				} else {
-					alignToCenter(
-						node,
-						maxWidth === Infinity ? maxNodeWidth : maxWidth,
-					);
-				}
+				alignToCenter(node, alignnentWidth, scale);
 				break;
 			case "right":
-				if (insideOf === "RichText" || insideOf === "Connector") {
-					alignToRight(node, maxNodeWidth);
-				} else if (insideOf === "Shape" || insideOf === "Sticker") {
-					alignToRight(node, maxWidth, scale);
-				} else {
-					alignToRight(
-						node,
-						maxWidth === Infinity ? maxNodeWidth : maxWidth,
-					);
-				}
+				alignToRight(node, alignnentWidth, scale);
 				break;
 		}
 	}
@@ -643,24 +640,16 @@ function align(
 function alignToCenter(
 	node: LayoutBlockNode,
 	maxWidth: number,
-	scale?: number,
+	scale: number,
 ): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
-			if (scale) {
-				lineWidth += block.width * scale;
-			} else {
-				lineWidth += block.width;
-			}
+			lineWidth += block.width * scale;
 		}
 		const xOffset = (maxWidth - lineWidth) / 2;
 		for (const block of line) {
-			if (scale) {
-				block.x += xOffset / scale;
-			} else {
-				block.x += xOffset;
-			}
+			block.x += xOffset / scale;
 		}
 	}
 }
@@ -668,24 +657,16 @@ function alignToCenter(
 function alignToRight(
 	node: LayoutBlockNode,
 	maxWidth: number,
-	scale?: number,
+	scale: number,
 ): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
-			if (scale) {
-				lineWidth += block.width * scale;
-			} else {
-				lineWidth += block.width;
-			}
+			lineWidth += block.width * scale;
 		}
 		const xOffset = maxWidth - lineWidth;
 		for (const block of line) {
-			if (scale) {
-				block.x += xOffset / scale;
-			} else {
-				block.x += xOffset;
-			}
+			block.x += xOffset / scale;
 		}
 	}
 }
