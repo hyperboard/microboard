@@ -112,6 +112,8 @@ function getBlockNode(
 	data: BlockNode,
 	maxWidth: number,
 	isFrame?: boolean, // Smell
+	listData?: { isNumberedList: boolean; level: number },
+	listMark?: string,
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -123,19 +125,95 @@ function getBlockNode(
 		height: 0,
 		didBreakWords: false,
 	};
-	for (const child of data.children) {
+	for (let i = 0; i < data.children.length; i++) {
+		const child = { ...data.children[i] };
 		switch (child.type) {
-			case "bulleted-list":
-			case "numbered-list":
-			case "list-item":
-				getBlockNode(child, maxWidth); // TODO lists
+			case "ol_list": {
+				const currentListData = {
+					isNumberedList: true,
+					level: listData?.level || 0,
+				};
+				if (listData) {
+					currentListData.level += 1;
+				}
+				const blockNode = getBlockNode(
+					child,
+					maxWidth,
+					isFrame,
+					currentListData,
+				);
+				node.children = node.children.concat(blockNode.children);
+				node.lines = node.lines.concat(blockNode.lines);
 				break;
+			}
+			case "ul_list": {
+				const currentListData = {
+					isNumberedList: false,
+					level: listData?.level || 0,
+				};
+				if (listData) {
+					currentListData.level += 1;
+				}
+				const blockNode = getBlockNode(
+					child,
+					maxWidth,
+					isFrame,
+					currentListData,
+				);
+				node.children = node.children.concat(blockNode.children);
+				node.lines = node.lines.concat(blockNode.lines);
+				break;
+			}
+			case "list_item": {
+				let listMark = "";
+				for (let i = 0; i < listData?.level; i++) {
+					listMark += "   ";
+				}
+				if (listData?.isNumberedList) {
+					listMark += `${i}. `;
+				} else {
+					listMark += "• ";
+				}
+				const blockNode = getBlockNode(
+					child,
+					maxWidth,
+					isFrame,
+					listData,
+					listMark,
+				);
+				node.children = node.children.concat(blockNode.children);
+				node.lines = node.lines.concat(blockNode.lines);
+				break;
+			}
 			case "text":
 				handleTextNode(isFrame, child, maxWidth, node);
 				break;
 			default:
 				if (typeof child.text === "string") {
 					handleTextNode(isFrame, child, maxWidth, node);
+				} else {
+					if (
+						listMark &&
+						child.children &&
+						child.children.length > 0 &&
+						child.children[0].type === "text"
+					) {
+						const textNode: TextNode = {
+							...child.children[0],
+							text: listMark,
+							newLine: true,
+						};
+						child.children = [textNode, ...child.children];
+					}
+					const blockNode = getBlockNode(
+						child,
+						maxWidth,
+						isFrame,
+						listData,
+						listMark,
+					);
+					node.children = node.children.concat(blockNode.children);
+					node.lines = node.lines.concat(blockNode.lines);
 				}
 				break;
 		}
@@ -151,6 +229,7 @@ interface LayoutTextNode {
 	text: string;
 	style: LeafStyle;
 	blocks: never[];
+	newLine: boolean;
 }
 
 function handleTextNode(
@@ -162,7 +241,7 @@ function handleTextNode(
 	const newChild = isFrame
 		? sliceTextByWidth(child, maxWidth)
 		: getTextNode(child);
-	node.children.push(newChild);
+	node.children.push({ ...newChild, newLine: child.newLine });
 }
 
 function getTextNode(data: TextNode): LayoutTextNode {
@@ -280,6 +359,13 @@ function layoutTextNode(
 	// Check if the lines array is empty. If it is, add a new line to it.
 	if (lines.length === 0) {
 		lines.push([]);
+	}
+
+	if (textNode.newLine) {
+		// Проверяем, не пуста ли последняя строка
+		if (lines.length > 0 && lines[lines.length - 1].length > 0) {
+			lines.push([]); // Создаем новую строку
+		}
 	}
 
 	const style = textNode.style;

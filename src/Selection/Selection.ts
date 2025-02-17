@@ -520,9 +520,7 @@ export class Selection {
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}
 
-	copy(
-		skipImageBlobCopy = false,
-	):
+	copy(skipImageBlobCopy = false):
 		| { [key: string]: ItemData }
 		| {
 				imageElement: HTMLImageElement;
@@ -1340,7 +1338,7 @@ export class Selection {
 
 	duplicate(): void {
 		const filteredItemMap = Object.fromEntries(
-			Object.entries(this.copy()).filter(
+			Object.entries(this.copy(true)).filter(
 				([_, item]) => item.itemType !== "Group",
 			),
 		);
