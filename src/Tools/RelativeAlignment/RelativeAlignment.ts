@@ -53,7 +53,6 @@ export class AlignmentHelper {
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
 		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 8);
-
 		const childrenIds =
 			movingItem instanceof Frame ? movingItem.getChildrenIds() : [];
 
@@ -66,7 +65,7 @@ export class AlignmentHelper {
 				otherItem.itemType !== "Drawing" &&
 				otherItem.isInView(camera) &&
 				!childrenIds.includes(otherItem.getId()),
-			cameraWidth,
+			Math.ceil(cameraWidth / 3),
 		);
 
 		const verticalAlignments: Map<number, { minY: number; maxY: number }> =
