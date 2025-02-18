@@ -20,7 +20,7 @@ export function getParagraph(
 					bold: fontStyles.includes("bold"),
 					italic: fontStyles.includes("italic"),
 					underline: fontStyles.includes("underline"),
-					lineThrough: fontStyles.includes("line-through"),
+					"line-through": fontStyles.includes("line-through"),
 					fontColor: fontColor,
 					fontHighlight: "",
 					fontSize: fontSize,

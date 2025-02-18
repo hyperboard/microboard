@@ -21,7 +21,7 @@ export type TextNode = {
 	italic: boolean;
 	underline: boolean;
 	overline: boolean;
-	lineThrough: boolean;
+	"line-through": boolean;
 	subscript: boolean;
 	superscript: boolean;
 	fontFamily?: string;
@@ -43,7 +43,7 @@ export type LinkNode = {
 	italic: boolean;
 	underline: boolean;
 	overline: boolean;
-	lineThrough: boolean;
+	"line-through": boolean;
 	subscript: boolean;
 	superscript: boolean;
 	fontFamily?: string;

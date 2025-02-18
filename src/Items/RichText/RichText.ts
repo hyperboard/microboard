@@ -51,7 +51,7 @@ export type DefaultTextStyles = {
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;
-	lineThrough: boolean;
+	"line-through": boolean;
 };
 
 let isEditInProcessValue = false;
@@ -657,6 +657,7 @@ export class RichText extends Mbr implements Geometry {
 		) {
 			this.editor.selectWholeText();
 		}
+		console.log("setSelectionFontStyle", style);
 		const ops = this.editor.setSelectionFontStyle(style);
 		this.updateElement();
 		return ops;
@@ -1020,7 +1021,7 @@ export class RichText extends Mbr implements Geometry {
 				span.style.fontStyle = node.italic ? "italic" : "";
 				span.style.textDecoration = [
 					node.underline ? "underline" : "",
-					node.lineThrough ? "line-through" : "",
+					node["line-through"] ? "line-through" : "",
 				]
 					.filter(Boolean)
 					.join(" ");

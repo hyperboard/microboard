@@ -98,7 +98,7 @@ export class EditorContainer {
 						text: "",
 						...initialTextStyles,
 						overline: false,
-						lineThrough: false,
+						"line-through": false,
 						subscript: false,
 						superscript: false,
 					},
@@ -489,9 +489,12 @@ export class EditorContainer {
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
 			} else if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
+				console.log("addMark", style);
 				Editor.addMark(this.editor, style, true);
 			}
 		}
+
+		console.log("get marks", this.editor);
 		return this.stopOpRecordingAndGetOps();
 	}
 
@@ -733,7 +736,7 @@ export class EditorContainer {
 				styles.push("underline");
 			}
 
-			if (n.lineThrough) {
+			if (n["line-through"]) {
 				styles.push("line-through");
 			}
 			return styles;
@@ -748,6 +751,7 @@ export class EditorContainer {
 		}
 
 		const nodes = this.getAllTextNodesInSelection();
+		console.log("nodes", nodes);
 		const styles: TextStyle[][] = nodes.reduce(
 			(acc: TextStyle[][], node: TextNode) => {
 				const styles: TextStyle[] = [];
@@ -767,7 +771,7 @@ export class EditorContainer {
 					styles.push("underline");
 				}
 
-				if (node.lineThrough) {
+				if (node["line-through"]) {
 					styles.push("line-through");
 				}
 				acc.push(styles);

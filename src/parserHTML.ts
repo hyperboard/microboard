@@ -87,7 +87,8 @@ function parseHTMLRichText(
 				bold: node.style.fontWeight === "700",
 				italic: node.style.fontStyle === "italic",
 				underline: node.style.textDecoration.includes("underline"),
-				lineThrough: node.style.textDecoration.includes("line-through"),
+				"line-through":
+					node.style.textDecoration.includes("line-through"),
 				fontColor: node.style.color || DEFAULT_TEXT_STYLES.fontColor,
 				fontHighlight:
 					node.style.backgroundColor ||
