@@ -1454,7 +1454,7 @@ export class Board {
 		this.interfaceType = interfaceType;
 		const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 		if (!isMobile) {
-			this.tools.navigate();
+			this.tools.select();
 		}
 		this.subject.publish();
 		this.tools.publish();

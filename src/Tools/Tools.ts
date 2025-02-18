@@ -30,11 +30,7 @@ export class Tools extends ToolContext {
 	}
 
 	navigate(): void {
-		if (this.getNavigate()) {
-			this.cancel();
-		} else {
-			this.tool = new Navigate(this.board);
-		}
+		this.tool = new Navigate(this.board);
 		this.publish();
 	}
 
@@ -43,13 +39,9 @@ export class Tools extends ToolContext {
 	}
 
 	select(clearSelection = false): void {
-		if (this.getSelect()) {
-			this.navigate();
-		} else {
-			this.tool = new Select(this.board);
-			if (clearSelection) {
-				this.board.selection.removeAll();
-			}
+		this.tool = new Select(this.board);
+		if (clearSelection) {
+			this.board.selection.removeAll();
 		}
 		this.publish();
 	}
