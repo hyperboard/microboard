@@ -5,8 +5,11 @@ import {
 	fitBoardMenu,
 	fitComment,
 	fitContextPanel,
+	fitContextPanelToCenter,
+	fitContextPanelToLeft,
 	fitLinkToBtn,
 	fitThreadPanel,
+	getContextPanelRect,
 } from "View/fit";
 
 export function updateRects(
@@ -27,21 +30,21 @@ export function updateRects(
 	const selectionMbr = mbr ?? selection.getMbr();
 	const selectionItems = selection.items;
 	const richTextSelection =
-		selectionItems.isSingle() &&
 		selectionItems.getSingle() instanceof RichText
 			? (selectionItems.list()[0] as RichText)
 			: undefined;
 
 	if (panel && selectionMbr) {
 		if (fit === "contextPanel") {
-			const panelRect = fitContextPanel(
-				selectionMbr.getTransformed(camera.getMatrix()),
-				camera.window.getMbr(),
-				Mbr.fromDomRect(panel.getBoundingClientRect()),
-				verticalOffset,
+			const panelRect = getContextPanelRect(
+				selectionMbr,
+				camera,
+				panel,
+				!!richTextSelection,
 				horizontalOffset,
-				richTextSelection,
+				verticalOffset,
 			);
+
 			return panelRect;
 		}
 		if (fit === "linkToBtn") {
