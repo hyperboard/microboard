@@ -37,18 +37,6 @@ const Pointers = {
 		start: new Point(94, 50),
 		end: new Point(95, 50),
 	},
-	AngleTalk: {
-		name: "AngleTalk",
-		path: new Path(
-			[
-				new Line(new Point(65, 25), new Point(95, 50)),
-				new Line(new Point(95, 50), new Point(65, 75)),
-			],
-			false,
-		),
-		start: new Point(94, 50),
-		end: new Point(95, 50),
-	},
 	ArrowBroad: {
 		name: "ArrowBroad",
 		path: new Path(
@@ -277,19 +265,6 @@ const Pointers = {
 	},
 	TriangleFilled: {
 		name: "TriangleFilled",
-		path: new Path(
-			[
-				new Line(new Point(65, 35), new Point(95, 50)),
-				new Line(new Point(95, 50), new Point(65, 65)),
-				new Line(new Point(65, 65), new Point(65, 35)),
-			],
-			true,
-		),
-		start: new Point(65, 50),
-		end: new Point(95, 50),
-	},
-	TriangleFilledTalk: {
-		name: "TriangleFilledTalk",
 		path: new Path(
 			[
 				new Line(new Point(65, 35), new Point(95, 50)),
