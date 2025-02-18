@@ -19,9 +19,9 @@ export function getBlockNodes(
 	for (const node of nodes) {
 		didBreakWords = didBreakWords || node.didBreakWords;
 	}
-	setBlockNodesCoordinates(nodes);
+	const paddingsSum = setBlockNodesCoordinates(nodes);
 	let width = 0;
-	let height = 0;
+	let height = paddingsSum;
 	for (const node of nodes) {
 		width = Math.max(width, node.width);
 		height += node.height;
@@ -68,9 +68,9 @@ interface LayoutBlockNode {
 		| "heading_four"
 		| "heading_five"
 		| "code_block"
-		| "bulleted-list"
-		| "numbered-list"
-		| "list-item"
+		| "ul_list"
+		| "ol_list"
+		| "list_item"
 		| "text";
 	lineHeight: number;
 	children: LayoutTextNode[];
@@ -79,6 +79,8 @@ interface LayoutBlockNode {
 	width: number;
 	height: number;
 	didBreakWords: boolean;
+	paddingTop: number;
+	marginLeft: number;
 }
 
 const sliceTextByWidth = (
@@ -114,6 +116,7 @@ function getBlockNode(
 	isFrame?: boolean, // Smell
 	listData?: { isNumberedList: boolean; level: number },
 	listMark?: string,
+	newLine = false,
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -124,9 +127,16 @@ function getBlockNode(
 		width: 0,
 		height: 0,
 		didBreakWords: false,
+		paddingTop: 0,
+		marginLeft: 0,
 	};
+	if (node.type === "ol_list" && !listData) {
+		listData = { level: 0, isNumberedList: true };
+	} else if (node.type === "ul_list" && !listData) {
+		listData = { level: 0, isNumberedList: false };
+	}
 	for (let i = 0; i < data.children.length; i++) {
-		const child = { ...data.children[i] };
+		const child = structuredClone(data.children[i]);
 		switch (child.type) {
 			case "ol_list": {
 				const currentListData = {
@@ -166,14 +176,12 @@ function getBlockNode(
 			}
 			case "list_item": {
 				let listMark = "";
-				for (let i = 0; i < listData?.level; i++) {
-					listMark += "   ";
-				}
 				if (listData?.isNumberedList) {
-					listMark += `${i}. `;
+					listMark += `${i}.`;
 				} else {
-					listMark += "• ";
+					listMark += "•";
 				}
+
 				const blockNode = getBlockNode(
 					child,
 					maxWidth,
@@ -186,31 +194,45 @@ function getBlockNode(
 				break;
 			}
 			case "text":
-				handleTextNode(isFrame, child, maxWidth, node);
+				handleTextNode({
+					isFrame,
+					child,
+					node,
+					maxWidth,
+					paddingTop: i === 0 ? 8 : 0,
+					marginLeft:
+						(listData ? 16 : 0) + (listData?.level || 0) * 24,
+					newLine: i === 0 ? newLine : false,
+					listMark,
+				});
 				break;
 			default:
-				if (typeof child.text === "string") {
-					handleTextNode(isFrame, child, maxWidth, node);
+				if ("text" in child && typeof child.text === "string") {
+					handleTextNode({
+						isFrame,
+						child,
+						node,
+						maxWidth,
+						paddingTop: i === 0 ? 8 : 0,
+						marginLeft:
+							(listData ? 16 : 0) + (listData?.level || 0) * 24,
+						newLine: i === 0 ? newLine : false,
+						listMark,
+					});
 				} else {
-					if (
+					const shouldStartWithNewLine = Boolean(
 						listMark &&
-						child.children &&
-						child.children.length > 0 &&
-						child.children[0].type === "text"
-					) {
-						const textNode: TextNode = {
-							...child.children[0],
-							text: listMark,
-							newLine: true,
-						};
-						child.children = [textNode, ...child.children];
-					}
+							child.children &&
+							child.children.length > 0 &&
+							child.children[0].type === "text",
+					);
 					const blockNode = getBlockNode(
 						child,
 						maxWidth,
 						isFrame,
 						listData,
 						listMark,
+						shouldStartWithNewLine,
 					);
 					node.children = node.children.concat(blockNode.children);
 					node.lines = node.lines.concat(blockNode.lines);
@@ -230,18 +252,40 @@ interface LayoutTextNode {
 	style: LeafStyle;
 	blocks: never[];
 	newLine: boolean;
+	paddingTop?: number;
+	marginLeft?: number;
+	listMark?: string;
 }
 
-function handleTextNode(
-	isFrame: boolean | undefined,
-	child: TextNode,
-	maxWidth: number,
-	node: LayoutBlockNode,
-): void {
+function handleTextNode({
+	isFrame,
+	child,
+	node,
+	maxWidth,
+	newLine = false,
+	listMark,
+	marginLeft,
+	paddingTop,
+}: {
+	isFrame: boolean | undefined;
+	child: TextNode;
+	maxWidth: number;
+	node: LayoutBlockNode;
+	newLine?: boolean;
+	paddingTop?: number;
+	marginLeft?: number;
+	listMark?: string;
+}): void {
 	const newChild = isFrame
 		? sliceTextByWidth(child, maxWidth)
 		: getTextNode(child);
-	node.children.push({ ...newChild, newLine: child.newLine });
+	node.children.push({
+		...newChild,
+		newLine,
+		paddingTop,
+		marginLeft,
+		listMark,
+	});
 }
 
 function getTextNode(data: TextNode): LayoutTextNode {
@@ -346,11 +390,12 @@ function layoutBlockNode(blockNode: LayoutBlockNode, maxWidth: number): void {
 }
 
 function layoutTextNode(
-	blockNode,
+	blockNode: LayoutBlockNode,
 	lines: LayoutTextBlock[][],
 	textNode: LayoutTextNode,
 	maxWidth: number,
 ): void {
+	let isFirstLineInNode = true;
 	// Check if textNode.text is empty. If it is, return since there is no text to process.
 	if (textNode.text === "") {
 		return;
@@ -362,9 +407,8 @@ function layoutTextNode(
 	}
 
 	if (textNode.newLine) {
-		// Проверяем, не пуста ли последняя строка
 		if (lines.length > 0 && lines[lines.length - 1].length > 0) {
-			lines.push([]); // Создаем новую строку
+			lines.push([]);
 		}
 	}
 
@@ -389,12 +433,18 @@ function layoutTextNode(
 			const newText =
 				currentString === "" ? word : currentString + "" + word;
 
-			// Create a text block using the getTextBlock function with the current string.
-			// The function will measure the text and set the text block width.
-			const block = getTextBlock(newText, style);
-
 			// Get the last line in the lines array and its width.
 			const lastLine = lines[lines.length - 1];
+
+			// Create a text block using the getTextBlock function with the current string.
+			// The function will measure the text and set the text block width.
+			const block = getTextBlock({
+				text: newText,
+				style,
+				paddingTop: textNode.paddingTop,
+				marginLeft: lastLine.length ? 0 : textNode.marginLeft,
+			});
+
 			let lastLineWidth = 0;
 			for (const block of lastLine) {
 				lastLineWidth += block.width;
@@ -414,13 +464,25 @@ function layoutTextNode(
 							word,
 							style,
 							maxWidth,
-						);
+							textNode.marginLeft,
+						).firstPart;
 						const remainingPart = word.slice(substring.length);
 
 						// Create a new block with the substring.
-						const newBlock = getTextBlock(substring, style);
+						const newBlock = getTextBlock({
+							text: substring,
+							style,
+							paddingTop: isFirstLineInNode
+								? textNode.paddingTop
+								: 0,
+							marginLeft: textNode.marginLeft,
+							listMark: !hasWrapped
+								? textNode.listMark
+								: undefined,
+						});
 						// Push the new block to the line.
 						lastLine.push(newBlock);
+						isFirstLineInNode = false;
 
 						// Push a new line to the lines array.
 						lines.push([]);
@@ -430,26 +492,79 @@ function layoutTextNode(
 						// Insert the remaining part of the word at the start of the words array.
 						words.unshift(remainingPart);
 					} else {
-						// If the last line is not empty, we must attempt to fit the word into a new empty line.
-						// Push a new line to the lines array.
+						const lastBlock = lastLine[lastLine.length - 1];
+						let lineWidth = 0;
+						lastLine.forEach((block, index) => {
+							if (index < lastLine.length - 1) {
+								lineWidth += block.width;
+							}
+						});
+						console.log(lastBlock);
+						console.log(word);
+
+						const substring = findLargestSubstring(
+							lastBlock.text,
+							lastBlock.style,
+							maxWidth,
+							lastBlock === lastLine[0]
+								? textNode.marginLeft
+								: lineWidth,
+							word,
+							style,
+						).secondPart;
+
+						const newBlock = getTextBlock({
+							text: substring,
+							style,
+							paddingTop: isFirstLineInNode
+								? textNode.paddingTop
+								: 0,
+						});
+
+						lastLine.push(newBlock);
+						isFirstLineInNode = false;
+
 						lines.push([]);
 
 						hasWrapped = true;
+						blockNode.didBreakWords = true;
 
-						// Insert the current word back at the start of the words array.
-						words.unshift(word);
+						words.unshift(word.slice(substring.length));
+
+						// // If the last line is not empty, we must attempt to fit the word into a new empty line.
+						// // Push a new line to the lines array.
+						// lines.push([]);
+						//
+						// hasWrapped = true;
+						//
+						// // Insert the current word back at the start of the words array.
+						// words.unshift(word);
 					}
 				} else {
 					// If the current string is not empty, we can push it to the last line and create the next line.
 					if (lastLine.length === 0 && hasWrapped) {
 						currentString = currentString.trimStart();
 					}
+					const isFirstBlockInLine =
+						lines[lines.length - 1].length === 0;
 
 					// Create a text block from the current string.
-					const newBlock = getTextBlock(currentString, style);
+					const newBlock = getTextBlock({
+						text: currentString,
+						style,
+						paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
+						marginLeft: isFirstBlockInLine
+							? textNode.marginLeft
+							: 0,
+						listMark:
+							!hasWrapped && isFirstBlockInLine
+								? textNode.listMark
+								: undefined,
+					});
 
 					// Push the new block to the last line.
 					lastLine.push(newBlock);
+					isFirstLineInNode = false;
 
 					// Push a new empty line to the lines array.
 					lines.push([]);
@@ -467,7 +582,17 @@ function layoutTextNode(
 
 		// Push the last text block if it exists.
 		if (currentString !== "") {
-			const lastBlock = getTextBlock(currentString, style);
+			const isFirstBlockInLine = lines[lines.length - 1].length === 0;
+			const lastBlock = getTextBlock({
+				text: currentString,
+				style,
+				paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
+				marginLeft: isFirstBlockInLine ? textNode.marginLeft : 0,
+				listMark:
+					!hasWrapped && isFirstBlockInLine
+						? textNode.listMark
+						: undefined,
+			});
 			lines[lines.length - 1].push(lastBlock);
 		}
 
@@ -489,7 +614,12 @@ function fillEmptyLines(blockNode: LayoutBlockNode): void {
 			if (previousLine !== undefined) {
 				previousStyle = previousLine[previousLine.length - 1].style;
 			}
-			line.push(getTextBlock(" ", previousStyle ?? defaultStyle));
+			line.push(
+				getTextBlock({
+					text: " ",
+					style: previousStyle ?? defaultStyle,
+				}),
+			);
 		}
 	}
 }
@@ -553,10 +683,25 @@ interface LayoutTextBlock {
 	y: number;
 	measure: MeasuredRect;
 	fontSize: number;
+	marginLeft?: number;
+	paddingTop?: number;
+	listMark?: string;
 }
 
-function getTextBlock(text: string, style: LeafStyle): LayoutTextBlock {
-	const measure = measureText(text, style);
+function getTextBlock({
+	text,
+	style,
+	paddingTop = 0,
+	marginLeft = 0,
+	listMark,
+}: {
+	text: string;
+	style: LeafStyle;
+	paddingTop?: number;
+	marginLeft?: number;
+	listMark?: string;
+}): LayoutTextBlock {
+	const measure = measureText(text, style, paddingTop, marginLeft);
 	const textBlock = {
 		text,
 		style,
@@ -565,6 +710,9 @@ function getTextBlock(text: string, style: LeafStyle): LayoutTextBlock {
 		y: 0,
 		measure,
 		fontSize: style.fontSize,
+		paddingTop,
+		marginLeft,
+		listMark,
 	};
 	return textBlock;
 }
@@ -603,10 +751,17 @@ interface MeasuredRect {
 	height: number;
 }
 
-function measureText(text: string, style): MeasuredRect {
+function measureText(
+	text: string,
+	style,
+	paddingTop = 0,
+	marginLeft = 0,
+): MeasuredRect {
 	if (measureCache[style.font]) {
 		if (measureCache[style.font][text]) {
-			return measureCache[style.font][text];
+			const rect = { ...measureCache[style.font][text] };
+			rect.width += marginLeft;
+			rect.height += paddingTop;
 		}
 	}
 	measureCtx.font = style.font;
@@ -644,7 +799,10 @@ function measureText(text: string, style): MeasuredRect {
 		measureCache[style.font] = {};
 	}
 	measureCache[style.font][text] = rect;
-	return rect;
+	const rectCopy = { ...rect };
+	rectCopy.width += marginLeft;
+	rectCopy.height += paddingTop;
+	return rectCopy;
 }
 
 function splitTextIntoWords(text: string): string[] {
@@ -652,11 +810,23 @@ function splitTextIntoWords(text: string): string[] {
 	return text.split(/(\s+)/).filter(element => element !== "");
 }
 
-function findLargestSubstring(word, style, maxWidth: number): string {
+function findLargestSubstring(
+	firstStr: string,
+	firstStyle: LeafStyle,
+	maxWidth: number,
+	marginLeft = 0,
+	secondStr = "",
+	secondStyle?: LeafStyle,
+): { firstPart: string; secondPart: string } {
 	// Use binary search to find the largest substring of the word that fits within the maxWidth.
 	let start = 0;
+	const word = firstStr + secondStr;
+	const firstStrLength = firstStr.length;
 	let end = word.length;
-	let largestSubstring = "";
+	let largestSubstring: { firstPart: string; secondPart: string } = {
+		firstPart: "",
+		secondPart: "",
+	};
 
 	while (start <= end) {
 		// Calculate the middle index of the current range
@@ -664,19 +834,40 @@ function findLargestSubstring(word, style, maxWidth: number): string {
 
 		if (mid === 0) {
 			// If mid is 0, the range is 0 to 0, so break out of the loop
-			largestSubstring = word.slice(0, 1);
+			largestSubstring.firstPart = word.slice(0, 1);
 			break;
 		}
 
-		// Get the substring from the start of the word up to the middle index
-		const substring = word.slice(0, mid);
-
 		// Measure the width of the substring using the getTextBlock function
-		const block = getTextBlock(substring, style);
+		let blocksWidth = 0;
 
-		if (block.width <= maxWidth) {
+		const substrings: { text: string; style: LeafStyle }[] = [];
+		if (mid <= firstStrLength) {
+			substrings.push({ text: word.slice(0, mid), style: firstStyle });
+		} else {
+			substrings.push({ text: firstStr, style: firstStyle });
+			substrings.push({
+				text: word.slice(firstStrLength, mid),
+				style: secondStyle,
+			});
+		}
+
+		substrings.forEach((substring, index) => {
+			blocksWidth += getTextBlock({
+				text: substring.text,
+				style: substring.style,
+				marginLeft: index === 0 ? marginLeft : 0,
+			}).width;
+		});
+
+		if (blocksWidth <= maxWidth) {
 			// If the substring width is less than or equal to maxWidth, update largestSubstring
-			largestSubstring = substring;
+			if (mid <= firstStrLength) {
+				largestSubstring.firstPart = word.slice(0, mid);
+			} else {
+				largestSubstring.firstPart = firstStr;
+				largestSubstring.secondPart = word.slice(firstStrLength, mid);
+			}
 
 			// Search for a longer substring in the second half of the range
 			start = mid + 1;
@@ -689,16 +880,24 @@ function findLargestSubstring(word, style, maxWidth: number): string {
 	return largestSubstring;
 }
 
-function setBlockNodesCoordinates(nodes): void {
+function setBlockNodesCoordinates(nodes: LayoutBlockNode[]): number {
 	let yOffset = 0;
+	let paddingsSum = 0;
 	for (const node of nodes) {
 		for (const line of node.lines) {
 			for (const block of line) {
+				if (node !== nodes[0]) {
+					yOffset += block.paddingTop || 0;
+					paddingsSum += block.paddingTop || 0;
+				}
 				block.y += yOffset;
+				block.x += block.marginLeft || 0;
 			}
 		}
 		yOffset += node.height;
 	}
+
+	return paddingsSum;
 }
 
 function align(nodes: LayoutBlockNode[], maxWidth: number, scale = 1): void {
@@ -856,4 +1055,7 @@ function fillText(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const { text, style, x, y } = textBlock;
 	ctx.fillStyle = style.color;
 	ctx.fillText(text, x, y);
+	if (textBlock.listMark) {
+		ctx.fillText(textBlock.listMark, x - 16, y);
+	}
 }
