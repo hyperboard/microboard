@@ -142,6 +142,10 @@ export class Camera {
 		const finalScaleX = this.limitScale(targetScaleX);
 		const finalScaleY = this.limitScale(targetScaleY);
 
+		if (finalScaleX === startScaleX && finalScaleY === startScaleY) {
+			return;
+		}
+
 		// If duration is 0, apply changes instantly without animation
 		if (duration === 0) {
 			this.matrix.translateX = targetTranslateX;
