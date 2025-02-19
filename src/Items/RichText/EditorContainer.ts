@@ -751,7 +751,6 @@ export class EditorContainer {
 		}
 
 		const nodes = this.getAllTextNodesInSelection();
-		console.log("nodes", nodes);
 		const styles: TextStyle[][] = nodes.reduce(
 			(acc: TextStyle[][], node: TextNode) => {
 				const styles: TextStyle[] = [];

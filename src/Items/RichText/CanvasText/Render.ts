@@ -12,6 +12,7 @@ export function getBlockNodes(
 ): LayoutBlockNodes {
 	const nodes: LayoutBlockNode[] = [];
 	let didBreakWords = false;
+
 	for (const node of data) {
 		const blockNode = getBlockNode(node, maxWidth, isFrame);
 		nodes.push(blockNode);
@@ -117,6 +118,7 @@ function getBlockNode(
 	listData?: { isNumberedList: boolean; level: number },
 	listMark?: string,
 	newLine = false,
+	paddingTopInEm = 0,
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -199,7 +201,7 @@ function getBlockNode(
 					child,
 					node,
 					maxWidth,
-					paddingTop: i === 0 ? 8 : 0,
+					paddingTop: i === 0 ? 16 * paddingTopInEm : 0,
 					marginLeft:
 						(listData ? 16 : 0) + (listData?.level || 0) * 24,
 					newLine: i === 0 ? newLine : false,
@@ -213,7 +215,7 @@ function getBlockNode(
 						child,
 						node,
 						maxWidth,
-						paddingTop: i === 0 ? 8 : 0,
+						paddingTop: i === 0 ? 16 * paddingTopInEm : 0,
 						marginLeft:
 							(listData ? 16 : 0) + (listData?.level || 0) * 24,
 						newLine: i === 0 ? newLine : false,
@@ -233,6 +235,7 @@ function getBlockNode(
 						listData,
 						listMark,
 						shouldStartWithNewLine,
+						child.paddingTop,
 					);
 					node.children = node.children.concat(blockNode.children);
 					node.lines = node.lines.concat(blockNode.lines);
