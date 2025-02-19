@@ -974,7 +974,7 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
-		this.updateElement();
+		setTimeout(() => this.updateElement(), 200);
 		this.subject.publish(this);
 		return this;
 	}

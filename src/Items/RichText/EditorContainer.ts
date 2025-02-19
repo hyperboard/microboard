@@ -1003,14 +1003,15 @@ export class EditorContainer {
 		}
 	}
 
-	deserializeMarkdown(isNewParagraphNeeded: boolean) {
+	deserializeMarkdown(isNewParagraphNeeded: boolean, textToInsert?: string) {
 		const lastNode = this.getText()[this.getText().length - 1];
-		if (lastNode.type !== "paragraph") {
+		if (lastNode.type !== "paragraph" && !textToInsert) {
 			this.subject.publish(this);
 			return true;
 		}
 
-		let text: string | undefined = lastNode.children[0]?.text;
+		let text: string | undefined =
+			textToInsert || lastNode.children[0]?.text;
 
 		if (!text) {
 			Transforms.insertNodes(this.editor, this.createParagraphNode(""), {
@@ -1020,7 +1021,7 @@ export class EditorContainer {
 			return true;
 		}
 
-		if (text.startsWith(t("AIInput.generatingResponse"))) {
+		if (text.startsWith(t("AIInput.generatingResponse")) && !textToInsert) {
 			return true;
 		}
 

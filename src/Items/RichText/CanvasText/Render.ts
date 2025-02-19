@@ -1,6 +1,7 @@
 import { BlockNode } from "../Editor/BlockNode";
 import { TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
+import { Descendant } from "slate";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -10,6 +11,50 @@ export function getBlockNodes(
 	shrink = false,
 	isFrame = false, // Smell
 ): LayoutBlockNodes {
+	// if (shrink) {
+	// 	const filledEmptys = data.map(
+	// 		des =>
+	// 			(des.type === "paragraph" && {
+	// 				...des,
+	// 				children: des.children.map(child => ({
+	// 					...child,
+	// 					text:
+	// 						child.text?.length !== 0
+	// 							? child.text
+	// 							: child.link
+	// 								? child.link
+	// 								: "1",
+	// 				})),
+	// 			}) ||
+	// 			des,
+	// 	);
+	//
+	// 	// non emptys width is calculated correctly
+	// 	const singleLineLayout = getBlockNodes(filledEmptys, Infinity);
+	// 	const singleLineHeight = singleLineLayout.height;
+	//
+	// 	const maxWidthLayout = getBlockNodes(data, maxWidth);
+	// 	const maxWidthHeight = maxWidthLayout.height;
+	//
+	// 	// If the height with maxWidth is greater than the single line height, return the maxWidth layout
+	// 	if (maxWidthHeight > singleLineHeight) {
+	// 		return maxWidthLayout;
+	// 	}
+	//
+	// 	const bestWidth = findMinimumWidthForSingleLineHeight(
+	// 		data,
+	// 		singleLineHeight,
+	// 		maxWidth,
+	// 	);
+	// 	const biggestOneSymbolWidth = getOneCharacterMaxWidth(data);
+	//
+	// 	return getBlockNodes(
+	// 		data,
+	// 		bestWidth > biggestOneSymbolWidth
+	// 			? bestWidth
+	// 			: biggestOneSymbolWidth,
+	// 	);
+	// }
 	const nodes: LayoutBlockNode[] = [];
 	let didBreakWords = false;
 
@@ -32,7 +77,7 @@ export function getBlockNodes(
 		align(nodes, maxWidth);
 	}
 
-	alignNodes(maxWidth);
+	alignNodes(shrink ? width : maxWidth);
 
 	return {
 		nodes,
