@@ -823,7 +823,7 @@ function findLargestSubstring(
 	const word = firstStr + secondStr;
 	const firstStrLength = firstStr.length;
 	let end = word.length;
-	let largestSubstring: { firstPart: string; secondPart: string } = {
+	const largestSubstring: { firstPart: string; secondPart: string } = {
 		firstPart: "",
 		secondPart: "",
 	};
