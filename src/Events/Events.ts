@@ -34,7 +34,6 @@ import {
 } from "Board/Presence/Events";
 import i18n from "Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
-import { DEFAULT_MAX_NODE_WIDTH } from "View/AIInput/utils";
 import { t } from "i18next";
 import { ImageItem } from "Board/Items/Image";
 import { Connector } from "Board/Items";
@@ -730,8 +729,16 @@ export function createEvents(
 		}
 
 		const cameraSnapshot = board.getCameraSnapshot();
-		if (board.items.getItemsInView().length === 0 || !cameraSnapshot) {
+		const hasItemsInBoard = board.items.listAll().length !== 0;
+		const isItemsOutOfView =
+			board.items.getItemsInView().length === 0 || !cameraSnapshot;
+
+		if (isItemsOutOfView && hasItemsInBoard) {
 			board.camera.zoomToFit(board.items.getMbr());
+		}
+
+		if (!hasItemsInBoard) {
+			board.camera.zoomToViewCenter(1);
 		}
 
 		board.camera.setBoardId(board.getBoardId());
