@@ -118,7 +118,6 @@ function getBlockNode(
 	listData?: { isNumberedList: boolean; level: number },
 	listMark?: string,
 	newLine = false,
-	paddingTopInEm = 0,
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -201,7 +200,7 @@ function getBlockNode(
 					child,
 					node,
 					maxWidth,
-					paddingTop: i === 0 ? 16 * paddingTopInEm : 0,
+					paddingTop: i === 0 ? 16 * (data.paddingTop || 0) : 0,
 					marginLeft:
 						(listData ? 16 : 0) + (listData?.level || 0) * 24,
 					newLine: i === 0 ? newLine : false,
@@ -215,7 +214,7 @@ function getBlockNode(
 						child,
 						node,
 						maxWidth,
-						paddingTop: i === 0 ? 16 * paddingTopInEm : 0,
+						paddingTop: i === 0 ? 16 * (data.paddingTop || 0) : 0,
 						marginLeft:
 							(listData ? 16 : 0) + (listData?.level || 0) * 24,
 						newLine: i === 0 ? newLine : false,
@@ -235,7 +234,6 @@ function getBlockNode(
 						listData,
 						listMark,
 						shouldStartWithNewLine,
-						child.paddingTop,
 					);
 					node.children = node.children.concat(blockNode.children);
 					node.lines = node.lines.concat(blockNode.lines);
@@ -502,8 +500,6 @@ function layoutTextNode(
 								lineWidth += block.width;
 							}
 						});
-						console.log(lastBlock);
-						console.log(word);
 
 						const substring = findLargestSubstring(
 							lastBlock.text,
