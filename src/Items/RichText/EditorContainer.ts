@@ -489,12 +489,10 @@ export class EditorContainer {
 			if (isAllNodesContainStyle) {
 				Editor.addMark(this.editor, style, false);
 			} else if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
-				console.log("addMark", style);
 				Editor.addMark(this.editor, style, true);
 			}
 		}
 
-		console.log("get marks", this.editor);
 		return this.stopOpRecordingAndGetOps();
 	}
 

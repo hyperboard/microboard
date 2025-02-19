@@ -9,7 +9,6 @@ export function uploadImage(file: File, board: Board) {
 	const reader = new FileReader();
 
 	if (file.type === "application/pdf") {
-		console.log("PDF PDF");
 		reader.onload = event => {
 			const typedarray = new Uint8Array(
 				event.target?.result as ArrayBufferLike,

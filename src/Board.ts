@@ -789,7 +789,6 @@ export class Board {
 		}
 	}
 	deserialize(snapshot: BoardSnapshot): void {
-		console.log(snapshot, "snapshot");
 		const { events, items } = snapshot;
 		this.index.clear();
 		const createdConnectors: Record<
@@ -1389,7 +1388,6 @@ export class Board {
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const items: Item[] = [];
-		console.log("apply paste", itemsMap);
 
 		const sortedItemsMap = Object.entries(itemsMap).sort(
 			([, dataA], [, dataB]) => {
@@ -1424,7 +1422,6 @@ export class Board {
 
 		sortedItemsMap.map(([id, data]) => {
 			if (data.itemType === "Connector") {
-				console.log(id, data);
 				return pasteItem(id, data);
 			}
 			return;

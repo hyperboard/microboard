@@ -657,7 +657,6 @@ export class RichText extends Mbr implements Geometry {
 		) {
 			this.editor.selectWholeText();
 		}
-		console.log("setSelectionFontStyle", style);
 		const ops = this.editor.setSelectionFontStyle(style);
 		this.updateElement();
 		return ops;

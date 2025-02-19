@@ -149,7 +149,6 @@ function validateTransformationData(transformationData: any): boolean {
 
 export function validateRichTextData(richTextData: any): boolean {
 	// Validate the presence and types of properties in RichTextData
-	console.log(validateChildren(richTextData.children));
 	const isValid =
 		richTextData.hasOwnProperty("children") &&
 		Array.isArray(richTextData.children) &&
@@ -191,7 +190,6 @@ function validateChildren(children: any): children is Descendant[] {
 	for (const child of children) {
 		const isValidDescendant = validateDescendant(child);
 		if (!isValidDescendant) {
-			console.log(child);
 			return false;
 		}
 	}
