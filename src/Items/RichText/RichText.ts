@@ -1013,7 +1013,10 @@ export class RichText extends Mbr implements Geometry {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
 				const text =
-					node.text === "" ? "\u00A0" : escapeHtml(node.text);
+					node.text === ""
+						? "\u00A0"
+						: decodeHtml(escapeHtml(node.text));
+
 				const span = document.createElement("span");
 				span.textContent = text;
 				span.style.fontWeight = node.bold ? "700" : "400";
@@ -1066,6 +1069,12 @@ export class RichText extends Mbr implements Geometry {
 			}
 
 			return document.createElement("div");
+		};
+
+		const decodeHtml = (htmlString: string): string => {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(htmlString, "text/html");
+			return doc.documentElement.textContent || "";
 		};
 
 		const escapeHtml = (unsafe: string): string => {
