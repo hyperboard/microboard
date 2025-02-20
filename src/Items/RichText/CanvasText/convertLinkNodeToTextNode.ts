@@ -5,7 +5,7 @@ import { LinkNode, TextNode } from "../Editor/TextNode";
 export const convertLinkNodeToTextNode = (
 	node: LinkNode | TextNode,
 ): TextNode => {
-	if (node.type === "text" || !node.type) {
+	if (node.type === "text" || !node.type || "text" in node) {
 		return node;
 	}
 	const link = node.link;

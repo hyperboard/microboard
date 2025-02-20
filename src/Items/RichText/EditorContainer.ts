@@ -37,6 +37,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
+import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -922,100 +923,14 @@ export class EditorContainer {
 		return this.stopProcessingMarkDownCb;
 	}
 
-	convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
-		if (node.type === "text" || !node.type || "text" in node) {
-			return { ...node, type: "text" };
-		}
-		const link = node.link;
-		const nodeCopy = { ...node };
-		let text = link;
-		if (!link.trim()) {
-			text = node.children ? node.children[0].text : "";
-		}
-		delete nodeCopy.children;
-		return { ...nodeCopy, type: "text", text };
-	};
-
-	setNodeChildrenStyles(node: BlockNode) {
-		let fontStyles = Editor.marks(this.editor) || DEFAULT_TEXT_STYLES;
-
-		switch (node.type) {
-			case "heading_one":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
-				break;
-			case "heading_two":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 17 };
-				break;
-			case "heading_three":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 16 };
-				break;
-			case "heading_four":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 15 };
-				break;
-			case "heading_five":
-				fontStyles = { ...fontStyles, bold: true, fontSize: 14 };
-				break;
-		}
-
-		function isSymbol(str: string) {
-			const symbolRegex = /^[^\w\s]$/;
-
-			return symbolRegex.test(str);
-		}
-
-		node.children = node.children
-			.map((children: TextNode | LinkNode) => {
-				return this.convertLinkNodeToTextNode(children);
-			})
-			.map((children: TextNode, index) => {
-				const nextChildren: TextNode = node.children[index + 1];
-
-				const isNoSpaceBetweenNextTextAndCurrent =
-					nextChildren &&
-					children.text[children.text.length - 1] !== " " &&
-					!nextChildren.text.startsWith(" ") &&
-					!isSymbol(nextChildren.text[0]);
-
-				if (isNoSpaceBetweenNextTextAndCurrent) {
-					children.text += " ";
-				}
-
-				return {
-					...fontStyles,
-					...children,
-				};
-			});
-		node.horisontalAlignment = this.horisontalAlignment;
-	}
-
-	setNodeStyles(item: BlockNode, isPaddingTopNeeded: boolean) {
-		if (item.type === "ol_list" || item.type === "ul_list") {
-			for (const listItem of item.children) {
-				for (const listItemChild of listItem.children) {
-					this.setNodeStyles(listItemChild, true);
-				}
-			}
-		} else {
-			if (isPaddingTopNeeded) {
-				item.paddingTop = 0.5;
-			}
-			this.setNodeChildrenStyles(item);
-		}
-	}
-
-	deserializeMarkdown(
-		isNewParagraphNeeded: boolean,
-		textToInsert?: string,
-		insertLocation?: Location,
-	) {
+	deserializeMarkdown(isNewParagraphNeeded: boolean) {
 		const lastNode = this.getText()[this.getText().length - 1];
-		if (lastNode.type !== "paragraph" && !textToInsert) {
+		if (lastNode.type !== "paragraph") {
 			this.subject.publish(this);
 			return true;
 		}
 
-		const text: string | undefined =
-			textToInsert || lastNode.children[0]?.text;
+		const text: string | undefined = lastNode.children[0]?.text;
 
 		if (!text) {
 			Transforms.insertNodes(this.editor, this.createParagraphNode(""), {
@@ -1025,7 +940,7 @@ export class EditorContainer {
 			return true;
 		}
 
-		if (text.startsWith(t("AIInput.generatingResponse")) && !textToInsert) {
+		if (text.startsWith(t("AIInput.generatingResponse"))) {
 			return true;
 		}
 
@@ -1040,7 +955,7 @@ export class EditorContainer {
 
 		const isPrevTextEmpty = this.isEmpty();
 
-		if (!isPrevTextEmpty && !textToInsert) {
+		if (!isPrevTextEmpty) {
 			Transforms.removeNodes(this.editor, {
 				at: [this.getText().length - 1],
 			});
@@ -1069,7 +984,12 @@ export class EditorContainer {
 						// 	);
 						// 	return item;
 						// }
-						this.setNodeStyles(item, item.type !== "code_block");
+						setNodeStyles({
+							node: item,
+							editor: this.editor,
+							horisontalAlignment: this.horisontalAlignment,
+							isPaddingTopNeeded: item.type !== "code_block",
+						});
 						return item;
 					},
 				);
@@ -1087,7 +1007,7 @@ export class EditorContainer {
 				// }
 
 				Transforms.insertNodes(this.editor, nodes, {
-					at: insertLocation || [this.getText().length],
+					at: [this.getText().length],
 				});
 			});
 

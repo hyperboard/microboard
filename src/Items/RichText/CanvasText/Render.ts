@@ -222,19 +222,13 @@ function getBlockNode(
 						listMark: i === 0 ? listMark : undefined,
 					});
 				} else {
-					const shouldStartWithNewLine = Boolean(
-						listMark &&
-							child.children &&
-							child.children.length > 0 &&
-							child.children[0].type === "text",
-					);
 					const blockNode = getBlockNode(
 						child,
 						maxWidth,
 						isFrame,
 						listData,
 						i === 0 ? listMark : undefined,
-						shouldStartWithNewLine,
+						true,
 					);
 					node.children = node.children.concat(blockNode.children);
 					node.lines = node.lines.concat(blockNode.lines);
