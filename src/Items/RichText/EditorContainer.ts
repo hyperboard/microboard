@@ -51,6 +51,7 @@ export class EditorContainer {
 	private chunksQueue: string[] = [];
 	private isProcessingChunk = false;
 	private stopProcessingMarkDownCb: (() => void) | null = null;
+	private currentNode: string = "";
 
 	private decorated = {
 		realapply: (_operation: SlateOp): void => {},
@@ -944,15 +945,6 @@ export class EditorContainer {
 			return true;
 		}
 
-		// // sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
-		// let slicedListIndex = "";
-		//
-		// const numberedListItemRegex = /^(?!1\.\s)\d+\.\s/;
-		// if (numberedListItemRegex.test(text) && isNewParagraphNeeded) {
-		// 	slicedListIndex = text.slice(0, 3);
-		// 	text = text.slice(3);
-		// }
-
 		const isPrevTextEmpty = this.isEmpty();
 
 		if (!isPrevTextEmpty) {
@@ -971,19 +963,6 @@ export class EditorContainer {
 
 				const nodes = (file.result as BlockNode[]).map(
 					(item: BlockNode, index) => {
-						// if (index === 0) {
-						// 	const nodeText: string | undefined =
-						// 		item.children[0].text;
-						// 	if (nodeText) {
-						// 		item.children[0].text =
-						// 			slicedListIndex + nodeText;
-						// 	}
-						// 	this.setNodeStyles(
-						// 		item,
-						// 		item.type !== "code_block",
-						// 	);
-						// 	return item;
-						// }
 						setNodeStyles({
 							node: item,
 							editor: this.editor,
@@ -996,15 +975,6 @@ export class EditorContainer {
 				if (isNewParagraphNeeded) {
 					nodes.push(this.createParagraphNode(""));
 				}
-
-				// const shouldRemoveFirstNode =
-				// 	nodes[0].type === "paragraph" &&
-				// 	nodes[0].children[0].type === "text" &&
-				// 	nodes[0].children[0].text === ""
-				//
-				// if (shouldRemoveFirstNode) {
-				// 	nodes.shift()
-				// }
 
 				Transforms.insertNodes(this.editor, nodes, {
 					at: [this.getText().length],
@@ -1037,6 +1007,7 @@ export class EditorContainer {
 		if (chunk === "StopProcessingMarkdown") {
 			await this.deserializeMarkdownAsync(false);
 			this.isProcessingChunk = false;
+			this.currentNode = "";
 			if (this.stopProcessingMarkDownCb) {
 				this.selectWholeText();
 				this.stopProcessingMarkDownCb();
@@ -1052,9 +1023,17 @@ export class EditorContainer {
 		}
 
 		if (chunk.includes("\n\n")) {
-			this.insertChunk(chunk.split("\n\n")[0]);
-			await this.deserializeMarkdownAsync();
+			// // sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
+			const numberedListItemRegex = /^\d+\.\s/;
+			if (numberedListItemRegex.test(this.currentNode)) {
+				this.insertChunk(chunk);
+			} else {
+				this.insertChunk(chunk.split("\n\n")[0]);
+				await this.deserializeMarkdownAsync();
+			}
+			this.currentNode = "";
 		} else {
+			this.currentNode += chunk;
 			this.insertChunk(chunk);
 		}
 		setTimeout(() => this.processNextChunk(), 0);
