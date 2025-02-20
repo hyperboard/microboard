@@ -1014,7 +1014,7 @@ export class RichText extends Mbr implements Geometry {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
 				const text =
-					node.text || node.text !== " "
+					node.text.trim() !== ""
 						? decodeHtml(escapeHtml(node.text))
 						: "\u00A0";
 
