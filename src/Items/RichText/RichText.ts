@@ -41,6 +41,7 @@ import { getParagraph } from "./getParagraph";
 import { RichTextOperation } from "./RichTextOperations";
 import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
+import { decodeHtml } from "Board/parserHTML";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -1013,9 +1014,9 @@ export class RichText extends Mbr implements Geometry {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
 				const text =
-					node.text === ""
-						? "\u00A0"
-						: decodeHtml(escapeHtml(node.text));
+					node.text || node.text !== " "
+						? decodeHtml(escapeHtml(node.text))
+						: "\u00A0";
 
 				const span = document.createElement("span");
 				span.textContent = text;
@@ -1069,12 +1070,6 @@ export class RichText extends Mbr implements Geometry {
 			}
 
 			return document.createElement("div");
-		};
-
-		const decodeHtml = (htmlString: string): string => {
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(htmlString, "text/html");
-			return doc.documentElement.textContent || "";
 		};
 
 		const escapeHtml = (unsafe: string): string => {

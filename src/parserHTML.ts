@@ -54,6 +54,12 @@ export const parsersHTML: TagFactories = {
 	"ainode-item": parseHTMLAINode,
 };
 
+export const decodeHtml = (htmlString: string): string => {
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(htmlString, "text/html");
+	return doc.documentElement.textContent || "";
+};
+
 function getTransformationData(el: HTMLElement): TransformationData {
 	const transformStyle = el.style.transform;
 	const transformMatch = transformStyle.match(
@@ -81,9 +87,14 @@ function parseHTMLRichText(
 			node.tagName.toLowerCase() === "span" &&
 			node.children.length === 0
 		) {
+			const text =
+				node.textContent !== " " && node.textContent
+					? decodeHtml(node.textContent)
+					: "";
+
 			return {
 				type: "text",
-				text: node.textContent || "",
+				text,
 				bold: node.style.fontWeight === "700",
 				italic: node.style.fontStyle === "italic",
 				underline: node.style.textDecoration.includes("underline"),
