@@ -88,7 +88,7 @@ function parseHTMLRichText(
 			node.children.length === 0
 		) {
 			const text =
-				node.textContent !== " " && node.textContent
+				node.textContent?.trim() !== "" && node.textContent
 					? decodeHtml(node.textContent)
 					: "";
 
