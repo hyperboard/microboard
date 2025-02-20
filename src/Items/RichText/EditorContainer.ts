@@ -1014,7 +1014,7 @@ export class EditorContainer {
 			return true;
 		}
 
-		let text: string | undefined =
+		const text: string | undefined =
 			textToInsert || lastNode.children[0]?.text;
 
 		if (!text) {
