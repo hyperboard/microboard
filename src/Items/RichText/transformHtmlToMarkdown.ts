@@ -10,5 +10,7 @@ export const transformHtmlToMarkdown = async (html: string) => {
 		.use(remarkStringify)
 		.process(html);
 
-	return String(file);
+	return String(file)
+		.trim()
+		.replace(/<!--(Start|End)Fragment-->/g, "");
 };

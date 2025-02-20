@@ -11,50 +11,6 @@ export function getBlockNodes(
 	shrink = false,
 	isFrame = false, // Smell
 ): LayoutBlockNodes {
-	// if (shrink) {
-	// 	const filledEmptys = data.map(
-	// 		des =>
-	// 			(des.type === "paragraph" && {
-	// 				...des,
-	// 				children: des.children.map(child => ({
-	// 					...child,
-	// 					text:
-	// 						child.text?.length !== 0
-	// 							? child.text
-	// 							: child.link
-	// 								? child.link
-	// 								: "1",
-	// 				})),
-	// 			}) ||
-	// 			des,
-	// 	);
-	//
-	// 	// non emptys width is calculated correctly
-	// 	const singleLineLayout = getBlockNodes(filledEmptys, Infinity);
-	// 	const singleLineHeight = singleLineLayout.height;
-	//
-	// 	const maxWidthLayout = getBlockNodes(data, maxWidth);
-	// 	const maxWidthHeight = maxWidthLayout.height;
-	//
-	// 	// If the height with maxWidth is greater than the single line height, return the maxWidth layout
-	// 	if (maxWidthHeight > singleLineHeight) {
-	// 		return maxWidthLayout;
-	// 	}
-	//
-	// 	const bestWidth = findMinimumWidthForSingleLineHeight(
-	// 		data,
-	// 		singleLineHeight,
-	// 		maxWidth,
-	// 	);
-	// 	const biggestOneSymbolWidth = getOneCharacterMaxWidth(data);
-	//
-	// 	return getBlockNodes(
-	// 		data,
-	// 		bestWidth > biggestOneSymbolWidth
-	// 			? bestWidth
-	// 			: biggestOneSymbolWidth,
-	// 	);
-	// }
 	const nodes: LayoutBlockNode[] = [];
 	let didBreakWords = false;
 
@@ -223,7 +179,7 @@ function getBlockNode(
 			case "list_item": {
 				let listMark = "";
 				if (listData?.isNumberedList) {
-					listMark += `${i}.`;
+					listMark += `${i + 1}.`;
 				} else {
 					listMark += "•";
 				}
@@ -249,7 +205,7 @@ function getBlockNode(
 					marginLeft:
 						(listData ? 16 : 0) + (listData?.level || 0) * 24,
 					newLine: i === 0 ? newLine : false,
-					listMark,
+					listMark: i === 0 ? listMark : undefined,
 				});
 				break;
 			default:
@@ -263,7 +219,7 @@ function getBlockNode(
 						marginLeft:
 							(listData ? 16 : 0) + (listData?.level || 0) * 24,
 						newLine: i === 0 ? newLine : false,
-						listMark,
+						listMark: i === 0 ? listMark : undefined,
 					});
 				} else {
 					const shouldStartWithNewLine = Boolean(
@@ -277,7 +233,7 @@ function getBlockNode(
 						maxWidth,
 						isFrame,
 						listData,
-						listMark,
+						i === 0 ? listMark : undefined,
 						shouldStartWithNewLine,
 					);
 					node.children = node.children.concat(blockNode.children);

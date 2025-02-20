@@ -923,7 +923,7 @@ export class EditorContainer {
 	}
 
 	convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
-		if (node.type === "text" || !node.type) {
+		if (node.type === "text" || !node.type || "text" in node) {
 			return { ...node, type: "text" };
 		}
 		const link = node.link;
@@ -1003,7 +1003,11 @@ export class EditorContainer {
 		}
 	}
 
-	deserializeMarkdown(isNewParagraphNeeded: boolean, textToInsert?: string) {
+	deserializeMarkdown(
+		isNewParagraphNeeded: boolean,
+		textToInsert?: string,
+		insertLocation?: Location,
+	) {
 		const lastNode = this.getText()[this.getText().length - 1];
 		if (lastNode.type !== "paragraph" && !textToInsert) {
 			this.subject.publish(this);
@@ -1025,18 +1029,18 @@ export class EditorContainer {
 			return true;
 		}
 
-		// sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
-		let slicedListIndex = "";
-
-		const numberedListItemRegex = /^(?!1\.\s)\d+\.\s/;
-		if (numberedListItemRegex.test(text) && isNewParagraphNeeded) {
-			slicedListIndex = text.slice(0, 3);
-			text = text.slice(3);
-		}
+		// // sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
+		// let slicedListIndex = "";
+		//
+		// const numberedListItemRegex = /^(?!1\.\s)\d+\.\s/;
+		// if (numberedListItemRegex.test(text) && isNewParagraphNeeded) {
+		// 	slicedListIndex = text.slice(0, 3);
+		// 	text = text.slice(3);
+		// }
 
 		const isPrevTextEmpty = this.isEmpty();
 
-		if (!isPrevTextEmpty) {
+		if (!isPrevTextEmpty && !textToInsert) {
 			Transforms.removeNodes(this.editor, {
 				at: [this.getText().length - 1],
 			});
@@ -1052,20 +1056,20 @@ export class EditorContainer {
 
 				const nodes = (file.result as BlockNode[]).map(
 					(item: BlockNode, index) => {
-						if (index === 0) {
-							const nodeText: string | undefined =
-								item.children[0].text;
-							if (nodeText) {
-								item.children[0].text =
-									slicedListIndex + nodeText;
-							}
-							this.setNodeStyles(
-								item,
-								item.type !== "code_block",
-							);
-							return item;
-						}
-						this.setNodeStyles(item, false);
+						// if (index === 0) {
+						// 	const nodeText: string | undefined =
+						// 		item.children[0].text;
+						// 	if (nodeText) {
+						// 		item.children[0].text =
+						// 			slicedListIndex + nodeText;
+						// 	}
+						// 	this.setNodeStyles(
+						// 		item,
+						// 		item.type !== "code_block",
+						// 	);
+						// 	return item;
+						// }
+						this.setNodeStyles(item, item.type !== "code_block");
 						return item;
 					},
 				);
@@ -1073,8 +1077,17 @@ export class EditorContainer {
 					nodes.push(this.createParagraphNode(""));
 				}
 
+				// const shouldRemoveFirstNode =
+				// 	nodes[0].type === "paragraph" &&
+				// 	nodes[0].children[0].type === "text" &&
+				// 	nodes[0].children[0].text === ""
+				//
+				// if (shouldRemoveFirstNode) {
+				// 	nodes.shift()
+				// }
+
 				Transforms.insertNodes(this.editor, nodes, {
-					at: [this.getText().length],
+					at: insertLocation || [this.getText().length],
 				});
 			});
 
