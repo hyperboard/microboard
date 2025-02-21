@@ -1,6 +1,34 @@
 import { getBlockNodes } from "./CanvasText/Render.ts";
 import { BlockNode } from "./Editor/BlockNode";
 
+/*
+Вот 10 слов из 10 букв (не правда):
+
+1. Автомобиль
+2. Библиотека
+3. Велосипед 
+4. Гимнастика
+5. Дисциплина
+6. Жонглировать
+7. Интеллект
+8. Концепция
+9. Лаборатория
+10. Мотивация
+
+Вот 10 слов из 17 букв (не правда):
+
+1. Благотворительность
+2. Водонепроницаемость
+3. Гастроэнтерология
+4. Дезориентированный
+5. Землепользователь
+6. Интернационализм
+7. Кораблестроитель
+8. Малоинформативный
+9. Невосприимчивость
+10. Осведомительница
+
+*/
 export function findOptimalMaxWidthForTextAutoSize(
 	text: BlockNode[],
 	containerWidth: number,
@@ -13,16 +41,13 @@ export function findOptimalMaxWidthForTextAutoSize(
 } {
 	const targetRatio = containerWidth / containerHeight;
 	let low = 0;
-	let high = initialMaxWidth * 10;
-	let bestMaxWidth = initialMaxWidth;
-	let bestMaxHeight = initialMaxWidth / targetRatio;
-	let didFound = false;
+	let high = initialMaxWidth * 3;
 
 	let closestRatioDifference = Infinity;
 	let closestWidth = initialMaxWidth;
 	let closestHeight = initialMaxWidth / targetRatio;
 
-	for (let i = 0; i < 10 && low < high; i += 1) {
+	for (let i = 0; i < 3 && low < high; i += 1) {
 		const mid = (low + high) / 2;
 		const { width: calcWidth, height: calcHeight } = getBlockNodes(
 			text,
@@ -39,9 +64,6 @@ export function findOptimalMaxWidthForTextAutoSize(
 		}
 
 		if (ratioDifference <= tolerance) {
-			bestMaxWidth = mid;
-			bestMaxHeight = calcHeight;
-			didFound = true;
 			break;
 		}
 
@@ -52,16 +74,12 @@ export function findOptimalMaxWidthForTextAutoSize(
 		}
 	}
 
-	if (!didFound) {
-		const scale = Math.min(
-			containerWidth / closestWidth,
-			containerHeight / closestHeight,
-		);
-		return {
-			bestMaxWidth: initialMaxWidth / scale,
-			bestMaxHeight: initialMaxWidth / targetRatio / scale,
-		};
-	}
-
-	return { bestMaxWidth, bestMaxHeight };
+	const scale = Math.min(
+		containerWidth / closestWidth,
+		containerHeight / closestHeight,
+	);
+	return {
+		bestMaxWidth: initialMaxWidth / scale,
+		bestMaxHeight: initialMaxWidth / targetRatio / scale,
+	};
 }
