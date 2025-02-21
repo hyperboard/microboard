@@ -51,7 +51,7 @@ export class EditorContainer {
 	private chunksQueue: string[] = [];
 	private isProcessingChunk = false;
 	private stopProcessingMarkDownCb: (() => void) | null = null;
-	private currentNode: string = "";
+	private currentNode = "";
 
 	private decorated = {
 		realapply: (_operation: SlateOp): void => {},
