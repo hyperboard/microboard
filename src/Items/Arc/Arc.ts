@@ -86,9 +86,45 @@ export class Arc {
 		return (circumference * angle) / (2 * Math.PI);
 	}
 
+	// getNearestPointParameter(point: Point): number {
+	// 	const { x, y } = point;
+	// 	const { center, radiusX, radiusY, rotation } = this;
+	// 	const dx = x - center.x;
+	// 	const dy = y - center.y;
+
+	// 	// Transform the point to the ellipse's local coordinate system
+	// 	const localX = Math.cos(rotation) * dx + Math.sin(rotation) * dy;
+	// 	const localY = -Math.sin(rotation) * dx + Math.cos(rotation) * dy;
+
+	// 	let angle = Math.atan2(localY / radiusY, localX / radiusX);
+
+	// 	// Normalize the angle to be within the arc's start and end angles
+	// 	const startAngle = this.startAngle;
+	// 	const endAngle = this.endAngle;
+	// 	if (endAngle < startAngle) {
+	// 		angle += 2 * Math.PI;
+	// 	}
+
+	// 	// if (endAngle < startAngle) {
+	// 	// 	angle = (angle + 2 * Math.PI) % (2 * Math.PI);
+	// 	// }
+
+	// 	let parameter = (angle - startAngle) / (endAngle - startAngle);
+
+	// 	// Adjust parameter to be within [0, 1]
+	// 	if (parameter < 0) {
+	// 		parameter += 1;
+	// 	} else if (parameter > 1) {
+	// 		parameter -= 1;
+	// 	}
+
+	// 	return parameter;
+	// }
+
 	getNearestPointParameter(point: Point): number {
 		const { x, y } = point;
-		const { center, radiusX, radiusY, rotation } = this;
+		const { center, radiusX, radiusY, rotation, startAngle, endAngle } =
+			this;
 		const dx = x - center.x;
 		const dy = y - center.y;
 
@@ -96,23 +132,19 @@ export class Arc {
 		const localX = Math.cos(rotation) * dx + Math.sin(rotation) * dy;
 		const localY = -Math.sin(rotation) * dx + Math.cos(rotation) * dy;
 
-		let angle = Math.atan2(localY / radiusY, localX / radiusX);
+		// Учет эллиптической формы и вычисление угла касательной
+		let angle = Math.atan2(localY * radiusX, localX * radiusY);
 
-		// Normalize the angle to be within the arc's start and end angles
-		const startAngle = this.startAngle;
-		const endAngle = this.endAngle;
-		if (endAngle < startAngle) {
-			angle = (angle + 2 * Math.PI) % (2 * Math.PI);
+		// Нормализация угла
+		if (angle < 0) {
+			angle += 2 * Math.PI;
 		}
 
+		// Учет направления дуги
 		let parameter = (angle - startAngle) / (endAngle - startAngle);
 
-		// Adjust parameter to be within [0, 1]
-		if (parameter < 0) {
-			parameter += 1;
-		} else if (parameter > 1) {
-			parameter -= 1;
-		}
+		// Приведение параметра в диапазон [0, 1]
+		parameter = Math.min(Math.max(parameter, 0), 1);
 
 		return parameter;
 	}
@@ -204,8 +236,8 @@ export class Arc {
 		const dirY = nearest.y - this.center.y;
 		const magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
 
-		const normalX = -dirY / magnitude;
-		const normalY = dirX / magnitude;
+		const normalX = -dirX / magnitude;
+		const normalY = -dirY / magnitude;
 
 		const normalPoint = new Point(normalX, normalY);
 
