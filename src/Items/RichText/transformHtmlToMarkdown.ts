@@ -6,6 +6,7 @@ import markdown from "remark-parse";
 import slate from "remark-slate";
 import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export const transformHtmlOrTextToMarkdown = async (
 	text: string,
@@ -21,7 +22,7 @@ export const transformHtmlOrTextToMarkdown = async (
 		markdownString = String(file).trim();
 	}
 
-	const slateNodes = convertMarkdownToSlate(
+	const slateNodes = await convertMarkdownToSlate(
 		markdownString.replace(/<!--(Start|End)Fragment-->/g, ""),
 	);
 
@@ -34,29 +35,61 @@ export const transformHtmlOrTextToMarkdown = async (
 	return data;
 };
 
-function convertMarkdownToSlate(text: string) {
+async function convertMarkdownToSlate(text: string) {
 	if (!text) {
 		throw new Error("No text to convert");
 	}
 
-	const nodes: BlockNode[] = [];
+	const file = await unified().use(markdown).use(slate).process(text);
 
-	unified()
-		.use(markdown)
-		.use(slate)
-		.process(text, (err, file) => {
-			if (err || !file) {
-				throw err;
-			}
+	if (!file || !file.result) {
+		throw new Error("Failed to process Markdown");
+	}
 
-			(file.result as BlockNode[]).forEach((item: BlockNode) => {
-				setNodeStyles({
-					node: item,
-					isPaddingTopNeeded: item.type !== "code_block",
-				});
-				nodes.push(item);
-			});
+	let nodes: BlockNode[] = file.result as BlockNode[];
+
+	if (nodes.some(node => node.type === "list_item")) {
+		const listType = detectListType(text);
+		nodes = [
+			{
+				type: listType,
+				children: nodes.filter(node => node.type === "list_item"),
+			},
+			...nodes.filter(node => node.type !== "list_item"),
+		];
+	}
+
+	if (
+		nodes[0] &&
+		(nodes[0].type === "ol_list" || nodes[0].type === "ul_list")
+	) {
+		nodes.unshift({
+			type: "paragraph",
+			children: [{ type: "text", text: "", ...DEFAULT_TEXT_STYLES }],
+			horisontalAlignment: "left",
 		});
+	}
 
-	return nodes;
+	return nodes.map(item => {
+		setNodeStyles({
+			node: item,
+			isPaddingTopNeeded: item.type !== "code_block",
+		});
+		return item;
+	});
+}
+
+function detectListType(text: string): "ol_list" | "ul_list" {
+	const lines = text.split("\n").filter(Boolean);
+
+	for (const line of lines) {
+		if (/^(\d+)\.\s/.test(line)) {
+			return "ol_list";
+		}
+		if (/^[-*+]\s/.test(line)) {
+			return "ul_list";
+		}
+	}
+
+	return "ul_list";
 }

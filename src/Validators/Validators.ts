@@ -295,10 +295,9 @@ function validateListItemChild(child: any): child is ListItemChild {
 
 function validateTextNode(node: any): node is TextNode {
 	return (
-		node.hasOwnProperty("type") &&
-		node.hasOwnProperty("text") &&
-		typeof node.type === "string" &&
-		typeof node.text === "string"
+		// node.hasOwnProperty("type") &&
+		// typeof node.type === "string" &&
+		node.hasOwnProperty("text") && typeof node.text === "string"
 	);
 }
 

@@ -55,6 +55,7 @@ export function setNodeChildrenStyles({
 			const isNoSpaceBetweenNextTextAndCurrent =
 				nextChildren &&
 				nextChildren.text &&
+				children.text &&
 				children.text[children.text.length - 1] !== " " &&
 				!nextChildren.text.startsWith(" ") &&
 				!isSymbol(nextChildren.text[0]);

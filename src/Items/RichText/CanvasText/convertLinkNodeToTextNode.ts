@@ -6,7 +6,7 @@ export const convertLinkNodeToTextNode = (
 	node: LinkNode | TextNode,
 ): TextNode => {
 	if (node.type === "text" || !node.type || "text" in node) {
-		return node;
+		return { ...node, type: "text" };
 	}
 	const link = node.link;
 	const nodeCopy = { ...node };
