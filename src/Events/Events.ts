@@ -38,6 +38,7 @@ import { t } from "i18next";
 import { ImageItem } from "Board/Items/Image";
 import { Connector } from "Board/Items";
 import { getControlPointData } from "Board/Selection/QuickAddButtons";
+import { isTemplateView } from "lib/queryStringParser";
 
 export interface BoardEvent {
 	order: number;
@@ -403,6 +404,9 @@ export function createEvents(
 	function handleModeMessage(message: ModeMsg): void {
 		if (board.getInterfaceType() !== message.mode) {
 			enforceMode(message.mode);
+			if (isTemplateView()) {
+				return;
+			}
 			notify({
 				header: i18n.t("sharing.settingsChanged.heading"),
 				body:

@@ -47,6 +47,7 @@ import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
+import { isTemplateView } from "lib/queryStringParser";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -1452,6 +1453,9 @@ export class Board {
 		const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 		if (!isMobile) {
 			this.tools.select();
+		}
+		if (interfaceType === "view") {
+			this.tools.navigate();
 		}
 		this.subject.publish();
 		this.tools.publish();
