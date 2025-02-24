@@ -36,7 +36,7 @@ function getFixedPoint(
 }
 export class ConnectorSnap {
 	distance = {
-		neighbor: 50,
+		neighbor: 5,
 		border: 10,
 		anchor: 15,
 	};

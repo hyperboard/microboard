@@ -15,7 +15,7 @@ interface Node {
 
 type Direction = "vertical" | "horizontal";
 
-const ITEM_OFFSET = 25;
+const ITEM_OFFSET = 1;
 
 export function getDirection(from: Point, to?: Point): Direction | null {
 	if (!to) {

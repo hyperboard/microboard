@@ -18,6 +18,7 @@ import { Point } from "../../Point";
 // http://output.jsbin.com/ApitIxo/2/
 
 // by proto-arrows https://github.com/krismuniz/proto-arrows/blob/cdfd0a1ef35342362f619c8f21e385aa3d67725e/src/path.ts
+
 const config = {
 	controlPointOffsetRate: 0.6,
 	minLengthForBorder: 30,
@@ -35,9 +36,17 @@ export function getCurvedLine(
 	let startControl: { point: Point; control: Point };
 	let endControl: { point: Point; control: Point };
 
+	const dX = end.x - start.x;
+	const dY = end.y - start.y;
+	const distance = Math.sqrt(dX * dX + dY * dY);
+
+	if (distance < 40) {
+		config.normalControlLength = distance;
+	} else {
+		config.normalControlLength = 100;
+	}
+
 	if (start.pointType === "Board" && end.pointType === "Board") {
-		const dX = end.x - start.x;
-		const dY = end.y - start.y;
 		const fdX = dX * (config.flip ? config.controlPointOffsetRate : 0);
 		let fdY = dY * (config.flip ? 0 : -config.controlPointOffsetRate);
 
