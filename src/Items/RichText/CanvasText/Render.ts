@@ -119,6 +119,7 @@ function getBlockNode(
 	listData?: { isNumberedList: boolean; level: number },
 	listMark?: string,
 	newLine = false,
+	paddingTopInEm = 0,
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
