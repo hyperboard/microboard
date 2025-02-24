@@ -19,6 +19,7 @@ import { AddComment } from "./AddComment";
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
+	beforeNavigateMode: "navigate" | "select" = "navigate";
 
 	constructor(protected board: Board) {
 		super();
@@ -27,6 +28,10 @@ export class Tools extends ToolContext {
 	setTool(tool: BoardTool): void {
 		this.tool = tool;
 		this.publish();
+	}
+
+	setBeforeNavigateMode(mode): void {
+		this.beforeNavigateMode = mode;
 	}
 
 	navigate(): void {
@@ -342,6 +347,25 @@ export class Tools extends ToolContext {
 		this.board.selection.items.add(frames[newFrameIndex]);
 		localStorage.setItem(`lastVisitedFrame`, frames[newFrameIndex].getId());
 		this.publish();
+	}
+
+	setNavigateMode(isSpacePressed: boolean): void {
+		const navigateActive = this.board.tools.getNavigate();
+		if (!isSpacePressed) {
+			this.board.tools.beforeNavigateMode = navigateActive
+				? "navigate"
+				: "select";
+
+			if (!navigateActive) {
+				this.navigate();
+			}
+		}
+	}
+
+	exitNavigateMode(): void {
+		if (this.board.tools.beforeNavigateMode === "select") {
+			this.select();
+		}
 	}
 
 	render(context: DrawingContext): void {
