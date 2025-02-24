@@ -86,41 +86,6 @@ export class Arc {
 		return (circumference * angle) / (2 * Math.PI);
 	}
 
-	// getNearestPointParameter(point: Point): number {
-	// 	const { x, y } = point;
-	// 	const { center, radiusX, radiusY, rotation } = this;
-	// 	const dx = x - center.x;
-	// 	const dy = y - center.y;
-
-	// 	// Transform the point to the ellipse's local coordinate system
-	// 	const localX = Math.cos(rotation) * dx + Math.sin(rotation) * dy;
-	// 	const localY = -Math.sin(rotation) * dx + Math.cos(rotation) * dy;
-
-	// 	let angle = Math.atan2(localY / radiusY, localX / radiusX);
-
-	// 	// Normalize the angle to be within the arc's start and end angles
-	// 	const startAngle = this.startAngle;
-	// 	const endAngle = this.endAngle;
-	// 	if (endAngle < startAngle) {
-	// 		angle += 2 * Math.PI;
-	// 	}
-
-	// 	// if (endAngle < startAngle) {
-	// 	// 	angle = (angle + 2 * Math.PI) % (2 * Math.PI);
-	// 	// }
-
-	// 	let parameter = (angle - startAngle) / (endAngle - startAngle);
-
-	// 	// Adjust parameter to be within [0, 1]
-	// 	if (parameter < 0) {
-	// 		parameter += 1;
-	// 	} else if (parameter > 1) {
-	// 		parameter -= 1;
-	// 	}
-
-	// 	return parameter;
-	// }
-
 	getNearestPointParameter(point: Point): number {
 		const { x, y } = point;
 		const { center, radiusX, radiusY, rotation, startAngle, endAngle } =
