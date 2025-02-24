@@ -538,12 +538,6 @@ export class Sticker implements Geometry {
 		return this.text;
 	}
 
-	getLink() {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
-	}
-
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
 	}

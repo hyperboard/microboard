@@ -759,7 +759,7 @@ export class Connector {
 			ctx.stroke();
 		}
 	}
-
+	// smell have to redo without document
 	renderHTML(): HTMLElement {
 		const div = document.createElement("connector-item");
 
@@ -1206,12 +1206,6 @@ export class Connector {
 
 	getRichText(): RichText {
 		return this.text;
-	}
-
-	getLink() {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
 	}
 
 	getLinkTo(): string | undefined {

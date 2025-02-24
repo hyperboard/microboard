@@ -408,12 +408,6 @@ export class Comment implements Geometry {
 		return uuidv4();
 	}
 
-	getLink() {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
-	}
-
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
 	}

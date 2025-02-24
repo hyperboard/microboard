@@ -298,12 +298,6 @@ export class AINode implements Geometry {
 		return this.linkTo.link;
 	}
 
-	getLink() {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
-	}
-
 	renderShadow(context: DrawingContext): void {
 		const mbr = this.getMbr();
 		const { ctx } = context;
@@ -342,7 +336,7 @@ export class AINode implements Geometry {
 		this.path.render(context);
 		this.text.render(context);
 	}
-
+	// smell have to redo without document
 	renderHTML(): HTMLElement {
 		const div = document.createElement("ainode-item");
 

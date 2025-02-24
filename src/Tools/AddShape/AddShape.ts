@@ -15,10 +15,7 @@ export class AddShape extends BoardTool {
 	type: ShapeType | "None" = DEFAULT_SHAPE;
 	shape: Shape;
 	isDown = false;
-	isShiftPressed = false;
 
-	private handleKeyDownBound: (event: KeyboardEvent) => void;
-	private handleKeyUpBound: (event: KeyboardEvent) => void;
 	constructor(board: Board) {
 		super(board);
 		this.setCursor();
@@ -39,24 +36,6 @@ export class AddShape extends BoardTool {
 		} else {
 			this.shape = new Shape(board);
 		}
-
-		this.handleKeyDownBound = this.handleKeyDown.bind(this);
-		this.handleKeyUpBound = this.handleKeyUp.bind(this);
-
-		window.addEventListener("keydown", this.handleKeyDownBound);
-		window.addEventListener("keyup", this.handleKeyUpBound);
-	}
-
-	handleKeyDown(event: KeyboardEvent) {
-		if (event.key === "Shift") {
-			this.isShiftPressed = true;
-		}
-	}
-
-	handleKeyUp(event: KeyboardEvent) {
-		if (event.key === "Shift") {
-			this.isShiftPressed = false;
-		}
 	}
 
 	setCursor(): void {
@@ -76,7 +55,7 @@ export class AddShape extends BoardTool {
 		this.board.tools.publish();
 	}
 
-	initTransformation(sx?: number, sy?: number) {
+	initTransformation(sx?: number, sy?: number): void {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100;
 		this.shape.transformation.translateTo(
@@ -106,7 +85,7 @@ export class AddShape extends BoardTool {
 			const startPoint = this.line.start.copy();
 			const endPoint = this.board.pointer.point.copy();
 
-			if (this.isShiftPressed) {
+			if (this.board.keyboard.isShift) {
 				const deltaX = endPoint.x - startPoint.x;
 				const deltaY = endPoint.y - startPoint.y;
 				const maxDelta = Math.max(Math.abs(deltaX), Math.abs(deltaY));
@@ -154,8 +133,6 @@ export class AddShape extends BoardTool {
 		}
 		this.board.tools.publish();
 
-		window.removeEventListener("keydown", this.handleKeyDownBound);
-		window.removeEventListener("keyup", this.handleKeyUpBound);
 		return true;
 	}
 
@@ -194,7 +171,7 @@ export class AddShape extends BoardTool {
 		this.setCursor();
 	};
 
-	createShapeInCenter(shape: ShapeType) {
+	createShapeInCenter(shape: ShapeType): void {
 		if (this.type === "None") {
 			return;
 		}

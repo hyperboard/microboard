@@ -31,6 +31,7 @@ export interface Dimension {
 	width: number;
 }
 
+// smell have to redo without document
 function getPlaceholderImage(
 	board: Board,
 	imageDimension?: Dimension,
@@ -115,7 +116,7 @@ export class ImageItem extends Mbr {
 		try {
 			const url = new URL(link);
 			// If the link is a valid URL, replace its domain with window.location.origin
-			this.storageLink = `${window.location.origin}${url.pathname}`;
+			this.storageLink = `${window.location.origin}${url.pathname}`; // Smell: inject object to query this value
 		} catch (_) {
 			// If the link is not a valid URL, prepend it with storageUrl
 			this.storageLink = `${storageURL}/${link}`;
@@ -364,12 +365,6 @@ export class ImageItem extends Mbr {
 
 	getRichText(): null {
 		return null;
-	}
-
-	getLink() {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
 	}
 
 	getLinkTo(): string | undefined {

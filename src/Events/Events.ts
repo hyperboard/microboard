@@ -82,7 +82,6 @@ export interface RawEvents {
 	eventsToSend: BoardEvent[];
 	newEvents: BoardEvent[];
 }
-
 export interface Events {
 	subject: Subject<BoardEvent>;
 	serialize(): BoardEvent[];
@@ -136,7 +135,7 @@ export function createEvents(
 		handleCreateSnapshotRequestMessage();
 	};
 
-	window.addEventListener("beforeunload", publishSnapshotBeforeUnload);
+	window.addEventListener("beforeunload", publishSnapshotBeforeUnload); // Smell: move to connection
 
 	const beforeUnloadListener = (event: BeforeUnloadEvent): void => {
 		event.preventDefault();
@@ -296,16 +295,10 @@ export function createEvents(
 			board.aiGeneratingOnItem = undefined;
 			board.aiImageConnectorID = undefined;
 		}
-
+		// smell have to remove document refference
 		if (response.status === "completed" && response.base64) {
-			const audioBlob = new Blob(
-				[
-					Uint8Array.from(window.atob(response.base64), ch =>
-						ch.charCodeAt(0),
-					),
-				],
-				{ type: "audio/wav" },
-			);
+			const audioBuffer = Buffer.from(response.base64, "base64");
+			const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
 			const audioUrl = URL.createObjectURL(audioBlob);
 			const link = document.createElement("a");
 			link.href = audioUrl;
@@ -621,11 +614,11 @@ export function createEvents(
 					window.removeEventListener(
 						"beforeunload",
 						publishSnapshotBeforeUnload,
-					);
+					); // Smell: move to connection
 					window.addEventListener(
 						"beforeunload",
 						beforeUnloadListener,
-					);
+					); // Smell: move to connection
 					if (isMicroboard()) {
 						notificationId = notify({
 							header: i18next.t(
@@ -667,13 +660,13 @@ export function createEvents(
 				window.removeEventListener(
 					"beforeunload",
 					beforeUnloadListener,
-				);
+				); // Smell: move to connection
 				toast.dismiss(notificationId);
 				notificationId = null;
 				window.addEventListener(
 					"beforeunload",
 					publishSnapshotBeforeUnload,
-				);
+				); // Smell: move to connection
 			}
 			currentSequenceNumber++;
 			pendingEvent.event.order = msg.order;
@@ -717,6 +710,7 @@ export function createEvents(
 		connection.publishPresenceEvent(board.getBoardId(), event);
 	}
 
+	// Smell: move to connection
 	function onBoardLoad(): void {
 		const searchParams = new URLSearchParams(
 			window.location.search.slice(1),
@@ -966,11 +960,11 @@ export function createEvents(
 		canUndo,
 		canRedo,
 		removeBeforeUnloadListener: () => {
-			window.removeEventListener("beforeunload", beforeUnloadListener);
+			window.removeEventListener("beforeunload", beforeUnloadListener); // Smell: move to connection
 			window.addEventListener(
 				"beforeunload",
 				publishSnapshotBeforeUnload,
-			);
+			); // Smell: move to connection
 		},
 		getNotificationId: () => notificationId,
 		getSaveFileTimeout: () => saveFileTimeout,

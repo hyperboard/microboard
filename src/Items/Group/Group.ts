@@ -255,10 +255,6 @@ export class Group extends Mbr {
 		return this.linkTo.link;
 	}
 
-	getLink(): string {
-		return "";
-	}
-
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;

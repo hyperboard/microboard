@@ -711,10 +711,4 @@ export class Shape implements Geometry {
 		}
 		return true;
 	}
-
-	getLink() {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
-	}
 }

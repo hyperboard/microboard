@@ -84,6 +84,7 @@ export class Board {
 		this.tools.navigate();
 	}
 
+	// Smell just do in in connection and set event onject on board
 	/* Connect to the server to recieve the events*/
 	async connect(connection: Connection): Promise<void> {
 		if (this.getBoardId() === "blank") {
@@ -370,6 +371,7 @@ export class Board {
 		});
 	}
 
+	// Smell. Uses document. have to move it out of board
 	/**
 	 * Creates new canvas and returns it.
 	 * Renders all items from translation on new canvas.
@@ -839,7 +841,7 @@ export class Board {
 
 	getCameraSnapshot(): Matrix | undefined {
 		try {
-			const snap = localStorage.getItem(`camera_${this.boardId}`);
+			const snap = localStorage.getItem(`camera_${this.boardId}`); // Smell
 			if (snap) {
 				const matrix = JSON.parse(snap);
 				if (

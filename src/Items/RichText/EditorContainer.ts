@@ -1092,9 +1092,11 @@ export class EditorContainer {
 		// || getSlateFragmentAttribute(data);
 
 		if (fragment) {
-			const decoded = decodeURIComponent(window.atob(fragment));
+			const decoded = decodeURIComponent(
+				Buffer.from(fragment, "base64").toString("utf-8"),
+			);
 			const parsed = JSON.parse(decoded) as Node[];
-			e.insertFragment(parsed);
+			this.editor.insertFragment(parsed);
 			return true;
 		}
 		return false;

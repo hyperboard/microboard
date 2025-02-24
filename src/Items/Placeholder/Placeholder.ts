@@ -350,12 +350,6 @@ export class Placeholder {
 		return undefined;
 	}
 
-	getLink(): string {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
-	}
-
 	getRichText(): null {
 		return null;
 	}

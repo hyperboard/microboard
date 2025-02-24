@@ -70,6 +70,7 @@ export class LinkTo {
 		});
 	}
 
+	// smell have to redo without document
 	renderHTML(): HTMLDivElement {
 		const div = document.createElement("link-item");
 		div.classList.add("link-object");

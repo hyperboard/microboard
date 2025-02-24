@@ -28,7 +28,9 @@ export const transformHtmlOrTextToMarkdown = async (
 
 	const data = new DataTransfer();
 
-	const encoded = window.btoa(encodeURIComponent(JSON.stringify(slateNodes)));
+	const jsonString = JSON.stringify(slateNodes);
+	const buf = Buffer.from(encodeURIComponent(jsonString));
+	const encoded = buf.toString("base64");
 	data.setData("application/x-slate-fragment", encoded);
 	data.setData("text/plain", text);
 

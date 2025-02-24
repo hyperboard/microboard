@@ -510,6 +510,7 @@ export class Path implements Geometry, PathStylize {
 		return pathData.trim();
 	}
 
+	// smell have to redo without document
 	renderHTML(): SVGPathElement {
 		const pathElement = document.createElementNS(
 			"http://www.w3.org/2000/svg",

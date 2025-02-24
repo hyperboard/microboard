@@ -239,6 +239,7 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
+	// smell have to redo without document
 	renderHTML(): HTMLElement {
 		const div = document.createElement("drawing-item");
 
@@ -488,12 +489,6 @@ export class Drawing extends Mbr implements Geometry {
 
 	getRichText(): null {
 		return null;
-	}
-
-	getLink(): string {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
 	}
 }
 

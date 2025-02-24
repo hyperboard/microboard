@@ -693,12 +693,6 @@ export class Frame implements Geometry {
 		});
 	}
 
-	getLink(): string {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
-	}
-
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;
@@ -746,6 +740,7 @@ export class Frame implements Geometry {
 		}
 	}
 
+	// smell have to redo without document
 	renderHTML(): HTMLElement {
 		const div = document.createElement("frame-item");
 		div.id = this.getId();

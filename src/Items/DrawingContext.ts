@@ -17,7 +17,7 @@ export class DrawingContext {
 	}
 
 	dpi(): number {
-		return window.devicePixelRatio;
+		return window.devicePixelRatio; // Smell: inject object to query this value
 	}
 
 	setCamera(camera: Camera): void {
@@ -29,7 +29,7 @@ export class DrawingContext {
 
 	clear(): void {
 		this.ctx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
-		this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+		this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); // Smell: inject object to query this value
 		this.matrix.applyToContext(this.ctx);
 	}
 
@@ -38,7 +38,7 @@ export class DrawingContext {
 			return;
 		}
 		this.cursorCtx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
-		this.cursorCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+		this.cursorCtx.clearRect(0, 0, window.innerWidth, window.innerHeight); // Smell: inject object to query this value
 		this.matrix.applyToContext(this.cursorCtx);
 	}
 
