@@ -20,7 +20,8 @@ type Params = {
 		| "linkToBtn"
 		| "comment"
 		| "threadPanel"
-		| "boardMenu";
+		| "boardMenu"
+		| "hyperLink";
 };
 
 export function useDomMbr({

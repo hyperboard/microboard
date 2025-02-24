@@ -1,7 +1,6 @@
 import { BlockNode } from "../Editor/BlockNode";
-import { TextNode } from "../Editor/TextNode";
+import { LinkNode, TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
-import { Descendant } from "slate";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -13,6 +12,13 @@ export function getBlockNodes(
 ): LayoutBlockNodes {
 	const nodes: LayoutBlockNode[] = [];
 	let didBreakWords = false;
+	const linkPositions: {
+		link: string;
+		left: number;
+		top: number;
+		right: number;
+		bottom: number;
+	}[] = [];
 
 	for (const node of data) {
 		const blockNode = getBlockNode(node, maxWidth, isFrame);
@@ -27,6 +33,22 @@ export function getBlockNodes(
 	for (const node of nodes) {
 		width = Math.max(width, node.width);
 		height += node.height;
+		for (const line of node.lines) {
+			for (const block of line) {
+				if (block.link) {
+					linkPositions.push({
+						link: block.link,
+						left: block.x,
+						top: block.y - block.measure.ascent,
+						right: block.width + block.x,
+						bottom:
+							block.y -
+							block.measure.ascent +
+							block.measure.height,
+					});
+				}
+			}
+		}
 	}
 
 	function alignNodes(maxWidth: number): void {
@@ -41,6 +63,7 @@ export function getBlockNodes(
 		width,
 		height,
 		didBreakWords,
+		linkPositions,
 		render: (ctx, scale?: number) => {
 			renderBlockNodes(ctx, nodes, scale);
 		},
@@ -113,7 +136,7 @@ const sliceTextByWidth = (
 };
 
 function getBlockNode(
-	data: BlockNode,
+	data: BlockNode | LinkNode,
 	maxWidth: number,
 	isFrame?: boolean, // Smell
 	listData?: { isNumberedList: boolean; level: number },
@@ -137,6 +160,10 @@ function getBlockNode(
 		listData = { level: 0, isNumberedList: true };
 	} else if (node.type === "ul_list" && !listData) {
 		listData = { level: 0, isNumberedList: false };
+	}
+	let link: string | undefined;
+	if (data.type === "link") {
+		link = data.link;
 	}
 	for (let i = 0; i < data.children.length; i++) {
 		const child = structuredClone(data.children[i]);
@@ -207,6 +234,7 @@ function getBlockNode(
 						(listData ? 16 : 0) + (listData?.level || 0) * 24,
 					newLine: i === 0 ? newLine : false,
 					listMark: i === 0 ? listMark : undefined,
+					link,
 				});
 				break;
 			default:
@@ -221,6 +249,7 @@ function getBlockNode(
 							(listData ? 16 : 0) + (listData?.level || 0) * 24,
 						newLine: i === 0 ? newLine : false,
 						listMark: i === 0 ? listMark : undefined,
+						link,
 					});
 				} else {
 					const blockNode = getBlockNode(
@@ -252,6 +281,7 @@ interface LayoutTextNode {
 	paddingTop?: number;
 	marginLeft?: number;
 	listMark?: string;
+	link?: string;
 }
 
 function handleTextNode({
@@ -263,6 +293,7 @@ function handleTextNode({
 	listMark,
 	marginLeft,
 	paddingTop,
+	link,
 }: {
 	isFrame: boolean | undefined;
 	child: TextNode;
@@ -272,6 +303,7 @@ function handleTextNode({
 	paddingTop?: number;
 	marginLeft?: number;
 	listMark?: string;
+	link?: string;
 }): void {
 	const newChild = isFrame
 		? sliceTextByWidth(child, maxWidth)
@@ -282,6 +314,7 @@ function handleTextNode({
 		paddingTop,
 		marginLeft,
 		listMark,
+		link,
 	});
 }
 
@@ -476,6 +509,7 @@ function layoutTextNode(
 							listMark: !hasWrapped
 								? textNode.listMark
 								: undefined,
+							link: textNode.link,
 						});
 						// Push the new block to the line.
 						lastLine.push(newBlock);
@@ -514,6 +548,7 @@ function layoutTextNode(
 							paddingTop: isFirstLineInNode
 								? textNode.paddingTop
 								: 0,
+							link: textNode.link,
 						});
 
 						lastLine.push(newBlock);
@@ -555,6 +590,7 @@ function layoutTextNode(
 							!hasWrapped && isFirstBlockInLine
 								? textNode.listMark
 								: undefined,
+						link: textNode.link,
 					});
 
 					// Push the new block to the last line.
@@ -587,6 +623,7 @@ function layoutTextNode(
 					!hasWrapped && isFirstBlockInLine
 						? textNode.listMark
 						: undefined,
+				link: textNode.link,
 			});
 			lines[lines.length - 1].push(lastBlock);
 		}
@@ -681,6 +718,7 @@ interface LayoutTextBlock {
 	marginLeft?: number;
 	paddingTop?: number;
 	listMark?: string;
+	link?: string;
 }
 
 function getTextBlock({
@@ -689,12 +727,14 @@ function getTextBlock({
 	paddingTop = 0,
 	marginLeft = 0,
 	listMark,
+	link,
 }: {
 	text: string;
 	style: LeafStyle;
 	paddingTop?: number;
 	marginLeft?: number;
 	listMark?: string;
+	link?: string;
 }): LayoutTextBlock {
 	const measure = measureText(text, style, paddingTop, marginLeft);
 	const textBlock = {
@@ -708,6 +748,7 @@ function getTextBlock({
 		paddingTop,
 		marginLeft,
 		listMark,
+		link,
 	};
 	return textBlock;
 }
@@ -1000,8 +1041,9 @@ function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
 
 function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	if (
-		textBlock.style.textDecorationLine !== "underline" ||
-		textBlock.text === "\u00A0"
+		!textBlock.link &&
+		(textBlock.style.textDecorationLine !== "underline" ||
+			textBlock.text === "\u00A0")
 	) {
 		return;
 	}

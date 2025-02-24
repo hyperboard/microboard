@@ -5,7 +5,10 @@ import { ReactEditor } from "slate-react";
 import { HistoryEditor } from "slate-history";
 import { LinkNode, TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { HorisontalAlignment } from "Board/Items/Alignment";
-import { convertLinkNodeToTextNode } from "Board/Items/RichText/CanvasText/convertLinkNodeToTextNode";
+import {
+	convertLinkNodeToTextNode,
+	validateLinkOrTextNode,
+} from "Board/Items/RichText/CanvasText/convertLinkNodeToTextNode";
 
 export function setNodeChildrenStyles({
 	editor,
@@ -47,26 +50,56 @@ export function setNodeChildrenStyles({
 
 	node.children = node.children
 		.map((children: TextNode | LinkNode) => {
-			return convertLinkNodeToTextNode(children);
+			return validateLinkOrTextNode(children);
 		})
-		.map((children: TextNode, index) => {
-			const nextChildren: TextNode = node.children[index + 1];
-
-			const isNoSpaceBetweenNextTextAndCurrent =
-				nextChildren &&
-				nextChildren.text &&
-				children.text &&
-				children.text[children.text.length - 1] !== " " &&
-				!nextChildren.text.startsWith(" ") &&
-				!isSymbol(nextChildren.text[0]);
-
-			if (isNoSpaceBetweenNextTextAndCurrent) {
-				children.text += " ";
+		.map((children, index) => {
+			const nextChildren: TextNode | LinkNode = node.children[index + 1];
+			let nextChildrenText = "";
+			if (nextChildren) {
+				if (nextChildren.type === "link") {
+					nextChildrenText = nextChildren.children[0].text;
+				} else {
+					nextChildrenText = nextChildren.text;
+				}
 			}
 
+			let currentText = "";
+			if (children.type === "link") {
+				currentText = children.children
+					?.map(textNode => textNode.text)
+					.join();
+			} else {
+				currentText = children.text;
+			}
+
+			const isNoSpaceBetweenNextTextAndCurrent =
+				currentText &&
+				nextChildren &&
+				nextChildrenText &&
+				currentText &&
+				currentText[currentText.length - 1] !== " " &&
+				!nextChildrenText.startsWith(" ") &&
+				!isSymbol(nextChildrenText[0]);
+
+			if (isNoSpaceBetweenNextTextAndCurrent) {
+				if (children.type === "text") {
+					children.text += " ";
+				}
+			}
+
+			if (children.type === "text") {
+				return {
+					...fontStyles,
+					...children,
+				};
+			}
 			return {
-				...fontStyles,
 				...children,
+				children: children.children?.map(child => ({
+					...fontStyles,
+					...child,
+					fontColor: "rgb(71, 120, 245)",
+				})),
 			};
 		});
 	node.horisontalAlignment = horisontalAlignment || "left";

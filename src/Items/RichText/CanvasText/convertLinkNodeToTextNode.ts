@@ -1,15 +1,21 @@
 import { LinkNode, TextNode } from "../Editor/TextNode";
 
-// needed while we cant create hyperlink
-
-export const convertLinkNodeToTextNode = (
-	node: LinkNode | TextNode,
-): TextNode => {
-	if (node.type === "text" || !node.type || "text" in node) {
+export function validateLinkOrTextNode<T extends LinkNode | TextNode>(
+	node: T,
+): T {
+	if (node.type === "text" || "text" in node) {
 		return { ...node, type: "text" };
 	}
-	const link = node.link;
-	const nodeCopy = { ...node };
-	delete nodeCopy.children;
-	return { ...nodeCopy, type: "text", text: link };
-};
+	let children = node.children;
+	if (children && children.length > 0) {
+		if (children.some(child => child.text.trim())) {
+			return {
+				...node,
+				children: children.map(child => validateLinkOrTextNode(child)),
+			};
+		}
+		children[0].text = node.link;
+		return node;
+	}
+	return { ...node, children: [{ type: "text", text: node.link }] };
+}

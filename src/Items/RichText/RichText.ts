@@ -219,6 +219,19 @@ export class RichText extends Mbr implements Geometry {
 		}
 	}
 
+	getHyperLinkByPointerCoordinates(point: Point) {
+		for (const link of this.layoutNodes.linkPositions) {
+			const { link: hyperLink, left, right, bottom, top } = link;
+			const linkMbr = new Mbr(left, top, right, bottom).getTransformed(
+				this.transformation.matrix,
+			);
+			if (linkMbr.isUnderPoint(point)) {
+				return { hyperLink, linkMbr };
+			}
+		}
+		return undefined;
+	}
+
 	getDefaultHorizontalAlignment(): HorisontalAlignment {
 		switch (this.insideOf) {
 			case "Sticker":

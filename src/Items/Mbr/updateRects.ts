@@ -4,9 +4,7 @@ import { RefObject } from "react";
 import {
 	fitBoardMenu,
 	fitComment,
-	fitContextPanel,
-	fitContextPanelToCenter,
-	fitContextPanelToLeft,
+	fitHyperLink,
 	fitLinkToBtn,
 	fitThreadPanel,
 	getContextPanelRect,
@@ -19,6 +17,7 @@ export function updateRects(
 	verticalOffset?: number,
 	horizontalOffset?: number,
 	fit:
+		| "hyperLink"
 		| "boardMenu"
 		| "contextPanel"
 		| "linkToBtn"
@@ -95,6 +94,17 @@ export function updateRects(
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
 				verticalOffset,
 				horizontalOffset,
+			);
+			return panelRect;
+		}
+		if (fit === "hyperLink") {
+			if (!mbr) {
+				return null;
+			}
+			const panelRect = fitHyperLink(
+				selectionMbr.getTransformed(camera.getMatrix()),
+				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				verticalOffset,
 			);
 			return panelRect;
 		}

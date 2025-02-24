@@ -7,4 +7,11 @@ export interface LayoutBlockNodes {
 	render: (ctx: CanvasRenderingContext2D, scale?: number) => void;
 	realign: (newMaxWidht: number) => void;
 	recoordinate: (newMaxWidth?: number) => void;
+	linkPositions: {
+		link: string;
+		left: number;
+		top: number;
+		right: number;
+		bottom: number;
+	}[];
 }
