@@ -163,10 +163,14 @@ export class Group extends Mbr {
 
 		const mbrs = this.children.flatMap((childId: string) => {
 			const item = this.board.items.getById(childId);
-			if (!item) return [];
+			if (!item) {
+				return [];
+			}
 
 			const mbr = item.getMbr();
-			if (!mbr) return [];
+			if (!mbr) {
+				return [];
+			}
 
 			if (left > mbr.left) {
 				left = mbr.left;
