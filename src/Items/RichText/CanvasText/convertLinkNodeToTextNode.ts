@@ -6,7 +6,7 @@ export function validateLinkOrTextNode<T extends LinkNode | TextNode>(
 	if (node.type === "text" || "text" in node) {
 		return { ...node, type: "text" };
 	}
-	let children = node.children;
+	const children = node.children;
 	if (children && children.length > 0) {
 		if (children.some(child => child.text.trim())) {
 			return {
