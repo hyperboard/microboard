@@ -161,25 +161,26 @@ export class Group extends Mbr {
 		let right = Number.MIN_SAFE_INTEGER;
 		let bottom = Number.MIN_SAFE_INTEGER;
 
-		const mbrs = this.children.map((childId: string) => {
-			const mbr = this.board.items.getById(childId)?.getMbr();
-			if (mbr && left > mbr.left) {
-				left = mbr?.left;
-			}
+		const mbrs = this.children.flatMap((childId: string) => {
+			const item = this.board.items.getById(childId);
+			if (!item) return [];
 
-			if (mbr && top > mbr.top) {
-				top = mbr?.top;
-			}
+			const mbr = item.getMbr();
+			if (!mbr) return [];
 
-			if (mbr && right < mbr.right) {
-				right = mbr?.right;
+			if (left > mbr.left) {
+				left = mbr.left;
 			}
-
-			if (mbr && bottom < mbr.bottom) {
-				bottom = mbr?.bottom;
+			if (top > mbr.top) {
+				top = mbr.top;
 			}
-
-			return mbr;
+			if (right < mbr.right) {
+				right = mbr.right;
+			}
+			if (bottom < mbr.bottom) {
+				bottom = mbr.bottom;
+			}
+			return [mbr];
 		});
 
 		if (mbrs.length) {
@@ -251,7 +252,7 @@ export class Group extends Mbr {
 	}
 
 	getLink(): string {
-		return '';
+		return "";
 	}
 
 	render(context: DrawingContext): void {

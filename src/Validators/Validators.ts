@@ -15,6 +15,7 @@ import { TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { Descendant } from "slate";
 import Ajv from "ajv";
 import { PlaceholderData } from "Board/Items/Placeholder";
+import { GroupData } from "Board/Items/Group";
 
 export const validator = new Ajv();
 
@@ -54,6 +55,7 @@ const itemValidators: Record<string, (data: any) => boolean> = {
 	Frame: validateFrameData,
 	Placeholder: validatePlaceholderData,
 	AINode: validateAINodeData,
+	Group: validateGroupData,
 };
 
 function validateItemData(itemData: any): boolean {
@@ -363,4 +365,14 @@ function validatePointData(data: any): data is PointData {
 		typeof data.x === "number" &&
 		typeof data.y === "number"
 	);
+}
+
+function validateGroupData(groupData: GroupData): boolean {
+	const isValid =
+		groupData.hasOwnProperty("itemType") &&
+		groupData.hasOwnProperty("transformation") &&
+		groupData.hasOwnProperty("children") &&
+		Array.isArray(groupData.children) &&
+		validateTransformationData(groupData.transformation);
+	return isValid;
 }
