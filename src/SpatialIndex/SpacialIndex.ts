@@ -562,6 +562,21 @@ export class Items {
 		return this.index.getLastZIndex();
 	}
 
+	getConnectorsPointById(id: string): Connector[] {
+		return this.listAll().filter(item => {
+			if (item.itemType !== "Connector") {
+				return false;
+			}
+
+			const { startItem, endItem } = item.getConnectedItems();
+			if (startItem?.getId() === id || endItem?.getId() === id) {
+				return true;
+			}
+
+			return false;
+		});
+	}
+
 	getConnectorsByItemIds(
 		startPointerItemId?: string,
 		endPointerItemId?: string,

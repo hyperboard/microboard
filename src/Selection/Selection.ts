@@ -10,15 +10,7 @@ import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
 import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "View/Tools/Selection";
 import { Command, createCommand } from "../Events/Command";
-import {
-	Connector,
-	Frame,
-	Item,
-	ItemData,
-	Mbr,
-	RichText,
-	Shape,
-} from "../Items";
+import { Connector, Frame, Item, ItemData, Mbr, RichText } from "../Items";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
 import { BorderStyle } from "../Items/Path";
 import { ShapeType } from "../Items/Shape";
@@ -36,7 +28,6 @@ import {
 	AINode,
 	CONTEXT_NODE_HIGHLIGHT_COLOR,
 } from "Board/Items/AINode/AINode";
-import { ImageItemData } from "Board/Items/Image/Image";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -1300,6 +1291,34 @@ export class Selection {
 				itemIds.push(comment.getId());
 			}
 		}
+
+		const connectors = itemIds.flatMap(id => {
+			return this.board.items.getConnectorsPointById(id);
+		});
+
+		connectors.forEach(connector => {
+			const startPoint = connector.getStartPoint();
+			const endPoint = connector.getEndPoint();
+
+			if (
+				startPoint.pointType === "Fixed" &&
+				itemIds.includes(startPoint.item.getId() || "")
+			) {
+				const { x, y } = startPoint;
+				const pointData = new BoardPoint(x, y);
+				connector.applyStartPoint(pointData);
+			}
+
+			if (
+				endPoint.pointType === "Fixed" &&
+				itemIds.includes(endPoint.item.getId() || "")
+			) {
+				const { x, y } = endPoint;
+				const pointData = new BoardPoint(x, y);
+				connector.applyEndPoint(pointData);
+			}
+		});
+
 		this.emit({
 			class: "Board",
 			method: "remove",
