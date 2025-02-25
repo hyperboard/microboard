@@ -151,7 +151,7 @@ export class EditorContainer {
 				const isSecondTextNotEmpty =
 					editor.children[0]?.children?.text !== "";
 				const isNextRemoveText =
-					this.recordedOps &&
+					this.recordedOps?.length &&
 					this.recordedOps[0].type === "remove_text";
 				if (
 					operation.type === "set_selection" &&

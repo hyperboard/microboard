@@ -1051,6 +1051,14 @@ export class RichText extends Mbr implements Geometry {
 				span.style.fontFamily =
 					node.fontFamily || DEFAULT_TEXT_STYLES.fontFamily;
 
+				if (this.insideOf === "Frame") {
+					span.style.whiteSpace = "nowrap";
+					span.style.overflow = "hidden";
+					span.style.textOverflow = "ellipsis";
+					span.style.display = "inline-block";
+					span.style.width = "100%";
+				}
+
 				return span;
 			}
 
