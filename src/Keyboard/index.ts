@@ -5,16 +5,22 @@ export class Keyboard {
 	isCtrl = false;
 	isAlt = false;
 	isCmd = false;
+	isSpacePressed = false;
 
 	keyDown(event: KeyboardEvent): void {
 		this.down = event.key;
 		this.isShift = event.shiftKey;
 		this.isAlt = event.altKey;
 		this.isCtrl = event.ctrlKey;
+		console.log("event", event);
 
 		this.isCmd = event.metaKey || event.key === "Meta";
 		if (navigator.platform.match("Mac") && this.isCmd) {
 			this.isCtrl = true;
+		}
+
+		if (event.code === "Space") {
+			this.isSpacePressed = true;
 		}
 	}
 
@@ -27,6 +33,9 @@ export class Keyboard {
 		if (!this.isCmd || event.key === "Meta" || event.key === "Control") {
 			this.isCtrl = false;
 			this.isCmd = false;
+		}
+		if (event.code === "Space") {
+			this.isSpacePressed = false;
 		}
 	}
 }
