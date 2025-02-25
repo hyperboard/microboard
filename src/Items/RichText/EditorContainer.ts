@@ -19,7 +19,6 @@ import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
 import { Subject } from "Subject";
 import { unified } from "unified";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import {
 	BlockNode,
@@ -28,7 +27,7 @@ import {
 	ListTypes,
 	ParagraphNode,
 } from "./Editor/BlockNode";
-import { LinkNode, TextNode, TextStyle } from "./Editor/TextNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./isTextEmpty";
 import { DefaultTextStyles } from "./RichText";
 import {
@@ -151,9 +150,13 @@ export class EditorContainer {
 					editor.children[0]?.children?.text === "";
 				const isSecondTextNotEmpty =
 					editor.children[0]?.children?.text !== "";
+				const isNextRemoveText =
+					this.recordedOps &&
+					this.recordedOps[0].type === "remove_text";
 				if (
 					operation.type === "set_selection" &&
-					!(isFirstTextEmpty && isSecondTextNotEmpty)
+					!(isFirstTextEmpty && isSecondTextNotEmpty) &&
+					!isNextRemoveText
 				) {
 					return;
 				}
@@ -1138,6 +1141,7 @@ export class EditorContainer {
 			anchor: Editor.start(this.editor, []),
 			focus: Editor.end(this.editor, []),
 		});
+		this.selectWholeText();
 		Transforms.delete(this.editor);
 	}
 

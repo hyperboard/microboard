@@ -506,16 +506,23 @@ export class Selection {
 			}
 		}
 
-		if (item.itemType === "Frame" && serializedData.itemType === "Frame") {
-			const textItem = item.text.getTextString();
-			const copyText = t("frame.copy");
+		const textItem = item.getRichText()?.getTextString();
+		const copyText = t("frame.copy");
+		const isCopyTextExist = textItem?.includes(copyText);
+		const isChangeCopiedFrameText =
+			item.itemType === "Frame" &&
+			serializedData.itemType === "Frame" &&
+			textItem !== "" &&
+			!isCopyTextExist;
+
+		if (isChangeCopiedFrameText) {
 			const copiedFrameText =
-				copyText + (textItem || serializedData.text.placeholderText);
+				copyText + (textItem || serializedData.text?.placeholderText);
 			item.text.editor.clearText();
 			item.text.editor.addText(copiedFrameText);
 			serializedData.text = item.text.serialize();
 			item.text.editor.clearText();
-			item.text.editor.addText(textItem);
+			item.text.editor.addText(textItem || "");
 		}
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}
