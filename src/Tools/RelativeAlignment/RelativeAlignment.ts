@@ -1,7 +1,6 @@
 import { Board } from "Board/Board";
-import { Frame, Item, Line, Mbr, Point } from "Board/Items";
+import { Frame, Item, Line, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { SelectionItems } from "Board/Selection/SelectionItems";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
 import { CanvasDrawer } from "Board/drawMbrOnCanvas";
@@ -65,7 +64,7 @@ export class AlignmentHelper {
 				otherItem.itemType !== "Drawing" &&
 				otherItem.isInView(camera) &&
 				!childrenIds.includes(otherItem.getId()),
-			Math.ceil(cameraWidth / 3),
+			Math.ceil(cameraWidth),
 		);
 
 		const verticalAlignments: Map<number, { minY: number; maxY: number }> =

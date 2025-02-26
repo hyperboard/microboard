@@ -91,7 +91,7 @@ export class Select extends Tool {
 		if (this.board.keyboard.isShift) {
 			return false;
 		}
-		const increasedSnapThreshold = 2;
+		const increasedSnapThreshold = 5;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,
@@ -116,26 +116,26 @@ export class Select extends Tool {
 			);
 
 			if (
-				cursorDiffX > increasedSnapThreshold ||
-				cursorDiffY > increasedSnapThreshold
+				(cursorDiffX > increasedSnapThreshold ||
+					cursorDiffY > increasedSnapThreshold) &&
+				this.initialCursorPos
 			) {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
+				const itemCenter = item.getMbr().getCenter();
+				const targetX =
+					this.board.pointer.point.x - this.initialCursorPos.x;
+				const targetY =
+					this.board.pointer.point.y - this.initialCursorPos.y;
+				const translateX = targetX - itemCenter.x;
+				const translateY = targetY - itemCenter.y;
+				this.alignmentHelper.translateItemsOrCanvas(
+					item,
+					translateX,
+					translateY,
+					this.beginTimeStamp,
+				);
 			}
-		} else if (this.initialCursorPos) {
-			const itemCenter = item.getMbr().getCenter();
-			const targetX =
-				this.board.pointer.point.x - this.initialCursorPos.x;
-			const targetY =
-				this.board.pointer.point.y - this.initialCursorPos.y;
-			const translateX = targetX - itemCenter.x;
-			const translateY = targetY - itemCenter.y;
-			this.alignmentHelper.translateItemsOrCanvas(
-				item,
-				translateX,
-				translateY,
-				this.beginTimeStamp,
-			);
 		}
 		return false;
 	}
