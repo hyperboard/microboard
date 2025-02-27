@@ -59,7 +59,9 @@ export function createCommand(board: Board, operation: Operation): Command {
 					.map(itemId => board.items.findById(itemId) ?? itemId)
 					.filter((item): item is Item => {
 						if (typeof item === "string") {
-							console.warn(`Item with ID ${item} not found.`);
+							console.warn(
+								`Item with ID ${item} not found for operation ${operation.class}.${operation.method}`,
+							);
 							return false;
 						}
 						if (
