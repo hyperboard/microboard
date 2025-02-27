@@ -10,8 +10,12 @@ export const uploadToTheStorage = async (
 	return new Promise((resolve, reject) => {
 		const base64String = dataURL.split(",")[1];
 		const mimeType = dataURL.split(",")[0].split(":")[1].split(";")[0];
-		const buffer = Buffer.from(base64String, "base64");
-		const blob = new Blob([buffer], { type: mimeType });
+		// const buffer = Buffer.from(base64String, "base64");
+		// const blob = new Blob([buffer], { type: mimeType });
+		// Smell: window
+		const binaryString = window.atob(base64String);
+		const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+		const blob = new Blob([bytes], { type: mimeType });
 		fetch(storageURL, {
 			method: "POST",
 			headers: {

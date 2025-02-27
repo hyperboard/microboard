@@ -1175,9 +1175,11 @@ export class EditorContainer {
 		// || getSlateFragmentAttribute(data);
 
 		if (fragment) {
-			const decoded = decodeURIComponent(
-				Buffer.from(fragment, "base64").toString("utf-8"),
-			);
+			// const decoded = decodeURIComponent(
+			// 	Buffer.from(fragment, "base64").toString("utf-8"),
+			// );
+			// Smell window
+			const decoded = decodeURIComponent(window.atob(fragment));
 			const parsed = JSON.parse(decoded) as Node[];
 			this.editor.insertFragment(parsed);
 			return true;

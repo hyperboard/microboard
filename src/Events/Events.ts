@@ -297,8 +297,17 @@ export function createEvents(
 		}
 		// smell have to remove document refference
 		if (response.status === "completed" && response.base64) {
-			const audioBuffer = Buffer.from(response.base64, "base64");
-			const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
+			// const audioBuffer = Buffer.from(response.base64, "base64");
+			// const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
+			// Smell: window
+			const audioBlob = new Blob(
+				[
+					Uint8Array.from(window.atob(response.base64), ch =>
+						ch.charCodeAt(0),
+					),
+				],
+				{ type: "audio/wav" },
+			);
 			const audioUrl = URL.createObjectURL(audioBlob);
 			const link = document.createElement("a");
 			link.href = audioUrl;
