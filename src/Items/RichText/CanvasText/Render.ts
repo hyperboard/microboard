@@ -136,13 +136,12 @@ const sliceTextByWidth = (
 };
 
 function getBlockNode(
-	data: BlockNode | LinkNode,
+	data: BlockNode,
 	maxWidth: number,
 	isFrame?: boolean, // Smell
 	listData?: { isNumberedList: boolean; level: number },
 	listMark?: string,
 	newLine = false,
-	paddingTopInEm = 0,
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -160,10 +159,6 @@ function getBlockNode(
 		listData = { level: 0, isNumberedList: true };
 	} else if (node.type === "ul_list" && !listData) {
 		listData = { level: 0, isNumberedList: false };
-	}
-	let link: string | undefined;
-	if (data.type === "link") {
-		link = data.link;
 	}
 	for (let i = 0; i < data.children.length; i++) {
 		const child = structuredClone(data.children[i]);
@@ -234,7 +229,7 @@ function getBlockNode(
 						(listData ? 16 : 0) + (listData?.level || 0) * 24,
 					newLine: i === 0 ? newLine : false,
 					listMark: i === 0 ? listMark : undefined,
-					link,
+					link: child.link,
 				});
 				break;
 			default:
@@ -249,7 +244,7 @@ function getBlockNode(
 							(listData ? 16 : 0) + (listData?.level || 0) * 24,
 						newLine: i === 0 ? newLine : false,
 						listMark: i === 0 ? listMark : undefined,
-						link,
+						link: child.link,
 					});
 				} else {
 					const blockNode = getBlockNode(
@@ -1051,7 +1046,7 @@ function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const y = textBlock.y;
 	const style = textBlock.style;
 	const measure = textBlock.measure;
-	const width = measure.width;
+	const width = measure.width - (textBlock.marginLeft || 0);
 	const color = style.color;
 	ctx.strokeStyle = color;
 	ctx.lineWidth = textBlock.fontSize / 14;

@@ -8,6 +8,7 @@ import {
 import { SelectionContext } from "Board/Selection/Selection";
 import i18next from "i18next";
 import {
+	BaseRange,
 	BaseSelection,
 	Descendant,
 	Editor,
@@ -607,6 +608,13 @@ export class RichText extends Mbr implements Geometry {
 		return ops;
 	}
 
+	setHyperLink(link: string, selection: BaseRange): SlateOp[] {
+		const ops = this.editor.setSelectionLink(link, selection);
+		this.updateElement();
+
+		return ops;
+	}
+
 	applySelectionFontColor(fontColor: string): void {
 		this.editor.shouldEmit = false;
 		this.editor.applySelectionFontColor(fontColor);
@@ -941,7 +949,9 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
-		setTimeout(() => this.updateElement(), 200);
+		document.fonts.ready.then(() => {
+			this.updateElement();
+		});
 		this.subject.publish(this);
 		return this;
 	}

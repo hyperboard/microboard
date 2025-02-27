@@ -1,21 +1,22 @@
 import { LinkNode, TextNode } from "../Editor/TextNode";
+import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
-export function validateLinkOrTextNode<T extends LinkNode | TextNode>(
-	node: T,
-): T {
+export const convertLinkNodeToTextNode = (
+	node: LinkNode | TextNode,
+): TextNode => {
 	if (node.type === "text" || "text" in node) {
 		return { ...node, type: "text" };
 	}
-	const children = node.children;
-	if (children && children.length > 0) {
-		if (children.some(child => child.text.trim())) {
-			return {
-				...node,
-				children: children.map(child => validateLinkOrTextNode(child)),
-			};
-		}
-		children[0].text = node.link;
-		return node;
-	}
-	return { ...node, children: [{ type: "text", text: node.link }] };
-}
+	const link = node.link;
+	const text = node.children.map(child => child.text).join("");
+
+	return {
+		...DEFAULT_TEXT_STYLES,
+		type: "text",
+		text,
+		link,
+		overline: false,
+		subscript: false,
+		superscript: false,
+	};
+};

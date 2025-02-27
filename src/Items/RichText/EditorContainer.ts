@@ -14,6 +14,8 @@ import {
 	Range,
 	Operation as SlateOp,
 	Transforms,
+	Path,
+	Point,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
@@ -27,7 +29,7 @@ import {
 	ListTypes,
 	ParagraphNode,
 } from "./Editor/BlockNode";
-import { TextNode, TextStyle } from "./Editor/TextNode";
+import { LinkNode, TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./isTextEmpty";
 import { DefaultTextStyles } from "./RichText";
 import {
@@ -460,6 +462,53 @@ export class EditorContainer {
 		return this.stopOpRecordingAndGetOps();
 	}
 
+	setSelectionLink(link: string, selection: BaseSelection) {
+		const editor = this.editor;
+
+		if (!selection) {
+			return;
+		}
+
+		const format = "rgba(71, 120, 245, 1)";
+		Transforms.select(editor, selection);
+		if (!editor.selection) {
+			return;
+		}
+
+		this.startOpRecording();
+		Editor.addMark(editor, "fontColor", format);
+
+		for (const [node, path] of Editor.nodes(editor, {
+			at: selection,
+			match: n => n.type === "text",
+		})) {
+			const nodeRange = Editor.range(editor, path);
+			Transforms.select(editor, nodeRange);
+			Transforms.setNodes(
+				editor,
+				{ link },
+				{ split: false, match: n => n.type === "text" },
+			);
+		}
+
+		return this.stopOpRecordingAndGetOps();
+	}
+
+	createLinkNode(link: string, children?: []): LinkNode {
+		return {
+			type: "link",
+			link,
+			bold: false,
+			italic: false,
+			underline: true,
+			overline: false,
+			"line-through": false,
+			subscript: false,
+			superscript: false,
+			children,
+		};
+	}
+
 	isMarkActive = (format: string) => {
 		const marks = Editor.marks(this.editor);
 		return marks ? marks[format] === true : false;
@@ -722,6 +771,40 @@ export class EditorContainer {
 		}
 
 		return textNodes;
+	}
+
+	getLinkNodesPathsInSelection(): Path[] {
+		const { selection } = this.editor;
+		if (!selection) {
+			return [];
+		}
+
+		const linkNodesPaths: Path[] = [];
+		for (const [node, path] of Editor.nodes(this.editor, {
+			at: selection,
+			// @ts-expect-error
+			match: n => n.type === "link",
+		})) {
+			linkNodesPaths.push(path);
+		}
+
+		return linkNodesPaths;
+	}
+
+	getFirstSelectionLink(selection: BaseSelection): string | undefined {
+		if (!selection) {
+			return undefined;
+		}
+
+		for (const [node, path] of Editor.nodes(this.editor, {
+			at: selection,
+			// @ts-expect-error
+			match: n => n.type === "link",
+		})) {
+			return node.link;
+		}
+
+		return undefined;
 	}
 
 	getEachNodeInSelectionStyles(): string[][] {

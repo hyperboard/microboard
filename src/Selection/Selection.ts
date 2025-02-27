@@ -28,6 +28,7 @@ import {
 	AINode,
 	CONTEXT_NODE_HIGHLIGHT_COLOR,
 } from "Board/Items/AINode/AINode";
+import { BaseRange } from "slate";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -1179,6 +1180,26 @@ export class Selection {
 			});
 			tempStorage.setFontColor(item.itemType, fontColor);
 		}
+		this.emitApplied({
+			class: "RichText",
+			method: "groupEdit",
+			itemsOps,
+		});
+	}
+
+	setHyperLink(link: string, selection: BaseRange): void {
+		const text = this.items.getSingle()?.getRichText();
+		if (!text) {
+			return;
+		}
+		const itemsOps: ItemOp[] = [];
+		const ops = text.setHyperLink(link, selection);
+		itemsOps.push({
+			item: text.getId(),
+			selection: text.editor.getSelection(),
+			ops,
+		});
+
 		this.emitApplied({
 			class: "RichText",
 			method: "groupEdit",

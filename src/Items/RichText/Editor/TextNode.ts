@@ -16,6 +16,7 @@ export type TextStyle = (typeof TextStyles)[number];
 export type TextNode = {
 	type: "text";
 	text: string;
+	link?: string;
 	styles?: TextStyle[];
 	bold: boolean;
 	italic: boolean;
@@ -37,21 +38,7 @@ export type TextNode = {
 export type LinkNode = {
 	type: "link";
 	link: string;
-	styles?: TextStyle[];
-	children?: TextNode[];
-	bold: boolean;
-	italic: boolean;
-	underline: boolean;
-	overline: boolean;
-	"line-through": boolean;
-	subscript: boolean;
-	superscript: boolean;
-	fontFamily?: string;
-	fontColor?: string;
-	fontSize?: number | "auto";
-	fontHighlight?: string;
-	enableAuto?: boolean;
-	horisontalAlignment?: HorisontalAlignment;
+	children: TextNode[];
 	paddingTop?: number;
 	paddingBottom?: number;
 };
