@@ -911,7 +911,7 @@ export class Connector {
 	}
 
 	private renderPathHTML(
-		documentFactory,
+		documentFactory: DocumentFactory,
 		path: Path | Paths,
 	): SVGPathElement[] {
 		const { translateX, translateY, scaleX, scaleY } =
