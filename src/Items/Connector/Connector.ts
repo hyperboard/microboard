@@ -44,6 +44,7 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -760,8 +761,8 @@ export class Connector {
 		}
 	}
 	// smell have to redo without document
-	renderHTML(): HTMLElement {
-		const div = document.createElement("connector-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("connector-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -771,7 +772,7 @@ export class Connector {
 		const unscaledWidth = width / scaleX;
 		const unscaledHeight = height / scaleY;
 
-		const svg = document.createElementNS(
+		const svg = documentFactory.createElementNS(
 			"http://www.w3.org/2000/svg",
 			"svg",
 		);
@@ -781,12 +782,12 @@ export class Connector {
 		svg.setAttribute("style", "position: absolute; overflow: visible;");
 
 		// todo fix clip
-		// const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-		// const clip = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		// const clip = documentFactory.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+		// const clip = documentFactory.createElementNS("http://www.w3.org/2000/svg", "mask");
 		// clip.setAttribute("id", `${this.getId()}_clip`);
 
 		// const textMbr = this.text.getTransformedContainer();
-		// const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		// const rect = documentFactory.createElementNS("http://www.w3.org/2000/svg", "rect");
 		// rect.setAttribute("x", `${textMbr.left}`);
 		// rect.setAttribute("y", `${textMbr.top}`);
 		// rect.setAttribute("width", `${textMbr.getWidth()}`);
@@ -797,7 +798,7 @@ export class Connector {
 		// );
 		// rect.setAttribute("fill", "black");
 
-		// const fullRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		// const fullRect = documentFactory.createElementNS("http://www.w3.org/2000/svg", "rect");
 		// fullRect.setAttribute("x", `${this.getMbr().left}`);
 		// fullRect.setAttribute("y", `${this.getMbr().top}`);
 		// fullRect.setAttribute("width", `${this.getMbr().getWidth()}`);
@@ -814,11 +815,14 @@ export class Connector {
 		// svg.setAttribute("clip-path", `url(#${this.getId()}_clip)`);
 		// svg.setAttribute("mask", `url(#${this.getId()}_clip)`);
 
-		const lines = this.renderPathHTML(this.lines);
+		const lines = this.renderPathHTML(documentFactory, this.lines);
 		svg.append(...lines);
 
 		if (this.getStartPointerStyle() !== "None") {
-			const startPointer = this.renderPathHTML(this.startPointer.path);
+			const startPointer = this.renderPathHTML(
+				documentFactory,
+				this.startPointer.path,
+			);
 			if (
 				!(
 					this.startPointer.name.toLowerCase().includes("filled") ||
@@ -830,7 +834,10 @@ export class Connector {
 			svg.append(...startPointer);
 		}
 		if (this.getEndPointerStyle() !== "None") {
-			const endPointer = this.renderPathHTML(this.endPointer.path);
+			const endPointer = this.renderPathHTML(
+				documentFactory,
+				this.endPointer.path,
+			);
 			if (
 				!(
 					this.endPointer.name.toLowerCase().includes("filled") ||
@@ -891,7 +898,7 @@ export class Connector {
 		setPointAttributes(div, this.startPoint, "start");
 		setPointAttributes(div, this.endPoint, "end");
 
-		const textElement = this.text.renderHTML(false);
+		const textElement = this.text.renderHTML(documentFactory, false);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.overflow = "auto";
 		positionRelatively(textElement, div);
@@ -903,10 +910,13 @@ export class Connector {
 		return div;
 	}
 
-	private renderPathHTML(path: Path | Paths): SVGPathElement[] {
+	private renderPathHTML(
+		documentFactory,
+		path: Path | Paths,
+	): SVGPathElement[] {
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
-		const pathElement = path.renderHTML();
+		const pathElement = path.renderHTML(documentFactory);
 		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 
 		paths.forEach(element => {

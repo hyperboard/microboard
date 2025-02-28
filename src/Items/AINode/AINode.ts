@@ -20,6 +20,7 @@ import {
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
 import { Board } from "Board";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 
@@ -337,8 +338,8 @@ export class AINode implements Geometry {
 		this.text.render(context);
 	}
 	// smell have to redo without document
-	renderHTML(): HTMLElement {
-		const div = document.createElement("ainode-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("ainode-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -370,7 +371,7 @@ export class AINode implements Geometry {
 		}
 		div.setAttribute("context-range", this.contextRange.toString());
 
-		const textElement = this.text.renderHTML();
+		const textElement = this.text.renderHTML(documentFactory);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.maxWidth = `${width}px`;
 		textElement.style.overflow = "auto";
@@ -385,7 +386,7 @@ export class AINode implements Geometry {
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,

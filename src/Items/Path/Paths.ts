@@ -6,6 +6,7 @@ import { Point } from "../Point";
 import { BorderStyle, BorderWidth, Path, PathStylize } from "./Path";
 import { Matrix } from "../Transformation";
 import { GeometricNormal } from "../GeometricNormal";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export class Paths implements Geometry {
 	private x: number;
@@ -221,8 +222,8 @@ export class Paths implements Geometry {
 		}
 	}
 
-	renderHTML(): SVGPathElement[] {
-		return this.paths.map(path => path.renderHTML());
+	renderHTML(documentFactory: DocumentFactory): SVGPathElement[] {
+		return this.paths.map(path => path.renderHTML(documentFactory));
 	}
 
 	transform(matrix: Matrix): void {

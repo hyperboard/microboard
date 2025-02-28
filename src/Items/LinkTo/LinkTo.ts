@@ -3,6 +3,7 @@ import { LinkToOperation } from "./LinkToOperation";
 import { Events } from "../../Events";
 import { LinkToCommand } from "./LinkToCommand";
 import { Matrix } from "Board/Items/Transformation/Matrix";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export class LinkTo {
 	readonly subject = new SubjectOperation<LinkTo, LinkToOperation>();
@@ -71,8 +72,8 @@ export class LinkTo {
 	}
 
 	// smell have to redo without document
-	renderHTML(): HTMLDivElement {
-		const div = document.createElement("link-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("link-item");
 		div.classList.add("link-object");
 		div.id = this.id;
 		div.style.width = `24px`;
@@ -82,7 +83,7 @@ export class LinkTo {
 		div.style.backgroundColor = "#FFFFFF";
 		div.style.borderRadius = "2px";
 		div.style.zIndex = "1";
-		const link = document.createElement("a");
+		const link = documentFactory.createElement("a");
 		link.style.position = "absolute";
 		link.style.width = `100%`;
 		link.style.height = `100%`;
@@ -93,7 +94,7 @@ export class LinkTo {
 		link.setAttribute("target", "_blank");
 		if (this.link) {
 			link.href = this.link;
-			const image = document.createElement("img");
+			const image = documentFactory.createElement("img");
 			image.id = this.id;
 			image.classList.add("link-image");
 			image.src = `${new URL(this.link).origin}/favicon.ico`;

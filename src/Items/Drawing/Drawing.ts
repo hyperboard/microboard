@@ -16,6 +16,7 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -240,8 +241,8 @@ export class Drawing extends Mbr implements Geometry {
 	}
 
 	// smell have to redo without document
-	renderHTML(): HTMLElement {
-		const div = document.createElement("drawing-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("drawing-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -251,7 +252,7 @@ export class Drawing extends Mbr implements Geometry {
 		const unscaledWidth = width / scaleX;
 		const unscaledHeight = height / scaleY;
 
-		const svg = document.createElementNS(
+		const svg = documentFactory.createElementNS(
 			"http://www.w3.org/2000/svg",
 			"svg",
 		);
@@ -262,7 +263,7 @@ export class Drawing extends Mbr implements Geometry {
 		// svg.setAttribute("transform-origin", "0 0");
 		// svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
 
-		const pathElement = document.createElementNS(
+		const pathElement = documentFactory.createElementNS(
 			"http://www.w3.org/2000/svg",
 			"path",
 		);
@@ -287,7 +288,7 @@ export class Drawing extends Mbr implements Geometry {
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,

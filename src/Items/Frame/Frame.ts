@@ -37,6 +37,7 @@ import {
 	translateElementBy,
 } from "Board/HTMLRender";
 import { DefaultFrameData, FrameData } from "./FrameData";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {
@@ -741,8 +742,8 @@ export class Frame implements Geometry {
 	}
 
 	// smell have to redo without document
-	renderHTML(): HTMLElement {
-		const div = document.createElement("frame-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("frame-item");
 		div.id = this.getId();
 
 		div.style.backgroundColor = this.backgroundColor;
@@ -774,7 +775,7 @@ export class Frame implements Geometry {
 		div.style.position = "absolute";
 		// div.setAttribute("data-shape-type", this.shapeType);
 
-		const textElement = this.text.renderHTML();
+		const textElement = this.text.renderHTML(documentFactory);
 		textElement.style.transform = `translate(0px, -30px) scale(1, 1)`;
 		// positionRelatively(textElement,  div);
 		// resetElementScale(textElement);
@@ -786,7 +787,7 @@ export class Frame implements Geometry {
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			translateElementBy(
 				linkElement,
 				width - parseInt(linkElement.style.width),

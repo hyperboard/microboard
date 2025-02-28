@@ -29,6 +29,7 @@ import {
 } from "Board/HTMLRender";
 import { SessionStorage } from "App/SessionStorage";
 import { Board } from "Board";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export const stickerColors = {
 	Purple: "rgb(233, 208, 255)",
@@ -321,8 +322,8 @@ export class Sticker implements Geometry {
 		this.text.render(context);
 	}
 
-	renderHTML(): HTMLElement {
-		const div = document.createElement("sticker-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("sticker-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -344,7 +345,7 @@ export class Sticker implements Geometry {
 
 		const autoScale =
 			(this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
-		const textElement = this.text.renderHTML();
+		const textElement = this.text.renderHTML(documentFactory);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.overflow = "auto";
 		positionRelatively(textElement, div);
@@ -369,7 +370,7 @@ export class Sticker implements Geometry {
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,

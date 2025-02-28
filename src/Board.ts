@@ -48,6 +48,7 @@ import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
 import { isTemplateView } from "lib/queryStringParser";
+import { DocumentFactory } from "./api/DocumentFactory";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -676,8 +677,8 @@ export class Board {
 		return this.copy();
 	}
 
-	async serializeHTML(): Promise<string> {
-		const items = this.items.getWholeHTML();
+	async serializeHTML(documentFactory: DocumentFactory): Promise<string> {
+		const items = this.items.getWholeHTML(documentFactory);
 		const script = await fetch(
 			new URL(getPublicUrl("/customWebComponents.js")),
 		);

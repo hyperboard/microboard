@@ -17,6 +17,7 @@ import {
 } from "Board/HTMLRender/HTMLRender";
 import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export interface ImageItemData {
 	itemType: "Image";
@@ -291,13 +292,13 @@ export class ImageItem extends Mbr {
 		ctx.restore();
 	}
 
-	renderHTML(): HTMLElement {
-		const div = document.createElement("image-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("image-item");
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
-		// const canvas = document.createElement('canvas');
+		// const canvas = documentFactory.createElement('canvas');
 		// canvas.width = this.image.width;
 		// canvas.height = this.image.height;
 		// const ctx = canvas.getContext('2d')!;
@@ -316,7 +317,7 @@ export class ImageItem extends Mbr {
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,

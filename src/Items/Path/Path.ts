@@ -7,6 +7,7 @@ import { Point } from "../Point";
 import { Mbr } from "../Mbr";
 import { Arc, Matrix } from "..";
 import { GeometricNormal } from "../GeometricNormal";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export type Segment = Line | QuadraticBezier | CubicBezier | Arc;
 
@@ -511,8 +512,8 @@ export class Path implements Geometry, PathStylize {
 	}
 
 	// smell have to redo without document
-	renderHTML(): SVGPathElement {
-		const pathElement = document.createElementNS(
+	renderHTML(documentFactory: DocumentFactory): SVGPathElement {
+		const pathElement = documentFactory.createElementNS(
 			"http://www.w3.org/2000/svg",
 			"path",
 		);

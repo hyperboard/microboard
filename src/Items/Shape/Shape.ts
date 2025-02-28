@@ -42,6 +42,7 @@ import {
 	getControlPoint,
 	toRelativePoint,
 } from "Board/Items/Connector/ControlPoint";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -269,7 +270,8 @@ export class Shape implements Geometry {
 		this.shapeType = shapeType;
 		this.initPath();
 		this.transformPath();
-
+		// Smell: Can we not update connectors in shape?
+		// Smell: Can we not iterate over all items?
 		for (const connector of this.board.items.listAll()) {
 			if (
 				connector instanceof Connector &&
@@ -514,8 +516,8 @@ export class Shape implements Geometry {
 		this.text.render(context);
 	}
 
-	renderHTML(): HTMLElement {
-		const div = document.createElement("shape-item");
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("shape-item");
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -525,7 +527,7 @@ export class Shape implements Geometry {
 		const unscaledWidth = width / scaleX;
 		const unscaledHeight = height / scaleY;
 
-		const svg = document.createElementNS(
+		const svg = documentFactory.createElementNS(
 			"http://www.w3.org/2000/svg",
 			"svg",
 		);
@@ -536,7 +538,9 @@ export class Shape implements Geometry {
 		svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
 		svg.setAttribute("style", "position: absolute; overflow: visible;");
 
-		const pathElement = Shapes[this.shapeType].path.copy().renderHTML();
+		const pathElement = Shapes[this.shapeType].path
+			.copy()
+			.renderHTML(documentFactory);
 		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 		paths.forEach(element => {
 			element.setAttribute("fill", this.backgroundColor);
@@ -568,7 +572,7 @@ export class Shape implements Geometry {
 		);
 		div.setAttribute("stroke-width", this.borderWidth.toString());
 
-		const textElement = this.text.renderHTML();
+		const textElement = this.text.renderHTML(documentFactory);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.maxWidth = `${width}px`;
 		textElement.style.overflow = "auto";
@@ -583,7 +587,7 @@ export class Shape implements Geometry {
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,

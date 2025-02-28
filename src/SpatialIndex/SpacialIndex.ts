@@ -8,6 +8,7 @@ import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";
 import { Comment } from "../Items/Comment";
 import { positionRelatively, translateElementBy } from "Board/HTMLRender";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -630,19 +631,23 @@ export class Items {
 		frames.forEach(frame => frame.renderName(context)); // names of frames
 	}
 
-	renderHTML(): string {
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		const frames = this.getFramesInView();
 		const rest = this.getItemsInView();
-		return this.getHTML(frames, rest);
+		return this.getHTML(documentFactory, frames, rest);
 	}
 
-	getWholeHTML(): string {
+	getWholeHTML(documentFactory: DocumentFactory): string {
 		const frames = this.listFrames();
 		const rest = this.listAll();
-		return this.getHTML(frames, rest);
+		return this.getHTML(documentFactory, frames, rest);
 	}
 
-	getHTML(frames: Frame[], rest: ItemWoFrames[]): string {
+	getHTML(
+		documentFactory: DocumentFactory,
+		frames: Frame[],
+		rest: ItemWoFrames[],
+	): string {
 		const lowestCoordinates = [...frames, ...rest]
 			.map(item => item.getMbr())
 			.reduce(
@@ -659,7 +664,7 @@ export class Items {
 				.getChildrenIds()
 				.forEach(childId => childrenMap.set(childId, frame.getId()));
 
-			const html = frame.renderHTML();
+			const html = frame.renderHTML(documentFactory);
 			translateElementBy(
 				html,
 				-lowestCoordinates.left,
@@ -669,7 +674,10 @@ export class Items {
 			return html;
 		});
 		const restHTML = rest
-			.map(item => "renderHTML" in item && item.renderHTML())
+			.map(
+				item =>
+					"renderHTML" in item && item.renderHTML(documentFactory),
+			)
 			.filter(item => !!item)
 			.map(item => {
 				if (item.tagName.toLowerCase() === "connector-item") {

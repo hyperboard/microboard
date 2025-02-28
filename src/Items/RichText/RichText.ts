@@ -43,6 +43,7 @@ import { RichTextOperation } from "./RichTextOperations";
 import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
 import { decodeHtml } from "Board/parserHTML";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -986,7 +987,10 @@ export class RichText extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	renderHTML(enablePlaceholder = true): HTMLElement {
+	renderHTML(
+		documentFactory: DocumentFactory,
+		enablePlaceholder = true,
+	): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
 			if (Text.isText(node)) {
 				const text =
@@ -1053,7 +1057,7 @@ export class RichText extends Mbr implements Geometry {
 				}
 			}
 
-			return document.createElement("div");
+			return documentFactory.createElement("div");
 		};
 
 		const escapeHtml = (unsafe: string): string => {
@@ -1077,7 +1081,7 @@ export class RichText extends Mbr implements Geometry {
 		const transformedWidth = this.getTransformedContainer().getWidth();
 		const transformedHeight = this.getTransformedContainer().getHeight();
 
-		const div = document.createElement("rich-text");
+		const div = documentFactory.createElement("rich-text");
 		div.id = this.getId();
 		div.style.width = `${transformedWidth + 5}px`;
 		div.style.height = `${transformedHeight}px`;
@@ -1113,7 +1117,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getLinkTo() &&
 			(this.insideOf === "RichText" || !this.insideOf)
 		) {
-			const linkElement = this.linkTo.renderHTML();
+			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
