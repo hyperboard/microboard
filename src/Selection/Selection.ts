@@ -265,7 +265,11 @@ export class Selection {
 		this.board.tools.select();
 	}
 
-	editText(shouldReplace?: string, moveCursorToEnd = false): void {
+	editText(
+		shouldReplace?: string,
+		moveCursorToEnd = false,
+		shouldSelect = false,
+	): void {
 		if (this.board.getInterfaceType() !== "edit") {
 			return;
 		}
@@ -292,6 +296,9 @@ export class Selection {
 		}
 		this.setTextToEdit(item);
 		this.setContext("EditTextUnderPointer");
+		if (shouldSelect) {
+			text.editor.selectWholeText();
+		}
 		this.board.items.subject.publish(this.board.items);
 	}
 
@@ -1187,7 +1194,7 @@ export class Selection {
 		});
 	}
 
-	setHyperLink(link: string, selection: BaseRange): void {
+	setHyperLink(link: string | undefined, selection: BaseRange): void {
 		const text = this.items.getSingle()?.getRichText();
 		if (!text) {
 			return;
