@@ -55,6 +55,9 @@ export type DefaultTextStyles = {
 	italic: boolean;
 	underline: boolean;
 	"line-through": boolean;
+	overline: boolean;
+	subscript: boolean;
+	superscript: boolean;
 };
 
 let isEditInProcessValue = false;

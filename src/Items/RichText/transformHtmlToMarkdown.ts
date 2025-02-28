@@ -7,6 +7,7 @@ import slate from "remark-slate";
 import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
 import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
+import { TextNode } from "Board/Items/RichText/Editor/TextNode";
 
 export const transformHtmlOrTextToMarkdown = async (
 	text: string,
@@ -22,9 +23,16 @@ export const transformHtmlOrTextToMarkdown = async (
 		markdownString = String(file).trim();
 	}
 
-	const slateNodes = await convertMarkdownToSlate(
-		markdownString.replace(/<!--(Start|End)Fragment-->/g, ""),
-	);
+	let slateNodes: BlockNode[] | TextNode[] = [];
+
+	const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+	if (urlRegex.test(text)) {
+		slateNodes = [createLinkNode(text)];
+	} else {
+		slateNodes = await convertMarkdownToSlate(
+			markdownString.replace(/<!--(Start|End)Fragment-->/g, ""),
+		);
+	}
 
 	const data = new DataTransfer();
 
@@ -38,6 +46,16 @@ export const transformHtmlOrTextToMarkdown = async (
 
 	return data;
 };
+
+function createLinkNode(link: string): TextNode {
+	return {
+		type: "text",
+		link,
+		text: link,
+		...DEFAULT_TEXT_STYLES,
+		fontColor: "rgba(71, 120, 245, 1)",
+	};
+}
 
 async function convertMarkdownToSlate(text: string) {
 	if (!text) {
