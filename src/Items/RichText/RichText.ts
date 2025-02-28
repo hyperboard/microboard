@@ -609,7 +609,10 @@ export class RichText extends Mbr implements Geometry {
 		return ops;
 	}
 
-	setHyperLink(link: string | undefined, selection: BaseRange): SlateOp[] {
+	setHyperLink(
+		link: string | undefined,
+		selection: BaseRange | null,
+	): SlateOp[] {
 		const ops = this.editor.setSelectionLink(link, selection);
 		this.updateElement();
 

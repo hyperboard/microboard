@@ -1194,7 +1194,7 @@ export class Selection {
 		});
 	}
 
-	setHyperLink(link: string | undefined, selection: BaseRange): void {
+	setHyperLink(link: string | undefined, selection: BaseRange | null): void {
 		const text = this.items.getSingle()?.getRichText();
 		if (!text) {
 			return;
