@@ -12,7 +12,6 @@ export class Keyboard {
 		this.isShift = event.shiftKey;
 		this.isAlt = event.altKey;
 		this.isCtrl = event.ctrlKey;
-		console.log("event", event);
 
 		this.isCmd = event.metaKey || event.key === "Meta";
 		if (navigator.platform.match("Mac") && this.isCmd) {
