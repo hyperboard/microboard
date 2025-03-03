@@ -83,18 +83,25 @@ function parseHTMLRichText(
 	},
 ): RichTextData & { id: string } {
 	const parseNode = (node: HTMLElement): Descendant => {
+		const isLinkNode = node.tagName.toLowerCase() === "a";
 		if (
-			node.tagName.toLowerCase() === "span" &&
-			node.children.length === 0
+			node.tagName.toLowerCase() === "span" ||
+			(isLinkNode && node.children.length === 0)
 		) {
 			const text =
 				node.textContent && node.textContent.trim() !== ""
 					? decodeHtml(node.textContent)
 					: "";
 
+			let link: string | null = null;
+			if (isLinkNode) {
+				link = node.getAttribute("href");
+			}
+
 			return {
 				type: "text",
 				text,
+				link: link || undefined,
 				bold: node.style.fontWeight === "700",
 				italic: node.style.fontStyle === "italic",
 				underline: node.style.textDecoration.includes("underline"),

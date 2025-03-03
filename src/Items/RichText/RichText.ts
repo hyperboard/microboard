@@ -1004,35 +1004,44 @@ export class RichText extends Mbr implements Geometry {
 						? decodeHtml(escapeHtml(node.text))
 						: "\u00A0";
 
-				const span = document.createElement("span");
-				span.textContent = text;
-				span.style.fontWeight = node.bold ? "700" : "400";
-				span.style.fontStyle = node.italic ? "italic" : "";
-				span.style.textDecoration = [
+				const link = node.link;
+
+				const textElement: HTMLAnchorElement | HTMLSpanElement = link
+					? document.createElement("a")
+					: document.createElement("span");
+				if (textElement instanceof HTMLAnchorElement && link) {
+					textElement.href = link;
+					textElement.target = "_blank";
+					textElement.rel = "noreferrer";
+				}
+				textElement.textContent = text;
+				textElement.style.fontWeight = node.bold ? "700" : "400";
+				textElement.style.fontStyle = node.italic ? "italic" : "";
+				textElement.style.textDecoration = [
 					node.underline ? "underline" : "",
 					node["line-through"] ? "line-through" : "",
 				]
 					.filter(Boolean)
 					.join(" ");
-				span.style.color =
+				textElement.style.color =
 					node.fontColor || DEFAULT_TEXT_STYLES.fontColor;
-				span.style.backgroundColor =
+				textElement.style.backgroundColor =
 					node.fontHighlight || DEFAULT_TEXT_STYLES.fontHighlight;
-				span.style.fontSize = node.fontSize
+				textElement.style.fontSize = node.fontSize
 					? `${node.fontSize}px`
 					: DEFAULT_TEXT_STYLES.fontSize + "";
-				span.style.fontFamily =
+				textElement.style.fontFamily =
 					node.fontFamily || DEFAULT_TEXT_STYLES.fontFamily;
 
 				if (this.insideOf === "Frame") {
-					span.style.whiteSpace = "nowrap";
-					span.style.overflow = "hidden";
-					span.style.textOverflow = "ellipsis";
-					span.style.display = "inline-block";
-					span.style.width = "100%";
+					textElement.style.whiteSpace = "nowrap";
+					textElement.style.overflow = "hidden";
+					textElement.style.textOverflow = "ellipsis";
+					textElement.style.display = "inline-block";
+					textElement.style.width = "100%";
 				}
 
-				return span;
+				return textElement;
 			}
 
 			if (Element.isElement(node)) {

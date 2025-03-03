@@ -989,6 +989,38 @@ export class EditorContainer {
 		return true;
 	}
 
+	insertCopiedNodes(nodes: BlockNode[]): boolean {
+		const isPrevTextEmpty = this.isEmpty();
+		const editor = this.editor;
+
+		if (isPrevTextEmpty) {
+			this.selectWholeText();
+			Transforms.removeNodes(editor);
+			Transforms.insertNodes(editor, nodes);
+			this.moveCursorToEndOfTheText();
+			this.subject.publish(this);
+			return true;
+		}
+
+		if (
+			nodes.length === 1 &&
+			nodes[0].type === "paragraph" &&
+			nodes[0].children.length === 1 &&
+			nodes[0].children[0].type === "text"
+		) {
+			Transforms.insertText(editor, nodes[0].children[0].text);
+			Transforms.collapse(this.editor, { edge: "end" });
+			this.subject.publish(this);
+			return true;
+		}
+
+		Transforms.insertNodes(editor, nodes);
+		Transforms.collapse(this.editor, { edge: "end" });
+
+		this.subject.publish(this);
+		return true;
+	}
+
 	setStopProcessingMarkDownCb(cb: (() => void) | null) {
 		this.stopProcessingMarkDownCb = cb;
 	}
