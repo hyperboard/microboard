@@ -15,7 +15,7 @@ import { Selection } from "..";
 import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
-import { access } from "fs";
+import { AINode } from "Board/Items/AINode/AINode";
 
 export interface QuickAddButtons {
 	clear: () => void;
@@ -28,10 +28,13 @@ export interface QuickAddItems {
 	connectorStartPoint: Point;
 	connectorEndPoint: Point;
 }
+
 export interface HTMLQuickAddButton extends HTMLButtonElement {
 	isMouseDown: boolean;
 	resetState: () => void;
 }
+
+const offsets = { minX: 320, maxX: 640, minY: 100, maxY: 240 };
 
 export function getQuickAddButtons(
 	selection: Selection,
@@ -47,39 +50,69 @@ export function getQuickAddButtons(
 	): { newItem: Item; connectorData: ConnectorData } {
 		const connectorStorage = new SessionStorage();
 		const currMbr = selectedItem.getMbr();
-		const itemData = selectedItem.serialize();
-		const guarded = itemData as Partial<ItemData>;
-		if ("text" in guarded) {
-			delete guarded.text;
-		}
+		const selectedItemData = selectedItem.serialize();
 		const width = currMbr.getWidth();
 		const height = currMbr.getHeight();
+		let offsetX = width;
+		let offsetY = height;
+		let newWidth = width;
+		let newHeight = height;
+		let itemData: ItemData;
+		if (selectedItem.itemType === "AINode") {
+			const node = new AINode(board, true);
+			const nodeRichText = node.getRichText();
+			nodeRichText.setMaxWidth(600);
+			nodeRichText.setSelectionHorisontalAlignment("left");
+			// nodeRichText.container.right = nodeRichText.container.left + 600;
+			nodeRichText.placeholderText = "Type your request...";
+			newWidth = node.getMbr().getWidth();
+			newHeight = node.getMbr().getHeight();
+			itemData = node.serialize();
+			const { minX, minY, maxY, maxX } = offsets;
+			offsetX = Math.min(offsetX, maxX);
+			offsetX = Math.max(offsetX, minX);
+			offsetY = Math.min(offsetY, maxY);
+			offsetY = Math.max(offsetY, minY);
+		} else {
+			itemData = selectedItemData;
+		}
+		const guarded = itemData as Partial<ItemData>;
+		if ("text" in guarded && guarded.itemType !== "AINode") {
+			delete guarded.text;
+		}
 
 		const iterAdjustment = {
-			0: { x: 0, y: -2 * height },
-			1: { x: 0, y: -2 * height },
-			2: { x: -2 * width, y: 0 },
-			3: { x: -2 * width, y: 0 },
+			0: { x: 0, y: -2 * offsetY },
+			1: { x: 0, y: -2 * offsetY },
+			2: { x: -2 * offsetX, y: 0 },
+			3: { x: -2 * offsetX, y: 0 },
 		};
 
 		const baseAdjustments = {
-			0: { translateX: -width * 2, translateY: 0 },
-			1: { translateX: width * 2, translateY: 0 },
-			2: { translateX: 0, translateY: -height * 2 },
-			3: { translateX: 0, translateY: height * 2 },
+			0: { translateX: -offsetX - width, translateY: 0 },
+			1: { translateX: offsetX + width, translateY: 0 },
+			2: { translateX: 0, translateY: -offsetY - height },
+			3: { translateX: 0, translateY: offsetY + height },
 		};
 
 		const adjustment = baseAdjustments[index];
 		const newItemData = { ...itemData };
 		if (newItemData.transformation) {
-			newItemData.transformation.translateX += adjustment.translateX;
-			newItemData.transformation.translateY += adjustment.translateY;
+			newItemData.transformation.translateX =
+				adjustment.translateX +
+				(selectedItemData.transformation?.translateX || 0);
+			newItemData.transformation.translateY =
+				adjustment.translateY +
+				(selectedItemData.transformation?.translateY || 0) +
+				height / 2 -
+				newHeight / 2;
 		}
-		const newMbr = currMbr
-			.copy()
-			.getTransformed(
-				new Matrix(adjustment.translateX, adjustment.translateY),
-			);
+		const newMbr = new Mbr(
+			newItemData.transformation?.translateX,
+			newItemData.transformation?.translateY,
+			(newItemData.transformation?.translateX || 0) + newWidth,
+			(newItemData.transformation?.translateY || 0) + newHeight,
+		);
 
 		let step = 1;
 		while (
@@ -116,7 +149,8 @@ export function getQuickAddButtons(
 
 		const defaultConnector = new Connector(board);
 		const connectorData = defaultConnector.serialize();
-		connectorData.lineStyle = "orthogonal";
+		connectorData.lineStyle =
+			newItem.itemType === "AINode" ? "curved" : "orthogonal";
 
 		const savedStart = connectorStorage.getConnectorPointer("start");
 		if (savedStart) {
@@ -171,7 +205,9 @@ export function getQuickAddButtons(
 		const itemMbr = customMbr ? customMbr : single?.getMbr();
 		if (
 			!itemMbr ||
-			(single?.itemType !== "Sticker" && single?.itemType !== "Shape")
+			(single?.itemType !== "Sticker" &&
+				single?.itemType !== "Shape" &&
+				single?.itemType !== "AINode")
 		) {
 			return;
 		}
