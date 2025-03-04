@@ -682,7 +682,6 @@ export class Board {
 	}
 
 	async serializeHTML(documentFactory: DocumentFactory): Promise<string> {
-		const items = this.items.getWholeHTML(documentFactory);
 		const script = await fetch(
 			new URL(getPublicUrl("/customWebComponents.js")),
 		);
@@ -693,10 +692,15 @@ export class Board {
 		const customTagsScript = await script.text();
 		const loadLinksImagesScript = await loadLinksImages.text();
 		const css = await builtCSS.text();
-		const body = `<body><div id="items">${items}</div><script type="module">${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
+
+		// div with id="items" and last-event-order are necessary for successfull uploading to storage
+		const items = this.items.getWholeHTML(documentFactory);
+		const itemsDiv = `<div id="items">${items}</div>`;
+		const body = `<body>${itemsDiv}<script type="module">${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
 		const head = `
 		<head>
 			<meta charset="utf-8" />
+			<meta name="last-event-order" content="${this.events?.getLastOrder()}" />
 			<title>Microboard ${this.getBoardId()}</title>
 			<link rel="preconnect" href="https://fonts.googleapis.com">
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

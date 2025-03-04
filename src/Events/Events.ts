@@ -88,6 +88,7 @@ export interface Events {
 	deserialize(serializedData: BoardEvent[]): void;
 	getRaw: () => RawEvents;
 	getAll: () => BoardEvent[];
+	getLastOrder: () => number;
 	getSyncLog: () => SyncLog;
 	syncLogSubject: SyncLogSubject;
 	getSnapshot(): BoardSnapshot;
@@ -960,6 +961,7 @@ export function createEvents(
 		getSyncLog: log.getSyncLog,
 		syncLogSubject: log.syncLogSubject,
 		getAll: () => log.getList().map(record => record.event),
+		getLastOrder: log.getLatestOrder,
 		disconnect,
 		emit,
 		emitAndApply,
