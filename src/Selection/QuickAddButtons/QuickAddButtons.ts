@@ -16,6 +16,7 @@ import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
 import { AINode } from "Board/Items/AINode/AINode";
+import { createAINode } from "Board/Selection/QuickAddButtons/quickAddHelpers";
 
 export interface QuickAddButtons {
 	clear: () => void;
@@ -59,12 +60,7 @@ export function getQuickAddButtons(
 		let newHeight = height;
 		let itemData: ItemData;
 		if (selectedItem.itemType === "AINode") {
-			const node = new AINode(board, true);
-			const nodeRichText = node.getRichText();
-			nodeRichText.setMaxWidth(600);
-			nodeRichText.setSelectionHorisontalAlignment("left");
-			// nodeRichText.container.right = nodeRichText.container.left + 600;
-			nodeRichText.placeholderText = "Type your request...";
+			const node = createAINode(board, selectedItem.getId(), index);
 			newWidth = node.getMbr().getWidth();
 			newHeight = node.getMbr().getHeight();
 			itemData = node.serialize();

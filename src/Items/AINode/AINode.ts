@@ -23,6 +23,7 @@ import { Board } from "Board";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
+export type ThreadDirection = 0 | 1 | 2 | 3;
 
 export class AINode implements Geometry {
 	readonly itemType = "AINode";
@@ -35,6 +36,7 @@ export class AINode implements Geometry {
 	private parentNodeId?: string;
 	private isUserRequest: boolean;
 	private contextItems: string[] = [];
+	private threadDirection: ThreadDirection = 3;
 	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
 
@@ -43,11 +45,15 @@ export class AINode implements Geometry {
 		isUserRequest = false,
 		parentNodeId?: string,
 		contextItems: string[] = [],
+		threadDirection?: ThreadDirection,
 		private id = "",
 	) {
 		this.contextItems = contextItems;
 		this.isUserRequest = isUserRequest;
 		this.parentNodeId = parentNodeId;
+		if (threadDirection || threadDirection === 0) {
+			this.threadDirection = threadDirection;
+		}
 		this.transformation = new Transformation(this.id, this.board.events);
 		this.linkTo = new LinkTo(this.id, this.board.events);
 		this.text = new RichText(
@@ -155,6 +161,7 @@ export class AINode implements Geometry {
 			parentNodeId: isCopy ? undefined : this.parentNodeId,
 			isUserRequest: this.isUserRequest,
 			contextItems: this.contextItems,
+			threadDirection: this.threadDirection,
 		};
 	}
 
@@ -171,6 +178,9 @@ export class AINode implements Geometry {
 		}
 		if (data.contextItems) {
 			this.contextItems = data.contextItems;
+		}
+		if (data.threadDirection || data.threadDirection === 0) {
+			this.threadDirection = data.threadDirection;
 		}
 
 		this.parentNodeId = data.parentNodeId;
@@ -198,6 +208,10 @@ export class AINode implements Geometry {
 	// setParentId(id: string): void {
 	//     this.parentNodeId = id;
 	// }
+
+	getThreadDirection(): ThreadDirection {
+		return this.threadDirection;
+	}
 
 	getContextRange(): number {
 		return this.contextRange;

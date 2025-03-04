@@ -6,6 +6,7 @@ import {
 } from "Board/Items/Connector/ControlPoint";
 import { getDirection } from "Board/Items/Connector/getLine/findOrthogonalPath";
 import { ShapeType } from "Board/Items/Shape";
+import { AINode } from "Board/Items/AINode/AINode";
 
 /** index represents the number of connection - left, right, top, bottom */
 export function getControlPointData(
@@ -38,27 +39,31 @@ export function getControlPointData(
 
 export function quickAddItem(
 	board: Board,
-	type: "copy" | ShapeType,
+	type: "copy" | ShapeType | "AIRequest",
 	connector: Connector,
 ): void {
-	const optionalShape = new Shape(
-		board,
-		undefined,
-		type !== "copy" ? type : "Rectangle",
-	);
 	const startPoint = connector.getStartPoint();
 	const endPoint = connector.getEndPoint();
+	const optionalItem =
+		type === "AIRequest"
+			? createAINode(board, startPoint?.item?.getId(), 3)
+			: new Shape(board, undefined, type !== "copy" ? type : "Rectangle");
 
-	const itemMbr =
-		type === "copy" && startPoint.pointType !== "Board"
-			? startPoint.item.getMbr()
-			: optionalShape.getMbr();
-	const itemData: ShapeData =
-		type === "copy" && startPoint.pointType !== "Board"
-			? (startPoint.item.serialize() as ShapeData)
-			: (optionalShape.serialize() as ShapeData);
+	let itemMbr = optionalItem.getMbr();
+	if (startPoint.pointType !== "Board") {
+		if (type === "copy") {
+			itemMbr = startPoint.item.getMbr();
+		}
+	}
+	let itemData: ItemData = optionalItem.serialize();
+	if (startPoint.pointType !== "Board") {
+		if (type === "copy") {
+			itemData = startPoint.item.serialize();
+		}
+	}
+
 	const guarded = itemData as Partial<ItemData>;
-	if ("text" in guarded) {
+	if ("text" in guarded && guarded.itemType !== "AINode") {
 		delete guarded.text;
 	}
 	itemData.transformation.translateX = endPoint.x;
@@ -100,6 +105,11 @@ export function quickAddItem(
 		throw new Error("New item connection direction now found");
 	}
 
+	if (itemData.itemType === "AINode") {
+		const reverseIndexMap = { 0: 1, 1: 0, 2: 3, 3: 2 };
+		itemData.threadDirection = reverseIndexMap[dirIndex];
+	}
+
 	const newItem = board.createItem("", itemData);
 	const added = board.add(newItem);
 	const pointData = getControlPointData(added, dirIndex);
@@ -110,4 +120,23 @@ export function quickAddItem(
 	board.selection.removeAll();
 	board.selection.add(added);
 	board.selection.setContext("EditUnderPointer");
+}
+
+export function createAINode(
+	board: Board,
+	parentNodeId: string,
+	directionIndex: number,
+): AINode {
+	const node = new AINode(
+		board,
+		true,
+		parentNodeId,
+		undefined,
+		directionIndex,
+	);
+	const nodeRichText = node.getRichText();
+	nodeRichText.setMaxWidth(600);
+	nodeRichText.setSelectionHorisontalAlignment("left");
+	nodeRichText.placeholderText = "Type your request...";
+	return node;
 }

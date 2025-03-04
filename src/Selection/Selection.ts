@@ -1405,6 +1405,7 @@ export class Selection {
 	getMostNestedAINodeWithParents(): {
 		node: AINode;
 		parents: AINode[];
+		lastAssistantMessageId: string | undefined;
 	} | null {
 		const AINodes = this.items.getItemsByItemTypes(["AINode"]);
 		if (!AINodes.length) {
@@ -1424,7 +1425,19 @@ export class Selection {
 			}
 		});
 
-		return { node: mostNestedNode, parents: mostNestedNodeParents };
+		let lastAssistantMessageId: string | undefined;
+		const nodes = [...mostNestedNodeParents, mostNestedNode];
+		for (let i = nodes.length - 1; i >= 0; i--) {
+			if (!nodes[i].getIsUserRequest()) {
+				lastAssistantMessageId = nodes[i].getId();
+			}
+		}
+
+		return {
+			node: mostNestedNode,
+			parents: mostNestedNodeParents,
+			lastAssistantMessageId,
+		};
 	}
 
 	renderItemMbr(
