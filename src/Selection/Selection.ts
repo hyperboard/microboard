@@ -1329,7 +1329,8 @@ export class Selection {
 			const endPoint = connector.getEndPoint();
 
 			if (
-				startPoint.pointType === "Fixed" &&
+				(startPoint.pointType === "Fixed" ||
+					startPoint.pointType === "FixedConnector") &&
 				itemIds.includes(startPoint.item.getId() || "")
 			) {
 				const { x, y } = startPoint;
@@ -1338,7 +1339,8 @@ export class Selection {
 			}
 
 			if (
-				endPoint.pointType === "Fixed" &&
+				(endPoint.pointType === "Fixed" ||
+					endPoint.pointType === "FixedConnector") &&
 				itemIds.includes(endPoint.item.getId() || "")
 			) {
 				const { x, y } = endPoint;

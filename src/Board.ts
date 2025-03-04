@@ -297,6 +297,10 @@ export class Board {
 		this.findItemAndApply(op.item, item => {
 			this.index.remove(item);
 			this.selection.remove(item);
+
+			if (item.itemType === "Connector") {
+				item.clearObservedItems();
+			}
 			removedItems.push(item);
 		});
 	}

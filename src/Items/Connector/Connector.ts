@@ -205,6 +205,19 @@ export class Connector {
 		}
 	};
 
+	clearObservedItems() {
+		const startPoint = this.getStartPoint();
+		const endPoint = this.getEndPoint();
+
+		if (startPoint.pointType !== "Board") {
+			this.unsubscribeFromItem(startPoint, this.observerStartPointItem);
+		}
+
+		if (endPoint.pointType !== "Board") {
+			this.unsubscribeFromItem(endPoint, this.observerEndPointItem);
+		}
+	}
+
 	private unsubscribeFromItem(
 		point: ControlPoint,
 		observer: (item: Item) => void,
