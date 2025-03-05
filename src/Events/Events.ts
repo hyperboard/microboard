@@ -23,7 +23,7 @@ import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
 import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
-import { notify } from "View/Ui/Toast";
+import { notify } from "View/Ui/Toast"; // Smell: View from Board
 import { isMicroboard } from "lib/isMicroboard";
 import i18next from "i18next";
 import toast from "react-hot-toast";

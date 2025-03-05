@@ -8,7 +8,7 @@ import {
 	ResizeType,
 } from "Board/Selection/Transformer/getResizeType";
 import { Tool } from "Board/Tools/Tool";
-import { CANVAS_BG_COLOR } from "View/consts";
+import { CANVAS_BG_COLOR } from "View/consts"; // Smell View from Board
 import {
 	EXPORT_BLUR_BACKGROUND_COLOR,
 	EXPORT_FRAME_DECORATIONS,

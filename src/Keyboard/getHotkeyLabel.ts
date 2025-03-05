@@ -1,4 +1,4 @@
-import hotkeys from "View/hotkeys.json";
+import hotkeys from "View/hotkeys.json"; // Smell View from Board
 import type { Hotkey, HotkeyName } from "./types";
 import { isMacos } from "App/isMacos";
 

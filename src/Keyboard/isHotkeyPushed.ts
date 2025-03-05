@@ -1,5 +1,5 @@
 import type { Hotkey, HotkeyName } from "./types";
-import hotkeys from "View/hotkeys.json";
+import hotkeys from "View/hotkeys.json"; // Smell View from Board
 
 export function isHotkeyPushed(
 	hotkey: HotkeyName,

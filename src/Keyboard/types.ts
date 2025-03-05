@@ -1,5 +1,5 @@
 import type { SelectionContext } from "Board/Selection/Selection";
-import hotkeys from "View/hotkeys.json";
+import hotkeys from "View/hotkeys.json"; // Smell View from Board
 
 export type Hotkey = {
 	key: {

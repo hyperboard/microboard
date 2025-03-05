@@ -1,8 +1,8 @@
 import { Matrix, Point } from "Board/Items";
-import { cursorsMap } from "View/Cursors/customCursors";
 import { Subject } from "../../Subject";
-import { Cursor, CursorName } from "./Cursor";
+import { Cursor, CursorName, CursorsMap } from "./Cursor";
 
+export const cursorsMap: CursorsMap = {};
 export class Pointer {
 	readonly point = new Point();
 	readonly subject: Subject<Pointer> = new Subject<Pointer>();

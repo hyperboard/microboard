@@ -18,13 +18,12 @@ import { ShapeOperation } from "./ShapeOperation";
 import { DefaultShapeData, ShapeData } from "./ShapeData";
 import { Geometry } from "../Geometry";
 import { DrawingContext } from "../DrawingContext";
-import { Events, Operation } from "Board/Events";
+import { Operation } from "Board/Events";
 import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "../../Selection/Transformer/getResizeType";
 import { getResize } from "../../Selection/Transformer/getResizeMatrix";
 import { tempStorage } from "App/SessionStorage";
-import { Comment } from "Board/Items/Comment/Comment";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BPMN } from "./BPMN";
 import {
@@ -33,15 +32,9 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender";
-import { UiDivButton } from "View/Ui/UiButton";
-import { DOMSVGFactory } from "@bundled-es-modules/pdfjs-dist/types/src/display/display_utils";
 import { Board } from "Board";
-import { FixedConnectorPoint, FixedPoint } from "Board/Items/Connector";
-import { getControlPointData } from "Board/Selection/QuickAddButtons";
-import {
-	getControlPoint,
-	toRelativePoint,
-} from "Board/Items/Connector/ControlPoint";
+import { FixedPoint } from "Board/Items/Connector";
+import { toRelativePoint } from "Board/Items/Connector/ControlPoint";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 
 const defaultShapeData = new DefaultShapeData();

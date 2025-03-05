@@ -4,12 +4,12 @@ import {
 	BulletedListNode,
 	NumberedListNode,
 } from "../Editor/BlockNode";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkNode, TextNode } from "../Editor/TextNode";
 import { getPublicUrl } from "Config";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
 import { convertLinkNodeToTextNode } from "./convertLinkNodeToTextNode";
 import { Descendant } from "slate";
+import { DEFAULT_TEXT_STYLES } from "../RichText";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 

@@ -1,7 +1,5 @@
-import { Events, Operation } from "Board/Events";
-import { isDarkColor } from "lib/isDarkColor";
+import { Operation } from "Board/Events";
 import { Subject } from "Subject";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
 	Line,
 	Matrix,

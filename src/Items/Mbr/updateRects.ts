@@ -8,7 +8,7 @@ import {
 	fitLinkToBtn,
 	fitThreadPanel,
 	getContextPanelRect,
-} from "View/fit";
+} from "View/fit"; // Smell: View from Board
 
 export function updateRects(
 	board: Board,
