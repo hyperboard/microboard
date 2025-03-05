@@ -761,13 +761,27 @@ export class Selection {
 				});
 
 			Object.values(selectedMap).forEach(val => {
+				const parentFrame = this.board.items.getById(val.item.parent);
+				const isParentFrame = parentFrame?.itemType === "Frame";
+				const parentFrameId = isParentFrame
+					? parentFrame.getId()
+					: null;
+
 				if (val.nested) {
+					const isRemoveChildFromFrame = Object.values(
+						selectedMap,
+					).some(
+						val =>
+							val.nested && val.nested.getId() !== parentFrameId,
+					);
+
+					if (isParentFrame && isRemoveChildFromFrame) {
+						parentFrame.emitRemoveChild(val.item);
+					}
+
 					val.nested.emitAddChild(val.item);
 				} else if (val.item.parent !== "Board") {
-					const parentFrame = this.board.items.getById(
-						val.item.parent,
-					);
-					if (parentFrame && parentFrame.itemType === "Frame") {
+					if (isParentFrame) {
 						parentFrame.emitRemoveChild(val.item);
 					} else {
 						console.warn(
@@ -775,6 +789,7 @@ export class Selection {
 						);
 					}
 				}
+
 				if (val.item.itemType === "Frame" && checkFrames) {
 					const currFrame = val.item;
 					const currMbr = currFrame.getMbr();
