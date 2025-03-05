@@ -363,7 +363,11 @@ export function createEvents(
 								imageTopY,
 							);
 							imageItem.setId(placeholderId);
-
+							let threadDirection = 3;
+							if (placeholderNode.itemType === "AINode") {
+								threadDirection =
+									placeholderNode.getThreadDirection();
+							}
 							board.remove(placeholderNode);
 							const newImageAI = board.add(imageItem);
 
@@ -373,8 +377,17 @@ export function createEvents(
 										board.aiImageConnectorID,
 									) as Connector;
 
+									const reverseIndexMap = {
+										0: 1,
+										1: 0,
+										2: 3,
+										3: 2,
+									};
 									oldIdConnector.setEndPoint(
-										getControlPointData(newImageAI, 2),
+										getControlPointData(
+											newImageAI,
+											reverseIndexMap[threadDirection],
+										),
 									);
 								}
 								board.selection.removeAll();
