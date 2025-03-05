@@ -88,7 +88,6 @@ export class AddFrame extends BoardTool {
 		if (width < 2 && height < 2) {
 			this.frame.scaleLikeLastFrame();
 			this.transformToPointerCenter();
-			this.board.camera.viewRectangle(this.mbr);
 		} else {
 			this.initTransformation(width / 100, height / 100);
 			localStorage.setItem(
