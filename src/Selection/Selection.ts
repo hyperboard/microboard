@@ -8,7 +8,7 @@ import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "Subject";
 import { toFiniteNumber } from "utils";
-import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "View/Tools/Selection";
+import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "Board/Settings";
 import { Command, createCommand } from "../Events/Command";
 import { Connector, Frame, Item, ItemData, Mbr, RichText } from "../Items";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
@@ -20,7 +20,6 @@ import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
 import { t } from "i18next";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import { CONNECTOR_COLOR } from "../../View/Items/Connector";
 import { ItemOp } from "Board/Items/RichText/RichTextOperations";
 import { tempStorage } from "App/SessionStorage";
 import { Tool } from "Board/Tools/Tool";
@@ -29,6 +28,7 @@ import {
 	CONTEXT_NODE_HIGHLIGHT_COLOR,
 } from "Board/Items/AINode/AINode";
 import { BaseRange } from "slate";
+import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
 
 const defaultShapeData = new DefaultShapeData();
 

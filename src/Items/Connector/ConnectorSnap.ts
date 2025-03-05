@@ -11,11 +11,11 @@ import { Item } from "../Item";
 import { DrawingContext } from "../DrawingContext";
 import { Anchor } from "../Anchor";
 import { Path, Paths } from "../Path";
-import { Connector } from "./Connector";
 import {
+	Connector,
 	CONNECTOR_ANCHOR_COLOR,
 	CONNECTOR_ANCHOR_TYPE,
-} from "View/Items/Connector";
+} from "./Connector";
 
 function getFixedPoint(
 	item: Item,

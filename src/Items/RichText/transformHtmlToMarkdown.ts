@@ -6,8 +6,8 @@ import markdown from "remark-parse";
 import slate from "remark-slate";
 import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { TextNode } from "Board/Items/RichText/Editor/TextNode";
+import { DEFAULT_TEXT_STYLES } from "./RichText";
 
 export const transformHtmlOrTextToMarkdown = async (
 	text: string,

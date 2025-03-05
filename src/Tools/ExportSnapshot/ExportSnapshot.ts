@@ -10,13 +10,13 @@ import {
 import { Tool } from "Board/Tools/Tool";
 import { CANVAS_BG_COLOR } from "View/consts";
 import {
-	BLUR_BACKGROUND_COLOR,
-	FRAME_DECORATIONS,
-	MIN_EXPORT_HEIGHT,
-	MIN_EXPORT_WIDTH,
-	SELECTION_BOX_HEIGHT,
-	SELECTION_BOX_WIDTH,
-} from "View/Tools/ExportBoard";
+	EXPORT_BLUR_BACKGROUND_COLOR,
+	EXPORT_FRAME_DECORATIONS,
+	EXPORT_MIN_HEIGHT,
+	EXPORT_MIN_WIDTH,
+	EXPORT_SELECTION_BOX_HEIGHT,
+	EXPORT_SELECTION_BOX_WIDTH,
+} from "Board/Settings";
 import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";
 import { getDecorationResizeType } from "./getDecorationResizeType";
 
@@ -37,10 +37,10 @@ export class ExportSnapshot extends Tool {
 		super();
 		const cameraCenter = this.board.camera.getMbr().getCenter();
 		this.mbr = new Mbr(
-			cameraCenter.x - SELECTION_BOX_WIDTH / 2,
-			cameraCenter.y - SELECTION_BOX_HEIGHT / 2,
-			cameraCenter.x + SELECTION_BOX_WIDTH / 2,
-			cameraCenter.y + SELECTION_BOX_HEIGHT / 2,
+			cameraCenter.x - EXPORT_SELECTION_BOX_WIDTH / 2,
+			cameraCenter.y - EXPORT_SELECTION_BOX_HEIGHT / 2,
+			cameraCenter.x + EXPORT_SELECTION_BOX_WIDTH / 2,
+			cameraCenter.y + EXPORT_SELECTION_BOX_HEIGHT / 2,
 			"transparent",
 			"transparent",
 			1,
@@ -66,11 +66,11 @@ export class ExportSnapshot extends Tool {
 				this.mbr,
 				this.oppositePoint,
 			);
-			if (resize.mbr.getWidth() > MIN_EXPORT_WIDTH) {
+			if (resize.mbr.getWidth() > EXPORT_MIN_WIDTH) {
 				this.mbr.left = resize.mbr.left;
 				this.mbr.right = resize.mbr.right;
 			}
-			if (resize.mbr.getHeight() > MIN_EXPORT_HEIGHT) {
+			if (resize.mbr.getHeight() > EXPORT_MIN_HEIGHT) {
 				this.mbr.top = resize.mbr.top;
 				this.mbr.bottom = resize.mbr.bottom;
 			}
@@ -242,7 +242,7 @@ export class ExportSnapshot extends Tool {
 		const cameraMbr = context.camera.getMbr();
 		this.tempDrawingContext.setCamera(this.board.camera);
 		this.tempDrawingContext.clear();
-		cameraMbr.backgroundColor = BLUR_BACKGROUND_COLOR;
+		cameraMbr.backgroundColor = EXPORT_BLUR_BACKGROUND_COLOR;
 		cameraMbr.strokeWidth = 0;
 		cameraMbr.render(this.tempDrawingContext);
 
@@ -257,8 +257,8 @@ export class ExportSnapshot extends Tool {
 			this.mbr.getHeight(),
 		);
 
-		if (FRAME_DECORATIONS) {
-			const topLeft = FRAME_DECORATIONS["top-left"];
+		if (EXPORT_FRAME_DECORATIONS) {
+			const topLeft = EXPORT_FRAME_DECORATIONS["top-left"];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topLeft.path,
@@ -267,7 +267,7 @@ export class ExportSnapshot extends Tool {
 				topLeft.color,
 				topLeft.lineWidth,
 			);
-			const topRight = FRAME_DECORATIONS["top-right"];
+			const topRight = EXPORT_FRAME_DECORATIONS["top-right"];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topRight.path,
@@ -276,7 +276,7 @@ export class ExportSnapshot extends Tool {
 				topRight.color,
 				topRight.lineWidth,
 			);
-			const bottomLeft = FRAME_DECORATIONS["bottom-left"];
+			const bottomLeft = EXPORT_FRAME_DECORATIONS["bottom-left"];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomLeft.path,
@@ -285,7 +285,7 @@ export class ExportSnapshot extends Tool {
 				bottomLeft.color,
 				bottomLeft.lineWidth,
 			);
-			const bottomRight = FRAME_DECORATIONS["bottom-right"];
+			const bottomRight = EXPORT_FRAME_DECORATIONS["bottom-right"];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomRight.path,

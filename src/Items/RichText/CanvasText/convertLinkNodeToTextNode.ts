@@ -1,5 +1,5 @@
 import { LinkNode, TextNode } from "../Editor/TextNode";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
+import { DEFAULT_TEXT_STYLES } from "../RichText";
 
 export const convertLinkNodeToTextNode = (
 	node: LinkNode | TextNode,

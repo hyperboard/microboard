@@ -32,7 +32,7 @@ import {
 } from "./Editor/BlockNode";
 import { LinkNode, TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./isTextEmpty";
-import { DefaultTextStyles } from "./RichText";
+import { DEFAULT_TEXT_STYLES, DefaultTextStyles } from "./RichText";
 import {
 	RichTextOperation,
 	SelectionMethod,
@@ -40,7 +40,6 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 

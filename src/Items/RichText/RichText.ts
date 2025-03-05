@@ -20,7 +20,6 @@ import {
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
 import { Subject } from "Subject";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
 	ItemType,
 	Matrix,
@@ -58,6 +57,21 @@ export type DefaultTextStyles = {
 	overline: boolean;
 	subscript: boolean;
 	superscript: boolean;
+};
+
+export const DEFAULT_TEXT_STYLES: DefaultTextStyles = {
+	fontFamily: "Manrope",
+	fontSize: 14,
+	fontColor: "rgb(20, 21, 26)",
+	fontHighlight: "",
+	lineHeight: 1.4,
+	bold: false,
+	underline: false,
+	italic: false,
+	"line-through": false,
+	overline: false,
+	subscript: false,
+	superscript: false,
 };
 
 let isEditInProcessValue = false;

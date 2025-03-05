@@ -26,7 +26,7 @@ import {
 	SELECTION_ANCHOR_WIDTH,
 	SELECTION_COLOR,
 	SELECTION_LOCKED_COLOR,
-} from "View/Tools/Selection";
+} from "Board/Settings";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";

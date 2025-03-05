@@ -8,9 +8,9 @@ import { Cursor } from "../../Pointer";
 import { Anchor } from "Board/Items/Anchor";
 import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
 import {
-	CONNECTOR_ANCHOR_COLOR,
 	CONNECTOR_ANCHOR_TYPE,
-} from "View/Items/Connector";
+	CONNECTOR_ANCHOR_COLOR,
+} from "Board/Items/Connector/Connector";
 
 const config = {
 	anchorDistance: 10,

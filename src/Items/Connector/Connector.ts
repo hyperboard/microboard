@@ -1,16 +1,6 @@
 import { RichText } from "Board/Items";
 import { t } from "i18next";
 import { Subject } from "Subject";
-import {
-	CONNECTOR_BORDER_STYLE,
-	CONNECTOR_COLOR,
-	CONNECTOR_LINE_CAP,
-	CONNECTOR_LINE_WIDTH,
-	DEFAULT_END_POINTER,
-	DRAW_TEXT_BORDER,
-	TEXT_BORDER_PADDING,
-} from "View/Items/Connector";
-import { SELECTION_COLOR } from "View/Tools/Selection";
 import { Board } from "../../Board";
 import { Events, Operation } from "../../Events";
 import { CubicBezier } from "../Curve";
@@ -36,7 +26,6 @@ import { getLine } from "./getLine/getLine";
 import { ConnectorEdge } from "./Pointers";
 import { getStartPointer, getEndPointer } from "./Pointers/index";
 import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
 import {
 	positionRelatively,
@@ -45,6 +34,9 @@ import {
 	translateElementBy,
 } from "Board/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { SELECTION_COLOR } from "Board/Settings";
+import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
+import { ConnectorAnchorColors } from "./types";
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -58,6 +50,25 @@ export const ConnectionLineWidths = [1, 2, 3, 4, 5, 6, 7, 8, 12] as const;
 
 export type ConnectionLineWidth = (typeof ConnectionLineWidths)[number];
 
+export const CONNECTOR_COLOR = "rgb(20, 21, 26)";
+export const CONNECTOR_LINE_WIDTH = 1;
+export const CONNECTOR_BORDER_STYLE: BorderStyle = "solid";
+export const DEFAULT_END_POINTER = "TriangleFilled";
+export const DRAW_TEXT_BORDER = false;
+export const TEXT_BORDER_PADDING = 0;
+export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
+	snapBorder: "rgb(71, 120, 245)",
+	snapBackgroundHighlight: "rgba(0,0,0,0.1)",
+	snapBackground: "rgba(0,0,0,0)",
+	anchorBorder: "rgb(147, 175, 246)",
+	anchorBackground: "rgb(255, 255, 255)",
+	anchorHighlight: "rgb(255, 255, 255)",
+	pointBorder: "rgb(147, 175, 246)",
+	pointBackground: "rgb(147, 175, 246)",
+};
+
+export const CONNECTOR_ANCHOR_TYPE = "rect";
+export const CONNECTOR_LINE_CAP = "round";
 export class Connector {
 	readonly itemType = "Connector";
 	parent = "Board";
@@ -1235,3 +1246,21 @@ export class Connector {
 		return this.linkTo.link;
 	}
 }
+export const CONNECTOR_POINTER_TYPES = [
+	"None",
+	"ArrowBroad",
+	"ArrowThin",
+	"TriangleFilled",
+	"CircleFilled",
+	"Angle",
+	"TriangleEmpty",
+	"DiamondFilled",
+	"DiamondEmpty",
+	"Zero",
+	"One",
+	"Many",
+	"ManyMandatory",
+	"OneMandatory",
+	"ManyOptional",
+	"OneOptional",
+] as const;

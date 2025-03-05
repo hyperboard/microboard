@@ -1,11 +1,11 @@
 import { BaseEditor, Editor } from "slate";
 import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { ReactEditor } from "slate-react";
 import { HistoryEditor } from "slate-history";
 import { LinkNode, TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { HorisontalAlignment } from "Board/Items/Alignment";
 import { convertLinkNodeToTextNode } from "Board/Items/RichText/CanvasText/convertLinkNodeToTextNode";
+import { DEFAULT_TEXT_STYLES } from "./RichText";
 
 export function setNodeChildrenStyles({
 	editor,
@@ -15,7 +15,7 @@ export function setNodeChildrenStyles({
 	editor?: BaseEditor & ReactEditor & HistoryEditor;
 	horisontalAlignment?: HorisontalAlignment;
 	node: BlockNode;
-}) {
+}): void {
 	let fontStyles = DEFAULT_TEXT_STYLES;
 	if (editor) {
 		fontStyles = Editor.marks(editor) || DEFAULT_TEXT_STYLES;

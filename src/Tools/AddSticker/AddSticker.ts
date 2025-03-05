@@ -2,9 +2,9 @@ import { Board } from "Board/Board";
 import { Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Sticker } from "Board/Items/Sticker";
-import { SELECTION_COLOR } from "View/Tools/Selection";
+import { SELECTION_COLOR } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
-import { STICKER_COLOR_NAMES, STICKER_COLORS } from "View/Tools/AddSticker";
+import { STICKER_COLOR_NAMES, STICKER_COLORS } from "Board/Settings";
 import { CursorName } from "Board/Pointer/Cursor";
 import { tempStorage } from "App/SessionStorage";
 

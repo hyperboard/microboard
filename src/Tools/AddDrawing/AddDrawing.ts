@@ -4,30 +4,30 @@ import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { BorderStyle } from "Board/Items/Path";
 import {
-	DEFAULT_PEN_COLOR,
-	DRAWING_SETTINGS_KEY,
-	RENDER_POINTER_CIRCLE,
-} from "View/Tools/AddDrawing";
+	PEN_DEFAULT_COLOR,
+	PEN_SETTINGS_KEY,
+	PEN_RENDER_POINTER_CIRCLE,
+} from "Board/Settings";
 import {
-	DRAWING_POINTER_CIRCLE_COLOR,
-	DRAWING_STROKE_STYLE,
-	INITIAL_DRAWING_STROKE_WIDTH,
-} from "View/Tools/AddDrawing";
+	PEN_POINTER_CIRCLE_COLOR,
+	PEN_STROKE_STYLE,
+	PEN_INITIAL_STROKE_WIDTH,
+} from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 
 export class AddDrawing extends BoardTool {
 	drawing: Drawing | null = null;
 	isDown = false;
-	strokeWidth = INITIAL_DRAWING_STROKE_WIDTH;
-	strokeColor = DEFAULT_PEN_COLOR;
-	strokeStyle: BorderStyle = DRAWING_STROKE_STYLE;
+	strokeWidth = PEN_INITIAL_STROKE_WIDTH;
+	strokeColor = PEN_DEFAULT_COLOR;
+	strokeStyle: BorderStyle = PEN_STROKE_STYLE;
 
 	constructor(private board: Board) {
 		super(board);
 		this.setCursor();
 
-		if (DRAWING_SETTINGS_KEY) {
-			const drawingSettings = localStorage.getItem(DRAWING_SETTINGS_KEY);
+		if (PEN_SETTINGS_KEY) {
+			const drawingSettings = localStorage.getItem(PEN_SETTINGS_KEY);
 			if (drawingSettings) {
 				const { strokeWidth, strokeColor, strokeStyle } =
 					JSON.parse(drawingSettings);
@@ -40,7 +40,7 @@ export class AddDrawing extends BoardTool {
 
 	private updateSettings() {
 		localStorage.setItem(
-			DRAWING_SETTINGS_KEY,
+			PEN_SETTINGS_KEY,
 			JSON.stringify({
 				strokeWidth: this.strokeWidth,
 				strokeColor: this.strokeColor,
@@ -77,7 +77,7 @@ export class AddDrawing extends BoardTool {
 		ctx.beginPath();
 		ctx.arc(point.x, point.y, this.strokeWidth / 2, 0, 2 * Math.PI, false);
 		ctx.lineWidth = 1;
-		ctx.strokeStyle = DRAWING_POINTER_CIRCLE_COLOR;
+		ctx.strokeStyle = PEN_POINTER_CIRCLE_COLOR;
 		ctx.stroke();
 	}
 
@@ -170,7 +170,7 @@ export class AddDrawing extends BoardTool {
 	};
 
 	render(context: DrawingContext): void {
-		if (RENDER_POINTER_CIRCLE) {
+		if (PEN_RENDER_POINTER_CIRCLE) {
 			this.renderPointerCircle(this.board.pointer.point, context);
 		}
 

@@ -2,11 +2,11 @@ import { Board } from "Board/Board";
 import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import {
-	DEFAULT_ERASER_COLOR,
-	DRAWING_STROKE_STYLE,
+	ERASER_DEFAULT_COLOR,
+	PEN_STROKE_STYLE,
 	ERASER_STROKE_WIDTH,
-	MAX_ERASER_LINE_LENGTH,
-} from "View/Tools/AddDrawing";
+	ERASER_MAX_LINE_LENGTH,
+} from "Board/Settings";
 import { BorderStyle } from "../../Items/Path";
 import { BoardTool } from "../BoardTool";
 
@@ -14,10 +14,10 @@ export class Eraser extends BoardTool {
 	itemType = "Eraser";
 	isDown = false;
 	strokeWidth = ERASER_STROKE_WIDTH;
-	strokeColor = DEFAULT_ERASER_COLOR;
-	strokeStyle: BorderStyle = DRAWING_STROKE_STYLE;
+	strokeColor = ERASER_DEFAULT_COLOR;
+	strokeStyle: BorderStyle = PEN_STROKE_STYLE;
 	drawing = new Drawing([]);
-	maxPointsInLine = MAX_ERASER_LINE_LENGTH;
+	maxPointsInLine = ERASER_MAX_LINE_LENGTH;
 
 	constructor(board: Board) {
 		super(board);

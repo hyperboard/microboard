@@ -1,17 +1,17 @@
 import { AddDrawing } from "./AddDrawing";
 import {
-	DEFAULT_HIGHLIGHTER_COLOR,
-	DRAWING_STROKE_STYLE,
+	HIGHLIGHTER_DEFAULT_COLOR,
+	PEN_STROKE_STYLE,
 	HIGHLIGHTER_SETTINGS_KEY,
-	INITIAL_HIGHLIGHTER_STROKE_WIDTH,
-} from "View/Tools/AddDrawing";
+	HIGHLIGHTER_INITIAL_STROKE_WIDTH,
+} from "Board/Settings";
 import { BorderStyle } from "../../Items/Path";
 import { Board } from "../../Board";
 
 export class AddHighlighter extends AddDrawing {
-	strokeWidth = INITIAL_HIGHLIGHTER_STROKE_WIDTH;
-	strokeColor = DEFAULT_HIGHLIGHTER_COLOR;
-	strokeStyle: BorderStyle = DRAWING_STROKE_STYLE;
+	strokeWidth = HIGHLIGHTER_INITIAL_STROKE_WIDTH;
+	strokeColor = HIGHLIGHTER_DEFAULT_COLOR;
+	strokeStyle: BorderStyle = PEN_STROKE_STYLE;
 
 	constructor(board: Board) {
 		super(board);

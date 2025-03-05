@@ -27,8 +27,6 @@ import {
 	exportBoardSnapshot,
 	SnapshotInfo,
 } from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
-import { FRAME_TITLE_COLOR } from "View/Items/Frame";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import { LinkTo } from "../LinkTo/LinkTo";
 import {
 	positionRelatively,
@@ -36,8 +34,9 @@ import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender";
-import { DefaultFrameData, FrameData } from "./FrameData";
+import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
 const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {

@@ -1,7 +1,11 @@
 import { Item, Frame } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import {
+	FRAME_HIGHLIGHTER_BORDER_COLOR,
+	FRAME_CHILDREN_HIGHLIGHTER_COLOR,
+	FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR,
+} from "Board/Items/Frame/FrameData";
 import { Tool } from "Board/Tools/Tool";
-import { FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR, FRAME_CHILDREN_HIGHLIGHTER_COLOR, FRAME_HIGHLIGHTER_BORDER_COLOR } from "View/Items/Frame";
 
 interface HighlightGroup {
 	frame?: Frame;
@@ -10,10 +14,6 @@ interface HighlightGroup {
 
 export class NestingHighlighter extends Tool {
 	private toHighlight: HighlightGroup[] = [];
-
-	constructor() {
-		super();
-	}
 
 	clear(): void {
 		this.toHighlight = [];
@@ -65,8 +65,10 @@ export class NestingHighlighter extends Tool {
 				// Render children
 				group.children.forEach(child => {
 					const childRect = child.getMbr();
-					childRect.backgroundColor = FRAME_CHILDREN_HIGHLIGHTER_COLOR;
-					childRect.borderColor = FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR;
+					childRect.backgroundColor =
+						FRAME_CHILDREN_HIGHLIGHTER_COLOR;
+					childRect.borderColor =
+						FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR;
 					childRect.strokeWidth = 0.3;
 					childRect.render(context);
 				});

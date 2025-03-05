@@ -1,5 +1,4 @@
 import { Descendant } from "slate";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 import {
 	ItemType,
 	RichTextData,
@@ -24,6 +23,7 @@ import { ConnectorLineStyle } from "./Items/Connector";
 import { ConnectionLineWidth } from "./Items/Connector/Connector";
 import { DrawingData } from "./Items/Drawing";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
+import { DEFAULT_TEXT_STYLES } from "./Items/RichText/RichText";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {

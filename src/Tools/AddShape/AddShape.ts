@@ -4,8 +4,8 @@ import { Line, Mbr, Point, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "View/Tools/AddShape";
-import { SELECTION_COLOR } from "View/Tools/Selection";
+import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "Board/Items/Shape/ShapeData";
+import { SELECTION_COLOR } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 
 export class AddShape extends BoardTool {

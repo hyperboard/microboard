@@ -1,9 +1,8 @@
 import { Board } from "Board";
-import { RichText } from "./RichText";
+import { DEFAULT_TEXT_STYLES, RichText } from "./RichText";
 import { GroupEdit, RichTextOperation } from "./RichTextOperations";
 import { Command } from "Board/Events";
 import { Operation } from "slate";
-import { DEFAULT_TEXT_STYLES } from "View/Items/RichText";
 
 export class RichTextCommand implements Command {
 	private reverse: { item: string; operation: RichTextOperation }[];

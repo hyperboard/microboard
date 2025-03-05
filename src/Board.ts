@@ -5,7 +5,7 @@ import {
 	SELECTION_ANCHOR_RADIUS,
 	SELECTION_ANCHOR_WIDTH,
 	SELECTION_COLOR,
-} from "View/Tools/Selection";
+} from "./Settings";
 import { BoardCommand } from "./BoardCommand";
 import {
 	BoardOps,

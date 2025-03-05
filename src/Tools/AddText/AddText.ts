@@ -1,7 +1,7 @@
 import { Board } from "Board/Board";
 import { Line, Mbr, Point, RichText } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { SELECTION_COLOR } from "View/Tools/Selection";
+import { SELECTION_COLOR } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 
 const height = 16;
