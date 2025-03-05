@@ -83,25 +83,21 @@ function parseHTMLRichText(
 	},
 ): RichTextData & { id: string } {
 	const parseNode = (node: HTMLElement): Descendant => {
+		// Обработка текстовых нод и ссылок
 		const isLinkNode = node.tagName.toLowerCase() === "a";
 		if (
 			node.tagName.toLowerCase() === "span" ||
 			(isLinkNode && node.children.length === 0)
 		) {
-			const text =
-				node.textContent && node.textContent.trim() !== ""
-					? decodeHtml(node.textContent)
-					: "";
-
-			let link: string | null = null;
-			if (isLinkNode) {
-				link = node.getAttribute("href");
-			}
+			const textContent = node.textContent?.trim() || "";
+			const text = textContent !== "" ? decodeHtml(textContent) : "";
 
 			return {
 				type: "text",
 				text,
-				link: link || undefined,
+				link: isLinkNode
+					? node.getAttribute("href") || undefined
+					: undefined,
 				bold: node.style.fontWeight === "700",
 				italic: node.style.fontStyle === "italic",
 				underline: node.style.textDecoration.includes("underline"),
@@ -125,38 +121,100 @@ function parseHTMLRichText(
 		const children = Array.from(node.children).map(child =>
 			parseNode(child as HTMLElement),
 		);
+		const tagName = node.tagName.toLowerCase();
 
-		switch (node.tagName.toLowerCase()) {
+		// Функция для извлечения общих свойств
+		const extractCommonProps = () => ({
+			horisontalAlignment: (node.style.textAlign ||
+				"left") as HorisontalAlignment,
+			paddingTop: parseFloat(node.style.paddingTop) || undefined,
+			paddingBottom: parseFloat(node.style.paddingBottom) || undefined,
+		});
+
+		// Обработка специальных элементов
+		switch (tagName) {
 			case "blockquote":
 				return {
 					type: "block-quote",
-					horisontalAlignment: (node.style.textAlign ||
-						"left") as HorisontalAlignment,
+					...extractCommonProps(),
 					children,
 				};
+
+			case "ul":
+				return {
+					type: "ul_list",
+					...extractCommonProps(),
+					children,
+				};
+
+			case "ol":
+				return {
+					type: "ol_list",
+					...extractCommonProps(),
+					children,
+				};
+
+			case "li":
+				return {
+					type: "list_item",
+					...extractCommonProps(),
+					children,
+				};
+
+			case "pre": {
+				const codeElement = node.querySelector("code");
+				const languageClass =
+					codeElement?.className.match(/language-(\w+)/);
+
+				return {
+					type: "code_block",
+					...extractCommonProps(),
+					language: languageClass?.[1] || null,
+					children: codeElement
+						? Array.from(codeElement.children).map(child =>
+								parseNode(child as HTMLElement),
+							)
+						: [],
+				};
+			}
+
+			case "h1":
+			case "h2":
+			case "h3":
+			case "h4":
+			case "h5":
+			case "h6": {
+				const headingType =
+					`heading_${["one", "two", "three", "four", "five", "six"][parseInt(tagName[1]) - 1]}` as const;
+				return {
+					type: headingType,
+					...extractCommonProps(),
+					children,
+				};
+			}
+
 			case "p":
-			default:
-				if (
-					["h1", "h2", "h3", "h4", "h5", "h6"].includes(
-						node.tagName.toLowerCase(),
-					)
-				) {
-					return {
-						type: "heading",
-						level: parseInt(node.tagName[1]),
-						horisontalAlignment: (node.style.textAlign ||
-							"left") as HorisontalAlignment,
-						children,
-					};
-				}
 				return {
 					type: "paragraph",
-					horisontalAlignment: (node.style.textAlign ||
-						"left") as HorisontalAlignment,
+					...extractCommonProps(),
+					lineHeight:
+						parseFloat(node.style.lineHeight) ||
+						DEFAULT_TEXT_STYLES.lineHeight,
+					children,
+				};
+
+			default:
+				return {
+					type: "paragraph",
+					...extractCommonProps(),
 					children,
 				};
 		}
 	};
+
+	const children = Array.from(el.children)
+		.filter(child => !child.classList.contains("link-object"))
+		.map(child => parseNode(child as HTMLElement));
 
 	const data: RichTextData & { id: string } = {
 		id: el.id,
@@ -168,9 +226,7 @@ function parseHTMLRichText(
 		verticalAlignment:
 			(el.getAttribute("data-vertical-alignment") as VerticalAlignment) ||
 			"top",
-		children: Array.from(el.children)
-			.filter(child => !child.classList.contains("link-object"))
-			.map(child => parseNode(child as HTMLElement)),
+		children,
 	};
 
 	if (options) {

@@ -1012,81 +1012,140 @@ export class RichText extends Mbr implements Geometry {
 		enablePlaceholder = true,
 	): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
+			// Обработка текстовых нод
 			if (Text.isText(node)) {
 				const text =
 					node.text.trim() !== ""
 						? decodeHtml(escapeHtml(node.text))
 						: "\u00A0";
 
-				const link = node.link;
-
-				const textElement: HTMLAnchorElement | HTMLSpanElement = link
-					? document.createElement("a")
+				const textElement = node.link
+					? Object.assign(document.createElement("a"), {
+							href: node.link,
+							target: "_blank",
+							rel: "noreferrer",
+						})
 					: document.createElement("span");
-				if (textElement instanceof HTMLAnchorElement && link) {
-					textElement.href = link;
-					textElement.target = "_blank";
-					textElement.rel = "noreferrer";
-				}
-				textElement.textContent = text;
-				textElement.style.fontWeight = node.bold ? "700" : "400";
-				textElement.style.fontStyle = node.italic ? "italic" : "";
-				textElement.style.textDecoration = [
-					node.underline ? "underline" : "",
-					node["line-through"] ? "line-through" : "",
-				]
-					.filter(Boolean)
-					.join(" ");
-				textElement.style.color =
-					node.fontColor || DEFAULT_TEXT_STYLES.fontColor;
-				textElement.style.backgroundColor =
-					node.fontHighlight || DEFAULT_TEXT_STYLES.fontHighlight;
-				textElement.style.fontSize = node.fontSize
-					? `${node.fontSize}px`
-					: DEFAULT_TEXT_STYLES.fontSize + "";
-				textElement.style.fontFamily =
-					node.fontFamily || DEFAULT_TEXT_STYLES.fontFamily;
+
+				Object.assign(textElement.style, {
+					fontWeight: node.bold ? "700" : "400",
+					fontStyle: node.italic ? "italic" : "",
+					textDecoration: [
+						node.underline ? "underline" : "",
+						node["line-through"] ? "line-through" : "",
+					]
+						.filter(Boolean)
+						.join(" "),
+					color: node.fontColor || DEFAULT_TEXT_STYLES.fontColor,
+					backgroundColor:
+						node.fontHighlight || DEFAULT_TEXT_STYLES.fontHighlight,
+					fontSize: node.fontSize
+						? `${node.fontSize}px`
+						: `${DEFAULT_TEXT_STYLES.fontSize}px`,
+					fontFamily:
+						node.fontFamily || DEFAULT_TEXT_STYLES.fontFamily,
+				});
 
 				if (this.insideOf === "Frame") {
-					textElement.style.whiteSpace = "nowrap";
-					textElement.style.overflow = "hidden";
-					textElement.style.textOverflow = "ellipsis";
-					textElement.style.display = "inline-block";
-					textElement.style.width = "100%";
+					Object.assign(textElement.style, {
+						whiteSpace: "nowrap",
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						display: "inline-block",
+						width: "100%",
+					});
 				}
 
+				textElement.textContent = text;
 				return textElement;
 			}
 
+			// Обработка элементов
 			if (Element.isElement(node)) {
 				const children = node.children.map(renderNode);
+				const applyCommonStyles = (el: HTMLElement) => {
+					el.style.textAlign = node.horisontalAlignment || "left";
+					el.style.paddingTop = node.paddingTop
+						? `${node.paddingTop}px`
+						: "";
+					el.style.paddingBottom = node.paddingBottom
+						? `${node.paddingBottom}px`
+						: "";
+				};
+
 				switch (node.type) {
-					case "heading":
-						const header = document.createElement(`h${node.level}`);
-						header.style.textAlign =
-							node.horisontalAlignment || "left";
+					case "heading_one":
+					case "heading_two":
+					case "heading_three":
+					case "heading_four":
+					case "heading_five": {
+						const level = node.type.split("_")[2];
+						const header = document.createElement(`h${level}`);
+						applyCommonStyles(header);
 						header.append(...children);
 						return header;
-					case "block-quote":
+					}
+
+					case "code_block": {
+						const pre = document.createElement("pre");
+						const code = document.createElement("code");
+						applyCommonStyles(pre);
+						if (node.language)
+							code.classList.add(`language-${node.language}`);
+						code.append(...children);
+						pre.append(code);
+						Object.assign(pre.style, {
+							fontFamily: "monospace",
+							whiteSpace: "pre-wrap",
+						});
+						return pre;
+					}
+
+					case "block-quote": {
 						const blockquote = document.createElement("blockquote");
-						blockquote.style.textAlign =
-							node.horisontalAlignment || "left";
+						applyCommonStyles(blockquote);
 						blockquote.append(...children);
 						return blockquote;
+					}
+
+					case "ul_list": {
+						const ul = document.createElement("ul");
+						applyCommonStyles(ul);
+						ul.append(...children);
+						return ul;
+					}
+
+					case "ol_list": {
+						const ol = document.createElement("ol");
+						applyCommonStyles(ol);
+						ol.append(...children);
+						return ol;
+					}
+
+					case "list_item": {
+						const li = document.createElement("li");
+						applyCommonStyles(li);
+						li.append(...children);
+						return li;
+					}
+
 					case "paragraph":
-					default:
+					default: {
 						const par = document.createElement("p");
-						par.style.textAlign =
-							node.horisontalAlignment || "left";
-						par.style.lineHeight =
-							DEFAULT_TEXT_STYLES.lineHeight + "";
-						par.style.margin = "0";
+						applyCommonStyles(par);
+						Object.assign(par.style, {
+							lineHeight: node.lineHeight
+								? `${node.lineHeight}`
+								: DEFAULT_TEXT_STYLES.lineHeight,
+							margin: "0",
+						});
 						par.append(...children);
 						return par;
+					}
 				}
 			}
 
-			return documentFactory.createElement("div");
+			return document.createElement("div");
 		};
 
 		const escapeHtml = (unsafe: string): string => {
