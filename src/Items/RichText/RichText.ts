@@ -1090,8 +1090,9 @@ export class RichText extends Mbr implements Geometry {
 						const pre = document.createElement("pre");
 						const code = document.createElement("code");
 						applyCommonStyles(pre);
-						if (node.language)
+						if (node.language) {
 							code.classList.add(`language-${node.language}`);
+						}
 						code.append(...children);
 						pre.append(code);
 						Object.assign(pre.style, {

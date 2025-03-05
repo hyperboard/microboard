@@ -1445,6 +1445,7 @@ export class Selection {
 		for (let i = nodes.length - 1; i >= 0; i--) {
 			if (!nodes[i].getIsUserRequest()) {
 				lastAssistantMessageId = nodes[i].getId();
+				break;
 			}
 		}
 

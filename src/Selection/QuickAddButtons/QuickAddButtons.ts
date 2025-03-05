@@ -35,7 +35,7 @@ export interface HTMLQuickAddButton extends HTMLButtonElement {
 	resetState: () => void;
 }
 
-const offsets = { minX: 320, maxX: 640, minY: 100, maxY: 240 };
+const offsets = { minX: 320, maxX: 320, minY: 120, maxY: 240 };
 
 export function getQuickAddButtons(
 	selection: Selection,
@@ -121,18 +121,24 @@ export function getQuickAddButtons(
 				)
 				.filter(item => item.itemType !== "Connector").length > 0
 		) {
-			const direction = step % 2 === 0 ? -1 : 1;
+			const xDirection = step % 2 === 0 ? -1 : 1;
+			const yDirection =
+				newItemData.itemType === "AINode" ? -1 : xDirection;
 			newMbr.transform(
 				new Matrix(
-					iterAdjustment[index].x * direction * step,
-					iterAdjustment[index].y * direction * step,
+					iterAdjustment[index].x * xDirection * step,
+					iterAdjustment[index].y *
+						yDirection *
+						(newItemData.itemType === "AINode" ? 1 : step),
 				),
 			);
 			if (newItemData.transformation) {
 				newItemData.transformation.translateX +=
-					iterAdjustment[index].x * direction * step;
+					iterAdjustment[index].x * xDirection * step;
 				newItemData.transformation.translateY +=
-					iterAdjustment[index].y * direction * step;
+					iterAdjustment[index].y *
+					yDirection *
+					(newItemData.itemType === "AINode" ? 1 : step);
 			}
 			step += 1;
 		}
