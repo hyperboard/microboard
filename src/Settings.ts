@@ -295,3 +295,4 @@ export const TEMPLATE_LANGUAGES: { value: string; label: string }[] = [
 	{ value: "fr", label: "French" },
 	{ value: "zh", label: "Chinese" },
 ];
+export const CANVAS_BG_COLOR = "#f6f6f6";
