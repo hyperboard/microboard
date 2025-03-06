@@ -78,6 +78,11 @@ export class Group extends Mbr {
 		});
 	}
 
+	emitRemoveChild(child: Item): void {
+		this.removeChild(child.getId());
+		child.parent = "Board";
+	}
+
 	apply(op: Operation): void {
 		switch (op.class) {
 			case "Group":

@@ -33,6 +33,7 @@ export class Transformation {
 			scaleX: this.matrix.scaleX,
 			scaleY: this.matrix.scaleY,
 			rotate: this.rotate,
+			isLocked: this.isLocked,
 		};
 	}
 
@@ -56,6 +57,9 @@ export class Transformation {
 		}
 		if (data.scaleY) {
 			this.matrix.scaleY = data.scaleY;
+		}
+		if (data.isLocked) {
+			this.isLocked = data.isLocked;
 		}
 		if (data.rotate) {
 			// TODO to rotate to a degree calculate rotation by
@@ -90,6 +94,7 @@ export class Transformation {
 			scaleX,
 			scaleY,
 			rotate,
+			isLocked: false,
 		});
 	}
 

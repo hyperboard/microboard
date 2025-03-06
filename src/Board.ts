@@ -1367,6 +1367,7 @@ export class Board {
 				itemData.transformation.translateX =
 					translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
+				itemData.transformation.isLocked = false;
 
 				if (itemData.itemType === "Drawing") {
 					itemData.transformation.translateY = translateY;

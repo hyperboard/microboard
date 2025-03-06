@@ -7,6 +7,7 @@ export interface TransformationData {
 	scaleX: number;
 	scaleY: number;
 	rotate: number;
+	isLocked: boolean;
 }
 
 const transformationDataSchema: JSONSchemaType<TransformationData> = {
@@ -17,8 +18,16 @@ const transformationDataSchema: JSONSchemaType<TransformationData> = {
 		scaleX: { type: "number" },
 		scaleY: { type: "number" },
 		rotate: { type: "number" },
+		isLocked: { type: "boolean" },
 	},
-	required: ["translateX", "translateY", "scaleX", "scaleY", "rotate"],
+	required: [
+		"translateX",
+		"translateY",
+		"scaleX",
+		"scaleY",
+		"rotate",
+		"isLocked",
+	],
 	additionalProperties: false,
 };
 
@@ -31,5 +40,6 @@ export class DefaultTransformationData implements TransformationData {
 		public scaleX = 1,
 		public scaleY = 1,
 		public rotate = 0,
+		public isLocked = false,
 	) {}
 }

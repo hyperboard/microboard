@@ -551,7 +551,6 @@ export class Selection {
 			return { imageElement: single.image, imageData: copiedItemsMap };
 		}
 
-		// console.log("this.list()", this.list());
 		this.list().forEach(item => {
 			this.handleItemCopy(item, copiedItemsMap);
 		});
@@ -786,10 +785,6 @@ export class Selection {
 					).some(
 						val =>
 							val.nested && val.nested.getId() !== parentFrameId,
-					);
-					console.log(
-						"isRemoveChildFromFrame",
-						isRemoveChildFromFrame,
 					);
 
 					if (isParentFrame && isRemoveChildFromFrame) {

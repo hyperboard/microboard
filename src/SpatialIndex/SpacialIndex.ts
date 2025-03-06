@@ -9,6 +9,7 @@ import { Drawing } from "Board/Items/Drawing";
 import { Comment } from "../Items/Comment";
 import { positionRelatively, translateElementBy } from "Board/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { Group } from "Board/Items/Group";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -85,6 +86,7 @@ export class SpatialIndex {
 		if (item.parent !== "Board") {
 			const parentFrame = this.items.getById(item.parent) as
 				| Frame
+				| Group
 				| undefined;
 			parentFrame?.emitRemoveChild(item);
 		}
