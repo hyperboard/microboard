@@ -482,25 +482,36 @@ export class Selection {
 
 			// If the start or end point items are not in the selection,
 			// change them to BoardPoints with the current absolute position.
-			if (
-				startPoint.pointType !== "Board" &&
-				!this.items.findById(startPoint.item.getId())
-			) {
-				const newStartPointPos = connector.getStartPoint();
+			const startItemId =
+				startPoint.pointType !== "Board"
+					? startPoint.item.getId()
+					: null;
+			const endItemId =
+				endPoint.pointType !== "Board" ? endPoint.item.getId() : null;
+			const single = this.items.getSingle();
+			const frameChild =
+				single instanceof Frame ? single.getChildrenIds() : null;
+
+			const hasStartItem =
+				startItemId &&
+				!this.items.findById(startItemId) &&
+				!frameChild?.some(child => child === startItemId);
+			const hasEndItem =
+				endItemId &&
+				!this.items.findById(endItemId) &&
+				!frameChild?.some(child => child === endItemId);
+
+			if (hasStartItem) {
 				serializedData.startPoint = new BoardPoint(
-					newStartPointPos.x,
-					newStartPointPos.y,
+					startPoint.x,
+					startPoint.y,
 				).serialize();
 			}
 
-			if (
-				endPoint.pointType !== "Board" &&
-				!this.items.findById(endPoint.item.getId())
-			) {
-				const newEndPointPos = connector.getEndPoint();
+			if (hasEndItem) {
 				serializedData.endPoint = new BoardPoint(
-					newEndPointPos.x,
-					newEndPointPos.y,
+					endPoint.x,
+					endPoint.y,
 				).serialize();
 			}
 		}
@@ -539,6 +550,7 @@ export class Selection {
 			return { imageElement: single.image, imageData: copiedItemsMap };
 		}
 
+		// console.log("this.list()", this.list());
 		this.list().forEach(item => {
 			this.handleItemCopy(item, copiedItemsMap);
 		});
@@ -773,6 +785,10 @@ export class Selection {
 					).some(
 						val =>
 							val.nested && val.nested.getId() !== parentFrameId,
+					);
+					console.log(
+						"isRemoveChildFromFrame",
+						isRemoveChildFromFrame,
 					);
 
 					if (isParentFrame && isRemoveChildFromFrame) {
