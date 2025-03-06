@@ -294,6 +294,9 @@ export function getQuickAddButtons(
 					"button",
 				) as HTMLQuickAddButton;
 				button.classList.add(styles.quickAddButton);
+				if (item.itemType === "AINode" && index === 2) {
+					button.classList.add(styles.invisible);
+				}
 				button.classList.add(styles[adjustment.rotate]);
 				button.style.left = `${
 					(pos.x - cameraMbr.left) * cameraMatrix.scaleX +

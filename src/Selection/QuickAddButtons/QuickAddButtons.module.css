@@ -13,6 +13,10 @@
 	margin: auto;
 }
 
+.invisible {
+	display: none;
+}
+
 .quickAddButton:hover {
 	transform: translate(-50%, -50%) scale(1);
 	background-color: #924fe8;

@@ -1,5 +1,13 @@
 import { Board } from "Board";
-import { Connector, Item, ItemData, Shape, ShapeData } from "Board/Items";
+import {
+	Connector,
+	Item,
+	ItemData,
+	Mbr,
+	RichText,
+	Shape,
+	ShapeData,
+} from "Board/Items";
 import {
 	ControlPointData,
 	getControlPoint,
@@ -7,6 +15,8 @@ import {
 import { getDirection } from "Board/Items/Connector/getLine/findOrthogonalPath";
 import { ShapeType } from "Board/Items/Shape";
 import { AINode } from "Board/Items/AINode/AINode";
+import { BasicShapes } from "Board/Items/Shape/Basic/index";
+import { Sticker } from "Board/Items/Sticker/Sticker";
 
 /** index represents the number of connection - left, right, top, bottom */
 export function getControlPointData(
@@ -39,31 +49,59 @@ export function getControlPointData(
 
 export function quickAddItem(
 	board: Board,
-	type: "copy" | ShapeType | "AIRequest",
+	type: ShapeType | "AINode" | "Sticker" | "RichText",
 	connector: Connector,
 ): void {
 	const startPoint = connector.getStartPoint();
 	const endPoint = connector.getEndPoint();
-	const optionalItem =
-		type === "AIRequest"
-			? createAINode(board, startPoint?.item?.getId(), 3)
-			: new Shape(board, undefined, type !== "copy" ? type : "Rectangle");
+	const isShape = type in BasicShapes;
+	let optionalItem: Item = new Shape(
+		board,
+		undefined,
+		isShape ? (type as ShapeType) : "Rectangle",
+	);
+	switch (type) {
+		case "RichText":
+			optionalItem = createRichText(board);
+			break;
+		case "Sticker":
+			optionalItem = new Sticker(board);
+			break;
+		case "AINode":
+			optionalItem = createAINode(board, startPoint?.item?.getId(), 3);
+			break;
+	}
 
 	let itemMbr = optionalItem.getMbr();
 	if (startPoint.pointType !== "Board") {
-		if (type === "copy") {
+		if (type === "Sticker" || isShape) {
 			itemMbr = startPoint.item.getMbr();
 		}
 	}
 	let itemData: ItemData = optionalItem.serialize();
 	if (startPoint.pointType !== "Board") {
-		if (type === "copy") {
-			itemData = startPoint.item.serialize();
+		if (type === "Sticker" || isShape) {
+			const prevItemData = startPoint.item.serialize();
+			if (prevItemData.itemType === "Shape" && isShape) {
+				itemData = {
+					...prevItemData,
+					shapeType: (itemData as ShapeData).shapeType,
+				};
+			} else if (
+				type === "Sticker" &&
+				prevItemData.itemType === "Sticker"
+			) {
+				itemData = prevItemData;
+			}
 		}
 	}
 
 	const guarded = itemData as Partial<ItemData>;
-	if ("text" in guarded && guarded.itemType !== "AINode") {
+	if (
+		"text" in guarded &&
+		guarded.itemType !== "AINode" &&
+		guarded.itemType !== "RichText"
+	) {
 		delete guarded.text;
 	}
 	itemData.transformation.translateX = endPoint.x;
@@ -139,4 +177,11 @@ export function createAINode(
 	nodeRichText.setSelectionHorisontalAlignment("left");
 	nodeRichText.placeholderText = "Type your request...";
 	return node;
+}
+
+function createRichText(board: Board): RichText {
+	const text = new RichText(board, new Mbr());
+	text.setMaxWidth(600);
+	text.setSelectionHorisontalAlignment("left");
+	return text;
 }
