@@ -67,6 +67,7 @@ export class Selection {
 	serialize(): string {
 		const selectedItems = this.items.list().map(item => item.getId());
 		return JSON.stringify(selectedItems);
+		this.removeFromBoard();
 	}
 
 	deserialize(serializedData: string): void {
@@ -1351,39 +1352,41 @@ export class Selection {
 			}
 		}
 
-		const connectors = itemIds.flatMap(id => {
-			return this.board.items.getConnectorsPointById(id);
-		});
+		const connectors = itemIds
+			.flatMap(id => {
+				return this.board.items.getLinkedConnectorsById(id);
+			})
+			.map(connector => connector.getId());
 
-		connectors.forEach(connector => {
-			const startPoint = connector.getStartPoint();
-			const endPoint = connector.getEndPoint();
-
-			if (
-				(startPoint.pointType === "Fixed" ||
-					startPoint.pointType === "FixedConnector") &&
-				itemIds.includes(startPoint.item.getId() || "")
-			) {
-				const { x, y } = startPoint;
-				const pointData = new BoardPoint(x, y);
-				connector.applyStartPoint(pointData);
-			}
-
-			if (
-				(endPoint.pointType === "Fixed" ||
-					endPoint.pointType === "FixedConnector") &&
-				itemIds.includes(endPoint.item.getId() || "")
-			) {
-				const { x, y } = endPoint;
-				const pointData = new BoardPoint(x, y);
-				connector.applyEndPoint(pointData);
-			}
-		});
+		// connectors.forEach(connector => {
+		// 	const startPoint = connector.getStartPoint();
+		// 	const endPoint = connector.getEndPoint();
+		//
+		// 	if (
+		// 		(startPoint.pointType === "Fixed" ||
+		// 			startPoint.pointType === "FixedConnector") &&
+		// 		itemIds.includes(startPoint.item.getId() || "")
+		// 	) {
+		// 		const { x, y } = startPoint;
+		// 		const pointData = new BoardPoint(x, y);
+		// 		connector.applyStartPoint(pointData);
+		// 	}
+		//
+		// 	if (
+		// 		(endPoint.pointType === "Fixed" ||
+		// 			endPoint.pointType === "FixedConnector") &&
+		// 		itemIds.includes(endPoint.item.getId() || "")
+		// 	) {
+		// 		const { x, y } = endPoint;
+		// 		const pointData = new BoardPoint(x, y);
+		// 		connector.applyEndPoint(pointData);
+		// 	}
+		// });
 
 		this.emit({
 			class: "Board",
 			method: "remove",
-			item: itemIds,
+			item: Array.from(new Set([...itemIds, ...connectors])),
 		});
 		this.board.tools.getSelect()?.nestingHighlighter.clear();
 		this.setContext("None");

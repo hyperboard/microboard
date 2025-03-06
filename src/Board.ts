@@ -574,10 +574,13 @@ export class Board {
 	}
 
 	remove(item: Item): void {
+		const connectors = this.items
+			.getLinkedConnectorsById(item.getId())
+			.map(connector => connector.getId());
 		this.emit({
 			class: "Board",
 			method: "remove",
-			item: [item.getId()],
+			item: [item.getId(), ...connectors],
 		});
 	}
 

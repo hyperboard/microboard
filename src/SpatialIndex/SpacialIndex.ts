@@ -563,7 +563,7 @@ export class Items {
 		return this.index.getLastZIndex();
 	}
 
-	getConnectorsPointById(id: string): Connector[] {
+	getLinkedConnectorsById(id: string): Connector[] {
 		return this.listAll().filter(item => {
 			if (item.itemType !== "Connector") {
 				return false;
