@@ -10,7 +10,7 @@ import { Path } from "Board/Items/Path/Path";
 import { Paths } from "Board/Items/Path/Paths";
 import { LinkTo } from "Board/Items/LinkTo/LinkTo";
 import { Subject } from "Subject";
-import { AINodeData } from "Board/Items/AINode/AINodeData";
+import { AINodeData, createNodePath } from "Board/Items/AINode/AINodeData";
 import { Operation } from "Board/Events/EventsOperations";
 import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
 import {
@@ -23,7 +23,11 @@ import { Board } from "Board";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
+const BUTTON_SIZE = 20;
 export type ThreadDirection = 0 | 1 | 2 | 3;
+const arrowIcon = new Image();
+arrowIcon.src =
+	"data:image/svg+xml;charset=utf-8,%3Csvg id='AIChatSendArrow' viewBox='0 0 21 21' xmlns='http://www.w3.org/2000/svg' fill='url(%23paint0_linear_7542_32550)'%3E%3Cpath d='M0.946815 7.31455C0.424815 7.14055 0.419815 6.85955 0.956815 6.68055L20.0438 0.318552C20.5728 0.142552 20.8758 0.438552 20.7278 0.956552L15.2738 20.0426C15.1238 20.5716 14.8188 20.5896 14.5948 20.0876L11.0008 11.9996L17.0008 3.99955L9.00081 9.99955L0.946815 7.31455Z'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_7542_32550' x1='10.66' y1='0.267578' x2='10.66' y2='20.452' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23CD4FF2'/%3E%3Cstop offset='1' stop-color='%235F4AFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E";
 
 export class AINode implements Geometry {
 	readonly itemType = "AINode";
@@ -39,6 +43,7 @@ export class AINode implements Geometry {
 	private threadDirection: ThreadDirection = 3;
 	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
+	private buttonMbr: Mbr = new Mbr();
 
 	constructor(
 		private board: Board,
@@ -123,32 +128,32 @@ export class AINode implements Geometry {
 	transformPath(): void {
 		const { left, right, top, bottom } =
 			this.text.getTransformedContainer();
+		const { scaleX, scaleY } = this.transformation.matrix;
+		const minScale = Math.min(scaleX, scaleY);
+		const leftOffset = 20 * minScale;
+		const topOffset = 20 * minScale;
+		const nodeRight = right + 80 * minScale;
+		const nodeBottom = bottom + (bottom - top > 400 ? 60 : 40) * minScale;
 		if (
 			!this.path ||
-			(this.text.left < this.path.getMbr().left + 20 &&
-				this.text.top < this.path.getMbr().top + 20)
+			(this.text.left < this.path.getMbr().left + leftOffset &&
+				this.text.top < this.path.getMbr().top + topOffset)
 		) {
-			this.text.left += 20;
-			this.text.top += 20;
+			this.text.left = this.transformation.matrix.translateX + leftOffset;
+			this.text.top = this.transformation.matrix.translateY + topOffset;
 		}
-		const nodeRight = right + 40;
-		const nodeBottom = bottom + (bottom - top > 400 ? 60 : 40);
-		this.path = new Path(
-			[
-				new Line(new Point(left, top), new Point(nodeRight, top)),
-				new Line(
-					new Point(nodeRight, top),
-					new Point(nodeRight, nodeBottom),
-				),
-				new Line(
-					new Point(nodeRight, nodeBottom),
-					new Point(left, nodeBottom),
-				),
-				new Line(new Point(left, nodeBottom), new Point(left, top)),
-			],
-			true,
-			"rgb(255, 255, 255)",
-			"rgba(222, 224, 227, 1)",
+
+		this.path = createNodePath(
+			new Mbr(left, top, nodeRight, nodeBottom),
+			this.transformation.matrix,
+		);
+		const scaledSize = BUTTON_SIZE * minScale;
+
+		this.buttonMbr = new Mbr(
+			nodeRight - scaledSize * 2,
+			nodeBottom - scaledSize * 2,
+			nodeRight - scaledSize,
+			nodeBottom - scaledSize,
 		);
 	}
 
@@ -264,6 +269,10 @@ export class AINode implements Geometry {
 		];
 	}
 
+	getButtonMbr() {
+		return this.buttonMbr;
+	}
+
 	getDistanceToPoint(point: Point): number {
 		const nearest = this.getNearestEdgePointTo(point);
 		return point.getDistance(nearest);
@@ -313,31 +322,44 @@ export class AINode implements Geometry {
 		return this.linkTo.link;
 	}
 
-	renderShadow(context: DrawingContext): void {
-		const mbr = this.getMbr();
+	// renderShadow(context: DrawingContext): void {
+	// 	const mbr = this.getMbr();
+	// 	const { ctx } = context;
+	//
+	// 	ctx.save();
+	//
+	// 	ctx.shadowOffsetX = 0;
+	// 	ctx.shadowOffsetY =
+	// 		(18 - 5) *
+	// 		context.getCameraScale() *
+	// 		this.transformation.getScale().y;
+	// 	ctx.shadowColor = "rgba(20, 21, 26, 0.35)"; // Сделал тень темнее
+	// 	ctx.shadowBlur = 32; // Увеличил размытие
+	// 	ctx.fillStyle = "rgba(20, 21, 26, 0.35)";
+	// 	ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
+	//
+	// 	ctx.shadowOffsetX = 0;
+	// 	ctx.shadowOffsetY =
+	// 		(8 - 5) *
+	// 		context.getCameraScale() *
+	// 		this.transformation.getScale().y;
+	// 	ctx.shadowColor = "rgba(20, 21, 26, 0.2)";
+	// 	ctx.shadowBlur = 16;
+	// 	ctx.fillStyle = "rgba(20, 21, 26, 0.2)";
+	// 	ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
+	//
+	// 	ctx.restore();
+	// }
+
+	renderButton(context: DrawingContext): void {
+		const { left, right, top, bottom } = this.buttonMbr;
 		const { ctx } = context;
 
 		ctx.save();
 
-		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY =
-			(18 - 5) *
-			context.getCameraScale() *
-			this.transformation.getScale().y;
-		ctx.shadowColor = "rgba(20, 21, 26, 0.35)"; // Сделал тень темнее
-		ctx.shadowBlur = 32; // Увеличил размытие
-		ctx.fillStyle = "rgba(20, 21, 26, 0.35)";
-		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
-
-		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY =
-			(8 - 5) *
-			context.getCameraScale() *
-			this.transformation.getScale().y;
-		ctx.shadowColor = "rgba(20, 21, 26, 0.2)";
-		ctx.shadowBlur = 16;
-		ctx.fillStyle = "rgba(20, 21, 26, 0.2)";
-		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
+		if (arrowIcon.complete) {
+			ctx.drawImage(arrowIcon, left, top, right - left, bottom - top);
+		}
 
 		ctx.restore();
 	}
@@ -347,8 +369,9 @@ export class AINode implements Geometry {
 			return;
 		}
 		// this.text.setPaddingTop(0.5);
-		this.renderShadow(context);
+		// this.renderShadow(context);
 		this.path.render(context);
+		this.renderButton(context);
 		this.text.render(context);
 	}
 	// smell have to redo without document
