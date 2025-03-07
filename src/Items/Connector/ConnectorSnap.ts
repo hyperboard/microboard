@@ -188,13 +188,13 @@ export class ConnectorSnap {
 
 	setSnap(): void {
 		const item = this.snap.item;
-		if (!item) {
+		const path = item?.getPath();
+		if (!item || !path) {
 			this.snap.path = null;
 			this.snap.anchors = [];
 			this.snap.anchor = null;
 			this.snap.point = null;
 		} else {
-			const path = item.getPath();
 			path.setBorderColor(this.color.snapBorder);
 			this.snap.path = path;
 			if (
@@ -209,6 +209,10 @@ export class ConnectorSnap {
 
 	setAnchors(item: Item): void {
 		const points = item.getSnapAnchorPoints();
+		if (!points) {
+			return;
+		}
+
 		const anchors: Anchor[] = [];
 		for (const { x, y } of points) {
 			anchors.push(

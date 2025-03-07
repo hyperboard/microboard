@@ -412,5 +412,13 @@ export class Comment implements Geometry {
 		return this.linkTo.link;
 	}
 
+	getPath(): null {
+		return null;
+	}
+
+	getSnapAnchorPoints(): Point[] | null {
+		return null;
+	}
+
 	render(context: DrawingContext): void {}
 }
