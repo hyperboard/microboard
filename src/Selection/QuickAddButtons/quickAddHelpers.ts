@@ -179,7 +179,7 @@ export function createAINode(
 	return node;
 }
 
-function createRichText(board: Board): RichText {
+export function createRichText(board: Board): RichText {
 	const text = new RichText(board, new Mbr());
 	text.setMaxWidth(600);
 	text.setSelectionHorisontalAlignment("left");

@@ -8,13 +8,17 @@ import {
 	Point,
 	RichText,
 	ItemData,
+	Shape,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "..";
 import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
-import { createAINode } from "Board/Selection/QuickAddButtons/quickAddHelpers";
+import {
+	createAINode,
+	createRichText,
+} from "Board/Selection/QuickAddButtons/quickAddHelpers";
 
 export interface QuickAddButtons {
 	clear: () => void;
@@ -26,6 +30,7 @@ export interface QuickAddItems {
 	connectorData: ConnectorData;
 	connectorStartPoint: Point;
 	connectorEndPoint: Point;
+	placeholderItem?: Item;
 }
 
 export interface HTMLQuickAddButton extends HTMLButtonElement {
@@ -57,11 +62,17 @@ export function getQuickAddButtons(
 		let newWidth = width;
 		let newHeight = height;
 		let itemData: ItemData;
-		if (selectedItem.itemType === "AINode") {
-			const node = createAINode(board, selectedItem.getId(), index);
-			newWidth = node.getMbr().getWidth();
-			newHeight = node.getMbr().getHeight();
-			itemData = node.serialize();
+		if (
+			selectedItem.itemType === "AINode" ||
+			selectedItem.itemType === "RichText"
+		) {
+			const item =
+				selectedItem.itemType === "AINode"
+					? createAINode(board, selectedItem.getId(), index)
+					: createRichText(board);
+			newWidth = item.getMbr().getWidth();
+			newHeight = item.getMbr().getHeight();
+			itemData = item.serialize();
 			const { minX, minY, maxY, maxX } = offsets;
 			offsetX = Math.min(offsetX, maxX);
 			offsetX = Math.max(offsetX, minX);
@@ -71,7 +82,11 @@ export function getQuickAddButtons(
 			itemData = selectedItemData;
 		}
 		const guarded = itemData as Partial<ItemData>;
-		if ("text" in guarded && guarded.itemType !== "AINode") {
+		if (
+			"text" in guarded &&
+			guarded.itemType !== "AINode" &&
+			guarded.itemType !== "RichText"
+		) {
 			delete guarded.text;
 		}
 
@@ -146,11 +161,20 @@ export function getQuickAddButtons(
 		const connectorEndPoint =
 			endPoints?.positions[reverseIndexMap[index]] || new Point();
 		const newItem = board.createItem(board.getNewItemId(), newItemData);
+		let newItemPlaceholder: Item | undefined;
+		if (newItem.itemType === "RichText") {
+			const shapeData = new Shape(board).serialize();
+			shapeData.transformation = {
+				...newItemData.transformation,
+				scaleX: 1.463,
+				scaleY: 0.196,
+			};
+			newItemPlaceholder = board.createItem(newItem.getId(), shapeData);
+		}
 
 		const defaultConnector = new Connector(board);
 		const connectorData = defaultConnector.serialize();
-		connectorData.lineStyle =
-			newItem.itemType === "AINode" ? "curved" : "orthogonal";
+		connectorData.lineStyle = "curved";
 
 		const savedStart = connectorStorage.getConnectorPointer("start");
 		if (savedStart) {
@@ -163,7 +187,7 @@ export function getQuickAddButtons(
 
 		const startPointData = getControlPointData(selectedItem, index);
 		const endPointData = getControlPointData(
-			newItem,
+			newItemPlaceholder ? newItemPlaceholder : newItem,
 			reverseIndexMap[index],
 		);
 		connectorData.startPoint = startPointData;
@@ -175,6 +199,7 @@ export function getQuickAddButtons(
 			connectorData,
 			connectorStartPoint,
 			connectorEndPoint,
+			placeholderItem: newItemPlaceholder,
 		};
 		return {
 			newItem,
@@ -207,7 +232,8 @@ export function getQuickAddButtons(
 			!itemMbr ||
 			(single?.itemType !== "Sticker" &&
 				single?.itemType !== "Shape" &&
-				single?.itemType !== "AINode")
+				single?.itemType !== "AINode" &&
+				single?.itemType !== "RichText")
 		) {
 			return;
 		}
@@ -230,14 +256,14 @@ export function getQuickAddButtons(
 	function renderQuickAddItems(context: DrawingContext): void {
 		if (quickAddItems) {
 			const connectorData = { ...quickAddItems.connectorData };
-			const { newItem } = quickAddItems;
+			const { newItem, placeholderItem } = quickAddItems;
 			connectorData.optionalFindItemFn = () => newItem;
 
 			const floatingConnector = board.createItem("", connectorData);
 			const originalAlpha = context.ctx.globalAlpha;
 			context.ctx.globalAlpha = 0.6;
 
-			newItem.render(context);
+			(placeholderItem || newItem).render(context);
 			floatingConnector.render(context);
 
 			context.ctx.globalAlpha = originalAlpha;

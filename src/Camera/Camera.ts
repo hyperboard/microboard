@@ -42,7 +42,7 @@ export class Camera {
 				return;
 			}
 			const mbr = this.observableItem.getMbr();
-			if (mbr.getHeight() > 40) {
+			if (mbr.getHeight() > 40 && mbr.getWidth() > 600) {
 				this.zoomToFit(mbr, 20, 350);
 			}
 		}, 400);
