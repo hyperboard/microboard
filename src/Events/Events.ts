@@ -23,10 +23,7 @@ import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
 import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
-import { notify } from "View/Ui/Toast"; // Smell: View from Board
-import { isMicroboard } from "lib/isMicroboard";
 import i18next from "i18next";
-import toast from "react-hot-toast";
 import {
 	PresenceEventMsg,
 	PresenceEventType,
@@ -82,6 +79,20 @@ export interface RawEvents {
 	eventsToSend: BoardEvent[];
 	newEvents: BoardEvent[];
 }
+
+export interface NotifyFunction {
+	(options: {
+		header: string;
+		body: string;
+		variant?: "info" | "success" | "warning" | "error";
+		duration?: number;
+	}): string; // Returns notification id
+}
+
+export interface DismissNotificationFunction {
+	(id: string): void;
+}
+
 export interface Events {
 	subject: Subject<BoardEvent>;
 	serialize(): BoardEvent[];
@@ -112,6 +123,8 @@ export function createEvents(
 	board: Board,
 	connection: Connection,
 	lastOrder: number,
+	notify: NotifyFunction,
+	dismissNotification: DismissNotificationFunction,
 ): Events {
 	const log = createEventsLog(board);
 	const latestEvent: { [key: string]: number } = {};
@@ -642,27 +655,16 @@ export function createEvents(
 						"beforeunload",
 						beforeUnloadListener,
 					); // Smell: move to connection
-					if (isMicroboard()) {
-						notificationId = notify({
-							header: i18next.t(
-								"notifications.restoringConnectionHeader",
-							),
-							body: i18next.t(
-								"notifications.restoringConnectionBody",
-							),
-							variant: "warning",
-							duration: Infinity,
-						});
-					} else {
-						notificationId = notify({
-							header: i18next.t(
-								"notifications.connectionLostHeader",
-							),
-							variant: "black",
-							duration: Infinity,
-							position: "bottom-center",
-						});
-					}
+					notificationId = notify({
+						header: i18next.t(
+							"notifications.restoringConnectionHeader",
+						),
+						body: i18next.t(
+							"notifications.restoringConnectionBody",
+						),
+						variant: "warning",
+						duration: Infinity,
+					});
 				}
 			}
 
@@ -684,7 +686,7 @@ export function createEvents(
 					"beforeunload",
 					beforeUnloadListener,
 				); // Smell: move to connection
-				toast.dismiss(notificationId);
+				dismissNotification(notificationId);
 				notificationId = null;
 				window.addEventListener(
 					"beforeunload",

@@ -10,12 +10,10 @@ import {
 	ItemData,
 } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { isMicroboard } from "lib/isMicroboard";
 import { Selection } from "..";
 import { SessionStorage } from "../../../App/SessionStorage";
 import { getControlPointData } from "./";
 import styles from "./QuickAddButtons.module.css";
-import { AINode } from "Board/Items/AINode/AINode";
 import { createAINode } from "Board/Selection/QuickAddButtons/quickAddHelpers";
 
 export interface QuickAddButtons {
@@ -247,7 +245,7 @@ export function getQuickAddButtons(
 	}
 
 	function renderQuickAddButtons(): void {
-		if (!isMicroboard() || board.getInterfaceType() !== "edit") {
+		if (board.getInterfaceType() !== "edit") {
 			clear();
 			return;
 		}

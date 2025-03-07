@@ -1,4 +1,3 @@
-import { Connection } from "App/Connection";
 import { v4 as uuidv4 } from "uuid";
 import {
 	SELECTION_ANCHOR_COLOR,
@@ -17,7 +16,7 @@ import {
 } from "./BoardOperations";
 import { Camera } from "./Camera/";
 import { Events, ItemOperation, Operation } from "./Events";
-import { createEvents, SyncBoardEvent } from "./Events/Events";
+import { SyncBoardEvent } from "./Events/Events";
 import { itemFactories } from "./itemFactories";
 import {
 	Connector,
@@ -47,7 +46,6 @@ import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
-import { isTemplateView } from "lib/queryStringParser";
 import { DocumentFactory } from "./api/DocumentFactory";
 
 export type InterfaceType = "edit" | "view" | "loading";
@@ -70,7 +68,7 @@ export class Board {
 	private interfaceType: InterfaceType = "loading";
 	readonly subject = new Subject<void>();
 
-	private resolveConnecting!: () => void;
+	resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {
 		this.resolveConnecting = resolve;
 	});
@@ -83,44 +81,6 @@ export class Board {
 		this.selection = new Selection(this, this.events);
 		this.presence = new Presence(this);
 		this.tools.navigate();
-	}
-
-	// Smell just do in in connection and set event onject on board
-	/* Connect to the server to recieve the events*/
-	async connect(connection: Connection): Promise<void> {
-		if (this.getBoardId() === "blank") {
-			return;
-		}
-		const currIndex = this.getSnapshot().lastIndex;
-		// temporaly disable snapshot cache
-		// TODO: reenable when fixed multiple snapshots for one board
-		// const snapshot = await this.getSnapshotFromCache();
-		const snapshot = undefined;
-		this.events = createEvents(
-			this,
-			connection,
-			currIndex || snapshot?.lastIndex || 0,
-		);
-		this.presence.addEvents(this.events);
-		this.presence.setCurrentUser(
-			localStorage.getItem(`currentUser`) ||
-				(() => {
-					const uuid = uuidv4();
-					localStorage.setItem(`currentUser`, uuid);
-					return uuid;
-				})(),
-		);
-		this.selection.events = this.events;
-		if (snapshot && currIndex === 0) {
-			this.deserialize(snapshot);
-		}
-		this.resolveConnecting();
-		setTimeout(() => {
-			this.items.subject.publish(this.items);
-		}, 0);
-		setTimeout(() => {
-			this.items.subject.publish(this.items);
-		}, 1000);
 	}
 
 	disconnect(): void {
