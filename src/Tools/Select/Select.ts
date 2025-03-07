@@ -716,6 +716,8 @@ export class Select extends Tool {
 			return false;
 		}
 		if (this.board.getInterfaceType() !== "edit") {
+			this.board.selection.removeAll();
+			this.clear();
 			return false;
 		}
 
@@ -727,7 +729,7 @@ export class Select extends Tool {
 
 		if (
 			curr &&
-			curr.itemType == "AINode" &&
+			curr.itemType === "AINode" &&
 			this.board.aiGeneratingOnItem
 		) {
 			this.board.tools.publish();
