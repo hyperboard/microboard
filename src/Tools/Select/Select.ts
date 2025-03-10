@@ -2,7 +2,7 @@ import { Board } from "../../Board";
 import { Frame, Item, Line, Mbr, Point } from "../../Items";
 import { DrawingContext } from "../../Items/DrawingContext";
 import { Tool } from "../Tool";
-import { SELECTION_BACKGROUND, SELECTION_COLOR } from "Board/Settings.js";
+import { SETTINGS } from "Board/Settings.js";
 import { NestingHighlighter } from "../NestingHighlighter";
 import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { createDebounceUpdater } from "../DebounceUpdater";
@@ -295,8 +295,8 @@ export class Select extends Tool {
 			const { x, y } = pointer.point;
 			this.line = new Line(new Point(x, y), new Point(x, y));
 			this.rect = this.line.getMbr();
-			this.rect.borderColor = SELECTION_COLOR;
-			this.rect.backgroundColor = SELECTION_BACKGROUND;
+			this.rect.borderColor = SETTINGS.SELECTION_COLOR;
+			this.rect.backgroundColor = SETTINGS.SELECTION_BACKGROUND;
 			this.board.tools.publish();
 
 			this.board.presence.throttledEmit({
@@ -409,8 +409,8 @@ export class Select extends Tool {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
 			this.rect = this.line.getMbr();
-			this.rect.borderColor = SELECTION_COLOR;
-			this.rect.backgroundColor = SELECTION_BACKGROUND;
+			this.rect.borderColor = SETTINGS.SELECTION_COLOR;
+			this.rect.backgroundColor = SETTINGS.SELECTION_BACKGROUND;
 			this.board.tools.publish();
 
 			this.board.presence.throttledEmit({

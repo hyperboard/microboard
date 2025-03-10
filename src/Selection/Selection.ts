@@ -8,7 +8,7 @@ import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "shared/Subject";
 import { toFiniteNumber } from "Board/lib";
-import { SELECTION_COLOR, SELECTION_LOCKED_COLOR } from "Board/Settings";
+import { SETTINGS } from "Board/Settings";
 import { Command, createCommand } from "../Events/Command";
 import { Connector, Frame, Item, ItemData, Mbr, RichText } from "../Items";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
@@ -1482,8 +1482,8 @@ export class Selection {
 			: 1 / customScale;
 
 		const selectionColor = item.transformation.isLocked
-			? SELECTION_LOCKED_COLOR
-			: SELECTION_COLOR;
+			? SETTINGS.SELECTION_LOCKED_COLOR
+			: SETTINGS.SELECTION_COLOR;
 		mbr.borderColor = selectionColor;
 		mbr.render(context);
 	}

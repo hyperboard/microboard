@@ -9,7 +9,7 @@ import {
 } from "../Transformation";
 import { ShapeType } from "./index";
 import { RequiredMembers } from "ajv/dist/types/json-schema";
-import { SHAPE_DEFAULT_STROKE_COLOR } from "Board/Settings";
+import { SETTINGS } from "Board/Settings";
 
 export interface ShapeData {
 	readonly itemType: "Shape";
@@ -67,7 +67,7 @@ export class DefaultShapeData implements ShapeData {
 		public shapeType: ShapeType = "Rectangle",
 		public backgroundColor = "none",
 		public backgroundOpacity = 1,
-		public borderColor = SHAPE_DEFAULT_STROKE_COLOR,
+		public borderColor = SETTINGS.SHAPE_DEFAULT_STROKE_COLOR,
 		public borderOpacity = 1,
 		public borderStyle: BorderStyle = "solid",
 		public borderWidth: BorderWidth = 1,

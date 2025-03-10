@@ -20,13 +20,7 @@ import { getOppositePoint } from "./getOppositePoint";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { Geometry } from "Board/Items/Geometry";
 import { Anchor } from "Board/Items/Anchor";
-import {
-	SELECTION_ANCHOR_COLOR,
-	SELECTION_ANCHOR_RADIUS,
-	SELECTION_ANCHOR_WIDTH,
-	SELECTION_COLOR,
-	SELECTION_LOCKED_COLOR,
-} from "Board/Settings";
+import { SETTINGS } from "Board/Settings";
 import { Sticker } from "Board/Items/Sticker";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
@@ -507,8 +501,8 @@ export class Transformer extends Tool {
 			mbr.strokeWidth = 1 / context.matrix.scaleX;
 
 			const selectionColor = isLockedItems
-				? SELECTION_LOCKED_COLOR
-				: SELECTION_COLOR;
+				? SETTINGS.SELECTION_LOCKED_COLOR
+				: SETTINGS.SELECTION_COLOR;
 			mbr.borderColor = selectionColor;
 			mbr.render(context);
 		}
@@ -678,10 +672,10 @@ export class Transformer extends Tool {
 				const circle = new Anchor(
 					point.x,
 					point.y,
-					SELECTION_ANCHOR_RADIUS,
-					SELECTION_COLOR,
-					SELECTION_ANCHOR_COLOR,
-					SELECTION_ANCHOR_WIDTH,
+					SETTINGS.SELECTION_ANCHOR_RADIUS,
+					SETTINGS.SELECTION_COLOR,
+					SETTINGS.SELECTION_ANCHOR_COLOR,
+					SETTINGS.SELECTION_ANCHOR_WIDTH,
 				);
 				anchors.push(circle);
 			}

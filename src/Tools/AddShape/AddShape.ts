@@ -5,7 +5,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "Board/Items/Shape/ShapeData";
-import { SELECTION_COLOR } from "Board/Settings";
+import { SETTINGS } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 
 export class AddShape extends BoardTool {
@@ -73,7 +73,7 @@ export class AddShape extends BoardTool {
 		const point = this.board.pointer.point;
 		this.line = new Line(point.copy(), point.copy());
 		this.bounds = this.line.getMbr();
-		this.bounds.borderColor = SELECTION_COLOR;
+		this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
 		this.shape.setShapeType(this.type);
 		this.initTransformation();
 		this.board.tools.publish();
@@ -95,7 +95,7 @@ export class AddShape extends BoardTool {
 
 			this.line = new Line(startPoint, endPoint);
 			this.bounds = this.line.getMbr();
-			this.bounds.borderColor = SELECTION_COLOR;
+			this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
 			this.initTransformation();
 			this.board.tools.publish();
 			return true;
@@ -181,7 +181,7 @@ export class AddShape extends BoardTool {
 		const y = (top + bottom) / 2 - 50;
 		this.bounds = new Mbr(x, y, x, y);
 		this.line = new Line(new Point(x, y), new Point(x, y));
-		this.bounds.borderColor = SELECTION_COLOR;
+		this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
 		this.shape.setShapeType(this.type);
 		this.initTransformation();
 		this.board.tools.publish();

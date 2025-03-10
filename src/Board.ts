@@ -1,10 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import {
-	SELECTION_ANCHOR_COLOR,
-	SELECTION_ANCHOR_RADIUS,
-	SELECTION_ANCHOR_WIDTH,
-	SELECTION_COLOR,
-} from "./Settings";
+import { SETTINGS } from "./Settings";
 import { BoardCommand } from "./BoardCommand";
 import {
 	BoardOps,
@@ -46,7 +41,6 @@ import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
-import { DocumentFactory } from "./api/DocumentFactory";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -384,7 +378,7 @@ export class Board {
 			borderDiv.id = "canvasBorder";
 			borderDiv.style.position = "absolute";
 			borderDiv.style.transformOrigin = "left top";
-			borderDiv.style.border = `1px solid ${SELECTION_COLOR}`;
+			borderDiv.style.border = `1px solid ${SETTINGS.SELECTION_COLOR}`;
 			borderDiv.style.boxSizing = "border-box";
 			borderDiv.style.left = `${leftOffset}px`;
 			borderDiv.style.top = `${topOffset}px`;
@@ -394,7 +388,7 @@ export class Board {
 			canvas.style.boxSizing = "border-box";
 			container.appendChild(borderDiv);
 		} else {
-			canvas.style.border = `1px solid ${SELECTION_COLOR}`;
+			canvas.style.border = `1px solid ${SETTINGS.SELECTION_COLOR}`;
 			canvas.style.boxSizing = "border-box";
 		}
 
@@ -407,8 +401,8 @@ export class Board {
 			anchorDiv.style.position = "absolute";
 			anchorDiv.style.width = `${2 * radius}px`;
 			anchorDiv.style.height = `${2 * radius}px`;
-			anchorDiv.style.backgroundColor = `${SELECTION_ANCHOR_COLOR}`;
-			anchorDiv.style.border = `${SELECTION_ANCHOR_WIDTH}px solid ${SELECTION_COLOR}`;
+			anchorDiv.style.backgroundColor = `${SETTINGS.SELECTION_ANCHOR_COLOR}`;
+			anchorDiv.style.border = `${SETTINGS.SELECTION_ANCHOR_WIDTH}px solid ${SETTINGS.SELECTION_COLOR}`;
 			anchorDiv.style.borderRadius = "2px";
 			anchorDiv.style.left = `calc(${left} - ${radius}px)`;
 			anchorDiv.style.top = `calc(${top} - ${radius}px)`;
@@ -417,13 +411,21 @@ export class Board {
 		};
 
 		const anchors = [
-			createAnchorDiv("0%", "0%", SELECTION_ANCHOR_RADIUS),
-			createAnchorDiv("100% + 1px", "0%", SELECTION_ANCHOR_RADIUS),
-			createAnchorDiv("0%", "100% + 1px", SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv("0%", "0%", SETTINGS.SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv(
+				"100% + 1px",
+				"0%",
+				SETTINGS.SELECTION_ANCHOR_RADIUS,
+			),
+			createAnchorDiv(
+				"0%",
+				"100% + 1px",
+				SETTINGS.SELECTION_ANCHOR_RADIUS,
+			),
 			createAnchorDiv(
 				"100% + 1px",
 				"100% + 1px",
-				SELECTION_ANCHOR_RADIUS,
+				SETTINGS.SELECTION_ANCHOR_RADIUS,
 			),
 		];
 
@@ -527,7 +529,7 @@ export class Board {
 		return newItem as T;
 	}
 
-	addLockedGroup(item: Group) {
+	addLockedGroup(item: Group): Item {
 		const id = this.getNewItemId();
 		this.emit({
 			class: "Board",
@@ -540,7 +542,7 @@ export class Board {
 			throw new Error(`Add item. Item ${id} was not created.`);
 		}
 		this.handleNesting(newItem);
-		return newItem as T;
+		return newItem;
 	}
 
 	remove(item: Item): void {
@@ -654,7 +656,7 @@ export class Board {
 		return this.copy();
 	}
 
-	async serializeHTML(documentFactory: DocumentFactory): Promise<string> {
+	async serializeHTML(): Promise<string> {
 		const script = await fetch(
 			new URL(getPublicUrl("/customWebComponents.js")),
 		);
@@ -667,7 +669,7 @@ export class Board {
 		const css = await builtCSS.text();
 
 		// div with id="items" and last-event-order are necessary for successfull uploading to storage
-		const items = this.items.getWholeHTML(documentFactory);
+		const items = this.items.getWholeHTML(SETTINGS.documentFactory);
 		const itemsDiv = `<div id="items">${items}</div>`;
 		const body = `<body>${itemsDiv}<script type="module">${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
 		const head = `
@@ -797,7 +799,8 @@ export class Board {
 				this.index.insert(item);
 			}
 		} else {
-			// for older snapshots, that were {id: data}
+			// TODO remove on snapshots update
+			// @ts-expect-error - for older snapshots, that were {id: data}
 			for (const key in items) {
 				const itemData = items[key];
 				const item = this.createItem(key, itemData);

@@ -1,14 +1,14 @@
 import { Mbr, Point } from "Board/Items";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { EXPORT_FRAME_DECORATIONS } from "Board/Settings";
+import { SETTINGS } from "Board/Settings";
 
 export function getDecorationResizeType(
 	point: Point,
 	mbr: Mbr,
 	tolerance = 10,
 ): ResizeType | undefined {
-	for (const key in EXPORT_FRAME_DECORATIONS) {
-		const decoration = EXPORT_FRAME_DECORATIONS[key];
+	for (const key in SETTINGS.EXPORT_FRAME_DECORATIONS) {
+		const decoration = SETTINGS.EXPORT_FRAME_DECORATIONS[key];
 		const decorationBounds = {
 			left: mbr.left + (decoration.offsetX ?? 0),
 			top: mbr.top + (decoration.offsetY ?? 0),

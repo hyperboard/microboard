@@ -3,6 +3,11 @@ import { assert } from "chai";
 import { Shape } from "./Shape";
 import { Point } from "../Point";
 import { Mbr } from "../Mbr";
+import { initBrowserSettings } from "Board/api/initBrowserSettings";
+
+beforeAll(() => {
+	initBrowserSettings();
+});
 
 describe("to diagram user of shapes", () => {
 	const board = new Board();

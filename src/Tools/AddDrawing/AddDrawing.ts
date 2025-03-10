@@ -3,31 +3,24 @@ import { Point } from "Board/Items";
 import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { BorderStyle } from "Board/Items/Path";
-import {
-	PEN_DEFAULT_COLOR,
-	PEN_SETTINGS_KEY,
-	PEN_RENDER_POINTER_CIRCLE,
-} from "Board/Settings";
-import {
-	PEN_POINTER_CIRCLE_COLOR,
-	PEN_STROKE_STYLE,
-	PEN_INITIAL_STROKE_WIDTH,
-} from "Board/Settings";
+import { SETTINGS } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 
 export class AddDrawing extends BoardTool {
 	drawing: Drawing | null = null;
 	isDown = false;
-	strokeWidth = PEN_INITIAL_STROKE_WIDTH;
-	strokeColor = PEN_DEFAULT_COLOR;
-	strokeStyle: BorderStyle = PEN_STROKE_STYLE;
+	strokeWidth = SETTINGS.PEN_INITIAL_STROKE_WIDTH;
+	strokeColor = SETTINGS.PEN_DEFAULT_COLOR;
+	strokeStyle: BorderStyle = SETTINGS.PEN_STROKE_STYLE;
 
 	constructor(private board: Board) {
 		super(board);
 		this.setCursor();
 
-		if (PEN_SETTINGS_KEY) {
-			const drawingSettings = localStorage.getItem(PEN_SETTINGS_KEY);
+		if (SETTINGS.PEN_SETTINGS_KEY) {
+			const drawingSettings = localStorage.getItem(
+				SETTINGS.PEN_SETTINGS_KEY,
+			);
 			if (drawingSettings) {
 				const { strokeWidth, strokeColor, strokeStyle } =
 					JSON.parse(drawingSettings);
@@ -40,7 +33,7 @@ export class AddDrawing extends BoardTool {
 
 	private updateSettings() {
 		localStorage.setItem(
-			PEN_SETTINGS_KEY,
+			SETTINGS.PEN_SETTINGS_KEY,
 			JSON.stringify({
 				strokeWidth: this.strokeWidth,
 				strokeColor: this.strokeColor,
@@ -77,7 +70,7 @@ export class AddDrawing extends BoardTool {
 		ctx.beginPath();
 		ctx.arc(point.x, point.y, this.strokeWidth / 2, 0, 2 * Math.PI, false);
 		ctx.lineWidth = 1;
-		ctx.strokeStyle = PEN_POINTER_CIRCLE_COLOR;
+		ctx.strokeStyle = SETTINGS.PEN_POINTER_CIRCLE_COLOR;
 		ctx.stroke();
 	}
 
@@ -170,7 +163,7 @@ export class AddDrawing extends BoardTool {
 	};
 
 	render(context: DrawingContext): void {
-		if (PEN_RENDER_POINTER_CIRCLE) {
+		if (SETTINGS.PEN_RENDER_POINTER_CIRCLE) {
 			this.renderPointerCircle(this.board.pointer.point, context);
 		}
 
