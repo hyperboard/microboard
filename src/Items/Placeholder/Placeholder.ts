@@ -291,8 +291,11 @@ export class Placeholder {
 	}
 
 	private loadIconImage(): void {
+		const blob = new Blob([PlaceholderImg], { type: "image/svg+xml" });
+		const url = URL.createObjectURL(blob);
+
 		this.iconImage = new Image();
-		this.iconImage.src = PlaceholderImg?.toString() || "";
+		this.iconImage.src = url;
 
 		this.iconImage.onload = () => {
 			this.subject.publish(this);
