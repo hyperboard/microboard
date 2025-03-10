@@ -1,4 +1,4 @@
-import { isNumberOdd } from "utils";
+import { isNumberOdd } from "Board/lib";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Geometry } from "../Geometry";
 import { Line } from "../Line";

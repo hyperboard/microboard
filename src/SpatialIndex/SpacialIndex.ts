@@ -2,7 +2,7 @@ import { Camera } from "Board/Camera";
 import { Connector, Frame, Item, ItemData, Mbr, Point } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Pointer } from "Board/Pointer";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
 import { LayeredIndex } from "./LayeredIndex";
 import { Drawing } from "Board/Items/Drawing";

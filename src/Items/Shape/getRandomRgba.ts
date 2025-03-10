@@ -1,4 +1,4 @@
-import { getRandomNumber } from "utils";
+import { getRandomNumber } from "Board/lib";
 
 export function getRandomRgba(
 	min: number,

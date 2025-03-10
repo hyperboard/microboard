@@ -32,7 +32,7 @@ import { ControlPointData } from "./Items/Connector/ControlPoint";
 // import { Group } from "./Items/Group";
 import { AINode } from "Board/Items/AINode/AINode";
 import { getPublicUrl } from "Config";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { Comment } from "./Items/Comment";
 import { DrawingContext } from "./Items/DrawingContext";
 import { Group } from "./Items/Group";

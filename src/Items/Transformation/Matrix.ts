@@ -1,4 +1,4 @@
-import { toFiniteNumber } from "utils";
+import { toFiniteNumber } from "Board/lib";
 import { Point } from "..";
 
 export class Matrix {

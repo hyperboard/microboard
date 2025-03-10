@@ -1,5 +1,5 @@
 import { Matrix, Point } from "Board/Items";
-import { Subject } from "../../Subject";
+import { Subject } from "../../shared/Subject";
 import { Cursor, CursorName, CursorsMap } from "./Cursor";
 
 export const cursorsMap: CursorsMap = {};

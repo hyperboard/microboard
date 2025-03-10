@@ -1,5 +1,5 @@
 import { Events, Operation } from "Board/Events";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";

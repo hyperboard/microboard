@@ -12,7 +12,7 @@ import {
 import { BasicShapes } from "./Basic";
 import { ShapeType } from "./index";
 import { BorderStyle, BorderWidth, LinePatterns } from "../Path";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { RichText } from "../RichText";
 import { ShapeOperation } from "./ShapeOperation";
 import { DefaultShapeData, ShapeData } from "./ShapeData";

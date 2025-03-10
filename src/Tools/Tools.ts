@@ -1,7 +1,7 @@
 import { Board } from "Board";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { isIframe } from "lib/isIframe";
-import { Subject } from "Subject";
+import { isIframe } from "shared/lib/isIframe";
+import { Subject } from "shared/Subject";
 import { AddConnector } from "./AddConnector";
 import { AddDrawing, AddHighlighter } from "./AddDrawing";
 import { AddFrame } from "./AddFrame";

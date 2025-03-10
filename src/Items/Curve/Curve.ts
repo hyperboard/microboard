@@ -1,5 +1,5 @@
 import { Bezier, Projection } from "bezier-js";
-import { toFiniteNumber } from "utils";
+import { toFiniteNumber } from "Board/lib";
 import { Mbr } from "../Mbr";
 import { Line } from "../Line";
 import { Point } from "../Point";

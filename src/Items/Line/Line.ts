@@ -1,4 +1,4 @@
-import { forceNumberIntoInterval } from "utils";
+import { forceNumberIntoInterval } from "Board/lib";
 import { Point } from "../Point";
 import { Mbr } from "../Mbr";
 import { Matrix } from "../Transformation";

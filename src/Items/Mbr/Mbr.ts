@@ -1,4 +1,4 @@
-import { forceNumberIntoInterval, toFiniteNumber } from "utils";
+import { forceNumberIntoInterval, toFiniteNumber } from "Board/lib";
 import { Point } from "../Point";
 import { Line } from "../Line";
 import { Matrix } from "../Transformation";

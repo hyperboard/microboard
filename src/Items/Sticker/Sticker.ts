@@ -1,5 +1,5 @@
 import { Operation } from "Board/Events";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import {
 	Line,
 	Matrix,

@@ -1,4 +1,4 @@
-import { SubjectOperation } from "SubjectOperation";
+import { SubjectOperation } from "shared/SubjectOperation";
 import { Events, Operation } from "../../Events";
 import { Point } from "../Point";
 import { Matrix } from "./Matrix";

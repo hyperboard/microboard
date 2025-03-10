@@ -2,7 +2,7 @@ import { type App } from "App";
 import { type Board } from "Board";
 import { Mbr } from "Board/Items";
 import { useAppSubscription } from "Board/useBoardSubscription";
-import { useForceUpdate } from "lib/useForceUpdate";
+import { useForceUpdate } from "shared/lib/useForceUpdate";
 import { useEffect, useState, type RefObject, useRef } from "react";
 import { updateRects } from "./updateRects";
 import type { SubjectName } from "App/getSubscriptions";

@@ -9,7 +9,7 @@ import { Line } from "Board/Items/Line/Line";
 import { Path } from "Board/Items/Path/Path";
 import { Paths } from "Board/Items/Path/Paths";
 import { LinkTo } from "Board/Items/LinkTo/LinkTo";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { AINodeData, createNodePath } from "Board/Items/AINode/AINodeData";
 import { Operation } from "Board/Events/EventsOperations";
 import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";

@@ -1,6 +1,6 @@
 import { RichText } from "Board/Items";
 import { t } from "i18next";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { Board } from "../../Board";
 import { Events, Operation } from "../../Events";
 import { CubicBezier } from "../Curve";

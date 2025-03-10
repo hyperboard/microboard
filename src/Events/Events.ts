@@ -17,7 +17,7 @@ import {
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { Command, createCommand } from "./Command";
 import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
@@ -29,13 +29,13 @@ import {
 	PresenceEventType,
 	UserJoinMsg,
 } from "Board/Presence/Events";
-import i18n from "Lang";
+import i18n from "shared/Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
 import { t } from "i18next";
 import { ImageItem } from "Board/Items/Image";
 import { Connector } from "Board/Items";
 import { getControlPointData } from "Board/Selection/QuickAddButtons";
-import { isTemplateView } from "lib/queryStringParser";
+import { isTemplateView } from "shared/lib/queryStringParser";
 
 export interface BoardEvent {
 	order: number;

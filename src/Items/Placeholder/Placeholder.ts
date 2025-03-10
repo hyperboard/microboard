@@ -2,7 +2,7 @@ import { Events, Operation } from "Board/Events";
 import { DrawingContext } from "../DrawingContext";
 import { Shapes } from "../Shape";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { GeometricNormal } from "../GeometricNormal";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";

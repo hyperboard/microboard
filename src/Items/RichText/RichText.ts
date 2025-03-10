@@ -19,7 +19,7 @@ import {
 } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import {
 	ItemType,
 	Matrix,

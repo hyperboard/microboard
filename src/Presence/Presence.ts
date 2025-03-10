@@ -4,9 +4,8 @@ import { Events } from "Board/Events";
 import { Item, Matrix, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "Board/Selection/Selection";
-import i18n from "Lang";
-import { Subject } from "Subject";
-import { throttleWithDebounce } from "shared/utils";
+import i18n from "shared/Lang";
+import { Subject } from "shared/Subject";
 import {
 	BringToMeEvent,
 	CameraEvent,
@@ -24,6 +23,7 @@ import {
 } from "./Events";
 import { PRESENCE_COLORS } from "./consts";
 import { catmullRomInterpolate, rgbToRgba } from "./helpers";
+import { throttleWithDebounce } from "shared/lib/throttle";
 
 const SECOND = 1000;
 const CURSOR_FPS = 3;

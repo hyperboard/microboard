@@ -1,9 +1,10 @@
+import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
 import { t } from "i18next";
-import { findCommonStrings } from "lib/findCommonStrings";
 import markdown from "remark-parse";
 import slate from "remark-slate";
 import {
 	BaseEditor,
+	BaseRange,
 	BaseSelection,
 	createEditor,
 	Descendant,
@@ -14,13 +15,10 @@ import {
 	Range,
 	Operation as SlateOp,
 	Transforms,
-	Path,
-	Point,
-	BaseRange,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { unified } from "unified";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import {
@@ -30,7 +28,7 @@ import {
 	ListTypes,
 	ParagraphNode,
 } from "./Editor/BlockNode";
-import { LinkNode, TextNode, TextStyle } from "./Editor/TextNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./isTextEmpty";
 import { DEFAULT_TEXT_STYLES, DefaultTextStyles } from "./RichText";
 import {
@@ -39,7 +37,7 @@ import {
 	SelectionOp,
 	WholeTextOp,
 } from "./RichTextOperations";
-import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
+import { findCommonStrings } from "./utils";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 

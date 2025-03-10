@@ -1,5 +1,5 @@
 import React from "react";
-import { useAppContext } from "View/AppContext";
+import { useAppContext } from "features/AppContext";
 
 const QuickAddButtonsClear: React.FC<{ children?: React.ReactNode }> = ({
 	children,

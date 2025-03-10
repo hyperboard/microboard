@@ -1,4 +1,4 @@
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
 import { TransformationData } from "../Transformation/TransformationData";
 import { GroupOperation } from "./GroupOperation";

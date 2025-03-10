@@ -1,6 +1,6 @@
 import { isMacos } from "App/isMacos";
 import type { SelectionContext } from "Board/Selection/Selection";
-import hotkeys from "View/hotkeys.json"; // Smell View from Board
+import hotkeys from "features/hotkeys.json"; // Smell View from Board
 import type { Hotkey, HotkeyCb, HotkeyConfig, HotkeyName } from "./types";
 
 type HotkeyStatus =

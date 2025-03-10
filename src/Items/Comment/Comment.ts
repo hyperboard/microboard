@@ -1,4 +1,4 @@
-import { Subject } from "../../../Subject";
+import { Subject } from "../../../shared/Subject";
 import { Events, Operation } from "../../Events";
 import { Point } from "../Point";
 import { Transformation, TransformationData } from "../Transformation";

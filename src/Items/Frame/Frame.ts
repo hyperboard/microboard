@@ -10,7 +10,7 @@ import {
 	Matrix,
 } from "..";
 import { Geometry } from "../Geometry";
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Events, Operation } from "Board/Events";
 import { FrameOperation } from "./FrameOperation";

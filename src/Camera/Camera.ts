@@ -1,8 +1,8 @@
 import { Item, Matrix, Mbr, Point } from "Board/Items";
 import { Pointer } from "Board/Pointer";
-import { Subject } from "Subject";
-import { toFiniteNumber } from "utils";
-import { throttle } from "shared/utils/throttle";
+import { Subject } from "shared/Subject";
+import { toFiniteNumber } from "Board/lib";
+import { throttle } from "shared/lib/throttle";
 
 export class Camera {
 	subject = new Subject<Camera>();

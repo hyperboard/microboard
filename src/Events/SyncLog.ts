@@ -1,4 +1,4 @@
-import { Subject } from "Subject";
+import { Subject } from "shared/Subject";
 import { HistoryRecord } from "./EventsLog";
 
 export interface SyncLogMsg {
