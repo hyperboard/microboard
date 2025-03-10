@@ -6,7 +6,7 @@ import { RichText } from "Board/Items/RichText/RichText";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Point } from "Board/Items/Point/Point";
 import { Line } from "Board/Items/Line/Line";
-import { Path } from "Board/Items/Path/Path";
+import { LinePatterns, Path } from "Board/Items/Path/Path";
 import { Paths } from "Board/Items/Path/Paths";
 import { LinkTo } from "Board/Items/LinkTo/LinkTo";
 import { Subject } from "shared/Subject";
@@ -21,13 +21,15 @@ import {
 } from "Board/HTMLRender/HTMLRender";
 import { Board } from "Board";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { Matrix } from "Board/Items/Transformation/Matrix";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
 export type ThreadDirection = 0 | 1 | 2 | 3;
 const arrowIcon = new Image();
-arrowIcon.src =
+const ICON_SRC =
 	"data:image/svg+xml;charset=utf-8,%3Csvg id='AIChatSendArrow' viewBox='0 0 21 21' xmlns='http://www.w3.org/2000/svg' fill='url(%23paint0_linear_7542_32550)'%3E%3Cpath d='M0.946815 7.31455C0.424815 7.14055 0.419815 6.85955 0.956815 6.68055L20.0438 0.318552C20.5728 0.142552 20.8758 0.438552 20.7278 0.956552L15.2738 20.0426C15.1238 20.5716 14.8188 20.5896 14.5948 20.0876L11.0008 11.9996L17.0008 3.99955L9.00081 9.99955L0.946815 7.31455Z'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_7542_32550' x1='10.66' y1='0.267578' x2='10.66' y2='20.452' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23CD4FF2'/%3E%3Cstop offset='1' stop-color='%235F4AFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E";
+arrowIcon.src = ICON_SRC;
 
 export class AINode implements Geometry {
 	readonly itemType = "AINode";
@@ -322,35 +324,6 @@ export class AINode implements Geometry {
 		return this.linkTo.link;
 	}
 
-	// renderShadow(context: DrawingContext): void {
-	// 	const mbr = this.getMbr();
-	// 	const { ctx } = context;
-	//
-	// 	ctx.save();
-	//
-	// 	ctx.shadowOffsetX = 0;
-	// 	ctx.shadowOffsetY =
-	// 		(18 - 5) *
-	// 		context.getCameraScale() *
-	// 		this.transformation.getScale().y;
-	// 	ctx.shadowColor = "rgba(20, 21, 26, 0.35)"; // Сделал тень темнее
-	// 	ctx.shadowBlur = 32; // Увеличил размытие
-	// 	ctx.fillStyle = "rgba(20, 21, 26, 0.35)";
-	// 	ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
-	//
-	// 	ctx.shadowOffsetX = 0;
-	// 	ctx.shadowOffsetY =
-	// 		(8 - 5) *
-	// 		context.getCameraScale() *
-	// 		this.transformation.getScale().y;
-	// 	ctx.shadowColor = "rgba(20, 21, 26, 0.2)";
-	// 	ctx.shadowBlur = 16;
-	// 	ctx.fillStyle = "rgba(20, 21, 26, 0.2)";
-	// 	ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
-	//
-	// 	ctx.restore();
-	// }
-
 	renderButton(context: DrawingContext): void {
 		const { left, right, top, bottom } = this.buttonMbr;
 		const { ctx } = context;
@@ -385,18 +358,49 @@ export class AINode implements Geometry {
 		const height = mbr.getHeight();
 		const unscaledWidth = width;
 		const unscaledHeight = height;
-		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px)`;
+
+		const svg = documentFactory.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"svg",
+		);
+		svg.setAttribute("width", `${unscaledWidth}px`);
+		svg.setAttribute("height", `${unscaledHeight}px`);
+		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute("transform-origin", "0 0");
+		svg.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
+		svg.setAttribute("style", "position: absolute; overflow: visible;");
+
+		const pathElement = createNodePath(
+			this.getMbr(),
+			new Matrix(0, 0, scaleX, scaleY),
+		)
+			.copy()
+			.renderHTML(documentFactory);
+		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
+		paths.forEach(element => {
+			element.setAttribute("fill", "rgb(255, 255, 255)");
+			element.setAttribute("stroke", "rgba(222, 224, 227, 1)");
+			element.setAttribute(
+				"stroke-dasharray",
+				LinePatterns["solid"].join(", "),
+			);
+			element.setAttribute("stroke-width", "1");
+			element.setAttribute("transform-origin", "0 0");
+			element.setAttribute(
+				"transform",
+				`scale(${1 / scaleX}, ${1 / scaleY})`,
+			);
+		});
+		svg.append(...paths);
+		div.appendChild(svg);
 
 		div.id = this.getId();
-		div.style.backgroundColor = "rgb(255, 255, 255)";
-		div.style.border = "1px solid rgba(222, 224, 227, 1)";
 		div.style.width = `${unscaledWidth}px`;
 		div.style.height = `${unscaledHeight}px`;
 		div.style.transformOrigin = "top left";
 		div.style.transform = transform;
 		div.style.position = "absolute";
-		div.style.boxShadow =
-			"0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)";
 		if (this.parentNodeId) {
 			div.setAttribute("parent-node-id", this.parentNodeId);
 		}
@@ -408,26 +412,45 @@ export class AINode implements Geometry {
 		}
 		div.setAttribute("context-range", this.contextRange.toString());
 
+		const button = documentFactory.createElement("button");
+		button.style.position = "absolute";
+		button.style.cursor = "pointer";
+		const img = documentFactory.createElement("img");
+		img.setAttribute("src", ICON_SRC);
+		img.setAttribute("alt", "#");
+		img.setAttribute("width", `${BUTTON_SIZE}px`);
+		img.setAttribute("height", `${BUTTON_SIZE}px`);
+		button.setAttribute("width", `${BUTTON_SIZE}px`);
+		button.setAttribute("height", `${BUTTON_SIZE}px`);
+		button.appendChild(img);
+		translateElementBy(
+			button,
+			width - BUTTON_SIZE * scaleX * 2,
+			height - BUTTON_SIZE * scaleY * 2,
+		);
+		scaleElementBy(button, scaleX, scaleY);
+		div.appendChild(button);
+
 		const textElement = this.text.renderHTML(documentFactory);
 		textElement.id = `${this.getId()}_text`;
-		textElement.style.maxWidth = `${width}px`;
+		const maxWidth = this.text.getMaxWidth();
+		if (maxWidth) {
+			textElement.style.width = `${maxWidth}px`;
+		} else {
+			textElement.style.width = "600px";
+		}
+		textElement.style.removeProperty("height");
 		textElement.style.overflow = "auto";
 		positionRelatively(textElement, div);
-		resetElementScale(textElement);
-		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
-		const [dx, dy] = [
-			(width - parseInt(textElement.style.width)) / scaleX / 2 - 1,
-			(height - parseInt(textElement.style.height)) / scaleY / 2 - 1,
-		];
-		translateElementBy(textElement, dx, dy);
+		translateElementBy(textElement, 20 * scaleX, 20 * scaleY);
 
 		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
-			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
+			resetElementScale(linkElement);
 			translateElementBy(
 				linkElement,
-				(width - parseInt(linkElement.style.width)) / scaleX,
+				width - parseInt(linkElement.style.width),
 				0,
 			);
 			div.appendChild(linkElement);

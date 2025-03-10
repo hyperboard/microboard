@@ -1012,7 +1012,6 @@ export class RichText extends Mbr implements Geometry {
 		enablePlaceholder = true,
 	): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
-			// Обработка текстовых нод
 			if (Text.isText(node)) {
 				const text =
 					node.text.trim() !== ""
@@ -1060,7 +1059,6 @@ export class RichText extends Mbr implements Geometry {
 				return textElement;
 			}
 
-			// Обработка элементов
 			if (Element.isElement(node)) {
 				const children = node.children.map(renderNode);
 				const applyCommonStyles = (el: HTMLElement) => {
@@ -1079,7 +1077,7 @@ export class RichText extends Mbr implements Geometry {
 					case "heading_three":
 					case "heading_four":
 					case "heading_five": {
-						const level = node.type.split("_")[2];
+						const level = node.type.split("_")[1];
 						const header = document.createElement(`h${level}`);
 						applyCommonStyles(header);
 						header.append(...children);
