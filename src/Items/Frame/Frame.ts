@@ -111,8 +111,9 @@ export class Frame implements Geometry {
 		this.addChild(childrenIds);
 	}
 
-	emitRemoveChild(children: Item[]): void {
-		const childrenIds = children.map(child => {
+	emitRemoveChild(children: Item[] | Item): void {
+		const newChildren = Array.isArray(children) ? children : [children];
+		const childrenIds = newChildren.map(child => {
 			child.parent = "Board";
 			return child.getId();
 		});
@@ -148,8 +149,9 @@ export class Frame implements Geometry {
 		});
 	}
 
-	applyAddChild(childId: string[], noWarn = false): void {
-		childId.forEach(child => {
+	applyAddChild(childId: string[] | string, noWarn = false): void {
+		const children = Array.isArray(childId) ? childId : [childId];
+		children.forEach(child => {
 			if (
 				this.parent !== child &&
 				// && child.itemType !== "Frame"
