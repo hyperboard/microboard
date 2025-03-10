@@ -26,14 +26,14 @@ interface AddChild {
 	class: "Frame";
 	method: "addChild";
 	item: string[];
-	childId: string;
+	childId: string[];
 }
 
 interface RemoveChild {
 	class: "Frame";
 	method: "removeChild";
 	item: string[];
-	childId: string;
+	childId: string[];
 }
 
 export type FrameOperation =

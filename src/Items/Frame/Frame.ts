@@ -12,7 +12,7 @@ import {
 import { Geometry } from "../Geometry";
 import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
-import { Events, Operation } from "Board/Events";
+import { Operation } from "Board/Events";
 import { FrameOperation } from "./FrameOperation";
 import { Frames, FrameType } from "./Basic";
 import { GeometricNormal } from "../GeometricNormal";
@@ -28,12 +28,7 @@ import {
 	SnapshotInfo,
 } from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
 import { LinkTo } from "../LinkTo/LinkTo";
-import {
-	positionRelatively,
-	resetElementScale,
-	scaleElementBy,
-	translateElementBy,
-} from "Board/HTMLRender";
+import { translateElementBy } from "Board/HTMLRender";
 import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
@@ -108,24 +103,35 @@ export class Frame implements Geometry {
 	}
 
 	/** Sets parent of child and emits add child message */
-	emitAddChild(child: Item): void {
-		this.addChild(child.getId());
-		child.parent = this.getId();
+	emitAddChild(children: Item[]): void {
+		const childrenIds = children.map(child => {
+			child.parent = this.getId();
+			return child.getId();
+		});
+		this.addChild(childrenIds);
 	}
 
-	emitRemoveChild(child: Item): void {
-		this.removeChild(child.getId());
-		child.parent = "Board";
+	emitRemoveChild(children: Item[]): void {
+		const childrenIds = children.map(child => {
+			child.parent = "Board";
+			return child.getId();
+		});
+		this.removeChild(childrenIds);
 	}
 
-	emitNesting(child: Item): boolean {
-		if (this.handleNesting(child)) {
-			this.emitAddChild(child);
-			return true;
-		} else {
-			this.emitRemoveChild(child);
-			return false;
-		}
+	emitNesting(children: Item[]): void {
+		const itemsToAdd: Item[] = [];
+		const itemsToRemove: Item[] = [];
+
+		children.forEach(child => {
+			if (this.handleNesting(child)) {
+				itemsToAdd.push(child);
+			} else {
+				itemsToRemove.push(child);
+			}
+		});
+		this.emitAddChild(itemsToAdd);
+		this.emitRemoveChild(itemsToRemove);
 	}
 
 	/**
@@ -133,7 +139,7 @@ export class Frame implements Geometry {
 	 * Child cant be itself,
 	 * frame cant be child
 	 */
-	private addChild(childId: string): void {
+	private addChild(childId: string[]): void {
 		this.emit({
 			class: "Frame",
 			method: "addChild",
@@ -142,32 +148,34 @@ export class Frame implements Geometry {
 		});
 	}
 
-	applyAddChild(childId: string, noWarn = false): void {
-		if (
-			this.parent !== childId &&
-			// && child.itemType !== "Frame"
-			this.getId() !== childId
-		) {
-			const foundItem = this.getItemById(childId);
-			if (!this.children.includes(childId) && foundItem) {
-				this.children.push(childId);
-				foundItem.parent = this.getId();
-				this.updateMbr();
-				this.subject.publish(this);
-			} else if (!foundItem && !noWarn) {
-				console.warn(`Could not find child with id ${childId}`);
+	applyAddChild(childId: string[], noWarn = false): void {
+		childId.forEach(child => {
+			if (
+				this.parent !== child &&
+				// && child.itemType !== "Frame"
+				this.getId() !== child
+			) {
+				const foundItem = this.getItemById(child);
+				if (!this.children.includes(child) && foundItem) {
+					this.children.push(child);
+					foundItem.parent = this.getId();
+					this.updateMbr();
+					this.subject.publish(this);
+				} else if (!foundItem && !noWarn) {
+					console.warn(`Could not find child with id ${childId}`);
+				}
 			}
-		}
+		});
 	}
 
-	private applyRemoveChild(childId: string): void {
+	private applyRemoveChild(childId: string[]): void {
 		this.children = this.children.filter(
-			currChild => currChild !== childId,
+			currChild => !childId.includes(currChild),
 		);
 		this.subject.publish(this);
 	}
 
-	private removeChild(childId: string): void {
+	private removeChild(childId: string[]): void {
 		this.emit({
 			class: "Frame",
 			method: "removeChild",
@@ -404,9 +412,7 @@ export class Frame implements Geometry {
 			this.transformPath();
 		}
 		if (data.children) {
-			data.children.forEach(child => {
-				this.applyAddChild(child, true);
-			});
+			this.applyAddChild(data.children, true);
 		}
 		if (data.text) {
 			this.text.deserialize(data.text);
@@ -581,10 +587,10 @@ export class Frame implements Geometry {
 				const child = this.board?.items.getById(childId);
 				if (child) {
 					if (this.handleNesting(child)) {
-						this.applyAddChild(child.getId());
+						this.applyAddChild([child.getId()]);
 						child.parent = this.getId();
 					} else {
-						this.applyRemoveChild(child.getId());
+						this.applyRemoveChild([child.getId()]);
 						child.parent = "Board";
 					}
 					// this.handleNesting(child);
@@ -601,7 +607,7 @@ export class Frame implements Geometry {
 				.forEach(item => {
 					if (item.parent === "Board") {
 						if (this.handleNesting(item)) {
-							this.applyAddChild(item.getId());
+							this.applyAddChild([item.getId()]);
 							item.parent = this.getId();
 						}
 					}

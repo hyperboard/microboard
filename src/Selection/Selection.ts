@@ -788,13 +788,13 @@ export class Selection {
 					);
 
 					if (isParentFrame && isRemoveChildFromFrame) {
-						parentFrame.emitRemoveChild(val.item);
+						parentFrame.emitRemoveChild([val.item]);
 					}
 
-					val.nested.emitAddChild(val.item);
+					val.nested.emitAddChild([val.item]);
 				} else if (val.item.parent !== "Board") {
 					if (isParentFrame) {
-						parentFrame.emitRemoveChild(val.item);
+						parentFrame.emitRemoveChild([val.item]);
 					} else {
 						console.warn(
 							`Didnt find frame with id ${val.item.parent}`,
@@ -832,7 +832,8 @@ export class Selection {
 							return true;
 						},
 					);
-					toCheck.forEach(child => currFrame.emitNesting(child));
+					// toCheck.forEach(child => currFrame.emitNesting(child));
+					currFrame.emitNesting(toCheck);
 				}
 			});
 		}

@@ -315,6 +315,8 @@ export class Board {
 	 */
 	handleNesting(items: Item | Item[]): void {
 		const arrayed = Array.isArray(items) ? items : [items];
+		const framesMap = new Map<Frame, Item[]>();
+
 		arrayed.forEach(item => {
 			const itemCenter = item.getMbr().getCenter();
 			const frame = this.items
@@ -330,9 +332,17 @@ export class Board {
 					}
 					return acc;
 				}, undefined);
+
 			if (frame) {
-				frame.emitAddChild(item);
+				if (!framesMap.has(frame)) {
+					framesMap.set(frame, []);
+				}
+				framesMap.get(frame)?.push(item);
 			}
+		});
+
+		framesMap.forEach((items, frame) => {
+			frame.emitAddChild(items);
 		});
 	}
 
@@ -805,7 +815,7 @@ export class Board {
 		}
 		for (const key in createdFrames) {
 			const { item, itemData } = createdFrames[key];
-			itemData.children.forEach(childId => item.applyAddChild(childId));
+			item.applyAddChild(itemData.children);
 		}
 
 		this.events?.deserialize(events);

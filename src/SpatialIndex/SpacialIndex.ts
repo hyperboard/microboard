@@ -76,12 +76,12 @@ export class SpatialIndex {
 
 	remove(item: Item): void {
 		if (item instanceof Frame) {
-			item.getChildrenIds()
+			const newItems = item
+				.getChildrenIds()
 				.map(childId => this.getById(childId))
-				.filter(child => child !== undefined)
-				.forEach(child => {
-					item.emitRemoveChild(child);
-				});
+				.filter(child => child !== undefined);
+
+			item.emitRemoveChild(newItems);
 		}
 		if (item.parent !== "Board") {
 			const parentFrame = this.items.getById(item.parent) as
