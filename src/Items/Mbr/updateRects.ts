@@ -97,6 +97,7 @@ export function updateRects(
 			const panelRect = fitHyperLink(
 				selectionMbr.getTransformed(camera.getMatrix()),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
+				camera.window.getMbr(),
 				verticalOffset,
 			);
 			return panelRect;
@@ -315,18 +316,35 @@ export function fitLinkToBtn(
 export function fitHyperLink(
 	linkMbr: Mbr,
 	panel: Mbr,
-	verticalOffset = 0,
+	view: Mbr,
+	offset = 20,
 ): Mbr {
 	const panelHeight = panel.getHeight();
 	const newPanel = new Mbr();
 
-	newPanel.top = linkMbr.bottom - verticalOffset;
+	newPanel.top = linkMbr.bottom;
 	newPanel.bottom = panelHeight + newPanel.top;
 
 	const panelWidth = panel.getWidth();
 
 	newPanel.left = linkMbr.left;
 	newPanel.right = newPanel.left + panelWidth;
+
+	if (newPanel.right >= view.right - offset) {
+		newPanel.right = view.right - offset;
+		newPanel.left = newPanel.right - panelWidth;
+	} else if (newPanel.left <= view.left + offset) {
+		newPanel.left = view.left + offset;
+		newPanel.right = newPanel.left + panelWidth;
+	}
+
+	if (newPanel.bottom >= view.bottom - offset) {
+		newPanel.bottom = view.bottom - offset;
+		newPanel.top = newPanel.bottom - panelHeight;
+	} else if (newPanel.top <= view.top + offset) {
+		newPanel.top = view.top + offset;
+		newPanel.bottom = newPanel.top + panelHeight;
+	}
 
 	return newPanel;
 }
