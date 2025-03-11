@@ -124,6 +124,8 @@ export interface Settings {
 
 	// Canvas background
 	CANVAS_BG_COLOR: string;
+
+	URL_REGEX: RegExp;
 }
 
 /**
@@ -336,6 +338,7 @@ export const SETTINGS: Settings = {
 		{ value: "zh", label: "Chinese" },
 	],
 	CANVAS_BG_COLOR: "#f6f6f6",
+	URL_REGEX: /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i,
 };
 
 export interface ExportSnapshotSelection {

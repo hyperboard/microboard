@@ -241,9 +241,14 @@ export class RichText extends Mbr implements Geometry {
 	getHyperLinkByPointerCoordinates(point: Point) {
 		for (const link of this.layoutNodes.linkPositions) {
 			const { link: hyperLink, left, right, bottom, top } = link;
-			const linkMbr = new Mbr(left, top, right, bottom).getTransformed(
-				this.transformation.matrix,
-			);
+			const mbr = new Mbr(left, top, right, bottom);
+			if (this.insideOf === "AINode") {
+				mbr.left += 20;
+				mbr.top += 20;
+				mbr.right += 20;
+				mbr.bottom += 20;
+			}
+			const linkMbr = mbr.getTransformed(this.transformation.matrix);
 			if (linkMbr.isUnderPoint(point)) {
 				return { hyperLink, linkMbr };
 			}
@@ -1078,7 +1083,16 @@ export class RichText extends Mbr implements Geometry {
 					case "heading_four":
 					case "heading_five": {
 						const level = node.type.split("_")[1];
-						const header = document.createElement(`h${level}`);
+						const levels = {
+							one: 1,
+							two: 2,
+							three: 3,
+							four: 4,
+							five: 5,
+						} as const;
+						const header = document.createElement(
+							`h${levels[level]}`,
+						);
 						applyCommonStyles(header);
 						header.append(...children);
 						return header;

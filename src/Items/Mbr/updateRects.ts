@@ -330,21 +330,21 @@ export function fitHyperLink(
 	newPanel.left = linkMbr.left;
 	newPanel.right = newPanel.left + panelWidth;
 
-	if (newPanel.right >= view.right - offset) {
-		newPanel.right = view.right - offset;
-		newPanel.left = newPanel.right - panelWidth;
-	} else if (newPanel.left <= view.left + offset) {
-		newPanel.left = view.left + offset;
-		newPanel.right = newPanel.left + panelWidth;
-	}
-
-	if (newPanel.bottom >= view.bottom - offset) {
-		newPanel.bottom = view.bottom - offset;
-		newPanel.top = newPanel.bottom - panelHeight;
-	} else if (newPanel.top <= view.top + offset) {
-		newPanel.top = view.top + offset;
-		newPanel.bottom = newPanel.top + panelHeight;
-	}
+	// if (newPanel.right >= view.right - offset) {
+	// 	newPanel.right = view.right - offset;
+	// 	newPanel.left = newPanel.right - panelWidth;
+	// } else if (newPanel.left <= view.left + offset) {
+	// 	newPanel.left = view.left + offset;
+	// 	newPanel.right = newPanel.left + panelWidth;
+	// }
+	//
+	// if (newPanel.bottom >= view.bottom - offset) {
+	// 	newPanel.bottom = view.bottom - offset;
+	// 	newPanel.top = newPanel.bottom - panelHeight;
+	// } else if (newPanel.top <= view.top + offset) {
+	// 	newPanel.top = view.top + offset;
+	// 	newPanel.bottom = newPanel.top + panelHeight;
+	// }
 
 	return newPanel;
 }

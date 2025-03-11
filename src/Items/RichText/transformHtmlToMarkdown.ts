@@ -8,6 +8,7 @@ import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
 import { TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { DEFAULT_TEXT_STYLES } from "./RichText";
+import { SETTINGS } from "Board/Settings";
 
 export const transformHtmlOrTextToMarkdown = async (
 	text: string,
@@ -25,8 +26,7 @@ export const transformHtmlOrTextToMarkdown = async (
 
 	let slateNodes: BlockNode[] | TextNode[] = [];
 
-	const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-	if (urlRegex.test(text)) {
+	if (SETTINGS.URL_REGEX.test(text)) {
 		slateNodes = [createLinkNode(text)];
 	} else {
 		slateNodes = await convertMarkdownToSlate(

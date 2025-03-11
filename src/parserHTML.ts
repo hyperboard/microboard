@@ -83,7 +83,6 @@ function parseHTMLRichText(
 	},
 ): RichTextData & { id: string } {
 	const parseNode = (node: HTMLElement): Descendant => {
-		// Обработка текстовых нод и ссылок
 		const isLinkNode = node.tagName.toLowerCase() === "a";
 		if (
 			node.tagName.toLowerCase() === "span" ||
