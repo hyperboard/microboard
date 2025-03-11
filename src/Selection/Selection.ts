@@ -1541,10 +1541,18 @@ export class Selection {
 		}
 
 		contextItems.forEach(item => {
-			const itemRect = item.getMbr();
-			itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
-			itemRect.strokeWidth = 2;
-			itemRect.render(context);
+			if (item.itemType === "AINode") {
+				const path = item.getPath();
+				path.setBorderColor(CONTEXT_NODE_HIGHLIGHT_COLOR);
+				path.setBorderWidth(2);
+				path.setBackgroundColor("none");
+				path.render(context);
+			} else {
+				const itemRect = item.getMbr();
+				itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
+				itemRect.strokeWidth = 2;
+				itemRect.render(context);
+			}
 		});
 	}
 }

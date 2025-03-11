@@ -126,6 +126,7 @@ export interface Settings {
 	CANVAS_BG_COLOR: string;
 
 	URL_REGEX: RegExp;
+	AI_NODE_DEFAULT_NODE_WIDTH: number;
 }
 
 /**
@@ -339,6 +340,7 @@ export const SETTINGS: Settings = {
 	],
 	CANVAS_BG_COLOR: "#f6f6f6",
 	URL_REGEX: /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i,
+	AI_NODE_DEFAULT_NODE_WIDTH: 640,
 };
 
 export interface ExportSnapshotSelection {

@@ -157,7 +157,12 @@ export function quickAddItem(
 	connector.setEndPoint(newEndPoint);
 	board.selection.removeAll();
 	board.selection.add(added);
-	board.selection.setContext("EditUnderPointer");
+
+	if (added.itemType === "RichText" || added.itemType === "AINode") {
+		board.selection.editText();
+	} else {
+		board.selection.setContext("EditUnderPointer");
+	}
 }
 
 export function createAINode(
