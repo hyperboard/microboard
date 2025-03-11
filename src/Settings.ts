@@ -50,6 +50,7 @@ export interface Settings {
 	// Factories
 	path2DFactory: typeof Path2DFactory;
 	documentFactory: DocumentFactory;
+	measureCtx: CanvasRenderingContext2D;
 
 	// Selection settings
 	SELECTION_COLOR: string;
@@ -137,6 +138,7 @@ export interface Settings {
 export const SETTINGS: Settings = {
 	path2DFactory: undefined as unknown as typeof Path2DFactory,
 	documentFactory: undefined as unknown as DocumentFactory,
+	measureCtx: undefined as unknown as CanvasRenderingContext2D,
 
 	SELECTION_COLOR: "rgb(71, 120, 245)",
 	SELECTION_LOCKED_COLOR: "#0B0C0E",

@@ -748,17 +748,6 @@ function getTextBlock({
 	return textBlock;
 }
 
-function getMeasureCtx(): Ctx {
-	const measureCanvas = document.createElement("canvas");
-	const measureCtx = measureCanvas.getContext("2d");
-	if (!measureCtx) {
-		throw new Error("Failde to create canvas and get 2d context");
-	}
-	return measureCtx;
-}
-
-const measureCtx = getMeasureCtx();
-
 const measureCache: Record<string, Record<string, MeasuredRect>> = {};
 
 function isFiniteNumber(value: unknown): value is number {
@@ -795,8 +784,8 @@ function measureText(
 			rect.height += paddingTop;
 		}
 	}
-	measureCtx.font = style.font;
-	const measure = measureCtx.measureText(text);
+	SETTINGS.measureCtx.font = style.font;
+	const measure = SETTINGS.measureCtx.measureText(text);
 	const actualBoundingBoxAscent = toFiniteNumber(
 		measure.actualBoundingBoxAscent,
 	);

@@ -2,6 +2,7 @@ import { Settings, SETTINGS } from "Board/Settings";
 import { BrowserDocumentFactory } from "./BrowserDocumentFactory";
 import { BrowserPath2D } from "./BrowserPath2DFactory";
 import { initPaths } from "./initPaths";
+import { getMeasureCtx } from "./getMeasureCtx";
 
 // export dummy to prevent tree shake
 export function initBrowserSettings(): Settings {
