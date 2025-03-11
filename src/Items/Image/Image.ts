@@ -371,4 +371,12 @@ export class ImageItem extends Mbr {
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
 	}
+
+	download() {
+		const linkElem = document.createElement("a");
+
+		linkElem.href = this.storageLink;
+		linkElem.setAttribute("download", "");
+		linkElem.click();
+	}
 }
