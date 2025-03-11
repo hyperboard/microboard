@@ -61,6 +61,7 @@ export class Board {
 	private drawingContext: DrawingContext | null = null;
 	private interfaceType: InterfaceType = "loading";
 	readonly subject = new Subject<void>();
+	private name: string | undefined;
 
 	resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {
@@ -667,6 +668,7 @@ export class Board {
 		const customTagsScript = await script.text();
 		const loadLinksImagesScript = await loadLinksImages.text();
 		const css = await builtCSS.text();
+		const boardName = this.getName() || this.getBoardId();
 
 		// div with id="items" and last-event-order are necessary for successfull uploading to storage
 		const items = this.items.getWholeHTML(SETTINGS.documentFactory);
@@ -676,7 +678,8 @@ export class Board {
 		<head>
 			<meta charset="utf-8" />
 			<meta name="last-event-order" content="${this.events?.getLastOrder()}" />
-			<title>Microboard ${this.getBoardId()}</title>
+			<meta name="board-name" content="${boardName}" />
+			<title>Microboard ${boardName}</title>
 			<link rel="preconnect" href="https://fonts.googleapis.com">
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 			<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
@@ -1451,6 +1454,14 @@ export class Board {
 
 	getInterfaceType() {
 		return this.interfaceType;
+	}
+
+	setName(name: string | undefined): void {
+		this.name = name;
+	}
+
+	getName() {
+		return this.name;
 	}
 }
 

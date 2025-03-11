@@ -204,6 +204,7 @@ export class ExportSnapshot extends Tool {
 			bgColor: SETTINGS.CANVAS_BG_COLOR,
 			selection: this.mbr,
 			upscaleTo: 4000,
+			nameToExport: this.board.getName(),
 		});
 		this.board.selection.on();
 		return res;
