@@ -43,6 +43,7 @@ export class Transformer extends Tool {
 	canvasDrawer: CanvasDrawer;
 	debounceUpd = createDebounceUpdater();
 	isShiftPressed = false;
+	onPointerUpCb: null | (() => void) = null;
 	private alignmentHelper: AlignmentHelper;
 	private snapLines: { verticalLines: Line[]; horizontalLines: Line[] } = {
 		verticalLines: [],
@@ -139,6 +140,11 @@ export class Transformer extends Tool {
 		const isLockedItems = this.selection.getIsLockedSelection();
 		if (isLockedItems) {
 			return false;
+		}
+
+		if (this.onPointerUpCb) {
+			this.onPointerUpCb();
+			this.onPointerUpCb = null;
 		}
 
 		if (
@@ -303,6 +309,11 @@ export class Transformer extends Tool {
 				}
 			}
 		} else if (single instanceof RichText) {
+			const isLongText = single.getTextString().length > 5000;
+			if ((isLongText && !isWidth) || !this.mbr) {
+				return false;
+			}
+
 			const { matrix, mbr: resizedMbr } = getProportionalResize(
 				this.resizeType,
 				this.board.pointer.point,
@@ -311,12 +322,49 @@ export class Transformer extends Tool {
 			);
 
 			if (isWidth) {
-				single.editor.setMaxWidth(
-					resizedMbr.getWidth() / single.getScale(),
-				);
-				single.transformation.translateBy(matrix.translateX, 0);
-				matrix.translateY = 0;
-				matrix.scaleY = 1;
+				if (isLongText) {
+					const isLeft = this.resizeType === "left";
+					if (this.board.selection.shouldRenderItemsMbr) {
+						this.board.selection.shouldRenderItemsMbr = false;
+					}
+					if (this.board.pointer.getCursor() !== "w-resize") {
+						this.board.pointer.setCursor("w-resize");
+					}
+					if (isLeft) {
+						if (
+							this.board.pointer.point.x >=
+							this.mbr.right - 100
+						) {
+							return false;
+						}
+						this.mbr.left = this.board.pointer.point.x;
+					} else {
+						if (this.board.pointer.point.x <= this.mbr.left + 100) {
+							return false;
+						}
+						this.mbr.right = this.board.pointer.point.x;
+					}
+					const newWidth = this.mbr.getWidth();
+					this.onPointerUpCb = () => {
+						this.board.pointer.setCursor("default");
+						this.board.selection.shouldRenderItemsMbr = true;
+						if (isLeft) {
+							single.transformation.translateBy(
+								single.getWidth() - newWidth,
+								0,
+							);
+						}
+						single.editor.setMaxWidth(newWidth);
+					};
+					return true;
+				} else {
+					single.editor.setMaxWidth(
+						resizedMbr.getWidth() / single.getScale(),
+					);
+					single.transformation.translateBy(matrix.translateX, 0);
+					matrix.translateY = 0;
+					matrix.scaleY = 1;
+				}
 			} else {
 				single.transformation.scaleByTranslateBy(
 					{ x: matrix.scaleX, y: matrix.scaleY },

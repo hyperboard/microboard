@@ -51,6 +51,7 @@ export class Selection {
 	readonly tool: Tool;
 	textToEdit: RichText | undefined;
 	transformationRenderBlock?: boolean = undefined;
+	shouldRenderItemsMbr: boolean = true;
 
 	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
@@ -1502,8 +1503,10 @@ export class Selection {
 		}
 
 		if (!this.transformationRenderBlock) {
-			for (const item of this.items.list()) {
-				this.renderItemMbr(context, item);
+			if (this.shouldRenderItemsMbr) {
+				for (const item of this.items.list()) {
+					this.renderItemMbr(context, item);
+				}
 			}
 			this.tool.render(context);
 			if (!isLocked) {
