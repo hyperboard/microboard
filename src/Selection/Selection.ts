@@ -51,7 +51,7 @@ export class Selection {
 	readonly tool: Tool;
 	textToEdit: RichText | undefined;
 	transformationRenderBlock?: boolean = undefined;
-	shouldRenderItemsMbr: boolean = true;
+	shouldRenderItemsMbr = true;
 
 	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
