@@ -45,6 +45,7 @@ export class Tools extends ToolContext {
 
 	select(clearSelection = false): void {
 		this.tool = new Select(this.board);
+		this.board.pointer.setCursor("default");
 		if (clearSelection) {
 			this.board.selection.removeAll();
 		}
