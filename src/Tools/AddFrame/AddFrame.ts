@@ -97,7 +97,7 @@ export class AddFrame extends BoardTool {
 		}
 
 		const currMbr = this.frame.getMbr();
-		this.board.items
+		const frameChildren = this.board.items
 			.getEnclosedOrCrossed(
 				currMbr.left,
 				currMbr.top,
@@ -105,8 +105,8 @@ export class AddFrame extends BoardTool {
 				currMbr.bottom,
 			)
 			.filter(item => item.parent === "Board")
-			.filter(item => this.frame.handleNesting(item))
-			.forEach(item => this.frame.emitAddChild(item));
+			.filter(item => this.frame.handleNesting(item));
+		this.frame.emitAddChild(frameChildren);
 		const frame = this.board.add(this.frame);
 		if (this.shape !== "Custom") {
 			frame.setCanChangeRatio(false);
