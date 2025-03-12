@@ -935,6 +935,7 @@ export class Selection {
 
 		if (unselectedItem) {
 			addItemToTranslation(unselectedItem.getId());
+			tryToAddFrameChildrenToTranslation(unselectedItem);
 			createTranslationWithComments(unselectedItem);
 			return translation;
 		}
