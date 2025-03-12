@@ -43,6 +43,10 @@ export class ConnectorSnap {
 
 	maxNeighbors = 10;
 	timeout = 2000;
+	connectorAttachLimit = {
+		start: 0.05,
+		end: 0.8,
+	};
 
 	color = CONNECTOR_ANCHOR_COLOR;
 
@@ -150,11 +154,11 @@ export class ConnectorSnap {
 			this.distance.neighbor / this.board.camera.getScale(),
 			this.maxNeighbors,
 		);
-
 		const pointer = this.board.pointer.point;
 
 		let nearest: Item | null = null;
 		let nearestDistance = Number.MAX_VALUE;
+		let tangent: number | null = null;
 
 		for (const neighbor of neighbors) {
 			if (neighbor === this.connector) {
@@ -162,7 +166,29 @@ export class ConnectorSnap {
 			}
 			const edgePoint = neighbor.getNearestEdgePointTo(pointer);
 			const distance = pointer.getDistance(edgePoint);
-			if (distance < nearestDistance) {
+			const isConnector = neighbor.itemType === "Connector";
+
+			if (isConnector && neighbor !== this.connector) {
+				const boardPointer = this.board.pointer.point;
+				const point =
+					this.snap.anchor?.getCenter() ||
+					(this.snap.point
+						? neighbor.getNearestEdgePointTo(boardPointer)
+						: boardPointer);
+
+				const nearestSegmentData = neighbor
+					.getPaths()
+					.getNearestEdgeAndPointTo(point);
+				tangent = nearestSegmentData.segment.getParameter(point);
+			}
+
+			const { start, end } = this.connectorAttachLimit;
+			const isConnectorNearEndpoint =
+				tangent !== null &&
+				(tangent < start || tangent > end) &&
+				isConnector;
+
+			if (distance < nearestDistance && !isConnectorNearEndpoint) {
 				nearestDistance = distance;
 				nearest = neighbor;
 			}
