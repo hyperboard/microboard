@@ -160,14 +160,27 @@ export function getQuickAddButtons(
 		const reverseIndexMap = { 0: 1, 1: 0, 2: 3, 3: 2 };
 		const connectorEndPoint =
 			endPoints?.positions[reverseIndexMap[index]] || new Point();
+		const fontSize =
+			selectedItem.itemType === "RichText"
+				? selectedItem.getFontSize()
+				: 14;
 		const newItem = board.createItem(board.getNewItemId(), newItemData);
+		if (newItem.itemType === "RichText") {
+			const storage = new SessionStorage();
+			storage.setFontSize("RichText", fontSize);
+			newItem.editor.selectWholeText();
+			newItem.applySelectionFontSize(fontSize);
+		}
 		let newItemPlaceholder: Item | undefined;
 		if (newItem.itemType === "RichText") {
 			const shapeData = new Shape(board).serialize();
+			const newItemMbr = newItem.getMbr();
+			const scaleX = newItemMbr.getWidth() / 100;
+			const scaleY = newItemMbr.getHeight() / 100;
 			shapeData.transformation = {
 				...newItemData.transformation,
-				scaleX: 1.463,
-				scaleY: 0.196,
+				scaleX: scaleX,
+				scaleY: scaleY,
 			};
 			newItemPlaceholder = board.createItem(newItem.getId(), shapeData);
 		}
@@ -189,6 +202,7 @@ export function getQuickAddButtons(
 		const endPointData = getControlPointData(
 			newItemPlaceholder ? newItemPlaceholder : newItem,
 			reverseIndexMap[index],
+			!!newItemPlaceholder,
 		);
 		connectorData.startPoint = startPointData;
 		connectorData.endPoint = endPointData;

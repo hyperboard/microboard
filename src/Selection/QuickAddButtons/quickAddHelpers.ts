@@ -22,8 +22,11 @@ import { Sticker } from "Board/Items/Sticker/Sticker";
 export function getControlPointData(
 	item: Item,
 	index: number,
+	isRichText = false,
 ): ControlPointData {
-	const itemScale = item.transformation.getScale();
+	const itemScale = isRichText
+		? { x: 1, y: 1 }
+		: item.transformation.getScale();
 	const width = item.getMbr().getWidth();
 	const height = item.getMbr().getHeight();
 	const adjMapScaled = {
@@ -150,7 +153,11 @@ export function quickAddItem(
 
 	const newItem = board.createItem("", itemData);
 	const added = board.add(newItem);
-	const pointData = getControlPointData(added, dirIndex);
+	const pointData = getControlPointData(
+		added,
+		dirIndex,
+		added.itemType === "RichText",
+	);
 	const newEndPoint = getControlPoint(pointData, itemId =>
 		board.items.findById(itemId),
 	);
@@ -188,5 +195,6 @@ export function createRichText(board: Board): RichText {
 	const text = new RichText(board, new Mbr());
 	text.setMaxWidth(600);
 	text.setSelectionHorisontalAlignment("left");
+
 	return text;
 }
