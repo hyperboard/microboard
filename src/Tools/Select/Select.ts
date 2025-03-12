@@ -715,11 +715,6 @@ export class Select extends Tool {
 			this.clear();
 			return false;
 		}
-		if (this.board.getInterfaceType() !== "edit") {
-			this.board.selection.removeAll();
-			this.clear();
-			return false;
-		}
 
 		const topItem = this.board.items.getUnderPointer().pop();
 		const curr = this.downOnItem;
@@ -813,6 +808,13 @@ export class Select extends Tool {
 				return false;
 			}
 		}
+
+		if (this.board.getInterfaceType() !== "edit") {
+			this.board.selection.removeAll();
+			this.clear();
+			return false;
+		}
+
 		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			this.board.selection.removeAll();
 			this.clear();
