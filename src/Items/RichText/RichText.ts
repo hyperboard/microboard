@@ -37,13 +37,14 @@ import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
-import { getParagraph } from "./getParagraph";
+import { getParagraph, getParagraphWithPassedTextNode } from "./getParagraph";
 import { RichTextOperation } from "./RichTextOperations";
 import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
 import { decodeHtml } from "Board/parserHTML";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { SETTINGS } from "Board/Settings";
+import { SessionStorage } from "App/SessionStorage";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -129,6 +130,12 @@ export class RichText extends Mbr implements Geometry {
 	) {
 		super();
 		this.linkTo = linkTo || new LinkTo(this.id, this.board.events);
+		let textSizeFromStorage = new SessionStorage().getFontSize(
+			insideOf || "RichText",
+		);
+		if (!textSizeFromStorage || textSizeFromStorage === "auto") {
+			textSizeFromStorage = initialTextStyles.fontSize;
+		}
 		this.editor = new EditorContainer(
 			id,
 			this.emit,
@@ -152,6 +159,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getScale,
 			this.getDefaultHorizontalAlignment(),
 			initialTextStyles,
+			textSizeFromStorage,
 			this.isAutosize.bind(this),
 			this.autosizeEnable.bind(this),
 			this.autosizeDisable.bind(this),
@@ -204,12 +212,16 @@ export class RichText extends Mbr implements Geometry {
 			this.updateElement();
 			this.subject.publish(this);
 		});
+
 		this.layoutNodes = getBlockNodes(
 			this.getBlockNodes(),
-			this.getMaxWidth() || 0,
+			this.shrinkWidth && this.isEmpty()
+				? Infinity
+				: this.getMaxWidth() || 0,
 			this.shrinkWidth,
 			this.insideOf === "Frame",
 		);
+
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
 			path: [0, 0],
@@ -228,6 +240,13 @@ export class RichText extends Mbr implements Geometry {
 		if (!this.editor.isEmpty()) {
 			return this.editor.getBlockNodes();
 		} else {
+			this.editor.selectWholeText();
+			const firstTextNode = this.editor.getAllTextNodesInSelection()[0];
+			if (firstTextNode) {
+				const placeholderNode = structuredClone(firstTextNode);
+				placeholderNode.text = this.placeholderText;
+				return getParagraphWithPassedTextNode(placeholderNode);
+			}
 			return getParagraph(
 				this.getFontStyles(),
 				this.getFontColor(),
@@ -316,7 +335,9 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			this.layoutNodes = getBlockNodes(
 				this.getBlockNodes(),
-				this.getMaxWidth() || 0,
+				this.shrinkWidth && this.isEmpty()
+					? Infinity
+					: this.getMaxWidth() || 0,
 				this.shrinkWidth,
 				this.insideOf === "Frame",
 			);

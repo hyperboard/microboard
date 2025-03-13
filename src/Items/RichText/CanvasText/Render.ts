@@ -1,6 +1,7 @@
 import { BlockNode } from "../Editor/BlockNode";
 import { LinkNode, TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
+import { SETTINGS } from "Board/Settings";
 
 type Ctx = CanvasRenderingContext2D;
 

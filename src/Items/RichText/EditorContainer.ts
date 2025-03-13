@@ -38,6 +38,7 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
+import { SessionStorage } from "App/SessionStorage";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -76,6 +77,7 @@ export class EditorContainer {
 		private getScale: () => number,
 		public horisontalAlignment: HorisontalAlignment,
 		private initialTextStyles: DefaultTextStyles,
+		fontSize: number,
 		private getAutosize: () => boolean,
 		private autosizeEnable: () => void,
 		private autosizeDisable: () => void,
@@ -98,7 +100,7 @@ export class EditorContainer {
 					{
 						type: "text",
 						text: "",
-						...initialTextStyles,
+						...{ ...initialTextStyles, fontSize },
 						overline: false,
 						"line-through": false,
 						subscript: false,

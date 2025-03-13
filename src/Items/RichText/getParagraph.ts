@@ -1,6 +1,6 @@
 import { HorisontalAlignment } from "../Alignment";
 import { BlockNode } from "./Editor/BlockNode";
-import { TextStyle } from "./Editor/TextNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
 
 export function getParagraph(
 	fontStyles: TextStyle[],
@@ -32,6 +32,18 @@ export function getParagraph(
 					superscript: false,
 				},
 			],
+		},
+	];
+}
+
+export function getParagraphWithPassedTextNode(
+	textNode: TextNode,
+): BlockNode[] {
+	return [
+		{
+			type: "paragraph",
+			lineHeight: 1.4,
+			children: [textNode],
 		},
 	];
 }
