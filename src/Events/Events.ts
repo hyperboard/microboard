@@ -381,7 +381,7 @@ export function createEvents(
 								threadDirection =
 									placeholderNode.getThreadDirection();
 							}
-							board.remove(placeholderNode);
+							board.remove(placeholderNode, false);
 							const newImageAI = board.add(imageItem);
 
 							newImageAI.doOnceOnLoad(() => {

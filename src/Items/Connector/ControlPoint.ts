@@ -5,6 +5,9 @@ import { Matrix } from "../Transformation";
 import { RichText } from "../RichText";
 import { AINode } from "../AINode";
 import { getFixedPoint } from "./ConnectorSnap";
+import { Mbr } from "Board/Items/Mbr/Mbr";
+
+type Edge = "top" | "bottom" | "left" | "right";
 
 interface BoardPointData {
 	pointType: "Board";
@@ -60,16 +63,31 @@ export class BoardPoint extends Point {
 
 export class FloatingPoint extends Point {
 	readonly pointType = "Floating";
+	private edge: Edge | undefined;
+
 	constructor(
 		public item: Item,
 		readonly relativePoint: Point,
 	) {
 		super();
+		if (relativePoint.y <= 0) {
+			this.edge = "top";
+		} else if (relativePoint.y >= item.getMbr().getHeight()) {
+			this.edge = "bottom";
+		} else if (relativePoint.x <= 0) {
+			this.edge = "left";
+		} else if (relativePoint.x >= item.getMbr().getWidth()) {
+			this.edge = "right";
+		}
 		this.recalculatePoint();
 	}
 
 	recalculatePoint(): void {
-		const point = fromRelativePoint(this.relativePoint, this.item);
+		const point = fromRelativePoint(
+			this.relativePoint,
+			this.item,
+			this.edge,
+		);
 		this.x = point.x;
 		this.y = point.y;
 	}
@@ -96,16 +114,31 @@ export class FloatingPoint extends Point {
 
 export class FixedPoint extends Point {
 	readonly pointType = "Fixed";
+	private edge: Edge | undefined;
+
 	constructor(
 		public item: Item,
 		readonly relativePoint: Point,
 	) {
 		super();
+		if (relativePoint.y <= 0) {
+			this.edge = "top";
+		} else if (relativePoint.y >= item.getMbr().getHeight()) {
+			this.edge = "bottom";
+		} else if (relativePoint.x <= 0) {
+			this.edge = "left";
+		} else if (relativePoint.x >= item.getMbr().getWidth()) {
+			this.edge = "right";
+		}
 		this.recalculatePoint();
 	}
 
 	recalculatePoint(): void {
-		const point = fromRelativePoint(this.relativePoint, this.item);
+		const point = fromRelativePoint(
+			this.relativePoint,
+			this.item,
+			this.edge,
+		);
 		this.x = point.x;
 		this.y = point.y;
 	}
@@ -132,6 +165,7 @@ export class FixedPoint extends Point {
 
 export class FixedConnectorPoint extends Point {
 	readonly pointType = "FixedConnector";
+
 	constructor(
 		public item: Connector,
 		public tangent: number,
@@ -238,8 +272,12 @@ export function toRelativePoint(point: Point, item: Item): Point {
 	return point;
 }
 
-function fromRelativePoint(relativePoint: Point, item: Item): Point {
-	const matrix = item.transformation?.matrix || new Matrix();
+function fromRelativePoint(
+	relativePoint: Point,
+	item: Item,
+	edge?: Edge,
+): Point {
+	const matrix = item.transformation?.matrix.copy() || new Matrix();
 	// const mbr = item.getMbr();
 	// const scaleX = item.transformation?.getScale().x || 1;
 	// const scaleY = item.transformation?.getScale().y || 1;
@@ -251,18 +289,31 @@ function fromRelativePoint(relativePoint: Point, item: Item): Point {
 
 	// TODO fix richtext width transformation. The connector needs a modified scaleX
 	if (item instanceof RichText || item instanceof AINode) {
-		let prevEdge: "top" | "bottom" | "right" | "left" | undefined;
 		const itemMbr = item.getMbr();
-		if (relativePoint.y <= 0) {
-			prevEdge = "top";
-		} else if (relativePoint.y >= itemMbr.getHeight()) {
-			prevEdge = "bottom";
-		} else if (relativePoint.x <= 0) {
-			prevEdge = "left";
-		} else if (relativePoint.x >= itemMbr.getWidth()) {
-			prevEdge = "right";
+		switch (edge) {
+			case "left":
+				return new Point(
+					itemMbr.left,
+					(itemMbr.top + itemMbr.bottom) / 2,
+				);
+			case "right":
+				return new Point(
+					itemMbr.right,
+					(itemMbr.top + itemMbr.bottom) / 2,
+				);
+			case "top":
+				return new Point(
+					(itemMbr.left + itemMbr.right) / 2,
+					itemMbr.top,
+				);
+			case "bottom":
+				return new Point(
+					(itemMbr.left + itemMbr.right) / 2,
+					itemMbr.bottom,
+				);
+			default:
+				return item.getMbr().getClosestEdgeCenterPoint(point);
 		}
-		return item.getMbr().getClosestEdgeCenterPoint(point, prevEdge);
 	}
 
 	return point;
