@@ -472,6 +472,10 @@ export class Selection {
 	): void {
 		const serializedData = item.serialize(true);
 		const zIndex = this.board.items.index.getZIndex(item);
+		if (item.itemType === "Comment") {
+			return;
+		}
+
 		// If the item is a Connector and the connected items are not part of selection,
 		// change the control points to BoardPoint.
 		if (
