@@ -384,7 +384,7 @@ export class Mbr implements Geometry {
 
 	updatePath(): void {
 		/*
-		this.path = new Path2D();
+		this.path = new (SETTINGS.path2DFactory)();
 		this.path.rect(this.left, this.top, this.getWidth(), this.getHeight());
 		*/
 	}

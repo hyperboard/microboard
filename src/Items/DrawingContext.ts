@@ -9,7 +9,7 @@ export class DrawingContext {
 
 	constructor(
 		public camera: Camera,
-		public ctx: CanvasRenderingContext2D,
+		public ctx: CanvasRenderingContext2D, // fix here
 		public cursorCtx?: CanvasRenderingContext2D,
 		public matrix = new Matrix(),
 	) {

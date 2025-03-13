@@ -3,12 +3,13 @@ import { BrowserDocumentFactory } from "./BrowserDocumentFactory";
 import { BrowserPath2D } from "./BrowserPath2DFactory";
 import { initPaths } from "./initPaths";
 
+// export dummy to prevent tree shake
 export function initBrowserSettings(): Settings {
-	const documentFactory = new BrowserDocumentFactory();
-	const path2DFactory = new BrowserPath2D();
-	SETTINGS.documentFactory = documentFactory;
-	SETTINGS.path2DFactory = path2DFactory;
-
-	initPaths(BrowserPath2D);
-    return SETTINGS;
+	return SETTINGS;
 }
+
+const documentFactory = new BrowserDocumentFactory();
+SETTINGS.documentFactory = documentFactory;
+SETTINGS.path2DFactory = BrowserPath2D;
+SETTINGS.measureCtx = getMeasureCtx();
+initPaths(BrowserPath2D);

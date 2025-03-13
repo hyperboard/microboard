@@ -43,6 +43,7 @@ import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
 import { decodeHtml } from "Board/parserHTML";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { SETTINGS } from "Board/Settings";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -100,7 +101,7 @@ export class RichText extends Mbr implements Geometry {
 	private isContainerSet = false;
 	isRenderEnabled = true;
 	private layoutNodes: LayoutBlockNodes;
-	private clipPath = new Path2D();
+	private clipPath = new SETTINGS.path2DFactory();
 	private updateRequired = false;
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
@@ -474,7 +475,7 @@ export class RichText extends Mbr implements Geometry {
 		const container = this.getTransformedContainer();
 		const width = container.getWidth();
 		const height = container.getHeight();
-		this.clipPath = new Path2D();
+		this.clipPath = new SETTINGS.path2DFactory();
 		this.clipPath.rect(0, 0, width, height);
 	}
 	/**
@@ -1005,7 +1006,7 @@ export class RichText extends Mbr implements Geometry {
 		const shouldClip =
 			this.insideOf === "Shape" || this.insideOf === "Sticker";
 		if (shouldClip) {
-			ctx.clip(this.clipPath);
+			ctx.clip(this.clipPath.nativePath);
 		}
 		const autoSizeScale = this.autoSize ? this.autoSizeScale : undefined;
 		this.layoutNodes.render(ctx, autoSizeScale);

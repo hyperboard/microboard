@@ -1,4 +1,7 @@
+/* eslint-disable id-length */
+
 export interface Path2DFactory {
+	nativePath: any;
 	/**
 	 * Adds the given path to the current path, optionally applying a transformation.
 	 * @param path - The Path2D to add.
@@ -110,4 +113,88 @@ export interface Path2DFactory {
 	 * @param h - The height of the rectangle.
 	 */
 	rect(x: number, y: number, w: number, h: number): void;
+
+	/**
+	 * Adds a rectangle with rounded corners to the path.
+	 * @param x - The x-coordinate of the rectangle's starting point.
+	 * @param y - The y-coordinate of the rectangle's starting point.
+	 * @param width - The width of the rectangle.
+	 * @param height - The height of the rectangle.
+	 * @param radii - The radius of the rounded corners. Can be a number or a DOMPointInit.
+	 */
+	roundRect(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radii?: number | DOMPointInit,
+	): void;
+}
+
+export class Path2DFactory {
+	// constructor(d?: string) {
+	// }
+	// private nativePath: any;
+
+	addPath(_path: Path2DFactory, _transform?: DOMMatrix2DInit): void {}
+
+	arc(
+		_x: number,
+		_y: number,
+		_radius: number,
+		_startAngle: number,
+		_endAngle: number,
+		_anticlockwise?: boolean,
+	): void {}
+
+	arcTo(
+		_x1: number,
+		_y1: number,
+		_x2: number,
+		_y2: number,
+		_radius: number,
+	): void {}
+
+	bezierCurveTo(
+		_cp1x: number,
+		_cp1y: number,
+		_cp2x: number,
+		_cp2y: number,
+		_x: number,
+		_y: number,
+	): void {}
+
+	closePath(): void {}
+
+	ellipse(
+		_x: number,
+		_y: number,
+		_radiusX: number,
+		_radiusY: number,
+		_rotation: number,
+		_startAngle: number,
+		_endAngle: number,
+		_anticlockwise?: boolean,
+	): void {}
+
+	lineTo(_x: number, _y: number): void {}
+
+	moveTo(_x: number, _y: number): void {}
+
+	quadraticCurveTo(
+		_cpx: number,
+		_cpy: number,
+		_x: number,
+		_y: number,
+	): void {}
+
+	rect(_x: number, _y: number, _w: number, _h: number): void {}
+
+	roundRect(
+		_x: number,
+		_y: number,
+		_width: number,
+		_height: number,
+		_radii?: number | DOMPointInit,
+	): void {}
 }

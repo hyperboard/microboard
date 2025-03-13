@@ -11,6 +11,7 @@ import { Tool } from "Board/Tools/Tool";
 import { SETTINGS } from "Board/Settings";
 import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";
 import { getDecorationResizeType } from "./getDecorationResizeType";
+import { Path2DFactory } from "Board/api/Path2DFactory";
 
 const TOLERANCE = 30;
 
@@ -212,22 +213,22 @@ export class ExportSnapshot extends Tool {
 
 	renderDecoration(
 		context: DrawingContext,
-		path: Path2D,
+		path: Path2DFactory,
 		translateX: number,
 		translateY: number,
 		color: string,
 		lineWidth: number,
-	) {
+	): void {
 		const ctx = context.ctx;
 		ctx.save();
 		ctx.strokeStyle = color;
 		ctx.lineWidth = lineWidth;
 		ctx.translate(translateX, translateY);
-		ctx.stroke(path);
+		ctx.stroke(path.nativePath);
 		ctx.restore();
 	}
 
-	onCancel() {
+	onCancel(): void {
 		this.tempDrawingContext.clear();
 	}
 

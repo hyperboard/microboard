@@ -8,6 +8,8 @@ import { Mbr } from "../Mbr";
 import { Arc, Matrix } from "..";
 import { GeometricNormal } from "../GeometricNormal";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { SETTINGS } from "Board/Settings";
+import { Path2DFactory } from "Board/api/Path2DFactory";
 
 export type Segment = Line | QuadraticBezier | CubicBezier | Arc;
 
@@ -74,7 +76,7 @@ export interface PathStylize {
 }
 
 export class Path implements Geometry, PathStylize {
-	private path2d = Path2D ? new Path2D() : undefined; // just to make tests run in node
+	private path2d: Path2DFactory;
 	private x: number;
 	private y: number;
 	private width: number;
@@ -102,13 +104,14 @@ export class Path implements Geometry, PathStylize {
 		private paddingLeft: number = 0,
 	) {
 		this.linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
-		this.updateCache();
 		const mbr = this.getMbr();
 		this.x = mbr.left;
 		this.y = mbr.top;
 		this.width = this.getMbr().getWidth();
 		this.height = this.getMbr().getHeight();
 		this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
+		this.path2d = new SETTINGS.path2DFactory();
+		this.updateCache();
 	}
 
 	getBackgroundColor(): string {
@@ -207,10 +210,7 @@ export class Path implements Geometry, PathStylize {
 		this.y = top - this.paddingTop; // Adjust for top padding
 		this.width = right - left + this.paddingLeft + this.paddingRight; // Adjust for horizontal padding
 		this.height = bottom - top + this.paddingTop + this.paddingBottom; // Adjust for vertical padding
-		if (!Path2D) {
-			return;
-		}
-		const path2d = new Path2D();
+		const path2d = new SETTINGS.path2DFactory();
 		if (this.segments.length === 0) {
 			return;
 		}
@@ -402,7 +402,7 @@ export class Path implements Geometry, PathStylize {
 		if (context.isBorderInvisible && !this.shadowBlur) {
 			if (shouldFillBackground) {
 				ctx.fillStyle = this.backgroundColor;
-				ctx.fill(this.path2d!);
+				ctx.fill(this.path2d.nativePath);
 			}
 		} else {
 			if (this.shadowBlur) {
@@ -426,7 +426,7 @@ export class Path implements Geometry, PathStylize {
 			ctx.setLineDash(this.linePattern);
 			if (shouldFillBackground) {
 				ctx.fillStyle = this.backgroundColor;
-				ctx.fill(this.path2d!);
+				ctx.fill(this.path2d.nativePath);
 			}
 		}
 
@@ -440,7 +440,7 @@ export class Path implements Geometry, PathStylize {
 		// 	ctx.globalCompositeOperation = 'source-over';
 		// }
 
-		ctx.stroke(this.path2d!);
+		ctx.stroke(this.path2d.nativePath);
 	}
 
 	getSvgPath(): string {

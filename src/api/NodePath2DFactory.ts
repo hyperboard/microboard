@@ -3,7 +3,7 @@ import { Path2D as CanvasPath2D } from "canvas";
 import { Path2DFactory } from "./Path2DFactory";
 
 export class NodePath2D implements Path2DFactory {
-	private nativePath: CanvasPath2D;
+	nativePath: CanvasPath2D;
 
 	constructor(d?: string) {
 		this.nativePath = new CanvasPath2D(d);
@@ -91,8 +91,13 @@ export class NodePath2D implements Path2DFactory {
 		this.nativePath.rect(x, y, w, h);
 	}
 
-	// Expose the native CanvasPath2D instance if needed
-	getNativePath(): CanvasPath2D {
-		return this.nativePath;
+	roundRect(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radii?: number | DOMPointInit,
+	): void {
+		this.nativePath.roundRect(x, y, width, height, radii);
 	}
 }

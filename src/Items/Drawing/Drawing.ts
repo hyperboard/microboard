@@ -17,6 +17,7 @@ import {
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { SETTINGS } from "Board/Settings";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -31,7 +32,7 @@ export class Drawing extends Mbr implements Geometry {
 	readonly itemType = "Drawing";
 	parent = "Board";
 	readonly transformation: Transformation;
-	private path2d = Path2D ? new Path2D() : undefined; // just to make tests run in node
+	private path2d = new SETTINGS.path2DFactory();
 	readonly subject = new Subject<Drawing>();
 	untransformedMbr = new Mbr();
 	private lines: Line[] = [];
@@ -126,7 +127,7 @@ export class Drawing extends Mbr implements Geometry {
 	}
 
 	updatePath2d(): void {
-		this.path2d = new Path2D();
+		this.path2d = new SETTINGS.path2DFactory();
 		const context = this.path2d;
 		const points = this.points;
 		if (points.length < 3) {
@@ -236,7 +237,7 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.lineCap = "round";
 		ctx.setLineDash(this.linePattern);
 		this.transformation.matrix.applyToContext(ctx);
-		ctx.stroke(this.path2d!);
+		ctx.stroke(this.path2d.nativePath);
 		ctx.restore();
 	}
 

@@ -48,7 +48,7 @@ export enum ExportQuality {
 
 export interface Settings {
 	// Factories
-	path2DFactory: Path2DFactory;
+	path2DFactory: typeof Path2DFactory;
 	documentFactory: DocumentFactory;
 
 	// Selection settings
@@ -135,7 +135,7 @@ export interface Settings {
  * @property {DocumentFactory} - The factory for creating document elements.
  */
 export const SETTINGS: Settings = {
-	path2DFactory: undefined as unknown as Path2DFactory,
+	path2DFactory: undefined as unknown as typeof Path2DFactory,
 	documentFactory: undefined as unknown as DocumentFactory,
 
 	SELECTION_COLOR: "rgb(71, 120, 245)",

@@ -2,7 +2,7 @@
 import { Path2DFactory } from "./Path2DFactory";
 
 export class BrowserPath2D implements Path2DFactory {
-	private nativePath: Path2D;
+	nativePath: Path2D;
 
 	constructor(d?: string) {
 		this.nativePath = new Path2D(d);
@@ -90,8 +90,13 @@ export class BrowserPath2D implements Path2DFactory {
 		this.nativePath.rect(x, y, w, h);
 	}
 
-	// Expose the native Path2D instance if needed
-	getNativePath(): Path2D {
-		return this.nativePath;
+	roundRect(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radii?: number | DOMPointInit,
+	): void {
+		this.nativePath.roundRect(x, y, width, height, radii);
 	}
 }
