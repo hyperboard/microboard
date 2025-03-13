@@ -195,6 +195,5 @@ export function createRichText(board: Board): RichText {
 	const text = new RichText(board, new Mbr());
 	text.setMaxWidth(600);
 	text.setSelectionHorisontalAlignment("left");
-
 	return text;
 }
