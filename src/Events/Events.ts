@@ -249,43 +249,61 @@ export function createEvents(
 				if (board.aiGeneratingOnItem) {
 					const item = board.items.getById(board.aiGeneratingOnItem);
 					if (item) {
+						board.selection.removeAll();
+						board.selection.add(item);
 						if (item.itemType === "AINode") {
 							item.getRichText().editor.setStopProcessingMarkDownCb(
 								null,
 							);
+							if (chunk.isExternalApiError) {
+								const editor = item.getRichText().editor;
+								editor.clearText();
+								editor.insertCopiedText(
+									t("AIInput.nodeErrorText"),
+								);
+							}
 						}
-						board.selection.removeAll();
-						board.selection.add(item);
 						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
 				console.log("Error AI generate", chunk.error);
-				notify({
-					header: t("AIInput.textGenerationError.header"),
-					body: t("AIInput.textGenerationError.body"),
-					variant: "error",
-					duration: 4000,
-				});
+				if (!chunk.isExternalApiError) {
+					notify({
+						header: t("AIInput.textGenerationError.header"),
+						body: t("AIInput.textGenerationError.body"),
+						variant: "error",
+						duration: 4000,
+					});
+				}
 				board.aiGeneratingOnItem = undefined;
 				break;
 			default:
 				board.camera.unsubscribeFromItem();
-				notify({
-					header: t("AIInput.textGenerationError.header"),
-					body: t("AIInput.textGenerationError.body"),
-					variant: "error",
-					duration: 4000,
-				});
+				if (!chunk.isExternalApiError) {
+					notify({
+						header: t("AIInput.textGenerationError.header"),
+						body: t("AIInput.textGenerationError.body"),
+						variant: "error",
+						duration: 4000,
+					});
+				}
 				if (board.aiGeneratingOnItem) {
 					const item = board.items.getById(board.aiGeneratingOnItem);
 					if (item) {
+						board.selection.removeAll();
+						board.selection.add(item);
 						if (item.itemType === "AINode") {
 							item.getRichText().editor.setStopProcessingMarkDownCb(
 								null,
 							);
+							if (chunk.isExternalApiError) {
+								const editor = item.getRichText().editor;
+								editor.clearText();
+								editor.insertCopiedText(
+									t("AIInput.nodeErrorText"),
+								);
+							}
 						}
-						board.selection.removeAll();
-						board.selection.add(item);
 						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
@@ -418,12 +436,26 @@ export function createEvents(
 			return;
 		} else if (response.status === "error") {
 			console.error("Image generation error:", response.message);
-			notify({
-				header: t("AIInput.imageGenerationError.header"),
-				body: t("AIInput.imageGenerationError.body"),
-				variant: "error",
-				duration: 4000,
-			});
+			if (response.isExternalApiError) {
+				if (board.aiGeneratingOnItem) {
+					const item = board.items.getById(board.aiGeneratingOnItem);
+					if (item) {
+						board.selection.removeAll();
+						board.selection.add(item);
+						const editor = item.getRichText()?.editor;
+						editor?.clearText();
+						editor?.insertCopiedText(t("AIInput.nodeErrorText"));
+						board.camera.zoomToFit(item.getMbr(), 20);
+					}
+				}
+			} else {
+				notify({
+					header: t("AIInput.imageGenerationError.header"),
+					body: t("AIInput.imageGenerationError.body"),
+					variant: "error",
+					duration: 4000,
+				});
+			}
 			board.aiGeneratingOnItem = undefined;
 		} else {
 			console.warn("Unhandled image generation status:", response.status);
