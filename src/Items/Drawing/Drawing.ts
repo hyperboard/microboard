@@ -492,6 +492,30 @@ export class Drawing extends Mbr implements Geometry {
 	getRichText(): null {
 		return null;
 	}
+
+	isPointNearLine(point: Point, threshold: number | undefined = 10): boolean {
+		const transformedMouseX =
+			(point.x - this.transformation.matrix.translateX) /
+			this.transformation.matrix.scaleX;
+		const transformedMouseY =
+			(point.y - this.transformation.matrix.translateY) /
+			this.transformation.matrix.scaleY;
+		const transformedMouse = new Point(
+			transformedMouseX,
+			transformedMouseY,
+		);
+		for (let i = 0; i < this.points.length - 1; i++) {
+			const p1 = this.points[i];
+			const p2 = this.points[i + 1];
+
+			const distance = getPerpendicularDistance(transformedMouse, p1, p2);
+
+			if (distance < threshold) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
 
 function getPerpendicularDistance(

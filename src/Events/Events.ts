@@ -115,6 +115,7 @@ export interface Events {
 	getSaveFileTimeout(): NodeJS.Timeout | null;
 	removeBeforeUnloadListener(): void;
 	sendPresenceEvent(event: PresenceEventType): void;
+	replay(): Promise<void>;
 }
 
 type MessageHandler<T extends EventsMsg = EventsMsg> = (message: T) => void;
@@ -388,7 +389,7 @@ export function createEvents(
 								placeholderCenterX -
 								imageData.imageDimension.width / 2;
 							const imageTopY = placeholderMbr.top;
-
+							// error
 							imageItem.transformation.translateTo(
 								imageCenterX,
 								imageTopY,
@@ -999,6 +1000,74 @@ export function createEvents(
 		};
 	}
 
+	async function replay(): Promise<void> {
+		try {
+			// Create a file input element
+			const fileInput = document.createElement("input");
+			fileInput.type = "file";
+			fileInput.accept = ".json";
+
+			// Create a promise to handle the file selection
+			const fileSelectedPromise = new Promise<File>((resolve, reject) => {
+				fileInput.onchange = event => {
+					const files = (event.target as HTMLInputElement).files;
+					if (files && files.length > 0) {
+						resolve(files[0]);
+					} else {
+						reject(new Error("No file selected"));
+					}
+				};
+			});
+
+			// Trigger file selection dialog
+			fileInput.click();
+
+			// Wait for file selection
+			const file = await fileSelectedPromise;
+
+			// Read the file content
+			const fileContent = await file.text();
+
+			// Parse JSON
+			const events: SyncBoardEvent[] = JSON.parse(fileContent);
+
+			// Validate that the content is an array
+			if (!Array.isArray(events)) {
+				throw new Error(
+					"Selected file does not contain a valid array of events",
+				);
+			}
+
+			// Call the log's replay method
+			log.replay(events);
+
+			// Notify user
+			notify({
+				header:
+					i18n.t("events.replaySuccessful.header") ||
+					"Replay Successful",
+				body:
+					i18n.t("events.replaySuccessful.body") ||
+					`Successfully replayed ${events.length} events`,
+				variant: "success",
+				duration: 3000,
+			});
+
+			// Update the UI
+			subject.publish({} as any);
+		} catch (error) {
+			console.error("Failed to replay events:", error);
+			notify({
+				header: i18n.t("events.replayFailed.header") || "Replay Failed",
+				body:
+					i18n.t("events.replayFailed.body") ||
+					"Failed to replay events from file",
+				variant: "error",
+				duration: 5000,
+			});
+		}
+	}
+
 	const instance: Events = {
 		subject,
 		serialize: log.serialize,
@@ -1027,6 +1096,7 @@ export function createEvents(
 		getNotificationId: () => notificationId,
 		getSaveFileTimeout: () => saveFileTimeout,
 		sendPresenceEvent,
+		replay,
 	};
 
 	connection.subscribe(

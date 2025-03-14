@@ -45,6 +45,7 @@ export interface EventsLog {
 	getLastConfirmed(): BoardEvent | null;
 	getSyncLog(): SyncLog;
 	syncLogSubject: SyncLogSubject;
+	replay(events: BoardEvent[]): void;
 }
 
 interface EventsList {
@@ -349,6 +350,21 @@ export function createEventsLog(board: Board): EventsLog {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			// command.apply();
+			list.addConfirmedRecords([record]);
+		}
+	}
+
+	function replay(events: SyncBoardEvent[]): void {
+		list.clear();
+
+		const bodyEvents = events.map(event => {
+			return { body: event, order: event.order };
+		});
+
+		for (const event of bodyEvents) {
+			const command = createCommand(board, event.body.operation);
+			const record = { event, command };
+			command.apply();
 			list.addConfirmedRecords([record]);
 		}
 	}
@@ -667,6 +683,7 @@ export function createEventsLog(board: Board): EventsLog {
 		getUnpublishedEvent,
 		getLatestOrder,
 		getLastConfirmed,
+		replay,
 	};
 }
 
