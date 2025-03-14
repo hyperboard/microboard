@@ -570,4 +570,19 @@ export class Camera {
 		this.resizeSubject.publish(this);
 		this.subject.publish(this);
 	}
+
+	smoothTranslateTo(x: number, y: number): void {
+		const friction = 0.9;
+
+		const animate = (): void => {
+			if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1) {
+				this.translateTo(x, y);
+				x *= friction;
+				y *= friction;
+				requestAnimationFrame(animate);
+			}
+		};
+
+		requestAnimationFrame(animate);
+	}
 }
