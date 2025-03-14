@@ -505,6 +505,14 @@ export class Items {
 			(acc, item) => {
 				const area =
 					item.getMbr().getHeight() * item.getMbr().getWidth();
+
+				if (
+					item.itemType === "Drawing" &&
+					!item.isPointNearLine(this.pointer.point)
+				) {
+					return acc;
+				}
+
 				const isItemTransparent =
 					item?.itemType === "Shape" &&
 					item?.getBackgroundColor() === "none";
