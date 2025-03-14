@@ -242,7 +242,7 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			this.editor.selectWholeText();
 			const firstTextNode = this.editor.getAllTextNodesInSelection()[0];
-			if (firstTextNode) {
+			if (firstTextNode && !this.autoSize) {
 				const placeholderNode = structuredClone(firstTextNode);
 				placeholderNode.text = this.placeholderText;
 				return getParagraphWithPassedTextNode(placeholderNode);
@@ -1228,6 +1228,10 @@ export class RichText extends Mbr implements Geometry {
 		div.setAttribute(
 			"data-vertical-alignment",
 			this.getVerticalAlignment(),
+		);
+		div.setAttribute(
+			"data-horizontal-alignment",
+			this.getHorisontalAlignment() || "left",
 		);
 		div.setAttribute("data-placeholder-text", this.placeholderText);
 		div.setAttribute(

@@ -344,15 +344,16 @@ export class Sticker implements Geometry {
 		const autoScale =
 			(this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
 		const textElement = this.text.renderHTML(documentFactory);
+		const padding = 6;
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.overflow = "auto";
-		positionRelatively(textElement, div);
+		positionRelatively(textElement, div, padding);
 		resetElementScale(textElement);
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		scaleElementBy(textElement, autoScale, autoScale);
-		textElement.style.maxWidth = `${(width / autoScale) * scaleX}px`;
+		textElement.style.maxWidth = `${(width / autoScale - (2 * padding) / autoScale) * scaleX}px`;
 		if (autoScale < 1) {
-			textElement.style.width = `${parseInt(textElement.style.width) / (scaleX * autoScale)}px`;
+			textElement.style.width = `${parseInt(textElement.style.width) / (scaleX * autoScale) - 2 * padding * scaleX}px`;
 		}
 		const textHeight = this.text.layoutNodes.height * autoScale;
 		if (textHeight < height) {

@@ -59,13 +59,28 @@ export function resetElementScale(el: HTMLElement): HTMLElement {
 export function positionRelatively(
 	toPosition: HTMLElement,
 	positionBy: HTMLElement,
+	padding = 0,
 ): HTMLElement {
 	const [translateX, translateY] = getTranslationFromHTML(toPosition);
 	const [frameX, frameY] = getTranslationFromHTML(positionBy);
 	const [dx, dy] = [translateX - frameX, translateY - frameY];
+	const verticalAlignment = toPosition.getAttribute(
+		"data-vertical-alignment",
+	);
+	const horizontalAlignment = toPosition.getAttribute(
+		"data-vertical-alignment",
+	);
+	let paddingX = padding;
+	let paddingY = padding;
+	if (verticalAlignment && verticalAlignment === "bottom") {
+		paddingY = -padding;
+	}
+	if (horizontalAlignment && horizontalAlignment === "right") {
+		paddingX = -padding;
+	}
 
 	const [scaleX, scaleY] = getScaleFromHTML(toPosition);
-	toPosition.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+	toPosition.style.transform = `translate(${dx + paddingX}px, ${dy + paddingY}px) scale(${scaleX}, ${scaleY})`;
 
 	return toPosition;
 }
