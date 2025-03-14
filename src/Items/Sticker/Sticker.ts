@@ -446,6 +446,7 @@ export class Sticker implements Geometry {
 		if (line.end.y < line.start.y) {
 			y -= l * height;
 		}
+		// Smell
 		this.transformation.translateTo(x, y);
 		this.transformation.scaleTo(l, l);
 		this.saveStickerData();
