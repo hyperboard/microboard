@@ -110,8 +110,6 @@ export class Path implements Geometry, PathStylize {
 		this.width = this.getMbr().getWidth();
 		this.height = this.getMbr().getHeight();
 		this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
-		console.log("Factory", SETTINGS.path2DFactory);
-		console.log("new one", new SETTINGS.path2DFactory());
 		this.path2d = new SETTINGS.path2DFactory();
 		this.updateCache();
 	}

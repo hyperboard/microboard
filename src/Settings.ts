@@ -1,3 +1,4 @@
+import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { DocumentFactory } from "./api/DocumentFactory";
 import { Path2DFactory } from "./api/Path2DFactory";
 import { BoardSnapshot } from "./Board";
@@ -136,7 +137,9 @@ export interface Settings {
  * @property {DocumentFactory} - The factory for creating document elements.
  */
 export const SETTINGS: Settings = {
-	path2DFactory: undefined as unknown as typeof Path2DFactory,
+	path2DFactory: Path2D
+		? BrowserPath2D
+		: (undefined as unknown as typeof Path2DFactory),
 	documentFactory: undefined as unknown as DocumentFactory,
 	measureCtx: undefined as unknown as CanvasRenderingContext2D,
 
