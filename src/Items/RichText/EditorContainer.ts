@@ -39,6 +39,7 @@ import {
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
 import { SessionStorage } from "App/SessionStorage";
+import { getParagraphWithPassedTextNode } from "Board/Items/RichText/getParagraph";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -614,7 +615,19 @@ export class EditorContainer {
 				// autoSize is based on 14 => need to disable autoSizing in decorated.apply
 				Editor.addMark(editor, "fontSize", 1);
 			}
-			Editor.addMark(editor, "fontSize", size);
+			if (this.isEmpty()) {
+				const firstTextNode = this.getAllTextNodesInSelection()[0];
+				if (firstTextNode) {
+					const placeholderNode = structuredClone(firstTextNode);
+					placeholderNode.fontSize = fontSize;
+					const paragraph =
+						getParagraphWithPassedTextNode(placeholderNode);
+					this.insertCopiedNodes(paragraph);
+					this.updateElement();
+				}
+			} else {
+				Editor.addMark(editor, "fontSize", size);
+			}
 		}
 
 		if (selectionContext === "EditTextUnderPointer") {
