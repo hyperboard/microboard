@@ -583,11 +583,17 @@ export function createEvents(
 	}
 
 	function handleSnapshotApplication(snapshot: BoardSnapshot): void {
-		const existingSnapshot = board.getSnapshot();
-		if (existingSnapshot.lastIndex > 0) {
+		const existingSnapshot = log.getSnapshot();
+		const hasContent = existingSnapshot.lastIndex > 0;
+
+		if (hasContent) {
+			// We already have content, just apply newer events
+			// ERROR: we do not send events in snapshot anymore
 			handleNewerEvents(snapshot, existingSnapshot);
 		} else {
+			// First time loading or empty board, deserialize the full snapshot
 			board.deserialize(snapshot);
+			log.setSnapshotLastIndex(snapshot.lastIndex);
 		}
 		// board.saveSnapshot(snapshot);
 	}

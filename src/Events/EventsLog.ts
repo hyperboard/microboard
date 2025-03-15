@@ -38,6 +38,7 @@ export interface EventsLog {
 	getRecordById(id: string): HistoryRecord | undefined;
 	serialize(): BoardEvent[];
 	deserialize(events: BoardEvent[]): void;
+	setSnapshotLastIndex(index: number): void;
 	getSnapshot(): BoardSnapshot;
 	getUnpublishedEvent(): BoardEventPack | null;
 	confirmEvent(event: BoardEvent | BoardEventPack): void;
@@ -406,11 +407,26 @@ export function createEventsLog(board: Board): EventsLog {
 		return combinedEvent;
 	}
 
+	let snapshotLastIndex = 0;
+	function setSnapshotLastIndex(index: number): void {
+		snapshotLastIndex = index;
+	}
+
 	function getLatestOrder(): number {
 		const confirmedRecords = list.getConfirmedRecords();
-		return confirmedRecords.length > 0
-			? confirmedRecords[confirmedRecords.length - 1].event.order
-			: 0;
+		const lastConfirmedRecord =
+			confirmedRecords[confirmedRecords.length - 1];
+
+		if (!lastConfirmedRecord) {
+			return snapshotLastIndex;
+		}
+
+		const lastConfirmedEventOrder = lastConfirmedRecord.event.order;
+		if (snapshotLastIndex >= lastConfirmedEventOrder) {
+			return snapshotLastIndex;
+		}
+
+		return lastConfirmedEventOrder;
 	}
 
 	function insertEvents(events: SyncEvent | SyncEvent[]): void {
@@ -679,6 +695,7 @@ export function createEventsLog(board: Board): EventsLog {
 		getRecordById,
 		serialize,
 		deserialize,
+		setSnapshotLastIndex,
 		getSnapshot,
 		getUnpublishedEvent,
 		getLatestOrder,
