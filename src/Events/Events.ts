@@ -623,14 +623,15 @@ export function createEvents(
 		const newerEvents = snapshot.events.filter(
 			event => event.order > existingSnapshot.lastIndex,
 		);
-		if (newerEvents.length > 0) {
-			log.insertEvents(newerEvents);
-			const last = log.getLastConfirmed();
-			if (last) {
-				subject.publish(last);
-			}
-			latestServerOrder = log.getLatestOrder();
+		if (newerEvents.length <= 0) {
+			return;
 		}
+		log.insertEvents(newerEvents);
+		const last = log.getLastConfirmed();
+		if (last) {
+			subject.publish(last);
+		}
+		latestServerOrder = log.getLatestOrder();
 	}
 
 	function handleSubscribeConfirmation(msg: SubscribeConfirmationMsg): void {
@@ -665,16 +666,18 @@ export function createEvents(
 	}
 
 	function tryPublishEvent(): void {
-		if (pendingEvent === null) {
-			const unpublishedEvent = log.getUnpublishedEvent();
-			if (unpublishedEvent) {
-				sendBoardEvent(
-					board.getBoardId(),
-					unpublishedEvent,
-					currentSequenceNumber,
-				);
-			}
+		if (pendingEvent) {
+			return;
 		}
+		const unpublishedEvent = log.getUnpublishedEvent();
+		if (!unpublishedEvent) {
+			return;
+		}
+		sendBoardEvent(
+			board.getBoardId(),
+			unpublishedEvent,
+			currentSequenceNumber,
+		);
 	}
 
 	function tryResendEvent(): void {
