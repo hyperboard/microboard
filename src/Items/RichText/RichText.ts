@@ -34,7 +34,7 @@ import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
-import { TextStyle } from "./Editor/TextNode";
+import { TextNode, TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph, getParagraphWithPassedTextNode } from "./getParagraph";
@@ -1050,7 +1050,8 @@ export class RichText extends Mbr implements Geometry {
 		enablePlaceholder = true,
 	): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
-			if (Text.isText(node)) {
+			if (node.type === "text" || "text" in node) {
+				node = node as TextNode;
 				const text =
 					node.text.trim() !== ""
 						? decodeHtml(escapeHtml(node.text))
