@@ -133,6 +133,8 @@ export class Presence {
 		this.board.selection.subject.subscribe(_selection => {
 			throttleSelectionEvent(this.board.selection);
 		});
+
+		window.addEventListener("storage", this.updateCurrentUser.bind(this));
 	}
 
 	clear(): void {
@@ -187,6 +189,21 @@ export class Presence {
 
 	setCurrentUser(userId: string): void {
 		this.currentUserId = userId;
+	}
+
+	private updateCurrentUser(event: StorageEvent) {
+		if (event.key === "currentUser") {
+			if (event.newValue) {
+				this.setCurrentUser(event.newValue);
+			}
+		}
+	}
+
+	cleanup() {
+		window.removeEventListener(
+			"storage",
+			this.updateCurrentUser.bind(this),
+		);
 	}
 
 	setupUpdateInterval(): void {

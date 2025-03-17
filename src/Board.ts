@@ -1466,6 +1466,11 @@ export class Board {
 	getName() {
 		return this.name;
 	}
+
+	cleanup() {
+		this.selection.quickAddButtons.clear();
+		this.presence.cleanup();
+	}
 }
 
 export interface BoardSnapshot {
