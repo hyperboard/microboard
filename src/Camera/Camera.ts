@@ -3,6 +3,8 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "shared/Subject";
 import { toFiniteNumber } from "Board/lib";
 import { throttle } from "shared/lib/throttle";
+import { Keyboard } from "Board/Keyboard";
+import { SETTINGS } from "Board/Settings";
 
 export class Camera {
 	subject = new Subject<Camera>();
@@ -571,8 +573,47 @@ export class Camera {
 		this.subject.publish(this);
 	}
 
-	smoothTranslateTo(x: number, y: number): void {
+	smoothTranslateTo(keyboard: Keyboard): void {
 		const friction = 0.9;
+		let x = 0;
+		let y = 0;
+		const { activeKeys } = keyboard;
+
+		const directions: Record<string, [number, number]> = {
+			ArrowRight: [-SETTINGS.NAVIGATION_STEP, 0],
+			ArrowLeft: [SETTINGS.NAVIGATION_STEP, 0],
+			ArrowDown: [0, -SETTINGS.NAVIGATION_STEP],
+			ArrowUp: [0, SETTINGS.NAVIGATION_STEP],
+		};
+
+		const activeArrowKeys: string[] = Array.from(activeKeys)
+			.filter(key => key in directions)
+			.sort();
+
+		if (activeArrowKeys.length === 2) {
+			// If opposite keys are pressed simultaneously, ignore them
+			if (
+				(activeArrowKeys.includes("ArrowUp") &&
+					activeArrowKeys.includes("ArrowDown")) ||
+				(activeArrowKeys.includes("ArrowLeft") &&
+					activeArrowKeys.includes("ArrowRight"))
+			) {
+				x = 0;
+				y = 0;
+			} else {
+				const [firstKey, secondKey] = activeArrowKeys;
+				x =
+					(directions[firstKey]?.[0] || 0) +
+					(directions[secondKey]?.[0] || 0);
+				y =
+					(directions[firstKey]?.[1] || 0) +
+					(directions[secondKey]?.[1] || 0);
+			}
+		} else if (activeArrowKeys.length === 1) {
+			const key = activeArrowKeys[0];
+			x = directions[key]?.[0] || 0;
+			y = directions[key]?.[1] || 0;
+		}
 
 		const animate = (): void => {
 			if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1) {
