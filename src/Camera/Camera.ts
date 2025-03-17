@@ -573,7 +573,11 @@ export class Camera {
 		this.subject.publish(this);
 	}
 
-	smoothTranslateTo(keyboard: Keyboard): void {
+	smoothTranslateTo(keyboard: Keyboard, isSelect: boolean): void {
+		if (!isSelect) {
+			return;
+		}
+
 		const friction = 0.9;
 		let x = 0;
 		let y = 0;
