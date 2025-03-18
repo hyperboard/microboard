@@ -23,6 +23,8 @@ import { PlaceholderCommand } from "Board/Items/Placeholder/PlaceholderCommand";
 import { Placeholder } from "Board/Items/Placeholder";
 import { ImageCommand } from "Board/Items/Image/ImageCommand";
 import { ImageItem } from "Board/Items/Image";
+import { VideoCommand } from "Board/Items/Video/VideoCommand";
+import { VideoItem } from "Board/Items/Video/Video";
 
 export interface Command {
 	apply(): void;
@@ -176,6 +178,14 @@ export function createCommand(board: Board, operation: Operation): Command {
 							items.filter(
 								(item): item is ImageItem =>
 									item.itemType === "Image",
+							),
+							operation,
+						);
+					case "Video":
+						return new VideoCommand(
+							items.filter(
+								(item): item is VideoItem =>
+									item.itemType === "Video",
 							),
 							operation,
 						);

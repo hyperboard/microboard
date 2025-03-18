@@ -12,6 +12,7 @@ import { StickerData } from "./Sticker/StickerOperation";
 import { Comment, CommentData } from "./Comment";
 import { AINode } from "Board/Items/AINode/AINode";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
+import { VideoItem, VideoItemData } from "Board/Items/Video/Video";
 
 export type Item =
 	| RichText
@@ -24,7 +25,8 @@ export type Item =
 	| Placeholder
 	| Comment
 	| Group
-	| AINode;
+	| AINode
+	| VideoItem;
 
 export type ItemType = Item["itemType"];
 export type ItemData =
@@ -38,4 +40,5 @@ export type ItemData =
 	| PlaceholderData
 	| CommentData
 	| GroupData
-	| AINodeData;
+	| AINodeData
+	| VideoItemData;

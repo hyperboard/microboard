@@ -11,6 +11,7 @@ import { PlaceholderOperation } from "Board/Items/Placeholder/PlaceholderOperati
 import { GroupOperation } from "Board/Items/Group/GroupOperation";
 import { CommentOperation } from "../Items/Comment";
 import { ImageOperation } from "Board/Items/Image";
+import { VideoOperation } from "Board/Items/Video/VideoOperation";
 
 interface Undo {
 	class: "Events";
@@ -38,7 +39,8 @@ export type ItemOperation =
 	| PlaceholderOperation
 	| GroupOperation
 	| CommentOperation
-	| ImageOperation;
+	| ImageOperation
+	| VideoOperation;
 
 export type UndoableOperation = BoardOps | ItemOperation;
 

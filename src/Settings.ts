@@ -130,6 +130,8 @@ export interface Settings {
 	URL_REGEX: RegExp;
 	AI_NODE_DEFAULT_NODE_WIDTH: number;
 	NAVIGATION_STEP: number;
+
+	getYouTubeId: (url: string) => string | null;
 }
 
 /**
@@ -348,6 +350,13 @@ export const SETTINGS: Settings = {
 	URL_REGEX: /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i,
 	AI_NODE_DEFAULT_NODE_WIDTH: 640,
 	NAVIGATION_STEP: 5,
+
+	getYouTubeId: (url: string) => {
+		const regExp =
+			/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+		const match = url.match(regExp);
+		return match && match[2].length === 11 ? match[2] : null;
+	},
 };
 
 export interface ExportSnapshotSelection {

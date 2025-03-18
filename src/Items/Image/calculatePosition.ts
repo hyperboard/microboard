@@ -1,8 +1,9 @@
 import type { Board } from "Board/Board";
 import type { ImageItem } from "./Image";
+import { VideoItem } from "Board/Items/Video/Video";
 
 export function calculatePosition(
-	boardImage: ImageItem,
+	boardImage: ImageItem | VideoItem,
 	board: Board,
 ): { scaleX: number; scaleY: number; translateX: number; translateY: number } {
 	const viewportMbr = board.camera.getMbr();

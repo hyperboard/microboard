@@ -22,6 +22,7 @@ import { Group, GroupData } from "./Items/Group";
 import { Comment } from "./Items/Comment";
 import { AINode } from "Board/Items/AINode/AINode";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
+import { VideoItem, VideoItemData } from "Board/Items/Video/Video";
 
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
@@ -40,6 +41,7 @@ export const itemFactories: ItemFactories = {
 	Comment: createComment,
 	Group: createGroup,
 	AINode: createAINode,
+	Video: createVideo,
 };
 
 function createSticker(id: string, data: ItemData, board: Board): Sticker {
@@ -110,6 +112,16 @@ function createImage(id: string, data: ItemData, board: Board): ImageItem {
 		.setId(id)
 		.deserialize(data);
 	return image;
+}
+
+function createVideo(id: string, data: ItemData, board: Board): VideoItem {
+	if (!isVideoItemData(data)) {
+		throw new Error("Invalid data for VideoItem");
+	}
+	const video = new VideoItem(data, board, board.events, id)
+		.setId(id)
+		.deserialize(data);
+	return video;
 }
 
 function createDrawing(id: string, data: ItemData, board: Board): Drawing {
@@ -184,6 +196,10 @@ function isConnectorData(data: ItemData): data is ConnectorData {
 
 function isImageItemData(data: ItemData): data is ImageItemData {
 	return data.itemType === "Image";
+}
+
+function isVideoItemData(data: ItemData): data is VideoItemData {
+	return data.itemType === "Video";
 }
 
 function isDrawingData(data: ItemData): data is DrawingData {
