@@ -1150,7 +1150,7 @@ export class Selection {
 			});
 			if (item.itemType === "Sticker" && fontSize === "auto") {
 				tempStorage.remove(`fontSize_${item.itemType}`);
-			} else {
+			} else if (item.itemType !== "AINode") {
 				tempStorage.setFontSize(item.itemType, fontSize);
 			}
 		}
@@ -1193,7 +1193,9 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontStyles(item.itemType, text.getFontStyles());
+			if (item.itemType !== "AINode") {
+				tempStorage.setFontStyles(item.itemType, text.getFontStyles());
+			}
 		}
 		this.emitApplied({
 			class: "RichText",
@@ -1269,7 +1271,9 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			tempStorage.setFontHighlight(item.itemType, fontHighlight);
+			if (item.itemType !== "AINode") {
+				tempStorage.setFontHighlight(item.itemType, fontHighlight);
+			}
 		}
 		this.emitApplied({
 			class: "RichText",

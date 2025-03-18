@@ -80,12 +80,12 @@ export class VideoItem extends Mbr {
 	loadCallbacks: ((video: VideoItem) => void)[] = [];
 	beforeLoadCallbacks: ((video: VideoItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
-	private url: string = "";
+	private url = "";
 	private isStorageUrl = false;
 	videoDimension: Dimension;
 	board: Board;
-	private isPlaying: boolean = false;
-	private shouldShowControls: boolean = false;
+	private isPlaying = false;
+	private shouldShowControls = false;
 	private playBtnMbr: Mbr = new Mbr();
 
 	constructor(
@@ -234,7 +234,9 @@ export class VideoItem extends Mbr {
 	}
 
 	render(context: DrawingContext): void {
-		if (this.transformationRenderBlock || !this.preview.complete) return;
+		if (this.transformationRenderBlock || !this.preview.complete) {
+			return;
+		}
 		const ctx = context.ctx;
 		ctx.save();
 		this.transformation.matrix.applyToContext(ctx);
