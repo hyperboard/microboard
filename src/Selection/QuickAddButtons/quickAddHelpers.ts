@@ -166,6 +166,8 @@ export function quickAddItem(
 	board.selection.add(added);
 
 	if (added.itemType === "RichText" || added.itemType === "AINode") {
+		const text = added.getRichText();
+		text.editor.setMaxWidth(text.editor.maxWidth || 600);
 		board.selection.editText();
 	} else {
 		board.selection.setContext("EditUnderPointer");
