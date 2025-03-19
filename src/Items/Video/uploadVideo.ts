@@ -20,6 +20,5 @@ export function uploadVideo(file: File, board: Board) {
 		})
 		.catch(er => {
 			console.error("Could not create video:", er);
-			// TODO notification
 		});
 }

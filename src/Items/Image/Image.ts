@@ -33,7 +33,7 @@ export interface Dimension {
 }
 
 // smell have to redo without document
-function getPlaceholderImage(
+export function getPlaceholderImage(
 	board: Board,
 	imageDimension?: Dimension,
 ): HTMLImageElement {

@@ -34,7 +34,7 @@ export const uploadVideoToStorage = async (
 export const prepareVideo = (
 	file: File,
 ): Promise<{
-	storageLink: string;
+	url: string;
 	videoDimension: { width: number; height: number };
 }> => {
 	return new Promise((resolve, reject) => {
@@ -45,9 +45,9 @@ export const prepareVideo = (
 			sha256(file)
 				.then(hash => {
 					uploadVideoToStorage(hash, file)
-						.then(storageLink => {
+						.then(url => {
 							resolve({
-								storageLink,
+								url,
 								videoDimension: { width, height },
 							});
 						})
@@ -61,4 +61,34 @@ export const prepareVideo = (
 			reject(new Error("Failed to load video"));
 		};
 	});
+};
+
+export const getYouTubeVideoPreview = (
+	youtubeUrl: string,
+): Promise<HTMLImageElement> => {
+	return new Promise((resolve, reject) => {
+		const preview = document.createElement("img");
+		preview.src = youtubeUrl;
+		preview.onload = () => {
+			resolve(preview);
+		};
+		preview.onerror = () => {
+			reject(new Error("Failed to load preview"));
+		};
+	});
+};
+
+export const getYouTubeThumbnail = (
+	videoId: string,
+	quality: string = "maxres",
+) => {
+	const qualities = {
+		maxres: "maxresdefault", // 1280x720
+		sd: "sddefault", // 640x480
+		hq: "hqdefault", // 480x360
+		mq: "mqdefault", // 320x180
+		default: "default", // 120x90
+	};
+
+	return `https://img.youtube.com/vi/${videoId}/${qualities[quality]}.jpg`;
 };

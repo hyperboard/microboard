@@ -4,22 +4,23 @@ import { DrawingContext } from "../DrawingContext";
 import { Mbr } from "../Mbr";
 import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
-import { Placeholder } from "../Placeholder";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { storageURL } from "./VideoHelpers";
+import { getYouTubeThumbnail, storageURL } from "./VideoHelpers";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Paths, Path } from "../Path";
 import { VideoCommand } from "Board/Items/Video/VideoCommand";
 import { Point } from "Board/Items/Point/Point";
 import { Line } from "Board/Items/Line/Line";
 import { SETTINGS } from "Board/Settings";
+import { getPlaceholderImage } from "Board/Items/Image/Image";
 
 export interface VideoItemData {
 	itemType: "Video";
 	url: string;
 	videoDimension: Dimension;
 	transformation: TransformationData;
+	isStorageUrl: boolean;
 }
 
 export interface Dimension {
@@ -27,45 +28,8 @@ export interface Dimension {
 	width: number;
 }
 
-const PlaceholderImg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M5 11.1L7 9.1L12.5 14.6L16 11.1L19 14.1V5H5V11.1ZM4 3H20C20.2652 3 20.5196 3.10536 20.7071 3.29289C20.8946 3.48043 21 3.73478 21 4V20C21 20.2652 20.8946 20.5196 20.7071 20.7071C20.5196 20.8946 20.2652 21 20 21H4C3.73478 21 3.48043 20.8946 3.29289 20.7071C3.10536 20.5196 3 20.2652 3 20V4C3 3.73478 3.10536 3.48043 3.29289 3.29289C3.48043 3.10536 3.73478 3 4 3ZM15.5 10C15.1022 10 14.7206 9.84196 14.4393 9.56066C14.158 9.27936 14 8.89782 14 8.5C14 8.10218 14.158 7.72064 14.4393 7.43934C14.7206 7.15804 15.1022 7 15.5 7C15.8978 7 16.2794 7.15804 16.5607 7.43934C16.842 7.72064 17 8.10218 17 8.5C17 8.89782 16.842 9.27936 16.5607 9.56066C16.2794 9.84196 15.8978 10 15.5 10Z" fill="white" fill-opacity="0.6"/>
-</svg>`;
-
-function getPlaceholderVideo(
-	board: Board,
-	videoDimension?: Dimension,
-): HTMLImageElement {
-	const placeholderCanvas = document.createElement("canvas");
-	const placeholderContext = placeholderCanvas.getContext(
-		"2d",
-	) as CanvasRenderingContext2D;
-
-	const context = new DrawingContext(board.camera, placeholderContext);
-	const placeholder = new Placeholder();
-
-	if (videoDimension) {
-		placeholderCanvas.width = videoDimension.width;
-		placeholderCanvas.height = videoDimension.height;
-		placeholder.transformation.scaleTo(
-			videoDimension.width / 100,
-			videoDimension.height / 100,
-		);
-	} else {
-		placeholderCanvas.width = 250;
-		placeholderCanvas.height = 150;
-		placeholder.transformation.scaleTo(250 / 100, 150 / 100);
-	}
-
-	placeholder.render(context);
-
-	const placeholderImage = new Image();
-	placeholderImage.src = placeholderCanvas.toDataURL();
-	return placeholderImage;
-}
-
 export interface VideoConstructorData {
-	storageLink?: string;
-	videoUrl?: string;
+	url: string;
 	videoDimension: Dimension;
 }
 
@@ -89,26 +53,24 @@ export class VideoItem extends Mbr {
 	private playBtnMbr: Mbr = new Mbr();
 
 	constructor(
-		{ storageLink, videoUrl, videoDimension }: VideoConstructorData,
+		{ url, videoDimension }: VideoConstructorData,
 		board: Board,
 		private events?: Events,
 		private id = "",
+		preview?: HTMLImageElement,
 	) {
 		super();
-		// this.preview.src = PlaceholderImg;
+		this.preview = getPlaceholderImage(board, videoDimension);
 		this.linkTo = new LinkTo(this.id, events);
 		this.board = board;
-		this.setUrl(storageLink, videoUrl);
+		if (preview) {
+			this.preview = preview;
+		}
+		this.isStorageUrl = !SETTINGS.getYouTubeId(url);
+		this.setUrl(url);
+		this.createVideo();
 		this.videoDimension = videoDimension;
 		this.transformation = new Transformation(id, events);
-		if (!SETTINGS.getYouTubeId(this.url)) {
-			this.video = document.createElement("video");
-			this.video.crossOrigin = "anonymous";
-			this.video.muted = true;
-			this.video.onloadedmetadata = this.onLoadedMetadata;
-			this.video.onerror = this.onError;
-			this.video.src = this.url;
-		}
 		this.linkTo.subject.subscribe(() => {
 			this.updateMbr();
 			this.subject.publish(this);
@@ -116,10 +78,25 @@ export class VideoItem extends Mbr {
 		this.transformation.subject.subscribe(this.onTransform);
 	}
 
-	private captureFirstFrame() {
-		if (SETTINGS.getYouTubeId(this.url)) {
-			return;
+	private getYouTubePreview() {
+		const videoId = SETTINGS.getYouTubeId(this.url);
+		if (videoId) {
+			this.preview.src = getYouTubeThumbnail(videoId, "maxres");
 		}
+	}
+
+	private createVideo() {
+		if (this.isStorageUrl) {
+			this.video = document.createElement("video");
+			this.video.crossOrigin = "anonymous";
+			this.video.muted = true;
+			this.video.onloadedmetadata = this.onLoadedMetadata;
+			this.video.onerror = this.onError;
+			this.video.src = this.url;
+		}
+	}
+
+	private captureFirstFrame() {
 		this.video.currentTime = 0.1;
 		const handleSeeked = () => {
 			const canvas = document.createElement("canvas");
@@ -182,17 +159,16 @@ export class VideoItem extends Mbr {
 		return this.playBtnMbr;
 	}
 
-	setUrl(storageLink?: string, videoUrl?: string): void {
-		if (videoUrl) {
-			this.url = videoUrl;
-		} else if (storageLink) {
+	setUrl(url: string): void {
+		if (this.isStorageUrl) {
 			try {
-				const url = new URL(storageLink);
-				this.url = `${window.location.origin}${url.pathname}`;
+				const newUrl = new URL(url);
+				this.url = `${window.location.origin}${newUrl.pathname}`;
 			} catch (_) {
-				this.url = `${storageURL}/${storageLink}`;
+				this.url = `${storageURL}/${url}`;
 			}
-			this.isStorageUrl = true;
+		} else {
+			this.url = url;
 		}
 	}
 
@@ -205,12 +181,16 @@ export class VideoItem extends Mbr {
 			width: this.video.videoWidth,
 			height: this.video.videoHeight,
 		};
+		if (SETTINGS.getYouTubeId(this.url)) {
+			this.shootLoadCallbacks();
+			return;
+		}
 		this.captureFirstFrame();
 		this.shootBeforeLoadCallbacks();
 	};
 
 	onError = (_error: any) => {
-		this.preview = getPlaceholderVideo(this.board, this.videoDimension);
+		this.preview = getPlaceholderImage(this.board, this.videoDimension);
 		this.updateMbr();
 		this.subject.publish(this);
 		this.shootLoadCallbacks();
@@ -276,7 +256,7 @@ export class VideoItem extends Mbr {
 
 		div.style.backgroundImage = this.preview
 			? `url(${this.preview.src})`
-			: `url(${getPlaceholderVideo(this.board).src})`;
+			: `url(${getPlaceholderImage(this.board).src})`;
 
 		div.id = this.id;
 		div.style.width = `${this.videoDimension.width}px`;
@@ -295,6 +275,7 @@ export class VideoItem extends Mbr {
 			url: this.url,
 			videoDimension: this.videoDimension,
 			transformation: this.transformation.serialize(),
+			isStorageUrl: this.isStorageUrl,
 		};
 	}
 
@@ -302,15 +283,17 @@ export class VideoItem extends Mbr {
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
+		if (data.isStorageUrl) {
+			this.isStorageUrl = data.isStorageUrl;
+		}
 		if (data.url) {
-			if (SETTINGS.getYouTubeId(data.url)) {
-				this.setUrl(undefined, data.url);
-			} else {
-				this.setUrl(data.url);
+			this.setUrl(data.url);
+			if (!this.isStorageUrl) {
+				this.getYouTubePreview();
 			}
 		}
 		if (this.isStorageUrl) {
-			this.video.src = this.url;
+			this.createVideo();
 		}
 		return this;
 	}
