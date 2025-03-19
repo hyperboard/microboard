@@ -573,8 +573,8 @@ export class Camera {
 		this.subject.publish(this);
 	}
 
-	smoothTranslateTo(keyboard: Keyboard, isSelect: boolean): void {
-		if (!isSelect) {
+	smoothTranslateTo(keyboard: Keyboard, shouldTranslate: boolean): void {
+		if (!shouldTranslate) {
 			return;
 		}
 
