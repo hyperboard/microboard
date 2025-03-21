@@ -22,6 +22,7 @@ export interface VideoItemData {
 	transformation: TransformationData;
 	isStorageUrl: boolean;
 	previewUrl: string;
+	extension: "mp4" | "webm";
 }
 
 export interface Dimension {
@@ -60,6 +61,7 @@ export class VideoItem extends Mbr {
 		board: Board,
 		private events?: Events,
 		private id = "",
+		private extension: "mp4" | "webm" = "mp4",
 	) {
 		super();
 		this.isStorageUrl = !SETTINGS.getYouTubeId(url);
@@ -275,6 +277,7 @@ export class VideoItem extends Mbr {
 			transformation: this.transformation.serialize(),
 			isStorageUrl: this.isStorageUrl,
 			previewUrl: this.previewUrl,
+			extension: this.extension,
 		};
 	}
 
@@ -287,6 +290,9 @@ export class VideoItem extends Mbr {
 		}
 		if (data.url) {
 			this.setUrl(data.url);
+		}
+		if (data.extension) {
+			this.extension = data.extension;
 		}
 
 		this.preview = getPlaceholderImage(this.board, data.videoDimension);
@@ -391,11 +397,11 @@ export class VideoItem extends Mbr {
 		return undefined;
 	}
 
-	download(extension: "mp4" | "webm") {
+	download() {
 		if (this.isStorageUrl) {
 			const linkElem = document.createElement("a");
 			linkElem.href = this.url;
-			linkElem.setAttribute("download", `${this.url}.${extension}`);
+			linkElem.setAttribute("download", `${this.url}.${this.extension}`);
 			linkElem.click();
 		}
 	}

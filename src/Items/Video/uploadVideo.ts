@@ -5,10 +5,21 @@ import { prepareVideo } from "./VideoHelpers";
 import { NotifyFunction } from "Board/Events/Events";
 import { t } from "i18next";
 
-export function uploadVideo(file: File, board: Board, notify: NotifyFunction) {
+export function uploadVideo(
+	file: File,
+	board: Board,
+	notify: NotifyFunction,
+	extension: "mp4" | "webm",
+) {
 	prepareVideo(file)
 		.then(videoData => {
-			const video = new VideoItem(videoData, board, board.events, "");
+			const video = new VideoItem(
+				videoData,
+				board,
+				board.events,
+				"",
+				extension,
+			);
 			video.doOnceBeforeOnLoad(() => {
 				const { scaleX, scaleY, translateX, translateY } =
 					calculatePosition(video, board);

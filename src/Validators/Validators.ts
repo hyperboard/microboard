@@ -16,6 +16,7 @@ import { Descendant } from "slate";
 import Ajv from "ajv";
 import { PlaceholderData } from "Board/Items/Placeholder";
 import { GroupData } from "Board/Items/Group";
+import { VideoItemData } from "Board/Items/Video/Video";
 
 export const validator = new Ajv();
 
@@ -56,6 +57,7 @@ const itemValidators: Record<string, (data: any) => boolean> = {
 	Placeholder: validatePlaceholderData,
 	AINode: validateAINodeData,
 	Group: validateGroupData,
+	Video: validateVideoItemData,
 };
 
 function validateItemData(itemData: any): boolean {
@@ -309,6 +311,20 @@ function validateImageItemData(data: any): data is ImageItemData {
 		data.hasOwnProperty("storageLink") &&
 		typeof data.transformation === "object" &&
 		typeof data.storageLink === "string" &&
+		validateTransformationData(data.transformation);
+	return isValid;
+}
+
+function validateVideoItemData(data: any): data is VideoItemData {
+	const isValid =
+		data.hasOwnProperty("transformation") &&
+		data.hasOwnProperty("url") &&
+		data.hasOwnProperty("isStorageUrl") &&
+		data.hasOwnProperty("previewUrl") &&
+		typeof data.transformation === "object" &&
+		typeof data.url === "string" &&
+		typeof data.previewUrl === "string" &&
+		typeof data.isStorageUrl === "boolean" &&
 		validateTransformationData(data.transformation);
 	return isValid;
 }

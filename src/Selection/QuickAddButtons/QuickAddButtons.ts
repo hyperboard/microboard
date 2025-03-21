@@ -55,8 +55,14 @@ export function getQuickAddButtons(
 		const connectorStorage = new SessionStorage();
 		const currMbr = selectedItem.getMbr();
 		const selectedItemData = selectedItem.serialize();
-		const width = currMbr.getWidth();
-		const height = currMbr.getHeight();
+		const width =
+			selectedItem.itemType === "Shape"
+				? selectedItem.getPath().getMbr().getWidth()
+				: currMbr.getWidth();
+		const height =
+			selectedItem.itemType === "Shape"
+				? selectedItem.getPath().getMbr().getHeight()
+				: currMbr.getHeight();
 		let offsetX = width;
 		let offsetY = height;
 		let newWidth = width;
@@ -252,12 +258,16 @@ export function getQuickAddButtons(
 			return;
 		}
 
+		let pathCenter: Point | undefined;
+		if (single.itemType === "Shape") {
+			pathCenter = single.getPath().getMbr().getCenter();
+		}
 		const center = itemMbr.getCenter();
 		const width = itemMbr.getWidth();
 		const height = itemMbr.getHeight();
 		const positions = [
-			new Point(center.x - width / 2, center.y),
-			new Point(center.x + width / 2, center.y),
+			new Point(center.x - width / 2, (pathCenter || center).y),
+			new Point(center.x + width / 2, (pathCenter || center).y),
 			new Point(center.x, center.y - height / 2),
 			new Point(center.x, center.y + height / 2),
 		];

@@ -27,8 +27,16 @@ export function getControlPointData(
 	const itemScale = isRichText
 		? { x: 1, y: 1 }
 		: item.transformation.getScale();
-	const width = item.getMbr().getWidth();
-	const height = item.getMbr().getHeight();
+	const width =
+		item.itemType === "Shape"
+			? item.getPath().getMbr().getWidth()
+			: item.getMbr().getWidth();
+	let height: number;
+	if (item.itemType === "Shape" && index !== 2 && index !== 3) {
+		height = item.getPath().getMbr().getHeight();
+	} else {
+		height = item.getMbr().getHeight();
+	}
 	const adjMapScaled = {
 		0: { x: 0, y: height / 2 / itemScale.y },
 		1: {
