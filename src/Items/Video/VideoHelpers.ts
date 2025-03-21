@@ -1,4 +1,4 @@
-import { sha256 } from "shared/sha256";
+import { fileTosha256 } from "shared/sha256";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
 
 export const storageURL = `${window.location.origin}/api/v1/media/video`;
@@ -49,7 +49,7 @@ export const prepareVideo = (
 					.then(imageData => {
 						const { videoWidth: width, videoHeight: height } =
 							video;
-						sha256(file)
+						fileTosha256(file)
 							.then(hash => {
 								uploadVideoToStorage(hash, file)
 									.then(url => {
