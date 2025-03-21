@@ -2,8 +2,10 @@ import { Board } from "Board/Board";
 import { VideoItem } from "./Video";
 import { calculatePosition } from "../Image/calculatePosition";
 import { prepareVideo } from "./VideoHelpers";
+import { NotifyFunction } from "Board/Events/Events";
+import { t } from "i18next";
 
-export function uploadVideo(file: File, board: Board) {
+export function uploadVideo(file: File, board: Board, notify: NotifyFunction) {
 	prepareVideo(file)
 		.then(videoData => {
 			const video = new VideoItem(videoData, board, board.events, "");
@@ -19,6 +21,12 @@ export function uploadVideo(file: File, board: Board) {
 			});
 		})
 		.catch(er => {
+			notify({
+				variant: "error",
+				header: t("video.error.header"),
+				body: er.message || "",
+				duration: 5000,
+			});
 			console.error("Could not create video:", er);
 		});
 }

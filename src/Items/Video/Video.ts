@@ -38,7 +38,7 @@ export interface VideoConstructorData {
 export class VideoItem extends Mbr {
 	readonly itemType = "Video";
 	parent = "Board";
-	preview: HTMLImageElement = new Image();
+	preview: HTMLImageElement;
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	readonly subject = new Subject<VideoItem>();
@@ -66,13 +66,12 @@ export class VideoItem extends Mbr {
 		this.preview = getPlaceholderImage(board, videoDimension);
 		this.linkTo = new LinkTo(this.id, events);
 		this.board = board;
-		//img storage link or youtube preview url
+		// img storage link or youtube preview url
 		this.previewUrl = previewUrl;
 		this.setPreview(this.preview, previewUrl);
 		this.preview.onload = this.onLoad;
 		this.preview.onerror = this.onError;
 		this.setUrl(url);
-		// this.createVideo();
 		this.videoDimension = videoDimension;
 		this.transformation = new Transformation(id, events);
 		this.linkTo.subject.subscribe(() => {
@@ -81,24 +80,6 @@ export class VideoItem extends Mbr {
 		});
 		this.transformation.subject.subscribe(this.onTransform);
 	}
-
-	// private getYouTubePreview() {
-	//     const videoId = SETTINGS.getYouTubeId(this.url);
-	//     if (videoId) {
-	//         this.preview.src = getYouTubeThumbnail(videoId, "maxres");
-	//     }
-	// }
-
-	// private createVideo() {
-	//     if (this.isStorageUrl) {
-	//         this.video = document.createElement("video");
-	//         this.video.crossOrigin = "anonymous";
-	//         this.video.muted = true;
-	//         this.video.onloadedmetadata = this.onLoadedMetadata;
-	//         this.video.onerror = this.onError;
-	//         this.video.src = this.url;
-	//     }
-	// }
 
 	setCurrentTime(time: number) {
 		this.currentTime = time;
@@ -172,7 +153,9 @@ export class VideoItem extends Mbr {
 			image.src = previewUrl;
 		}
 
-		this.preview = image;
+		image.onload = () => {
+			this.preview = image;
+		};
 	}
 
 	setPreviewImage(image: HTMLImageElement): void {
@@ -306,11 +289,7 @@ export class VideoItem extends Mbr {
 			this.setUrl(data.url);
 		}
 
-		this.preview = getPlaceholderImage(
-			this.board,
-			data.videoDimension,
-			// "The image is loading from the storage",
-		);
+		this.preview = getPlaceholderImage(this.board, data.videoDimension);
 
 		const storageImage = new Image();
 
@@ -322,9 +301,6 @@ export class VideoItem extends Mbr {
 		if (data.previewUrl) {
 			this.setPreview(storageImage, data.previewUrl);
 		}
-		// if (this.isStorageUrl) {
-		//     this.createVideo();
-		// }
 		return this;
 	}
 
@@ -415,11 +391,11 @@ export class VideoItem extends Mbr {
 		return undefined;
 	}
 
-	download() {
+	download(extension: "mp4" | "webm") {
 		if (this.isStorageUrl) {
 			const linkElem = document.createElement("a");
 			linkElem.href = this.url;
-			linkElem.setAttribute("download", "video.mp4");
+			linkElem.setAttribute("download", `${this.url}.${extension}`);
 			linkElem.click();
 		}
 	}
