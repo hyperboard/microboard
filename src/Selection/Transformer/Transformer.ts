@@ -310,7 +310,7 @@ export class Transformer extends Tool {
 			}
 		} else if (single instanceof RichText) {
 			const isLongText = single.getTextString().length > 5000;
-			if ((isLongText && !isWidth) || !this.mbr) {
+			if (!this.mbr) {
 				return false;
 			}
 
@@ -366,11 +366,101 @@ export class Transformer extends Tool {
 					matrix.scaleY = 1;
 				}
 			} else {
-				single.transformation.scaleByTranslateBy(
-					{ x: matrix.scaleX, y: matrix.scaleY },
-					{ x: matrix.translateX, y: matrix.translateY },
-					this.beginTimeStamp,
-				);
+				if (isLongText) {
+					if (this.board.selection.shouldRenderItemsMbr) {
+						this.board.selection.shouldRenderItemsMbr = false;
+					}
+					switch (this.resizeType) {
+						case "leftTop":
+							if (
+								this.board.pointer.getCursor() !== "nwse-resize"
+							) {
+								this.board.pointer.setCursor("nwse-resize");
+							}
+							if (
+								this.board.pointer.point.x >=
+									this.mbr.right - 100 ||
+								this.board.pointer.point.y >=
+									this.mbr.bottom - 100
+							) {
+								return false;
+							}
+							break;
+
+						case "rightTop":
+							if (
+								this.board.pointer.getCursor() !== "nesw-resize"
+							) {
+								this.board.pointer.setCursor("nesw-resize");
+							}
+							if (
+								this.board.pointer.point.x <=
+									this.mbr.left + 100 ||
+								this.board.pointer.point.y >=
+									this.mbr.bottom - 100
+							) {
+								return false;
+							}
+							break;
+
+						case "leftBottom":
+							if (
+								this.board.pointer.getCursor() !== "nesw-resize"
+							) {
+								this.board.pointer.setCursor("nesw-resize");
+							}
+							if (
+								this.board.pointer.point.x >=
+									this.mbr.right - 100 ||
+								this.board.pointer.point.y <= this.mbr.top + 100
+							) {
+								return false;
+							}
+							break;
+
+						case "rightBottom":
+							if (
+								this.board.pointer.getCursor() !== "nwse-resize"
+							) {
+								this.board.pointer.setCursor("nwse-resize");
+							}
+							if (
+								this.board.pointer.point.x <=
+									this.mbr.left + 100 ||
+								this.board.pointer.point.y <= this.mbr.top + 100
+							) {
+								return false;
+							}
+							break;
+
+						default:
+							break;
+					}
+					this.mbr = resizedMbr;
+					const mbrWidth = this.mbr.getWidth();
+					const mbrHeight = this.mbr.getHeight();
+					const { left, top } = this.mbr;
+					this.onPointerUpCb = () => {
+						this.board.pointer.setCursor("default");
+						this.board.selection.shouldRenderItemsMbr = true;
+						const scaleX = mbrWidth / single.getWidth();
+						const scaleY = mbrHeight / single.getHeight();
+						const translateX = left - single.left;
+						const translateY = top - single.top;
+						single.transformation.scaleByTranslateBy(
+							{ x: scaleX, y: scaleY },
+							{ x: translateX, y: translateY },
+							this.beginTimeStamp,
+						);
+					};
+					return true;
+				} else {
+					single.transformation.scaleByTranslateBy(
+						{ x: matrix.scaleX, y: matrix.scaleY },
+						{ x: matrix.translateX, y: matrix.translateY },
+						this.beginTimeStamp,
+					);
+				}
 			}
 			if (followingComments) {
 				const translation = this.handleMultipleItemsResize(
