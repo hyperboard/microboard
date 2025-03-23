@@ -1,18 +1,18 @@
+import { isSafari } from "App/isSafari";
+import { Comment } from "Board/Items/Comment/Comment";
+import { Group } from "Board/Items/Group/Group.js";
+import { Selection } from "Board/Selection/index.js";
+import { quickAddItem } from "Board/Selection/QuickAddButtons";
+import { SETTINGS } from "Board/Settings.js";
 import { Board } from "../../Board";
+import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { Frame, Item, Line, Mbr, Point } from "../../Items";
 import { DrawingContext } from "../../Items/DrawingContext";
-import { Tool } from "../Tool";
-import { SETTINGS } from "Board/Settings.js";
-import { NestingHighlighter } from "../NestingHighlighter";
-import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { createDebounceUpdater } from "../DebounceUpdater";
-import { quickAddItem } from "Board/Selection/QuickAddButtons";
-import { isSafari } from "App/isSafari";
+import { NestingHighlighter } from "../NestingHighlighter";
 import AlignmentHelper from "../RelativeAlignment";
-import { Group } from "Board/Items/Group/Group.js";
-import { Comment } from "Board/Items/Comment/Comment";
-import { Selection } from "Board/Selection/index.js";
 import { RELATIVE_ALIGNMENT_COLOR } from "../RelativeAlignment/RelativeAlignment.js";
+import { Tool } from "../Tool";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -87,7 +87,7 @@ export class Select extends Tool {
 		this.snapLines = { verticalLines: [], horizontalLines: [] };
 	}
 
-	private handleSnapping(item: Item): boolean {
+	private handleSnapping(item: Item | Item[]): boolean {
 		if (this.board.keyboard.isShift) {
 			return false;
 		}
@@ -122,7 +122,9 @@ export class Select extends Tool {
 			) {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
-				const itemCenter = item.getMbr().getCenter();
+				const itemCenter = Array.isArray(item)
+					? this.board.selection.getMbr()?.getCenter()!
+					: item.getMbr().getCenter();
 				const targetX =
 					this.board.pointer.point.x - this.initialCursorPos.x;
 				const targetY =
@@ -167,10 +169,15 @@ export class Select extends Tool {
 		return Math.min(angleDiff, 360 - angleDiff);
 	}
 
-	private handleShiftGuidelines(item: Item, mousePosition: Point): void {
+	private handleShiftGuidelines(
+		item: Item | Item[],
+		mousePosition: Point,
+	): void {
 		if (item) {
 			if (!this.originalCenter) {
-				this.originalCenter = item.getMbr().getCenter().copy();
+				this.originalCenter = Array.isArray(item)
+					? this.board.selection.getMbr()?.getCenter().copy()!
+					: item.getMbr().getCenter().copy();
 				this.guidelines = this.alignmentHelper.generateGuidelines(
 					this.originalCenter,
 				).lines;
@@ -213,13 +220,34 @@ export class Select extends Tool {
 					this.originalCenter.y + snapDirectionY * mainLineLength;
 
 				const threshold = Infinity; // Убрали ограничение
-				const translateX = newEndX - item.getMbr().getCenter().x;
-				const translateY = newEndY - item.getMbr().getCenter().y;
-				item.transformation.translateBy(
-					translateX,
-					translateY,
-					this.beginTimeStamp,
-				);
+				const translateX =
+					newEndX -
+					(Array.isArray(item)
+						? this.board.selection.getMbr()?.getCenter().x!
+						: item.getMbr().getCenter().x);
+				const translateY =
+					newEndY -
+					(Array.isArray(item)
+						? this.board.selection.getMbr()?.getCenter().y!
+						: item.getMbr().getCenter().y);
+
+				if (Array.isArray(item)) {
+					const translation =
+						this.board.selection.getManyItemsTranslation(
+							translateX,
+							translateY,
+						);
+					this.board.selection.transformMany(
+						translation,
+						this.beginTimeStamp,
+					);
+				} else {
+					item.transformation.translateBy(
+						translateX,
+						translateY,
+						this.beginTimeStamp,
+					);
+				}
 			}
 		}
 	}
@@ -486,6 +514,9 @@ export class Select extends Tool {
 				this.debounceUpd.setFalse();
 				return false;
 			} else {
+				if (this.handleSnapping(this.board.selection.items.list())) {
+					return false;
+				}
 				const translation = selection.getManyItemsTranslation(x, y);
 
 				const translationKeys = Object.keys(translation);
@@ -606,7 +637,10 @@ export class Select extends Tool {
 
 		if (isShift) {
 			const mousePosition = this.board.pointer.point;
-			if (this.downOnItem) {
+			if (this.board.selection.list().length > 1) {
+				const items = this.board.selection.list();
+				this.handleShiftGuidelines(items, mousePosition);
+			} else if (this.downOnItem) {
 				this.handleShiftGuidelines(this.downOnItem, mousePosition);
 			} else if (this.isDraggingSelection) {
 				const singleItem = this.board.selection.items.getSingle();
@@ -662,25 +696,36 @@ export class Select extends Tool {
 		}
 	}
 
-	private getAlignmentItem(): Item | null {
-		let finalItem: Item | null = null;
+	private getAlignmentItem(): Item | Item[] | null {
+		let finalItem: Item | Item[] | null = null;
 
 		const singleItem = this.board.selection.items.getSingle();
 		const groupItem = this.board.selection.items;
 
 		const isConnectorUnderPointer =
-			this.downOnItem?.itemType !== "Connector";
+			this.downOnItem?.itemType === "Connector";
 		const isDraggingSingleSelectedItem =
 			this.isDraggingSelection && singleItem;
 		// const isDregginGroupSelectedItem =
 		// 	this.isDraggingSelection && groupItem;
-
 		if (isConnectorUnderPointer) {
+			return null;
+		}
+		if (this.isDownOnUnselectedItem) {
 			finalItem = this.downOnItem;
 		}
 		if (isDraggingSingleSelectedItem) {
 			finalItem = singleItem;
 		}
+
+		if (
+			this.isDownOnSelection &&
+			this.isDraggingSelection &&
+			this.board.selection.items.list().length > 1
+		) {
+			finalItem = this.board.selection.items.list();
+		}
+
 		return finalItem;
 	}
 

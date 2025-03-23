@@ -1,5 +1,5 @@
 import { Board } from "Board/Board";
-import { Frame, Item, Line, Point } from "Board/Items";
+import { Frame, Item, Line, Point, type Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
@@ -36,15 +36,29 @@ export class AlignmentHelper {
 		return baseThickness / (zoom / 100);
 	}
 
-	checkAlignment(movingItem: Item): {
+	private combineMBRs(items: Item[]): Mbr {
+		return items.reduce((acc, item, i) => {
+			if (i === 0) {
+				return acc;
+			}
+			const itemMbr =
+				item.itemType === "Shape"
+					? item.getPath().getMbr()
+					: item.getMbr();
+			return acc.combine(itemMbr);
+		}, items[0].getMbr());
+	}
+
+	checkAlignment(movingItem: Item | Item[]): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
-		if (movingItem.itemType === "Comment") {
+		if (!Array.isArray(movingItem) && movingItem.itemType === "Comment") {
 			return { verticalLines: [], horizontalLines: [] };
 		}
-		const movingMBR =
-			movingItem.itemType === "Shape"
+		const movingMBR = Array.isArray(movingItem)
+			? this.combineMBRs(movingItem)
+			: movingItem.itemType === "Shape"
 				? movingItem.getPath().getMbr()
 				: movingItem.getMbr();
 
@@ -55,17 +69,21 @@ export class AlignmentHelper {
 		const childrenIds =
 			movingItem instanceof Frame ? movingItem.getChildrenIds() : [];
 
-		const nearbyItems = this.spatialIndex.getNearestTo(
-			movingMBR.getCenter(),
-			20,
-			(otherItem: Item) =>
-				otherItem !== movingMBR &&
-				otherItem.itemType !== "Connector" &&
-				otherItem.itemType !== "Drawing" &&
-				otherItem.isInView(camera) &&
-				!childrenIds.includes(otherItem.getId()),
-			Math.ceil(cameraWidth),
-		);
+		const nearbyItems = this.spatialIndex
+			.getNearestTo(
+				movingMBR.getCenter(),
+				20,
+				(otherItem: Item) =>
+					otherItem !== movingMBR &&
+					otherItem.itemType !== "Connector" &&
+					otherItem.itemType !== "Drawing" &&
+					otherItem.isInView(camera) &&
+					!childrenIds.includes(otherItem.getId()),
+				Math.ceil(cameraWidth),
+			)
+			.filter(item =>
+				Array.isArray(movingItem) ? !movingItem.includes(item) : true,
+			);
 
 		const verticalAlignments: Map<number, { minY: number; maxY: number }> =
 			new Map();
@@ -326,12 +344,14 @@ export class AlignmentHelper {
 	}
 
 	snapToClosestLine(
-		draggingItem: Item,
+		draggingItem: Item | Item[],
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
 		cursorPosition: Point,
 	): boolean {
-		const itemMbr = draggingItem.getMbr();
+		const itemMbr = Array.isArray(draggingItem)
+			? this.combineMBRs(draggingItem)
+			: draggingItem.getMbr();
 		const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 
@@ -520,7 +540,7 @@ export class AlignmentHelper {
 	}
 
 	translateItemsOrCanvas(
-		item: Item,
+		item: Item | Item[],
 		x: number,
 		y: number,
 		timeStamp: number,
@@ -528,6 +548,16 @@ export class AlignmentHelper {
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
 			return;
 		}
+
+		if (Array.isArray(item)) {
+			const translation = this.board.selection.getManyItemsTranslation(
+				x,
+				y,
+			);
+			this.board.selection.transformMany(translation, timeStamp);
+			return;
+		}
+
 		if (item.itemType === "Frame") {
 			const translation = this.board.selection.getManyItemsTranslation(
 				x,
