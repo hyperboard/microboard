@@ -761,7 +761,7 @@ function findPathPoints(
 	const pathPoints: Point[] = [];
 
 	if (toVisitPoints.length > 0) {
-		let current = points[0];
+		const current = points[0];
 		const remainingToVisit = [...toVisitPoints];
 
 		while (remainingToVisit.length > 0) {
@@ -831,7 +831,9 @@ function findPathPoints(
 }
 
 function filterOrthogonalSegments(points: Point[]): Point[] {
-	if (points.length < 2) return points;
+	if (points.length < 2) {
+		return points;
+	}
 
 	const filteredPoints: Point[] = [points[0]];
 	let currentDirection: "horizontal" | "vertical" | null = null;
@@ -857,7 +859,9 @@ function filterOrthogonalSegments(points: Point[]): Point[] {
 	filteredPoints.push(points[points.length - 1]);
 
 	return filteredPoints.filter((point, index, arr) => {
-		if (index === 0) return true;
+		if (index === 0) {
+			return true;
+		}
 		const prev = arr[index - 1];
 		return !(point.x === prev.x && point.y === prev.y);
 	});
