@@ -170,6 +170,7 @@ function findCenterLine(
 		);
 		for (let y = 0; y < grid[0].length && centerIdx !== -1; y++) {
 			if (
+				grid[centerIdx][y] &&
 				grid[centerIdx][y].x >= min.x - 0.01 &&
 				grid[centerIdx][y].x <= max.x + 0.01 &&
 				grid[centerIdx][y].y >= min.y - 0.01 &&
@@ -202,6 +203,7 @@ function findCenterLine(
 function createGrid(
 	start: ControlPoint,
 	end: ControlPoint,
+	toVisitPoints: Point[] = [],
 ): {
 	grid: Point[][];
 	newStart?: ControlPoint;
@@ -281,6 +283,7 @@ function createGrid(
 			endOnMbr.y,
 			endMbr.bottom,
 			endMbr.bottom + ITEM_OFFSET,
+			...toVisitPoints,
 		];
 		if (
 			horizontalLines.every(
@@ -301,6 +304,7 @@ function createGrid(
 			endOnMbr.x,
 			endMbr.right,
 			endMbr.right + ITEM_OFFSET,
+			...toVisitPoints,
 		];
 		if (
 			verticalLines.every(line => Math.abs(line - middleX) > ITEM_OFFSET)
@@ -379,6 +383,7 @@ function createGrid(
 			itemMbrFloored.bottom,
 			itemMbrFloored.bottom + ITEM_OFFSET,
 			otherPoint.y,
+			...toVisitPoints,
 		];
 		if (
 			Math.abs(itemMbrFloored.top - middleY) > ITEM_OFFSET &&
@@ -394,6 +399,7 @@ function createGrid(
 			itemMbrFloored.right,
 			itemMbrFloored.right + ITEM_OFFSET,
 			otherPoint.x,
+			...toVisitPoints,
 		];
 		if (
 			Math.abs(itemMbrFloored.left - middleX) > ITEM_OFFSET &&
@@ -439,6 +445,17 @@ function createGrid(
 	for (let x = gridStart.x; x <= gridEnd.x + stepX; x += stepX) {
 		const row: Point[] = [];
 		for (let y = gridStart.y; y <= gridEnd.y + stepY; y += stepY) {
+			toVisitPoints.forEach(visitPoint => {
+				if (
+					visitPoint.x >= x &&
+					visitPoint.x < x + stepX &&
+					visitPoint.y >= y &&
+					visitPoint.y < y + stepY
+				) {
+					row.push(new Point(visitPoint.x, visitPoint.y));
+				}
+			});
+
 			row.push(new Point(x, y));
 		}
 		grid.push(row);
@@ -739,32 +756,117 @@ function findPathPoints(
 	obstacles: Mbr[],
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint,
+	toVisitPoints: Point[] = [],
 ): Point[] {
 	const pathPoints: Point[] = [];
 
-	for (let i = 0; i < points.length - 1; i += 1) {
-		const segmentPath = findPath(
-			points[i],
-			points[i + 1],
+	if (toVisitPoints.length > 0) {
+		let current = points[0];
+		const remainingToVisit = [...toVisitPoints];
+
+		while (remainingToVisit.length > 0) {
+			let closestIndex = 0;
+			let minDistance = distance(current, remainingToVisit[0]);
+			for (let i = 1; i < remainingToVisit.length; i++) {
+				const d = distance(current, remainingToVisit[i]);
+				if (d < minDistance) {
+					minDistance = d;
+					closestIndex = i;
+				}
+			}
+			const nextPoint = remainingToVisit.splice(closestIndex, 1)[0];
+
+			const segmentPath = findPath(
+				current,
+				nextPoint,
+				grid,
+				obstacles,
+				newStart,
+				newEnd,
+			);
+
+			if (segmentPath) {
+				const filteredSegment = filterOrthogonalSegments(segmentPath);
+				pathPoints.push(...filteredSegment);
+			}
+		}
+
+		const finalSegment = findPath(
+			current,
+			points[points.length - 1],
 			grid,
 			obstacles,
 			newStart,
 			newEnd,
 		);
-		if (segmentPath) {
-			pathPoints.push(...segmentPath.slice(0, -1));
-		} else {
-			// If the segmentPath is invalid, remove the current point from the points array
-			points.splice(i + 1, 1);
-			i--; // Adjust the index to recheck the new segment
+
+		if (finalSegment) {
+			pathPoints.push(...finalSegment);
+		}
+	} else {
+		for (let i = 0; i < points.length - 1; i += 1) {
+			const segmentPath = findPath(
+				points[i],
+				points[i + 1],
+				grid,
+				obstacles,
+				newStart,
+				newEnd,
+			);
+
+			if (segmentPath) {
+				pathPoints.push(...segmentPath.slice(0, -1));
+			} else {
+				// If the segmentPath is invalid, remove the current point from the points array
+				points.splice(i + 1, 1);
+				i--;
+			}
+		}
+		if (pathPoints.length !== 0) {
+			pathPoints.push(points[points.length - 1]);
 		}
 	}
 
-	if (pathPoints.length !== 0) {
-		pathPoints.push(points[points.length - 1]);
+	return pathPoints;
+}
+
+function filterOrthogonalSegments(points: Point[]): Point[] {
+	if (points.length < 2) return points;
+
+	const filteredPoints: Point[] = [points[0]];
+	let currentDirection: "horizontal" | "vertical" | null = null;
+
+	for (let i = 1; i < points.length; i++) {
+		const prev = points[i - 1];
+		const current = points[i];
+		const horizontal = prev.y === current.y;
+		const vertical = prev.x === current.x;
+
+		if (!horizontal && !vertical) {
+			continue;
+		}
+
+		const newDirection = horizontal ? "horizontal" : "vertical";
+
+		if (newDirection !== currentDirection) {
+			filteredPoints.push(prev);
+			currentDirection = newDirection;
+		}
 	}
 
-	return pathPoints;
+	filteredPoints.push(points[points.length - 1]);
+
+	return filteredPoints.filter((point, index, arr) => {
+		if (index === 0) return true;
+		const prev = arr[index - 1];
+		return !(point.x === prev.x && point.y === prev.y);
+	});
+}
+
+function distance(p1: Point, p2: Point): number {
+	const dx = p1.x - p2.x;
+	const dy = p1.y - p2.y;
+	return Math.sqrt(dx * dx + dy * dy);
 }
 
 /**
@@ -874,8 +976,13 @@ export function findOrthogonalPath(
 	start: ControlPoint,
 	end: ControlPoint,
 	obstacles: Mbr[],
+	toVisitPoints: Point[] = [],
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	const { grid, newStart, newEnd, middlePoint } = createGrid(start, end);
+	const { grid, newStart, newEnd, middlePoint } = createGrid(
+		start,
+		end,
+		toVisitPoints,
+	);
 	const startPoint = newStart ? newStart : start;
 	const endPoint = newEnd ? newEnd : end;
 
@@ -896,6 +1003,7 @@ export function findOrthogonalPath(
 		obstacles,
 		newStart,
 		newEnd,
+		toVisitPoints,
 	);
 	return {
 		lines: getLines(pathPoints),

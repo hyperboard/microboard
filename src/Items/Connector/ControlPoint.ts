@@ -4,12 +4,10 @@ import { Connector } from "./Connector";
 import { Matrix } from "../Transformation";
 import { RichText } from "../RichText";
 import { AINode } from "../AINode";
-import { getFixedPoint } from "./ConnectorSnap";
-import { Mbr } from "Board/Items/Mbr/Mbr";
 
 type Edge = "top" | "bottom" | "left" | "right";
 
-interface BoardPointData {
+export interface BoardPointData {
 	pointType: "Board";
 	x: number;
 	y: number;

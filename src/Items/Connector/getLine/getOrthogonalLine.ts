@@ -5,10 +5,11 @@ import { findOrthogonalPath } from "./findOrthogonalPath";
 export function getOrthogonalLine(
 	start: ControlPoint,
 	end: ControlPoint,
-	_middle: BoardPoint[],
+	middle: BoardPoint | null,
 	skipObstacles = false,
 ): Path {
 	const obstacles: Mbr[] = [];
+
 	if (start.pointType !== "Board" && !skipObstacles) {
 		obstacles.push(start.item.getMbr());
 	}
@@ -20,15 +21,15 @@ export function getOrthogonalLine(
 		start,
 		end,
 		obstacles,
+		middle ? [middle] : undefined,
 	);
 
 	if (lines.length === 0) {
 		if (obstacles.length > 0) {
-			return getOrthogonalLine(start, end, _middle, true);
+			return getOrthogonalLine(start, end, middle, true);
 		}
-		return new Path([
-			new Line(newStart ? newStart : start, newEnd ? newEnd : end),
-		]);
+		return new Path([new Line(newStart || start, newEnd || end)]);
 	}
+
 	return new Path(lines);
 }

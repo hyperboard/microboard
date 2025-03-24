@@ -10,6 +10,7 @@ export class ConnectorData {
 	readonly itemType = "Connector";
 	startPoint: ControlPointData = new BoardPoint(0, 0);
 	endPoint: ControlPointData = new BoardPoint(0, 0);
+	middlePoints: ControlPointData | null = null;
 	startPointerStyle: ConnectorPointerStyle = "None";
 	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";
@@ -35,6 +36,14 @@ interface SetEndPoint {
 	method: "setEndPoint";
 	item: string[];
 	endPointData: ControlPointData;
+	timestamp?: number;
+}
+
+interface SetMiddlePoint {
+	class: "Connector";
+	method: "setMiddlePoint";
+	item: string[];
+	middlePointData: ControlPointData | null;
 	timestamp?: number;
 }
 
@@ -89,6 +98,7 @@ interface SwitchPointers {
 export type ConnectorOperation =
 	| SetStartPoint
 	| SetEndPoint
+	| SetMiddlePoint
 	| SetStartPointerStyle
 	| SetEndPointerStyle
 	| SetLineStyle

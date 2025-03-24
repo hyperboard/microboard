@@ -2,14 +2,14 @@ import { RichText } from "Board/Items";
 import { t } from "i18next";
 import { Subject } from "shared/Subject";
 import { Board } from "../../Board";
-import { Events, Operation } from "../../Events";
+import { Operation } from "../../Events";
 import { CubicBezier } from "../Curve";
 import { DrawingContext } from "../DrawingContext";
 import { GeometricNormal } from "../GeometricNormal";
 import { Item } from "../Item";
 import { Line } from "../Line";
 import { Mbr } from "../Mbr";
-import { BorderStyle, LinePatterns, Path, Paths } from "../Path";
+import { BorderStyle, Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Matrix, Transformation } from "../Transformation";
 import { ConnectorCommand } from "./ConnectorCommand";
@@ -19,11 +19,10 @@ import {
 	ControlPoint,
 	ControlPointData,
 	FindItemFn,
-	FixedPoint,
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
-import { ConnectorEdge } from "./Pointers";
+import { ConnectorEdge, getMiddlePointer } from "./Pointers";
 import { getStartPointer, getEndPointer } from "./Pointers/index";
 import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
 import { LinkTo } from "../LinkTo/LinkTo";
@@ -31,7 +30,6 @@ import {
 	positionRelatively,
 	resetElementScale,
 	scaleElementBy,
-	translateElementBy,
 } from "Board/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
@@ -74,7 +72,7 @@ export class Connector {
 	parent = "Board";
 	private id = "";
 	readonly transformation: Transformation;
-	private middlePoints: BoardPoint[] = [];
+	private middlePoints: ControlPoint | null = new BoardPoint();
 	private lineColor: string;
 	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth;
@@ -83,6 +81,7 @@ export class Connector {
 	lines = new Path([new Line(new Point(), new Point())]);
 	startPointer: Pointer;
 	endPointer: Pointer;
+	middlePointers: Pointer;
 	animationFrameId?: number;
 	readonly text: RichText;
 	transformationRenderBlock?: boolean = undefined;
@@ -139,6 +138,7 @@ export class Connector {
 			this.lines,
 			this.lineWidth * 0.1 + 0.3,
 		);
+		this.middlePoints = null;
 
 		this.transformation.subject.subscribe((_sub, op) => {
 			if (op.method === "transformMany") {
@@ -285,6 +285,9 @@ export class Connector {
 					case "setEndPoint":
 						this.applyEndPoint(operation.endPointData);
 						break;
+					case "setMiddlePoint":
+						this.applyMiddlePoint(operation.middlePointData);
+						break;
 					case "setStartPointerStyle":
 						this.applyStartPointerStyle(
 							operation.startPointerStyle,
@@ -392,6 +395,19 @@ export class Connector {
 		}
 	}
 
+	applyMiddlePoint(pointData: ControlPointData, updatePath = true): void {
+		const optionalFn = this.getOptionalFindFn();
+		this.middlePoints = getControlPoint(
+			pointData,
+			optionalFn
+				? optionalFn
+				: itemId => this.board.items.findById(itemId),
+		);
+		if (updatePath) {
+			this.updatePaths();
+		}
+	}
+
 	private applySwitchPointers(): void {
 		const temp = this.startPointerStyle;
 		this.startPointerStyle = this.endPointerStyle;
@@ -399,25 +415,20 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	addMiddlePoint(point: BoardPoint, afterPoint?: BoardPoint): void {
-		if (afterPoint) {
-			const afterPointIndex = this.middlePoints.indexOf(afterPoint);
-			if (afterPointIndex === -1) {
-				return;
-			}
-			this.middlePoints.splice(afterPointIndex, 0, point);
-		} else {
-			this.middlePoints.push(point);
-		}
+	addMiddlePoint(point: BoardPoint): void {
+		this.middlePoints = point;
+
 		this.updatePaths();
 	}
 
-	removeMiddlePoint(point: BoardPoint): void {
-		const index = this.middlePoints.indexOf(point);
-		if (index !== -1) {
-			this.middlePoints.splice(index, 1);
-		}
-		this.updatePaths();
+	setMiddlePoint(point: ControlPoint, timestamp?: number): void {
+		this.emit({
+			class: "Connector",
+			method: "setMiddlePoint",
+			item: [this.id],
+			middlePointData: point.serialize(),
+			timestamp,
+		});
 	}
 
 	setStartPointerStyle(style: ConnectorPointerStyle): void {
@@ -512,7 +523,7 @@ export class Connector {
 		return this.endPoint;
 	}
 
-	getMiddlePoints(): BoardPoint[] {
+	getMiddlePoints(): ControlPoint | null {
 		return this.middlePoints;
 	}
 
@@ -978,6 +989,9 @@ export class Connector {
 			transformation: transformation.serialize(),
 			startPoint: this.startPoint.serialize(),
 			endPoint: this.endPoint.serialize(),
+			middlePoints: this.middlePoints
+				? this.middlePoints.serialize()
+				: null,
 			startPointerStyle: this.startPointerStyle,
 			endPointerStyle: this.endPointerStyle,
 			lineStyle: this.lineStyle,
@@ -1001,6 +1015,9 @@ export class Connector {
 		}
 		if (data.endPoint) {
 			this.applyEndPoint(data.endPoint, false);
+		}
+		if (data.middlePoints) {
+			this.applyMiddlePoint(data.middlePoints, false);
 		}
 		if (data.text) {
 			this.text.deserialize(data.text);
@@ -1050,7 +1067,7 @@ export class Connector {
 		if (!this.text) {
 			return;
 		}
-		const { x, y } = this.getMiddlePoint();
+		const { x, y } = this.getMiddlePoints() || this.getMiddlePoint();
 		const height = this.text!.getHeight();
 		const width = this.text!.getWidth();
 
@@ -1125,6 +1142,8 @@ export class Connector {
 		newPoint.transform(delta);
 		if (edge === "start") {
 			this.startPoint = newPoint;
+		} else if (edge === "middle") {
+			this.middlePoints = newPoint;
 		} else {
 			this.endPoint = newPoint;
 		}
@@ -1160,6 +1179,20 @@ export class Connector {
 		this.endPointer.path.setBorderColor(this.lineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
 		this.endPointer.path.setBackgroundColor(this.lineColor);
+
+		if (this.middlePoints) {
+			this.middlePointers = getMiddlePointer(
+				this.middlePoints,
+				this.endPointerStyle,
+				this.lineStyle,
+				this.lines,
+				this.lineWidth * 0.1 + 0.2,
+			);
+
+			this.middlePointers.path.setBorderColor(this.lineColor);
+			this.middlePointers.path.setBorderWidth(this.lineWidth);
+			this.middlePointers.path.setBackgroundColor(this.lineColor);
+		}
 
 		this.offsetLines();
 
@@ -1199,9 +1232,16 @@ export class Connector {
 				]).addConnectedItemType(this.itemType);
 			}
 		} else if (line instanceof Line) {
-			this.lines = new Path([
-				new Line(this.startPointer.start, this.endPointer.start),
-			]).addConnectedItemType(this.itemType);
+			if (this.middlePoints) {
+				this.lines = new Path([
+					new Line(this.startPointer.start, this.middlePoints),
+					new Line(this.middlePoints, this.endPointer.start),
+				]).addConnectedItemType(this.itemType);
+			} else {
+				this.lines = new Path([
+					new Line(this.startPointer.start, this.endPointer.start),
+				]).addConnectedItemType(this.itemType);
+			}
 		} else if (line instanceof CubicBezier) {
 			this.lines = new Path([
 				new CubicBezier(

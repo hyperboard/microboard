@@ -2,7 +2,7 @@ import { Tool } from "../../Tools/Tool";
 import { Board } from "../../Board";
 import { Selection } from "../Selection";
 import { SelectionItems } from "../SelectionItems";
-import { Connector } from "../../Items";
+import { Connector, Point } from "../../Items";
 import { DrawingContext } from "../../Items/DrawingContext";
 import { Cursor } from "../../Pointer";
 import { Anchor } from "Board/Items/Anchor";
@@ -11,6 +11,7 @@ import {
 	CONNECTOR_ANCHOR_TYPE,
 	CONNECTOR_ANCHOR_COLOR,
 } from "Board/Items/Connector/Connector";
+import { BoardPoint } from "Board/Items/Connector";
 
 const config = {
 	anchorDistance: 10,
@@ -19,8 +20,9 @@ const config = {
 export class ConnectorTransformer extends Tool {
 	private startPointerAnchor: Anchor | null = null;
 	private endPointerAnchor: Anchor | null = null;
+	private middlePointerAnchor: Anchor | null = null;
 
-	private statePointer: "start" | "end" | "none" = "none";
+	private statePointer: "start" | "end" | "middle" | "none" = "none";
 	private state: Cursor = "default";
 
 	private snap: ConnectorSnap;
@@ -56,6 +58,9 @@ export class ConnectorTransformer extends Tool {
 			this.state = "grabbing";
 		} else if (this.isHoveringAnchor(this.endPointerAnchor)) {
 			this.statePointer = "end";
+			this.state = "grabbing";
+		} else if (this.isHoveringAnchor(this.middlePointerAnchor)) {
+			this.statePointer = "middle";
 			this.state = "grabbing";
 		}
 
@@ -111,6 +116,10 @@ export class ConnectorTransformer extends Tool {
 		if (this.statePointer !== "end" && this.endPointerAnchor) {
 			this.endPointerAnchor.render(context);
 		}
+
+		if (this.statePointer !== "middle" && this.middlePointerAnchor) {
+			this.middlePointerAnchor.render(context, "circle");
+		}
 	}
 
 	private updateConnectorPoints(): void {
@@ -126,6 +135,22 @@ export class ConnectorTransformer extends Tool {
 					break;
 				case "end":
 					connector.setEndPoint(point, this.beginTimeStamp);
+					this.selection.subject.publish(this.selection);
+					break;
+				case "middle":
+					if (connector.getLineStyle() === "orthogonal") {
+						const middlePoint = connector.getMiddlePoint();
+						const middleBoardPoint = new BoardPoint(
+							point.x,
+							middlePoint.y,
+						);
+						connector.setMiddlePoint(
+							middleBoardPoint,
+							this.beginTimeStamp,
+						);
+					} else {
+						connector.setMiddlePoint(point, this.beginTimeStamp);
+					}
 					this.selection.subject.publish(this.selection);
 					break;
 			}
@@ -165,9 +190,22 @@ export class ConnectorTransformer extends Tool {
 				CONNECTOR_ANCHOR_COLOR.anchorBorder,
 				CONNECTOR_ANCHOR_COLOR.anchorBackground,
 			);
+			const middlePoints =
+				connector.getMiddlePoints() || connector.getMiddlePoint();
+			const nearestMiddlePoint = connector.getNearestEdgePointTo(
+				new Point(middlePoints.x, middlePoints.y),
+			);
+			this.middlePointerAnchor = new Anchor(
+				nearestMiddlePoint.x,
+				nearestMiddlePoint.y,
+				5,
+				CONNECTOR_ANCHOR_COLOR.anchorBorder,
+				CONNECTOR_ANCHOR_COLOR.anchorBorder,
+			);
 		} else {
 			this.startPointerAnchor = null;
 			this.endPointerAnchor = null;
+			this.middlePointerAnchor = null;
 		}
 	}
 }

@@ -1,21 +1,19 @@
 import { Line, Path } from "Board/Items";
-import { ControlPoint, BoardPoint } from "../ControlPoint";
+import { ControlPoint } from "../ControlPoint";
 
 export function getStraightLine(
 	start: ControlPoint,
 	end: ControlPoint,
-	middle: BoardPoint[],
+	middle: ControlPoint | null,
 ): Path {
 	const segments: Line[] = [];
-	if (middle.length === 0) {
+
+	if (!middle) {
 		segments.push(new Line(start, end));
 	} else {
-		for (const point of middle) {
-			end = point;
-			segments.push(new Line(start, end));
-			start = end;
-		}
-		segments.push(new Line(start, end));
+		segments.push(new Line(start, middle));
+		segments.push(new Line(middle, end));
 	}
+
 	return new Path(segments);
 }

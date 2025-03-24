@@ -58,6 +58,20 @@ export class ConnectorCommand implements Command {
 					});
 				}
 				break;
+			case "setMiddlePoint":
+				for (const connector of this.connector) {
+					const middlePoint = connector.getMiddlePoints();
+					reverse.push({
+						item: connector,
+						operation: {
+							...this.operation,
+							middlePointData: middlePoint
+								? middlePoint.serialize()
+								: null,
+						},
+					});
+				}
+				break;
 			case "setStartPointerStyle":
 				for (const connector of this.connector) {
 					reverse.push({

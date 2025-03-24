@@ -1,6 +1,6 @@
 import { Path } from "../../Path";
 import { ConnectorLineStyle } from "../Connector";
-import { BoardPoint, ControlPoint } from "../ControlPoint";
+import { ControlPoint } from "../ControlPoint";
 import { getCurvedLine } from "./getCurvedLine";
 import { getOrthogonalLine } from "./getOrthogonalLine";
 import { getStraightLine } from "./getStraightLine";
@@ -9,7 +9,7 @@ export function getLine(
 	lineStyle: ConnectorLineStyle,
 	start: ControlPoint,
 	end: ControlPoint,
-	middle: BoardPoint[],
+	middle: ControlPoint | null,
 ): Path {
 	switch (lineStyle) {
 		case "straight":

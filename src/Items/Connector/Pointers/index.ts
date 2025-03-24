@@ -7,7 +7,7 @@ import { ControlPoint } from "../ControlPoint";
 import { getPointer, Pointer } from "./Pointers";
 
 export type ConnectedPointerDirection = "top" | "bottom" | "right" | "left";
-export type ConnectorEdge = "start" | "end";
+export type ConnectorEdge = "start" | "end" | "middle";
 
 interface GetRotationParams {
 	point: ControlPoint;
@@ -47,7 +47,7 @@ function getStraightRotation({
 	lines,
 	type,
 }: GetRotationParams): number {
-	if (type === "end") {
+	if (type === "end" || type === "middle") {
 		return (
 			lines.getNormal(point).getAngleRadiansNormal() + (Math.PI / 2) * 3
 		);
@@ -138,6 +138,24 @@ export function getEndPointer(
 	scale: number,
 ): Pointer {
 	const angleRadians = getPointerRotation(point, lineStyle, lines, "end");
+	const matrix = getPointerMatrix(point, angleRadians, scale);
+	const pointer = getPointer(pointerStyle);
+	return {
+		path: pointer.path.getTransformed(matrix),
+		start: pointer.start.getTransformed(matrix),
+		end: pointer.end.getTransformed(matrix),
+		name: pointer.name,
+	};
+}
+
+export function getMiddlePointer(
+	point: ControlPoint,
+	pointerStyle: string,
+	lineStyle: ConnectorLineStyle,
+	lines: Path,
+	scale: number,
+): Pointer {
+	const angleRadians = getPointerRotation(point, lineStyle, lines, "middle");
 	const matrix = getPointerMatrix(point, angleRadians, scale);
 	const pointer = getPointer(pointerStyle);
 	return {

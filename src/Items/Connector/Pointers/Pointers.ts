@@ -8,6 +8,7 @@ export interface Pointer {
 	path: Path | Paths;
 	start: Point;
 	end: Point;
+	middle: Point[];
 }
 
 export function getPointer(style: string): Pointer {
