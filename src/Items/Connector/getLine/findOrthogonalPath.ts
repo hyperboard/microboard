@@ -212,12 +212,7 @@ function createGrid(
 } {
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-	const revertMapDir = {
-		top: 0,
-		bottom: 1,
-		right: 2,
-		left: 3,
-	};
+	const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
 	const offsetMap = {
 		top: { x: 0, y: -ITEM_OFFSET },
 		bottom: { x: 0, y: ITEM_OFFSET },
@@ -225,243 +220,96 @@ function createGrid(
 		left: { x: -ITEM_OFFSET, y: 0 },
 	};
 
-	if (
-		start.pointType !== "Board" &&
-		end.pointType !== "Board" &&
-		startDir &&
-		endDir
-	) {
-		const startItemMbr = start.item.getMbr();
-		const startMbr = new Mbr(
-			Math.floor(startItemMbr.left),
-			Math.floor(startItemMbr.top),
-			Math.floor(startItemMbr.right),
-			Math.floor(startItemMbr.bottom),
-		);
-		const endItemMbr = end.item.getMbr();
-		const endMbr = new Mbr(
-			Math.floor(endItemMbr.left),
-			Math.floor(endItemMbr.top),
-			Math.floor(endItemMbr.right),
-			Math.floor(endItemMbr.bottom),
-		);
+	const horizontalLines: number[] = [];
+	const verticalLines: number[] = [];
 
-		const startOnMbr = startMbr
-			.getLines()
-			[revertMapDir[startDir]].getNearestPointOnLineSegment(start);
-		const endOnMbr = endMbr
-			.getLines()
-			[revertMapDir[endDir]].getNearestPointOnLineSegment(end);
+	let newStart: ControlPoint | undefined;
+	let newEnd: ControlPoint | undefined;
 
-		const newStart = Object.create(
-			Object.getPrototypeOf(start),
-			Object.getOwnPropertyDescriptors(start),
-		);
-		newStart.x = startOnMbr.x + offsetMap[startDir].x;
-		newStart.y = startOnMbr.y + offsetMap[startDir].y;
-		const newEnd = Object.create(
-			Object.getPrototypeOf(end),
-			Object.getOwnPropertyDescriptors(end),
-		);
-		newEnd.x = endOnMbr.x + offsetMap[endDir].x;
-		newEnd.y = endOnMbr.y + offsetMap[endDir].y;
-
-		const middle = new Point(
-			(newStart.x + newEnd.x) / 2,
-			(newStart.y + newEnd.y) / 2,
-		);
-		const { x: middleX, y: middleY } = middle;
-
-		const horizontalLines = [
-			startMbr.top - ITEM_OFFSET,
-			startMbr.top,
-			startOnMbr.y,
-			startMbr.bottom,
-			startMbr.bottom + ITEM_OFFSET,
-			endMbr.top - ITEM_OFFSET,
-			endMbr.top,
-			endOnMbr.y,
-			endMbr.bottom,
-			endMbr.bottom + ITEM_OFFSET,
-			...toVisitPoints,
-		];
-		if (
-			horizontalLines.every(
-				line => Math.abs(line - middleY) > ITEM_OFFSET,
-			)
-		) {
-			horizontalLines.push(middleY);
-		}
-
-		const verticalLines = [
-			startMbr.left - ITEM_OFFSET,
-			startMbr.left,
-			startOnMbr.x,
-			startMbr.right,
-			startMbr.right + ITEM_OFFSET,
-			endMbr.left - ITEM_OFFSET,
-			endMbr.left,
-			endOnMbr.x,
-			endMbr.right,
-			endMbr.right + ITEM_OFFSET,
-			...toVisitPoints,
-		];
-		if (
-			verticalLines.every(line => Math.abs(line - middleX) > ITEM_OFFSET)
-		) {
-			verticalLines.push(middleX);
-		}
-
-		const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort(
-			(aa, bb) => aa - bb,
-		);
-		const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort(
-			(aa, bb) => aa - bb,
-		);
-
-		const grid = uniqueVerticalLines.map(x =>
-			uniqueHorizontalLines.map(y => new Point(x, y)),
-		);
-		return {
-			grid,
-			newStart,
-			newEnd,
-			middlePoint: middle,
-		};
-	} else if (
-		(start.pointType !== "Board" && startDir) ||
-		(end.pointType !== "Board" && endDir)
-	) {
-		const item =
-			start.pointType !== "Board"
-				? start.item
-				: end.pointType !== "Board"
-					? end.item
-					: null;
-		const itemDir =
-			start.pointType !== "Board"
-				? startDir
-				: end.pointType !== "Board"
-					? endDir
-					: null;
-		if (!item || !itemDir) {
-			throw new Error(
-				"Item or connector direction not found in start/end point",
-			);
-		}
-		const itemPoint = start.pointType !== "Board" ? start : end;
-		const otherPoint = start.pointType !== "Board" ? end : start;
-
-		const itemMbr = item.getMbr();
-		const itemMbrFloored = new Mbr(
+	const processPoint = (
+		point: ControlPoint,
+		dir: ConnectedPointerDirection,
+	): ControlPoint => {
+		const itemMbr = point.item.getMbr();
+		const mbrFloored = new Mbr(
 			Math.floor(itemMbr.left),
 			Math.floor(itemMbr.top),
 			Math.floor(itemMbr.right),
 			Math.floor(itemMbr.bottom),
 		);
 
-		const pointOnMbr = itemMbrFloored
+		const pointOnMbr = mbrFloored
 			.getLines()
-			[revertMapDir[itemDir]].getNearestPointOnLineSegment(itemPoint);
-		const newItemPoint = Object.create(
-			Object.getPrototypeOf(itemPoint),
-			Object.getOwnPropertyDescriptors(itemPoint),
+			[revertMapDir[dir]].getNearestPointOnLineSegment(point);
+
+		const newPoint = Object.create(
+			Object.getPrototypeOf(point),
+			Object.getOwnPropertyDescriptors(point),
 		);
-		newItemPoint.x = pointOnMbr.x + offsetMap[itemDir].x;
-		newItemPoint.y = pointOnMbr.y + offsetMap[itemDir].y;
 
-		const middle = new Point(
-			(newItemPoint.x + otherPoint.x) / 2,
-			(newItemPoint.y + otherPoint.y) / 2,
-		);
-		const { x: middleX, y: middleY } = middle;
+		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
+		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
 
-		const horizontalLines = [
-			itemMbrFloored.top - ITEM_OFFSET,
-			itemMbrFloored.top,
-			pointOnMbr.y,
-			itemMbrFloored.bottom,
-			itemMbrFloored.bottom + ITEM_OFFSET,
-			otherPoint.y,
-			...toVisitPoints,
-		];
-		if (
-			Math.abs(itemMbrFloored.top - middleY) > ITEM_OFFSET &&
-			Math.abs(itemMbrFloored.bottom - middleY) > ITEM_OFFSET
-		) {
-			horizontalLines.push(middleY);
-		}
-
-		const verticalLines = [
-			itemMbrFloored.left - ITEM_OFFSET,
-			itemMbrFloored.left,
+		verticalLines.push(
+			mbrFloored.left - ITEM_OFFSET,
+			mbrFloored.left,
 			pointOnMbr.x,
-			itemMbrFloored.right,
-			itemMbrFloored.right + ITEM_OFFSET,
-			otherPoint.x,
-			...toVisitPoints,
-		];
-		if (
-			Math.abs(itemMbrFloored.left - middleX) > ITEM_OFFSET &&
-			Math.abs(itemMbrFloored.right - middleX) > ITEM_OFFSET
-		) {
-			verticalLines.push(middleX);
-		}
-
-		const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort(
-			(aa, bb) => aa - bb,
-		);
-		const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort(
-			(aa, bb) => aa - bb,
+			mbrFloored.right,
+			mbrFloored.right + ITEM_OFFSET,
 		);
 
-		const grid = uniqueVerticalLines.map(x =>
-			uniqueHorizontalLines.map(y => new Point(x, y)),
+		horizontalLines.push(
+			mbrFloored.top - ITEM_OFFSET,
+			mbrFloored.top,
+			pointOnMbr.y,
+			mbrFloored.bottom,
+			mbrFloored.bottom + ITEM_OFFSET,
 		);
-		return {
-			grid,
-			newStart: start.pointType !== "Board" ? newItemPoint : undefined,
-			newEnd: end.pointType !== "Board" ? newItemPoint : undefined,
-			middlePoint: middle,
-		};
+
+		return newPoint;
+	};
+
+	if (start.pointType !== "Board" && startDir) {
+		newStart = processPoint(start, startDir);
 	}
 
-	const grid: Point[][] = [];
-	const gridStart = new Point(
-		Math.min(start.x, end.x),
-		Math.min(start.y, end.y),
-	);
-	const gridEnd = new Point(
-		Math.max(start.x, end.x),
-		Math.max(start.y, end.y),
-	);
-	const minStep = 1;
-
-	const possibleStepX = Math.abs(gridEnd.x - gridStart.x) / 10;
-	const possibleStepY = Math.abs(gridEnd.y - gridStart.y) / 10;
-	const stepX = possibleStepX === 0 ? minStep : possibleStepX;
-	const stepY = possibleStepY === 0 ? minStep : possibleStepY;
-
-	for (let x = gridStart.x; x <= gridEnd.x + stepX; x += stepX) {
-		const row: Point[] = [];
-		for (let y = gridStart.y; y <= gridEnd.y + stepY; y += stepY) {
-			toVisitPoints.forEach(visitPoint => {
-				if (
-					visitPoint.x >= x &&
-					visitPoint.x < x + stepX &&
-					visitPoint.y >= y &&
-					visitPoint.y < y + stepY
-				) {
-					row.push(new Point(visitPoint.x, visitPoint.y));
-				}
-			});
-
-			row.push(new Point(x, y));
-		}
-		grid.push(row);
+	if (end.pointType !== "Board" && endDir) {
+		newEnd = processPoint(end, endDir);
 	}
 
-	return { grid };
+	const finalStart = newStart || start;
+	const finalEnd = newEnd || end;
+
+	const middle = new Point(
+		(finalStart.x + finalEnd.x) / 2,
+		(finalStart.y + finalEnd.y) / 2,
+	);
+
+	horizontalLines.push(middle.y, finalStart.y, finalEnd.y);
+	verticalLines.push(middle.x, finalStart.x, finalEnd.x);
+
+	toVisitPoints.forEach(p => {
+		horizontalLines.push(p.y);
+		verticalLines.push(p.x);
+	});
+
+	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort(
+		(a, b) => a - b,
+	);
+	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort(
+		(a, b) => a - b,
+	);
+
+	const grid: Point[][] = uniqueVerticalLines.map(x =>
+		uniqueHorizontalLines.map(y => new Point(x, y)),
+	);
+
+	return {
+		grid,
+		newStart,
+		newEnd,
+		middlePoint: middle,
+	};
 }
 
 // function jump(
@@ -756,121 +604,33 @@ function findPathPoints(
 	obstacles: Mbr[],
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint,
-	toVisitPoints: Point[] = [],
 ): Point[] {
 	const pathPoints: Point[] = [];
 
-	if (toVisitPoints.length > 0) {
-		const current = points[0];
-		const remainingToVisit = [...toVisitPoints];
-
-		while (remainingToVisit.length > 0) {
-			let closestIndex = 0;
-			let minDistance = distance(current, remainingToVisit[0]);
-			for (let i = 1; i < remainingToVisit.length; i++) {
-				const d = distance(current, remainingToVisit[i]);
-				if (d < minDistance) {
-					minDistance = d;
-					closestIndex = i;
-				}
-			}
-			const nextPoint = remainingToVisit.splice(closestIndex, 1)[0];
-
-			const segmentPath = findPath(
-				current,
-				nextPoint,
-				grid,
-				obstacles,
-				newStart,
-				newEnd,
-			);
-
-			if (segmentPath) {
-				const filteredSegment = filterOrthogonalSegments(segmentPath);
-				pathPoints.push(...filteredSegment);
-			}
-		}
-
-		const finalSegment = findPath(
-			current,
-			points[points.length - 1],
+	for (let i = 0; i < points.length - 1; i += 1) {
+		const segmentPath = findPath(
+			points[i],
+			points[i + 1],
 			grid,
 			obstacles,
 			newStart,
 			newEnd,
 		);
 
-		if (finalSegment) {
-			pathPoints.push(...finalSegment);
+		if (segmentPath) {
+			pathPoints.push(...segmentPath.slice(0, -1));
+		} else {
+			// If the segmentPath is invalid, remove the current point from the points array
+			points.splice(i + 1, 1);
+			i--;
 		}
-	} else {
-		for (let i = 0; i < points.length - 1; i += 1) {
-			const segmentPath = findPath(
-				points[i],
-				points[i + 1],
-				grid,
-				obstacles,
-				newStart,
-				newEnd,
-			);
+	}
 
-			if (segmentPath) {
-				pathPoints.push(...segmentPath.slice(0, -1));
-			} else {
-				// If the segmentPath is invalid, remove the current point from the points array
-				points.splice(i + 1, 1);
-				i--;
-			}
-		}
-		if (pathPoints.length !== 0) {
-			pathPoints.push(points[points.length - 1]);
-		}
+	if (pathPoints.length !== 0) {
+		pathPoints.push(points[points.length - 1]);
 	}
 
 	return pathPoints;
-}
-
-function filterOrthogonalSegments(points: Point[]): Point[] {
-	if (points.length < 2) {
-		return points;
-	}
-
-	const filteredPoints: Point[] = [points[0]];
-	let currentDirection: "horizontal" | "vertical" | null = null;
-
-	for (let i = 1; i < points.length; i++) {
-		const prev = points[i - 1];
-		const current = points[i];
-		const horizontal = prev.y === current.y;
-		const vertical = prev.x === current.x;
-
-		if (!horizontal && !vertical) {
-			continue;
-		}
-
-		const newDirection = horizontal ? "horizontal" : "vertical";
-
-		if (newDirection !== currentDirection) {
-			filteredPoints.push(prev);
-			currentDirection = newDirection;
-		}
-	}
-
-	filteredPoints.push(points[points.length - 1]);
-
-	return filteredPoints.filter((point, index, arr) => {
-		if (index === 0) {
-			return true;
-		}
-		const prev = arr[index - 1];
-		return !(point.x === prev.x && point.y === prev.y);
-	});
-}
-
-function distance(p1: Point, p2: Point): number {
-	const dx = p1.x - p2.x;
-	const dy = p1.y - p2.y;
-	return Math.sqrt(dx * dx + dy * dy);
 }
 
 /**
@@ -987,6 +747,7 @@ export function findOrthogonalPath(
 		end,
 		toVisitPoints,
 	);
+
 	const startPoint = newStart ? newStart : start;
 	const endPoint = newEnd ? newEnd : end;
 
@@ -999,7 +760,11 @@ export function findOrthogonalPath(
 				: centerLine.reverse()
 			: centerLine;
 
-	const points = [startPoint, ...adjustedCenterLine, endPoint];
+	const points = [
+		startPoint,
+		...(toVisitPoints.length > 0 ? toVisitPoints : adjustedCenterLine),
+		endPoint,
+	];
 
 	const pathPoints = findPathPoints(
 		points,
@@ -1007,7 +772,6 @@ export function findOrthogonalPath(
 		obstacles,
 		newStart,
 		newEnd,
-		toVisitPoints,
 	);
 	return {
 		lines: getLines(pathPoints),

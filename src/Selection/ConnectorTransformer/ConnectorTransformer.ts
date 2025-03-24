@@ -138,19 +138,7 @@ export class ConnectorTransformer extends Tool {
 					this.selection.subject.publish(this.selection);
 					break;
 				case "middle":
-					if (connector.getLineStyle() === "orthogonal") {
-						const middlePoint = connector.getMiddlePoint();
-						const middleBoardPoint = new BoardPoint(
-							point.x,
-							middlePoint.y,
-						);
-						connector.setMiddlePoint(
-							middleBoardPoint,
-							this.beginTimeStamp,
-						);
-					} else {
-						connector.setMiddlePoint(point, this.beginTimeStamp);
-					}
+					connector.setMiddlePoint(point, this.beginTimeStamp);
 					this.selection.subject.publish(this.selection);
 					break;
 			}
