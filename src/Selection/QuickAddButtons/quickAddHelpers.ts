@@ -197,6 +197,7 @@ export function createAINode(
 	const nodeRichText = node.getRichText();
 	nodeRichText.setMaxWidth(600);
 	nodeRichText.setSelectionHorisontalAlignment("left");
+	nodeRichText.container.right = nodeRichText.container.left + 600;
 	nodeRichText.placeholderText = "Type your request...";
 	return node;
 }
