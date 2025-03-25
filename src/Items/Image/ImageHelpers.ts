@@ -1,7 +1,8 @@
 import { sha256 } from "shared/sha256";
 import { ImageConstructorData } from "./Image";
+import { getDOMParser } from "Board/api/DOMParser";
 
-export const storageURL = `${window.location.origin}/api/v1/media`;
+// export const storageURL = `${window?.location.origin}/api/v1/media`;
 
 export const uploadToTheStorage = async (
 	hash: string,
@@ -12,11 +13,12 @@ export const uploadToTheStorage = async (
 		const mimeType = dataURL.split(",")[0].split(":")[1].split(";")[0];
 		// const buffer = Buffer.from(base64String, "base64");
 		// const blob = new Blob([buffer], { type: mimeType });
-		// Smell: window
+		// Window Smell: window
 		const binaryString = window.atob(base64String);
 		const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
 		const blob = new Blob([bytes], { type: mimeType });
-		fetch(storageURL, {
+		// fetch(storageURL, {
+		fetch(`${window?.location.origin}/api/v1/media`, {
 			method: "POST",
 			headers: {
 				"Content-Type": mimeType,
@@ -61,7 +63,7 @@ export const resizeAndConvertToPng = async (
 
 		if (base64String.startsWith("data:image/svg+xml")) {
 			image.onload = async () => {
-				const parser = new DOMParser();
+				const parser = getDOMParser();
 				const svgDoc = parser.parseFromString(
 					atob(base64String.split(",")[1]),
 					"image/svg+xml",

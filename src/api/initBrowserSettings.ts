@@ -3,6 +3,7 @@ import { BrowserDocumentFactory } from "./BrowserDocumentFactory";
 import { BrowserPath2D } from "./BrowserPath2DFactory";
 import { initPaths } from "./initPaths";
 import { getMeasureCtx } from "./getMeasureCtx";
+import { initI18N } from "./initI18N";
 
 // export dummy to prevent tree shake
 export function initBrowserSettings(): Settings {
@@ -13,4 +14,8 @@ const documentFactory = new BrowserDocumentFactory();
 SETTINGS.documentFactory = documentFactory;
 SETTINGS.path2DFactory = BrowserPath2D;
 SETTINGS.measureCtx = getMeasureCtx();
+SETTINGS.getDocumentWidth = () => document.documentElement.clientWidth;
+SETTINGS.getDocumentHeight = () => document.documentElement.clientHeight;
+SETTINGS.getDPI = () => window.devicePixelRatio;
+initI18N();
 initPaths(BrowserPath2D);

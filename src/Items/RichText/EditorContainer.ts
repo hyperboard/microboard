@@ -1,5 +1,4 @@
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { t } from "i18next";
 import markdown from "remark-parse";
 import slate from "remark-slate";
 import {
@@ -38,7 +37,8 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
-import { SessionStorage } from "App/SessionStorage";
+import { SETTINGS } from "Board/Settings";
+const { i18n } = SETTINGS;
 import { getParagraphWithPassedTextNode } from "Board/Items/RichText/getParagraph";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
@@ -1058,7 +1058,7 @@ export class EditorContainer {
 			return true;
 		}
 
-		if (text.startsWith(t("AIInput.generatingResponse"))) {
+		if (text.startsWith(i18n.t("AIInput.generatingResponse"))) {
 			return true;
 		}
 
@@ -1135,7 +1135,7 @@ export class EditorContainer {
 
 		const prevText =
 			this.getText()?.[this.getText().length - 1]?.children[0]?.text;
-		if (prevText?.startsWith(t("AIInput.generatingResponse"))) {
+		if (prevText?.startsWith(i18n.t("AIInput.generatingResponse"))) {
 			this.clearText();
 		}
 
@@ -1209,7 +1209,7 @@ export class EditorContainer {
 			// const decoded = decodeURIComponent(
 			// 	Buffer.from(fragment, "base64").toString("utf-8"),
 			// );
-			// Smell window
+			// Window Smell window
 			const decoded = decodeURIComponent(window.atob(fragment));
 			const parsed = JSON.parse(decoded) as Node[];
 			this.editor.insertFragment(parsed);

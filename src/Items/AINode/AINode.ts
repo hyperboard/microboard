@@ -26,10 +26,11 @@ import { Matrix } from "Board/Items/Transformation/Matrix";
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
 export type ThreadDirection = 0 | 1 | 2 | 3;
-const arrowIcon = new Image();
+// TODO FIX node
+// const arrowIcon = new Image();
 const ICON_SRC =
 	"data:image/svg+xml;charset=utf-8,%3Csvg id='AIChatSendArrow' viewBox='0 0 21 21' xmlns='http://www.w3.org/2000/svg' fill='url(%23paint0_linear_7542_32550)'%3E%3Cpath d='M0.946815 7.31455C0.424815 7.14055 0.419815 6.85955 0.956815 6.68055L20.0438 0.318552C20.5728 0.142552 20.8758 0.438552 20.7278 0.956552L15.2738 20.0426C15.1238 20.5716 14.8188 20.5896 14.5948 20.0876L11.0008 11.9996L17.0008 3.99955L9.00081 9.99955L0.946815 7.31455Z'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_7542_32550' x1='10.66' y1='0.267578' x2='10.66' y2='20.452' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23CD4FF2'/%3E%3Cstop offset='1' stop-color='%235F4AFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E";
-arrowIcon.src = ICON_SRC;
+// arrowIcon.src = ICON_SRC;
 
 export class AINode implements Geometry {
 	readonly itemType = "AINode";
@@ -330,9 +331,10 @@ export class AINode implements Geometry {
 
 		ctx.save();
 
-		if (arrowIcon.complete) {
-			ctx.drawImage(arrowIcon, left, top, right - left, bottom - top);
-		}
+		// TODO fix node
+		// if (arrowIcon.complete) {
+		// 	ctx.drawImage(arrowIcon, left, top, right - left, bottom - top);
+		// }
 
 		ctx.restore();
 	}

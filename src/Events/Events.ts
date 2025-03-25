@@ -23,19 +23,18 @@ import { EventsCommand } from "./EventsCommand";
 import { createEventsLog } from "./EventsLog";
 import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
-import i18next from "i18next";
 import {
 	PresenceEventMsg,
 	PresenceEventType,
 	UserJoinMsg,
 } from "Board/Presence/Events";
-import i18n from "shared/Lang";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
-import { t } from "i18next";
 import { ImageItem } from "Board/Items/Image";
 import { Connector } from "Board/Items";
 import { getControlPointData } from "Board/Selection/QuickAddButtons";
 import { isTemplateView } from "shared/lib/queryStringParser";
+import { SETTINGS } from "Board/Settings";
+const { i18n } = SETTINGS;
 
 export interface BoardEvent {
 	order: number;
@@ -89,20 +88,18 @@ export interface NotifyFunction {
 	}): string; // Returns notification id
 }
 
-export interface DismissNotificationFunction {
-	(id: string): void;
-}
-
 export interface Events {
 	subject: Subject<BoardEvent>;
 	serialize(): BoardEvent[];
 	deserialize(serializedData: BoardEvent[]): void;
+	deserializeAndApply(serializedData: BoardEvent[]): void;
 	getRaw: () => RawEvents;
 	getAll: () => BoardEvent[];
-	getLastOrder: () => number;
+	getLastIndex: () => number;
 	getSyncLog: () => SyncLog;
 	syncLogSubject: SyncLogSubject;
 	getSnapshot(): BoardSnapshot;
+	getSnapshotToPublish(): Promise<SnapshotToPublish>;
 	disconnect(): void;
 	emit(operation: Operation, command?: Command): void;
 	emitAndApply(operation: Operation, command?: Command): void;
@@ -111,25 +108,29 @@ export interface Events {
 	redo(): void;
 	canUndo(): boolean;
 	canRedo(): boolean;
-	getNotificationId(): string | null;
 	getSaveFileTimeout(): NodeJS.Timeout | null;
-	removeBeforeUnloadListener(): void;
 	sendPresenceEvent(event: PresenceEventType): void;
 	replay(): Promise<void>;
+	handleEvent(message: EventsMsg);
 }
+
+type SnapshotToPublish = {
+	boardId: string;
+	snapshot: string;
+	lastOrder: number;
+};
 
 type MessageHandler<T extends EventsMsg = EventsMsg> = (message: T) => void;
 
 export function createEvents(
 	board: Board,
-	connection: Connection,
-	lastOrder: number,
+	connection: Connection | undefined, // undefined for node or local
+	lastIndex: number,
 	notify: NotifyFunction,
-	dismissNotification: DismissNotificationFunction,
 ): Events {
 	const log = createEventsLog(board);
 	const latestEvent: { [key: string]: number } = {};
-	let latestServerOrder = lastOrder;
+	log.setSnapshotLastIndex(lastIndex);
 	const subject = new Subject<BoardEvent>();
 
 	let currentSequenceNumber = 0;
@@ -144,18 +145,6 @@ export function createEvents(
 	let publishIntervalTimer: NodeJS.Timeout | null = null;
 	let resendIntervalTimer: NodeJS.Timeout | null = null;
 	let saveFileTimeout: NodeJS.Timeout | null = null;
-	let notificationId: null | string = null;
-
-	const publishSnapshotBeforeUnload = () => {
-		handleCreateSnapshotRequestMessage();
-	};
-
-	window.addEventListener("beforeunload", publishSnapshotBeforeUnload); // Smell: move to connection
-
-	const beforeUnloadListener = (event: BeforeUnloadEvent): void => {
-		event.preventDefault();
-		event.returnValue = "Do not leave the page to avoid losing data";
-	};
 
 	interface MessageRouter {
 		addHandler: <T extends EventsMsg>(
@@ -195,7 +184,7 @@ export function createEvents(
 
 	function disconnect(): void {
 		enforceMode("loading");
-		connection.unsubscribe(board.getBoardId(), messageRouter.handleMessage);
+		connection?.unsubscribe(board);
 	}
 
 	function handleAiChatMassage(message: AiChatMsg): void {
@@ -270,8 +259,8 @@ export function createEvents(
 				console.log("Error AI generate", chunk.error);
 				if (!chunk.isExternalApiError) {
 					notify({
-						header: t("AIInput.textGenerationError.header"),
-						body: t("AIInput.textGenerationError.body"),
+						header: i18n.t("AIInput.textGenerationError.header"),
+						body: i18n.t("AIInput.textGenerationError.body"),
 						variant: "error",
 						duration: 4000,
 					});
@@ -282,8 +271,8 @@ export function createEvents(
 				board.camera.unsubscribeFromItem();
 				if (!chunk.isExternalApiError) {
 					notify({
-						header: t("AIInput.textGenerationError.header"),
-						body: t("AIInput.textGenerationError.body"),
+						header: i18n.t("AIInput.textGenerationError.header"),
+						body: i18n.t("AIInput.textGenerationError.body"),
 						variant: "error",
 						duration: 4000,
 					});
@@ -328,11 +317,10 @@ export function createEvents(
 			board.aiGeneratingOnItem = undefined;
 			board.aiImageConnectorID = undefined;
 		}
-		// smell have to remove document refference
 		if (response.status === "completed" && response.base64) {
 			// const audioBuffer = Buffer.from(response.base64, "base64");
 			// const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
-			// Smell: window
+			// Window Smell: window
 			const audioBlob = new Blob(
 				[
 					Uint8Array.from(window.atob(response.base64), ch =>
@@ -342,19 +330,21 @@ export function createEvents(
 				{ type: "audio/wav" },
 			);
 			const audioUrl = URL.createObjectURL(audioBlob);
-			const link = document.createElement("a");
-			link.href = audioUrl;
-			link.download = "generated_audio.wav";
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-			URL.revokeObjectURL(audioUrl);
+			if (typeof document !== "undefined") {
+				const link = document.createElement("a");
+				link.href = audioUrl;
+				link.download = "generated_audio.wav";
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				URL.revokeObjectURL(audioUrl);
+			}
 			removePlaceholders();
 		} else if (response.status === "error") {
 			console.error("Audio generation error:", response.message);
 			notify({
-				header: t("AIInput.audioGenerationError.header"),
-				body: t("AIInput.audioGenerationError.body"),
+				header: i18n.t("AIInput.audioGenerationError.header"),
+				body: i18n.t("AIInput.audioGenerationError.body"),
 				variant: "error",
 				duration: 4000,
 			});
@@ -445,14 +435,16 @@ export function createEvents(
 						board.selection.add(item);
 						const editor = item.getRichText()?.editor;
 						editor?.clearText();
-						editor?.insertCopiedText(t("AIInput.nodeErrorText"));
+						editor?.insertCopiedText(
+							i18n.t("AIInput.nodeErrorText"),
+						);
 						board.camera.zoomToFit(item.getMbr(), 20);
 					}
 				}
 			} else {
 				notify({
-					header: t("AIInput.imageGenerationError.header"),
-					body: t("AIInput.imageGenerationError.body"),
+					header: i18n.t("AIInput.imageGenerationError.header"),
+					body: i18n.t("AIInput.imageGenerationError.body"),
 					variant: "error",
 					duration: 4000,
 				});
@@ -489,7 +481,7 @@ export function createEvents(
 	function handleBoardEventMessage(message: BoardEventMsg): void {
 		const event = message.event;
 
-		if (event.order <= latestServerOrder) {
+		if (event.order <= lastIndex) {
 			return;
 		}
 
@@ -507,7 +499,7 @@ export function createEvents(
 		if (last) {
 			subject.publish(last);
 		}
-		latestServerOrder = log.getLatestOrder();
+		lastIndex = log.getLastIndex();
 	}
 	messageRouter.addHandler<BoardEventMsg>(
 		"BoardEvent",
@@ -538,10 +530,22 @@ export function createEvents(
 		handleBoardEventListMessage,
 	);
 
-	function handleCreateSnapshotRequestMessage(): void {
-		const snapshot = log.getSnapshot();
-		connection.publishSnapshot(board.getBoardId(), snapshot);
+	async function handleCreateSnapshotRequestMessage(): Promise<void> {
+		const { boardId, snapshot, lastOrder } = await getSnapshotToPublish();
+		connection?.publishSnapshot(boardId, snapshot, lastOrder);
 		// board.saveSnapshot(snapshot);
+	}
+
+	async function getSnapshotToPublish(): Promise<SnapshotToPublish> {
+		const boardId = board.getBoardId();
+		// const snapshot = log.getSnapshot();
+		const snapshot = await board.serializeHTML();
+		const lastOrder = log.getLastIndex();
+		return {
+			boardId,
+			snapshot,
+			lastOrder,
+		};
 	}
 
 	messageRouter.addHandler<SnapshotRequestMsg>(
@@ -582,19 +586,21 @@ export function createEvents(
 		startIntervals();
 	}
 
-	function handleSnapshotApplication(snapshot: BoardSnapshot): void {
+	// function handleSnapshotApplication(snapshot: BoardSnapshot): void {
+	function handleSnapshotApplication(snapshot: string): void {
 		const existingSnapshot = log.getSnapshot();
 		const hasContent = existingSnapshot.lastIndex > 0;
 
-		if (hasContent) {
-			// We already have content, just apply newer events
-			// ERROR: we do not send events in snapshot anymore
-			handleNewerEvents(snapshot, existingSnapshot);
-		} else {
-			// First time loading or empty board, deserialize the full snapshot
-			board.deserialize(snapshot);
-			log.setSnapshotLastIndex(snapshot.lastIndex);
-		}
+		// if (hasContent) {
+		// 	// We already have content, just apply newer events
+		// 	// ERROR: we do not send events in snapshot anymore
+		// 	handleNewerEvents(snapshot, existingSnapshot);
+		// } else {
+		// 	// First time loading or empty board, deserialize the full snapshot
+		// 	board.deserialize(snapshot);
+		// 	log.setSnapshotLastIndex(snapshot.lastIndex);
+		// }
+		board.deserializeHTML(snapshot, { shouldEmit: false });
 		// board.saveSnapshot(snapshot);
 	}
 
@@ -609,7 +615,7 @@ export function createEvents(
 
 		if (newEvents.length > 0) {
 			log.insertEvents(newEvents);
-			latestServerOrder = log.getLatestOrder();
+			lastIndex = log.getLastIndex();
 			subject.publish(newEvents[0]);
 		}
 
@@ -631,7 +637,7 @@ export function createEvents(
 		if (last) {
 			subject.publish(last);
 		}
-		latestServerOrder = log.getLatestOrder();
+		lastIndex = log.getLastIndex();
 	}
 
 	function handleSubscribeConfirmation(msg: SubscribeConfirmationMsg): void {
@@ -681,68 +687,47 @@ export function createEvents(
 	}
 
 	function tryResendEvent(): void {
-		const date = Date.now();
-		if (
-			pendingEvent &&
-			date - pendingEvent.lastSentTime >= RESEND_INTERVAL
-		) {
-			if (firstSentTime && date - firstSentTime >= RESEND_INTERVAL * 5) {
-				board.presence.clear();
-				if (!notificationId) {
-					window.removeEventListener(
-						"beforeunload",
-						publishSnapshotBeforeUnload,
-					); // Smell: move to connection
-					window.addEventListener(
-						"beforeunload",
-						beforeUnloadListener,
-					); // Smell: move to connection
-					notificationId = notify({
-						header: i18next.t(
-							"notifications.restoringConnectionHeader",
-						),
-						body: i18next.t(
-							"notifications.restoringConnectionBody",
-						),
-						variant: "warning",
-						duration: Infinity,
-					});
-				}
-			}
-
-			sendBoardEvent(
-				board.getBoardId(),
-				pendingEvent.event,
-				currentSequenceNumber,
-			);
+		if (!pendingEvent) {
+			return;
 		}
+		const date = Date.now();
+		const isTimeToSendPendingEvent =
+			date - pendingEvent.lastSentTime >= RESEND_INTERVAL;
+		if (!isTimeToSendPendingEvent) {
+			return;
+		}
+		const isProbablyLostConnection =
+			firstSentTime && date - firstSentTime >= RESEND_INTERVAL * 5;
+		if (isProbablyLostConnection) {
+			board.presence.clear();
+			connection?.notifyAboutLostConnection();
+		}
+
+		sendBoardEvent(
+			board.getBoardId(),
+			pendingEvent.event,
+			currentSequenceNumber,
+		);
 	}
 
 	function handleConfirmation(msg: ConfirmationMsg): void {
-		if (
-			pendingEvent &&
-			pendingEvent.sequenceNumber === msg.sequenceNumber
-		) {
-			if (notificationId) {
-				window.removeEventListener(
-					"beforeunload",
-					beforeUnloadListener,
-				); // Smell: move to connection
-				dismissNotification(notificationId);
-				notificationId = null;
-				window.addEventListener(
-					"beforeunload",
-					publishSnapshotBeforeUnload,
-				); // Smell: move to connection
-			}
-			currentSequenceNumber++;
-			pendingEvent.event.order = msg.order;
-			log.confirmEvent(pendingEvent.event);
-			subject.publish({} as any);
-			pendingEvent = null;
-			firstSentTime = null;
+		if (!pendingEvent) {
+			return;
 		}
+		const isPendingEventConfirmation =
+			pendingEvent.sequenceNumber === msg.sequenceNumber;
+		if (!isPendingEventConfirmation) {
+			return;
+		}
+		connection?.dismissNotificationAboutLostConnection();
+		currentSequenceNumber++;
+		pendingEvent.event.order = msg.order;
+		log.confirmEvent(pendingEvent.event);
+		subject.publish({} as any);
+		pendingEvent = null;
+		firstSentTime = null;
 	}
+
 	messageRouter.addHandler<ConfirmationMsg>(
 		"Confirmation",
 		handleConfirmation,
@@ -757,10 +742,10 @@ export function createEvents(
 			...event,
 			body: {
 				...event.body,
-				lastKnownOrder: log.getLatestOrder(),
+				lastKnownOrder: log.getLastIndex(),
 			},
 		};
-		connection.publishBoardEvent(boardId, toSend, sequenceNumber);
+		connection?.publishBoardEvent(boardId, toSend, sequenceNumber);
 
 		const date = Date.now();
 		pendingEvent = {
@@ -774,10 +759,10 @@ export function createEvents(
 	}
 
 	function sendPresenceEvent(event: PresenceEventType): void {
-		connection.publishPresenceEvent(board.getBoardId(), event);
+		connection?.publishPresenceEvent(board.getBoardId(), event);
 	}
 
-	// Smell: move to connection
+	// Window Smell: move to connection
 	function onBoardLoad(): void {
 		const searchParams = new URLSearchParams(
 			window.location.search.slice(1),
@@ -995,7 +980,7 @@ export function createEvents(
 	}
 
 	function getUserId(): number {
-		return connection.connectionId;
+		return connection?.connectionId || 0;
 	}
 
 	function getRaw(): RawEvents {
@@ -1081,12 +1066,14 @@ export function createEvents(
 		subject,
 		serialize: log.serialize,
 		deserialize: log.deserialize,
+		deserializeAndApply: log.deserializeAndApply,
 		getSnapshot: log.getSnapshot,
+		getSnapshotToPublish,
 		getRaw,
 		getSyncLog: log.getSyncLog,
 		syncLogSubject: log.syncLogSubject,
 		getAll: () => log.getList().map(record => record.event),
-		getLastOrder: log.getLatestOrder,
+		getLastIndex: log.getLastIndex,
 		disconnect,
 		emit,
 		emitAndApply,
@@ -1095,27 +1082,13 @@ export function createEvents(
 		redo,
 		canUndo,
 		canRedo,
-		removeBeforeUnloadListener: () => {
-			window.removeEventListener("beforeunload", beforeUnloadListener); // Smell: move to connection
-			window.addEventListener(
-				"beforeunload",
-				publishSnapshotBeforeUnload,
-			); // Smell: move to connection
-		},
-		getNotificationId: () => notificationId,
 		getSaveFileTimeout: () => saveFileTimeout,
 		sendPresenceEvent,
 		replay,
+		handleEvent: messageRouter.handleMessage,
 	};
 
-	connection.subscribe(
-		board.getBoardId(),
-		messageRouter.handleMessage,
-		function getLatestServerOrder(): number {
-			return latestServerOrder;
-		},
-		board.getAccessKey(),
-	);
+	connection?.subscribe(board);
 
 	return instance;
 }

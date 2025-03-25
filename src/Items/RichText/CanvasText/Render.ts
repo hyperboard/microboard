@@ -1,3 +1,4 @@
+import { SETTINGS } from "Board/Settings";
 import { BlockNode } from "../Editor/BlockNode";
 import { LinkNode, TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";

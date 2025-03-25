@@ -6,7 +6,7 @@ import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { storageURL } from "./VideoHelpers";
+import { getYouTubeThumbnail } from "./VideoHelpers";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Paths, Path } from "../Path";
 import { VideoCommand } from "Board/Items/Video/VideoCommand";
@@ -136,7 +136,7 @@ export class VideoItem extends Mbr {
 				const newUrl = new URL(url);
 				this.url = `${window.location.origin}${newUrl.pathname}`;
 			} catch (_) {
-				this.url = `${storageURL}/${url}`;
+				// this.url = `${storageURL}/${url}`;
 			}
 		} else {
 			this.url = url;

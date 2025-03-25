@@ -38,11 +38,12 @@ export interface EventsLog {
 	getRecordById(id: string): HistoryRecord | undefined;
 	serialize(): BoardEvent[];
 	deserialize(events: BoardEvent[]): void;
+	deserializeAndApply(events: BoardEvent[]): void;
 	setSnapshotLastIndex(index: number): void;
 	getSnapshot(): BoardSnapshot;
 	getUnpublishedEvent(): BoardEventPack | null;
 	confirmEvent(event: BoardEvent | BoardEventPack): void;
-	getLatestOrder(): number;
+	getLastIndex(): number;
 	getLastConfirmed(): BoardEvent | null;
 	getSyncLog(): SyncLog;
 	syncLogSubject: SyncLogSubject;
@@ -366,6 +367,18 @@ export function createEventsLog(board: Board): EventsLog {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
 			command.apply();
+			list.addConfirmedRecords([record]);
+		}
+	}
+
+	function deserializeAndApply(events: SyncBoardEvent[]): void {
+		list.clear();
+
+		for (const event of events) {
+			const command = createCommand(board, event.body.operation);
+			const record = { event, command };
+			command.apply();
+			console.log("applied", command);
 			list.addConfirmedRecords([record]);
 		}
 	}
@@ -695,10 +708,11 @@ export function createEventsLog(board: Board): EventsLog {
 		getRecordById,
 		serialize,
 		deserialize,
+		deserializeAndApply,
 		setSnapshotLastIndex,
 		getSnapshot,
 		getUnpublishedEvent,
-		getLatestOrder,
+		getLastIndex: getLatestOrder,
 		getLastConfirmed,
 		replay,
 	};

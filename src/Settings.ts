@@ -1,7 +1,9 @@
-import { BrowserPath2D } from "./api/BrowserPath2DFactory";
+import type i18next from "i18next";
 import { DocumentFactory } from "./api/DocumentFactory";
 import { Path2DFactory } from "./api/Path2DFactory";
 import { BoardSnapshot } from "./Board";
+import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
+import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 
 /**
  * Allowed drawing tools.
@@ -52,7 +54,11 @@ export interface Settings {
 	path2DFactory: typeof Path2DFactory;
 	documentFactory: DocumentFactory;
 	measureCtx: CanvasRenderingContext2D;
-
+	// Internationalization
+	i18n: typeof i18next;
+	getDocumentWidth: () => number;
+	getDocumentHeight: () => number;
+	getDPI: () => number;
 	// Selection settings
 	SELECTION_COLOR: string;
 	SELECTION_LOCKED_COLOR: string;
@@ -140,12 +146,19 @@ export interface Settings {
  * @property {DocumentFactory} - The factory for creating document elements.
  */
 export const SETTINGS: Settings = {
-	path2DFactory: Path2D
-		? BrowserPath2D
-		: (undefined as unknown as typeof Path2DFactory),
-	documentFactory: undefined as unknown as DocumentFactory,
+	path2DFactory:
+		typeof Path2D !== "undefined"
+			? BrowserPath2D
+			: (undefined as unknown as typeof Path2DFactory),
+	documentFactory:
+		typeof document !== "undefined"
+			? new BrowserDocumentFactory()
+			: (undefined as unknown as DocumentFactory),
 	measureCtx: undefined as unknown as CanvasRenderingContext2D,
-
+	i18n: {} as unknown as typeof i18next,
+	getDocumentWidth: (): number => 800,
+	getDocumentHeight: (): number => 600,
+	getDPI: (): number => 1,
 	SELECTION_COLOR: "rgb(71, 120, 245)",
 	SELECTION_LOCKED_COLOR: "#0B0C0E",
 	SELECTION_BACKGROUND: "none",
