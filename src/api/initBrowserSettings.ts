@@ -1,4 +1,4 @@
-import { Settings, SETTINGS } from "Board/Settings";
+import { Settings, conf } from "Board/Settings";
 import { BrowserDocumentFactory } from "./BrowserDocumentFactory";
 import { BrowserPath2D } from "./BrowserPath2DFactory";
 import { initPaths } from "./initPaths";
@@ -7,15 +7,15 @@ import { initI18N } from "./initI18N";
 
 // export dummy to prevent tree shake
 export function initBrowserSettings(): Settings {
-	return SETTINGS;
+	return conf;
 }
 
 const documentFactory = new BrowserDocumentFactory();
-SETTINGS.documentFactory = documentFactory;
-SETTINGS.path2DFactory = BrowserPath2D;
-SETTINGS.measureCtx = getMeasureCtx();
-SETTINGS.getDocumentWidth = () => document.documentElement.clientWidth;
-SETTINGS.getDocumentHeight = () => document.documentElement.clientHeight;
-SETTINGS.getDPI = () => window.devicePixelRatio;
+conf.documentFactory = documentFactory;
+conf.path2DFactory = BrowserPath2D;
+conf.measureCtx = getMeasureCtx();
+conf.getDocumentWidth = () => document.documentElement.clientWidth;
+conf.getDocumentHeight = () => document.documentElement.clientHeight;
+conf.getDPI = () => window.devicePixelRatio;
 initI18N();
 initPaths(BrowserPath2D);

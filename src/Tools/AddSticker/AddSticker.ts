@@ -2,7 +2,7 @@ import { Board } from "Board/Board";
 import { Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Sticker } from "Board/Items/Sticker";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 import { CursorName } from "Board/Pointer/Cursor";
 import { tempStorage } from "App/SessionStorage";
@@ -28,11 +28,9 @@ export class AddSticker extends BoardTool {
 	}
 
 	setCursor(color?: string) {
-		if (SETTINGS.STICKER_COLOR_NAMES) {
+		if (conf.STICKER_COLOR_NAMES) {
 			const colorName = color
-				? SETTINGS.STICKER_COLOR_NAMES[
-						SETTINGS.STICKER_COLORS.indexOf(color)
-					]
+				? conf.STICKER_COLOR_NAMES[conf.STICKER_COLORS.indexOf(color)]
 				: undefined;
 			this.board.pointer.setCursor(
 				colorName
@@ -59,7 +57,7 @@ export class AddSticker extends BoardTool {
 		const point = this.board.pointer.point;
 		this.line = new Line(point.copy(), point.copy());
 		this.bounds = this.line.getMbr();
-		this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
+		this.bounds.borderColor = conf.SELECTION_COLOR;
 		this.board.tools.publish();
 		return true;
 	}
@@ -72,7 +70,7 @@ export class AddSticker extends BoardTool {
 			);
 			this.sticker.setDiagonal(this.line);
 			this.bounds = this.sticker.getMbr();
-			this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
+			this.bounds.borderColor = conf.SELECTION_COLOR;
 			this.board.tools.publish();
 			return true;
 		}

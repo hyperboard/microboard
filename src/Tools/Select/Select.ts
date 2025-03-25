@@ -3,7 +3,7 @@ import { Comment } from "Board/Items/Comment/Comment";
 import { Group } from "Board/Items/Group/Group.js";
 import { Selection } from "Board/Selection/index.js";
 import { quickAddItem } from "Board/Selection/QuickAddButtons";
-import { SETTINGS } from "Board/Settings.js";
+import { conf } from "Board/Settings.js";
 import { Board } from "../../Board";
 import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
 import { Frame, Item, Line, Mbr, Point } from "../../Items";
@@ -323,8 +323,8 @@ export class Select extends Tool {
 			const { x, y } = pointer.point;
 			this.line = new Line(new Point(x, y), new Point(x, y));
 			this.rect = this.line.getMbr();
-			this.rect.borderColor = SETTINGS.SELECTION_COLOR;
-			this.rect.backgroundColor = SETTINGS.SELECTION_BACKGROUND;
+			this.rect.borderColor = conf.SELECTION_COLOR;
+			this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
 			this.board.tools.publish();
 
 			this.board.presence.throttledEmit({
@@ -437,8 +437,8 @@ export class Select extends Tool {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
 			this.rect = this.line.getMbr();
-			this.rect.borderColor = SETTINGS.SELECTION_COLOR;
-			this.rect.backgroundColor = SETTINGS.SELECTION_BACKGROUND;
+			this.rect.borderColor = conf.SELECTION_COLOR;
+			this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
 			this.board.tools.publish();
 
 			this.board.presence.throttledEmit({

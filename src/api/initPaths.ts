@@ -1,11 +1,11 @@
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import type { BrowserPath2D } from "./BrowserPath2DFactory";
 import type { NodePath2D } from "./NodePath2DFactory";
 
 export function initPaths(
 	path2D: typeof BrowserPath2D | typeof NodePath2D,
 ): void {
-	SETTINGS.EXPORT_FRAME_DECORATIONS = {
+	conf.EXPORT_FRAME_DECORATIONS = {
 		"top-left": {
 			path: new path2D("M13 1H1V13"),
 			lineWidth: 2,

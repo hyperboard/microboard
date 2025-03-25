@@ -8,7 +8,7 @@ import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
 import { Sticker } from "Board/Items/Sticker";
 import { Subject } from "shared/Subject";
 import { toFiniteNumber } from "Board/lib";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { Command, createCommand } from "../Events/Command";
 import { Connector, Frame, Item, ItemData, Mbr, RichText } from "../Items";
 import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
@@ -29,7 +29,7 @@ import {
 import { BaseRange } from "slate";
 import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-const { i18n } = SETTINGS;
+const { i18n } = conf;
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -1493,8 +1493,8 @@ export class Selection {
 			: 1 / customScale;
 
 		const selectionColor = item.transformation.isLocked
-			? SETTINGS.SELECTION_LOCKED_COLOR
-			: SETTINGS.SELECTION_COLOR;
+			? conf.SELECTION_LOCKED_COLOR
+			: conf.SELECTION_COLOR;
 		mbr.borderColor = selectionColor;
 		mbr.render(context);
 	}

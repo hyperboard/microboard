@@ -1,8 +1,8 @@
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { BlockNode } from "../Editor/BlockNode";
 import { LinkNode, TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -786,8 +786,8 @@ function measureText(
 			rect.height += paddingTop;
 		}
 	}
-	SETTINGS.measureCtx.font = style.font;
-	const measure = SETTINGS.measureCtx.measureText(text);
+	conf.measureCtx.font = style.font;
+	const measure = conf.measureCtx.measureText(text);
 	const actualBoundingBoxAscent = toFiniteNumber(
 		measure.actualBoundingBoxAscent,
 	);

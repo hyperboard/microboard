@@ -8,7 +8,7 @@ import { Mbr } from "../Mbr";
 import { Arc, Matrix } from "..";
 import { GeometricNormal } from "../GeometricNormal";
 import { DocumentFactory } from "Board/api/DocumentFactory";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { Path2DFactory } from "Board/api/Path2DFactory";
 
 export type Segment = Line | QuadraticBezier | CubicBezier | Arc;
@@ -110,7 +110,7 @@ export class Path implements Geometry, PathStylize {
 		this.width = this.getMbr().getWidth();
 		this.height = this.getMbr().getHeight();
 		this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
-		this.path2d = new SETTINGS.path2DFactory();
+		this.path2d = new conf.path2DFactory();
 		this.updateCache();
 	}
 
@@ -210,7 +210,7 @@ export class Path implements Geometry, PathStylize {
 		this.y = top - this.paddingTop; // Adjust for top padding
 		this.width = right - left + this.paddingLeft + this.paddingRight; // Adjust for horizontal padding
 		this.height = bottom - top + this.paddingTop + this.paddingBottom; // Adjust for vertical padding
-		const path2d = new SETTINGS.path2DFactory();
+		const path2d = new conf.path2DFactory();
 		if (this.segments.length === 0) {
 			return;
 		}

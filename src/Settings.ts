@@ -145,7 +145,7 @@ export interface Settings {
  * @property {Path2DFactory} - The factory for creating Path2D objects.
  * @property {DocumentFactory} - The factory for creating document elements.
  */
-export const SETTINGS: Settings = {
+export const conf: Settings = {
 	path2DFactory:
 		typeof Path2D !== "undefined"
 			? BrowserPath2D

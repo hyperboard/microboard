@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { SETTINGS } from "./Settings";
+import { conf } from "./Settings";
 import { BoardCommand } from "./BoardCommand";
 import {
 	BoardOps,
@@ -522,7 +522,7 @@ export class Board {
 		const boardName = this.getName() || this.getBoardId();
 
 		// div with id="items" and last-event-order are necessary for successfull uploading to storage
-		const items = this.items.getWholeHTML(SETTINGS.documentFactory);
+		const items = this.items.getWholeHTML(conf.documentFactory);
 		const itemsDiv = `<div id="items">${items}</div>`;
 		const body = `<body>${itemsDiv}<script type="module">${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
 		const head = `

@@ -23,9 +23,9 @@ import {
 import { PRESENCE_COLORS } from "./consts";
 import { catmullRomInterpolate, rgbToRgba } from "./helpers";
 import { throttleWithDebounce } from "shared/lib/throttle";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-const { i18n } = SETTINGS;
+const { i18n } = conf;
 
 const SECOND = 1000;
 const CURSOR_FPS = 3;

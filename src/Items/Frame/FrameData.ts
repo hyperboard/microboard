@@ -6,8 +6,8 @@ import { RichTextData } from "../RichText";
 import { BorderStyle, BorderWidth } from "../Path";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { FrameType } from "./Basic";
-import { SETTINGS } from "Board/Settings";
-const { i18n } = SETTINGS;
+import { conf } from "Board/Settings";
+const { i18n } = conf;
 
 export const FRAME_BORDER_COLOR = "rgba(10, 15, 41, 0.08)";
 

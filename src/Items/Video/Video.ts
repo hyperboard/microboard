@@ -12,7 +12,7 @@ import { Paths, Path } from "../Path";
 import { VideoCommand } from "Board/Items/Video/VideoCommand";
 import { Point } from "Board/Items/Point/Point";
 import { Line } from "Board/Items/Line/Line";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { getPlaceholderImage } from "Board/Items/Image/Image";
 
 export interface VideoItemData {
@@ -64,7 +64,7 @@ export class VideoItem extends Mbr {
 		private extension: "mp4" | "webm" = "mp4",
 	) {
 		super();
-		this.isStorageUrl = !SETTINGS.getYouTubeId(url);
+		this.isStorageUrl = !conf.getYouTubeId(url);
 		this.preview = getPlaceholderImage(board, videoDimension);
 		this.linkTo = new LinkTo(this.id, events);
 		this.board = board;

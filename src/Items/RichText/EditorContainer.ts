@@ -37,8 +37,8 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
-import { SETTINGS } from "Board/Settings";
-const { i18n } = SETTINGS;
+import { conf } from "Board/Settings";
+const { i18n } = conf;
 import { getParagraphWithPassedTextNode } from "Board/Items/RichText/getParagraph";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";

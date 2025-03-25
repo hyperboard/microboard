@@ -3,7 +3,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 // import en from "../../shared/Lang/en.json";
 // import ru from "../../shared/Lang/ru.json";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { defaultNS, resources } from "shared/Lang";
 
 // export const defaultNS = "default";
@@ -38,7 +38,7 @@ export function initI18N(isNode = false): typeof i18n {
 				escapeValue: false,
 			},
 		});
-	SETTINGS.i18n = i18n;
+	conf.i18n = i18n;
 
 	return i18n;
 }

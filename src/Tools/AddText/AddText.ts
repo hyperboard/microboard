@@ -1,7 +1,7 @@
 import { Board } from "Board/Board";
 import { Line, Mbr, Point, RichText } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { BoardTool } from "../BoardTool";
 
 const height = 16;
@@ -23,7 +23,7 @@ export class AddText extends BoardTool {
 		const point = this.board.pointer.point;
 		this.line = new Line(point.copy(), point.copy());
 		this.bounds = this.line.getMbr();
-		this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
+		this.bounds.borderColor = conf.SELECTION_COLOR;
 		this.board.tools.publish();
 		return true;
 	}
@@ -37,7 +37,7 @@ export class AddText extends BoardTool {
 			this.line = new Line(start, end);
 
 			this.bounds = this.line.getMbr();
-			this.bounds.borderColor = SETTINGS.SELECTION_COLOR;
+			this.bounds.borderColor = conf.SELECTION_COLOR;
 			this.board.tools.publish();
 			return true;
 		}

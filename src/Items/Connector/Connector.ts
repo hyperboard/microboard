@@ -33,8 +33,8 @@ import {
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
 import { ConnectorAnchorColors } from "./types";
-import { SETTINGS } from "Board/Settings";
-const { i18n } = SETTINGS;
+import { conf } from "Board/Settings";
+const { i18n } = conf;
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -781,7 +781,7 @@ export class Connector {
 				selectionContext === "EditTextUnderPointer") &&
 			this.board.selection.items.list().includes(this)
 		) {
-			ctx.strokeStyle = SETTINGS.SELECTION_COLOR;
+			ctx.strokeStyle = conf.SELECTION_COLOR;
 			ctx.lineWidth = 1;
 			ctx.beginPath();
 			// Draw border around the text only

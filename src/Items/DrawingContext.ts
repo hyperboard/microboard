@@ -1,6 +1,6 @@
 import { Camera } from "Board/Camera";
 import { Matrix } from "./Transformation/Matrix";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 
 /** A container for a CanvasRenderingContext2D, to extend it with more data. */
 export class DrawingContext {
@@ -18,7 +18,7 @@ export class DrawingContext {
 	}
 
 	dpi(): number {
-		return SETTINGS.getDPI();
+		return conf.getDPI();
 	}
 
 	setCamera(camera: Camera): void {
@@ -34,8 +34,8 @@ export class DrawingContext {
 		this.ctx.clearRect(
 			0,
 			0,
-			SETTINGS.getDocumentWidth(),
-			SETTINGS.getDocumentHeight(),
+			conf.getDocumentWidth(),
+			conf.getDocumentHeight(),
 		);
 		this.matrix.applyToContext(this.ctx);
 	}
@@ -49,8 +49,8 @@ export class DrawingContext {
 		this.cursorCtx.clearRect(
 			0,
 			0,
-			SETTINGS.getDocumentWidth(),
-			SETTINGS.getDocumentHeight(),
+			conf.getDocumentWidth(),
+			conf.getDocumentHeight(),
 		);
 		this.matrix.applyToContext(this.cursorCtx);
 	}

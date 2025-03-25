@@ -3,7 +3,7 @@ import { Camera } from "./Camera";
 import { Item, Matrix, Mbr } from "./Items";
 import { DrawingContext } from "./Items/DrawingContext";
 import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
-import { SETTINGS } from "./Settings";
+import { conf } from "./Settings";
 
 export interface CanvasDrawer {
 	getLastCreatedCanvas: () => HTMLDivElement | undefined;
@@ -70,7 +70,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			borderDiv.id = "canvasBorder";
 			borderDiv.style.position = "absolute";
 			borderDiv.style.transformOrigin = "left top";
-			borderDiv.style.border = `1px solid ${SETTINGS.SELECTION_COLOR}`;
+			borderDiv.style.border = `1px solid ${conf.SELECTION_COLOR}`;
 			borderDiv.style.boxSizing = "border-box";
 			borderDiv.style.left = `${leftOffset}px`;
 			borderDiv.style.top = `${topOffset}px`;
@@ -80,7 +80,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			canvas.style.boxSizing = "border-box";
 			container.appendChild(borderDiv);
 		} else {
-			canvas.style.border = `1px solid ${SETTINGS.SELECTION_COLOR}`;
+			canvas.style.border = `1px solid ${conf.SELECTION_COLOR}`;
 			canvas.style.boxSizing = "border-box";
 		}
 
@@ -93,8 +93,8 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			anchorDiv.style.position = "absolute";
 			anchorDiv.style.width = `${2 * radius}px`;
 			anchorDiv.style.height = `${2 * radius}px`;
-			anchorDiv.style.backgroundColor = `${SETTINGS.SELECTION_ANCHOR_COLOR}`;
-			anchorDiv.style.border = `${SETTINGS.SELECTION_ANCHOR_WIDTH}px solid ${SETTINGS.SELECTION_COLOR}`;
+			anchorDiv.style.backgroundColor = `${conf.SELECTION_ANCHOR_COLOR}`;
+			anchorDiv.style.border = `${conf.SELECTION_ANCHOR_WIDTH}px solid ${conf.SELECTION_COLOR}`;
 			anchorDiv.style.borderRadius = "2px";
 			anchorDiv.style.left = `calc(${left} - ${radius}px)`;
 			anchorDiv.style.top = `calc(${top} - ${radius}px)`;
@@ -103,21 +103,13 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		};
 
 		const anchors = [
-			createAnchorDiv("0%", "0%", SETTINGS.SELECTION_ANCHOR_RADIUS),
-			createAnchorDiv(
-				"100% + 1px",
-				"0%",
-				SETTINGS.SELECTION_ANCHOR_RADIUS,
-			),
-			createAnchorDiv(
-				"0%",
-				"100% + 1px",
-				SETTINGS.SELECTION_ANCHOR_RADIUS,
-			),
+			createAnchorDiv("0%", "0%", conf.SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv("100% + 1px", "0%", conf.SELECTION_ANCHOR_RADIUS),
+			createAnchorDiv("0%", "100% + 1px", conf.SELECTION_ANCHOR_RADIUS),
 			createAnchorDiv(
 				"100% + 1px",
 				"100% + 1px",
-				SETTINGS.SELECTION_ANCHOR_RADIUS,
+				conf.SELECTION_ANCHOR_RADIUS,
 			),
 		];
 

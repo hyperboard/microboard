@@ -4,7 +4,7 @@ import { Subject } from "shared/Subject";
 import { toFiniteNumber } from "Board/lib";
 import { throttle } from "shared/lib/throttle";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-import { SETTINGS } from "Board/Settings";
+import { conf } from "Board/Settings";
 import { Keyboard } from "Board/Keyboard";
 
 export class Camera {
@@ -19,9 +19,9 @@ export class Camera {
 	matrix = new Matrix();
 	readonly pointer = new Point();
 	window = {
-		width: SETTINGS.getDocumentWidth(),
-		height: SETTINGS.getDocumentHeight(),
-		dpi: SETTINGS.getDPI(),
+		width: conf.getDocumentWidth(),
+		height: conf.getDocumentHeight(),
+		dpi: conf.getDPI(),
 		getMbr: () => {
 			return new Mbr(0, 0, this.window.width, this.window.height);
 		},
@@ -567,9 +567,9 @@ export class Camera {
 	}
 
 	onWindowResize(): void {
-		this.window.width = SETTINGS.getDocumentWidth();
-		this.window.height = SETTINGS.getDocumentHeight();
-		this.window.dpi = SETTINGS.getDPI();
+		this.window.width = conf.getDocumentWidth();
+		this.window.height = conf.getDocumentHeight();
+		this.window.dpi = conf.getDPI();
 		this.resizeSubject.publish(this);
 		this.subject.publish(this);
 	}
@@ -585,10 +585,10 @@ export class Camera {
 		const { activeKeys } = keyboard;
 
 		const directions: Record<string, [number, number]> = {
-			ArrowRight: [-SETTINGS.NAVIGATION_STEP, 0],
-			ArrowLeft: [SETTINGS.NAVIGATION_STEP, 0],
-			ArrowDown: [0, -SETTINGS.NAVIGATION_STEP],
-			ArrowUp: [0, SETTINGS.NAVIGATION_STEP],
+			ArrowRight: [-conf.NAVIGATION_STEP, 0],
+			ArrowLeft: [conf.NAVIGATION_STEP, 0],
+			ArrowDown: [0, -conf.NAVIGATION_STEP],
+			ArrowUp: [0, conf.NAVIGATION_STEP],
 		};
 
 		const activeArrowKeys: string[] = Array.from(activeKeys)

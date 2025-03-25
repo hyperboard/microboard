@@ -42,8 +42,8 @@ import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
 import { decodeHtml } from "Board/parserHTML";
 import { DocumentFactory } from "Board/api/DocumentFactory";
-import { SETTINGS } from "Board/Settings";
-const { i18n } = SETTINGS;
+import { conf } from "Board/Settings";
+const { i18n } = conf;
 import { SessionStorage } from "App/SessionStorage";
 
 export type DefaultTextStyles = {
@@ -102,7 +102,7 @@ export class RichText extends Mbr implements Geometry {
 	private isContainerSet = false;
 	isRenderEnabled = true;
 	private layoutNodes: LayoutBlockNodes;
-	private clipPath = new SETTINGS.path2DFactory();
+	private clipPath = new conf.path2DFactory();
 	private updateRequired = false;
 	private autoSizeScale = 1;
 	private containerMaxWidth?: number;
@@ -507,7 +507,7 @@ export class RichText extends Mbr implements Geometry {
 		const container = this.getTransformedContainer();
 		const width = container.getWidth();
 		const height = container.getHeight();
-		this.clipPath = new SETTINGS.path2DFactory();
+		this.clipPath = new conf.path2DFactory();
 		this.clipPath.rect(0, 0, width, height);
 	}
 	/**
@@ -902,24 +902,24 @@ export class RichText extends Mbr implements Geometry {
 			// FYI https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint
 			if (
 				refMbr.isInside(point) &&
-				(SETTINGS.documentFactory.caretPositionFromPoint ||
-					SETTINGS.documentFactory.caretRangeFromPoint)
+				(conf.documentFactory.caretPositionFromPoint ||
+					conf.documentFactory.caretRangeFromPoint)
 			) {
-				const domRange = SETTINGS.documentFactory.caretPositionFromPoint
-					? SETTINGS.documentFactory.caretPositionFromPoint(
+				const domRange = conf.documentFactory.caretPositionFromPoint
+					? conf.documentFactory.caretPositionFromPoint(
 							point.x,
 							point.y,
 						)
-					: SETTINGS.documentFactory.caretRangeFromPoint(
+					: conf.documentFactory.caretRangeFromPoint(
 							point.x,
 							point.y,
 						);
 				// @ts-expect-error: Suppress TS error for non-existent method
-				const textNode = SETTINGS.documentFactory.caretPositionFromPoint
+				const textNode = conf.documentFactory.caretPositionFromPoint
 					? domRange.offsetNode
 					: domRange.startContainer;
 				// @ts-expect-error: Suppress TS error for non-existent method
-				const offset = SETTINGS.documentFactory.caretPositionFromPoint
+				const offset = conf.documentFactory.caretPositionFromPoint
 					? domRange.offset
 					: domRange.startOffset;
 				const domPoint = [textNode, offset] as DOMPoint;
@@ -937,8 +937,8 @@ export class RichText extends Mbr implements Geometry {
 			} else {
 				if (
 					!(
-						SETTINGS.documentFactory.caretPositionFromPoint ||
-						SETTINGS.documentFactory.caretRangeFromPoint
+						conf.documentFactory.caretPositionFromPoint ||
+						conf.documentFactory.caretRangeFromPoint
 					)
 				) {
 					console.error(
@@ -1071,15 +1071,12 @@ export class RichText extends Mbr implements Geometry {
 						: "\u00A0";
 
 				const textElement = node.link
-					? Object.assign(
-							SETTINGS.documentFactory.createElement("a"),
-							{
-								href: node.link,
-								target: "_blank",
-								rel: "noreferrer",
-							},
-						)
-					: SETTINGS.documentFactory.createElement("span");
+					? Object.assign(conf.documentFactory.createElement("a"), {
+							href: node.link,
+							target: "_blank",
+							rel: "noreferrer",
+						})
+					: conf.documentFactory.createElement("span");
 
 				Object.assign(textElement.style, {
 					fontWeight: node.bold ? "700" : "400",
@@ -1140,7 +1137,7 @@ export class RichText extends Mbr implements Geometry {
 							four: 4,
 							five: 5,
 						} as const;
-						const header = SETTINGS.documentFactory.createElement(
+						const header = conf.documentFactory.createElement(
 							`h${levels[level]}`,
 						);
 						applyCommonStyles(header);
@@ -1149,10 +1146,8 @@ export class RichText extends Mbr implements Geometry {
 					}
 
 					case "code_block": {
-						const pre =
-							SETTINGS.documentFactory.createElement("pre");
-						const code =
-							SETTINGS.documentFactory.createElement("code");
+						const pre = conf.documentFactory.createElement("pre");
+						const code = conf.documentFactory.createElement("code");
 						applyCommonStyles(pre);
 						if (node.language) {
 							code.classList.add(`language-${node.language}`);
@@ -1168,30 +1163,28 @@ export class RichText extends Mbr implements Geometry {
 
 					case "block-quote": {
 						const blockquote =
-							SETTINGS.documentFactory.createElement(
-								"blockquote",
-							);
+							conf.documentFactory.createElement("blockquote");
 						applyCommonStyles(blockquote);
 						blockquote.append(...children);
 						return blockquote;
 					}
 
 					case "ul_list": {
-						const ul = SETTINGS.documentFactory.createElement("ul");
+						const ul = conf.documentFactory.createElement("ul");
 						applyCommonStyles(ul);
 						ul.append(...children);
 						return ul;
 					}
 
 					case "ol_list": {
-						const ol = SETTINGS.documentFactory.createElement("ol");
+						const ol = conf.documentFactory.createElement("ol");
 						applyCommonStyles(ol);
 						ol.append(...children);
 						return ol;
 					}
 
 					case "list_item": {
-						const li = SETTINGS.documentFactory.createElement("li");
+						const li = conf.documentFactory.createElement("li");
 						applyCommonStyles(li);
 						li.append(...children);
 						return li;
@@ -1199,7 +1192,7 @@ export class RichText extends Mbr implements Geometry {
 
 					case "paragraph":
 					default: {
-						const par = SETTINGS.documentFactory.createElement("p");
+						const par = conf.documentFactory.createElement("p");
 						applyCommonStyles(par);
 						Object.assign(par.style, {
 							lineHeight: node.lineHeight
@@ -1213,7 +1206,7 @@ export class RichText extends Mbr implements Geometry {
 				}
 			}
 
-			return SETTINGS.documentFactory.createElement("div");
+			return conf.documentFactory.createElement("div");
 		};
 
 		const escapeHtml = (unsafe: string): string => {

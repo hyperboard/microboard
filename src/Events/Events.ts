@@ -33,8 +33,8 @@ import { ImageItem } from "Board/Items/Image";
 import { Connector } from "Board/Items";
 import { getControlPointData } from "Board/Selection/QuickAddButtons";
 import { isTemplateView } from "shared/lib/queryStringParser";
-import { SETTINGS } from "Board/Settings";
-const { i18n } = SETTINGS;
+import { conf } from "Board/Settings";
+const { i18n } = conf;
 
 export interface BoardEvent {
 	order: number;
