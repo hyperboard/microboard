@@ -168,7 +168,13 @@ export class ConnectorSnap {
 			const distance = pointer.getDistance(edgePoint);
 			const isConnector = neighbor.itemType === "Connector";
 
-			if (isConnector && neighbor !== this.connector) {
+			const isFloatingConnector =
+				isConnector &&
+				neighbor !== this.connector &&
+				neighbor.getStartPoint().pointType !== "Board" &&
+				neighbor.getEndPoint().pointType !== "Board";
+
+			if (isFloatingConnector) {
 				const boardPointer = this.board.pointer.point;
 				const point =
 					this.snap.anchor?.getCenter() ||
