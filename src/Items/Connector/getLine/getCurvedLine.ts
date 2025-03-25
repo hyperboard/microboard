@@ -26,86 +26,6 @@ const config = {
 	flip: false,
 };
 
-// export function getCurvedLine(
-// 	start: ControlPoint,
-// 	end: ControlPoint,
-// 	middle: BoardPoint | null,
-// ): Path {
-// 	const segments: Segment[] = [];
-
-// 	let startControl: { point: Point; control: Point };
-// 	let endControl: { point: Point; control: Point };
-
-// 	const dX = end.x - start.x;
-// 	const dY = end.y - start.y;
-// 	const distance = Math.sqrt(dX * dX + dY * dY);
-
-// 	if (distance < 40) {
-// 		config.normalControlLength = distance;
-// 	} else {
-// 		config.normalControlLength = 100;
-// 	}
-
-// 	if (start.pointType === "Board" && end.pointType === "Board") {
-// 		const fdX = dX * (config.flip ? config.controlPointOffsetRate : 0);
-// 		let fdY = dY * (config.flip ? 0 : -config.controlPointOffsetRate);
-
-// 		if (Math.abs(fdY) < config.minLengthForBorder) {
-// 			fdY =
-// 				fdY < 0
-// 					? -config.minLengthForBorder
-// 					: config.minLengthForBorder;
-// 		}
-
-// 		startControl = {
-// 			control: new Point(start.x + fdX, start.y - fdY),
-// 			point: start,
-// 		};
-// 		endControl = {
-// 			control: new Point(end.x - fdX, end.y + fdY),
-// 			point: end,
-// 		};
-// 	} else {
-// 		if (start.pointType === "Board") {
-// 			startControl = { point: start, control: start };
-// 		} else {
-// 			startControl = calculatePoint(start, end);
-// 		}
-
-// 		if (end.pointType === "Board") {
-// 			endControl = { point: end, control: end };
-// 		} else {
-// 			endControl = calculatePoint(end, start);
-// 		}
-// 	}
-
-// 	if (middle.length === 0) {
-// 		segments.push(
-// 			new CubicBezier(
-// 				startControl.point,
-// 				startControl.control,
-// 				endControl.point,
-// 				endControl.control,
-// 			),
-// 		);
-// 	} else {
-// 		for (const point of middle) {
-// 			segments.push(
-// 				new CubicBezier(
-// 					start,
-// 					startControl.point,
-// 					endControl.point,
-// 					point,
-// 				),
-// 			);
-// 		}
-// 		segments.push(
-// 			new CubicBezier(start, startControl.point, endControl.point, end),
-// 		);
-// 	}
-// 	return new Path(segments);
-// }
-
 export function getCurvedLine(
 	start: ControlPoint,
 	end: ControlPoint,
@@ -166,8 +86,7 @@ export function getCurvedLine(
 		const middlePoint = middle;
 		const CONTROL_POINT_FACTOR = 1;
 
-		const d1x = middlePoint.x - start.x;
-		const d1y = middlePoint.y - start.y;
+		const { x: d1x, y: d1y } = vectorBetweenPoints(start, middlePoint);
 		const c1 = new Point(
 			start.x + d1x * CONTROL_POINT_FACTOR,
 			start.y + d1y * CONTROL_POINT_FACTOR,
@@ -179,18 +98,24 @@ export function getCurvedLine(
 
 		segments.push(new CubicBezier(start, c1, c2, middlePoint));
 
-		const d2x = end.x - middlePoint.x;
-		const d2y = end.y - middlePoint.y;
+		endControl =
+			end.pointType === "Board"
+				? { point: end, control: end }
+				: calculatePoint(end, middle);
+		const { x: d2x, y: d2y } = vectorBetweenPoints(
+			endControl.point,
+			middlePoint,
+		);
 		const c3 = new Point(
 			middlePoint.x + d2x * CONTROL_POINT_FACTOR,
 			middlePoint.y + d2y * CONTROL_POINT_FACTOR,
 		);
 		const c4 = new Point(
-			end.x - d2x * CONTROL_POINT_FACTOR,
-			end.y - d2y * CONTROL_POINT_FACTOR,
+			endControl.point.x - d2x * 0.02,
+			endControl.point.y - d2y * 0.02,
 		);
 
-		segments.push(new CubicBezier(middlePoint, c3, c4, end));
+		segments.push(new CubicBezier(middlePoint, c3, c4, endControl.control));
 	}
 
 	return new Path(segments);
@@ -201,17 +126,17 @@ function calculatePoint(
 	prevPoint: Point,
 ): { point: Point; control: Point } {
 	const normal = point.item.getNormal(point);
-
 	let invertCoff = 1;
 
 	if (!point.item.isClosed()) {
-		const prevVector = vectorBetweenPoints(point, prevPoint);
+		const referencePoint = prevPoint;
+		const prevVector = vectorBetweenPoints(point, referencePoint);
 		const angleNormalPoint = degreesBetweenVectors(
 			normal.normalPoint,
 			prevVector,
 		);
 		const angleNormalInvertPoint = degreesBetweenVectors(
-			new Point(normal.normalPoint.x * -1, normal.normalPoint.y * -1),
+			new Point(-normal.normalPoint.x, -normal.normalPoint.y),
 			prevVector,
 		);
 		if (angleNormalPoint < angleNormalInvertPoint) {
@@ -254,4 +179,9 @@ function vectorBetweenPoints(point1: Point, point2: Point): Point {
 
 function radiansToDegrees(angleInRadians: number): number {
 	return (angleInRadians * 180) / Math.PI;
+}
+
+function normaliseVector(x: number, y: number): { x: number; y: number } {
+	const length = Math.sqrt(x * x + y * y);
+	return length === 0 ? { x: 0, y: 0 } : { x: x / length, y: y / length };
 }
