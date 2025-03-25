@@ -24,6 +24,7 @@ import { ConnectionLineWidth } from "./Items/Connector/Connector";
 import { DrawingData } from "./Items/Drawing";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { DEFAULT_TEXT_STYLES } from "./Items/RichText/RichText";
+import { getDOMParser } from "./api/DOMParser";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -55,7 +56,7 @@ export const parsersHTML: TagFactories = {
 };
 
 export const decodeHtml = (htmlString: string): string => {
-	const parser = new DOMParser();
+	const parser = getDOMParser();
 	const doc = parser.parseFromString(htmlString, "text/html");
 	return doc.documentElement.textContent || "";
 };

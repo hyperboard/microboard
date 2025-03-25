@@ -41,6 +41,7 @@ import { Selection } from "./Selection";
 import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
+import { getDOMParser } from "./api/DOMParser";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -341,159 +342,6 @@ export class Board {
 		});
 	}
 
-	// Smell. Uses document. have to move it out of board
-	/**
-	 * Creates new canvas and returns it.
-	 * Renders all items from translation on new canvas.
-	 * @param mbr - width and height for resulting canvas
-	 * @param translation - ids of items to draw on mbr
-	 */
-	drawMbrOnCanvas(
-		mbr: Mbr,
-		translation: TransformManyItems,
-		actualMbr?: Mbr,
-	): { canvas: HTMLDivElement; items: Item[] } | undefined {
-		const canvas = document.createElement("canvas");
-		const width = mbr.getWidth() + 2;
-		const height = mbr.getHeight() + 2;
-		canvas.width = width * this.camera.getMatrix().scaleX;
-		canvas.height = height * this.camera.getMatrix().scaleY;
-
-		const container = document.createElement("div");
-		container.id = "selection-canvas";
-		container.style.position = "relative";
-		container.style.width = `${canvas.width}px`;
-		container.style.height = `${canvas.height}px`;
-		container.appendChild(canvas);
-
-		if (actualMbr) {
-			const leftOffset =
-				(actualMbr.left - mbr.left) * this.camera.getMatrix().scaleX;
-			const topOffset =
-				(actualMbr.top - mbr.top) * this.camera.getMatrix().scaleX;
-			const width = actualMbr.getWidth() * this.camera.getMatrix().scaleX;
-			const height =
-				actualMbr.getHeight() * this.camera.getMatrix().scaleY;
-
-			const borderDiv = document.createElement("div");
-			borderDiv.id = "canvasBorder";
-			borderDiv.style.position = "absolute";
-			borderDiv.style.transformOrigin = "left top";
-			borderDiv.style.border = `1px solid ${SETTINGS.SELECTION_COLOR}`;
-			borderDiv.style.boxSizing = "border-box";
-			borderDiv.style.left = `${leftOffset}px`;
-			borderDiv.style.top = `${topOffset}px`;
-			borderDiv.style.width = `${width}px`;
-			borderDiv.style.height = `${height}px`;
-			canvas.style.border = "";
-			canvas.style.boxSizing = "border-box";
-			container.appendChild(borderDiv);
-		} else {
-			canvas.style.border = `1px solid ${SETTINGS.SELECTION_COLOR}`;
-			canvas.style.boxSizing = "border-box";
-		}
-
-		const createAnchorDiv = (
-			left: string,
-			top: string,
-			radius: number,
-		): HTMLDivElement => {
-			const anchorDiv = document.createElement("div");
-			anchorDiv.style.position = "absolute";
-			anchorDiv.style.width = `${2 * radius}px`;
-			anchorDiv.style.height = `${2 * radius}px`;
-			anchorDiv.style.backgroundColor = `${SETTINGS.SELECTION_ANCHOR_COLOR}`;
-			anchorDiv.style.border = `${SETTINGS.SELECTION_ANCHOR_WIDTH}px solid ${SETTINGS.SELECTION_COLOR}`;
-			anchorDiv.style.borderRadius = "2px";
-			anchorDiv.style.left = `calc(${left} - ${radius}px)`;
-			anchorDiv.style.top = `calc(${top} - ${radius}px)`;
-			anchorDiv.style.zIndex = "10";
-			return anchorDiv;
-		};
-
-		const anchors = [
-			createAnchorDiv("0%", "0%", SETTINGS.SELECTION_ANCHOR_RADIUS),
-			createAnchorDiv(
-				"100% + 1px",
-				"0%",
-				SETTINGS.SELECTION_ANCHOR_RADIUS,
-			),
-			createAnchorDiv(
-				"0%",
-				"100% + 1px",
-				SETTINGS.SELECTION_ANCHOR_RADIUS,
-			),
-			createAnchorDiv(
-				"100% + 1px",
-				"100% + 1px",
-				SETTINGS.SELECTION_ANCHOR_RADIUS,
-			),
-		];
-
-		const canvasBorder = Array.from(container.children).find(
-			child => child.id === "canvasBorder",
-		);
-		for (const anchor of anchors) {
-			if (canvasBorder) {
-				canvasBorder.appendChild(anchor);
-			} else {
-				container.appendChild(anchor);
-			}
-		}
-
-		const ctx = canvas.getContext("2d");
-		if (!ctx) {
-			console.error(
-				"drawMbrOnCanvas: Unable to get 2D context from canvasElemnt",
-				canvas,
-			);
-			return;
-		}
-
-		const camera = new Camera();
-		const newCameraMatix = new Matrix(-mbr.left, -mbr.top, 1, 1);
-		camera.matrix = newCameraMatix;
-
-		const context = new DrawingContext(camera, ctx);
-
-		context.setCamera(camera);
-		context.ctx.setTransform(
-			this.camera.getMatrix().scaleX,
-			0,
-			0,
-			this.camera.getMatrix().scaleY,
-			0,
-			0,
-		);
-		context.matrix.applyToContext(context.ctx);
-
-		const items = Object.keys(translation)
-			.map(id => {
-				const item = this.items.getById(id);
-				if (item) {
-					if (item.itemType !== "Frame") {
-						return item;
-					}
-					item.render(context);
-					return item;
-				}
-				return;
-			})
-			.filter(item => !!item);
-		items.forEach(item => {
-			if (item.itemType !== "Frame") {
-				item.render(context);
-				this.selection.renderItemMbr(
-					context,
-					item,
-					this.camera.getMatrix().scaleX,
-				);
-			}
-		});
-
-		return { canvas: container, items };
-	}
-
 	createItem(id: string, data: ItemData): Item {
 		const factory = itemFactories[data.itemType];
 		if (!factory) {
@@ -680,9 +528,8 @@ export class Board {
 		const head = `
 		<head>
 			<meta charset="utf-8" />
-			<meta name="last-event-order" content="${this.events?.getLastOrder()}" />
-			<meta name="board-name" content="${boardName}" />
-			<title>Microboard ${boardName}</title>
+			<meta name="last-event-order" content="${this.events?.getLastIndex()}" />
+			<title>Microboard ${this.getBoardId()}</title>
 			<link rel="preconnect" href="https://fonts.googleapis.com">
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 			<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
@@ -711,8 +558,8 @@ export class Board {
 		return `${head}${body}`;
 	}
 
-	deserializeHTML(stringedHTML: string): void {
-		const parser = new DOMParser();
+	deserializeHTMLAndEmit(stringedHTML: string): void {
+		const parser = getDOMParser();
 		const doc = parser.parseFromString(stringedHTML, "text/html");
 		const items = doc.body.querySelector("#items");
 		if (items) {
@@ -781,8 +628,18 @@ export class Board {
 			});
 		}
 	}
-	deserialize(snapshot: BoardSnapshot): void {
-		const { events, items } = snapshot;
+
+	deserializeHTML(stringedHTML: string): void {
+		const parser = getDOMParser();
+		const doc = parser.parseFromString(stringedHTML, "text/html");
+		const itemsDiv = doc.body.querySelector("#items");
+		if (!itemsDiv) {
+			return;
+		}
+		const items = Array.from(itemsDiv.children).map(el =>
+			this.parseHTML(el as HTMLElement),
+		);
+
 		this.index.clear();
 		const createdConnectors: Record<
 			string,
@@ -793,27 +650,28 @@ export class Board {
 			{ item: Frame; itemData: FrameData }
 		> = {};
 
-		if (Array.isArray(items)) {
-			for (const itemData of items) {
-				const item = this.createItem(itemData.id, itemData);
-				if (item.itemType === "Connector") {
-					createdConnectors[itemData.id] = { item, itemData };
-				}
-				if (item.itemType === "Frame") {
-					createdFrames[item.getId()] = { item, itemData };
-				}
-				this.index.insert(item);
+		const addItem = (itemData: ItemData & { id: string }): Item => {
+			const item = this.createItem(itemData.id, itemData);
+			if (item.itemType === "Connector") {
+				createdConnectors[itemData.id] = { item, itemData };
 			}
-		} else {
-			// TODO remove on snapshots update
-			// @ts-expect-error - for older snapshots, that were {id: data}
-			for (const key in items) {
-				const itemData = items[key];
-				const item = this.createItem(key, itemData);
-				if (item.itemType === "Connector") {
-					createdConnectors[key] = { item, itemData };
-				}
-				this.index.insert(item);
+			if (item.itemType === "Frame") {
+				createdFrames[item.getId()] = { item, itemData };
+			}
+			this.index.insert(item);
+			return item;
+		};
+
+		for (const itemData of items) {
+			if ("childrenMap" in itemData) {
+				// Frame
+				Object.values(itemData.childrenMap).map(
+					(childData: ItemData & { id: string }) =>
+						addItem(childData),
+				);
+				addItem(itemData);
+			} else {
+				addItem(itemData);
 			}
 		}
 
@@ -826,12 +684,14 @@ export class Board {
 			const { item, itemData } = createdFrames[key];
 			item.applyAddChild(itemData.children);
 		}
-
-		this.events?.deserialize(events);
 	}
 
 	getCameraSnapshot(): Matrix | undefined {
 		try {
+			if (typeof localStorage === "undefined") {
+				throw new Error();
+			}
+
 			const snap = localStorage.getItem(`camera_${this.boardId}`); // Smell
 			if (snap) {
 				const matrix = JSON.parse(snap);

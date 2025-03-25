@@ -6,7 +6,8 @@ import { RichTextData } from "../RichText";
 import { BorderStyle, BorderWidth } from "../Path";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { FrameType } from "./Basic";
-import i18n from "shared/Lang";
+import { SETTINGS } from "Board/Settings";
+const { i18n } = SETTINGS;
 
 export const FRAME_BORDER_COLOR = "rgba(10, 15, 41, 0.08)";
 
@@ -16,7 +17,8 @@ export const FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR = "#4778F5";
 
 export const FRAME_TITLE_COLOR = "rgb(107, 110, 120)";
 export const FRAME_TYPES = [
-	{ id: "Custom", label: i18n.t("frame.custom") },
+	// { id: "Custom", label: i18n.t("frame.custom") },
+	{ id: "Custom", label: "Custom" },
 	{ id: "Frame16x9", label: "16:9" },
 	{ id: "Frame3x2", label: "3:2" },
 	{ id: "Frame4x3", label: "4:3" },

@@ -1,5 +1,6 @@
 import { Camera } from "Board/Camera";
 import { Matrix } from "./Transformation/Matrix";
+import { SETTINGS } from "Board/Settings";
 
 /** A container for a CanvasRenderingContext2D, to extend it with more data. */
 export class DrawingContext {
@@ -17,7 +18,7 @@ export class DrawingContext {
 	}
 
 	dpi(): number {
-		return window.devicePixelRatio; // Smell: inject object to query this value
+		return SETTINGS.getDPI();
 	}
 
 	setCamera(camera: Camera): void {
@@ -29,7 +30,13 @@ export class DrawingContext {
 
 	clear(): void {
 		this.ctx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
-		this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); // Smell: inject object to query this value
+		// used window.innerWidth and innerHeight before, if document works fine delete this comment
+		this.ctx.clearRect(
+			0,
+			0,
+			SETTINGS.getDocumentWidth(),
+			SETTINGS.getDocumentHeight(),
+		);
 		this.matrix.applyToContext(this.ctx);
 	}
 
@@ -38,7 +45,13 @@ export class DrawingContext {
 			return;
 		}
 		this.cursorCtx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
-		this.cursorCtx.clearRect(0, 0, window.innerWidth, window.innerHeight); // Smell: inject object to query this value
+		// used window.innerWidth and innerHeight before, if document works fine delete this comment
+		this.cursorCtx.clearRect(
+			0,
+			0,
+			SETTINGS.getDocumentWidth(),
+			SETTINGS.getDocumentHeight(),
+		);
 		this.matrix.applyToContext(this.cursorCtx);
 	}
 

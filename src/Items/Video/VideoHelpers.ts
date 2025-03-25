@@ -1,14 +1,15 @@
 import { fileTosha256 } from "shared/sha256";
 import { prepareImage } from "Board/Items/Image/ImageHelpers";
 
-export const storageURL = `${window.location.origin}/api/v1/media/video`;
+// TODO move browser api
+// export const storageURL = `${window.location.origin}/api/v1/video`;
 
 export const uploadVideoToStorage = async (
 	hash: string,
 	videoBlob: Blob,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		fetch(storageURL, {
+		fetch(`${window.location.origin}/api/v1/video`, {
 			method: "POST",
 			headers: {
 				"Content-Type": videoBlob.type,

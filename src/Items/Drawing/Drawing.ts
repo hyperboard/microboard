@@ -241,7 +241,6 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.restore();
 	}
 
-	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		const div = documentFactory.createElement("drawing-item");
 

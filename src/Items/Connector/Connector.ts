@@ -1,5 +1,4 @@
 import { RichText } from "Board/Items";
-import { t } from "i18next";
 import { Subject } from "shared/Subject";
 import { Board } from "../../Board";
 import { Operation } from "../../Events";
@@ -35,6 +34,7 @@ import { DocumentFactory } from "Board/api/DocumentFactory";
 import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
 import { ConnectorAnchorColors } from "./types";
 import { SETTINGS } from "Board/Settings";
+const { i18n } = SETTINGS;
 
 export const ConnectorLineStyles = [
 	"straight",
@@ -108,7 +108,7 @@ export class Connector {
 			this.id,
 			new Transformation(),
 			this.linkTo,
-			t("connector.textPlaceholder", {
+			i18n.t("connector.textPlaceholder", {
 				ns: "default",
 			}),
 			true,

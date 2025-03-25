@@ -6,7 +6,6 @@ import {
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
 import { SelectionContext } from "Board/Selection/Selection";
-import i18next from "i18next";
 import {
 	BaseRange,
 	BaseSelection,
@@ -44,6 +43,7 @@ import { getBlockNodes } from "./CanvasText/Render";
 import { decodeHtml } from "Board/parserHTML";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { SETTINGS } from "Board/Settings";
+const { i18n } = SETTINGS;
 import { SessionStorage } from "App/SessionStorage";
 
 export type DefaultTextStyles = {
@@ -122,7 +122,7 @@ export class RichText extends Mbr implements Geometry {
 		private id = "",
 		readonly transformation = new Transformation(id, board.events),
 		linkTo?: LinkTo,
-		public placeholderText = i18next.t("board.textPlaceholder"),
+		public placeholderText = i18n.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
 		public insideOf?: ItemType,
@@ -897,18 +897,24 @@ export class RichText extends Mbr implements Geometry {
 			// FYI https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint
 			if (
 				refMbr.isInside(point) &&
-				(document.caretPositionFromPoint ||
-					document.caretRangeFromPoint)
+				(SETTINGS.documentFactory.caretPositionFromPoint ||
+					SETTINGS.documentFactory.caretRangeFromPoint)
 			) {
-				const domRange = document.caretPositionFromPoint
-					? document.caretPositionFromPoint(point.x, point.y)
-					: document.caretRangeFromPoint(point.x, point.y);
+				const domRange = SETTINGS.documentFactory.caretPositionFromPoint
+					? SETTINGS.documentFactory.caretPositionFromPoint(
+							point.x,
+							point.y,
+						)
+					: SETTINGS.documentFactory.caretRangeFromPoint(
+							point.x,
+							point.y,
+						);
 				// @ts-expect-error: Suppress TS error for non-existent method
-				const textNode = document.caretPositionFromPoint
+				const textNode = SETTINGS.documentFactory.caretPositionFromPoint
 					? domRange.offsetNode
 					: domRange.startContainer;
 				// @ts-expect-error: Suppress TS error for non-existent method
-				const offset = document.caretPositionFromPoint
+				const offset = SETTINGS.documentFactory.caretPositionFromPoint
 					? domRange.offset
 					: domRange.startOffset;
 				const domPoint = [textNode, offset] as DOMPoint;
@@ -926,8 +932,8 @@ export class RichText extends Mbr implements Geometry {
 			} else {
 				if (
 					!(
-						document.caretPositionFromPoint ||
-						document.caretRangeFromPoint
+						SETTINGS.documentFactory.caretPositionFromPoint ||
+						SETTINGS.documentFactory.caretRangeFromPoint
 					)
 				) {
 					console.error(
@@ -1008,9 +1014,11 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
-		document.fonts.ready.then(() => {
-			this.updateElement();
-		});
+		if (typeof document !== "undefined") {
+			document.fonts.ready.then(() => {
+				this.updateElement();
+			});
+		}
 		this.subject.publish(this);
 		return this;
 	}
@@ -1058,12 +1066,15 @@ export class RichText extends Mbr implements Geometry {
 						: "\u00A0";
 
 				const textElement = node.link
-					? Object.assign(document.createElement("a"), {
-							href: node.link,
-							target: "_blank",
-							rel: "noreferrer",
-						})
-					: document.createElement("span");
+					? Object.assign(
+							SETTINGS.documentFactory.createElement("a"),
+							{
+								href: node.link,
+								target: "_blank",
+								rel: "noreferrer",
+							},
+						)
+					: SETTINGS.documentFactory.createElement("span");
 
 				Object.assign(textElement.style, {
 					fontWeight: node.bold ? "700" : "400",
@@ -1124,7 +1135,7 @@ export class RichText extends Mbr implements Geometry {
 							four: 4,
 							five: 5,
 						} as const;
-						const header = document.createElement(
+						const header = SETTINGS.documentFactory.createElement(
 							`h${levels[level]}`,
 						);
 						applyCommonStyles(header);
@@ -1133,8 +1144,10 @@ export class RichText extends Mbr implements Geometry {
 					}
 
 					case "code_block": {
-						const pre = document.createElement("pre");
-						const code = document.createElement("code");
+						const pre =
+							SETTINGS.documentFactory.createElement("pre");
+						const code =
+							SETTINGS.documentFactory.createElement("code");
 						applyCommonStyles(pre);
 						if (node.language) {
 							code.classList.add(`language-${node.language}`);
@@ -1149,28 +1162,31 @@ export class RichText extends Mbr implements Geometry {
 					}
 
 					case "block-quote": {
-						const blockquote = document.createElement("blockquote");
+						const blockquote =
+							SETTINGS.documentFactory.createElement(
+								"blockquote",
+							);
 						applyCommonStyles(blockquote);
 						blockquote.append(...children);
 						return blockquote;
 					}
 
 					case "ul_list": {
-						const ul = document.createElement("ul");
+						const ul = SETTINGS.documentFactory.createElement("ul");
 						applyCommonStyles(ul);
 						ul.append(...children);
 						return ul;
 					}
 
 					case "ol_list": {
-						const ol = document.createElement("ol");
+						const ol = SETTINGS.documentFactory.createElement("ol");
 						applyCommonStyles(ol);
 						ol.append(...children);
 						return ol;
 					}
 
 					case "list_item": {
-						const li = document.createElement("li");
+						const li = SETTINGS.documentFactory.createElement("li");
 						applyCommonStyles(li);
 						li.append(...children);
 						return li;
@@ -1178,7 +1194,7 @@ export class RichText extends Mbr implements Geometry {
 
 					case "paragraph":
 					default: {
-						const par = document.createElement("p");
+						const par = SETTINGS.documentFactory.createElement("p");
 						applyCommonStyles(par);
 						Object.assign(par.style, {
 							lineHeight: node.lineHeight
@@ -1192,7 +1208,7 @@ export class RichText extends Mbr implements Geometry {
 				}
 			}
 
-			return document.createElement("div");
+			return SETTINGS.documentFactory.createElement("div");
 		};
 
 		const escapeHtml = (unsafe: string): string => {
@@ -1204,9 +1220,10 @@ export class RichText extends Mbr implements Geometry {
 				.replace(/'/g, "&#039;");
 		};
 
-		const elements = enablePlaceholder
-			? this.getBlockNodes().map(renderNode)
-			: this.editor.editor.children.map(renderNode);
+		// const elements = enablePlaceholder
+		// ? this.getBlockNodes().map(renderNode)
+		// : this.editor.editor.children.map(renderNode);
+		const elements = this.editor.editor.children.map(renderNode);
 
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.matrix;
@@ -1228,14 +1245,14 @@ export class RichText extends Mbr implements Geometry {
 		div.style.maxWidth = this.getMaxWidth()
 			? `${this.getMaxWidth()}px`
 			: "";
-		if (this.layoutNodes.height < transformedHeight) {
-			const alignment = this.getVerticalAlignment();
-			if (alignment === "center") {
-				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / 2 / scaleY}px`;
-			} else if (alignment === "bottom") {
-				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
-			}
-		}
+		// if (this.layoutNodes.height < transformedHeight) {
+		// 	const alignment = this.getVerticalAlignment();
+		// 	if (alignment === "center") {
+		// 		div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / 2 / scaleY}px`;
+		// 	} else if (alignment === "bottom") {
+		// 		div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
+		// 	}
+		// }
 
 		div.setAttribute(
 			"data-vertical-alignment",

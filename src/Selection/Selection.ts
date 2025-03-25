@@ -18,7 +18,6 @@ import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
 import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
-import { t } from "i18next";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import { ItemOp } from "Board/Items/RichText/RichTextOperations";
 import { tempStorage } from "App/SessionStorage";
@@ -29,6 +28,8 @@ import {
 } from "Board/Items/AINode/AINode";
 import { BaseRange } from "slate";
 import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
+import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
+const { i18n } = SETTINGS;
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -60,7 +61,7 @@ export class Selection {
 		private board: Board,
 		public events?: Events,
 	) {
-		requestAnimationFrame(this.updateScheduledObservers);
+		safeRequestAnimationFrame(this.updateScheduledObservers);
 		this.tool = new SelectionTransformer(board, this);
 		this.quickAddButtons = getQuickAddButtons(this, board);
 	}
@@ -121,7 +122,7 @@ export class Selection {
 			observer();
 		}
 		this.updateQueue.clear();
-		requestAnimationFrame(this.updateScheduledObservers);
+		safeRequestAnimationFrame(this.updateScheduledObservers);
 	};
 
 	private itemObserver = (item: Item): void => {
@@ -523,7 +524,7 @@ export class Selection {
 		}
 
 		const textItem = item.getRichText()?.getTextString();
-		const copyText = t("frame.copy");
+		const copyText = i18n.t("frame.copy");
 		const isCopyTextExist = textItem?.includes(copyText);
 		const isChangeCopiedFrameText =
 			item.itemType === "Frame" &&

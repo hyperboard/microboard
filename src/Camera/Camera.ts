@@ -3,8 +3,9 @@ import { Pointer } from "Board/Pointer";
 import { Subject } from "shared/Subject";
 import { toFiniteNumber } from "Board/lib";
 import { throttle } from "shared/lib/throttle";
-import { Keyboard } from "Board/Keyboard";
+import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
 import { SETTINGS } from "Board/Settings";
+import { Keyboard } from "Board/Keyboard";
 
 export class Camera {
 	subject = new Subject<Camera>();
@@ -18,9 +19,9 @@ export class Camera {
 	matrix = new Matrix();
 	readonly pointer = new Point();
 	window = {
-		width: document.documentElement.clientWidth,
-		height: document.documentElement.clientHeight,
-		dpi: window.devicePixelRatio,
+		width: SETTINGS.getDocumentWidth(),
+		height: SETTINGS.getDocumentHeight(),
+		dpi: SETTINGS.getDPI(),
 		getMbr: () => {
 			return new Mbr(0, 0, this.window.width, this.window.height);
 		},
@@ -188,11 +189,11 @@ export class Camera {
 			this.subject.publish(this);
 
 			if (progress < 1) {
-				requestAnimationFrame(animate);
+				safeRequestAnimationFrame(animate);
 			}
 		};
 
-		requestAnimationFrame(animate);
+		safeRequestAnimationFrame(animate);
 	}
 
 	saveDownEvent(event: PointerEvent): void {
@@ -502,13 +503,13 @@ export class Camera {
 			this.subject.publish(this);
 
 			if (progress < 1) {
-				requestAnimationFrame(animate);
+				safeRequestAnimationFrame(animate);
 			} else {
 				this.isAnimating = false;
 			}
 		};
 
-		requestAnimationFrame(animate);
+		safeRequestAnimationFrame(animate);
 	}
 
 	private lerp(a: number, b: number, time: number): number {
@@ -566,9 +567,9 @@ export class Camera {
 	}
 
 	onWindowResize(): void {
-		this.window.width = document.documentElement.clientWidth;
-		this.window.height = document.documentElement.clientHeight;
-		this.window.dpi = window.devicePixelRatio;
+		this.window.width = SETTINGS.getDocumentWidth();
+		this.window.height = SETTINGS.getDocumentHeight();
+		this.window.dpi = SETTINGS.getDPI();
 		this.resizeSubject.publish(this);
 		this.subject.publish(this);
 	}

@@ -10,7 +10,7 @@ import { TransformationData } from "../Transformation/TransformationData";
 import { Placeholder } from "../Placeholder";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { storageURL } from "./ImageHelpers";
+// import { storageURL } from "./ImageHelpers";
 import {
 	scaleElementBy,
 	translateElementBy,
@@ -117,10 +117,10 @@ export class ImageItem extends Mbr {
 		try {
 			const url = new URL(link);
 			// If the link is a valid URL, replace its domain with window.location.origin
-			this.storageLink = `${window.location.origin}${url.pathname}`; // Smell: inject object to query this value
+			this.storageLink = `${window?.location.origin}${url.pathname}`; // Window Smell: inject object to query this value
 		} catch (_) {
 			// If the link is not a valid URL, prepend it with storageUrl
-			this.storageLink = `${storageURL}/${link}`;
+			// this.storageLink = `${storageURL}/${link}`;
 		}
 	}
 

@@ -4,7 +4,6 @@ import { Events } from "Board/Events";
 import { Item, Matrix, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Selection } from "Board/Selection/Selection";
-import i18n from "shared/Lang";
 import { Subject } from "shared/Subject";
 import {
 	BringToMeEvent,
@@ -24,6 +23,9 @@ import {
 import { PRESENCE_COLORS } from "./consts";
 import { catmullRomInterpolate, rgbToRgba } from "./helpers";
 import { throttleWithDebounce } from "shared/lib/throttle";
+import { SETTINGS } from "Board/Settings";
+import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
+const { i18n } = SETTINGS;
 
 const SECOND = 1000;
 const CURSOR_FPS = 3;
@@ -134,7 +136,13 @@ export class Presence {
 			throttleSelectionEvent(this.board.selection);
 		});
 
-		window.addEventListener("storage", this.updateCurrentUser.bind(this));
+		// todo move browser api
+		if (typeof window !== "undefined") {
+			window.addEventListener(
+				"storage",
+				this.updateCurrentUser.bind(this),
+			);
+		}
 	}
 
 	clear(): void {
@@ -200,10 +208,13 @@ export class Presence {
 	}
 
 	cleanup() {
-		window.removeEventListener(
-			"storage",
-			this.updateCurrentUser.bind(this),
-		);
+		// todo move browser api
+		if (typeof window !== "undefined") {
+			window.removeEventListener(
+				"storage",
+				this.updateCurrentUser.bind(this),
+			);
+		}
 	}
 
 	setupUpdateInterval(): void {
@@ -928,7 +939,7 @@ export class Presence {
 
 			ctx.restore();
 
-			this.pointerAnimationId = requestAnimationFrame(renderLoop);
+			this.pointerAnimationId = safeRequestAnimationFrame(renderLoop);
 		};
 
 		renderLoop();

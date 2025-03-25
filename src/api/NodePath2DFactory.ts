@@ -1,20 +1,27 @@
 /* eslint-disable id-length */
-import { Path2D as CanvasPath2D } from "canvas";
+// import { Path2D as CanvasPath2D } from "skia-canvas";
+// import { Path2D as CanvasPath2D } from "canvas";
+// import { CanvasRenderingContext2D as CanvasPath2D } from "canvas";
+// import { Canvas } from "canvas";
 import { Path2DFactory } from "./Path2DFactory";
 
-export class NodePath2D implements Path2DFactory {
-	nativePath: CanvasPath2D;
+export class NodePath2D extends Path2DFactory {
+	// nativePath: CanvasPath2D;
+	nativePath = {};
+	private shouldLog = false;
+	private log(str: string) {
+		if (this.shouldLog) {
+			console.log(str);
+		}
+	}
 
 	constructor(d?: string) {
-		this.nativePath = new CanvasPath2D(d);
+		super();
+		this.log("DummyPath2D constructor called");
 	}
 
 	addPath(path: Path2DFactory, transform?: DOMMatrix2DInit): void {
-		if (path instanceof NodePath2D) {
-			this.nativePath.addPath(path.nativePath, transform);
-		} else {
-			throw new Error("Invalid Path2D instance passed to addPath.");
-		}
+		this.log("addPath called");
 	}
 
 	arc(
@@ -25,7 +32,7 @@ export class NodePath2D implements Path2DFactory {
 		endAngle: number,
 		anticlockwise?: boolean,
 	): void {
-		this.nativePath.arc(x, y, radius, startAngle, endAngle, anticlockwise);
+		this.log("arc called");
 	}
 
 	arcTo(
@@ -35,7 +42,7 @@ export class NodePath2D implements Path2DFactory {
 		y2: number,
 		radius: number,
 	): void {
-		this.nativePath.arcTo(x1, y1, x2, y2, radius);
+		this.log("arcTo called");
 	}
 
 	bezierCurveTo(
@@ -46,11 +53,11 @@ export class NodePath2D implements Path2DFactory {
 		x: number,
 		y: number,
 	): void {
-		this.nativePath.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+		this.log("bezierCurveTo called");
 	}
 
 	closePath(): void {
-		this.nativePath.closePath();
+		this.log("closePath called");
 	}
 
 	ellipse(
@@ -63,32 +70,28 @@ export class NodePath2D implements Path2DFactory {
 		endAngle: number,
 		anticlockwise?: boolean,
 	): void {
-		this.nativePath.ellipse(
-			x,
-			y,
-			radiusX,
-			radiusY,
-			rotation,
-			startAngle,
-			endAngle,
-			anticlockwise,
-		);
+		this.log("ellipse called");
 	}
 
 	lineTo(x: number, y: number): void {
-		this.nativePath.lineTo(x, y);
+		this.log("lineTo called");
 	}
 
 	moveTo(x: number, y: number): void {
-		this.nativePath.moveTo(x, y);
+		this.log("moveTo called");
 	}
 
 	quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void {
-		this.nativePath.quadraticCurveTo(cpx, cpy, x, y);
+		this.log("quadraticCurveTo called");
 	}
 
 	rect(x: number, y: number, w: number, h: number): void {
-		this.nativePath.rect(x, y, w, h);
+		this.log("rect called");
+	}
+
+	// Expose a dummy method for getNativePath
+	getNativePath(): void {
+		this.log("getNativePath called");
 	}
 
 	roundRect(
@@ -98,6 +101,7 @@ export class NodePath2D implements Path2DFactory {
 		height: number,
 		radii?: number | DOMPointInit,
 	): void {
-		this.nativePath.roundRect(x, y, width, height, radii);
+		this.log("roundRect called");
+		// this.nativePath.roundRect(x, y, width, height, radii);
 	}
 }
