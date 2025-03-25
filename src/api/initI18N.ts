@@ -1,23 +1,11 @@
 import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
-// import en from "../../shared/Lang/en.json";
-// import ru from "../../shared/Lang/ru.json";
 import { conf } from "Board/Settings";
 import { defaultNS, resources } from "shared/Lang";
 
-// export const defaultNS = "default";
-// export const resources = {
-// 	en: {
-// 		default: en,
-// 	},
-// 	ru: {
-// 		default: ru,
-// 	},
-// };
 export function initI18N(isNode = false): typeof i18n {
 	if (isNode) {
-		console.log("return empty ctx");
 		return {} as typeof i18n;
 	}
 
@@ -38,7 +26,12 @@ export function initI18N(isNode = false): typeof i18n {
 				escapeValue: false,
 			},
 		});
+
 	conf.i18n = i18n;
+	conf.planNames = {
+		basic: i18n.t("userPlan.plans.basic.name"),
+		plus: i18n.t("userPlan.plans.plus.name"),
+	};
 
 	return i18n;
 }

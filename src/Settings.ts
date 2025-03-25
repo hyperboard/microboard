@@ -56,6 +56,10 @@ export interface Settings {
 	measureCtx: CanvasRenderingContext2D;
 	// Internationalization
 	i18n: typeof i18next;
+	planNames: {
+		basic: string;
+		plus: string;
+	};
 	getDocumentWidth: () => number;
 	getDocumentHeight: () => number;
 	getDPI: () => number;
@@ -159,6 +163,10 @@ export const conf: Settings = {
 	getDocumentWidth: (): number => 800,
 	getDocumentHeight: (): number => 600,
 	getDPI: (): number => 1,
+	planNames: {
+		basic: "Basic",
+		plus: "Plus",
+	},
 	SELECTION_COLOR: "rgb(71, 120, 245)",
 	SELECTION_LOCKED_COLOR: "#0B0C0E",
 	SELECTION_BACKGROUND: "none",
