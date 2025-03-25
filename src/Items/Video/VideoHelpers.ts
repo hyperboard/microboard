@@ -9,7 +9,7 @@ export const uploadVideoToStorage = async (
 	videoBlob: Blob,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		fetch(`${window.location.origin}/api/v1/video`, {
+		fetch(`${window.location.origin}/api/v1/media/video`, {
 			method: "POST",
 			headers: {
 				"Content-Type": videoBlob.type,

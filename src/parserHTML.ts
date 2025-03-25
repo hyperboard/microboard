@@ -25,6 +25,8 @@ import { DrawingData } from "./Items/Drawing";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { DEFAULT_TEXT_STYLES } from "./Items/RichText/RichText";
 import { getDOMParser } from "./api/DOMParser";
+import { VideoItemData } from "Board/Items/Video/Video";
+import { CommentData } from "Board/Items/Comment/Comment";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -36,8 +38,9 @@ export const tagByType: MapTagByType = {
 	Drawing: "drawing-item",
 	Frame: "frame-item",
 	AINode: "ainode-item",
+	Video: "video-item",
 	Placeholder: "",
-	Comment: "",
+	Comment: "comment-item",
 	Group: "",
 };
 
@@ -53,6 +56,8 @@ export const parsersHTML: TagFactories = {
 	"drawing-item": parseHTMLDrawing,
 	"frame-item": parseHTMLFrame,
 	"ainode-item": parseHTMLAINode,
+	"video-item": parseHTMLVideo,
+	"comment-item": parseHTMLComment,
 };
 
 export const decodeHtml = (htmlString: string): string => {
@@ -361,6 +366,38 @@ function parseHTMLImage(el: HTMLElement): ImageItemData & { id: string } {
 	};
 
 	return imageItemData;
+}
+
+function parseHTMLVideo(el: HTMLElement): VideoItemData & { id: string } {
+	const transformation = getTransformationData(el);
+
+	const videoItemData: VideoItemData & { id: string } = {
+		id: el.id,
+		itemType: "Video",
+		transformation,
+		videoDimension: {
+			width: parseInt(el.style.width),
+			height: parseInt(el.style.height),
+		},
+		url: el.getAttribute("video-url") || "",
+		previewUrl: el.getAttribute("preview-url") || "",
+		extension: el.getAttribute("extension") || "mp4",
+		isStorageUrl: Boolean(el.getAttribute("is-storage-url")),
+	};
+
+	return videoItemData;
+}
+
+function parseHTMLComment(el: HTMLElement): CommentData & { id: string } {
+	// const transformation = getTransformationData(el);
+	const data = JSON.parse(el.getAttribute("comment-data")) as CommentData;
+
+	const commentItemData: CommentData & { id: string } = {
+		id: el.id,
+		...data,
+	};
+
+	return commentItemData;
 }
 
 function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {

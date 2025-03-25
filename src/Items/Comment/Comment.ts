@@ -12,6 +12,7 @@ import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line";
 import { v4 as uuidv4 } from "uuid";
 import { LinkTo } from "../LinkTo/LinkTo";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 
 export interface Commentator {
 	username: string;
@@ -421,4 +422,16 @@ export class Comment implements Geometry {
 	}
 
 	render(context: DrawingContext): void {}
+
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		const div = documentFactory.createElement("comment-item");
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+		div.setAttribute("comment-data", JSON.stringify(this.serialize()));
+		return div;
+	}
 }
