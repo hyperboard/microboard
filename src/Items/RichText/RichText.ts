@@ -523,7 +523,12 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	setMaxWidth(maxWidth: number): this {
-		if (this.containerMaxWidth && this.shrinkWidth) {
+		const shouldNotShrink =
+			this.insideOf !== "RichText" &&
+			this.insideOf !== "AINode" &&
+			this.containerMaxWidth &&
+			this.shrinkWidth;
+		if (shouldNotShrink) {
 			this.shrinkWidth = false;
 		}
 		this.containerMaxWidth = maxWidth;
