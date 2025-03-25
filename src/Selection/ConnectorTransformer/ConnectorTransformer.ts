@@ -11,7 +11,6 @@ import {
 	CONNECTOR_ANCHOR_TYPE,
 	CONNECTOR_ANCHOR_COLOR,
 } from "Board/Items/Connector/Connector";
-import { BoardPoint } from "Board/Items/Connector";
 
 const config = {
 	anchorDistance: 10,
@@ -179,7 +178,7 @@ export class ConnectorTransformer extends Tool {
 				CONNECTOR_ANCHOR_COLOR.anchorBackground,
 			);
 			const middlePoints =
-				connector.getMiddlePoints() || connector.getMiddlePoint();
+				connector.getMiddlePoint() || connector.calculateMiddlePoint();
 			const nearestMiddlePoint = connector.getNearestEdgePointTo(
 				new Point(middlePoints.x, middlePoints.y),
 			);

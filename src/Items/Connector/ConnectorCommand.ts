@@ -60,7 +60,7 @@ export class ConnectorCommand implements Command {
 				break;
 			case "setMiddlePoint":
 				for (const connector of this.connector) {
-					const middlePoint = connector.getMiddlePoints();
+					const middlePoint = connector.getMiddlePoint();
 					reverse.push({
 						item: connector,
 						operation: {

@@ -21,7 +21,7 @@ import {
 	getControlPoint,
 } from "./ControlPoint";
 import { getLine } from "./getLine/getLine";
-import { ConnectorEdge, getMiddlePointer } from "./Pointers";
+import { ConnectorEdge } from "./Pointers";
 import { getStartPointer, getEndPointer } from "./Pointers/index";
 import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
 import { LinkTo } from "../LinkTo/LinkTo";
@@ -72,7 +72,7 @@ export class Connector {
 	parent = "Board";
 	private id = "";
 	readonly transformation: Transformation;
-	private middlePoints: ControlPoint | null = new BoardPoint();
+	private middlePoint: ControlPoint | null = new BoardPoint();
 	private lineColor: string;
 	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth;
@@ -81,7 +81,6 @@ export class Connector {
 	lines = new Path([new Line(new Point(), new Point())]);
 	startPointer: Pointer;
 	endPointer: Pointer;
-	middlePointers: Pointer;
 	animationFrameId?: number;
 	readonly text: RichText;
 	transformationRenderBlock?: boolean = undefined;
@@ -138,7 +137,7 @@ export class Connector {
 			this.lines,
 			this.lineWidth * 0.1 + 0.3,
 		);
-		this.middlePoints = null;
+		this.middlePoint = null;
 
 		this.transformation.subject.subscribe((_sub, op) => {
 			if (op.method === "transformMany") {
@@ -397,7 +396,7 @@ export class Connector {
 
 	applyMiddlePoint(pointData: ControlPointData, updatePath = true): void {
 		const optionalFn = this.getOptionalFindFn();
-		this.middlePoints = getControlPoint(
+		this.middlePoint = getControlPoint(
 			pointData,
 			optionalFn
 				? optionalFn
@@ -416,8 +415,7 @@ export class Connector {
 	}
 
 	addMiddlePoint(point: BoardPoint): void {
-		this.middlePoints = point;
-
+		this.middlePoint = point;
 		this.updatePaths();
 	}
 
@@ -523,11 +521,11 @@ export class Connector {
 		return this.endPoint;
 	}
 
-	getMiddlePoints(): ControlPoint | null {
-		return this.middlePoints;
+	getMiddlePoint(): ControlPoint | null {
+		return this.middlePoint;
 	}
 
-	getMiddlePoint(): { x: number; y: number } {
+	calculateMiddlePoint(): { x: number; y: number } {
 		if (this.lineStyle === "orthogonal") {
 			const segments = this.lines.getSegments();
 			const middle = segments[Math.floor(segments.length / 2)];
@@ -765,7 +763,7 @@ export class Connector {
 		ctx.restore();
 
 		// Render text in the center of the connector
-		const { x, y } = this.getMiddlePoint();
+		const { x, y } = this.calculateMiddlePoint();
 		const textWidth = this.text.getWidth();
 		const textHeight = this.text.getHeight();
 		this.text.transformation.applyTranslateTo(
@@ -989,9 +987,7 @@ export class Connector {
 			transformation: transformation.serialize(),
 			startPoint: this.startPoint.serialize(),
 			endPoint: this.endPoint.serialize(),
-			middlePoints: this.middlePoints
-				? this.middlePoints.serialize()
-				: null,
+			middlePoint: this.middlePoint ? this.middlePoint.serialize() : null,
 			startPointerStyle: this.startPointerStyle,
 			endPointerStyle: this.endPointerStyle,
 			lineStyle: this.lineStyle,
@@ -1016,8 +1012,8 @@ export class Connector {
 		if (data.endPoint) {
 			this.applyEndPoint(data.endPoint, false);
 		}
-		if (data.middlePoints) {
-			this.applyMiddlePoint(data.middlePoints, false);
+		if (data.middlePoint) {
+			this.applyMiddlePoint(data.middlePoint, false);
 		}
 		if (data.text) {
 			this.text.deserialize(data.text);
@@ -1067,7 +1063,7 @@ export class Connector {
 		if (!this.text) {
 			return;
 		}
-		const { x, y } = this.getMiddlePoints() || this.getMiddlePoint();
+		const { x, y } = this.getMiddlePoint() || this.calculateMiddlePoint();
 		const height = this.text!.getHeight();
 		const width = this.text!.getWidth();
 
@@ -1143,7 +1139,7 @@ export class Connector {
 		if (edge === "start") {
 			this.startPoint = newPoint;
 		} else if (edge === "middle") {
-			this.middlePoints = newPoint;
+			this.middlePoint = newPoint;
 		} else {
 			this.endPoint = newPoint;
 		}
@@ -1156,7 +1152,7 @@ export class Connector {
 			this.lineStyle,
 			startPoint,
 			endPoint,
-			this.middlePoints,
+			this.middlePoint,
 		).addConnectedItemType(this.itemType);
 
 		this.startPointer = getStartPointer(
@@ -1179,20 +1175,6 @@ export class Connector {
 		this.endPointer.path.setBorderColor(this.lineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
 		this.endPointer.path.setBackgroundColor(this.lineColor);
-
-		if (this.middlePoints) {
-			this.middlePointers = getMiddlePointer(
-				this.middlePoints,
-				this.endPointerStyle,
-				this.lineStyle,
-				this.lines,
-				this.lineWidth * 0.1 + 0.2,
-			);
-
-			this.middlePointers.path.setBorderColor(this.lineColor);
-			this.middlePointers.path.setBorderWidth(this.lineWidth);
-			this.middlePointers.path.setBackgroundColor(this.lineColor);
-		}
 
 		this.offsetLines();
 
@@ -1232,10 +1214,10 @@ export class Connector {
 				]).addConnectedItemType(this.itemType);
 			}
 		} else if (line instanceof Line) {
-			if (this.middlePoints) {
+			if (this.middlePoint) {
 				this.lines = new Path([
-					new Line(this.startPointer.start, this.middlePoints),
-					new Line(this.middlePoints, this.endPointer.start),
+					new Line(this.startPointer.start, this.middlePoint),
+					new Line(this.middlePoint, this.endPointer.start),
 				]).addConnectedItemType(this.itemType);
 			} else {
 				this.lines = new Path([

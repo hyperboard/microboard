@@ -10,7 +10,7 @@ export class ConnectorData {
 	readonly itemType = "Connector";
 	startPoint: ControlPointData = new BoardPoint(0, 0);
 	endPoint: ControlPointData = new BoardPoint(0, 0);
-	middlePoints: ControlPointData | null = null;
+	middlePoint: ControlPointData | null = null;
 	startPointerStyle: ConnectorPointerStyle = "None";
 	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";

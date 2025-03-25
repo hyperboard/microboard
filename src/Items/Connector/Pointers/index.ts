@@ -148,24 +148,6 @@ export function getEndPointer(
 	};
 }
 
-export function getMiddlePointer(
-	point: ControlPoint,
-	pointerStyle: string,
-	lineStyle: ConnectorLineStyle,
-	lines: Path,
-	scale: number,
-): Pointer {
-	const angleRadians = getPointerRotation(point, lineStyle, lines, "middle");
-	const matrix = getPointerMatrix(point, angleRadians, scale);
-	const pointer = getPointer(pointerStyle);
-	return {
-		path: pointer.path.getTransformed(matrix),
-		start: pointer.start.getTransformed(matrix),
-		end: pointer.end.getTransformed(matrix),
-		name: pointer.name,
-	};
-}
-
 function getPointerMatrix(
 	point: ControlPoint,
 	angleRadians: number,
