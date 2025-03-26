@@ -686,6 +686,55 @@ export class Board {
 		}
 	}
 
+	deserialize(snapshot: BoardSnapshot): void {
+		const { events, items } = snapshot;
+		this.index.clear();
+		const createdConnectors: Record<
+			string,
+			{ item: Connector; itemData: ConnectorData & { id: string } }
+		> = {};
+		const createdFrames: Record<
+			string,
+			{ item: Frame; itemData: FrameData }
+		> = {};
+
+		if (Array.isArray(items)) {
+			for (const itemData of items) {
+				const item = this.createItem(itemData.id, itemData);
+				if (item.itemType === "Connector") {
+					createdConnectors[itemData.id] = { item, itemData };
+				}
+				if (item.itemType === "Frame") {
+					createdFrames[item.getId()] = { item, itemData };
+				}
+				this.index.insert(item);
+			}
+		} else {
+			// TODO remove on snapshots update
+			// @ts-expect-error - for older snapshots, that were {id: data}
+			for (const key in items) {
+				const itemData = items[key];
+				const item = this.createItem(key, itemData);
+				if (item.itemType === "Connector") {
+					createdConnectors[key] = { item, itemData };
+				}
+				this.index.insert(item);
+			}
+		}
+
+		for (const key in createdConnectors) {
+			const { item, itemData } = createdConnectors[key];
+			item.applyStartPoint(itemData.startPoint);
+			item.applyEndPoint(itemData.endPoint);
+		}
+		for (const key in createdFrames) {
+			const { item, itemData } = createdFrames[key];
+			item.applyAddChild(itemData.children);
+		}
+
+		this.events?.deserialize(events);
+	}
+
 	getCameraSnapshot(): Matrix | undefined {
 		try {
 			if (typeof localStorage === "undefined") {
