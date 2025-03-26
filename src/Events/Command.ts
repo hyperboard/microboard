@@ -25,6 +25,8 @@ import { ImageCommand } from "Board/Items/Image/ImageCommand";
 import { ImageItem } from "Board/Items/Image";
 import { VideoCommand } from "Board/Items/Video/VideoCommand";
 import { VideoItem } from "Board/Items/Video/Video";
+import { AudioCommand } from "Board/Items/Audio/AudioCommand";
+import { AudioItem } from "Board/Items/Audio/Audio";
 
 export interface Command {
 	apply(): void;
@@ -186,6 +188,14 @@ export function createCommand(board: Board, operation: Operation): Command {
 							items.filter(
 								(item): item is VideoItem =>
 									item.itemType === "Video",
+							),
+							operation,
+						);
+					case "Audio":
+						return new AudioCommand(
+							items.filter(
+								(item): item is AudioItem =>
+									item.itemType === "Audio",
 							),
 							operation,
 						);

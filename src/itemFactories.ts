@@ -23,6 +23,7 @@ import { Comment } from "./Items/Comment";
 import { AINode } from "Board/Items/AINode/AINode";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { VideoItem, VideoItemData } from "Board/Items/Video/Video";
+import { AudioItem, AudioItemData } from "Board/Items/Audio/Audio";
 
 interface ItemFactory {
 	(id: string, data: ItemData, board: Board): Item;
@@ -42,6 +43,7 @@ export const itemFactories: ItemFactories = {
 	Group: createGroup,
 	AINode: createAINode,
 	Video: createVideo,
+	Audio: createAudio,
 };
 
 function createSticker(id: string, data: ItemData, board: Board): Sticker {
@@ -118,10 +120,26 @@ function createVideo(id: string, data: ItemData, board: Board): VideoItem {
 	if (!isVideoItemData(data)) {
 		throw new Error("Invalid data for VideoItem");
 	}
-	const video = new VideoItem(data, board, board.events, id)
+	const video = new VideoItem(data, board, board.events, id, data.extension)
 		.setId(id)
 		.deserialize(data);
 	return video;
+}
+
+function createAudio(id: string, data: ItemData, board: Board): AudioItem {
+	if (!isAudioItemData(data)) {
+		throw new Error("Invalid data for AudioItem");
+	}
+	const audio = new AudioItem(
+		data.url,
+		board,
+		board.events,
+		id,
+		data.extension,
+	)
+		.setId(id)
+		.deserialize(data);
+	return audio;
 }
 
 function createDrawing(id: string, data: ItemData, board: Board): Drawing {
@@ -200,6 +218,10 @@ function isImageItemData(data: ItemData): data is ImageItemData {
 
 function isVideoItemData(data: ItemData): data is VideoItemData {
 	return data.itemType === "Video";
+}
+
+function isAudioItemData(data: ItemData): data is AudioItemData {
+	return data.itemType === "Audio";
 }
 
 function isDrawingData(data: ItemData): data is DrawingData {

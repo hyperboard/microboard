@@ -142,6 +142,8 @@ export interface Settings {
 	NAVIGATION_STEP: number;
 
 	getYouTubeId: (url: string) => string | null;
+
+	AUDIO_DIMENSIONS: { width: number; height: number };
 }
 
 /**
@@ -378,6 +380,8 @@ export const conf: Settings = {
 		const match = url.match(regExp);
 		return match && match[2].length === 11 ? match[2] : null;
 	},
+
+	AUDIO_DIMENSIONS: { width: 600, height: 100 },
 };
 
 export interface ExportSnapshotSelection {

@@ -13,6 +13,7 @@ import { Comment, CommentData } from "./Comment";
 import { AINode } from "Board/Items/AINode/AINode";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
 import { VideoItem, VideoItemData } from "Board/Items/Video/Video";
+import { AudioItem, AudioItemData } from "Board/Items/Audio/Audio";
 
 export type Item =
 	| RichText
@@ -26,7 +27,8 @@ export type Item =
 	| Comment
 	| Group
 	| AINode
-	| VideoItem;
+	| VideoItem
+	| AudioItem;
 
 export type ItemType = Item["itemType"];
 export type ItemData =
@@ -41,4 +43,5 @@ export type ItemData =
 	| CommentData
 	| GroupData
 	| AINodeData
-	| VideoItemData;
+	| VideoItemData
+	| AudioItemData;

@@ -12,6 +12,7 @@ import { GroupOperation } from "Board/Items/Group/GroupOperation";
 import { CommentOperation } from "../Items/Comment";
 import { ImageOperation } from "Board/Items/Image";
 import { VideoOperation } from "Board/Items/Video/VideoOperation";
+import { AudioOperation } from "Board/Items/Audio/AudioOperation";
 
 interface Undo {
 	class: "Events";
@@ -40,7 +41,8 @@ export type ItemOperation =
 	| GroupOperation
 	| CommentOperation
 	| ImageOperation
-	| VideoOperation;
+	| VideoOperation
+	| AudioOperation;
 
 export type UndoableOperation = BoardOps | ItemOperation;
 
