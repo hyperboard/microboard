@@ -179,6 +179,16 @@ export class Transformer extends Tool {
 		if (wasResising) {
 			this.selection.nestSelectedItems();
 		}
+
+		const single = this.selection.items.getSingle();
+		if (
+			(single?.itemType === "AINode" ||
+				single?.itemType === "RichText") &&
+			wasResising
+		) {
+			single.isWidthResizing = false;
+		}
+
 		this.resizeType = undefined;
 		this.clickedOn = undefined;
 		this.oppositePoint = undefined;
@@ -322,6 +332,7 @@ export class Transformer extends Tool {
 			);
 
 			if (isWidth) {
+				single.isWidthResizing = true;
 				if (isLongText) {
 					const isLeft = this.resizeType === "left";
 					if (this.board.selection.shouldRenderItemsMbr) {
@@ -482,6 +493,7 @@ export class Transformer extends Tool {
 			);
 
 			if (isWidth) {
+				single.isWidthResizing = true;
 				single.text.editor.setMaxWidth(
 					resizedMbr.getWidth() / single.text.getScale(),
 				);

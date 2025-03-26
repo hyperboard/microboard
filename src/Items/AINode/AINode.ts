@@ -47,6 +47,7 @@ export class AINode implements Geometry {
 	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
 	private buttonMbr: Mbr = new Mbr();
+	isWidthResizing: boolean = false;
 
 	constructor(
 		private board: Board,
