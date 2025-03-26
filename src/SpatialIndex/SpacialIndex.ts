@@ -475,7 +475,7 @@ export class Items {
 	getUnderPointer(size = 0): Item[] {
 		const { x, y } = this.pointer.point;
 		const unmodifiedSize = size;
-		size = 16 / this.view.getScale();
+		size = 16;
 		const tolerated = this.index.getEnclosedOrCrossed(
 			x - size,
 			y - size,
