@@ -223,7 +223,7 @@ export class RichText extends Mbr implements Geometry {
 		);
 
 		if (this.layoutNodes.width > (this.getMaxWidth() || 0)) {
-			this.editor.setMaxWidth(this.layoutNodes.width);
+			this.editor.applyMaxWidth(this.layoutNodes.width);
 		}
 
 		this.editorTransforms.select(this.editor.editor, {
