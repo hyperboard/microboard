@@ -27,6 +27,7 @@ import { DEFAULT_TEXT_STYLES } from "./Items/RichText/RichText";
 import { getDOMParser } from "./api/DOMParser";
 import { VideoItemData } from "Board/Items/Video/Video";
 import { CommentData } from "Board/Items/Comment/Comment";
+import { AudioItemData } from "Board/Items/Audio/Audio";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -39,6 +40,7 @@ export const tagByType: MapTagByType = {
 	Frame: "frame-item",
 	AINode: "ainode-item",
 	Video: "video-item",
+	Audio: "audio-item",
 	Placeholder: "",
 	Comment: "comment-item",
 	Group: "",
@@ -57,6 +59,7 @@ export const parsersHTML: TagFactories = {
 	"frame-item": parseHTMLFrame,
 	"ainode-item": parseHTMLAINode,
 	"video-item": parseHTMLVideo,
+	"audio-item": parseHTMLAudio,
 	"comment-item": parseHTMLComment,
 };
 
@@ -386,6 +389,20 @@ function parseHTMLVideo(el: HTMLElement): VideoItemData & { id: string } {
 	};
 
 	return videoItemData;
+}
+
+function parseHTMLAudio(el: HTMLElement): AudioItemData & { id: string } {
+	const transformation = getTransformationData(el);
+
+	const audioItemData: AudioItemData & { id: string } = {
+		id: el.id,
+		itemType: "Audio",
+		transformation,
+		url: el.getAttribute("audio-url") || "",
+		extension: el.getAttribute("extension") || "mp3",
+	};
+
+	return audioItemData;
 }
 
 function parseHTMLComment(el: HTMLElement): CommentData & { id: string } {

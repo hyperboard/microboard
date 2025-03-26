@@ -381,7 +381,7 @@ export const conf: Settings = {
 		return match && match[2].length === 11 ? match[2] : null;
 	},
 
-	AUDIO_DIMENSIONS: { width: 600, height: 100 },
+	AUDIO_DIMENSIONS: { width: 500, height: 60 },
 };
 
 export interface ExportSnapshotSelection {

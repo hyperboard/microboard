@@ -223,7 +223,10 @@ export class RichText extends Mbr implements Geometry {
 			this.insideOf === "Frame",
 		);
 
-		if (this.layoutNodes.width > (this.getMaxWidth() || 0)) {
+		if (
+			this.shrinkWidth &&
+			this.layoutNodes.width > (this.getMaxWidth() || 0)
+		) {
 			this.editor.applyMaxWidth(this.layoutNodes.width);
 		}
 
@@ -348,9 +351,7 @@ export class RichText extends Mbr implements Geometry {
 			);
 			if (this.isEmpty() && this.shrinkWidth) {
 				if (this.layoutNodes.width > (this.getMaxWidth() || 0)) {
-					this.editor.applyMaxWidth(
-						Math.ceil(Math.ceil(this.layoutNodes.width)),
-					);
+					this.editor.setMaxWidth(Math.ceil(this.layoutNodes.width));
 				}
 			}
 			if (

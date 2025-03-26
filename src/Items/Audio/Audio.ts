@@ -2,16 +2,17 @@ import { Events, Operation, Command } from "Board/Events";
 import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Mbr } from "../Mbr";
-import { Transformation } from "../Transformation";
+import { Matrix, Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Paths, Path } from "../Path";
+import { Path, Paths } from "../Path";
 import { Point } from "Board/Items/Point/Point";
 import { Line } from "Board/Items/Line/Line";
 import { conf } from "Board/Settings";
 import { AudioCommand } from "Board/Items/Audio/AudioCommand";
+import { CubicBezier } from "Board/Items/Curve/Curve";
 
 export interface AudioItemData {
 	itemType: "Audio";
@@ -33,6 +34,7 @@ export class AudioItem extends Mbr {
 	board: Board;
 	private isPlaying = false;
 	private currentTime = 0;
+	private path: Path | Paths;
 
 	constructor(
 		url: string,
@@ -118,32 +120,21 @@ export class AudioItem extends Mbr {
 		this.top = translateY;
 		this.right = this.left + conf.AUDIO_DIMENSIONS.width * scaleX;
 		this.bottom = this.top + conf.AUDIO_DIMENSIONS.height * scaleY;
+		this.updatePath();
+	}
+
+	updatePath(): void {
+		this.path = createAudioPath(
+			this.getMbr(),
+			this.transformation?.matrix || new Matrix(),
+		);
 	}
 
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		const ctx = context.ctx;
-		ctx.save();
-		this.transformation.matrix.applyToContext(ctx);
-		ctx.fillStyle = "#000";
-		ctx.fillRect(this.left, this.top, this.getWidth(), this.getHeight());
-
-		if (this.isPlaying) {
-			ctx.fillStyle = "#fff";
-			ctx.fillRect(this.left + 10, this.top + 10, 10, 10);
-		} else {
-			ctx.fillStyle = "#fff";
-			ctx.beginPath();
-			ctx.moveTo(this.left + 10, this.top + 10);
-			ctx.lineTo(this.left + 20, this.top + 15);
-			ctx.lineTo(this.left + 10, this.top + 20);
-			ctx.closePath();
-			ctx.fill();
-		}
-
-		ctx.restore();
+		this.path.render(context);
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
@@ -153,12 +144,11 @@ export class AudioItem extends Mbr {
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 		div.id = this.getId();
-		div.style.width = `100px`;
-		div.style.height = `30px`;
+		div.style.width = `${conf.AUDIO_DIMENSIONS.width}px`;
+		div.style.height = `${conf.AUDIO_DIMENSIONS.height}px`;
 		div.style.transformOrigin = "top left";
 		div.style.transform = transform;
 		div.style.position = "absolute";
-		div.style.backgroundColor = "#000";
 		div.setAttribute("audio-url", this.getUrl());
 		div.setAttribute("extension", this.extension);
 		div.setAttribute("data-link-to", "");
@@ -283,3 +273,89 @@ export class AudioItem extends Mbr {
 		linkElem.click();
 	}
 }
+
+const convexity = 2;
+const nearBreakpoint = 6;
+const farBreakpoint = 12;
+
+export const createAudioPath = (mbr: Mbr, matrix: Matrix) => {
+	const width = mbr.getWidth();
+	const height = mbr.getHeight();
+	const movementLinesLeft = width * 0.46;
+	const movementLinesRight = width * 0.54;
+	return new Paths([
+		new Path(
+			[
+				new CubicBezier(
+					new Point(0, farBreakpoint),
+					new Point(0, nearBreakpoint - convexity),
+					new Point(farBreakpoint, 0),
+					new Point(nearBreakpoint - convexity, 0),
+				),
+				new Line(
+					new Point(farBreakpoint, 0),
+					new Point(width - farBreakpoint, 0),
+				),
+				new CubicBezier(
+					new Point(width - farBreakpoint, 0),
+					new Point(width - nearBreakpoint + convexity, 0),
+					new Point(width, farBreakpoint),
+					new Point(width, nearBreakpoint - convexity),
+				),
+				new Line(
+					new Point(width, farBreakpoint),
+					new Point(width, height - farBreakpoint),
+				),
+				new CubicBezier(
+					new Point(width, height - farBreakpoint),
+					new Point(width, height - nearBreakpoint - convexity),
+					new Point(width - farBreakpoint, height),
+					new Point(width - nearBreakpoint + convexity, height),
+				),
+				new Line(
+					new Point(width - farBreakpoint, height),
+					new Point(farBreakpoint, height),
+				),
+				new CubicBezier(
+					new Point(farBreakpoint, height),
+					new Point(nearBreakpoint - convexity, height),
+					new Point(0, height - farBreakpoint),
+					new Point(0, height - nearBreakpoint - convexity),
+				),
+				new Line(
+					new Point(0, height - farBreakpoint),
+					new Point(0, farBreakpoint),
+				),
+			],
+			true,
+			"rgb(255, 255, 255)",
+			"rgba(222, 224, 227, 1)",
+		),
+		new Path(
+			[
+				new Line(
+					new Point(movementLinesLeft, 3 * matrix.scaleX),
+					new Point(movementLinesRight, 3 * matrix.scaleX),
+				),
+			],
+			false,
+			"none",
+			"rgba(222, 224, 227, 1)",
+			"solid",
+			6,
+		),
+		new Path(
+			[
+				new Line(
+					new Point(movementLinesLeft, 10 * matrix.scaleY),
+					new Point(movementLinesRight, 10 * matrix.scaleY),
+				),
+			],
+			false,
+			"none",
+			"rgba(222, 224, 227, 1)",
+			"solid",
+			6,
+		),
+	]).getTransformed(new Matrix(matrix.translateX, matrix.translateY));
+};
