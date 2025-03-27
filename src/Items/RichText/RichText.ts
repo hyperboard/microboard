@@ -227,7 +227,7 @@ export class RichText extends Mbr implements Geometry {
 			this.shrinkWidth &&
 			this.layoutNodes.width > (this.getMaxWidth() || 0)
 		) {
-			this.editor.applyMaxWidth(this.layoutNodes.width);
+			this.applyMaxWidth(this.layoutNodes.width);
 		}
 
 		this.editorTransforms.select(this.editor.editor, {
@@ -351,7 +351,7 @@ export class RichText extends Mbr implements Geometry {
 			);
 			if (this.isEmpty() && this.shrinkWidth) {
 				if (this.layoutNodes.width > (this.getMaxWidth() || 0)) {
-					this.editor.setMaxWidth(Math.ceil(this.layoutNodes.width));
+					this.applyMaxWidth(Math.ceil(this.layoutNodes.width));
 				}
 			}
 			if (
@@ -524,7 +524,7 @@ export class RichText extends Mbr implements Geometry {
 		);
 	}
 
-	setMaxWidth(maxWidth: number): this {
+	applyMaxWidth(maxWidth: number): this {
 		const shouldNotShrink =
 			this.insideOf !== "RichText" &&
 			this.insideOf !== "AINode" &&
@@ -583,7 +583,7 @@ export class RichText extends Mbr implements Geometry {
 				break;
 			case "RichText":
 				if (op.method === "setMaxWidth") {
-					this.setMaxWidth(op.maxWidth ?? 0);
+					this.applyMaxWidth(op.maxWidth ?? 0);
 				} else if (op.method === "setFontSize") {
 					if (op.fontSize === "auto") {
 						this.autosizeEnable();

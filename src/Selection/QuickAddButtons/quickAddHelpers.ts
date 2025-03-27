@@ -195,7 +195,7 @@ export function createAINode(
 		directionIndex,
 	);
 	const nodeRichText = node.getRichText();
-	nodeRichText.setMaxWidth(600);
+	nodeRichText.applyMaxWidth(600);
 	nodeRichText.setSelectionHorisontalAlignment("left");
 	nodeRichText.container.right = nodeRichText.container.left + 600;
 	nodeRichText.placeholderText = "Type your request...";
@@ -204,7 +204,7 @@ export function createAINode(
 
 export function createRichText(board: Board): RichText {
 	const text = new RichText(board, new Mbr());
-	text.setMaxWidth(600);
+	text.applyMaxWidth(600);
 	text.setSelectionHorisontalAlignment("left");
 	return text;
 }
