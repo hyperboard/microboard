@@ -405,7 +405,10 @@ export class VideoItem extends Mbr {
 		if (this.isStorageUrl) {
 			const linkElem = document.createElement("a");
 			linkElem.href = this.url;
-			linkElem.setAttribute("download", `${this.url}.${this.extension}`);
+			linkElem.setAttribute(
+				"download",
+				`${this.board.getBoardId()}.${this.extension}`,
+			);
 			linkElem.click();
 		}
 	}

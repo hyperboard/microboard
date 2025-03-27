@@ -520,14 +520,16 @@ export class Transformer extends Tool {
 			this.mbr = single.getMbr();
 		} else {
 			const items = this.selection.items.list();
-			const includesStickerOrTextOrNode = items.some(
+			const includesProportionalItem = items.some(
 				item =>
 					item.itemType === "Sticker" ||
 					item.itemType === "RichText" ||
-					item.itemType === "AINode",
+					item.itemType === "AINode" ||
+					item.itemType === "Video" ||
+					item.itemType === "Audio",
 			);
 
-			if (includesStickerOrTextOrNode && (isWidth || isHeight)) {
+			if (includesProportionalItem && (isWidth || isHeight)) {
 				return false;
 			}
 
@@ -537,7 +539,7 @@ export class Transformer extends Tool {
 
 			const shouldBeProportionalResize =
 				isIncludesFixedFrame ||
-				includesStickerOrTextOrNode ||
+				includesProportionalItem ||
 				this.isShiftPressed ||
 				(!isWidth && !isHeight);
 

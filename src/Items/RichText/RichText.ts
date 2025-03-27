@@ -115,7 +115,7 @@ export class RichText extends Mbr implements Geometry {
 	frameMbr?: Mbr;
 	private _onLimitReached: () => void = () => {};
 	private shrinkWidth = false;
-	isWidthResizing: boolean = false;
+	isWidthResizing = false;
 
 	constructor(
 		private board: Board,

@@ -1,4 +1,4 @@
-import { Events, Operation, Command } from "Board/Events";
+import { Events, Operation } from "Board/Events";
 import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Mbr } from "../Mbr";
@@ -269,7 +269,10 @@ export class AudioItem extends Mbr {
 	download() {
 		const linkElem = document.createElement("a");
 		linkElem.href = this.url;
-		linkElem.setAttribute("download", `${this.url}.${this.extension}`);
+		linkElem.setAttribute(
+			"download",
+			`${this.board.getBoardId()}.${this.extension}`,
+		);
 		linkElem.click();
 	}
 }
@@ -283,79 +286,82 @@ export const createAudioPath = (mbr: Mbr, matrix: Matrix) => {
 	const height = mbr.getHeight();
 	const movementLinesLeft = width * 0.46;
 	const movementLinesRight = width * 0.54;
-	return new Paths([
-		new Path(
-			[
-				new CubicBezier(
-					new Point(0, farBreakpoint),
-					new Point(0, nearBreakpoint - convexity),
-					new Point(farBreakpoint, 0),
-					new Point(nearBreakpoint - convexity, 0),
-				),
-				new Line(
-					new Point(farBreakpoint, 0),
-					new Point(width - farBreakpoint, 0),
-				),
-				new CubicBezier(
-					new Point(width - farBreakpoint, 0),
-					new Point(width - nearBreakpoint + convexity, 0),
-					new Point(width, farBreakpoint),
-					new Point(width, nearBreakpoint - convexity),
-				),
-				new Line(
-					new Point(width, farBreakpoint),
-					new Point(width, height - farBreakpoint),
-				),
-				new CubicBezier(
-					new Point(width, height - farBreakpoint),
-					new Point(width, height - nearBreakpoint - convexity),
-					new Point(width - farBreakpoint, height),
-					new Point(width - nearBreakpoint + convexity, height),
-				),
-				new Line(
-					new Point(width - farBreakpoint, height),
-					new Point(farBreakpoint, height),
-				),
-				new CubicBezier(
-					new Point(farBreakpoint, height),
-					new Point(nearBreakpoint - convexity, height),
-					new Point(0, height - farBreakpoint),
-					new Point(0, height - nearBreakpoint - convexity),
-				),
-				new Line(
-					new Point(0, height - farBreakpoint),
-					new Point(0, farBreakpoint),
-				),
-			],
-			true,
-			"rgb(255, 255, 255)",
-			"rgba(222, 224, 227, 1)",
-		),
-		new Path(
-			[
-				new Line(
-					new Point(movementLinesLeft, 3 * matrix.scaleX),
-					new Point(movementLinesRight, 3 * matrix.scaleX),
-				),
-			],
-			false,
-			"none",
-			"rgba(222, 224, 227, 1)",
-			"solid",
-			6,
-		),
-		new Path(
-			[
-				new Line(
-					new Point(movementLinesLeft, 10 * matrix.scaleY),
-					new Point(movementLinesRight, 10 * matrix.scaleY),
-				),
-			],
-			false,
-			"none",
-			"rgba(222, 224, 227, 1)",
-			"solid",
-			6,
-		),
-	]).getTransformed(new Matrix(matrix.translateX, matrix.translateY));
+	return new Paths(
+		[
+			new Path(
+				[
+					new CubicBezier(
+						new Point(0, farBreakpoint),
+						new Point(0, nearBreakpoint - convexity),
+						new Point(farBreakpoint, 0),
+						new Point(nearBreakpoint - convexity, 0),
+					),
+					new Line(
+						new Point(farBreakpoint, 0),
+						new Point(width - farBreakpoint, 0),
+					),
+					new CubicBezier(
+						new Point(width - farBreakpoint, 0),
+						new Point(width - nearBreakpoint + convexity, 0),
+						new Point(width, farBreakpoint),
+						new Point(width, nearBreakpoint - convexity),
+					),
+					new Line(
+						new Point(width, farBreakpoint),
+						new Point(width, height - farBreakpoint),
+					),
+					new CubicBezier(
+						new Point(width, height - farBreakpoint),
+						new Point(width, height - nearBreakpoint - convexity),
+						new Point(width - farBreakpoint, height),
+						new Point(width - nearBreakpoint + convexity, height),
+					),
+					new Line(
+						new Point(width - farBreakpoint, height),
+						new Point(farBreakpoint, height),
+					),
+					new CubicBezier(
+						new Point(farBreakpoint, height),
+						new Point(nearBreakpoint - convexity, height),
+						new Point(0, height - farBreakpoint),
+						new Point(0, height - nearBreakpoint - convexity),
+					),
+					new Line(
+						new Point(0, height - farBreakpoint),
+						new Point(0, farBreakpoint),
+					),
+				],
+				true,
+				"rgb(255, 255, 255)",
+				"rgba(222, 224, 227, 1)",
+			),
+			new Path(
+				[
+					new Line(
+						new Point(movementLinesLeft, 3 * matrix.scaleX),
+						new Point(movementLinesRight, 3 * matrix.scaleX),
+					),
+				],
+				false,
+				"none",
+				"rgba(222, 224, 227, 1)",
+				"solid",
+				6,
+			),
+			new Path(
+				[
+					new Line(
+						new Point(movementLinesLeft, 10 * matrix.scaleY),
+						new Point(movementLinesRight, 10 * matrix.scaleY),
+					),
+				],
+				false,
+				"none",
+				"rgba(222, 224, 227, 1)",
+				"solid",
+				6,
+			),
+		],
+		"rgb(255, 255, 255)",
+	).getTransformed(new Matrix(matrix.translateX, matrix.translateY));
 };

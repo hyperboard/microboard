@@ -22,6 +22,7 @@ import {
 import { Board } from "Board";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Matrix } from "Board/Items/Transformation/Matrix";
+import { conf } from "Board/Settings";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
@@ -47,7 +48,8 @@ export class AINode implements Geometry {
 	private contextRange = 5;
 	transformationRenderBlock?: boolean = undefined;
 	private buttonMbr: Mbr = new Mbr();
-	isWidthResizing: boolean = false;
+	private buttonIcon: HTMLImageElement;
+	isWidthResizing = false;
 
 	constructor(
 		private board: Board,
@@ -57,6 +59,10 @@ export class AINode implements Geometry {
 		threadDirection?: ThreadDirection,
 		private id = "",
 	) {
+		this.buttonIcon = conf.documentFactory.createElement(
+			"img",
+		) as HTMLImageElement;
+		this.buttonIcon.src = ICON_SRC;
 		this.contextItems = contextItems;
 		this.isUserRequest = isUserRequest;
 		this.parentNodeId = parentNodeId;
@@ -332,10 +338,15 @@ export class AINode implements Geometry {
 
 		ctx.save();
 
-		// TODO fix node
-		// if (arrowIcon.complete) {
-		// 	ctx.drawImage(arrowIcon, left, top, right - left, bottom - top);
-		// }
+		if (this.buttonIcon.complete) {
+			ctx.drawImage(
+				this.buttonIcon,
+				left,
+				top,
+				right - left,
+				bottom - top,
+			);
+		}
 
 		ctx.restore();
 	}

@@ -17,6 +17,7 @@ import Ajv from "ajv";
 import { PlaceholderData } from "Board/Items/Placeholder";
 import { GroupData } from "Board/Items/Group";
 import { VideoItemData } from "Board/Items/Video/Video";
+import { AudioItemData } from "Board/Items/Audio/Audio";
 
 export const validator = new Ajv();
 
@@ -58,6 +59,7 @@ const itemValidators: Record<string, (data: any) => boolean> = {
 	AINode: validateAINodeData,
 	Group: validateGroupData,
 	Video: validateVideoItemData,
+	Audio: validateAudioItemData,
 };
 
 function validateItemData(itemData: any): boolean {
@@ -325,6 +327,18 @@ function validateVideoItemData(data: any): data is VideoItemData {
 		typeof data.url === "string" &&
 		typeof data.previewUrl === "string" &&
 		typeof data.isStorageUrl === "boolean" &&
+		validateTransformationData(data.transformation);
+	return isValid;
+}
+
+function validateAudioItemData(data: any): data is AudioItemData {
+	const isValid =
+		data.hasOwnProperty("transformation") &&
+		data.hasOwnProperty("url") &&
+		data.hasOwnProperty("extension") &&
+		typeof data.transformation === "object" &&
+		typeof data.url === "string" &&
+		typeof data.extension === "string" &&
 		validateTransformationData(data.transformation);
 	return isValid;
 }
