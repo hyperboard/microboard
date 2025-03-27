@@ -539,8 +539,10 @@ export function createEvents(
 	async function getSnapshotToPublish(): Promise<SnapshotToPublish> {
 		const boardId = board.getBoardId();
 		// const snapshot = log.getSnapshot();
+		log.revertUnconfirmed();
 		const snapshot = await board.serializeHTML();
 		const lastOrder = log.getLastIndex();
+		log.applyUnconfirmed();
 		return {
 			boardId,
 			snapshot,
@@ -600,7 +602,8 @@ export function createEvents(
 		// 	board.deserialize(snapshot);
 		// 	log.setSnapshotLastIndex(snapshot.lastIndex);
 		// }
-		board.deserializeHTML(snapshot, { shouldEmit: false });
+		// TODO set set snapshot last index
+		board.deserializeHTML(snapshot);
 		// board.saveSnapshot(snapshot);
 	}
 

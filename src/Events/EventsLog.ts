@@ -26,6 +26,8 @@ export interface RawHistoryRecords {
 
 export interface EventsLog {
 	getList(): HistoryRecord[];
+	revertUnconfirmed(): void;
+	applyUnconfirmed(): void;
 	getRaw(): RawHistoryRecords;
 	insertEvents(
 		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
@@ -696,6 +698,8 @@ export function createEventsLog(board: Board): EventsLog {
 
 	return {
 		getList,
+		revertUnconfirmed: list.revertUnconfirmed,
+		applyUnconfirmed: list.applyUnconfirmed,
 		getRaw,
 		getSyncLog: list.getSyncLog,
 		syncLogSubject: list.syncLogSubject,
