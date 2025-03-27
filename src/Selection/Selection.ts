@@ -745,6 +745,7 @@ export class Selection {
 
 	nestSelectedItems(unselectedItem?: Item | null, checkFrames = true): void {
 		const selected = this.board.selection.items.list();
+		console.log();
 		if (
 			unselectedItem &&
 			!selected.find(item => item.getId() === unselectedItem.getId())
@@ -763,20 +764,23 @@ export class Selection {
 				selected.map(item => [item.getId(), { item, nested: false }]),
 			) as { [k: string]: { item: Item; nested: false | Frame } };
 
-			this.board.items
-				.getFramesEnclosedOrCrossed(
-					selectedMbr?.left,
-					selectedMbr?.top,
-					selectedMbr?.right,
-					selectedMbr?.bottom,
-				)
-				.forEach(frame => {
-					selected.forEach(selectedItem => {
-						if (frame.handleNesting(selectedItem)) {
-							selectedMap[selectedItem.getId()].nested = frame;
-						}
-					});
+			const enclosedFrames = this.board.items.getFramesEnclosedOrCrossed(
+				selectedMbr?.left,
+				selectedMbr?.top,
+				selectedMbr?.right,
+				selectedMbr?.bottom,
+			);
+
+			enclosedFrames.forEach(frame => {
+				selected.forEach(item => {
+					const isAlreadyInFrame = enclosedFrames.some(
+						f => f.getId() === item.parent,
+					);
+					if (!isAlreadyInFrame && frame.handleNesting(item)) {
+						selectedMap[item.getId()].nested = frame;
+					}
 				});
+			});
 
 			Object.values(selectedMap).forEach(val => {
 				const parentFrame = this.board.items.getById(val.item.parent);
