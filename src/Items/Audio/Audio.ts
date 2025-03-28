@@ -55,6 +55,10 @@ export class AudioItem extends Mbr {
 		this.transformation.subject.subscribe(this.onTransform);
 		this.right = this.left + conf.AUDIO_DIMENSIONS.width;
 		this.bottom = this.top + conf.AUDIO_DIMENSIONS.height;
+		this.path = createAudioPath(
+			this.getMbr(),
+			this.transformation?.matrix || new Matrix(),
+		);
 	}
 
 	setCurrentTime(time: number) {
@@ -138,13 +142,13 @@ export class AudioItem extends Mbr {
 		if (
 			this.getMbr()
 				.getTransformed(this.board.camera.matrix)
-				.getHeight() >= 32
+				.getHeight() >= 36
 		) {
 			context.ctx.save();
 			context.ctx.globalCompositeOperation = "destination-out";
 			context.ctx.fillRect(
 				this.left + this.transformation.getScale().x,
-				this.top + 20 * this.transformation.getScale().y,
+				this.top + 21 * this.transformation.getScale().y,
 				this.getWidth() - 2 * this.transformation.getScale().x,
 				this.getHeight() - 22 * this.transformation.getScale().y,
 			);
@@ -292,9 +296,9 @@ export class AudioItem extends Mbr {
 	}
 }
 
-const convexity = 2;
-const nearBreakpoint = 6;
-const farBreakpoint = 12;
+const convexity = 0.25;
+const nearBreakpoint = 1;
+const farBreakpoint = 2;
 
 export const createAudioPath = (mbr: Mbr, matrix: Matrix) => {
 	const width = mbr.getWidth();

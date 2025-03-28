@@ -217,6 +217,18 @@ export class VideoItem extends Mbr {
 			return;
 		}
 		const ctx = context.ctx;
+		if (this.isPlaying) {
+			ctx.save();
+			ctx.globalCompositeOperation = "destination-out";
+			ctx.fillRect(
+				this.left,
+				this.top,
+				this.getWidth(),
+				this.getHeight(),
+			);
+			ctx.restore();
+			return;
+		}
 		ctx.save();
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.drawImage(this.preview, 0, 0);
@@ -245,18 +257,6 @@ export class VideoItem extends Mbr {
 		}
 
 		ctx.restore();
-
-		if (this.isPlaying) {
-			context.ctx.save();
-			context.ctx.globalCompositeOperation = "destination-out";
-			context.ctx.fillRect(
-				this.left,
-				this.top,
-				this.getWidth(),
-				this.getHeight(),
-			);
-			context.ctx.restore();
-		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {

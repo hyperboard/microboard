@@ -987,7 +987,6 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	deserialize(data: Partial<RichTextData>): this {
-		// console.log(data)
 		if (data.children) {
 			this.editor.editor.children = data.children;
 		}
