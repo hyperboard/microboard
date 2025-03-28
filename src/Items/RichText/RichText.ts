@@ -221,13 +221,6 @@ export class RichText extends Mbr implements Geometry {
 			this.insideOf === "Frame",
 		);
 
-		if (
-			this.shrinkWidth &&
-			this.layoutNodes.width > (this.getMaxWidth() || 0)
-		) {
-			this.applyMaxWidth(this.layoutNodes.width);
-		}
-
 		this.editorTransforms.select(this.editor.editor, {
 			offset: 0,
 			path: [0, 0],
