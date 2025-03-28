@@ -1,28 +1,28 @@
-import { Geometry } from "Board/Items/Geometry";
-import { Transformation } from "Board/Items/Transformation/Transformation";
-import { Mbr } from "Board/Items/Mbr/Mbr";
-import { GeometricNormal } from "Board/Items/GeometricNormal";
-import { RichText } from "Board/Items/RichText/RichText";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Point } from "Board/Items/Point/Point";
-import { Line } from "Board/Items/Line/Line";
-import { LinePatterns, Path } from "Board/Items/Path/Path";
-import { Paths } from "Board/Items/Path/Paths";
-import { LinkTo } from "Board/Items/LinkTo/LinkTo";
-import { Subject } from "shared/Subject";
-import { AINodeData, createNodePath } from "Board/Items/AINode/AINodeData";
+import { Board } from "Board";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Operation } from "Board/Events/EventsOperations";
-import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
 import {
 	positionRelatively,
 	resetElementScale,
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
-import { Board } from "Board";
-import { DocumentFactory } from "Board/api/DocumentFactory";
+import { AINodeData, createNodePath } from "Board/Items/AINode/AINodeData";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { GeometricNormal } from "Board/Items/GeometricNormal";
+import { Geometry } from "Board/Items/Geometry";
+import { Line } from "Board/Items/Line/Line";
+import { LinkTo } from "Board/Items/LinkTo/LinkTo";
+import { Mbr } from "Board/Items/Mbr/Mbr";
+import { LinePatterns, Path } from "Board/Items/Path/Path";
+import { Paths } from "Board/Items/Path/Paths";
+import { Point } from "Board/Items/Point/Point";
+import { RichText } from "Board/Items/RichText/RichText";
 import { Matrix } from "Board/Items/Transformation/Matrix";
+import { Transformation } from "Board/Items/Transformation/Transformation";
+import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
 import { conf } from "Board/Settings";
+import { Subject } from "shared/Subject";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;

@@ -1,34 +1,34 @@
-import { Tool } from "Board/Tools/Tool";
-import { DrawingContext } from "Board/Items/DrawingContext";
+import { Board } from "Board";
+import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import {
 	Frame,
+	Item,
+	Line,
+	Matrix,
 	Mbr,
 	Point,
-	Shape,
 	RichText,
-	Matrix,
-	Line,
-	Item,
+	Shape,
 } from "Board/Items";
-import { SelectionItems } from "Board/Selection/SelectionItems";
-import { Board } from "Board";
-import { Selection } from "Board/Selection";
-import { getResizeType, ResizeType } from "./getResizeType";
-import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getProportionalResize, getResize } from "./getResizeMatrix";
-import { getOppositePoint } from "./getOppositePoint";
-import { getTextResizeType } from "./TextTransformer/getTextResizeType";
-import { Geometry } from "Board/Items/Geometry";
-import { Anchor } from "Board/Items/Anchor";
-import { conf } from "Board/Settings";
-import { Sticker } from "Board/Items/Sticker";
-import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
-import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
-import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
-import AlignmentHelper from "Board/Tools/RelativeAlignment";
-import { Comment } from "Board/Items/Comment/Comment";
 import { AINode } from "Board/Items/AINode/AINode";
+import { Anchor } from "Board/Items/Anchor";
+import { Comment } from "Board/Items/Comment/Comment";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { Geometry } from "Board/Items/Geometry";
+import { Sticker } from "Board/Items/Sticker";
+import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
+import { Selection } from "Board/Selection";
+import { SelectionItems } from "Board/Selection/SelectionItems";
+import { conf } from "Board/Settings";
+import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
+import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
+import AlignmentHelper from "Board/Tools/RelativeAlignment";
+import { Tool } from "Board/Tools/Tool";
+import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
+import { getOppositePoint } from "./getOppositePoint";
+import { getProportionalResize, getResize } from "./getResizeMatrix";
+import { getResizeType, ResizeType } from "./getResizeType";
+import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -49,6 +49,8 @@ export class Transformer extends Tool {
 		verticalLines: [],
 		horizontalLines: [],
 	};
+	private snapCursorPos: Point | null = null;
+	private initialCursorPos: Point | null = null;
 
 	constructor(
 		private board: Board,
@@ -67,6 +69,7 @@ export class Transformer extends Tool {
 			board,
 			board.index,
 			this.canvasDrawer,
+			this.debounceUpd,
 		);
 	}
 
@@ -242,7 +245,6 @@ export class Transformer extends Tool {
 
 		if (single) {
 			this.snapLines = this.alignmentHelper.checkAlignment(single);
-
 			const snapped = this.alignmentHelper.snapToSide(
 				single,
 				this.snapLines,
@@ -578,24 +580,88 @@ export class Transformer extends Tool {
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
 			} else {
-				const translation = this.handleMultipleItemsResize(
-					resize,
-					mbr,
-					isWidth,
-					isHeight,
+				this.snapLines = this.alignmentHelper.checkAlignment(items);
+				const snapped = this.alignmentHelper.snapToSide(
+					items,
+					this.snapLines,
+					this.beginTimeStamp,
+					this.resizeType,
 				);
-				this.selection.transformMany(translation, this.beginTimeStamp);
-				if (Object.keys(translation).length > 10) {
-					this.canvasDrawer.updateCanvasAndKeys(
-						resize.mbr,
-						translation,
-						resize.matrix,
+				if (snapped) {
+					const increasedSnapThreshold = 5;
+
+					if (!this.snapCursorPos) {
+						this.snapCursorPos = new Point(
+							this.board.pointer.point.x,
+							this.board.pointer.point.y,
+						);
+					}
+
+					const cursorDiffX = Math.abs(
+						this.board.pointer.point.x - this.snapCursorPos.x,
 					);
-					this.debounceUpd.setFalse();
-					this.debounceUpd.setTimeoutUpdate(1000);
+					const cursorDiffY = Math.abs(
+						this.board.pointer.point.y - this.snapCursorPos.y,
+					);
+
+					// Disable snapping if the pointer moves more than 5 pixels
+					if (
+						cursorDiffX > increasedSnapThreshold ||
+						cursorDiffY > increasedSnapThreshold
+					) {
+						this.snapCursorPos = null; // Reset snapping
+						this.snapLines = {
+							verticalLines: [],
+							horizontalLines: [],
+						}; // Clear snap lines
+						const translation = this.handleMultipleItemsResize(
+							resize,
+							mbr,
+							isWidth,
+							isHeight,
+						);
+						this.selection.transformMany(
+							translation,
+							this.beginTimeStamp,
+						);
+						this.mbr = this.alignmentHelper.combineMBRs(
+							this.selection.items.list(),
+						); // Update the MBR to match items
+						return false;
+					}
+
+					// If snapping is active, prevent resizing of the selection border
+					this.mbr = this.alignmentHelper.combineMBRs(
+						this.selection.items.list(),
+					); // Ensure MBR matches items
+				} else {
+					this.snapCursorPos = null; // Reset snapping state
+					const translation = this.handleMultipleItemsResize(
+						resize,
+						mbr,
+						isWidth,
+						isHeight,
+					);
+					this.selection.transformMany(
+						translation,
+						this.beginTimeStamp,
+					);
+
+					if (Object.keys(translation).length > 10) {
+						this.canvasDrawer.updateCanvasAndKeys(
+							resize.mbr,
+							translation,
+							resize.matrix,
+						);
+						this.debounceUpd.setFalse();
+						this.debounceUpd.setTimeoutUpdate(1000);
+					}
+
+					this.mbr = this.alignmentHelper.combineMBRs(
+						this.selection.items.list(),
+					); // Update the MBR to match items
 				}
 			}
-			this.mbr = resize.mbr;
 		}
 
 		const frames = this.board.items.getFramesEnclosedOrCrossed(

@@ -21,3 +21,5 @@ export default function createDebounceUpdater() {
 		setFalse,
 	};
 }
+
+export type DebounceUpdater = ReturnType<typeof createDebounceUpdater>;

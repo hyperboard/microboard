@@ -22,6 +22,7 @@ export interface CanvasDrawer {
 	) => void;
 	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
 	highlightNesting: () => void;
+	getMbr: () => Mbr;
 }
 
 export default function createCanvasDrawer(board: Board): CanvasDrawer {
@@ -449,6 +450,35 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		}
 	}
 
+	function getMbr() {
+		if (!lastCreatedCanvas) {
+			return new Mbr();
+		}
+		const left = parseFloat(lastCreatedCanvas.style.left || "0");
+		const top = parseFloat(lastCreatedCanvas.style.top || "0");
+		const width = parseFloat(lastCreatedCanvas.style.width || "0");
+		const height = parseFloat(lastCreatedCanvas.style.height || "0");
+		const cameraMatrix = board.camera.getMatrix();
+		const cameraMbr = board.camera.getMbr();
+		const realLeft = left / cameraMatrix.scaleX + cameraMbr.left;
+		const realTop = top / cameraMatrix.scaleY + cameraMbr.top;
+		const transform = lastCreatedCanvas.style.transform;
+		let scaleX = 1,
+			scaleY = 1;
+		if (transform) {
+			const match = transform.match(/scale\(([^,]+),\s*([^)]+)\)/);
+			if (match) {
+				scaleX = parseFloat(match[1]);
+				scaleY = parseFloat(match[2]);
+			}
+		}
+		const adjustedWidth = (width / cameraMatrix.scaleX) * scaleX;
+		const adjustedHeight = (height / cameraMatrix.scaleY) * scaleY;
+		const realRight = realLeft + adjustedWidth;
+		const realBottom = realTop + adjustedHeight;
+		return new Mbr(realLeft, realTop, realRight, realBottom);
+	}
+
 	return {
 		getLastCreatedCanvas,
 		getLastTranslationKeys,
@@ -461,5 +491,6 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		updateCanvasAndKeys,
 		countSumMbr,
 		highlightNesting,
+		getMbr,
 	};
 }

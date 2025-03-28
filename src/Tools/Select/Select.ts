@@ -50,6 +50,7 @@ export class Select extends Tool {
 	private guidelines: Line[] = [];
 	private mainLine: Line | null = null;
 	private snapLine: Line | null = null;
+	initialSnap = false;
 
 	constructor(private board: Board) {
 		super();
@@ -58,6 +59,7 @@ export class Select extends Tool {
 			board,
 			board.index,
 			this.canvasDrawer,
+			this.debounceUpd,
 		);
 	}
 
@@ -91,7 +93,7 @@ export class Select extends Tool {
 		if (this.board.keyboard.isShift) {
 			return false;
 		}
-		const increasedSnapThreshold = 5;
+		const increasedSnapThreshold = Array.isArray(item) ? 15 : 5;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,
@@ -123,16 +125,71 @@ export class Select extends Tool {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 				const itemCenter = Array.isArray(item)
-					? this.board.selection.getMbr()?.getCenter()!
+					? this.alignmentHelper.combineMBRs(item).getCenter()
 					: item.getMbr().getCenter();
 				const targetX =
 					this.board.pointer.point.x - this.initialCursorPos.x;
 				const targetY =
 					this.board.pointer.point.y - this.initialCursorPos.y;
-				const translateX = targetX - itemCenter.x;
-				const translateY = targetY - itemCenter.y;
-				this.alignmentHelper.translateItemsOrCanvas(
+				const translateX =
+					targetX - (itemCenter.x - this.initialCursorPos.x);
+				const translateY =
+					targetY - (itemCenter.y - this.initialCursorPos.y);
+				console.log(translateX, translateY);
+				this.alignmentHelper.translateItems(
 					item,
+					translateX,
+					translateY,
+					this.beginTimeStamp,
+				);
+			}
+		}
+		return false;
+	}
+
+	private handleCanvasSnapping(): boolean {
+		if (this.board.keyboard.isShift) {
+			return false;
+		}
+		const increasedSnapThreshold = 5;
+
+		this.isSnapped = this.alignmentHelper.snapCanvasToClosestLine(
+			this.snapLines,
+			this.beginTimeStamp,
+			this.board.pointer.point,
+		);
+		if (this.isSnapped) {
+			if (!this.snapCursorPos) {
+				this.snapCursorPos = new Point(
+					this.board.pointer.point.x,
+					this.board.pointer.point.y,
+				);
+			}
+
+			const cursorDiffX = Math.abs(
+				this.board.pointer.point.x - this.snapCursorPos.x,
+			);
+			const cursorDiffY = Math.abs(
+				this.board.pointer.point.y - this.snapCursorPos.y,
+			);
+
+			if (
+				(cursorDiffX > increasedSnapThreshold ||
+					cursorDiffY > increasedSnapThreshold) &&
+				this.initialCursorPos
+			) {
+				this.isSnapped = false;
+				this.snapCursorPos = null;
+				const itemCenter = this.canvasDrawer.getMbr().getCenter();
+				const targetX =
+					this.board.pointer.point.x - this.initialCursorPos.x;
+				const targetY =
+					this.board.pointer.point.y - this.initialCursorPos.y;
+				const translateX =
+					targetX - (itemCenter.x - this.initialCursorPos.x);
+				const translateY =
+					targetY - (itemCenter.y - this.initialCursorPos.y);
+				this.alignmentHelper.translateCanvas(
 					translateX,
 					translateY,
 					this.beginTimeStamp,
@@ -497,10 +554,16 @@ export class Select extends Tool {
 				this.debounceUpd.shouldUpd();
 
 			if (isCanvasOk) {
+				// if (this.handleCanvasSnapping()) {
+				// 	return false;
+				// }
 				this.canvasDrawer.translateCanvasBy(x, y);
 				this.canvasDrawer.highlightNesting();
 				return false;
 			} else if (isCanvasNeedsUpdate) {
+				// if (this.handleCanvasSnapping()) {
+				// 	return false;
+				// }
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const { translateX, translateY } =
 					this.canvasDrawer.getMatrix();
@@ -690,7 +753,15 @@ export class Select extends Tool {
 		const alignmentItem = this.getAlignmentItem();
 
 		if (alignmentItem) {
-			this.snapLines = this.alignmentHelper.checkAlignment(alignmentItem);
+			if (this.canvasDrawer.getLastCreatedCanvas()) {
+				this.snapLines = this.alignmentHelper.checkAlignment(
+					alignmentItem,
+					this.board.selection.list(),
+				);
+			} else {
+				this.snapLines =
+					this.alignmentHelper.checkAlignment(alignmentItem);
+			}
 		} else {
 			this.snapLines = { verticalLines: [], horizontalLines: [] };
 		}
@@ -1031,6 +1102,11 @@ export class Select extends Tool {
 
 	render(context: DrawingContext): void {
 		const { isShift } = this.board.keyboard;
+		if (this.canvasDrawer.getLastCreatedCanvas()) {
+			const mbr = this.canvasDrawer.getMbr();
+			mbr.borderColor = "red";
+			mbr.render(context);
+		}
 		if (this.isDrawingRectangle && this.rect) {
 			this.rect.strokeWidth = 1 / this.board.camera.getScale();
 			this.rect.render(context);

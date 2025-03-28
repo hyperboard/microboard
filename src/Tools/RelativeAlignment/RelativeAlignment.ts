@@ -4,6 +4,7 @@ import { DrawingContext } from "Board/Items/DrawingContext";
 import { ResizeType } from "Board/Selection/Transformer/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
 import { CanvasDrawer } from "Board/drawMbrOnCanvas";
+import type { DebounceUpdater } from "../DebounceUpdater/DebounceUpdater";
 
 export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
 
@@ -27,6 +28,7 @@ export class AlignmentHelper {
 		board: Board,
 		private spatialIndex: SpatialIndex,
 		private canvasDrawer: CanvasDrawer,
+		private debounceUpd: DebounceUpdater,
 	) {
 		this.board = board;
 	}
@@ -36,7 +38,7 @@ export class AlignmentHelper {
 		return baseThickness / (zoom / 100);
 	}
 
-	private combineMBRs(items: Item[]): Mbr {
+	combineMBRs(items: Item[]): Mbr {
 		return items.reduce((acc, item, i) => {
 			if (i === 0) {
 				return acc;
@@ -49,19 +51,23 @@ export class AlignmentHelper {
 		}, items[0].getMbr());
 	}
 
-	checkAlignment(movingItem: Item | Item[]): {
+	checkAlignment(
+		movingItem: Item | Item[],
+		excludeItems: Item[] = [],
+	): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
 		if (!Array.isArray(movingItem) && movingItem.itemType === "Comment") {
 			return { verticalLines: [], horizontalLines: [] };
 		}
-		const movingMBR = Array.isArray(movingItem)
-			? this.combineMBRs(movingItem)
-			: movingItem.itemType === "Shape"
-				? movingItem.getPath().getMbr()
-				: movingItem.getMbr();
-
+		const movingMBR = this.canvasDrawer.getLastCreatedCanvas()
+			? this.canvasDrawer.getMbr()
+			: Array.isArray(movingItem)
+				? this.combineMBRs(movingItem)
+				: movingItem.itemType === "Shape"
+					? movingItem.getPath().getMbr()
+					: movingItem.getMbr();
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
@@ -69,21 +75,31 @@ export class AlignmentHelper {
 		const childrenIds =
 			movingItem instanceof Frame ? movingItem.getChildrenIds() : [];
 
-		const nearbyItems = this.spatialIndex
-			.getNearestTo(
-				movingMBR.getCenter(),
-				20,
-				(otherItem: Item) =>
-					otherItem !== movingMBR &&
-					otherItem.itemType !== "Connector" &&
-					otherItem.itemType !== "Drawing" &&
-					otherItem.isInView(camera) &&
-					!childrenIds.includes(otherItem.getId()),
-				Math.ceil(cameraWidth),
-			)
-			.filter(item =>
-				Array.isArray(movingItem) ? !movingItem.includes(item) : true,
-			);
+		const nearbyItems = this.canvasDrawer.getLastCreatedCanvas()
+			? this.spatialIndex.getNearestTo(
+					movingMBR.getCenter(),
+					20,
+					item => !excludeItems.includes(item),
+					Math.ceil(cameraWidth),
+				)
+			: this.spatialIndex
+					.getNearestTo(
+						movingMBR.getCenter(),
+						20,
+						(otherItem: Item) =>
+							otherItem !== movingMBR &&
+							otherItem.itemType !== "Connector" &&
+							otherItem.itemType !== "Drawing" &&
+							otherItem.isInView(camera) &&
+							!childrenIds.includes(otherItem.getId()),
+						Math.ceil(cameraWidth),
+					)
+					.filter(item =>
+						Array.isArray(movingItem)
+							? !movingItem.includes(item)
+							: true,
+					);
+		// .filter(item => !excludeItems.includes(item));
 
 		const verticalAlignments: Map<number, { minY: number; maxY: number }> =
 			new Map();
@@ -402,12 +418,101 @@ export class AlignmentHelper {
 				if (Math.abs(check) < dynamicSnapThreshold) {
 					const x = isVertical ? translation : 0;
 					const y = isVertical ? 0 : translation;
-					this.translateItemsOrCanvas(
-						draggingItem,
-						x,
-						y,
-						beginTimeStamp,
-					);
+					this.translateItems(draggingItem, x, y, beginTimeStamp);
+					this.snapMemory[isVertical ? "x" : "y"] =
+						cursorPosition[isVertical ? "x" : "y"];
+					return true;
+				}
+			}
+			return false;
+		};
+
+		const snapToLine = (lines: Line[], isVertical: boolean): boolean => {
+			for (const line of lines) {
+				if (!line) {
+					continue;
+				}
+
+				const alignment = getAlignmentInfo(line, isVertical);
+				if (trySnap(alignment, isVertical)) {
+					return true;
+				}
+			}
+			return false;
+		};
+
+		for (const axis of ["x", "y"] as const) {
+			if (
+				this.snapMemory[axis] !== null &&
+				Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) >
+					dynamicSnapThreshold
+			) {
+				this.snapMemory[axis] = null;
+			}
+		}
+
+		return (
+			snapToLine(snapLines.verticalLines, true) ||
+			snapToLine(snapLines.horizontalLines, false)
+		);
+	}
+
+	snapCanvasToClosestLine(
+		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
+		beginTimeStamp: number,
+		cursorPosition: Point,
+	): boolean {
+		const itemMbr = this.canvasDrawer.getMbr();
+		const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
+		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
+		const scale = this.board.camera.getScale();
+		const dynamicSnapThreshold = Math.min(
+			Math.max(this.snapThreshold / scale, 0.6),
+			3,
+		);
+
+		const getAlignmentInfo = (
+			line: Line,
+			isVertical: boolean,
+		): SnapAlignment => ({
+			offset: isVertical ? line.start.x : line.start.y,
+			itemOffset: isVertical ? itemMbr.left : itemMbr.top,
+			itemSize: isVertical ? itemMbr.getWidth() : itemMbr.getHeight(),
+			itemCenter: isVertical ? itemCenterX : itemCenterY,
+		});
+
+		const trySnap = (
+			alignment: SnapAlignment,
+			isVertical: boolean,
+		): boolean => {
+			const snapConditions: {
+				check: number;
+				translation: number;
+			}[] = [
+				{
+					check: alignment.itemOffset - alignment.offset,
+					translation: alignment.offset - alignment.itemOffset,
+				},
+				{
+					check:
+						alignment.itemOffset +
+						alignment.itemSize -
+						alignment.offset,
+					translation:
+						alignment.offset -
+						(alignment.itemOffset + alignment.itemSize),
+				},
+				{
+					check: alignment.itemCenter - alignment.offset,
+					translation: alignment.offset - alignment.itemCenter,
+				},
+			];
+
+			for (const { check, translation } of snapConditions) {
+				if (Math.abs(check) < dynamicSnapThreshold) {
+					const x = isVertical ? translation : 0;
+					const y = isVertical ? 0 : translation;
+					this.translateCanvas(x, y, beginTimeStamp);
 					this.snapMemory[isVertical ? "x" : "y"] =
 						cursorPosition[isVertical ? "x" : "y"];
 					return true;
@@ -447,12 +552,14 @@ export class AlignmentHelper {
 	}
 
 	snapToSide(
-		draggingItem: Item,
+		draggingItem: Item | Item[],
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
 		side: ResizeType,
 	): boolean {
-		const itemMbr = draggingItem.getMbr();
+		const itemMbr = Array.isArray(draggingItem)
+			? this.combineMBRs(draggingItem)
+			: draggingItem.getMbr();
 
 		const getAlignmentInfo = (line: Line, side: ResizeType) => {
 			const alignments: Record<
@@ -530,7 +637,7 @@ export class AlignmentHelper {
 			) {
 				const x = isVertical ? alignment.offset : 0;
 				const y = isVertical ? 0 : alignment.offset;
-				this.translateItemsOrCanvas(draggingItem, x, y, beginTimeStamp);
+				this.translateItems(draggingItem, x, y, beginTimeStamp);
 
 				return true;
 			}
@@ -539,7 +646,7 @@ export class AlignmentHelper {
 		return false;
 	}
 
-	translateItemsOrCanvas(
+	translateItems(
 		item: Item | Item[],
 		x: number,
 		y: number,
@@ -574,6 +681,36 @@ export class AlignmentHelper {
 				timeStamp,
 			};
 			this.board.selection.transformMany(transformMap, timeStamp);
+		}
+	}
+
+	translateCanvas(x: number, y: number, timeStamp: number): void {
+		if (!this.canvasDrawer.getLastCreatedCanvas()) {
+			return;
+		}
+
+		const isCanvasOk =
+			this.canvasDrawer.getLastCreatedCanvas() &&
+			!this.debounceUpd.shouldUpd();
+
+		const isCanvasNeedsUpdate =
+			this.canvasDrawer.getLastCreatedCanvas() &&
+			this.debounceUpd.shouldUpd();
+
+		if (isCanvasOk) {
+			this.canvasDrawer.translateCanvasBy(x, y);
+			this.canvasDrawer.highlightNesting();
+		} else if (isCanvasNeedsUpdate) {
+			this.canvasDrawer.translateCanvasBy(x, y);
+			const { translateX, translateY } = this.canvasDrawer.getMatrix();
+			const translation = this.board.selection.getManyItemsTranslation(
+				translateX,
+				translateY,
+			);
+			this.canvasDrawer.highlightNesting();
+			this.board.selection.transformMany(translation, timeStamp);
+			this.canvasDrawer.clearCanvasAndKeys();
+			this.debounceUpd.setFalse();
 		}
 	}
 
