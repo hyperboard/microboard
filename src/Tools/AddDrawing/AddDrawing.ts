@@ -85,7 +85,7 @@ export class AddDrawing extends BoardTool {
 			return false;
 		}
 		this.isDown = true;
-		this.drawing = new Drawing([]);
+		this.drawing = new Drawing(this.board, []);
 		this.board.tools.publish();
 		return true;
 	}
@@ -121,7 +121,7 @@ export class AddDrawing extends BoardTool {
 			point.x -= x;
 			point.y -= y;
 		}
-		const drawing = new Drawing(points);
+		const drawing = new Drawing(this.board, points);
 		drawing.transformation.translateTo(x, y);
 		drawing.setStrokeColor(this.strokeColor);
 		drawing.setStrokeWidth(this.strokeWidth);

@@ -318,6 +318,15 @@ export class Sticker implements Geometry {
 		this.renderShadow(context);
 		this.stickerPath.render(context);
 		this.text.render(context);
+		if (this.getLinkTo()) {
+			const { top, right } = this.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {

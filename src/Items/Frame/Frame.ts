@@ -731,6 +731,15 @@ export class Frame implements Geometry {
 		}
 		this.path.render(context);
 		this.renderNewShape(context);
+		if (this.getLinkTo()) {
+			const { top, right } = this.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 
 	renderNewShape(context: DrawingContext): void {

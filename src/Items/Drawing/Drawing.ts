@@ -18,6 +18,7 @@ import {
 } from "Board/HTMLRender/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { conf } from "Board/Settings";
+import { Board } from "Board/Board";
 
 export interface DrawingData {
 	itemType: "Drawing";
@@ -44,6 +45,7 @@ export class Drawing extends Mbr implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 
 	constructor(
+		private board: Board,
 		public points: Point[],
 		private events?: Events,
 		private id = "",
@@ -239,6 +241,15 @@ export class Drawing extends Mbr implements Geometry {
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.stroke(this.path2d.nativePath);
 		ctx.restore();
+		if (this.getLinkTo()) {
+			const { top, right } = this.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {

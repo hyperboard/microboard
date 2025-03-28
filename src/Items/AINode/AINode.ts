@@ -360,6 +360,15 @@ export class AINode implements Geometry {
 		this.path.render(context);
 		this.renderButton(context);
 		this.text.render(context);
+		if (this.getLinkTo()) {
+			const { top, right } = this.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {

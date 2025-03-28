@@ -1049,6 +1049,18 @@ export class RichText extends Mbr implements Geometry {
 		const autoSizeScale = this.autoSize ? this.autoSizeScale : undefined;
 		this.layoutNodes.render(ctx, autoSizeScale);
 		ctx.restore();
+		if (
+			this.getLinkTo() &&
+			(this.insideOf === "RichText" || !this.insideOf)
+		) {
+			const { top, right } = this.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 
 	renderHTML(

@@ -146,7 +146,9 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
 	if (!isDrawingData(data)) {
 		throw new Error("Invalid data for Drawing");
 	}
-	const drawing = new Drawing([], board.events).setId(id).deserialize(data);
+	const drawing = new Drawing(board, [], board.events)
+		.setId(id)
+		.deserialize(data);
 	return drawing;
 }
 

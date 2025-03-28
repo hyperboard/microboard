@@ -669,7 +669,7 @@ export class Board {
 					(childData: ItemData & { id: string }) =>
 						addItem(childData),
 				);
-				addItem(itemData);
+				addItem(itemData.data);
 			} else {
 				addItem(itemData);
 			}

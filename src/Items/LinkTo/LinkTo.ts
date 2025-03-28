@@ -2,8 +2,9 @@ import { SubjectOperation } from "shared/SubjectOperation";
 import { LinkToOperation } from "./LinkToOperation";
 import { Events } from "../../Events";
 import { LinkToCommand } from "./LinkToCommand";
-import { Matrix } from "Board/Items/Transformation/Matrix";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { DrawingContext } from "Board/Items/DrawingContext";
+import { conf } from "Board/Settings";
 
 export class LinkTo {
 	readonly subject = new SubjectOperation<LinkTo, LinkToOperation>();
@@ -69,6 +70,21 @@ export class LinkTo {
 			item: [this.id],
 			link: undefined,
 		});
+	}
+
+	render(
+		context: DrawingContext,
+		top: number,
+		right: number,
+		scale: number,
+	): void {
+		const ctx = context.ctx;
+		ctx.save();
+		ctx.globalCompositeOperation = "destination-out";
+		const size = conf.LINK_BTN_SIZE / scale;
+		const offset = conf.LINK_BTN_OFFSET / scale;
+		ctx.fillRect(right - size - offset, top + offset, size, size);
+		ctx.restore();
 	}
 
 	// smell have to redo without document

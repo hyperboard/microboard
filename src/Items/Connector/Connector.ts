@@ -691,6 +691,15 @@ export class Connector {
 		if (this.endPointerStyle !== "None") {
 			this.endPointer.path.render(context);
 		}
+		if (this.getLinkTo()) {
+			const { top, right } = this.endPointer.path.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 
 	clipText(context: DrawingContext): void {

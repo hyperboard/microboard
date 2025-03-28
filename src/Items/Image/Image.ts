@@ -290,6 +290,15 @@ export class ImageItem extends Mbr {
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.drawImage(this.image, 0, 0);
 		ctx.restore();
+		if (this.getLinkTo()) {
+			const { top, right } = this.getMbr();
+			this.linkTo.render(
+				context,
+				top,
+				right,
+				this.board.camera.getScale(),
+			);
+		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {

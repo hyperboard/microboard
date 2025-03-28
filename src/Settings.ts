@@ -144,6 +144,9 @@ export interface Settings {
 	getYouTubeId: (url: string) => string | null;
 
 	AUDIO_DIMENSIONS: { width: number; height: number };
+
+	LINK_BTN_SIZE: number;
+	LINK_BTN_OFFSET: number;
 }
 
 /**
@@ -382,6 +385,9 @@ export const conf: Settings = {
 	},
 
 	AUDIO_DIMENSIONS: { width: 500, height: 60 },
+
+	LINK_BTN_SIZE: 24,
+	LINK_BTN_OFFSET: 2,
 };
 
 export interface ExportSnapshotSelection {
