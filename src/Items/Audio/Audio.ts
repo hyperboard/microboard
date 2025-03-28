@@ -135,6 +135,21 @@ export class AudioItem extends Mbr {
 			return;
 		}
 		this.path.render(context);
+		if (
+			this.getMbr()
+				.getTransformed(this.board.camera.matrix)
+				.getHeight() >= 32
+		) {
+			context.ctx.save();
+			context.ctx.globalCompositeOperation = "destination-out";
+			context.ctx.fillRect(
+				this.left + this.transformation.getScale().x,
+				this.top + 20 * this.transformation.getScale().y,
+				this.getWidth() - 2 * this.transformation.getScale().x,
+				this.getHeight() - 22 * this.transformation.getScale().y,
+			);
+			context.ctx.restore();
+		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {

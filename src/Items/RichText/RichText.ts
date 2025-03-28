@@ -216,9 +216,7 @@ export class RichText extends Mbr implements Geometry {
 
 		this.layoutNodes = getBlockNodes(
 			this.getBlockNodes(),
-			this.shrinkWidth && this.isEmpty()
-				? Infinity
-				: this.getMaxWidth() || 0,
+			this.shrinkWidth ? Infinity : this.getMaxWidth() || 0,
 			this.shrinkWidth,
 			this.insideOf === "Frame",
 		);
@@ -996,6 +994,7 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	deserialize(data: Partial<RichTextData>): this {
+		// console.log(data)
 		if (data.children) {
 			this.editor.editor.children = data.children;
 		}

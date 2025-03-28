@@ -245,6 +245,18 @@ export class VideoItem extends Mbr {
 		}
 
 		ctx.restore();
+
+		if (this.isPlaying) {
+			context.ctx.save();
+			context.ctx.globalCompositeOperation = "destination-out";
+			context.ctx.fillRect(
+				this.left,
+				this.top,
+				this.getWidth(),
+				this.getHeight(),
+			);
+			context.ctx.restore();
+		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
