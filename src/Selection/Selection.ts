@@ -745,7 +745,6 @@ export class Selection {
 
 	nestSelectedItems(unselectedItem?: Item | null, checkFrames = true): void {
 		const selected = this.board.selection.items.list();
-		console.log();
 		if (
 			unselectedItem &&
 			!selected.find(item => item.getId() === unselectedItem.getId())
@@ -776,7 +775,7 @@ export class Selection {
 					const isAlreadyInFrame = enclosedFrames.some(
 						f => f.getId() === item.parent,
 					);
-					if (!isAlreadyInFrame && frame.handleNesting(item)) {
+					if (isAlreadyInFrame && frame.handleNesting(item)) {
 						selectedMap[item.getId()].nested = frame;
 					}
 				});
