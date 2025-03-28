@@ -483,4 +483,8 @@ export class AINode implements Geometry {
 
 		return div;
 	}
+
+	getIsWidthResizing(): boolean {
+		return this.isWidthResizing;
+	}
 }

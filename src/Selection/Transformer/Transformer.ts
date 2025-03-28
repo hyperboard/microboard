@@ -181,11 +181,7 @@ export class Transformer extends Tool {
 		}
 
 		const single = this.selection.items.getSingle();
-		if (
-			(single?.itemType === "AINode" ||
-				single?.itemType === "RichText") &&
-			wasResising
-		) {
+		if (single && single.getIsWidthResizing() && wasResising) {
 			single.isWidthResizing = false;
 		}
 

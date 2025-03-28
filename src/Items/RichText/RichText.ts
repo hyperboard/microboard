@@ -1368,4 +1368,8 @@ export class RichText extends Mbr implements Geometry {
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
 	}
+
+	getIsWidthResizing(): boolean {
+		return this.isWidthResizing;
+	}
 }

@@ -424,4 +424,8 @@ export class VideoItem extends Mbr {
 			linkElem.click();
 		}
 	}
+
+	getIsWidthResizing(): null {
+		return null;
+	}
 }

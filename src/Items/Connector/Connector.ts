@@ -1276,6 +1276,10 @@ export class Connector {
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
 	}
+
+	getIsWidthResizing(): null {
+		return null;
+	}
 }
 export const CONNECTOR_POINTER_TYPES = [
 	"None",

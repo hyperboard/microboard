@@ -97,7 +97,11 @@ function parseHTMLRichText(
 			node.tagName.toLowerCase() === "span" ||
 			(isLinkNode && node.children.length === 0)
 		) {
-			const textContent = node.textContent || "";
+			const isSingleSpace =
+				node.textContent?.length === 1 &&
+				node.textContent?.trim() === "";
+			const textContent = isSingleSpace ? "" : node.textContent || "";
+
 			const text = textContent !== "" ? decodeHtml(textContent) : "";
 
 			return {

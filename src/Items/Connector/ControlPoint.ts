@@ -287,11 +287,11 @@ function fromRelativePoint(
 
 	// TODO fix richtext width transformation. The connector needs a modified scaleX
 	if (item instanceof RichText || item instanceof AINode) {
-		if (!item.isWidthResizing) {
-			return point;
+		const itemMbr = item.getMbr();
+		if (!item.getIsWidthResizing()) {
+			return itemMbr.getNearestPointOnPerimeter(point, false);
 		}
 
-		const itemMbr = item.getMbr();
 		const { x: centerX, y: centerY } = itemMbr.getCenter();
 		switch (edge) {
 			case "left":

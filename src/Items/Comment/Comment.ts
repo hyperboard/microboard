@@ -434,4 +434,8 @@ export class Comment implements Geometry {
 		div.setAttribute("comment-data", JSON.stringify(this.serialize()));
 		return div;
 	}
+
+	getIsWidthResizing(): null {
+		return null;
+	}
 }

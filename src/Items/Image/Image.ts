@@ -388,4 +388,8 @@ export class ImageItem extends Mbr {
 		linkElem.setAttribute("download", "");
 		linkElem.click();
 	}
+
+	getIsWidthResizing(): null {
+		return null;
+	}
 }
