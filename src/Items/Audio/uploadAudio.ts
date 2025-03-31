@@ -11,7 +11,7 @@ export function uploadAudio(
 	file: File,
 	board: Board,
 	notify: NotifyFunction,
-	extension: "mp3" | "wav",
+	extension: string,
 ) {
 	prepareAudio(file)
 		.then(url => {

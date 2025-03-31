@@ -41,7 +41,7 @@ export class AudioItem extends Mbr {
 		board: Board,
 		private events?: Events,
 		private id = "",
-		private extension: "mp3" | "wav" = "mp3",
+		private extension: string = "mp3",
 	) {
 		super();
 		this.linkTo = new LinkTo(this.id, events);

@@ -144,6 +144,8 @@ export interface Settings {
 	getYouTubeId: (url: string) => string | null;
 
 	AUDIO_DIMENSIONS: { width: number; height: number };
+	AUDIO_FORMATS: string[];
+	VIDEO_FORMATS: string[];
 
 	LINK_BTN_SIZE: number;
 	LINK_BTN_OFFSET: number;
@@ -385,6 +387,19 @@ export const conf: Settings = {
 	},
 
 	AUDIO_DIMENSIONS: { width: 500, height: 60 },
+	AUDIO_FORMATS: [
+		"aac",
+		"ac3",
+		"aiff",
+		"amr",
+		"flac",
+		"mp3",
+		"ogg",
+		"opus",
+		"wav",
+		"wma",
+	],
+	VIDEO_FORMATS: ["mp4", "webm"],
 
 	LINK_BTN_SIZE: 24,
 	LINK_BTN_OFFSET: 2,
