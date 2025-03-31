@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom"; // Example dependency for Node
 import { DocumentFactory } from "./DocumentFactory";
-
+import { createCanvas, Image } from "canvas";
 export class NodeDocumentFactory implements DocumentFactory {
 	private dom = new JSDOM().window.document;
 
@@ -12,3 +12,19 @@ export class NodeDocumentFactory implements DocumentFactory {
 		return this.dom.createElementNS(namespace, tagName);
 	}
 }
+
+const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+global.document = dom.window.document;
+// global.window = dom.window; // had to comment out, this does not work
+global.HTMLImageElement = dom.window.HTMLImageElement;
+global.Image = Image; // Use the canvas Image implementation
+
+// Override the Image implementation for Node.js
+Image.prototype.onload = function () {};
+Image.prototype.onerror = function () {};
+
+// Create canvas context
+global.createCanvasContext = (width, height) => {
+	const canvas = createCanvas(width, height);
+	return canvas.getContext("2d");
+};

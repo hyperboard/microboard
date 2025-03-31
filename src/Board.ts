@@ -42,6 +42,11 @@ import { SpatialIndex } from "./SpatialIndex";
 import { Tools } from "./Tools";
 import { ItemsMap } from "./Validators";
 import { getDOMParser } from "./api/DOMParser";
+import {
+	CUSTOM_WEB_COMPONENTS_JS,
+	LOAD_LINKS_IMAGES_JS,
+	INDEX_CSS,
+} from "./staticResources";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -509,16 +514,9 @@ export class Board {
 	}
 
 	async serializeHTML(): Promise<string> {
-		const script = await fetch(
-			new URL(getPublicUrl("/customWebComponents.js")),
-		);
-		const loadLinksImages = await fetch(
-			new URL(getPublicUrl("/loadLinksImages.js")),
-		);
-		const builtCSS = await fetch(new URL(getPublicUrl("/index.css")));
-		const customTagsScript = await script.text();
-		const loadLinksImagesScript = await loadLinksImages.text();
-		const css = await builtCSS.text();
+		const customTagsScript = CUSTOM_WEB_COMPONENTS_JS;
+		const loadLinksImagesScript = LOAD_LINKS_IMAGES_JS;
+		const css = INDEX_CSS;
 		const boardName = this.getName() || this.getBoardId();
 
 		// div with id="items" and last-event-order are necessary for successfull uploading to storage

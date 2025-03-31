@@ -379,8 +379,8 @@ export function createEventsLog(board: Board): EventsLog {
 		for (const event of events) {
 			const command = createCommand(board, event.body.operation);
 			const record = { event, command };
+			console.log("Apply", event);
 			command.apply();
-			console.log("applied", command);
 			list.addConfirmedRecords([record]);
 		}
 	}

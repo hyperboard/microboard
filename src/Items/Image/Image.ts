@@ -60,7 +60,7 @@ export function getPlaceholderImage(
 		placeholder.transformation.scaleTo(250 / 100, 50 / 100);
 	}
 
-	placeholder.render(context);
+	// placeholder.render(context); TODO: had to comment out to run in node. look if it breaks something
 
 	const placeholderImage = new Image();
 	placeholderImage.src = placeholderCanvas.toDataURL();
