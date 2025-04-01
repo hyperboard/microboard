@@ -18,6 +18,7 @@ export function uploadAudio(
 			const audio = new AudioItem(
 				url,
 				board,
+				true,
 				board.events,
 				"",
 				extension,

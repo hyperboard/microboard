@@ -18,7 +18,8 @@ export interface AudioItemData {
 	itemType: "Audio";
 	url: string;
 	transformation: TransformationData;
-	extension: "mp3" | "wav";
+	isStorageUrl: boolean;
+	extension?: string;
 }
 
 export class AudioItem extends Mbr {
@@ -34,18 +35,21 @@ export class AudioItem extends Mbr {
 	board: Board;
 	private isPlaying = false;
 	private currentTime = 0;
+	private isStorageUrl = true;
 	private path: Path | Paths;
 
 	constructor(
 		url: string,
 		board: Board,
+		isStorageUrl: boolean,
 		private events?: Events,
 		private id = "",
-		private extension: string = "mp3",
+		private extension?: string,
 	) {
 		super();
 		this.linkTo = new LinkTo(this.id, events);
 		this.board = board;
+		this.isStorageUrl = isStorageUrl;
 		this.setUrl(url);
 		this.transformation = new Transformation(id, events);
 		this.linkTo.subject.subscribe(() => {
@@ -92,11 +96,15 @@ export class AudioItem extends Mbr {
 	}
 
 	setUrl(url: string): void {
-		try {
-			const newUrl = new URL(url);
-			this.url = `${window.location.origin}${newUrl.pathname}`;
-		} catch (_) {
-			// this.url = `${storageURL}/${url}`;
+		if (this.isStorageUrl) {
+			try {
+				const newUrl = new URL(url);
+				this.url = `${window.location.origin}${newUrl.pathname}`;
+			} catch (_) {
+				// this.url = `${storageURL}/${url}`;
+			}
+		} else {
+			this.url = url;
 		}
 	}
 
@@ -169,7 +177,9 @@ export class AudioItem extends Mbr {
 		div.style.transform = transform;
 		div.style.position = "absolute";
 		div.setAttribute("audio-url", this.getUrl());
-		div.setAttribute("extension", this.extension);
+		if (this.extension) {
+			div.setAttribute("extension", this.extension);
+		}
 		div.setAttribute("data-link-to", "");
 
 		return div;
@@ -180,11 +190,15 @@ export class AudioItem extends Mbr {
 			itemType: "Audio",
 			url: this.url,
 			transformation: this.transformation.serialize(),
+			isStorageUrl: this.isStorageUrl,
 			extension: this.extension,
 		};
 	}
 
 	deserialize(data: Partial<AudioItemData>): AudioItem {
+		if (data.isStorageUrl) {
+			this.isStorageUrl = data.isStorageUrl;
+		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
@@ -285,14 +299,20 @@ export class AudioItem extends Mbr {
 		return undefined;
 	}
 
+	getExtension(): string | undefined {
+		return this.extension;
+	}
+
 	download() {
-		const linkElem = document.createElement("a");
-		linkElem.href = this.url;
-		linkElem.setAttribute(
-			"download",
-			`${this.board.getBoardId()}.${this.extension}`,
-		);
-		linkElem.click();
+		if (this.extension) {
+			const linkElem = document.createElement("a");
+			linkElem.href = this.url;
+			linkElem.setAttribute(
+				"download",
+				`${this.board.getBoardId()}.${this.extension}`,
+			);
+			linkElem.click();
+		}
 	}
 
 	getIsWidthResizing(): null {
