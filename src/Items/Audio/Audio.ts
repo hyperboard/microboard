@@ -305,7 +305,9 @@ export class AudioItem extends Mbr {
 
 	download() {
 		if (this.extension) {
-			const linkElem = document.createElement("a");
+			const linkElem = conf.documentFactory.createElement(
+				"a",
+			) as HTMLAnchorElement;
 			linkElem.href = this.url;
 			linkElem.setAttribute(
 				"download",

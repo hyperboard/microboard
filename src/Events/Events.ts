@@ -34,6 +34,9 @@ import { Connector } from "Board/Items";
 import { getControlPointData } from "Board/Selection/QuickAddButtons";
 import { isTemplateView } from "shared/lib/queryStringParser";
 import { conf } from "Board/Settings";
+import { AudioItem } from "Board/Items/Audio/Audio";
+import { calculateAudioPosition } from "Board/Items/Audio/AudioHelpers";
+import { AINode } from "Board/Items/AINode/AINode";
 const { i18n } = conf;
 
 export interface BoardEvent {
@@ -249,7 +252,7 @@ export function createEvents(
 								const editor = item.getRichText().editor;
 								editor.clearText();
 								editor.insertCopiedText(
-									t("AIInput.nodeErrorText"),
+									i18n.t("AIInput.nodeErrorText"),
 								);
 							}
 						}
@@ -290,7 +293,7 @@ export function createEvents(
 								const editor = item.getRichText().editor;
 								editor.clearText();
 								editor.insertCopiedText(
-									t("AIInput.nodeErrorText"),
+									i18n.t("AIInput.nodeErrorText"),
 								);
 							}
 						}
@@ -302,45 +305,98 @@ export function createEvents(
 	}
 
 	function handleAudioGenerate(response: GenerateAudioResponse): void {
-		function removePlaceholders(): void {
+		function replacePlaceholderNode(
+			audioUrl: string,
+			bs64: string | null,
+		): void {
 			const connector = board.items.getById(
 				board.aiImageConnectorID || "",
+			) as Connector | undefined;
+			const placeholderNode = board.items.getById(
+				board.aiGeneratingOnItem || "",
+			) as AINode | undefined;
+			if (!placeholderNode || !connector) {
+				if (bs64) {
+					downloadAudio(bs64);
+				}
+				if (placeholderNode) {
+					board.remove(placeholderNode);
+				}
+				if (connector) {
+					board.remove(connector);
+				}
+				return;
+			}
+
+			const audio = new AudioItem(
+				audioUrl,
+				board,
+				true,
+				board.events,
+				"",
+				"wav",
 			);
-			if (connector) {
-				board.remove(connector);
-			}
-			const aiNode = board.items.getById(board.aiGeneratingOnItem || "");
-			if (aiNode) {
-				board.remove(aiNode);
-			}
+			const { left, top, right } = placeholderNode.getMbr();
+			audio.transformation.applyTranslateTo(
+				left + (right - left - conf.AUDIO_DIMENSIONS.width) / 2,
+				top,
+			);
+			audio.updateMbr();
+			const threadDirection = placeholderNode.getThreadDirection();
+			board.remove(placeholderNode, false);
+			const boardAudio = board.add(audio);
+			board.selection.removeAll();
+			board.selection.add(boardAudio);
+			const reverseIndexMap = {
+				0: 1,
+				1: 0,
+				2: 3,
+				3: 2,
+			};
+			connector.setEndPoint(
+				getControlPointData(
+					boardAudio,
+					reverseIndexMap[threadDirection],
+				),
+			);
 
 			board.aiGeneratingOnItem = undefined;
 			board.aiImageConnectorID = undefined;
 		}
-		if (response.status === "completed" && response.base64) {
-			// const audioBuffer = Buffer.from(response.base64, "base64");
-			// const audioBlob = new Blob([audioBuffer], { type: "audio/wav" });
-			// Window Smell: window
+
+		function downloadAudio(bs64: string): void {
 			const audioBlob = new Blob(
-				[
-					Uint8Array.from(window.atob(response.base64), ch =>
-						ch.charCodeAt(0),
-					),
-				],
+				[Uint8Array.from(window.atob(bs64), ch => ch.charCodeAt(0))],
 				{ type: "audio/wav" },
 			);
 			const audioUrl = URL.createObjectURL(audioBlob);
-			if (typeof document !== "undefined") {
-				const link = document.createElement("a");
-				link.href = audioUrl;
-				link.download = "generated_audio.wav";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-				URL.revokeObjectURL(audioUrl);
+			const linkElem = conf.documentFactory.createElement(
+				"a",
+			) as HTMLAnchorElement;
+			linkElem.href = audioUrl;
+			linkElem.setAttribute(
+				"download",
+				`${board.getBoardId()}-generated.wav`,
+			);
+			linkElem.click();
+		}
+
+		const { base64, audioUrl } = response;
+		if (response.status === "completed" && (base64 || audioUrl)) {
+			if (audioUrl) {
+				replacePlaceholderNode(audioUrl, base64);
+			} else if (base64) {
+				downloadAudio(base64);
 			}
-			removePlaceholders();
 		} else if (response.status === "error") {
+			const placeholderNode = board.items.getById(
+				board.aiImageConnectorID || "",
+			);
+			if (placeholderNode) {
+				board.selection.removeAll();
+				board.selection.add(placeholderNode);
+			}
+
 			console.error("Audio generation error:", response.message);
 			notify({
 				header: i18n.t("AIInput.audioGenerationError.header"),
@@ -348,7 +404,6 @@ export function createEvents(
 				variant: "error",
 				duration: 4000,
 			});
-			removePlaceholders();
 		}
 	}
 
