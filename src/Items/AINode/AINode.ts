@@ -443,6 +443,10 @@ export class AINode implements Geometry {
 		img.setAttribute("alt", "#");
 		img.setAttribute("width", `${BUTTON_SIZE}px`);
 		img.setAttribute("height", `${BUTTON_SIZE}px`);
+		button.style.background = "none";
+		button.style.border = "none";
+		button.style.outline = "none";
+		button.style.cursor = "pointer";
 		button.setAttribute("width", `${BUTTON_SIZE}px`);
 		button.setAttribute("height", `${BUTTON_SIZE}px`);
 		button.appendChild(img);
