@@ -96,6 +96,7 @@ export interface Events {
 	serialize(): BoardEvent[];
 	deserialize(serializedData: BoardEvent[]): void;
 	deserializeAndApply(serializedData: BoardEvent[]): void;
+	insert(events: SyncEvent | SyncEvent[]): void;
 	getRaw: () => RawEvents;
 	getAll: () => BoardEvent[];
 	getLastIndex: () => number;
@@ -1125,6 +1126,7 @@ export function createEvents(
 		serialize: log.serialize,
 		deserialize: log.deserialize,
 		deserializeAndApply: log.deserializeAndApply,
+		insert: log.insertEvents,
 		getSnapshot: log.getSnapshot,
 		getSnapshotToPublish,
 		getRaw,
