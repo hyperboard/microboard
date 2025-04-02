@@ -46,7 +46,7 @@ import {
 	CUSTOM_WEB_COMPONENTS_JS,
 	LOAD_LINKS_IMAGES_JS,
 	INDEX_CSS,
-} from "./staticResources";
+} from "../staticResources";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -513,7 +513,7 @@ export class Board {
 		return this.copy();
 	}
 
-	async serializeHTML(): Promise<string> {
+	serializeHTML(): string {
 		const customTagsScript = CUSTOM_WEB_COMPONENTS_JS;
 		const loadLinksImagesScript = LOAD_LINKS_IMAGES_JS;
 		const css = INDEX_CSS;

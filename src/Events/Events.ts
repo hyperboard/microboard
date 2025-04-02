@@ -103,7 +103,7 @@ export interface Events {
 	getSyncLog: () => SyncLog;
 	syncLogSubject: SyncLogSubject;
 	getSnapshot(): BoardSnapshot;
-	getSnapshotToPublish(): Promise<SnapshotToPublish>;
+	getSnapshotToPublish(): SnapshotToPublish;
 	disconnect(): void;
 	emit(operation: Operation, command?: Command): void;
 	emitAndApply(operation: Operation, command?: Command): void;
@@ -586,17 +586,17 @@ export function createEvents(
 		handleBoardEventListMessage,
 	);
 
-	async function handleCreateSnapshotRequestMessage(): Promise<void> {
-		const { boardId, snapshot, lastOrder } = await getSnapshotToPublish();
+	function handleCreateSnapshotRequestMessage(): void {
+		const { boardId, snapshot, lastOrder } = getSnapshotToPublish();
 		connection?.publishSnapshot(boardId, snapshot, lastOrder);
 		// board.saveSnapshot(snapshot);
 	}
 
-	async function getSnapshotToPublish(): Promise<SnapshotToPublish> {
+	function getSnapshotToPublish(): SnapshotToPublish {
 		const boardId = board.getBoardId();
 		// const snapshot = log.getSnapshot();
 		log.revertUnconfirmed();
-		const snapshot = await board.serializeHTML();
+		const snapshot = board.serializeHTML();
 		const lastOrder = log.getLastIndex();
 		log.applyUnconfirmed();
 		return {
