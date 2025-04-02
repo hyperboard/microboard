@@ -85,7 +85,11 @@ export class EditorContainer {
 		private getFontSize: () => number,
 		private getMatrixScale: () => number,
 		private getOnLimitReached: () => () => void,
-		private calcAutoSize: (textNodes?: BlockNode[]) => void,
+		private calcAutoSize: (textNodes?: BlockNode[]) => number,
+		private applyAutoSizeScale: (
+			textScale: number,
+			blockNodes?: BlockNode[],
+		) => void,
 		private updateElement: () => void,
 	) {
 		const baseEditor = createEditor();
@@ -956,7 +960,8 @@ export class EditorContainer {
 			const currentText = line.slice(0, mid);
 
 			const testLine = this.createParagraphNode(currentText);
-			this.calcAutoSize([...newlines, testLine]);
+			const nodes = [...newlines, testLine];
+			this.applyAutoSizeScale(this.calcAutoSize(nodes), nodes);
 			const relativeFontSize = this.getFontSize() / this.getMatrixScale();
 
 			if (relativeFontSize >= 10) {
@@ -981,6 +986,14 @@ export class EditorContainer {
 	insertCopiedText(text: string): boolean {
 		const lines = this.getTextParagraphs(text.split(/\r\n|\r|\n/));
 		const isPrevTextEmpty = this.isEmpty();
+		if (this.getAutosize()) {
+			if (this.getAutosize()) {
+				if (!this.checkIsAutoSizeTextScaleAllowed(lines)) {
+					this.getOnLimitReached()();
+					return true;
+				}
+			}
+		}
 		let insertLocation: Location | undefined = undefined;
 
 		if (isPrevTextEmpty) {
@@ -1001,9 +1014,22 @@ export class EditorContainer {
 		return true;
 	}
 
+	checkIsAutoSizeTextScaleAllowed(nodes: BlockNode[]) {
+		const existingNodes = this.getBlockNodes();
+		const textScale = this.calcAutoSize([...existingNodes, ...nodes]);
+		return textScale * 14 > 10;
+	}
+
 	insertCopiedNodes(nodes: BlockNode[]): boolean {
 		const isPrevTextEmpty = this.isEmpty();
 		const editor = this.editor;
+
+		if (this.getAutosize()) {
+			if (!this.checkIsAutoSizeTextScaleAllowed(nodes)) {
+				this.getOnLimitReached()();
+				return true;
+			}
+		}
 
 		if (isPrevTextEmpty) {
 			this.selectWholeText();

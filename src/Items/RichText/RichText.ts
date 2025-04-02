@@ -168,6 +168,7 @@ export class RichText extends Mbr implements Geometry {
 			this.getTransformationScale.bind(this),
 			() => this.onLimitReached,
 			this.calcAutoSize.bind(this),
+			this.applyAutoSizeScale.bind(this),
 			this.updateElement,
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
@@ -330,7 +331,7 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.updateRequired = true;
 		if (this.autoSize) {
-			this.calcAutoSize();
+			this.applyAutoSizeScale(this.calcAutoSize());
 		} else {
 			this.layoutNodes = getBlockNodes(
 				this.getBlockNodes(),
@@ -363,8 +364,8 @@ export class RichText extends Mbr implements Geometry {
 		this.updateRequired = false;
 	};
 
-	calcAutoSize(textNodes?: BlockNode[]): void {
-		const nodes = textNodes ? textNodes : this.getBlockNodes();
+	calcAutoSize(blockNodes?: BlockNode[]): number {
+		const nodes = blockNodes ? blockNodes : this.getBlockNodes();
 		const container = this.getTransformedContainer();
 		const containerWidth = container.getWidth();
 		const containerHeight = container.getHeight();
@@ -376,11 +377,17 @@ export class RichText extends Mbr implements Geometry {
 			containerWidth,
 		);
 
-		const textScale = Math.min(
+		return Math.min(
 			containerWidth / optimal.bestMaxWidth,
 			containerHeight / optimal.bestMaxHeight,
 		);
+	}
 
+	applyAutoSizeScale(textScale: number, blockNodes?: BlockNode[]): void {
+		const nodes = blockNodes ? blockNodes : this.getBlockNodes();
+		const container = this.getTransformedContainer();
+		const containerWidth = container.getWidth();
+		const containerHeight = container.getHeight();
 		this.layoutNodes = getBlockNodes(nodes, containerWidth / textScale);
 
 		this.autoSizeScale = textScale;
