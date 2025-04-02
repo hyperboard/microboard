@@ -228,7 +228,6 @@ export function getQuickAddButtons(
 	}
 
 	function clear(): void {
-		console.log("clear");
 		if (htmlButtons) {
 			htmlButtons.forEach(button => {
 				button.onclick = null;
