@@ -14,7 +14,7 @@ export class NodeDocumentFactory implements DocumentFactory {
 }
 
 const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-global.document = dom.window.document;
+// global.document = dom.window.document;
 // global.window = dom.window; // had to comment out, this does not work
 global.HTMLImageElement = dom.window.HTMLImageElement;
 global.Image = Image; // Use the canvas Image implementation
