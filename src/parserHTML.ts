@@ -301,6 +301,7 @@ function parseHTMLFrame(el: HTMLElement): {
 			);
 			return acc;
 		}, {});
+	data.children = Object.values(childrenMap).map(child => child.id);
 
 	return { data, childrenMap };
 }

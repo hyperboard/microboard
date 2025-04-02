@@ -621,6 +621,7 @@ export class Select extends Tool {
 		if (this.isDraggingUnselectedItem && this.downOnItem) {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
+			this.board.selection.removeAll();
 			const translation = this.board.selection.getManyItemsTranslation(
 				x,
 				y,

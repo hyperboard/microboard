@@ -772,10 +772,10 @@ export class Selection {
 
 			enclosedFrames.forEach(frame => {
 				selected.forEach(item => {
-					const isAlreadyInFrame = enclosedFrames.some(
-						f => f.getId() === item.parent,
-					);
-					if (isAlreadyInFrame && frame.handleNesting(item)) {
+					const shouldNestInFrame =
+						frame.getId() === item.parent ||
+						item.parent === "Board";
+					if (shouldNestInFrame && frame.handleNesting(item)) {
 						selectedMap[item.getId()].nested = frame;
 					}
 				});
