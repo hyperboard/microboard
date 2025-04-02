@@ -129,7 +129,7 @@ export class Selection {
 		if (!this.shouldPublish) {
 			return;
 		}
-		this.quickAddButtons.clear();
+		// this.quickAddButtons.clear();
 		this.subject.publish(this);
 		this.itemSubject.publish(item);
 	};
