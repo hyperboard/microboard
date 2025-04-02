@@ -1014,10 +1014,10 @@ export class EditorContainer {
 		return true;
 	}
 
-	checkIsAutoSizeTextScaleAllowed(nodes: BlockNode[]) {
+	checkIsAutoSizeTextScaleAllowed(nodes: BlockNode[]): boolean {
 		const existingNodes = this.getBlockNodes();
 		const textScale = this.calcAutoSize([...existingNodes, ...nodes]);
-		return textScale * 14 > 10;
+		return (textScale * 14) / this.getMatrixScale() > 10;
 	}
 
 	insertCopiedNodes(nodes: BlockNode[]): boolean {
