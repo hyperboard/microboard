@@ -6,7 +6,7 @@ import { BlockNode } from "./Editor/BlockNode";
 
 1. Автомобиль
 2. Библиотека
-3. Велосипед 
+3. Велосипед
 4. Гимнастика
 5. Дисциплина
 6. Жонглировать
@@ -46,8 +46,9 @@ export function findOptimalMaxWidthForTextAutoSize(
 	let closestRatioDifference = Infinity;
 	let closestWidth = initialMaxWidth;
 	let closestHeight = initialMaxWidth / targetRatio;
+	const iterations = Math.min(Math.max(3, containerWidth / 80), 15);
 
-	for (let i = 0; i < 3 && low < high; i += 1) {
+	for (let i = 0; i < iterations && low < high; i += 1) {
 		const mid = (low + high) / 2;
 		const { width: calcWidth, height: calcHeight } = getBlockNodes(
 			text,
