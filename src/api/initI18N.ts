@@ -13,7 +13,9 @@ export function initI18N(isNode = false): typeof i18n {
 		.use(LanguageDetector)
 		.init({
 			// @ts-expect-error import.meta object didn't exists in common-js modules
-			debug: import.meta.env.NODE_ENV === "development",
+			debug: import.meta.env
+				? import.meta.env.NODE_ENV === "development"
+				: false,
 			detection: {
 				order: ["navigator"],
 			},
@@ -21,7 +23,7 @@ export function initI18N(isNode = false): typeof i18n {
 			defaultNS,
 			resources,
 			// @ts-expect-error import.meta object didn't exists in common-js modules
-			fallbackLng: import.meta.env.FALLBACK_LNG ?? "en",
+			fallbackLng: import.meta.env ? import.meta.env.FALLBACK_LNG : "en",
 			interpolation: {
 				escapeValue: false,
 			},

@@ -115,12 +115,16 @@ export class Connector {
 			"Connector",
 			{
 				...DEFAULT_TEXT_STYLES,
-				fontSize: localStorage.getItem("lastConnectorTextSize")
-					? Number(localStorage.getItem("lastConnectorTextSize"))
-					: DEFAULT_TEXT_STYLES.fontSize,
+				fontSize:
+					typeof window !== "undefined" &&
+					localStorage.getItem("lastConnectorTextSize")
+						? Number(localStorage.getItem("lastConnectorTextSize"))
+						: DEFAULT_TEXT_STYLES.fontSize,
 				fontColor:
-					localStorage.getItem("lastConnectorTextColor") ??
-					DEFAULT_TEXT_STYLES.fontColor,
+					typeof window !== "undefined" &&
+					localStorage.getItem("lastConnectorTextColor")
+						? localStorage.getItem("lastConnectorTextColor")
+						: DEFAULT_TEXT_STYLES.fontColor,
 			},
 		);
 		this.startPointer = getStartPointer(
@@ -395,6 +399,7 @@ export class Connector {
 	}
 
 	applyMiddlePoint(pointData: ControlPointData, updatePath = true): void {
+		console.log("pointData", pointData);
 		const optionalFn = this.getOptionalFindFn();
 		this.middlePoint = getControlPoint(
 			pointData,

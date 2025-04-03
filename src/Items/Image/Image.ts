@@ -18,6 +18,7 @@ import {
 import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { conf } from "Board/Settings";
 
 export interface ImageItemData {
 	itemType: "Image";
@@ -37,7 +38,7 @@ export function getPlaceholderImage(
 	board: Board,
 	imageDimension?: Dimension,
 ): HTMLImageElement {
-	const placeholderCanvas = document.createElement("canvas");
+	const placeholderCanvas = conf.documentFactory.createElement("canvas");
 	const placeholderContext = placeholderCanvas.getContext(
 		"2d",
 	) as CanvasRenderingContext2D; // this does not fail
