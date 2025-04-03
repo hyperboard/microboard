@@ -168,6 +168,10 @@ export function fitContextPanelToLeft(
 		}
 	}
 
+	newPanel.bottom = newPanel.top + panelHeight;
+
+	fitContextPanelInViewRect(newPanel, view, verticalOffset);
+
 	const itemMbr = selectionMbr.getMbr();
 	newPanel.left = itemMbr.left;
 	adjustPanelHorizontal(newPanel, panelWidth, view, horizontalOffset);
@@ -205,6 +209,9 @@ export function fitContextPanelToCenter(
 	}
 
 	newPanel.bottom = newPanel.top + panelHeight;
+
+	fitContextPanelInViewRect(newPanel, view, verticalOffset);
+
 	const itemCenter = selectionMbr.getCenter();
 	newPanel.left = itemCenter.x - panelWidth / 2;
 	adjustPanelHorizontal(newPanel, panelWidth, view, horizontalOffset);
@@ -224,6 +231,24 @@ function adjustPanelHorizontal(
 		newPanel.left = view.right - (panelWidth + horizontalOffset);
 	}
 	newPanel.right = newPanel.left + panelWidth;
+}
+
+function fitContextPanelInViewRect(
+	panel: Mbr,
+	view: Mbr,
+	verticalOffset: number,
+): void {
+	const panelHeight = panel.getHeight();
+
+	if (panel.top <= view.top + verticalOffset) {
+		panel.top = view.top + 2 * verticalOffset;
+		panel.bottom = panel.top + panelHeight;
+	}
+
+	if (panel.bottom >= view.bottom - verticalOffset) {
+		panel.bottom = view.bottom - 2 * verticalOffset;
+		panel.top = panel.bottom - panelHeight;
+	}
 }
 
 export function fitContextMenu(
