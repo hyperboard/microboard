@@ -5,11 +5,6 @@ import { initPaths } from "./initPaths";
 import { getMeasureCtx } from "./getMeasureCtx";
 import { initI18N } from "./initI18N";
 
-// export dummy to prevent tree shake
-export function initBrowserSettings(): Settings {
-	return conf;
-}
-
 const documentFactory = new BrowserDocumentFactory();
 conf.documentFactory = documentFactory;
 conf.path2DFactory = BrowserPath2D;
@@ -19,3 +14,8 @@ conf.getDocumentHeight = () => document.documentElement.clientHeight;
 conf.getDPI = () => window.devicePixelRatio;
 initI18N();
 initPaths(BrowserPath2D);
+
+// export dummy to prevent tree shake
+export function initBrowserSettings(): Settings {
+	return conf;
+}

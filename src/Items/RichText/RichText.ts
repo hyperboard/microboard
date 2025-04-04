@@ -123,7 +123,7 @@ export class RichText extends Mbr implements Geometry {
 		private id = "",
 		readonly transformation = new Transformation(id, board.events),
 		linkTo?: LinkTo,
-		public placeholderText = i18n.t("board.textPlaceholder"),
+		public placeholderText = i18n?.t("board.textPlaceholder"),
 		public isInShape = false,
 		private autoSize = false,
 		public insideOf?: ItemType,
@@ -1255,15 +1255,14 @@ export class RichText extends Mbr implements Geometry {
 		div.style.maxWidth = this.getMaxWidth()
 			? `${this.getMaxWidth()}px`
 			: "";
-		// if (this.layoutNodes.height < transformedHeight) {
-		// 	const alignment = this.getVerticalAlignment();
-		// 	if (alignment === "center") {
-		// 		div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / 2 / scaleY}px`;
-		// 	} else if (alignment === "bottom") {
-		// 		div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
-		// 	}
-		// }
-
+		if (this.layoutNodes.height < transformedHeight) {
+			const alignment = this.getVerticalAlignment();
+			if (alignment === "center") {
+				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / 2 / scaleY}px`;
+			} else if (alignment === "bottom") {
+				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
+			}
+		}
 		div.setAttribute(
 			"data-vertical-alignment",
 			this.getVerticalAlignment(),
