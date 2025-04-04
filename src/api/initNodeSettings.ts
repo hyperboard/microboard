@@ -5,6 +5,7 @@ import { initPaths } from "./initPaths";
 import { getMeasureCtx } from "./getMeasureCtx";
 import { initI18N } from "./initI18N";
 // import { Canvas } from "canvas";
+import "css.escape";
 
 // export dummy to prevent tree shake
 export function initNodeSettings(): Settings {
