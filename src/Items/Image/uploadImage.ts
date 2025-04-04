@@ -5,7 +5,11 @@ import { prepareImage } from "./ImageHelpers";
 import * as PDFJS from "@bundled-es-modules/pdfjs-dist";
 import { RenderParameters } from "@bundled-es-modules/pdfjs-dist/types/src/display/api";
 
-export function uploadImage(file: File, board: Board) {
+export function uploadImage(
+	file: File,
+	board: Board,
+	accessToken: string | null,
+) {
 	const reader = new FileReader();
 
 	if (file.type === "application/pdf") {
@@ -42,7 +46,7 @@ export function uploadImage(file: File, board: Board) {
 									pagesRendered++;
 									const base64String =
 										canvas.toDataURL("image/png");
-									prepareImage(base64String)
+									prepareImage(base64String, accessToken)
 										.then(imageData => {
 											const image = new ImageItem(
 												imageData,
@@ -116,7 +120,7 @@ export function uploadImage(file: File, board: Board) {
 	} else {
 		reader.onload = (event: ProgressEvent<FileReader>) => {
 			const base64String = event.target?.result as string;
-			prepareImage(base64String)
+			prepareImage(base64String, accessToken)
 				.then(imageData => {
 					const image = new ImageItem(
 						imageData,

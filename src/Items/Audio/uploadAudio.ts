@@ -12,8 +12,9 @@ export function uploadAudio(
 	board: Board,
 	notify: NotifyFunction,
 	extension: string,
+	accessToken: string | null,
 ) {
-	prepareAudio(file)
+	prepareAudio(file, accessToken)
 		.then(url => {
 			const audio = new AudioItem(
 				url,

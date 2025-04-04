@@ -7,6 +7,7 @@ import { prepareImage } from "Board/Items/Image/ImageHelpers";
 export const uploadVideoToStorage = async (
 	hash: string,
 	videoBlob: Blob,
+	accessToken: string | null,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fetch(`${window.location.origin}/api/v1/media/video`, {
@@ -14,6 +15,7 @@ export const uploadVideoToStorage = async (
 			headers: {
 				"Content-Type": videoBlob.type,
 				"x-video-id": hash,
+				Authorization: `Bearer ${accessToken}`,
 			},
 			body: videoBlob,
 		})
@@ -35,6 +37,7 @@ export const uploadVideoToStorage = async (
 
 export const prepareVideo = (
 	file: File,
+	accessToken: string | null,
 ): Promise<{
 	url: string;
 	videoDimension: { width: number; height: number };
@@ -46,13 +49,13 @@ export const prepareVideo = (
 		video.onloadedmetadata = () => {
 			video.onseeked = () => {
 				video.onseeked = null;
-				prepareImage(captureFrame(0.1, video)?.src)
+				prepareImage(captureFrame(0.1, video)?.src, accessToken)
 					.then(imageData => {
 						const { videoWidth: width, videoHeight: height } =
 							video;
 						fileTosha256(file)
 							.then(hash => {
-								uploadVideoToStorage(hash, file)
+								uploadVideoToStorage(hash, file, accessToken)
 									.then(url => {
 										resolve({
 											url,

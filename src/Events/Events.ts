@@ -37,6 +37,7 @@ import { conf } from "Board/Settings";
 import { AudioItem } from "Board/Items/Audio/Audio";
 import { calculateAudioPosition } from "Board/Items/Audio/AudioHelpers";
 import { AINode } from "Board/Items/AINode/AINode";
+import { Account } from "entities/account/Account";
 const { i18n } = conf;
 
 export interface BoardEvent {
@@ -131,6 +132,7 @@ export function createEvents(
 	connection: Connection | undefined, // undefined for node or local
 	lastIndex: number,
 	notify: NotifyFunction,
+	account?: Account,
 ): Events {
 	const log = createEventsLog(board);
 	const latestEvent: { [key: string]: number } = {};
@@ -410,7 +412,7 @@ export function createEvents(
 
 	function handleImageGenerate(response: GenerateImageResponse): void {
 		if (response.status === "completed" && response.base64) {
-			prepareImage(response.base64)
+			prepareImage(response.base64, account?.accessToken || null)
 				.then(imageData => {
 					const placeholderId = board.aiImagePlaceholder?.getId();
 					if (placeholderId) {

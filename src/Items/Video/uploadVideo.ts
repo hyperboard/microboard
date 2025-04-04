@@ -10,8 +10,9 @@ export function uploadVideo(
 	board: Board,
 	notify: NotifyFunction,
 	extension: "mp4" | "webm",
+	accessToken: string | null,
 ) {
-	prepareVideo(file)
+	prepareVideo(file, accessToken)
 		.then(videoData => {
 			const video = new VideoItem(
 				videoData,

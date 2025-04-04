@@ -6,6 +6,7 @@ import { Matrix } from "Board/Items/Transformation/Matrix";
 export const uploadAudioToStorage = async (
 	hash: string,
 	audioBlob: Blob,
+	accessToken: string | null,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fetch(`${window.location.origin}/api/v1/media/audio`, {
@@ -13,6 +14,7 @@ export const uploadAudioToStorage = async (
 			headers: {
 				"Content-Type": audioBlob.type,
 				"x-audio-id": hash,
+				Authorization: `Bearer ${accessToken}`,
 			},
 			body: audioBlob,
 		})
@@ -32,14 +34,17 @@ export const uploadAudioToStorage = async (
 	});
 };
 
-export const prepareAudio = (file: File): Promise<string> => {
+export const prepareAudio = (
+	file: File,
+	accessToken: string | null,
+): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const audio = document.createElement("audio");
 		audio.src = URL.createObjectURL(file);
 		audio.onloadedmetadata = () => {
 			fileTosha256(file)
 				.then(hash => {
-					uploadAudioToStorage(hash, file)
+					uploadAudioToStorage(hash, file, accessToken)
 						.then(url => {
 							resolve(url);
 						})

@@ -7,6 +7,7 @@ import { getDOMParser } from "Board/api/DOMParser";
 export const uploadToTheStorage = async (
 	hash: string,
 	dataURL: string,
+	accessToken: string | null,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const base64String = dataURL.split(",")[1];
@@ -23,6 +24,7 @@ export const uploadToTheStorage = async (
 			headers: {
 				"Content-Type": mimeType,
 				"X-Image-Id": hash,
+				Authorization: `Bearer ${accessToken}`,
 			},
 			body: blob,
 		})
@@ -144,13 +146,15 @@ export const resizeAndConvertToPng = async (
 
 /** Resizes if needed and converts image to png and uploads the image to the storage, doesnt throw on unsuccess
  * @param inp - The input image data
+ * @param accessToken
  * @returns An object containing prepared image information on success, err otherwise
  */
 export const prepareImage = (
 	inp: string | ArrayBuffer | null | undefined,
+	accessToken: string | null,
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
-		return uploadToTheStorage(hash, dataURL).then(src => {
+		return uploadToTheStorage(hash, dataURL, accessToken).then(src => {
 			return {
 				imageDimension: { width, height },
 				base64: dataURL,
