@@ -940,6 +940,14 @@ export class Connector {
 			);
 			div.setAttribute(`${prefix}-x`, point.x.toString());
 			div.setAttribute(`${prefix}-y`, point.y.toString());
+
+			if (point.pointType === "FixedConnector") {
+				div.setAttribute(`${prefix}-tangent`, point.tangent.toString());
+				div.setAttribute(
+					`${prefix}-segment`,
+					point.segmentIndex.toString(),
+				);
+			}
 		};
 
 		setPointAttributes(div, this.startPoint, "start");

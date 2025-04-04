@@ -432,15 +432,24 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
 	const startRelativeY = parseFloat(
 		el.getAttribute("data-start-point-relative-y") || "",
 	);
+	const startTangent = parseFloat(
+		el.getAttribute("data-start-point-tangent") || "",
+	);
+	const startSegment = parseFloat(
+		el.getAttribute("data-start-point-segment") || "",
+	);
+	const startPointType = el.getAttribute("data-start-point-type");
 	const startPoint: ControlPointData = {
-		pointType: el.getAttribute(
-			"data-start-point-type",
-		) as ControlPointData["pointType"],
+		pointType: startPointType as ControlPointData["pointType"],
 		x: parseFloat(el.getAttribute("data-start-point-x") || "0"),
 		y: parseFloat(el.getAttribute("data-start-point-y") || "0"),
 		...(startRelativeX ? { relativeX: startRelativeX } : {}),
 		...(startRelativeY ? { relativeY: startRelativeY } : {}),
 		...(startItem ? { itemId: startItem } : {}),
+		...(startTangent ? { tangent: startTangent } : {}),
+		...(startPointType === "FixedConnector"
+			? { segment: startSegment }
+			: {}),
 	};
 
 	const endItem = el.getAttribute("data-end-point-item");
@@ -450,15 +459,22 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
 	const endRelativeY = parseFloat(
 		el.getAttribute("data-end-point-relative-y") || "",
 	);
+	const endTangent = parseFloat(
+		el.getAttribute("data-end-point-tangent") || "",
+	);
+	const endSegment = parseFloat(
+		el.getAttribute("data-end-point-segment") || "",
+	);
+	const endPointType = el.getAttribute("data-end-point-type");
 	const endPoint: ControlPointData = {
-		pointType: el.getAttribute(
-			"data-end-point-type",
-		) as ControlPointData["pointType"],
+		pointType: endPointType as ControlPointData["pointType"],
 		x: parseFloat(el.getAttribute("data-end-point-x") || "0"),
 		y: parseFloat(el.getAttribute("data-end-point-y") || "0"),
 		...(endItem ? { itemId: endItem } : {}),
 		...(endRelativeX ? { relativeX: endRelativeX } : {}),
 		...(endRelativeY ? { relativeY: endRelativeY } : {}),
+		...(endTangent ? { tangent: endTangent } : {}),
+		...(endPointType === "FixedConnector" ? { segment: startSegment } : {}),
 	};
 
 	const connectorData: ConnectorData & { id: string } = {
