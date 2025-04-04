@@ -2,7 +2,7 @@
 	position: absolute;
 	transform-origin: center;
 	transform: translate(-50%, -50%) scale(0.25);
-	z-index: 0;
+	z-index: 2;
 	padding: 14px;
 	background-color: #93aff6;
 	border-radius: 50%;

@@ -1017,7 +1017,13 @@ export class EditorContainer {
 	checkIsAutoSizeTextScaleAllowed(nodes: BlockNode[]): boolean {
 		const existingNodes = this.getBlockNodes();
 		const textScale = this.calcAutoSize([...existingNodes, ...nodes]);
-		return (textScale * 14) / this.getMatrixScale() > 10;
+		const marks = this.getSelectionMarks();
+		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
+		return (
+			Math.ceil(textScale * (fontSize === "auto" ? 14 : fontSize)) /
+				this.getMatrixScale() >
+			4
+		);
 	}
 
 	insertCopiedNodes(nodes: BlockNode[]): boolean {
