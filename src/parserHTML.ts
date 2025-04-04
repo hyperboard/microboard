@@ -446,9 +446,8 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
 		...(startRelativeX ? { relativeX: startRelativeX } : {}),
 		...(startRelativeY ? { relativeY: startRelativeY } : {}),
 		...(startItem ? { itemId: startItem } : {}),
-		...(startTangent ? { tangent: startTangent } : {}),
 		...(startPointType === "FixedConnector"
-			? { segment: startSegment }
+			? { segment: startSegment, tangent: startTangent }
 			: {}),
 	};
 
@@ -473,8 +472,9 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
 		...(endItem ? { itemId: endItem } : {}),
 		...(endRelativeX ? { relativeX: endRelativeX } : {}),
 		...(endRelativeY ? { relativeY: endRelativeY } : {}),
-		...(endTangent ? { tangent: endTangent } : {}),
-		...(endPointType === "FixedConnector" ? { segment: startSegment } : {}),
+		...(endPointType === "FixedConnector"
+			? { segment: startSegment, tangent: endTangent }
+			: {}),
 	};
 
 	const connectorData: ConnectorData & { id: string } = {
