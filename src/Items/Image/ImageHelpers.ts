@@ -1,8 +1,35 @@
 import { sha256 } from "shared/sha256";
 import { ImageConstructorData } from "./Image";
 import { getDOMParser } from "Board/api/DOMParser";
+import { conf } from "Board/Settings";
 
 // export const storageURL = `${window?.location.origin}/api/v1/media`;
+
+export const catchErrorResponse = async (response: Response) => {
+	if (response.status === 403) {
+		const data = await response.json();
+		conf.openModal("USER_PLAN_MODAL_ID");
+		if (data.currentUsage && data.storageLimit) {
+			conf.notify({
+				variant: "warning",
+				header: conf.i18n.t("toolsPanel.addMedia.limitReached.header"),
+				body: conf.i18n.t("toolsPanel.addMedia.limitReached.body", {
+					limit:
+						parseInt(data.storageLimit) < 100_000
+							? data.storageLimit + " " + conf.i18n.t("common.MB")
+							: parseInt(data.storageLimit) / 1024 +
+								" " +
+								conf.i18n.t("common.GB"),
+				}),
+				duration: 8000,
+			});
+		}
+	}
+	if (response.status === 401) {
+		conf.openModal("MEDIA_UNAVAILABLE_MODAL_ID");
+	}
+	throw new Error(`HTTP status: ${response.status}`);
+};
 
 export const uploadToTheStorage = async (
 	hash: string,
@@ -28,9 +55,9 @@ export const uploadToTheStorage = async (
 			},
 			body: blob,
 		})
-			.then(response => {
+			.then(async response => {
 				if (response.status !== 200) {
-					throw new Error(`HTTP status: ${response.status}`);
+					return catchErrorResponse(response);
 				}
 				return response.json();
 			})

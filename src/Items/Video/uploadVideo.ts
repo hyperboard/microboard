@@ -2,8 +2,7 @@ import { Board } from "Board/Board";
 import { VideoItem } from "./Video";
 import { calculatePosition } from "../Image/calculatePosition";
 import { prepareVideo } from "./VideoHelpers";
-import { NotifyFunction } from "Board/Events/Events";
-import { t } from "i18next";
+import { NotifyFunction } from "shared/ui-lib/Toast/notify";
 
 export function uploadVideo(
 	file: File,
@@ -33,12 +32,6 @@ export function uploadVideo(
 			});
 		})
 		.catch(er => {
-			notify({
-				variant: "error",
-				header: t("video.error.header"),
-				body: er.message || "",
-				duration: 5000,
-			});
 			console.error("Could not create video:", er);
 		});
 }

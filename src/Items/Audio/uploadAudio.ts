@@ -1,11 +1,10 @@
 import { Board } from "Board/Board";
-import { NotifyFunction } from "Board/Events/Events";
-import { t } from "i18next";
 import {
 	calculateAudioPosition,
 	prepareAudio,
 } from "Board/Items/Audio/AudioHelpers";
 import { AudioItem } from "Board/Items/Audio/Audio";
+import { NotifyFunction } from "shared/ui-lib/Toast/notify";
 
 export function uploadAudio(
 	file: File,
@@ -34,12 +33,6 @@ export function uploadAudio(
 			board.selection.add(boardAudio);
 		})
 		.catch(er => {
-			notify({
-				variant: "error",
-				header: t("video.error.header"),
-				body: er.message || "",
-				duration: 5000,
-			});
-			console.error("Could not create video:", er);
+			console.error("Could not create audio:", er);
 		});
 }

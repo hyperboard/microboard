@@ -1,19 +1,19 @@
 import {
+	AiChatMsg,
 	BoardEventListMsg,
 	BoardEventMsg,
 	BoardSubscriptionCompletedMsg,
+	ChatChunk,
 	ConfirmationMsg,
 	Connection,
 	EventsMsg,
+	GenerateAudioResponse,
+	GenerateImageResponse,
+	type ModeMsg,
 	SnapshotRequestMsg,
 	SnapshotResponseMsg,
 	SubscribeConfirmationMsg,
-	type ModeMsg,
 	ViewMode,
-	AiChatMsg,
-	ChatChunk,
-	GenerateImageResponse,
-	GenerateAudioResponse,
 } from "App/Connection";
 import { Board } from "Board";
 import { BoardSnapshot } from "Board/Board";
@@ -35,9 +35,10 @@ import { getControlPointData } from "Board/Selection/QuickAddButtons";
 import { isTemplateView } from "shared/lib/queryStringParser";
 import { conf } from "Board/Settings";
 import { AudioItem } from "Board/Items/Audio/Audio";
-import { calculateAudioPosition } from "Board/Items/Audio/AudioHelpers";
 import { AINode } from "Board/Items/AINode/AINode";
 import { Account } from "entities/account/Account";
+import { NotifyFunction } from "shared/ui-lib/Toast/notify";
+
 const { i18n } = conf;
 
 export interface BoardEvent {
@@ -81,15 +82,6 @@ export interface RawEvents {
 	confirmedEvents: BoardEvent[];
 	eventsToSend: BoardEvent[];
 	newEvents: BoardEvent[];
-}
-
-export interface NotifyFunction {
-	(options: {
-		header: string;
-		body: string;
-		variant?: "info" | "success" | "warning" | "error";
-		duration?: number;
-	}): string; // Returns notification id
 }
 
 export interface Events {

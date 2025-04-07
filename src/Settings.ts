@@ -4,6 +4,7 @@ import { Path2DFactory } from "./api/Path2DFactory";
 import { BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
+import { NotifyFunction } from "shared/ui-lib/Toast/notify";
 
 /**
  * Allowed drawing tools.
@@ -56,6 +57,9 @@ export interface Settings {
 	measureCtx: CanvasRenderingContext2D;
 	// Internationalization
 	i18n: typeof i18next;
+	openModal: (modalId: string) => void;
+	notify: NotifyFunction;
+
 	planNames: {
 		basic: string;
 		plus: string;
@@ -167,6 +171,8 @@ export const conf: Settings = {
 			: (undefined as unknown as DocumentFactory),
 	measureCtx: undefined as unknown as CanvasRenderingContext2D,
 	i18n: {} as unknown as typeof i18next,
+	openModal: () => {},
+	notify: () => "",
 	getDocumentWidth: (): number => 800,
 	getDocumentHeight: (): number => 600,
 	getDPI: (): number => 1,

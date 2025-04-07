@@ -2,6 +2,8 @@ import { fileTosha256 } from "shared/sha256";
 import { Board } from "Board/Board";
 import { AudioItem } from "Board/Items/Audio/Audio";
 import { Matrix } from "Board/Items/Transformation/Matrix";
+import { conf } from "Board/Settings";
+import { catchErrorResponse } from "Board/Items/Image/ImageHelpers";
 
 export const uploadAudioToStorage = async (
 	hash: string,
@@ -18,9 +20,9 @@ export const uploadAudioToStorage = async (
 			},
 			body: audioBlob,
 		})
-			.then(response => {
+			.then(async response => {
 				if (response.status !== 200) {
-					throw new Error(`HTTP status: ${response.status}`);
+					return catchErrorResponse(response);
 				}
 				return response.json();
 			})
