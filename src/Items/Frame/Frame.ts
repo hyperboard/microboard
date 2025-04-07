@@ -372,10 +372,12 @@ export class Frame implements Geometry {
 				this.transformation.getScale().y *
 				aspectRatios[this.getFrameType()].y,
 		};
-		localStorage.setItem(
-			"lastFrameScale",
-			JSON.stringify(proportionalScale),
-		);
+		if (typeof window !== "undefined") {
+			localStorage.setItem(
+				"lastFrameScale",
+				JSON.stringify(proportionalScale),
+			);
+		}
 	}
 
 	serialize(): FrameData {
