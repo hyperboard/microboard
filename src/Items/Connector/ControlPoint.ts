@@ -324,9 +324,6 @@ function fromRelativePoint(
 	if (item instanceof RichText || item instanceof AINode) {
 		const itemMbr = item.getMbr();
 		const prevMbr = item.getPrevMbr();
-		console.log("point", point);
-		console.log("itemMbr", itemMbr);
-		console.log("prevMbr", prevMbr);
 
 		if (
 			!prevMbr ||
@@ -338,8 +335,6 @@ function fromRelativePoint(
 		) {
 			return point;
 		}
-
-		console.log("switch");
 
 		switch (edge) {
 			case "left":

@@ -103,11 +103,9 @@ export class AINode implements Geometry {
 							currItemOp.scale.y === 1)
 					) {
 						// translating
-						console.log("translating");
 						this.text.transformCanvas();
 					} else {
 						// scaling
-						console.log("scaling");
 						this.text.handleInshapeScale();
 					}
 				} else {

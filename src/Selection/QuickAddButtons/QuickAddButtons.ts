@@ -415,7 +415,6 @@ export function getQuickAddButtons(
 						connectorData.endPoint.itemId = addedItem.getId();
 					}
 
-					console.log("connectorData", connectorData);
 					board.add(
 						board.createItem(board.getNewItemId(), connectorData),
 						mergeStamp,
