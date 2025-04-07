@@ -115,7 +115,7 @@ export class RichText extends Mbr implements Geometry {
 	frameMbr?: Mbr;
 	private _onLimitReached: () => void = () => {};
 	private shrinkWidth = false;
-	isWidthResizing = false;
+	prevMbr: Mbr | null = null;
 
 	constructor(
 		private board: Board,
@@ -178,6 +178,7 @@ export class RichText extends Mbr implements Geometry {
 		});
 		this.transformation.subject.subscribe(
 			(tr: Transformation, op: TransformationOperation) => {
+				this.prevMbr = this.getMbr();
 				if (
 					op.method === "translateTo" ||
 					op.method === "translateBy" ||
@@ -1375,7 +1376,7 @@ export class RichText extends Mbr implements Geometry {
 		return this.linkTo.link;
 	}
 
-	getIsWidthResizing(): boolean {
-		return this.isWidthResizing;
+	getPrevMbr(): Mbr | null {
+		return this.prevMbr;
 	}
 }

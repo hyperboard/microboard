@@ -717,8 +717,4 @@ export class Shape implements Geometry {
 		}
 		return true;
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }

@@ -359,8 +359,4 @@ export class Placeholder {
 	getRichText(): null {
 		return null;
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }

@@ -204,7 +204,12 @@ export function getQuickAddButtons(
 			connectorData.endPointerStyle = savedEnd;
 		}
 
-		const startPointData = getControlPointData(selectedItem, index);
+		const startPointData = getControlPointData(
+			selectedItem,
+			index,
+			selectedItem.itemType === "RichText" ||
+				selectedItem.itemType === "AINode",
+		);
 		const endPointData = getControlPointData(
 			newItemPlaceholder ? newItemPlaceholder : newItem,
 			reverseIndexMap[index],
@@ -409,6 +414,8 @@ export function getQuickAddButtons(
 					if ("itemId" in connectorData.endPoint) {
 						connectorData.endPoint.itemId = addedItem.getId();
 					}
+
+					console.log("connectorData", connectorData);
 					board.add(
 						board.createItem(board.getNewItemId(), connectorData),
 						mergeStamp,

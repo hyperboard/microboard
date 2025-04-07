@@ -49,7 +49,7 @@ export class AINode implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 	private buttonMbr: Mbr = new Mbr();
 	private buttonIcon: HTMLImageElement;
-	isWidthResizing = false;
+	prevMbr: Mbr | null = null;
 
 	constructor(
 		private board: Board,
@@ -94,6 +94,7 @@ export class AINode implements Geometry {
 					this.text.transformCanvas();
 				} else if (op.method === "transformMany") {
 					const currItemOp = op.items[this.getId()];
+					this.prevMbr = this.path?.getMbr();
 					if (
 						currItemOp.method === "translateBy" ||
 						currItemOp.method === "translateTo" ||
@@ -102,12 +103,15 @@ export class AINode implements Geometry {
 							currItemOp.scale.y === 1)
 					) {
 						// translating
+						console.log("translating");
 						this.text.transformCanvas();
 					} else {
 						// scaling
+						console.log("scaling");
 						this.text.handleInshapeScale();
 					}
 				} else {
+					this.prevMbr = this.path?.getMbr();
 					if (op.method === "scaleByTranslateBy") {
 						this.text.handleInshapeScale();
 					} else {
@@ -119,10 +123,12 @@ export class AINode implements Geometry {
 			},
 		);
 		this.text.subject.subscribe(() => {
+			this.prevMbr = this.path?.getMbr();
 			this.transformPath();
 			this.subject.publish(this);
 		});
 		this.text.transformation.subject.subscribe(() => {
+			this.prevMbr = this.path?.getMbr();
 			this.transformPath();
 			this.subject.publish(this);
 		});
@@ -488,7 +494,7 @@ export class AINode implements Geometry {
 		return div;
 	}
 
-	getIsWidthResizing(): boolean {
-		return this.isWidthResizing;
+	getPrevMbr(): Mbr | null {
+		return this.prevMbr;
 	}
 }

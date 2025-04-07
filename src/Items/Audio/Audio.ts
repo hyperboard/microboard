@@ -316,10 +316,6 @@ export class AudioItem extends Mbr {
 			linkElem.click();
 		}
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }
 
 const convexity = 0.25;

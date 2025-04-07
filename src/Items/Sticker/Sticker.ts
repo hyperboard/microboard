@@ -551,8 +551,4 @@ export class Sticker implements Geometry {
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }

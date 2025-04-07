@@ -267,8 +267,4 @@ export class Group extends Mbr {
 
 		this.mbr.render(context);
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }

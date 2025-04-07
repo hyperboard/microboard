@@ -818,8 +818,4 @@ export class Frame implements Geometry {
 	getRichText(): RichText {
 		return this.text;
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }

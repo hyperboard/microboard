@@ -526,10 +526,6 @@ export class Drawing extends Mbr implements Geometry {
 		}
 		return false;
 	}
-
-	getIsWidthResizing(): null {
-		return null;
-	}
 }
 
 function getPerpendicularDistance(

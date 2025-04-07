@@ -772,10 +772,7 @@ export class Selection {
 
 			enclosedFrames.forEach(frame => {
 				selected.forEach(item => {
-					const shouldNestInFrame =
-						frame.getId() === item.parent ||
-						item.parent === "Board";
-					if (shouldNestInFrame && frame.handleNesting(item)) {
+					if (frame.handleNesting(item)) {
 						selectedMap[item.getId()].nested = frame;
 					}
 				});
