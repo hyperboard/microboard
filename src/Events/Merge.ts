@@ -516,7 +516,7 @@ function mergeBoardOperations(
 
 		return {
 			...opB,
-			item: [...opBItems, ...opAItems],
+			item: [...opAItems, ...opBItems],
 			data: { ...opBData, ...opAData },
 		};
 	}

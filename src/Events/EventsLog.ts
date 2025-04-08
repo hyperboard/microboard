@@ -846,10 +846,8 @@ function mergeEvents(events: BoardEvent[]): BoardEvent[] {
 }
 
 function createMergedEvent(
-	// event: SyncBoardEvent,
 	event: BoardEvent,
 	mergedOperation: Operation,
-	// ): SyncBoardEvent {
 ): BoardEvent {
 	return {
 		...event,

@@ -213,10 +213,12 @@ export class Board {
 
 	private applyAddItems(op: CreateItem): void {
 		if (Array.isArray(op.item)) {
-			const items = op.item.map(item =>
-				this.createItem(item, op.data[item]),
-			);
-			items.forEach(item => this.index.insert(item));
+			const items = op.item.map(item => {
+				const created = this.createItem(item, op.data[item]);
+				this.index.insert(created);
+				return created;
+			});
+			// todo think if should be removed
 			items.forEach(item => {
 				if (item.itemType === "Connector" && op.data[item.getId()]) {
 					const connectorData = op.data[
