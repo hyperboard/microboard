@@ -58,6 +58,7 @@ export function getBlockNodes(
 	}
 
 	alignNodes(shrink ? width : maxWidth);
+	console.log(nodes);
 
 	return {
 		nodes,
@@ -422,7 +423,6 @@ function layoutTextNode(
 	textNode: LayoutTextNode,
 	maxWidth: number,
 ): void {
-	let isFirstLineInNode = true;
 	// Check if textNode.text is empty. If it is, return since there is no text to process.
 	if (textNode.text === "") {
 		return;
@@ -443,6 +443,11 @@ function layoutTextNode(
 	const nodeLines = textNode.text.split("\n");
 
 	for (let nodeLine of nodeLines) {
+		let isFirstLineInNode = nodeLine === nodeLines[0];
+		let listMark: string | undefined = undefined;
+		if (isFirstLineInNode) {
+			listMark = textNode.listMark;
+		}
 		nodeLine = nodeLine.replace(/\t/g, "        ");
 		// Create an array of words by using the splitWords function on the textNode.text.
 		const words = splitTextIntoWords(nodeLine);
@@ -503,9 +508,7 @@ function layoutTextNode(
 								? textNode.paddingTop
 								: 0,
 							marginLeft: textNode.marginLeft,
-							listMark: !hasWrapped
-								? textNode.listMark
-								: undefined,
+							listMark: !hasWrapped ? listMark : undefined,
 							link: textNode.link,
 						});
 						// Push the new block to the line.
@@ -585,7 +588,7 @@ function layoutTextNode(
 							: 0,
 						listMark:
 							!hasWrapped && isFirstBlockInLine
-								? textNode.listMark
+								? listMark
 								: undefined,
 						link: textNode.link,
 					});
@@ -617,9 +620,7 @@ function layoutTextNode(
 				paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
 				marginLeft: isFirstBlockInLine ? textNode.marginLeft : 0,
 				listMark:
-					!hasWrapped && isFirstBlockInLine
-						? textNode.listMark
-						: undefined,
+					!hasWrapped && isFirstBlockInLine ? listMark : undefined,
 				link: textNode.link,
 			});
 			lines[lines.length - 1].push(lastBlock);
@@ -632,6 +633,8 @@ function layoutTextNode(
 	if (lines[lines.length - 1].length === 0) {
 		lines.pop();
 	}
+
+	lines[0];
 }
 
 function fillEmptyLines(blockNode: LayoutBlockNode): void {
