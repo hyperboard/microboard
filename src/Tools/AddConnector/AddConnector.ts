@@ -102,7 +102,7 @@ export class AddConnector extends BoardTool {
 				this.strokeStyle,
 			);
 		} else {
-			this.connector.setEndPoint(point);
+			this.connector.applyEndPoint(point);
 			this.isDoneSecondPoint = true;
 		}
 		this.board.tools.publish();
@@ -117,7 +117,7 @@ export class AddConnector extends BoardTool {
 				this.isDraggingFromFirstToSecond = true;
 			}
 			const point = this.snap.getControlPoint();
-			this.connector.setEndPoint(point);
+			this.connector.applyEndPoint(point);
 		}
 		this.board.tools.publish();
 		return true;
