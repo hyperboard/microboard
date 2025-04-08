@@ -446,7 +446,7 @@ export class Sticker implements Geometry {
 		return points;
 	}
 
-	setDiagonal(line: Line) {
+	applyDiagonal(line: Line) {
 		const l = line.getLength() / _hypotenuse;
 		let x = line.start.x;
 		let y = line.start.y;
@@ -456,26 +456,59 @@ export class Sticker implements Geometry {
 		if (line.end.y < line.start.y) {
 			y -= l * height;
 		}
-		// Smell
-		this.transformation.translateTo(x, y);
-		this.transformation.scaleTo(l, l);
+
+		this.transformation.apply({
+			class: "Transformation",
+			method: "translateTo",
+			item: [this.id],
+			x,
+			y,
+		});
+		this.transformation.apply({
+			class: "Transformation",
+			method: "scaleTo",
+			item: [this.id],
+			x: l,
+			y: l,
+		});
 		this.saveStickerData();
 	}
-	transformToCenter(pt: Point, newWidth?: number) {
+	applyTransformToCenter(pt: Point, newWidth?: number) {
 		if (newWidth) {
 			const scale = newWidth / width;
 
 			const w = width * scale;
 			const h = height * scale;
 
-			this.transformation.translateTo(pt.x - w / 2, pt.y - h / 2);
-			this.transformation.scaleTo(scale, scale);
+			this.transformation.apply({
+				class: "Transformation",
+				method: "translateTo",
+				item: [this.id],
+				x: pt.x - w / 2,
+				y: pt.y - h / 2,
+			});
+			this.transformation.apply({
+				class: "Transformation",
+				method: "scaleTo",
+				item: [this.id],
+				x: scale,
+				y: scale,
+			});
 		} else {
-			this.transformation.translateTo(
-				pt.x - width / 2,
-				pt.y - height / 2,
-			);
-			this.transformation.scaleTo(1, 1);
+			this.transformation.apply({
+				class: "Transformation",
+				method: "translateTo",
+				item: [this.id],
+				x: pt.x - width / 2,
+				y: pt.y - height / 2,
+			});
+			this.transformation.apply({
+				class: "Transformation",
+				method: "scaleTo",
+				item: [this.id],
+				x: 1,
+				y: 1,
+			});
 		}
 	}
 	doResize(

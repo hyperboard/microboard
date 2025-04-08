@@ -43,7 +43,12 @@ export class AddSticker extends BoardTool {
 	}
 
 	setBackgroundColor(color: string): void {
-		this.sticker.setBackgroundColor(color);
+		this.sticker.apply({
+			class: "Sticker",
+			method: "setBackgroundColor",
+			item: [this.sticker.getId()],
+			backgroundColor: color,
+		});
 		this.setCursor(color);
 		this.board.tools.publish();
 	}
@@ -68,7 +73,7 @@ export class AddSticker extends BoardTool {
 				this.line.start.copy(),
 				this.board.pointer.point.copy(),
 			);
-			this.sticker.setDiagonal(this.line);
+			this.sticker.applyDiagonal(this.line);
 			this.bounds = this.sticker.getMbr();
 			this.bounds.borderColor = conf.SELECTION_COLOR;
 			this.board.tools.publish();
@@ -89,7 +94,7 @@ export class AddSticker extends BoardTool {
 		const width = this.bounds.getWidth();
 		const height = this.bounds.getHeight();
 		if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
-			this.sticker.transformToCenter(
+			this.sticker.applyTransformToCenter(
 				this.board.pointer.point.copy(),
 				AddSticker.defaultWidth,
 			);

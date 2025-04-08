@@ -621,7 +621,7 @@ export class Frame implements Geometry {
 				this.board.items.getInView(),
 			);
 		}
-		this.setCanChangeRatio(shapeType === "Custom");
+		this.applyCanChangeRatio(shapeType === "Custom");
 		this.updateMbr();
 	}
 

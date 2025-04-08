@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Frame, Line, Mbr } from "Board/Items";
+import { Frame, Item, Line, Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { FrameType } from "Board/Items/Frame/Basic";
 import { BoardTool } from "../BoardTool";
@@ -86,7 +86,8 @@ export class AddFrame extends BoardTool {
 		const width = this.mbr.getWidth();
 		const height = this.mbr.getHeight();
 		if (width < 2 && height < 2) {
-			this.frame.scaleLikeLastFrame();
+			const { x, y } = this.frame.getLastFrameScale();
+			this.applyScaleTo(x, y);
 			this.transformToPointerCenter();
 		} else {
 			this.initTransformation(width / 100, height / 100);
@@ -106,11 +107,11 @@ export class AddFrame extends BoardTool {
 			)
 			.filter(item => item.parent === "Board")
 			.filter(item => this.frame.handleNesting(item));
-		this.frame.emitAddChild(frameChildren);
-		const frame = this.board.add(this.frame);
+		this.applyAddChildren(frameChildren);
 		if (this.shape !== "Custom") {
-			frame.setCanChangeRatio(false);
+			this.applyCanChangeRatio(false);
 		}
+		const frame = this.board.add(this.frame);
 
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.editor.moveCursorToEndOfTheText();
@@ -128,11 +129,12 @@ export class AddFrame extends BoardTool {
 		const framesInView = this.board.items.getFramesInView();
 		if (framesInView.length === 0) {
 			if (this.shape === "Custom") {
-				this.frame.scaleLikeLastFrame();
+				const { x, y } = this.frame.getLastFrameScale();
+				this.applyScaleTo(x, y);
 			} else {
-				this.frame.setFrameType(this.shape);
-				this.frame.transformation.scaleBy(4, 4);
-				this.frame.setCanChangeRatio(false);
+				this.applyFrameType(this.shape);
+				this.applyScaleBy(4, 4);
+				this.applyCanChangeRatio(false);
 			}
 			this.transformToCenter();
 		} else {
@@ -145,7 +147,7 @@ export class AddFrame extends BoardTool {
 				}
 				return rightest;
 			}, framesInView[0]);
-			this.frame.transformation.translateTo(
+			this.applyTranslateTo(
 				nextTo.transformation.getTranslation().x +
 					nextTo.getMbr().getWidth() +
 					20,
@@ -160,7 +162,7 @@ export class AddFrame extends BoardTool {
 			let foundNext = findNext();
 			while (foundNext) {
 				nextTo = foundNext;
-				this.frame.transformation.translateTo(
+				this.applyTranslateTo(
 					nextTo.transformation.getTranslation().x +
 						nextTo.getMbr().getWidth() +
 						20,
@@ -168,10 +170,10 @@ export class AddFrame extends BoardTool {
 				);
 				foundNext = findNext();
 			}
-			this.frame.setFrameType(this.shape);
+			this.applyFrameType(this.shape);
 			if (this.shape === "Custom") {
-				this.frame.setFrameType(nextTo.getFrameType());
-				this.frame.transformation.scaleBy(
+				this.applyFrameType(nextTo.getFrameType());
+				this.applyScaleBy(
 					nextTo.transformation.getScale().x,
 					nextTo.transformation.getScale().y,
 				);
@@ -180,7 +182,7 @@ export class AddFrame extends BoardTool {
 					nextTo.transformation.getScale().x,
 					nextTo.transformation.getScale().y,
 				);
-				this.frame.transformation.scaleBy(min, min);
+				this.applyScaleBy(min, min);
 			}
 			this.board.camera.viewRectangle(this.frame.getMbr());
 		}
@@ -194,7 +196,7 @@ export class AddFrame extends BoardTool {
 			)
 			.filter(item => item.parent === "Board")
 			.filter(item => this.frame.handleNesting(item))
-			.forEach(item => this.frame.emitAddChild(item));
+			.forEach(item => this.applyAddChildren([item]));
 		const frame = this.board.add(this.frame);
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.editor.moveCursorToEndOfTheText();
@@ -210,30 +212,98 @@ export class AddFrame extends BoardTool {
 	initTransformation(sx?: number, sy?: number): void {
 		sx = sx || this.mbr.getWidth() / 100;
 		sy = sy || this.mbr.getHeight() / 100;
-		this.frame.transformation.translateTo(this.mbr.left, this.mbr.top);
-		this.frame.transformation.scaleTo(sx, sy);
+		this.applyTranslateTo(this.mbr.left, this.mbr.top);
+		this.applyScaleTo(sx, sy);
 	}
 
 	transformToCenter(): void {
-		this.frame.transformation.translateTo(
+		this.applyTranslateTo(
 			this.board.camera.getMbr().getCenter().x,
 			this.board.camera.getMbr().getCenter().y,
 		);
-		this.frame.transformation.translateBy(
+		this.applyTranslateBy(
 			-this.frame.getMbr().getWidth() / 2,
 			-this.frame.getMbr().getHeight() / 2,
 		);
 	}
 
 	transformToPointerCenter(): void {
-		this.frame.transformation.translateTo(
+		this.applyTranslateTo(
 			this.board.pointer.point.copy().x,
 			this.board.pointer.point.copy().y,
 		);
-		this.frame.transformation.translateBy(
+		this.applyTranslateBy(
 			-this.frame.getMbr().getWidth() / 2,
 			-this.frame.getMbr().getHeight() / 2,
 		);
+	}
+
+	applyScaleTo(x: number, y: number): void {
+		this.frame.transformation.apply({
+			class: "Transformation",
+			method: "scaleTo",
+			item: [this.frame.getId()],
+			x,
+			y,
+		});
+	}
+
+	applyScaleBy(x: number, y: number): void {
+		this.frame.transformation.apply({
+			class: "Transformation",
+			method: "scaleBy",
+			item: [this.frame.getId()],
+			x,
+			y,
+		});
+	}
+
+	applyTranslateTo(x: number, y: number): void {
+		this.frame.transformation.apply({
+			class: "Transformation",
+			method: "translateTo",
+			item: [this.frame.getId()],
+			x,
+			y,
+		});
+	}
+
+	applyTranslateBy(x: number, y: number): void {
+		this.frame.transformation.apply({
+			class: "Transformation",
+			method: "translateBy",
+			item: [this.frame.getId()],
+			x,
+			y,
+		});
+	}
+
+	applyAddChildren(children: Item[]): void {
+		const childrenIds = children.map(child => {
+			child.parent = this.frame.getId();
+			return child.getId();
+		});
+		this.frame.applyAddChild(childrenIds);
+		this.frame.subject.publish(this.frame);
+	}
+
+	applyCanChangeRatio(canChangeRatio: boolean): void {
+		this.frame.apply({
+			class: "Frame",
+			method: "setCanChangeRatio",
+			item: [this.frame.getId()],
+			canChangeRatio,
+		});
+	}
+
+	applyFrameType(shapeType: FrameType): void {
+		this.frame.apply({
+			class: "Frame",
+			method: "setFrameType",
+			item: [this.frame.getId()],
+			shapeType,
+			prevShapeType: this.frame.getFrameType(),
+		});
 	}
 
 	render(context: DrawingContext): void {

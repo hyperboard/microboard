@@ -58,11 +58,20 @@ export class AddShape extends BoardTool {
 	initTransformation(sx?: number, sy?: number): void {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100;
-		this.shape.transformation.translateTo(
-			this.bounds.left,
-			this.bounds.top,
-		);
-		this.shape.transformation.scaleTo(sx, sy);
+		this.shape.transformation.apply({
+			class: "Transformation",
+			method: "translateTo",
+			item: [this.shape.getId()],
+			x: this.bounds.left,
+			y: this.bounds.top,
+		});
+		this.shape.transformation.apply({
+			class: "Transformation",
+			method: "scaleTo",
+			item: [this.shape.getId()],
+			x: sx,
+			y: sy,
+		});
 	}
 
 	leftButtonDown(): boolean {
@@ -74,7 +83,12 @@ export class AddShape extends BoardTool {
 		this.line = new Line(point.copy(), point.copy());
 		this.bounds = this.line.getMbr();
 		this.bounds.borderColor = conf.SELECTION_COLOR;
-		this.shape.setShapeType(this.type);
+		this.shape.apply({
+			class: "Shape",
+			method: "setShapeType",
+			item: [this.shape.getId()],
+			shapeType: this.type,
+		});
 		this.initTransformation();
 		this.board.tools.publish();
 		return true;
@@ -182,7 +196,12 @@ export class AddShape extends BoardTool {
 		this.bounds = new Mbr(x, y, x, y);
 		this.line = new Line(new Point(x, y), new Point(x, y));
 		this.bounds.borderColor = conf.SELECTION_COLOR;
-		this.shape.setShapeType(this.type);
+		this.shape.apply({
+			class: "Shape",
+			method: "setShapeType",
+			item: [this.shape.getId()],
+			shapeType: this.type,
+		});
 		this.initTransformation();
 		this.board.tools.publish();
 		this.leftButtonUp();
