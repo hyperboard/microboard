@@ -10,6 +10,7 @@ import { Comment } from "../Items/Comment";
 import { positionRelatively, translateElementBy } from "Board/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Group } from "Board/Items/Group";
+import { conf } from "Board/Settings";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -49,6 +50,10 @@ export class SpatialIndex {
 		} else {
 			this.itemsArray.push(item);
 			this.itemsIndex.insert(item);
+		}
+
+		if (conf.isNode()) {
+			return;
 		}
 
 		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {

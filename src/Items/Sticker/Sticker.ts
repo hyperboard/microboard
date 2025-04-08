@@ -28,6 +28,7 @@ import {
 import { SessionStorage } from "App/SessionStorage";
 import { Board } from "Board";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { conf } from "Board/Settings";
 
 export const stickerColors = {
 	Purple: "rgb(233, 208, 255)",
@@ -194,6 +195,9 @@ export class Sticker implements Geometry {
 	}
 
 	private transformPath(): void {
+		if (conf.isNode()) {
+			return;
+		}
 		this.stickerPath = StickerShape.stickerPath.copy();
 		this.textContainer = StickerShape.textBounds.copy();
 		const matrix = this.transformation.matrix;

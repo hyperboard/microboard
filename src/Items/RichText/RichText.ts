@@ -324,6 +324,9 @@ export class RichText extends Mbr implements Geometry {
 	};
 
 	updateElement = (): void => {
+		if (conf.isNode()) {
+			return;
+		}
 		// if (this.selection) {
 		// 	Transforms.select(this.editor.editor, this.selection);
 		// }
@@ -1256,6 +1259,7 @@ export class RichText extends Mbr implements Geometry {
 		div.style.maxWidth = this.getMaxWidth()
 			? `${this.getMaxWidth()}px`
 			: "";
+		/*
 		if (this.layoutNodes.height < transformedHeight) {
 			const alignment = this.getVerticalAlignment();
 			if (alignment === "center") {
@@ -1264,6 +1268,7 @@ export class RichText extends Mbr implements Geometry {
 				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
 			}
 		}
+		*/
 		div.setAttribute(
 			"data-vertical-alignment",
 			this.getVerticalAlignment(),

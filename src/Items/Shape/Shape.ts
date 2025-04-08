@@ -36,6 +36,7 @@ import { Board } from "Board";
 import { FixedPoint } from "Board/Items/Connector";
 import { toRelativePoint } from "Board/Items/Connector/ControlPoint";
 import { DocumentFactory } from "Board/api/DocumentFactory";
+import { conf } from "Board/Settings";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -635,6 +636,9 @@ export class Shape implements Geometry {
 	}
 
 	private transformPath(): void {
+		if (conf.isNode()) {
+			return;
+		}
 		this.path = Shapes[this.shapeType].createPath(this.mbr);
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());

@@ -59,7 +59,7 @@ export interface Settings {
 	i18n: typeof i18next;
 	openModal: (modalId: string) => void;
 	notify: NotifyFunction;
-
+	isNode: () => boolean;
 	planNames: {
 		basic: string;
 		plus: string;
@@ -180,6 +180,7 @@ export const conf: Settings = {
 		basic: "Basic",
 		plus: "Plus",
 	},
+	isNode: () => typeof window === "undefined",
 	SELECTION_COLOR: "rgb(71, 120, 245)",
 	SELECTION_LOCKED_COLOR: "#0B0C0E",
 	SELECTION_BACKGROUND: "none",

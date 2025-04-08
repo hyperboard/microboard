@@ -1168,6 +1168,9 @@ export class Connector {
 	}
 
 	private updatePaths(): void {
+		if (conf.isNode()) {
+			return;
+		}
 		const startPoint = this.startPoint;
 		const endPoint = this.endPoint;
 		this.lines = getLine(
