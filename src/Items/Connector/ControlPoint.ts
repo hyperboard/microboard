@@ -270,95 +270,93 @@ export function toRelativePoint(point: Point, item: Item): Point {
 	return point;
 }
 
-// function fromRelativePoint(
-// 	relativePoint: Point,
-// 	item: Item,
-// 	edge?: Edge,
-// ): Point {
-// 	const matrix = item.transformation?.matrix.copy() || new Matrix();
-// 	// const mbr = item.getMbr();
-// 	// const scaleX = item.transformation?.getScale().x || 1;
-// 	// const scaleY = item.transformation?.getScale().y || 1;
-// 	// const translateX = mbr.left;
-// 	// const translateY = mbr.top;
-// 	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
-// 	const point = relativePoint.copy();
-// 	point.transform(matrix);
-
-// 	// TODO fix richtext width transformation. The connector needs a modified scaleX
-// 	if (item instanceof RichText || item instanceof AINode) {
-// 		const itemMbr = item.getMbr();
-// 		console.log("prevMbr", item.prevMbr);
-// 		console.log("itemMbr", itemMbr);
-// 		if (!item.getIsWidthResizing()) {
-// 			return itemMbr.getNearestPointOnPerimeter(point, false);
-// 		}
-
-// 		const { x: centerX, y: centerY } = itemMbr.getCenter();
-// 		switch (edge) {
-// 			case "left":
-// 				return new Point(itemMbr.left, centerY);
-// 			case "right":
-// 				return new Point(itemMbr.right, centerY);
-// 			case "top":
-// 				return new Point(centerX, itemMbr.top);
-// 			case "bottom":
-// 				return new Point(centerX, itemMbr.bottom);
-// 			default:
-// 				return item.getMbr().getClosestEdgeCenterPoint(point);
-// 		}
-// 	}
-
-// 	return point;
-// }
-
 function fromRelativePoint(
 	relativePoint: Point,
 	item: Item,
 	edge?: Edge,
 ): Point {
 	const matrix = item.transformation?.matrix.copy() || new Matrix();
+	// const mbr = item.getMbr();
+	// const scaleX = item.transformation?.getScale().x || 1;
+	// const scaleY = item.transformation?.getScale().y || 1;
+	// const translateX = mbr.left;
+	// const translateY = mbr.top;
+	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
 	const point = relativePoint.copy();
 	point.transform(matrix);
 
+	// TODO fix richtext width transformation. The connector needs a modified scaleX
 	if (item instanceof RichText || item instanceof AINode) {
 		const itemMbr = item.getMbr();
-		const prevMbr = item.getPrevMbr();
+		// if (!item.getIsWidthResizing()) {
+		// 	return itemMbr.getNearestPointOnPerimeter(point, false);
+		// }
 
-		if (
-			!prevMbr ||
-			(prevMbr &&
-				itemMbr.left === prevMbr.left &&
-				itemMbr.right === prevMbr.right &&
-				itemMbr.top === prevMbr.top &&
-				itemMbr.bottom === prevMbr.bottom)
-		) {
-			return point;
-		}
-
+		const { x: centerX, y: centerY } = itemMbr.getCenter();
 		switch (edge) {
 			case "left":
-			case "right": {
-				const yRatio = (point.y - prevMbr.top) / prevMbr.getHeight();
-				const clampedY = itemMbr.top + yRatio * itemMbr.getHeight();
-				return new Point(
-					edge === "left" ? itemMbr.left : itemMbr.right,
-					clampedY,
-				);
-			}
+				return new Point(itemMbr.left, centerY);
+			case "right":
+				return new Point(itemMbr.right, centerY);
 			case "top":
-			case "bottom": {
-				const xRatio = (point.x - prevMbr.left) / prevMbr.getWidth();
-				const clampedX = itemMbr.left + xRatio * itemMbr.getWidth();
-				return new Point(
-					clampedX,
-					edge === "top" ? itemMbr.top : itemMbr.bottom,
-				);
-			}
+				return new Point(centerX, itemMbr.top);
+			case "bottom":
+				return new Point(centerX, itemMbr.bottom);
 			default:
-				return itemMbr.getClosestEdgeCenterPoint(point);
+				return item.getMbr().getClosestEdgeCenterPoint(point);
 		}
 	}
 
 	return point;
 }
+
+// function fromRelativePoint(
+// 	relativePoint: Point,
+// 	item: Item,
+// 	edge?: Edge,
+// ): Point {
+// 	const matrix = item.transformation?.matrix.copy() || new Matrix();
+// 	const point = relativePoint.copy();
+// 	point.transform(matrix);
+//
+// 	if (item instanceof RichText || item instanceof AINode) {
+// 		const itemMbr = item.getMbr();
+// 		const prevMbr = item.getPrevMbr();
+//
+// 		if (
+// 			!prevMbr ||
+// 			(prevMbr &&
+// 				itemMbr.left === prevMbr.left &&
+// 				itemMbr.right === prevMbr.right &&
+// 				itemMbr.top === prevMbr.top &&
+// 				itemMbr.bottom === prevMbr.bottom)
+// 		) {
+// 			return point;
+// 		}
+//
+// 		switch (edge) {
+// 			case "left":
+// 			case "right": {
+// 				const yRatio = (point.y - prevMbr.top) / prevMbr.getHeight();
+// 				const clampedY = itemMbr.top + yRatio * itemMbr.getHeight();
+// 				return new Point(
+// 					edge === "left" ? itemMbr.left : itemMbr.right,
+// 					clampedY,
+// 				);
+// 			}
+// 			case "top":
+// 			case "bottom": {
+// 				const xRatio = (point.x - prevMbr.left) / prevMbr.getWidth();
+// 				const clampedX = itemMbr.left + xRatio * itemMbr.getWidth();
+// 				return new Point(
+// 					clampedX,
+// 					edge === "top" ? itemMbr.top : itemMbr.bottom,
+// 				);
+// 			}
+// 			default:
+// 				return itemMbr.getClosestEdgeCenterPoint(point);
+// 		}
+// 	}
+//
+// 	return point;
+// }

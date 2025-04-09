@@ -204,12 +204,7 @@ export function getQuickAddButtons(
 			connectorData.endPointerStyle = savedEnd;
 		}
 
-		const startPointData = getControlPointData(
-			selectedItem,
-			index,
-			selectedItem.itemType === "RichText" ||
-				selectedItem.itemType === "AINode",
-		);
+		const startPointData = getControlPointData(selectedItem, index);
 		const endPointData = getControlPointData(
 			newItemPlaceholder ? newItemPlaceholder : newItem,
 			reverseIndexMap[index],
