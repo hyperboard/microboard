@@ -215,6 +215,8 @@ export class Presence {
 				this.updateCurrentUser.bind(this),
 			);
 		}
+		this.drawingContext = null;
+		this.clear();
 	}
 
 	setupUpdateInterval(): void {
@@ -844,6 +846,7 @@ export class Presence {
 				this.stopPointerRendering();
 				return;
 			}
+
 			const scale = 1 / context.camera.getScale();
 			const cursors = this.getCursors();
 			const currentTime = performance.now();

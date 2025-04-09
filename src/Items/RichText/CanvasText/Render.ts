@@ -2,7 +2,6 @@ import { conf } from "Board/Settings";
 import { BlockNode } from "../Editor/BlockNode";
 import { LinkNode, TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
-import { conf } from "Board/Settings";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -58,7 +57,6 @@ export function getBlockNodes(
 	}
 
 	alignNodes(shrink ? width : maxWidth);
-	console.log(nodes);
 
 	return {
 		nodes,
