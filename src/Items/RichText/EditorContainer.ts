@@ -779,6 +779,17 @@ export class EditorContainer {
 		return textNodes;
 	}
 
+	// getAllNodesInSelection(): Descendant[] {
+	// 	const { selection } = this.editor;
+	// 	if (!selection) {
+	// 		return [];
+	// 	}
+	//
+	// 	return Editor.nodes(this.editor, {
+	// 		at: selection,
+	// 	})
+	// }
+
 	getLinkNodeRange(): BaseRange | null {
 		const { selection } = this.editor;
 		if (!selection) {

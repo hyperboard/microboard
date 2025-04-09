@@ -223,10 +223,10 @@ export class RichText extends Mbr implements Geometry {
 			this.insideOf === "Frame",
 		);
 
-		this.editorTransforms.select(this.editor.editor, {
-			offset: 0,
-			path: [0, 0],
-		});
+		this.editorTransforms.select(
+			this.editor.editor,
+			Editor.start(this.editor.editor, []),
+		);
 		this.setClipPath();
 	}
 
@@ -1000,6 +1000,10 @@ export class RichText extends Mbr implements Geometry {
 	deserialize(data: Partial<RichTextData>): this {
 		if (data.children) {
 			this.editor.editor.children = data.children;
+			this.editorTransforms.select(
+				this.editor.editor,
+				Editor.start(this.editor.editor, []),
+			);
 		}
 		if (data.verticalAlignment) {
 			this.editor.verticalAlignment = data.verticalAlignment;
