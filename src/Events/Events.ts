@@ -11,7 +11,6 @@ import {
 	GenerateImageResponse,
 	type ModeMsg,
 	SnapshotRequestMsg,
-	SnapshotResponseMsg,
 	SubscribeConfirmationMsg,
 	ViewMode,
 } from "App/Connection";
@@ -38,6 +37,7 @@ import { AudioItem } from "Board/Items/Audio/Audio";
 import { AINode } from "Board/Items/AINode/AINode";
 import { Account } from "entities/account/Account";
 import { NotifyFunction } from "shared/ui-lib/Toast/notify";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 
 const { i18n } = conf;
 
@@ -609,14 +609,6 @@ export function createEvents(
 		handleCreateSnapshotRequestMessage,
 	);
 
-	function handleBoardSnapshotMessage(message: SnapshotResponseMsg): void {
-		handleSnapshotApplication(message.snapshot);
-	}
-	messageRouter.addHandler<SnapshotResponseMsg>(
-		"BoardSnapshot",
-		handleBoardSnapshotMessage,
-	);
-
 	function handleBoardSubscriptionCompletedMsg(
 		msg: BoardSubscriptionCompletedMsg,
 	): void {
@@ -642,21 +634,7 @@ export function createEvents(
 		startIntervals();
 	}
 
-	// function handleSnapshotApplication(snapshot: BoardSnapshot): void {
 	function handleSnapshotApplication(snapshot: string): void {
-		const existingSnapshot = log.getSnapshot();
-		const hasContent = existingSnapshot.lastIndex > 0;
-
-		// if (hasContent) {
-		// 	// We already have content, just apply newer events
-		// 	// ERROR: we do not send events in snapshot anymore
-		// 	handleNewerEvents(snapshot, existingSnapshot);
-		// } else {
-		// 	// First time loading or empty board, deserialize the full snapshot
-		// 	board.deserialize(snapshot);
-		// 	log.setSnapshotLastIndex(snapshot.lastIndex);
-		// }
-		// TODO set set snapshot last index
 		board.deserializeHTML(snapshot);
 		// board.saveSnapshot(snapshot);
 	}
