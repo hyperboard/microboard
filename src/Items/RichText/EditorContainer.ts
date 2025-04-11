@@ -14,6 +14,7 @@ import {
 	Range,
 	Operation as SlateOp,
 	Transforms,
+	Path,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
@@ -779,16 +780,109 @@ export class EditorContainer {
 		return textNodes;
 	}
 
-	// getAllNodesInSelection(): Descendant[] {
-	// 	const { selection } = this.editor;
-	// 	if (!selection) {
-	// 		return [];
-	// 	}
-	//
-	// 	return Editor.nodes(this.editor, {
-	// 		at: selection,
-	// 	})
-	// }
+	getAllNodesInSelection(): BlockNode[] {
+		const { selection } = this.editor;
+		if (!selection) {
+			return [];
+		}
+
+		const nodes: BlockNode[] = [];
+		for (const [node, path] of Editor.nodes(this.editor, {
+			at: selection,
+		})) {
+			nodes.push(node);
+		}
+
+		return nodes;
+	}
+
+	getCursorPath() {
+		if (!this.editor.selection) {
+			return null;
+		}
+
+		return this.editor.selection.anchor.path;
+
+		// return editor.selection.focus.path;
+	}
+
+	handleListMerge(): boolean {
+		const editor = this.editor;
+		if (!editor.selection) {
+			return false;
+		}
+
+		const { anchor } = editor.selection;
+
+		if (anchor.offset !== 0) {
+			return false;
+		}
+
+		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
+		if (!textNode || textNode.type !== "text" || !textNode.text) {
+			return false;
+		}
+
+		const paragraphPath = Path.parent(textNodePath);
+		const [paragraph] = Editor.node(editor, paragraphPath);
+		if (!paragraph) {
+			return false;
+		}
+
+		const listItemPath = Path.parent(paragraphPath);
+		const [listItem] = Editor.node(editor, listItemPath);
+		if (!listItem || listItem.type !== "list_item") {
+			return false;
+		}
+
+		const listPath = Path.parent(listItemPath);
+		const [list] = Editor.node(editor, listPath);
+		if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
+			return false;
+		}
+
+		const listItemIndex = listItemPath[listItemPath.length - 1];
+		const currentListItemChildren = listItem.children;
+
+		if (listItemIndex === 0) {
+			const listParentPath = Path.parent(listPath);
+
+			const currentListItemChildren = [...listItem.children];
+
+			Transforms.removeNodes(editor, { at: listItemPath });
+
+			currentListItemChildren.forEach((childNode, index) => {
+				const listPosition = listPath[listPath.length - 1];
+				const copiedNode = structuredClone(childNode);
+				copiedNode.paddingTop = 0;
+				Transforms.insertNodes(editor, copiedNode, {
+					at: [...listParentPath, listPosition + index],
+				});
+			});
+
+			const updatedList = Node.get(editor, listPath);
+			if (updatedList.children.length === 0) {
+				Transforms.removeNodes(editor, { at: listPath });
+			}
+		} else {
+			const previousItemPath = Path.previous(listItemPath);
+			const [previousItem] = Editor.node(editor, previousItemPath);
+
+			currentListItemChildren.forEach((childNode, index) => {
+				const copiedNode = structuredClone(childNode);
+				copiedNode.paddingTop = 0;
+				Transforms.insertNodes(editor, copiedNode, {
+					at: [
+						...previousItemPath,
+						previousItem.children.length + index,
+					],
+				});
+			});
+
+			Transforms.removeNodes(editor, { at: listItemPath });
+		}
+		return true;
+	}
 
 	getLinkNodeRange(): BaseRange | null {
 		const { selection } = this.editor;
