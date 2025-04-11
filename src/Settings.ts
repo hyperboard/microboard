@@ -149,7 +149,9 @@ export interface Settings {
 
 	AUDIO_DIMENSIONS: { width: number; height: number };
 	AUDIO_FORMATS: string[];
+	AUDIO_MIME_TYPES: string[];
 	VIDEO_FORMATS: string[];
+	VIDEO_MIME_TYPES: string[];
 
 	LINK_BTN_SIZE: number;
 	LINK_BTN_OFFSET: number;
@@ -406,7 +408,21 @@ export const conf: Settings = {
 		"wav",
 		"wma",
 	],
-	VIDEO_FORMATS: ["mp4", "webm"],
+	AUDIO_MIME_TYPES: [
+		"audio/mpeg",
+		"audio/wav",
+		"audio/aac",
+		"audio/ac3",
+		"audio/aiff",
+		"audio/amr",
+		"audio/flac",
+		"audio/mp3",
+		"audio/ogg",
+		"audio/opus",
+		"audio/wma",
+	],
+	VIDEO_FORMATS: ["mp4", "webm", "mov"],
+	VIDEO_MIME_TYPES: ["video/mp4", "video/webm", "video/quicktime"],
 
 	LINK_BTN_SIZE: 24,
 	LINK_BTN_OFFSET: 2,

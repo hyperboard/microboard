@@ -9,24 +9,57 @@ export const catchErrorResponse = async (response: Response) => {
 	if (response.status === 403) {
 		const data = await response.json();
 		conf.openModal("USER_PLAN_MODAL_ID");
+		let errorBody = conf.i18n.t(
+			"toolsPanel.addMedia.limitReached.bodyWithoutLimit",
+		);
 		if (data.currentUsage && data.storageLimit) {
-			conf.notify({
-				variant: "warning",
-				header: conf.i18n.t("toolsPanel.addMedia.limitReached.header"),
-				body: conf.i18n.t("toolsPanel.addMedia.limitReached.body", {
-					limit:
-						parseInt(data.storageLimit) < 100_000
-							? data.storageLimit + " " + conf.i18n.t("common.MB")
-							: parseInt(data.storageLimit) / 1024 +
-								" " +
-								conf.i18n.t("common.GB"),
-				}),
-				duration: 8000,
+			errorBody = conf.i18n.t("toolsPanel.addMedia.limitReached.body", {
+				limit:
+					parseInt(data.storageLimit) < 100_000
+						? data.storageLimit + " " + conf.i18n.t("common.MB")
+						: parseInt(data.storageLimit) / 1024 +
+							" " +
+							conf.i18n.t("common.GB"),
 			});
 		}
-	}
-	if (response.status === 401) {
+		conf.notify({
+			variant: "warning",
+			header: conf.i18n.t("toolsPanel.addMedia.limitReached.header"),
+			body: errorBody,
+			duration: 8000,
+		});
+	} else if (response.status === 413) {
+		const data = await response.json();
+		let errorBody = conf.i18n.t(
+			"toolsPanel.addMedia.tooLarge.bodyWithoutLimit",
+		);
+		if (data.fileSizeLimit && data.fileSize) {
+			errorBody = conf.i18n.t("toolsPanel.addMedia.tooLarge.body", {
+				limit: data.fileSizeLimit + " " + conf.i18n.t("common.MB"),
+			});
+		}
+		conf.notify({
+			variant: "warning",
+			header: conf.i18n.t("toolsPanel.addMedia.tooLarge.header"),
+			body: errorBody,
+			duration: 4000,
+		});
+	} else if (response.status === 401) {
 		conf.openModal("MEDIA_UNAVAILABLE_MODAL_ID");
+	} else if (response.status === 415) {
+		conf.notify({
+			variant: "warning",
+			header: conf.i18n.t("toolsPanel.addMedia.unsupportedFormat.header"),
+			body: conf.i18n.t("toolsPanel.addMedia.unsupportedFormat.body"),
+			duration: 4000,
+		});
+	} else {
+		conf.notify({
+			variant: "error",
+			header: conf.i18n.t("toolsPanel.addMedia.unhandled.header"),
+			body: conf.i18n.t("toolsPanel.addMedia.unhandled.body"),
+			duration: 4000,
+		});
 	}
 	throw new Error(`HTTP status: ${response.status}`);
 };
