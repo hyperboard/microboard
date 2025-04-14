@@ -1,6 +1,9 @@
+import { getParagraphWithPassedTextNode } from "Board/Items/RichText/getParagraph";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
+import { conf } from "Board/Settings";
 import markdown from "remark-parse";
 import slate from "remark-slate";
+import { Subject } from "shared/Subject";
 import {
 	BaseEditor,
 	BaseRange,
@@ -18,7 +21,6 @@ import {
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
-import { Subject } from "shared/Subject";
 import { unified } from "unified";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import {
@@ -38,9 +40,7 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
-import { conf } from "Board/Settings";
 const { i18n } = conf;
-import { getParagraphWithPassedTextNode } from "Board/Items/RichText/getParagraph";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -1007,7 +1007,7 @@ export class EditorContainer {
 			{ at: selection },
 		);
 
-		ReactEditor.focus(editor);
+		// ReactEditor.focus(editor);
 	}
 
 	appendText(text: string) {

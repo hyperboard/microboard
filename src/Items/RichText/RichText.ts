@@ -1,11 +1,16 @@
+import { SessionStorage } from "App/SessionStorage";
 import { Board } from "Board";
+import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Camera } from "Board/Camera";
 import { Operation } from "Board/Events";
 import {
 	scaleElementBy,
 	translateElementBy,
 } from "Board/HTMLRender/HTMLRender";
+import { decodeHtml } from "Board/parserHTML";
 import { SelectionContext } from "Board/Selection/Selection";
+import { conf } from "Board/Settings";
+import { Subject } from "shared/Subject";
 import {
 	BaseRange,
 	BaseSelection,
@@ -18,7 +23,6 @@ import {
 } from "slate";
 import { ReactEditor } from "slate-react";
 import { DOMPoint } from "slate-react/dist/utils/dom";
-import { Subject } from "shared/Subject";
 import {
 	ItemType,
 	Matrix,
@@ -32,19 +36,15 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { Geometry } from "../Geometry";
 import { LinkTo } from "../LinkTo/LinkTo";
+import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
+import { getBlockNodes } from "./CanvasText/Render";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
 import { getParagraph, getParagraphWithPassedTextNode } from "./getParagraph";
 import { RichTextOperation } from "./RichTextOperations";
-import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
-import { getBlockNodes } from "./CanvasText/Render";
-import { decodeHtml } from "Board/parserHTML";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { conf } from "Board/Settings";
 const { i18n } = conf;
-import { SessionStorage } from "App/SessionStorage";
 
 export type DefaultTextStyles = {
 	fontFamily: string;
@@ -317,7 +317,6 @@ export class RichText extends Mbr implements Geometry {
 		if (!this.selection) {
 			return;
 		}
-		// TODO: Что-нибудь с этим сделать...
 		try {
 			ReactEditor.focus(this.editor.editor);
 		} catch {}
