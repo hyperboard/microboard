@@ -615,9 +615,10 @@ export function createEvents(
 		handleSeqNumApplication(msg.initialSequenceNumber);
 		if (msg.snapshot) {
 			handleSnapshotApplication(msg.snapshot);
+			log.clearConfirmed();
 		}
-		log.clear();
 		handleBoardEventListApplication(msg.eventsSinceLastSnapshot);
+
 		enforceMode(msg.mode);
 		onBoardLoad();
 	}
@@ -637,6 +638,10 @@ export function createEvents(
 
 	function handleSnapshotApplication(snapshot: string): void {
 		board.deserializeHTML(snapshot);
+		const match = snapshot.match(/last-event-order" content="(\d+)"/);
+		if (match && match[1]) {
+			log.setSnapshotLastIndex(Number(match[1]));
+		}
 		// board.saveSnapshot(snapshot);
 	}
 

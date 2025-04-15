@@ -51,6 +51,7 @@ export interface EventsLog {
 	syncLogSubject: SyncLogSubject;
 	replay(events: BoardEvent[]): void;
 	clear: () => void;
+	clearConfirmed: () => void;
 }
 
 interface EventsList {
@@ -70,6 +71,7 @@ interface EventsList {
 	getSyncLog(): SyncLog;
 	syncLogSubject: SyncLogSubject;
 	clear(): void;
+	clearConfirmedRecords(): void;
 	removeUnconfirmedEventsByItems(itemIds: string[]): void;
 	isAllEventsConfirmed(): boolean;
 }
@@ -283,6 +285,9 @@ function createEventsList(
 			confirmedRecords.length = 0;
 			recordsToSend.length = 0;
 			newRecords.length = 0;
+		},
+		clearConfirmedRecords(): void {
+			confirmedRecords.length = 0;
 		},
 
 		// FIXME: should filter unconfirmed events and not send them
@@ -725,6 +730,7 @@ export function createEventsLog(board: Board): EventsLog {
 		insertEvents,
 		confirmEvent,
 		clear: list.clear,
+		clearConfirmed: list.clearConfirmedRecords,
 		push,
 		getUnorderedRecords,
 		getUndoRecord,
