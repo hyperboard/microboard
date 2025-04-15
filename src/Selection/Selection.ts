@@ -29,6 +29,7 @@ import {
 import { BaseRange } from "slate";
 import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
+import { deleteMedia } from "Board/Items/Image/ImageHelpers";
 const { i18n } = conf;
 
 const defaultShapeData = new DefaultShapeData();
@@ -1389,6 +1390,17 @@ export class Selection {
 		// 		connector.applyEndPoint(pointData);
 		// 	}
 		// });
+		const mediaIds = this.items
+			.list()
+			.filter(item => {
+				return (
+					item.itemType === "Image" ||
+					item.itemType === "Video" ||
+					item.itemType === "Audio"
+				);
+			})
+			.map(item => item.getStorageId());
+		deleteMedia(mediaIds, this.board.getBoardId());
 
 		this.emit({
 			class: "Board",

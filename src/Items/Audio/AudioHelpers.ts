@@ -9,9 +9,10 @@ export const uploadAudioToStorage = async (
 	hash: string,
 	audioBlob: Blob,
 	accessToken: string | null,
+	boardId: string,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		fetch(`${window.location.origin}/api/v1/media/audio`, {
+		fetch(`${window.location.origin}/api/v1/media/audio/${boardId}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": audioBlob.type,
@@ -39,6 +40,7 @@ export const uploadAudioToStorage = async (
 export const prepareAudio = (
 	file: File,
 	accessToken: string | null,
+	boardId: string,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const audio = document.createElement("audio");
@@ -46,7 +48,7 @@ export const prepareAudio = (
 		audio.onloadedmetadata = () => {
 			fileTosha256(file)
 				.then(hash => {
-					uploadAudioToStorage(hash, file, accessToken)
+					uploadAudioToStorage(hash, file, accessToken, boardId)
 						.then(url => {
 							resolve(url);
 						})

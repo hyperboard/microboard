@@ -64,10 +64,26 @@ export const catchErrorResponse = async (response: Response) => {
 	throw new Error(`HTTP status: ${response.status}`);
 };
 
+export const deleteMedia = async (
+	mediaIds: string[],
+	boardId: string,
+): Promise<void> => {
+	fetch(`${window?.location.origin}/api/v1/media/${boardId}`, {
+		method: "DELETE",
+		headers: {
+			"content-type": "application/json",
+		},
+		body: JSON.stringify({ mediaIds }),
+	}).catch(error => {
+		console.error("Media storage error:", error);
+	});
+};
+
 export const uploadToTheStorage = async (
 	hash: string,
 	dataURL: string,
 	accessToken: string | null,
+	boardId: string,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const base64String = dataURL.split(",")[1];
@@ -79,7 +95,7 @@ export const uploadToTheStorage = async (
 		const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
 		const blob = new Blob([bytes], { type: mimeType });
 		// fetch(storageURL, {
-		fetch(`${window?.location.origin}/api/v1/media`, {
+		fetch(`${window?.location.origin}/api/v1/media/image/${boardId}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": mimeType,
@@ -207,18 +223,22 @@ export const resizeAndConvertToPng = async (
 /** Resizes if needed and converts image to png and uploads the image to the storage, doesnt throw on unsuccess
  * @param inp - The input image data
  * @param accessToken
+ * @param boardId
  * @returns An object containing prepared image information on success, err otherwise
  */
 export const prepareImage = (
 	inp: string | ArrayBuffer | null | undefined,
 	accessToken: string | null,
+	boardId: string,
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
-		return uploadToTheStorage(hash, dataURL, accessToken).then(src => {
-			return {
-				imageDimension: { width, height },
-				base64: dataURL,
-				storageLink: src,
-			};
-		});
+		return uploadToTheStorage(hash, dataURL, accessToken, boardId).then(
+			src => {
+				return {
+					imageDimension: { width, height },
+					base64: dataURL,
+					storageLink: src,
+				};
+			},
+		);
 	});

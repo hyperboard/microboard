@@ -103,6 +103,10 @@ export class VideoItem extends Mbr {
 		this.loadCallbacks.push(callback);
 	};
 
+	getStorageId() {
+		return this.url.split("/").pop();
+	}
+
 	getIsStorageUrl() {
 		return this.isStorageUrl;
 	}

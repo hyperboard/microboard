@@ -47,6 +47,7 @@ import {
 	LOAD_LINKS_IMAGES_JS,
 	INDEX_CSS,
 } from "../staticResources";
+import { deleteMedia } from "Board/Items/Image/ImageHelpers";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -407,6 +408,13 @@ export class Board {
 			connectors = this.items
 				.getLinkedConnectorsById(item.getId())
 				.map(connector => connector.getId());
+		}
+		if (
+			item.itemType === "Image" ||
+			item.itemType === "Video" ||
+			item.itemType === "Audio"
+		) {
+			deleteMedia([item.getStorageId()], this.boardId);
 		}
 		this.emit({
 			class: "Board",

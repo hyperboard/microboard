@@ -125,6 +125,10 @@ export class ImageItem extends Mbr {
 		}
 	}
 
+	getStorageId() {
+		return this.storageLink.split("/").pop();
+	}
+
 	handleError = (): void => {
 		// Provide handling logic for errors
 		console.error("Invalid dataUrl or image failed to load.");

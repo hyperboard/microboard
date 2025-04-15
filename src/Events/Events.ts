@@ -404,7 +404,11 @@ export function createEvents(
 
 	function handleImageGenerate(response: GenerateImageResponse): void {
 		if (response.status === "completed" && response.base64) {
-			prepareImage(response.base64, account?.accessToken || null)
+			prepareImage(
+				response.base64,
+				account?.accessToken || null,
+				board.getBoardId(),
+			)
 				.then(imageData => {
 					const placeholderId = board.aiImagePlaceholder?.getId();
 					if (placeholderId) {

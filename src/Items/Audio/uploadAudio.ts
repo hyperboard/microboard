@@ -13,7 +13,7 @@ export function uploadAudio(
 	extension: string,
 	accessToken: string | null,
 ) {
-	prepareAudio(file, accessToken)
+	prepareAudio(file, accessToken, board.getBoardId())
 		.then(url => {
 			const audio = new AudioItem(
 				url,

@@ -108,6 +108,10 @@ export class AudioItem extends Mbr {
 		}
 	}
 
+	getStorageId() {
+		return this.url.split("/").pop();
+	}
+
 	getUrl() {
 		return this.url;
 	}

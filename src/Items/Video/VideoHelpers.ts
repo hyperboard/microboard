@@ -14,9 +14,10 @@ export const uploadVideoToStorage = async (
 	hash: string,
 	videoBlob: Blob,
 	accessToken: string | null,
+	boardId: string,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		fetch(`${window.location.origin}/api/v1/media/video`, {
+		fetch(`${window.location.origin}/api/v1/media/video/${boardId}`, {
 			method: "POST",
 			headers: {
 				"Content-Type": videoBlob.type,
@@ -45,6 +46,7 @@ export const uploadVideoToStorage = async (
 export const prepareVideo = (
 	file: File,
 	accessToken: string | null,
+	boardId: string,
 ): Promise<{
 	url: string;
 	videoDimension: { width: number; height: number };
@@ -56,13 +58,22 @@ export const prepareVideo = (
 		video.onloadedmetadata = () => {
 			video.onseeked = () => {
 				video.onseeked = null;
-				prepareImage(captureFrame(0.1, video)?.src, accessToken)
+				prepareImage(
+					captureFrame(0.1, video)?.src,
+					accessToken,
+					boardId,
+				)
 					.then(imageData => {
 						const { videoWidth: width, videoHeight: height } =
 							video;
 						fileTosha256(file)
 							.then(hash => {
-								uploadVideoToStorage(hash, file, accessToken)
+								uploadVideoToStorage(
+									hash,
+									file,
+									accessToken,
+									boardId,
+								)
 									.then(url => {
 										resolve({
 											url,

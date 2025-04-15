@@ -46,7 +46,11 @@ export function uploadImage(
 									pagesRendered++;
 									const base64String =
 										canvas.toDataURL("image/png");
-									prepareImage(base64String, accessToken)
+									prepareImage(
+										base64String,
+										accessToken,
+										board.getBoardId(),
+									)
 										.then(imageData => {
 											const image = new ImageItem(
 												imageData,
@@ -120,7 +124,7 @@ export function uploadImage(
 	} else {
 		reader.onload = (event: ProgressEvent<FileReader>) => {
 			const base64String = event.target?.result as string;
-			prepareImage(base64String, accessToken)
+			prepareImage(base64String, accessToken, board.getBoardId())
 				.then(imageData => {
 					const image = new ImageItem(
 						imageData,
