@@ -566,12 +566,13 @@ export class Board {
 		return `${head}${body}`;
 	}
 
-	deserializeHTMLAndEmit(stringedHTML: string): void {
+	/** @returns ids of added items */
+	deserializeHTMLAndEmit(stringedHTML: string): string[] {
 		const parser = getDOMParser();
 		const doc = parser.parseFromString(stringedHTML, "text/html");
 		const items = doc.body.querySelector("#items");
 		if (items) {
-			const idsMap = {};
+			const idsMap: Record<string, string> = {};
 			const addedConnectors: { item: Connector; data: ConnectorData }[] =
 				[];
 			const data = Array.from(items.children).map(el =>
@@ -634,7 +635,10 @@ export class Board {
 				connector.item.setStartPoint(startData);
 				connector.item.setEndPoint(endData);
 			});
+			return Object.values(idsMap);
 		}
+
+		return [];
 	}
 
 	deserializeHTML(stringedHTML: string): void {

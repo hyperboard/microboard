@@ -57,6 +57,7 @@ export function getBlockNodes(
 	}
 
 	alignNodes(shrink ? width : maxWidth);
+	// console.log(nodes);
 
 	return {
 		nodes,

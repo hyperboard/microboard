@@ -450,7 +450,7 @@ export function createEventsLog(board: Board): EventsLog {
 		const lastConfirmedRecord =
 			confirmedRecords[confirmedRecords.length - 1];
 
-		console.log("Last confirmed", lastConfirmedRecord.event.order);
+		console.log("Last confirmed", lastConfirmedRecord?.event?.order);
 		console.log("Snapshot last index", snapshotLastIndex);
 		if (!lastConfirmedRecord) {
 			return snapshotLastIndex;
