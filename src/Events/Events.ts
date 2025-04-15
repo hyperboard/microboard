@@ -616,6 +616,7 @@ export function createEvents(
 		if (msg.snapshot) {
 			handleSnapshotApplication(msg.snapshot);
 		}
+		log.clear();
 		handleBoardEventListApplication(msg.eventsSinceLastSnapshot);
 		enforceMode(msg.mode);
 		onBoardLoad();

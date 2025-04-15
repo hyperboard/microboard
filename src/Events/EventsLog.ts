@@ -50,6 +50,7 @@ export interface EventsLog {
 	getSyncLog(): SyncLog;
 	syncLogSubject: SyncLogSubject;
 	replay(events: BoardEvent[]): void;
+	clear: () => void;
 }
 
 interface EventsList {
@@ -450,8 +451,6 @@ export function createEventsLog(board: Board): EventsLog {
 		const lastConfirmedRecord =
 			confirmedRecords[confirmedRecords.length - 1];
 
-		console.log("Last confirmed", lastConfirmedRecord?.event?.order);
-		console.log("Snapshot last index", snapshotLastIndex);
 		if (!lastConfirmedRecord) {
 			return snapshotLastIndex;
 		}
@@ -725,6 +724,7 @@ export function createEventsLog(board: Board): EventsLog {
 		syncLogSubject: list.syncLogSubject,
 		insertEvents,
 		confirmEvent,
+		clear: list.clear,
 		push,
 		getUnorderedRecords,
 		getUndoRecord,
