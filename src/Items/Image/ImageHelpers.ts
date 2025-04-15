@@ -2,6 +2,7 @@ import { sha256 } from "shared/sha256";
 import { ImageConstructorData } from "./Image";
 import { getDOMParser } from "Board/api/DOMParser";
 import { conf } from "Board/Settings";
+import { Account } from "entities/account/Account";
 
 // export const storageURL = `${window?.location.origin}/api/v1/media`;
 
@@ -87,6 +88,75 @@ export const catchErrorResponse = async (
 		});
 	}
 	throw new Error(`HTTP status: ${response.status}`);
+};
+
+export const validateMediaFile = (file: File, account: Account): boolean => {
+	const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+	if (
+		!file.type.startsWith("image") &&
+		!conf.AUDIO_FORMATS.includes(fileExtension) &&
+		!conf.VIDEO_FORMATS.includes(fileExtension)
+	) {
+		conf.notify({
+			variant: "warning",
+			header: conf.i18n.t("toolsPanel.addMedia.unsupportedFormat.header"),
+			body: conf.i18n.t("toolsPanel.addMedia.unsupportedFormat.body"),
+			duration: 4000,
+		});
+		return false;
+	}
+
+	const isBasicPlan = account.billingInfo?.plan.name === "basic";
+	let errorBody = conf.i18n.t(
+		`toolsPanel.addMedia.tooLarge.imageBody.${isBasicPlan ? "basic" : "plus"}`,
+	);
+	console.log(account.billingInfo?.storage);
+	if (
+		conf.AUDIO_FORMATS.includes(fileExtension) ||
+		conf.VIDEO_FORMATS.includes(fileExtension)
+	) {
+		errorBody = conf.i18n.t(
+			`toolsPanel.addMedia.tooLarge.audioOrVideoBody.${isBasicPlan ? "basic" : "plus"}`,
+		);
+		if (
+			file.size / 1024 ** 2 >
+			(account.billingInfo?.storage.maxMediaSize || Infinity)
+		) {
+			conf.notify({
+				variant: "warning",
+				header: conf.i18n.t("toolsPanel.addMedia.tooLarge.header"),
+				body: errorBody,
+				button: isBasicPlan
+					? {
+							text: conf.i18n.t(
+								"toolsPanel.addMedia.upgradeToPlus",
+							),
+							onClick: () => conf.openModal("USER_PLAN_MODAL_ID"),
+						}
+					: undefined,
+				duration: 4000,
+			});
+			return false;
+		}
+	} else if (
+		file.size / 1024 ** 2 >
+		(account.billingInfo?.storage.maxImageSize || Infinity)
+	) {
+		conf.notify({
+			variant: "warning",
+			header: conf.i18n.t("toolsPanel.addMedia.tooLarge.header"),
+			body: errorBody,
+			button: isBasicPlan
+				? {
+						text: conf.i18n.t("toolsPanel.addMedia.upgradeToPlus"),
+						onClick: () => conf.openModal("USER_PLAN_MODAL_ID"),
+					}
+				: undefined,
+			duration: 4000,
+		});
+		return false;
+	}
+	return true;
 };
 
 export const deleteMedia = async (
