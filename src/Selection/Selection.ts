@@ -1390,14 +1390,15 @@ export class Selection {
 		// 		connector.applyEndPoint(pointData);
 		// 	}
 		// });
+
 		const mediaIds = this.items
 			.list()
 			.filter(item => {
-				return (
+				const shouldClearStorageUsage =
 					item.itemType === "Image" ||
-					item.itemType === "Video" ||
-					item.itemType === "Audio"
-				);
+					(item.itemType === "Video" && item.getIsStorageUrl()) ||
+					(item.itemType === "Audio" && item.getIsStorageUrl());
+				return shouldClearStorageUsage;
 			})
 			.map(item => item.getStorageId());
 		deleteMedia(mediaIds, this.board.getBoardId());

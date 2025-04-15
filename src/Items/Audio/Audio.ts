@@ -73,6 +73,10 @@ export class AudioItem extends Mbr {
 		return this.currentTime;
 	}
 
+	getIsStorageUrl(): boolean {
+		return this.isStorageUrl;
+	}
+
 	onTransform = (): void => {
 		this.updateMbr();
 		this.subject.publish(this);

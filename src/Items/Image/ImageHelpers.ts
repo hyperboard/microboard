@@ -5,27 +5,37 @@ import { conf } from "Board/Settings";
 
 // export const storageURL = `${window?.location.origin}/api/v1/media`;
 
-export const catchErrorResponse = async (response: Response) => {
+export const catchErrorResponse = async (
+	response: Response,
+	mediaType: "image" | "video" | "audio",
+) => {
 	if (response.status === 403) {
 		const data = await response.json();
-		conf.openModal("USER_PLAN_MODAL_ID");
 		let errorBody = conf.i18n.t(
 			"toolsPanel.addMedia.limitReached.bodyWithoutLimit",
 		);
-		if (data.currentUsage && data.storageLimit) {
-			errorBody = conf.i18n.t("toolsPanel.addMedia.limitReached.body", {
-				limit:
-					parseInt(data.storageLimit) < 100_000
-						? data.storageLimit + " " + conf.i18n.t("common.MB")
-						: parseInt(data.storageLimit) / 1024 +
-							" " +
-							conf.i18n.t("common.GB"),
-			});
+		if (!data.isOwnerRequest) {
+			errorBody = conf.i18n.t(
+				"toolsPanel.addMedia.limitReached.bodyOwner",
+			);
+		} else if (data.currentUsage && data.storageLimit) {
+			errorBody = conf.i18n.t(
+				`toolsPanel.addMedia.limitReached.body.${parseInt(data.storageLimit) < 100_000 ? "basic" : "plus"}`,
+			);
 		}
 		conf.notify({
 			variant: "warning",
 			header: conf.i18n.t("toolsPanel.addMedia.limitReached.header"),
 			body: errorBody,
+			button:
+				data.isOwnerRequest && data.storageLimit <= 100
+					? {
+							text: conf.i18n.t(
+								"toolsPanel.addMedia.upgradeToPlus",
+							),
+							onClick: () => conf.openModal("USER_PLAN_MODAL_ID"),
+						}
+					: undefined,
 			duration: 8000,
 		});
 	} else if (response.status === 413) {
@@ -33,15 +43,30 @@ export const catchErrorResponse = async (response: Response) => {
 		let errorBody = conf.i18n.t(
 			"toolsPanel.addMedia.tooLarge.bodyWithoutLimit",
 		);
+		let isBasicPlan = false;
 		if (data.fileSizeLimit && data.fileSize) {
-			errorBody = conf.i18n.t("toolsPanel.addMedia.tooLarge.body", {
-				limit: data.fileSizeLimit + " " + conf.i18n.t("common.MB"),
-			});
+			if (mediaType === "image") {
+				isBasicPlan = parseInt(data.fileSizeLimit) < 20;
+				errorBody = conf.i18n.t(
+					`toolsPanel.addMedia.tooLarge.imageBody.${isBasicPlan ? "basic" : "plus"}`,
+				);
+			} else {
+				isBasicPlan = parseInt(data.fileSizeLimit) < 1000;
+				errorBody = conf.i18n.t(
+					`toolsPanel.addMedia.tooLarge.audioOrVideoBody.${isBasicPlan ? "basic" : "plus"}`,
+				);
+			}
 		}
 		conf.notify({
 			variant: "warning",
 			header: conf.i18n.t("toolsPanel.addMedia.tooLarge.header"),
 			body: errorBody,
+			button: isBasicPlan
+				? {
+						text: conf.i18n.t("toolsPanel.addMedia.upgradeToPlus"),
+						onClick: () => conf.openModal("USER_PLAN_MODAL_ID"),
+					}
+				: undefined,
 			duration: 4000,
 		});
 	} else if (response.status === 401) {
