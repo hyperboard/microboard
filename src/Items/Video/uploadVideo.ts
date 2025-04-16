@@ -1,8 +1,12 @@
 import { Board } from "Board/Board";
-import { VideoItem } from "./Video";
-import { calculatePosition } from "../Image/calculatePosition";
-import { prepareVideo } from "./VideoHelpers";
+import {
+	createVideoItem,
+	getVideoMetadata,
+	prepareVideo,
+} from "./VideoHelpers";
 import { NotifyFunction } from "shared/ui-lib/Toast/notify";
+import { VideoItem } from "Board/Items/Video/Video";
+import { conf } from "Board/Settings";
 
 export function uploadVideo(
 	file: File,
@@ -11,25 +15,32 @@ export function uploadVideo(
 	extension: "mp4" | "webm",
 	accessToken: string | null,
 ) {
-	prepareVideo(file, accessToken, board.getBoardId())
-		.then(videoData => {
-			const video = new VideoItem(
-				videoData,
+	getVideoMetadata(file)
+		.then(dimension => {
+			const onLoadCb = (videoItem: VideoItem) => {
+				const notificationId = notify({
+					variant: "info",
+					header: conf.i18n.t("toolsPanel.addMedia.loading"),
+					body: "",
+					duration: 100_000,
+					loader: "MediaLoader",
+				});
+				prepareVideo(file, accessToken, board.getBoardId())
+					.then(urls => {
+						videoItem.updateUrls(urls);
+					})
+					.catch(er => {
+						board.remove(videoItem);
+						console.error("Could not create video:", er);
+					})
+					.finally(() => conf.disMissNotification(notificationId));
+			};
+			createVideoItem(
 				board,
-				board.events,
-				"",
 				extension,
+				{ videoDimension: dimension },
+				onLoadCb,
 			);
-			video.doOnceBeforeOnLoad(() => {
-				const { scaleX, scaleY, translateX, translateY } =
-					calculatePosition(video, board);
-				video.transformation.applyTranslateTo(translateX, translateY);
-				video.transformation.applyScaleTo(scaleX, scaleY);
-				video.updateMbr();
-				const boardVideo = board.add(video);
-				board.selection.removeAll();
-				board.selection.add(boardVideo);
-			});
 		})
 		.catch(er => {
 			console.error("Could not create video:", er);

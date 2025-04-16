@@ -59,6 +59,7 @@ export interface Settings {
 	i18n: typeof i18next;
 	openModal: (modalId: string) => void;
 	notify: NotifyFunction;
+	disMissNotification: (toastId?: string) => void;
 	isNode: () => boolean;
 	planNames: {
 		basic: string;
@@ -145,7 +146,7 @@ export interface Settings {
 	AI_NODE_DEFAULT_NODE_WIDTH: number;
 	NAVIGATION_STEP: number;
 
-	getYouTubeId: (url: string) => string | null;
+	getYouTubeId: (url?: string) => string | null;
 
 	AUDIO_DIMENSIONS: { width: number; height: number };
 	AUDIO_FORMATS: string[];
@@ -175,6 +176,7 @@ export const conf: Settings = {
 	i18n: {} as unknown as typeof i18next,
 	openModal: () => {},
 	notify: () => "",
+	disMissNotification: () => {},
 	getDocumentWidth: (): number => 800,
 	getDocumentHeight: (): number => 600,
 	getDPI: (): number => 1,
@@ -388,7 +390,10 @@ export const conf: Settings = {
 	AI_NODE_DEFAULT_NODE_WIDTH: 640,
 	NAVIGATION_STEP: 5,
 
-	getYouTubeId: (url: string) => {
+	getYouTubeId: (url?: string) => {
+		if (!url) {
+			return null;
+		}
 		const regExp =
 			/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
 		const match = url.match(regExp);

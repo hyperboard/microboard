@@ -3,6 +3,9 @@ import {
 	catchErrorResponse,
 	prepareImage,
 } from "Board/Items/Image/ImageHelpers";
+import { VideoConstructorData, VideoItem } from "Board/Items/Video/Video";
+import { calculatePosition } from "Board/Items/Image/calculatePosition";
+import { Board } from "Board/Board";
 
 // TODO move browser api
 // export const storageURL = `${window.location.origin}/api/v1/video`;
@@ -40,13 +43,56 @@ export const uploadVideoToStorage = async (
 	});
 };
 
+export const getVideoMetadata = (
+	file: File,
+): Promise<{ width: number; height: number }> => {
+	return new Promise((resolve, reject) => {
+		const video = document.createElement("video");
+		video.preload = "metadata";
+
+		video.onloadedmetadata = () => {
+			const { videoWidth: width, videoHeight: height } = video;
+			URL.revokeObjectURL(video.src); // Cleanup
+			resolve({ width, height });
+		};
+
+		video.onerror = () => {
+			URL.revokeObjectURL(video.src); // Cleanup
+			reject(new Error("Failed to load video metadata"));
+		};
+
+		video.src = URL.createObjectURL(file);
+	});
+};
+
+export const createVideoItem = (
+	board: Board,
+	extension: "mp4" | "webm",
+	videoData: VideoConstructorData,
+	onLoadCb: (video: VideoItem) => void,
+) => {
+	const video = new VideoItem(videoData, board, board.events, "", extension);
+	video.doOnceBeforeOnLoad(() => {
+		const { scaleX, scaleY, translateX, translateY } = calculatePosition(
+			video,
+			board,
+		);
+		video.transformation.applyTranslateTo(translateX, translateY);
+		video.transformation.applyScaleTo(scaleX, scaleY);
+		video.updateMbr();
+		const boardVideo = board.add(video);
+		board.selection.removeAll();
+		board.selection.add(boardVideo);
+		onLoadCb(boardVideo);
+	});
+};
+
 export const prepareVideo = (
 	file: File,
 	accessToken: string | null,
 	boardId: string,
 ): Promise<{
 	url: string;
-	videoDimension: { width: number; height: number };
 	previewUrl: string;
 }> => {
 	return new Promise((resolve, reject) => {
@@ -61,8 +107,6 @@ export const prepareVideo = (
 					boardId,
 				)
 					.then(imageData => {
-						const { videoWidth: width, videoHeight: height } =
-							video;
 						fileTosha256(file)
 							.then(hash => {
 								uploadVideoToStorage(
@@ -74,7 +118,6 @@ export const prepareVideo = (
 									.then(url => {
 										resolve({
 											url,
-											videoDimension: { width, height },
 											previewUrl: imageData.storageLink,
 										});
 									})
