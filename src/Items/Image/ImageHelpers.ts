@@ -110,7 +110,7 @@ export const validateMediaFile = (file: File, account: Account): boolean => {
 	let errorBody = conf.i18n.t(
 		`toolsPanel.addMedia.tooLarge.imageBody.${isBasicPlan ? "basic" : "plus"}`,
 	);
-	console.log(account.billingInfo?.storage);
+
 	if (
 		conf.AUDIO_FORMATS.includes(fileExtension) ||
 		conf.VIDEO_FORMATS.includes(fileExtension)
@@ -201,7 +201,7 @@ export const uploadToTheStorage = async (
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response);
+					return catchErrorResponse(response, "image");
 				}
 				return response.json();
 			})

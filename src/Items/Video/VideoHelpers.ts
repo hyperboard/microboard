@@ -3,9 +3,6 @@ import {
 	catchErrorResponse,
 	prepareImage,
 } from "Board/Items/Image/ImageHelpers";
-import { openModal } from "shared/ui-lib/UiModal/UiModalContext";
-import { USER_PLAN_MODAL_ID } from "features/UserPlan/UserPlanModal";
-import { conf } from "Board/Settings";
 
 // TODO move browser api
 // export const storageURL = `${window.location.origin}/api/v1/video`;
@@ -28,7 +25,7 @@ export const uploadVideoToStorage = async (
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response);
+					return catchErrorResponse(response, "video");
 				}
 				return response.json();
 			})

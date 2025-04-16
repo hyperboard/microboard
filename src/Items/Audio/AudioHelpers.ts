@@ -23,7 +23,7 @@ export const uploadAudioToStorage = async (
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response);
+					return catchErrorResponse(response, "audio");
 				}
 				return response.json();
 			})
