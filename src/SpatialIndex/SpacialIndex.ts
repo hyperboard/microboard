@@ -1,16 +1,16 @@
+import { DocumentFactory } from "Board/api/DocumentFactory";
 import { Camera } from "Board/Camera";
+import { positionRelatively, translateElementBy } from "Board/HTMLRender";
 import { Connector, Frame, Item, ItemData, Mbr, Point } from "Board/Items";
+import { Drawing } from "Board/Items/Drawing";
 import { DrawingContext } from "Board/Items/DrawingContext";
+import { Group } from "Board/Items/Group";
 import { Pointer } from "Board/Pointer";
+import { conf } from "Board/Settings";
 import { Subject } from "shared/Subject";
 import { ItemsIndexRecord } from "../BoardOperations";
-import { LayeredIndex } from "./LayeredIndex";
-import { Drawing } from "Board/Items/Drawing";
 import { Comment } from "../Items/Comment";
-import { positionRelatively, translateElementBy } from "Board/HTMLRender";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Group } from "Board/Items/Group";
-import { conf } from "Board/Settings";
+import { LayeredIndex } from "./LayeredIndex";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -640,8 +640,22 @@ export class Items {
 		const frames = this.getFramesInView();
 		const rest = this.getItemsInView();
 
-		frames.forEach(frame => frame.renderPath(context)); // background of frames
-		rest.forEach(item => item.render(context)); // non-frame items
+		const frameChildrenIds: string[] = [];
+		frames.forEach(frame => {
+			frame.renderPath(context);
+			frame
+				.getChildrenIds()
+				.map(id => this.getById(id))
+				.forEach(child => {
+					if (child) {
+						frameChildrenIds.push(child.getId());
+						child.render(context);
+					}
+				});
+		}); // background of frames
+		rest.filter(item => !frameChildrenIds.includes(item.getId())).forEach(
+			item => item.render(context),
+		); // non-frame items
 		frames.forEach(frame => frame.renderBorders(context)); // borders of frames
 		frames.forEach(frame => frame.renderName(context)); // names of frames
 	}
