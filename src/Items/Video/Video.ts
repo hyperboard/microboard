@@ -150,11 +150,25 @@ export class VideoItem extends Mbr {
 		return this.isStorageUrl;
 	}
 
-	updateUrls({ previewUrl, url }: { previewUrl: string; url: string }): void {
+	setVideoData({ previewUrl, url }: { previewUrl: string; url: string }) {
+		this.emit({
+			class: "Video",
+			item: [this.id],
+			method: "updateVideoData",
+			data: { previewUrl, url, videoDimension: this.videoDimension },
+		});
+	}
+
+	applyVideoData({
+		previewUrl = "",
+		url = "",
+	}: {
+		previewUrl?: string;
+		url?: string;
+	}): void {
 		this.previewUrl = previewUrl;
 		this.setPreview(this.preview, previewUrl);
 		this.setUrl(url);
-		this.subject.publish(this);
 	}
 
 	setIsPlaying(isPlaying: boolean) {
@@ -318,7 +332,7 @@ export class VideoItem extends Mbr {
 			this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
-		div.style.backgroundImage = this.preview
+		div.style.backgroundImage = this.previewUrl
 			? `url(${this.previewUrl})`
 			: `url(${createPlaceholderImage(this.videoDimension.width, this.videoDimension.height).src})`;
 
@@ -391,6 +405,12 @@ export class VideoItem extends Mbr {
 				this.linkTo.apply(op);
 				break;
 			case "Video":
+				if (op.method === "updateVideoData") {
+					this.applyVideoData({
+						url: op.data.url,
+						previewUrl: op.data.previewUrl,
+					});
+				}
 				this.subject.publish(this);
 				break;
 		}

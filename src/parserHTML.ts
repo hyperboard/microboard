@@ -403,6 +403,7 @@ function parseHTMLAudio(el: HTMLElement): AudioItemData & { id: string } {
 		id: el.id,
 		itemType: "Audio",
 		transformation,
+		isStorageUrl: !!el.getAttribute("is-storage-url") || false,
 		url: el.getAttribute("audio-url") || "",
 		extension: el.getAttribute("extension") || "mp3",
 	};

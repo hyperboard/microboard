@@ -90,6 +90,25 @@ export const catchErrorResponse = async (
 	throw new Error(`HTTP status: ${response.status}`);
 };
 
+export const catchDuplicateErrorResponse = async (response: Response) => {
+	if (response.status === 403) {
+		conf.notify({
+			variant: "warning",
+			header: conf.i18n.t("toolsPanel.addMedia.limitReached.header"),
+			body: conf.i18n.t("toolsPanel.addMedia.limitReached.duplicateBody"),
+			duration: 4000,
+		});
+	} else {
+		conf.notify({
+			variant: "error",
+			header: conf.i18n.t("toolsPanel.addMedia.unhandled.header"),
+			body: conf.i18n.t("toolsPanel.addMedia.unhandled.body"),
+			duration: 4000,
+		});
+	}
+	throw new Error(`HTTP status: ${response.status}`);
+};
+
 export const validateMediaFile = (file: File, account: Account): boolean => {
 	const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
 	if (
@@ -163,15 +182,43 @@ export const deleteMedia = async (
 	mediaIds: string[],
 	boardId: string,
 ): Promise<void> => {
-	fetch(`${window?.location.origin}/api/v1/media/${boardId}`, {
-		method: "DELETE",
+	fetch(`${window?.location.origin}/api/v1/media/usage/${boardId}`, {
+		method: "POST",
 		headers: {
 			"content-type": "application/json",
 		},
-		body: JSON.stringify({ mediaIds }),
+		body: JSON.stringify({ mediaIds, shouldIncrease: false }),
 	}).catch(error => {
 		console.error("Media storage error:", error);
 	});
+};
+
+export const updateMediaUsage = async (
+	mediaIds: string[],
+	boardId: string,
+): Promise<boolean> => {
+	try {
+		const response = await fetch(
+			`${window?.location.origin}/api/v1/media/usage/${boardId}`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ mediaIds, shouldIncrease: true }),
+			},
+		);
+
+		if (response.status !== 200) {
+			await catchDuplicateErrorResponse(response);
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		console.error("Media storage error:", error);
+		return false;
+	}
 };
 
 export const uploadToTheStorage = async (

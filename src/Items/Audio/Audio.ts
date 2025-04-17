@@ -188,6 +188,9 @@ export class AudioItem extends Mbr {
 		if (this.extension) {
 			div.setAttribute("extension", this.extension);
 		}
+		if (this.isStorageUrl) {
+			div.setAttribute("is-storage-url", "true");
+		}
 		div.setAttribute("data-link-to", "");
 
 		return div;

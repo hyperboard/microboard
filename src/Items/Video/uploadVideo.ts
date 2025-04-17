@@ -27,7 +27,7 @@ export function uploadVideo(
 				});
 				prepareVideo(file, accessToken, board.getBoardId())
 					.then(urls => {
-						videoItem.updateUrls(urls);
+						videoItem.setVideoData(urls);
 					})
 					.catch(er => {
 						board.remove(videoItem);

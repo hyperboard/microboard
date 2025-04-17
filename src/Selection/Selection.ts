@@ -29,7 +29,7 @@ import {
 import { BaseRange } from "slate";
 import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-import { deleteMedia } from "Board/Items/Image/ImageHelpers";
+import { deleteMedia, updateMediaUsage } from "Board/Items/Image/ImageHelpers";
 const { i18n } = conf;
 
 const defaultShapeData = new DefaultShapeData();
@@ -1344,6 +1344,19 @@ export class Selection {
 		}
 	}
 
+	getMediaStorageIds(): string[] {
+		return this.items
+			.list()
+			.filter(item => {
+				const shouldClearStorageUsage =
+					item.itemType === "Image" ||
+					(item.itemType === "Video" && item.getIsStorageUrl()) ||
+					(item.itemType === "Audio" && item.getIsStorageUrl());
+				return shouldClearStorageUsage;
+			})
+			.map(item => item.getStorageId());
+	}
+
 	removeFromBoard(): void {
 		const isLocked = this.items
 			.list()
@@ -1391,17 +1404,7 @@ export class Selection {
 		// 	}
 		// });
 
-		const mediaIds = this.items
-			.list()
-			.filter(item => {
-				const shouldClearStorageUsage =
-					item.itemType === "Image" ||
-					(item.itemType === "Video" && item.getIsStorageUrl()) ||
-					(item.itemType === "Audio" && item.getIsStorageUrl());
-				return shouldClearStorageUsage;
-			})
-			.map(item => item.getStorageId());
-		deleteMedia(mediaIds, this.board.getBoardId());
+		deleteMedia(this.getMediaStorageIds(), this.board.getBoardId());
 
 		this.emit({
 			class: "Board",
@@ -1446,7 +1449,15 @@ export class Selection {
 		this.board.sendToBack(this.items.list());
 	}
 
-	duplicate(): void {
+	async duplicate(): Promise<void> {
+		const canDuplicate = await updateMediaUsage(
+			this.getMediaStorageIds(),
+			this.board.getBoardId(),
+		);
+		if (!canDuplicate) {
+			return;
+		}
+
 		const filteredItemMap = Object.fromEntries(
 			Object.entries(this.copy(true)).filter(
 				([_, item]) => item.itemType !== "Group",

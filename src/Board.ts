@@ -47,7 +47,7 @@ import {
 	LOAD_LINKS_IMAGES_JS,
 	INDEX_CSS,
 } from "../staticResources";
-import { deleteMedia } from "Board/Items/Image/ImageHelpers";
+import { deleteMedia, updateMediaUsage } from "Board/Items/Image/ImageHelpers";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -935,7 +935,7 @@ export class Board {
 		}
 	}
 
-	paste(itemsMap: ItemsMap, select = true): void {
+	async paste(itemsMap: ItemsMap, select = true): Promise<void> {
 		const newItemIdMap: { [key: string]: string } = {};
 
 		for (const itemId in itemsMap) {
@@ -997,8 +997,18 @@ export class Board {
 
 		const { x, y } = this.pointer.point;
 
+		const mediaStorageIds = [];
+
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
+			if (itemData.itemType === "Image") {
+				mediaStorageIds.push(itemData.storageLink.split("/").pop());
+			} else if (
+				(itemData.itemType === "Video" && itemData.isStorageUrl) ||
+				(itemData.itemType === "Audio" && itemData.isStorageUrl)
+			) {
+				mediaStorageIds.push(itemData.url.split("/").pop());
+			}
 			const newItemId = newItemIdMap[itemId];
 			const { translateX, translateY } = itemData.transformation || {
 				translateX: 0,
@@ -1024,6 +1034,14 @@ export class Board {
 				);
 			}
 			newMap[newItemId] = itemData;
+		}
+
+		const canDuplicate = await updateMediaUsage(
+			mediaStorageIds,
+			this.getBoardId(),
+		);
+		if (!canDuplicate) {
+			return;
 		}
 
 		this.emit({
@@ -1287,6 +1305,7 @@ export class Board {
 
 			newMap[newItemId] = itemData;
 		}
+
 		this.emit({
 			class: "Board",
 			method: "duplicate",

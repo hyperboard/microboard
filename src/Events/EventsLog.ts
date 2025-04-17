@@ -616,7 +616,10 @@ export function createEventsLog(board: Board): EventsLog {
 		}
 
 		for (const record of list.getConfirmedRecords().slice().reverse()) {
-			if (record.event.body.userId !== userId) {
+			const shouldSkip =
+				record.event.body.userId !== userId ||
+				record.event.body.operation.method === "updateVideoData";
+			if (shouldSkip) {
 				continue;
 			}
 
@@ -647,15 +650,18 @@ export function createEventsLog(board: Board): EventsLog {
 		let counter = 0;
 
 		for (const record of list.backwardIterable()) {
+			const shouldSkip =
+				record.event.body.userId !== userId ||
+				record.event.body.operation.method === "updateVideoData";
+			if (shouldSkip) {
+				continue;
+			}
+
 			if (
 				record.event.body.operation.method !== "undo" &&
 				record.event.body.operation.method !== "redo"
 			) {
 				return null;
-			}
-
-			if (record.event.body.userId !== userId) {
-				continue;
 			}
 
 			const { method } = record.event.body.operation;
