@@ -399,7 +399,7 @@ export class Connector {
 	}
 
 	applyMiddlePoint(pointData: ControlPointData, updatePath = true): void {
-		console.log("pointData", pointData);
+		// console.log("pointData", pointData);
 		const optionalFn = this.getOptionalFindFn();
 		this.middlePoint = getControlPoint(
 			pointData,
