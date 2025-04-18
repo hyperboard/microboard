@@ -324,9 +324,9 @@ export function createEvents(
 			}
 
 			const audio = new AudioItem(
-				audioUrl,
 				board,
 				true,
+				audioUrl,
 				board.events,
 				"",
 				"wav",

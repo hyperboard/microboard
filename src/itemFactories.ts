@@ -131,9 +131,9 @@ function createAudio(id: string, data: ItemData, board: Board): AudioItem {
 		throw new Error("Invalid data for AudioItem");
 	}
 	const audio = new AudioItem(
-		data.url,
 		board,
 		data.isStorageUrl,
+		data.url,
 		board.events,
 		id,
 		data.extension,

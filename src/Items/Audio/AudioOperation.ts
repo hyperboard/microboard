@@ -1,13 +1,11 @@
-import { AudioConstructorData } from "./Audio";
-
 interface AudioBaseOp {
 	class: "Audio";
 	item: string[];
 }
 
-interface UpdateAudioData extends AudioBaseOp {
-	method: "updateAudioData";
-	data: AudioConstructorData;
+interface SetUrl extends AudioBaseOp {
+	method: "setUrl";
+	url: string;
 }
 
-export type AudioOperation = UpdateAudioData;
+export type AudioOperation = SetUrl;

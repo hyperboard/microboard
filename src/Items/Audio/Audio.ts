@@ -2,17 +2,16 @@ import { Events, Operation } from "Board/Events";
 import { Subject } from "shared/Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Mbr } from "../Mbr";
-import { Matrix, Transformation } from "../Transformation";
+import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board/Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Path, Paths } from "../Path";
+import { Path } from "../Path";
 import { Point } from "Board/Items/Point/Point";
 import { Line } from "Board/Items/Line/Line";
 import { conf } from "Board/Settings";
 import { AudioCommand } from "Board/Items/Audio/AudioCommand";
-import { CubicBezier } from "Board/Items/Curve/Curve";
 
 export interface AudioItemData {
 	itemType: "Audio";
@@ -36,12 +35,11 @@ export class AudioItem extends Mbr {
 	private isPlaying = false;
 	private currentTime = 0;
 	private isStorageUrl = true;
-	private path: Path | Paths;
 
 	constructor(
-		url: string,
 		board: Board,
 		isStorageUrl: boolean,
+		url?: string,
 		private events?: Events,
 		private id = "",
 		private extension?: string,
@@ -50,7 +48,9 @@ export class AudioItem extends Mbr {
 		this.linkTo = new LinkTo(this.id, events);
 		this.board = board;
 		this.isStorageUrl = isStorageUrl;
-		this.setUrl(url);
+		if (url) {
+			this.applyUrl(url);
+		}
 		this.transformation = new Transformation(id, events);
 		this.linkTo.subject.subscribe(() => {
 			this.updateMbr();
@@ -59,10 +59,6 @@ export class AudioItem extends Mbr {
 		this.transformation.subject.subscribe(this.onTransform);
 		this.right = this.left + conf.AUDIO_DIMENSIONS.width;
 		this.bottom = this.top + conf.AUDIO_DIMENSIONS.height;
-		this.path = createAudioPath(
-			this.getMbr(),
-			this.transformation?.matrix || new Matrix(),
-		);
 	}
 
 	setCurrentTime(time: number) {
@@ -99,7 +95,7 @@ export class AudioItem extends Mbr {
 		return this.isPlaying;
 	}
 
-	setUrl(url: string): void {
+	applyUrl(url: string): void {
 		if (this.isStorageUrl) {
 			try {
 				const newUrl = new URL(url);
@@ -110,6 +106,15 @@ export class AudioItem extends Mbr {
 		} else {
 			this.url = url;
 		}
+	}
+
+	setUrl(url: string): void {
+		this.emit({
+			class: "Audio",
+			method: "setUrl",
+			item: [this.getId()],
+			url,
+		});
 	}
 
 	getStorageId() {
@@ -140,14 +145,6 @@ export class AudioItem extends Mbr {
 		this.top = translateY;
 		this.right = this.left + conf.AUDIO_DIMENSIONS.width * scaleX;
 		this.bottom = this.top + conf.AUDIO_DIMENSIONS.height * scaleY;
-		this.updatePath();
-	}
-
-	updatePath(): void {
-		this.path = createAudioPath(
-			this.getMbr(),
-			this.transformation?.matrix || new Matrix(),
-		);
 	}
 
 	render(context: DrawingContext): void {
@@ -254,6 +251,9 @@ export class AudioItem extends Mbr {
 				this.linkTo.apply(op);
 				break;
 			case "Audio":
+				if (op.method === "setUrl") {
+					this.applyUrl(op.url);
+				}
 				this.subject.publish(this);
 				break;
 		}
@@ -350,92 +350,3 @@ export class AudioItem extends Mbr {
 		}
 	}
 }
-
-const convexity = 0.25;
-const nearBreakpoint = 1;
-const farBreakpoint = 2;
-
-export const createAudioPath = (mbr: Mbr, matrix: Matrix) => {
-	const width = mbr.getWidth();
-	const height = mbr.getHeight();
-	const movementLinesLeft = width * 0.46;
-	const movementLinesRight = width * 0.54;
-	return new Paths(
-		[
-			new Path(
-				[
-					new CubicBezier(
-						new Point(0, farBreakpoint),
-						new Point(0, nearBreakpoint - convexity),
-						new Point(farBreakpoint, 0),
-						new Point(nearBreakpoint - convexity, 0),
-					),
-					new Line(
-						new Point(farBreakpoint, 0),
-						new Point(width - farBreakpoint, 0),
-					),
-					new CubicBezier(
-						new Point(width - farBreakpoint, 0),
-						new Point(width - nearBreakpoint + convexity, 0),
-						new Point(width, farBreakpoint),
-						new Point(width, nearBreakpoint - convexity),
-					),
-					new Line(
-						new Point(width, farBreakpoint),
-						new Point(width, height - farBreakpoint),
-					),
-					new CubicBezier(
-						new Point(width, height - farBreakpoint),
-						new Point(width, height - nearBreakpoint - convexity),
-						new Point(width - farBreakpoint, height),
-						new Point(width - nearBreakpoint + convexity, height),
-					),
-					new Line(
-						new Point(width - farBreakpoint, height),
-						new Point(farBreakpoint, height),
-					),
-					new CubicBezier(
-						new Point(farBreakpoint, height),
-						new Point(nearBreakpoint - convexity, height),
-						new Point(0, height - farBreakpoint),
-						new Point(0, height - nearBreakpoint - convexity),
-					),
-					new Line(
-						new Point(0, height - farBreakpoint),
-						new Point(0, farBreakpoint),
-					),
-				],
-				true,
-				"rgb(255, 255, 255)",
-				"rgba(222, 224, 227, 1)",
-			),
-			new Path(
-				[
-					new Line(
-						new Point(movementLinesLeft, 3 * matrix.scaleX),
-						new Point(movementLinesRight, 3 * matrix.scaleX),
-					),
-				],
-				false,
-				"none",
-				"rgba(222, 224, 227, 1)",
-				"solid",
-				6,
-			),
-			new Path(
-				[
-					new Line(
-						new Point(movementLinesLeft, 10 * matrix.scaleY),
-						new Point(movementLinesRight, 10 * matrix.scaleY),
-					),
-				],
-				false,
-				"none",
-				"rgba(222, 224, 227, 1)",
-				"solid",
-				6,
-			),
-		],
-		"rgb(255, 255, 255)",
-	).getTransformed(new Matrix(matrix.translateX, matrix.translateY));
-};

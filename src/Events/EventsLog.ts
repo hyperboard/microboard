@@ -618,7 +618,9 @@ export function createEventsLog(board: Board): EventsLog {
 		for (const record of list.getConfirmedRecords().slice().reverse()) {
 			const shouldSkip =
 				record.event.body.userId !== userId ||
-				record.event.body.operation.method === "updateVideoData";
+				record.event.body.operation.method === "updateVideoData" ||
+				(record.event.body.operation.class === "Audio" &&
+					record.event.body.operation.method === "setUrl");
 			if (shouldSkip) {
 				continue;
 			}
@@ -652,7 +654,9 @@ export function createEventsLog(board: Board): EventsLog {
 		for (const record of list.backwardIterable()) {
 			const shouldSkip =
 				record.event.body.userId !== userId ||
-				record.event.body.operation.method === "updateVideoData";
+				record.event.body.operation.method === "updateVideoData" ||
+				(record.event.body.operation.class === "Audio" &&
+					record.event.body.operation.method === "setUrl");
 			if (shouldSkip) {
 				continue;
 			}
