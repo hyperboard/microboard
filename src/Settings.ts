@@ -400,7 +400,7 @@ export const conf: Settings = {
 		return match && match[2].length === 11 ? match[2] : null;
 	},
 
-	AUDIO_DIMENSIONS: { width: 500, height: 60 },
+	AUDIO_DIMENSIONS: { width: 368, height: 76 },
 	AUDIO_FORMATS: ["aac", "mp3", "wav"],
 	AUDIO_MIME_TYPES: ["audio/mpeg", "audio/wav", "audio/aac", "audio/mp3"],
 	VIDEO_FORMATS: ["mp4", "webm", "mov"],

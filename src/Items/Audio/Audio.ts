@@ -154,22 +154,44 @@ export class AudioItem extends Mbr {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		this.path.render(context);
-		if (
-			this.getMbr()
-				.getTransformed(this.board.camera.matrix)
-				.getHeight() >= 36
-		) {
-			context.ctx.save();
-			context.ctx.globalCompositeOperation = "destination-out";
-			context.ctx.fillRect(
-				this.left + this.transformation.getScale().x,
-				this.top + 21 * this.transformation.getScale().y,
-				this.getWidth() - 2 * this.transformation.getScale().x,
-				this.getHeight() - 22 * this.transformation.getScale().y,
-			);
-			context.ctx.restore();
-		}
+		const ctx = context.ctx;
+		const radius = 12 * this.transformation.getScale().x;
+
+		ctx.save();
+		ctx.globalCompositeOperation = "destination-out";
+
+		ctx.beginPath();
+		ctx.moveTo(this.left + radius, this.top);
+		ctx.lineTo(this.left + this.getWidth() - radius, this.top);
+		ctx.quadraticCurveTo(
+			this.left + this.getWidth(),
+			this.top,
+			this.left + this.getWidth(),
+			this.top + radius,
+		);
+		ctx.lineTo(
+			this.left + this.getWidth(),
+			this.top + this.getHeight() - radius,
+		);
+		ctx.quadraticCurveTo(
+			this.left + this.getWidth(),
+			this.top + this.getHeight(),
+			this.left + this.getWidth() - radius,
+			this.top + this.getHeight(),
+		);
+		ctx.lineTo(this.left + radius, this.top + this.getHeight());
+		ctx.quadraticCurveTo(
+			this.left,
+			this.top + this.getHeight(),
+			this.left,
+			this.top + this.getHeight() - radius,
+		);
+		ctx.lineTo(this.left, this.top + radius);
+		ctx.quadraticCurveTo(this.left, this.top, this.left + radius, this.top);
+		ctx.closePath();
+
+		ctx.fill();
+		ctx.restore();
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
