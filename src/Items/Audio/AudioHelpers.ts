@@ -28,6 +28,7 @@ export const uploadAudioToStorage = async (
 				return response.json();
 			})
 			.then(data => {
+				console.log(data);
 				resolve(data.src);
 			})
 			.catch(error => {

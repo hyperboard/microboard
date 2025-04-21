@@ -46,6 +46,7 @@ export function uploadAudio(
 			boardAudio.setUrl(url);
 		})
 		.catch(er => {
+			board.remove(boardAudio);
 			console.error("Could not create audio:", er);
 		})
 		.finally(() => conf.disMissNotification(notificationId));
