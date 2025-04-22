@@ -1,6 +1,6 @@
 import { conf } from "Board/Settings";
 import { BlockNode } from "../Editor/BlockNode";
-import { LinkNode, TextNode } from "../Editor/TextNode";
+import { TextNode } from "../Editor/TextNode";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
 
 type Ctx = CanvasRenderingContext2D;
@@ -137,6 +137,21 @@ const sliceTextByWidth = (
 	return textNode;
 };
 
+function getListMarkType(depth: number) {
+	const cycle = (depth - 1) % 3;
+
+	switch (cycle) {
+		case 0:
+			return "LISTMARK_NUMBERS";
+		case 1:
+			return "LISTMARK_LETTERS";
+		case 2:
+			return "LISTMARK_ROMAN";
+		default:
+			return "LISTMARK_NUMBERS";
+	}
+}
+
 function getBlockNode(
 	data: BlockNode,
 	maxWidth: number,
@@ -162,6 +177,7 @@ function getBlockNode(
 	} else if (node.type === "ul_list" && !listData) {
 		listData = { level: 0, isNumberedList: false };
 	}
+	const listMarks = conf[getListMarkType((listData?.level || 0) + 1)];
 	for (let i = 0; i < data.children.length; i++) {
 		const child = structuredClone(data.children[i]);
 		switch (child.type) {
@@ -204,7 +220,7 @@ function getBlockNode(
 			case "list_item": {
 				let listMark = "";
 				if (listData?.isNumberedList) {
-					listMark += `${i + 1}.`;
+					listMark += listMarks[i % 10];
 				} else {
 					listMark += "•";
 				}
@@ -1081,6 +1097,10 @@ function fillText(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	ctx.fillStyle = style.color;
 	ctx.fillText(text, x, y);
 	if (textBlock.listMark) {
-		ctx.fillText(textBlock.listMark, x - 16, y);
+		ctx.fillText(
+			textBlock.listMark,
+			x - measureText(textBlock.listMark, style).width - 4,
+			y,
+		);
 	}
 }

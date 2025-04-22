@@ -156,6 +156,10 @@ export interface Settings {
 
 	LINK_BTN_SIZE: number;
 	LINK_BTN_OFFSET: number;
+
+	LISTMARK_NUMBERS: string[];
+	LISTMARK_LETTERS: string[];
+	LISTMARK_ROMAN: string[];
 }
 
 /**
@@ -408,6 +412,43 @@ export const conf: Settings = {
 
 	LINK_BTN_SIZE: 24,
 	LINK_BTN_OFFSET: 2,
+
+	LISTMARK_NUMBERS: [
+		"1.",
+		"2.",
+		"3.",
+		"4.",
+		"5.",
+		"6.",
+		"7.",
+		"8.",
+		"9.",
+		"10.",
+	],
+	LISTMARK_LETTERS: [
+		"a.",
+		"b.",
+		"c.",
+		"d.",
+		"e.",
+		"f.",
+		"g.",
+		"h.",
+		"i.",
+		"j.",
+	],
+	LISTMARK_ROMAN: [
+		"i.",
+		"ii.",
+		"iii.",
+		"iv.",
+		"v.",
+		"vi.",
+		"vii.",
+		"viii.",
+		"ix.",
+		"x.",
+	],
 };
 
 export interface ExportSnapshotSelection {
