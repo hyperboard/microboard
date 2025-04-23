@@ -849,8 +849,6 @@ export class EditorContainer {
 
 		const listItemIndex = listItemPath[listItemPath.length - 1];
 		const currentListItemChildren = listItem.children;
-		console.log(editor.selection);
-		console.log(this.getText());
 
 		if (listItemIndex === 0) {
 			const listParentPath = Path.parent(listPath);
@@ -889,13 +887,11 @@ export class EditorContainer {
 
 			Transforms.removeNodes(editor, { at: listItemPath });
 		}
-		console.log(this.getText());
 
 		// Transforms.select(editor, {
 		// 	anchor: { path: textNodePath, offset: 0 },
 		// 	focus: { path: textNodePath, offset: 0 }
 		// });
-		console.log(editor.selection);
 
 		return true;
 	}
