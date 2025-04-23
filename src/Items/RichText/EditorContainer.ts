@@ -248,6 +248,37 @@ export class EditorContainer {
 		this.recordedOps = op ? [op] : [];
 	}
 
+	getTextFromNode(node: BlockNode): string {
+		if ("text" in node) {
+			return node.text || "";
+		}
+
+		if ("children" in node && Array.isArray(node.children)) {
+			return node.children.reduce((acc: string, child: any) => {
+				return acc + this.getTextFromNode(child);
+			}, "");
+		}
+
+		return "";
+	}
+
+	getEndNodePath(
+		node: BlockNode,
+		nodePath: number[],
+	): { path: number[]; offset: number } | null {
+		if ("text" in node) {
+			return { path: nodePath, offset: node.text.length };
+		}
+		if ("children" in node && Array.isArray(node.children)) {
+			const childIndex = node.children.length - 1;
+			return this.getEndNodePath(node.children[childIndex], [
+				...nodePath,
+				childIndex,
+			]);
+		}
+		return null;
+	}
+
 	getSelectionOp(method: SelectionMethod, ops: SlateOp[]): SelectionOp {
 		return {
 			class: "RichText",
@@ -261,7 +292,21 @@ export class EditorContainer {
 	stopOpRecordingAndGetOps(): SlateOp[] {
 		const op = this.recordedOps;
 		this.recordedOps = null;
-		return op?.ops ?? op ?? [];
+
+		const opsArr = op?.ops ?? op ?? [];
+
+		if (opsArr.length && opsArr[0].type === "insert_node") {
+			const op = opsArr[0];
+			const path = this.getEndNodePath(op.node, op.path);
+			if (path) {
+				Transforms.select(this.editor, {
+					anchor: path,
+					focus: path,
+				});
+			}
+		}
+
+		return opsArr;
 	}
 
 	applyRichTextOp(op: RichTextOperation): void {
