@@ -295,7 +295,11 @@ export class EditorContainer {
 
 		const opsArr = op?.ops ?? op ?? [];
 
-		if (opsArr.length && opsArr[0].type === "insert_node") {
+		if (
+			opsArr.length &&
+			opsArr[0].type === "insert_node" &&
+			opsArr.length === 1
+		) {
 			const op = opsArr[0];
 			const path = this.getEndNodePath(op.node, op.path);
 			if (path) {
