@@ -17,7 +17,7 @@
 	display: none;
 }
 
-.quickAddButton:hover {
+.quickAddButtonActive {
 	transform: translate(-50%, -50%) scale(1);
 	background-color: #924fe8;
 	border: none;
@@ -36,7 +36,7 @@
 	transition: all 0.2s 0.2s;
 }
 
-.quickAddButton:hover::after {
+.quickAddButtonActive::after {
 	opacity: 0;
 	transform: none;
 }
@@ -57,7 +57,7 @@
 	top: 35%;
 }
 
-.quickAddButton:hover::before {
+.quickAddButtonActive::before {
 	opacity: 1;
 }
 

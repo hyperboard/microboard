@@ -295,6 +295,7 @@ export function getQuickAddButtons(
 	}
 
 	function renderQuickAddButtons(): void {
+		let timeoutId: number | undefined;
 		if (board.getInterfaceType() !== "edit") {
 			clear();
 			return;
@@ -361,6 +362,10 @@ export function getQuickAddButtons(
 				button.resetState();
 
 				button.onmouseleave = () => {
+					button.classList.remove(styles.quickAddButtonActive);
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+					}
 					if (button.isMouseDown) {
 						board.tools.addConnector(true, item, pos);
 					} else {
@@ -376,16 +381,19 @@ export function getQuickAddButtons(
 				};
 
 				button.onmouseenter = () => {
-					const selectedItem = selection.items.getSingle();
-					if (!selectedItem) {
-						return;
-					}
-					calculateQuickAddPosition(
-						index,
-						selectedItem,
-						positions[index],
-					);
-					selection.subject.publish(selection);
+					timeoutId = setTimeout(() => {
+						button.classList.add(styles.quickAddButtonActive);
+						const selectedItem = selection.items.getSingle();
+						if (!selectedItem) {
+							return;
+						}
+						calculateQuickAddPosition(
+							index,
+							selectedItem,
+							positions[index],
+						);
+						selection.subject.publish(selection);
+					}, 200);
 				};
 
 				button.onmousedown = () => {
