@@ -532,7 +532,11 @@ export class Board {
 		// div with id="items" and last-event-order are necessary for successfull uploading to storage
 		const items = this.items.getWholeHTML(conf.documentFactory);
 		const itemsDiv = `<div id="items">${items}</div>`;
-		const body = `<body>${itemsDiv}<script type="module">${customTagsScript}</script><script defer>${loadLinksImagesScript}</script></body>`;
+		const scripts = `
+			<script type="module">${customTagsScript}</script>
+			<script defer>${loadLinksImagesScript}</script>
+		`;
+		const body = `<body style="overflow-x: hidden; overflow-y: hidden;">${itemsDiv}${scripts}</body>`;
 		const head = `
 		<head>
 			<meta charset="utf-8" />
