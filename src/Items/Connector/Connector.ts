@@ -424,12 +424,15 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	setMiddlePoint(point: ControlPoint, timestamp?: number): void {
+	setMiddlePoint(
+		point: ControlPoint | ControlPointData,
+		timestamp?: number,
+	): void {
 		this.emit({
 			class: "Connector",
 			method: "setMiddlePoint",
 			item: [this.id],
-			middlePointData: point.serialize(),
+			middlePointData: "serialize" in point ? point.serialize() : point,
 			timestamp,
 		});
 	}

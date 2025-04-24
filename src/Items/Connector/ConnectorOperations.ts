@@ -43,7 +43,7 @@ interface SetMiddlePoint {
 	class: "Connector";
 	method: "setMiddlePoint";
 	item: string[];
-	middlePointData: ControlPointData | null;
+	middlePointData: ControlPointData;
 	timestamp?: number;
 }
 

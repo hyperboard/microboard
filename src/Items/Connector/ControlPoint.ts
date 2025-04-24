@@ -175,11 +175,14 @@ export class FixedConnectorPoint extends Point {
 
 	recalculatePoint(): void {
 		const item = this.item;
-		const segment = item.getPaths().getSegments()[this.segmentIndex];
-		// TODO fix ?
-		const point = segment?.getPoint(this.tangent);
-		this.x = point?.x || 0;
-		this.y = point?.y || 0;
+		const segments = item.getPaths().getSegments();
+		const segment =
+			segments.length > this.segmentIndex
+				? segments[this.segmentIndex]
+				: segments[segments.length - 1];
+		const point = segment.getPoint(this.tangent);
+		this.x = point.x;
+		this.y = point.y;
 	}
 
 	serialize(): FixedConnectorPointData {

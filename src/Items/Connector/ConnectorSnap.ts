@@ -22,6 +22,7 @@ function getFixedPoint(
 	point: Point,
 ): FixedPoint | FixedConnectorPoint {
 	if (item.itemType === "Connector") {
+		// todo look here, segments after deserialize are not the same, index might be undefined
 		const nearestSegmentData = item
 			.getPaths()
 			.getNearestEdgeAndPointTo(point);

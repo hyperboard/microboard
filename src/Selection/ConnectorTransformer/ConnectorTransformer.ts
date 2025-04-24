@@ -11,17 +11,20 @@ import {
 	CONNECTOR_ANCHOR_TYPE,
 	CONNECTOR_ANCHOR_COLOR,
 } from "Board/Items/Connector/Connector";
+import { ControlPoint } from "Board/Items/Connector";
+import { ControlPointData } from "Board/Items/Connector/ControlPoint";
 
 const config = {
 	anchorDistance: 10,
 };
 
+type PointersState = "start" | "end" | "middle" | "none";
 export class ConnectorTransformer extends Tool {
 	private startPointerAnchor: Anchor | null = null;
 	private endPointerAnchor: Anchor | null = null;
 	private middlePointerAnchor: Anchor | null = null;
 
-	private statePointer: "start" | "end" | "middle" | "none" = "none";
+	private statePointer: PointersState = "none";
 	private state: Cursor = "default";
 
 	private snap: ConnectorSnap;
@@ -127,20 +130,20 @@ export class ConnectorTransformer extends Tool {
 			this.snap.connector = connector;
 			this.snap.pointerMove();
 			const point = this.snap.getControlPoint();
-			switch (this.statePointer) {
-				case "start":
-					connector.setStartPoint(point, this.beginTimeStamp);
-					this.selection.subject.publish(this.selection);
-					break;
-				case "end":
-					connector.setEndPoint(point, this.beginTimeStamp);
-					this.selection.subject.publish(this.selection);
-					break;
-				case "middle":
-					connector.setMiddlePoint(point, this.beginTimeStamp);
-					this.selection.subject.publish(this.selection);
-					break;
-			}
+			const setterMap: Record<
+				PointersState,
+				(
+					point: ControlPoint | ControlPointData,
+					timestamp?: number,
+				) => void
+			> = {
+				start: connector.setStartPoint,
+				end: connector.setEndPoint,
+				middle: connector.setMiddlePoint,
+				none: () => {},
+			};
+			setterMap[this.statePointer](point, this.beginTimeStamp);
+			this.selection.subject.publish(this.selection);
 		}
 	}
 
