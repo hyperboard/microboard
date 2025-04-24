@@ -75,22 +75,23 @@ async function convertMarkdownToSlate(text: string) {
 		nodes = [
 			{
 				type: listType,
+				listLevel: 1,
 				children: nodes.filter(node => node.type === "list_item"),
 			},
 			...nodes.filter(node => node.type !== "list_item"),
 		];
 	}
 
-	if (
-		nodes[0] &&
-		(nodes[0].type === "ol_list" || nodes[0].type === "ul_list")
-	) {
-		nodes.unshift({
-			type: "paragraph",
-			children: [{ type: "text", text: "", ...DEFAULT_TEXT_STYLES }],
-			horisontalAlignment: "left",
-		});
-	}
+	// if (
+	// 	nodes[0] &&
+	// 	(nodes[0].type === "ol_list" || nodes[0].type === "ul_list")
+	// ) {
+	// 	nodes.unshift({
+	// 		type: "paragraph",
+	// 		children: [{ type: "text", text: "", ...DEFAULT_TEXT_STYLES }],
+	// 		horisontalAlignment: "left",
+	// 	});
+	// }
 
 	return nodes.map(item => {
 		setNodeStyles({

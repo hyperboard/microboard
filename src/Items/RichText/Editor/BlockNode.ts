@@ -90,6 +90,7 @@ export type BlockQuoteNode = {
 export type BulletedListNode = {
 	type: "ul_list";
 	children: ListItemNode[];
+	listLevel: number;
 	horisontalAlignment?: HorisontalAlignment;
 	paddingTop?: number;
 	paddingBottom?: number;
@@ -98,6 +99,7 @@ export type BulletedListNode = {
 export type NumberedListNode = {
 	type: "ol_list";
 	children: ListItemNode[];
+	listLevel: number;
 	horisontalAlignment?: HorisontalAlignment;
 	paddingTop?: number;
 	paddingBottom?: number;

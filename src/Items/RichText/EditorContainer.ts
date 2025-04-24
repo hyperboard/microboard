@@ -18,6 +18,7 @@ import {
 	Operation as SlateOp,
 	Transforms,
 	Path,
+	Operation,
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
@@ -149,28 +150,6 @@ export class EditorContainer {
 			}
 			const isRecordingOperations = this.recordedOps !== null;
 			if (isRecordingOperations) {
-				// When creating an item with non-default text styles, Slate automatically adds an empty text node
-				// to the first paragraph. As soon as the user types the first character, Slate triggers the following operations:
-				//   1. insert_node
-				//   2. set_selection – this operation must be emitted to update the focus
-				//   3. remove_node
-				//
-				// Therefore, we need to emit a set_selection event for text whose styles were changed before typing.
-				const isFirstTextEmpty =
-					editor.children[0]?.children?.text === "";
-				const isSecondTextNotEmpty =
-					editor.children[0]?.children?.text !== "";
-				const isNextRemoveText =
-					this.recordedOps?.length &&
-					this.recordedOps[0].type === "remove_text";
-				if (
-					operation.type === "set_selection" &&
-					!(isFirstTextEmpty && isSecondTextNotEmpty) &&
-					!isNextRemoveText
-				) {
-					return;
-				}
-
 				if (
 					operation.type === "set_node" &&
 					"fontSize" in operation.newProperties &&
@@ -289,12 +268,7 @@ export class EditorContainer {
 		};
 	}
 
-	stopOpRecordingAndGetOps(): SlateOp[] {
-		const op = this.recordedOps;
-		this.recordedOps = null;
-
-		const opsArr = op?.ops ?? op ?? [];
-
+	moveSelectionToTheEndOfNodeByOps(opsArr: Operation[]) {
 		if (
 			opsArr.length &&
 			opsArr[0].type === "insert_node" &&
@@ -309,6 +283,15 @@ export class EditorContainer {
 				});
 			}
 		}
+	}
+
+	stopOpRecordingAndGetOps(): SlateOp[] {
+		const op = this.recordedOps;
+		this.recordedOps = null;
+
+		const opsArr = op?.ops ?? op ?? [];
+
+		this.moveSelectionToTheEndOfNodeByOps(opsArr);
 
 		return opsArr;
 	}
@@ -864,7 +847,7 @@ export class EditorContainer {
 
 		const { anchor } = editor.selection;
 
-		if (anchor.offset !== 0) {
+		if (anchor.offset !== 0 || !Range.isCollapsed(editor.selection)) {
 			return false;
 		}
 
@@ -919,6 +902,10 @@ export class EditorContainer {
 					at: [...listParentPath, listPosition + index],
 				});
 			});
+			// Transforms.select(editor, {
+			// 	anchor: { path: [...listParentPath, 0], offset: 0 },
+			// 	focus: { path: [...listParentPath, 0], offset: 0 }
+			// });
 		} else {
 			const previousItemPath = Path.previous(listItemPath);
 			const [previousItem] = Editor.node(editor, previousItemPath);
@@ -935,12 +922,11 @@ export class EditorContainer {
 			});
 
 			Transforms.removeNodes(editor, { at: listItemPath });
+			// Transforms.select(editor, {
+			// 	anchor: { path: [...previousItemPath, 0], offset: 0 },
+			// 	focus: { path: [...previousItemPath, 0], offset: 0 }
+			// });
 		}
-
-		// Transforms.select(editor, {
-		// 	anchor: { path: textNodePath, offset: 0 },
-		// 	focus: { path: textNodePath, offset: 0 }
-		// });
 
 		return true;
 	}
@@ -1048,6 +1034,7 @@ export class EditorContainer {
 					editor,
 					{
 						...this.createParagraphNode(""),
+						paddingTop: 0.5,
 					},
 					{ at: nextPath },
 				);
@@ -1082,8 +1069,8 @@ export class EditorContainer {
 				}
 
 				Transforms.select(editor, {
-					anchor: { path: nextPath, offset: 0 },
-					focus: { path: nextPath, offset: 0 },
+					anchor: { path: [...nextPath, 0], offset: 0 },
+					focus: { path: [...nextPath, 0], offset: 0 },
 				});
 			});
 
@@ -1102,7 +1089,7 @@ export class EditorContainer {
 		if (Element.isElement(newNode)) {
 			Transforms.setNodes(
 				editor,
-				{ paddingTop: 0 },
+				{ paddingTop: 0.5 },
 				{ at: newParagraphPath },
 			);
 		}
@@ -1184,7 +1171,10 @@ export class EditorContainer {
 			} else if (shouldWrap) {
 				Transforms.setNodes(
 					editor,
-					{ type: targetListType },
+					{
+						type: targetListType,
+						listLevel: (list.listLevel || 1) + 1,
+					},
 					{ at: listPath },
 				);
 			}
@@ -1200,7 +1190,7 @@ export class EditorContainer {
 
 		Transforms.wrapNodes(
 			editor,
-			{ type: targetListType, children: [] },
+			{ type: targetListType, listLevel: 1, children: [] },
 			{ at: location },
 		);
 		Transforms.wrapNodes(
@@ -1252,9 +1242,14 @@ export class EditorContainer {
 			{ type: "list_item", children: [] },
 			{ at: paragraphPath },
 		);
+
 		Transforms.wrapNodes(
 			editor,
-			{ type: list.type, children: [] },
+			{
+				type: list.type,
+				listLevel: (list.listLevel || 1) + 1,
+				children: [],
+			},
 			{ at: paragraphPath },
 		);
 

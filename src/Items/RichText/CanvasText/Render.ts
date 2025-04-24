@@ -220,7 +220,7 @@ function getBlockNode(
 			case "list_item": {
 				let listMark = "";
 				if (listData?.isNumberedList) {
-					listMark += listMarks[i % 10];
+					listMark += listMarks[i % 20];
 				} else {
 					listMark += "•";
 				}
@@ -926,7 +926,11 @@ function setBlockNodesCoordinates(nodes: LayoutBlockNode[]): number {
 	for (const node of nodes) {
 		for (const line of node.lines) {
 			for (const block of line) {
-				if (node !== nodes[0]) {
+				if (
+					node !== nodes[0] ||
+					node.type === "ul_list" ||
+					node.type === "ol_list"
+				) {
 					yOffset += block.paddingTop || 0;
 					paddingsSum += block.paddingTop || 0;
 				}
@@ -1001,6 +1005,7 @@ function renderBlockNodes(
 	nodes: LayoutBlockNode[],
 	scale?: number,
 ): void {
+	console.log(nodes);
 	if (scale) {
 		ctx.scale(scale, scale);
 	}

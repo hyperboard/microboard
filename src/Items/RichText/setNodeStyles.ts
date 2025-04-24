@@ -81,22 +81,26 @@ export function setNodeChildrenStyles({
 export function setNodeStyles({
 	node,
 	isPaddingTopNeeded,
+	listLevel = 1,
 	editor,
 	horisontalAlignment,
 }: {
 	node: BlockNode;
 	isPaddingTopNeeded: boolean;
+	listLevel?: number;
 	editor?: BaseEditor & ReactEditor & HistoryEditor;
 	horisontalAlignment?: HorisontalAlignment;
 }) {
 	if (node.type === "ol_list" || node.type === "ul_list") {
+		node.listLevel = listLevel;
 		for (const listItem of node.children) {
 			for (const listItemChild of listItem.children) {
 				setNodeStyles({
 					node: listItemChild,
 					editor,
+					listLevel: listLevel + 1,
 					horisontalAlignment,
-					isPaddingTopNeeded: true,
+					isPaddingTopNeeded: listItemChild === listItem.children[0],
 				});
 			}
 		}

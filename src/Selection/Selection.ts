@@ -1450,10 +1450,10 @@ export class Selection {
 	}
 
 	async duplicate(): Promise<void> {
-		const canDuplicate = await updateMediaUsage(
-			this.getMediaStorageIds(),
-			this.board.getBoardId(),
-		);
+		const mediaIds = this.getMediaStorageIds();
+		const canDuplicate = mediaIds.length
+			? await updateMediaUsage(mediaIds, this.board.getBoardId())
+			: true;
 		if (!canDuplicate) {
 			return;
 		}

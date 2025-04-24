@@ -1040,10 +1040,9 @@ export class Board {
 			newMap[newItemId] = itemData;
 		}
 
-		const canDuplicate = await updateMediaUsage(
-			mediaStorageIds,
-			this.getBoardId(),
-		);
+		const canDuplicate = mediaStorageIds.length
+			? await updateMediaUsage(mediaStorageIds, this.getBoardId())
+			: true;
 		if (!canDuplicate) {
 			return;
 		}
