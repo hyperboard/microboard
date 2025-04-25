@@ -21,7 +21,7 @@ export class RichTextCommand implements Command {
 			if (!richText) {
 				continue;
 			}
-			richText.apply(this.operation);
+			richText.getRichText()?.applyCommand(this.operation);
 		}
 	}
 
@@ -31,7 +31,7 @@ export class RichTextCommand implements Command {
 			if (!richText) {
 				continue;
 			}
-			richText.apply(operation);
+			richText.getRichText()?.applyCommand(operation);
 		}
 	}
 
@@ -214,13 +214,13 @@ export class RichTextGroupCommand implements Command {
 
 	apply(): void {
 		for (const { item, operation } of this.forwardOps) {
-			item.apply(operation);
+			item.applyCommand(operation);
 		}
 	}
 
 	revert(): void {
 		for (const { item, operation } of this.reverseOps) {
-			item.apply(operation);
+			item.applyCommand(operation);
 		}
 	}
 
