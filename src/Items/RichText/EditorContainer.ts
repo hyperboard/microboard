@@ -145,17 +145,20 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: SlateOp): void => {
+			console.log(operation);
 			if (!this.shouldEmit) {
 				return;
 			}
 			const isRecordingOperations = this.recordedOps !== null;
 			if (isRecordingOperations) {
-				if (
+				const isSettingNodeFontSize =
 					operation.type === "set_node" &&
 					"fontSize" in operation.newProperties &&
-					"fontSize" in operation.properties
-				) {
-					if (operation.newProperties.fontSize === "auto") {
+					"fontSize" in operation.properties;
+				if (isSettingNodeFontSize) {
+					const isSettingNodeFontSizeToAuto =
+						operation.newProperties.fontSize === "auto";
+					if (isSettingNodeFontSizeToAuto) {
 						operation.newProperties.fontSize = 14;
 						operation.newProperties.enableAuto = true;
 						operation.properties.enableAuto = false;

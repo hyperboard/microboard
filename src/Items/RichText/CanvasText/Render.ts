@@ -1005,7 +1005,7 @@ function renderBlockNodes(
 	nodes: LayoutBlockNode[],
 	scale?: number,
 ): void {
-	console.log(nodes);
+	// console.log(nodes);
 	if (scale) {
 		ctx.scale(scale, scale);
 	}
