@@ -893,19 +893,25 @@ export class EditorContainer {
 			if (this.getAreAllChildrenEmpty(updatedList)) {
 				Transforms.removeNodes(editor, { at: listPath });
 			}
+			const listPosition = listPath[listPath.length - 1];
 
 			currentListItemChildren.forEach((childNode, index) => {
-				const listPosition = listPath[listPath.length - 1];
 				const copiedNode = structuredClone(childNode);
 				copiedNode.paddingTop = 0;
 				Transforms.insertNodes(editor, copiedNode, {
 					at: [...listParentPath, listPosition + index],
 				});
 			});
-			// Transforms.select(editor, {
-			// 	anchor: { path: [...listParentPath, 0], offset: 0 },
-			// 	focus: { path: [...listParentPath, 0], offset: 0 }
-			// });
+			Transforms.select(editor, {
+				anchor: {
+					path: [...listParentPath, listPosition, 0],
+					offset: 0,
+				},
+				focus: {
+					path: [...listParentPath, listPosition, 0],
+					offset: 0,
+				},
+			});
 		} else {
 			const previousItemPath = Path.previous(listItemPath);
 			const [previousItem] = Editor.node(editor, previousItemPath);
@@ -922,10 +928,24 @@ export class EditorContainer {
 			});
 
 			Transforms.removeNodes(editor, { at: listItemPath });
-			// Transforms.select(editor, {
-			// 	anchor: { path: [...previousItemPath, 0], offset: 0 },
-			// 	focus: { path: [...previousItemPath, 0], offset: 0 }
-			// });
+			Transforms.select(editor, {
+				anchor: {
+					path: [
+						...previousItemPath,
+						previousItem.children.length,
+						0,
+					],
+					offset: 0,
+				},
+				focus: {
+					path: [
+						...previousItemPath,
+						previousItem.children.length,
+						0,
+					],
+					offset: 0,
+				},
+			});
 		}
 
 		return true;
