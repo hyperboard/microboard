@@ -606,6 +606,12 @@ export class RichText extends Mbr implements Geometry {
 		this.subject.publish(this);
 	}
 
+	applyCommand(op: Operation): void {
+		this.editor.isCommandApplication = true;
+		this.apply(op);
+		this.editor.isCommandApplication = false;
+	}
+
 	getId(): string {
 		return this.id;
 	}

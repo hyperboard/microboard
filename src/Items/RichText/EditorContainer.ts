@@ -71,6 +71,7 @@ export class EditorContainer {
 	shouldEmit = true;
 	private recordedOps: SlateOp[] | null = null;
 	readonly subject = new Subject<EditorContainer>();
+	isCommandApplication = false;
 
 	constructor(
 		private id: string,
@@ -191,25 +192,27 @@ export class EditorContainer {
 						}
 					}
 
-					if (this.recordedOps && this.recordedOps.length !== 0) {
-						this.recordedOps.push(operation);
-					} else {
-						this.startOpRecording(operation);
-						setTimeout(() => {
-							const ops = this.stopOpRecordingAndGetOps();
-							if (ops.length === 0) {
-								return;
-							}
-							this.emitWithoutApplying({
-								class: "RichText",
-								method: "edit",
-								item: [this.id],
-								selection: JSON.parse(
-									JSON.stringify(this.editor.selection),
-								),
-								ops,
+					if (!this.isCommandApplication) {
+						if (this.recordedOps && this.recordedOps.length !== 0) {
+							this.recordedOps.push(operation);
+						} else {
+							this.startOpRecording(operation);
+							setTimeout(() => {
+								const ops = this.stopOpRecordingAndGetOps();
+								if (ops.length === 0) {
+									return;
+								}
+								this.emitWithoutApplying({
+									class: "RichText",
+									method: "edit",
+									item: [this.id],
+									selection: JSON.parse(
+										JSON.stringify(this.editor.selection),
+									),
+									ops,
+								});
 							});
-						});
+						}
 					}
 
 					this.decorated.apply(operation);
