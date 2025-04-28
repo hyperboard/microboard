@@ -146,7 +146,6 @@ export class EditorContainer {
 		};
 		/** We decorate methods */
 		editor.apply = (operation: SlateOp): void => {
-			console.log(operation);
 			if (!this.shouldEmit) {
 				return;
 			}
@@ -337,10 +336,9 @@ export class EditorContainer {
 			}
 		} catch (error) {
 			console.error(
-				"Error in applying RichText Operation",
+				"Error in applying RichText Operation in Item: ",
+				this.id,
 				error,
-				op,
-				this.editor.children,
 			);
 		}
 	}
