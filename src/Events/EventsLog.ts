@@ -249,6 +249,10 @@ function createEventsList(
 
 		applyUnconfirmed(): void {
 			if (justConfirmed.length > 0) {
+				console.log(
+					"INSIDE OF IF, found some just confirmed",
+					justConfirmed,
+				);
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
 					recordsToSend
@@ -257,6 +261,8 @@ function createEventsList(
 						.map(rec => rec.event),
 					// board,
 				);
+				console.log("Transformed Send Events:", transformedSend);
+
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
 					newRecords
@@ -265,14 +271,20 @@ function createEventsList(
 						.map(rec => rec.event),
 					// board,
 				);
+				console.log("Transformed New Events:", transformedNew);
+
 				const recsToSend = transformedSend.map(event => ({
 					event,
 					command: createCommand(event.body.operation),
 				}));
+				console.log("Records to Send:", recsToSend);
+
 				const recsNew = transformedNew.map(event => ({
 					event,
 					command: createCommand(event.body.operation),
 				}));
+				console.log("New Records:", recsNew);
+
 				recordsToSend.length = 0;
 				recordsToSend.push(...recsToSend.reverse());
 				newRecords.length = 0;
