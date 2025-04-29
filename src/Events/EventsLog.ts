@@ -249,10 +249,9 @@ function createEventsList(
 
 		applyUnconfirmed(): void {
 			if (justConfirmed.length > 0) {
-				console.log(
-					"INSIDE OF IF, found some just confirmed",
-					justConfirmed,
-				);
+				console.log("INSIDE OF IF, found some just confirmed", [
+					...justConfirmed,
+				]);
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
 					recordsToSend
