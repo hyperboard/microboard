@@ -68,8 +68,8 @@ export const prepareAudio = (
 export const calculateAudioPosition = (board: Board, audioItem: AudioItem) => {
 	const cameraMbr = board.camera.getMbr();
 	const cameraWidth = cameraMbr.getWidth();
-	const translateX = cameraMbr.left + cameraWidth * 0.2;
+	const translateX = cameraMbr.left + cameraWidth * 0.34;
 	const translateY = cameraMbr.getCenter().y - audioItem.getHeight() / 2;
-	const scale = (cameraWidth * 0.6) / audioItem.getWidth();
+	const scale = (cameraWidth * 0.32) / audioItem.getWidth();
 	return new Matrix(translateX, translateY, scale, scale);
 };
