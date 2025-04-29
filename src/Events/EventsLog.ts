@@ -274,9 +274,9 @@ function createEventsList(
 					command: createCommand(event.body.operation),
 				}));
 				recordsToSend.length = 0;
-				recordsToSend.push(...recsToSend);
+				recordsToSend.push(...recsToSend.reverse());
 				newRecords.length = 0;
-				newRecords.push(...recsNew);
+				newRecords.push(...recsNew.reverse());
 				justConfirmed.length = 0;
 			}
 			apply(recordsToSend);
