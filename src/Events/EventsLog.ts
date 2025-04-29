@@ -550,7 +550,7 @@ export function createEventsLog(board: Board): EventsLog {
 			) {
 				const confirmed = [
 					...list.getConfirmedRecords().map(rec => rec.event),
-					...events,
+					// ...events,
 				].filter(
 					evnt =>
 						evnt.body.eventId !== event.body.eventId &&
