@@ -19,7 +19,7 @@ import { BoardSnapshot } from "Board/Board";
 import { Subject } from "shared/Subject";
 import { Command, createCommand } from "./Command";
 import { EventsCommand } from "./EventsCommand";
-import { createEventsLog } from "./EventsLog";
+import { createEventsLog, EventsLog } from "./EventsLog";
 import { SyncLog, SyncLogSubject } from "./SyncLog";
 import { EventsOperation, Operation } from "./EventsOperations";
 import {
@@ -37,7 +37,6 @@ import { AudioItem } from "Board/Items/Audio/Audio";
 import { AINode } from "Board/Items/AINode/AINode";
 import { Account } from "entities/account/Account";
 import { NotifyFunction } from "shared/ui-lib/Toast/notify";
-import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 
 const { i18n } = conf;
 
@@ -109,6 +108,7 @@ export interface Events {
 	sendPresenceEvent(event: PresenceEventType): void;
 	replay(): Promise<void>;
 	handleEvent(message: EventsMsg);
+	log: EventsLog;
 }
 
 type SnapshotToPublish = {
@@ -548,7 +548,7 @@ export function createEvents(
 			return;
 		}
 
-		log.insertEvents(event);
+		log.insertEventsFromOtherConnections(event);
 		const last = log.getLastConfirmed();
 		if (last) {
 			subject.publish(last);
@@ -655,7 +655,7 @@ export function createEvents(
 		const newEvents = events.filter(event => event.order > maxOrder);
 
 		if (newEvents.length > 0) {
-			log.insertEvents(newEvents);
+			log.insertEventsFromOtherConnections(newEvents);
 			lastIndex = log.getLastIndex();
 			subject.publish(newEvents[0]);
 		}
@@ -673,7 +673,7 @@ export function createEvents(
 		if (newerEvents.length <= 0) {
 			return;
 		}
-		log.insertEvents(newerEvents);
+		log.insertEventsFromOtherConnections(newerEvents);
 		const last = log.getLastConfirmed();
 		if (last) {
 			subject.publish(last);
@@ -763,7 +763,7 @@ export function createEvents(
 		connection?.dismissNotificationAboutLostConnection();
 		currentSequenceNumber++;
 		pendingEvent.event.order = msg.order;
-		log.confirmEvent(pendingEvent.event);
+		log.confirmSentLocalEvent(pendingEvent.event);
 		subject.publish({} as any);
 		pendingEvent = null;
 		firstSentTime = null;
@@ -848,7 +848,7 @@ export function createEvents(
 			event,
 			command: command || createCommand(board, operation),
 		};
-		log.push(record);
+		log.insertNewLocalEventRecordAfterEmit(record);
 		setLatestUserEvent(operation, userId);
 		subject.publish(event);
 
@@ -1108,7 +1108,7 @@ export function createEvents(
 		serialize: log.serialize,
 		deserialize: log.deserialize,
 		deserializeAndApply: log.deserializeAndApply,
-		insert: log.insertEvents,
+		insert: log.insertEventsFromOtherConnections,
 		getSnapshot: log.getSnapshot,
 		getSnapshotToPublish,
 		getRaw,
@@ -1128,6 +1128,7 @@ export function createEvents(
 		sendPresenceEvent,
 		replay,
 		handleEvent: messageRouter.handleMessage,
+		log,
 	};
 
 	connection?.subscribe(board);

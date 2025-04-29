@@ -29,11 +29,11 @@ export interface EventsLog {
 	revertUnconfirmed(): void;
 	applyUnconfirmed(): void;
 	getRaw(): RawHistoryRecords;
-	insertEvents(
+	insertEventsFromOtherConnections(
 		// events: BoardEvent | BoardEventPack | (BoardEvent | BoardEventPack)[],
 		events: SyncEvent | SyncEvent[],
 	): void;
-	push(record: HistoryRecord): HistoryRecord;
+	insertNewLocalEventRecordAfterEmit(record: HistoryRecord): HistoryRecord;
 	getUnorderedRecords(): HistoryRecord[];
 	getUndoRecord(userId: number): HistoryRecord | null;
 	getRedoRecord(userId: number): HistoryRecord | null;
@@ -44,7 +44,7 @@ export interface EventsLog {
 	setSnapshotLastIndex(index: number): void;
 	getSnapshot(): BoardSnapshot;
 	getUnpublishedEvent(): BoardEventPack | null;
-	confirmEvent(event: BoardEvent | BoardEventPack): void;
+	confirmSentLocalEvent(event: BoardEvent | BoardEventPack): void;
 	getLastIndex(): number;
 	getLastConfirmed(): BoardEvent | null;
 	getSyncLog(): SyncLog;
@@ -239,8 +239,8 @@ function createEventsList(
 		},
 
 		revertUnconfirmed(): void {
-			revert(newRecords.reverse());
-			revert(recordsToSend.reverse());
+			revert(newRecords.slice().reverse());
+			revert(recordsToSend.slice().reverse());
 			syncLog.push({
 				msg: "revertUnconfirmed",
 				records: [...recordsToSend, ...newRecords],
@@ -251,12 +251,18 @@ function createEventsList(
 			if (justConfirmed.length > 0) {
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					recordsToSend.reverse().map(rec => rec.event),
+					recordsToSend
+						.slice()
+						.reverse()
+						.map(rec => rec.event),
 					// board,
 				);
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					newRecords.reverse().map(rec => rec.event),
+					newRecords
+						.slice()
+						.reverse()
+						.map(rec => rec.event),
 					// board,
 				);
 				const recsToSend = transformedSend.map(event => ({
@@ -468,7 +474,9 @@ export function createEventsLog(board: Board): EventsLog {
 		return lastConfirmedEventOrder;
 	}
 
-	function insertEvents(events: SyncEvent | SyncEvent[]): void {
+	function insertEventsFromOtherConnections(
+		events: SyncEvent | SyncEvent[],
+	): void {
 		const eventArray = Array.isArray(events) ? events : [events];
 		if (eventArray.length === 0) {
 			return;
@@ -512,7 +520,7 @@ export function createEventsLog(board: Board): EventsLog {
 		if (Array.isArray(toDelete) && toDelete.length > 0) {
 			list.removeUnconfirmedEventsByItems(toDelete);
 			toDelete.forEach(item => {
-				board.emit({
+				board.apply({
 					class: "Board",
 					method: "remove",
 					item: [item],
@@ -558,12 +566,14 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	// TODO: rethink this function
-	function confirmEvent(event: BoardEventPack): void {
+	function confirmSentLocalEvent(event: BoardEventPack): void {
 		const events = expandEvents([event]);
 		list.confirmSentRecords(events);
 	}
 
-	function push(record: HistoryRecord): HistoryRecord {
+	function insertNewLocalEventRecordAfterEmit(
+		record: HistoryRecord,
+	): HistoryRecord {
 		list.addNewRecords([record]);
 		return record;
 	}
@@ -731,29 +741,76 @@ export function createEventsLog(board: Board): EventsLog {
 	}
 
 	return {
+		// Inserts new events into the events log, handling transformations and merging
+		insertEventsFromOtherConnections,
+
+		// Adds a new record to the events log
+		insertNewLocalEventRecordAfterEmit,
+
+		// Confirms events that have been sent, updating their status in the log
+		confirmSentLocalEvent: confirmSentLocalEvent,
+
+		// Retrieves the complete list of all history records (confirmed, to-send, and new)
 		getList,
-		revertUnconfirmed: list.revertUnconfirmed,
-		applyUnconfirmed: list.applyUnconfirmed,
+
+		// Returns raw history records categorized into confirmed, to-send, and new records
 		getRaw,
+
+		// Retrieves the synchronization log for tracking event changes
 		getSyncLog: list.getSyncLog,
+
+		// Subject for synchronization log events, allowing subscription to log changes
 		syncLogSubject: list.syncLogSubject,
-		insertEvents,
-		confirmEvent,
-		clear: list.clear,
-		clearConfirmed: list.clearConfirmedRecords,
-		push,
+
+		// Reverts all unconfirmed events (records to send and new records) in reverse order
+		revertUnconfirmed: list.revertUnconfirmed,
+
+		// Applies all unconfirmed events, transforming them if necessary
+		applyUnconfirmed: list.applyUnconfirmed,
+
+		// Retrieves unordered records (records to send and new records)
 		getUnorderedRecords,
+
+		// Finds the most recent undoable record for a specific user
 		getUndoRecord,
+
+		// Finds the most recent redoable record for a specific user
 		getRedoRecord,
+
+		// Retrieves a specific record by its event ID
 		getRecordById,
+
+		// Serializes confirmed events into a format that can be stored or transmitted
 		serialize,
+
+		// Deserializes events and adds them to the confirmed records
 		deserialize,
+
+		// Deserializes events, applies them to the board, and adds them to confirmed records
 		deserializeAndApply,
+
+		// Sets the last known index for snapshots
 		setSnapshotLastIndex,
+
+		// Creates a snapshot of the current board state, including events and items
 		getSnapshot,
+
+		// Retrieves unpublished events ready to be sent
 		getUnpublishedEvent,
+
+		// Gets the latest event order, considering both confirmed events and snapshot index
 		getLastIndex: getLatestOrder,
+
+		// Retrieves the most recently confirmed event
 		getLastConfirmed,
+
+		// Completely clears all records from the events log
+		clear: list.clear,
+
+		// Clears only the confirmed records from the events log
+		clearConfirmed: list.clearConfirmedRecords,
+
+		// Replays a series of events, applying them in order
 		replay,
 	};
 }
