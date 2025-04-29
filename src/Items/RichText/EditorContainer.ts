@@ -41,6 +41,7 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
+import path from "path";
 
 const { i18n } = conf;
 
@@ -1133,12 +1134,154 @@ export class EditorContainer {
 		return false;
 	}
 
-	toggleListType(targetListType: ListType, shouldWrap = true): boolean {
+	toggleListTypeForSelection(targetListType: ListType) {
 		const { editor } = this;
 		const { selection } = editor;
 
 		if (!selection) {
 			return false;
+		}
+
+		Editor.withoutNormalizing(editor, () => {
+			const [start, end] = Range.edges(selection);
+			const commonAncestorPath = Path.common(start.path, end.path);
+
+			const nodes = Array.from(
+				Editor.nodes(editor, {
+					at: selection,
+					mode: "lowest",
+					match: n => Editor.isBlock(editor, n),
+				}),
+			);
+
+			const nodesWithLists: Record<
+				number,
+				[node: BlockNode, path: number[]][]
+			> = {};
+
+			nodes.forEach(([node, path]) => {
+				const parentList = this.getBlockParentList(path);
+				if (parentList) {
+					if (!nodesWithLists[parentList[1].length]) {
+						nodesWithLists[parentList[1].length] = [parentList];
+					} else if (
+						!nodesWithLists[parentList[1].length].some(
+							nodeEntry => nodeEntry[0] === parentList[0],
+						)
+					) {
+						if (nodesWithLists[parentList[1].length]) {
+							nodesWithLists[parentList[1].length].push(
+								parentList,
+							);
+						}
+					}
+				} else {
+					if (nodesWithLists[path.length]) {
+						nodesWithLists[path.length].push([node, path]);
+					} else {
+						nodesWithLists[path.length] = [[node, path]];
+					}
+				}
+			});
+
+			const [level, nodesArr] = Object.entries(nodesWithLists)[0];
+
+			if (nodesArr.length === 0) {
+				return false;
+			}
+
+			const nodePaths = nodesArr.map(([_, path]) => path);
+
+			const newSelectionStart: Path = nodesArr[0][1];
+			const newSelectionEnd: Path = [...nodesArr[nodesArr.length - 1][1]];
+			let diff = 0;
+
+			for (const [node, path] of nodesArr) {
+				if (Element.isElement(node)) {
+					if (node.type === "ol_list" || node.type === "ul_list") {
+						const childrenCount = node.children.length;
+						newSelectionEnd[newSelectionEnd.length - 1] =
+							newSelectionEnd[newSelectionEnd.length - 1] +
+							childrenCount -
+							1;
+						path[path.length - 1] = path[path.length - 1] + diff;
+						console.log(this.getText());
+						Transforms.unwrapNodes(editor, {
+							at: path,
+							mode: "highest",
+							match: n =>
+								Element.isElement(n) && n.type === "list_item",
+							split: true,
+						});
+
+						Transforms.unwrapNodes(editor, {
+							at: path,
+							mode: "highest",
+							match: n =>
+								Element.isElement(n) &&
+								(n.type === "ol_list" || n.type === "ul_list"),
+							split: true,
+						});
+						diff = diff + childrenCount - 1;
+					} else if (node.type === "list_item") {
+						Transforms.unwrapNodes(editor, {
+							at: path,
+							match: n =>
+								Element.isElement(n) && n.type === "list_item",
+							split: true,
+						});
+					}
+				}
+			}
+
+			const refreshedNodes = Array.from(
+				Editor.nodes(editor, {
+					at: Editor.range(
+						editor,
+						newSelectionStart,
+						newSelectionEnd,
+					),
+					mode: "all",
+					match: n => Element.isElement(n),
+				}),
+			).filter(([_, path]) => path.length === Number(level));
+
+			const refreshedPaths = refreshedNodes.map(([_, path]) => path);
+
+			for (const path of refreshedPaths) {
+				Transforms.wrapNodes(
+					editor,
+					{ type: "list_item", children: [] },
+					{ at: path },
+				);
+			}
+
+			const listRange = Editor.range(
+				editor,
+				refreshedPaths[0],
+				refreshedPaths[refreshedPaths.length - 1],
+			);
+			Transforms.wrapNodes(
+				editor,
+				{ type: targetListType, listLevel: 1, children: [] },
+				{ at: listRange },
+			);
+		});
+		this.subject.publish(this);
+		return true;
+	}
+
+	toggleListType(targetListType: ListType, shouldWrap = true): boolean {
+		console.log(this.getText());
+		const { editor } = this;
+		const { selection } = editor;
+
+		if (!selection) {
+			return false;
+		}
+
+		if (!Range.isCollapsed(selection)) {
+			return this.toggleListTypeForSelection(targetListType);
 		}
 
 		Editor.withoutNormalizing(editor, () => {
@@ -1197,7 +1340,7 @@ export class EditorContainer {
 					editor,
 					{
 						type: targetListType,
-						listLevel: (list.listLevel || 1) + 1,
+						listLevel: list.listLevel || 1,
 					},
 					{ at: listPath },
 				);
@@ -1222,6 +1365,25 @@ export class EditorContainer {
 			{ type: "list_item", children: [] },
 			{ at: location },
 		);
+	}
+
+	getBlockParentList(
+		blockPath: number[],
+	): [node: BlockNode, path: number[]] | null {
+		const editor = this.editor;
+		const listItemPath = Path.parent(blockPath);
+		const [listItem] = Editor.node(editor, listItemPath);
+		if (!listItem || listItem.type !== "list_item") {
+			return null;
+		}
+
+		const listPath = Path.parent(listItemPath);
+		const [list] = Editor.node(editor, listPath);
+		if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
+			return null;
+		}
+
+		return [list, listPath];
 	}
 
 	handleWrapIntoNestedList(): boolean {
