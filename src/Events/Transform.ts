@@ -147,6 +147,7 @@ function insertText_insertText(
 	confirmed: InsertTextOperation,
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
+	console.log("insertText_insertText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.offset) {
@@ -160,6 +161,7 @@ function removeText_insertText(
 	confirmed: RemoveTextOperation,
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
+	console.log("removeText_insertText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.offset) {
@@ -173,6 +175,7 @@ function splitNode_insertText(
 	confirmed: SplitNodeOperation,
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
+	console.log("splitNode_insertText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.position <= toTransform.offset) {
@@ -187,6 +190,7 @@ function removeNode_insertText(
 	confirmed: RemoveNodeOperation,
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
+	console.log("removeNode_insertText");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -196,6 +200,7 @@ function insertNode_insertText(
 	confirmed: InsertNodeOperation,
 	toTransform: InsertTextOperation,
 ): InsertTextOperation {
+	console.log("insertNode_insertText");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -207,6 +212,7 @@ function mergeNode_insertText(
 	toTransform: InsertTextOperation,
 	// editor: BaseEditor & ReactEditor & HistoryEditor,
 ): InsertTextOperation {
+	console.log("mergeNode_insertText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		// const previousSiblingPath = Path.previous(confirmed.path);
@@ -225,6 +231,7 @@ function insertText_removeText(
 	confirmed: InsertTextOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
+	console.log("insertText_removeText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.offset) {
@@ -238,6 +245,7 @@ function removeText_removeText(
 	confirmed: RemoveTextOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
+	console.log("removeText_removeText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.offset) {
@@ -251,6 +259,7 @@ function insertNode_removeText(
 	confirmed: InsertNodeOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
+	console.log("insertNode_removeText");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -260,6 +269,7 @@ function splitNode_removeText(
 	confirmed: SplitNodeOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
+	console.log("splitNode_removeText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.position <= toTransform.offset) {
@@ -274,6 +284,7 @@ function mergeNode_removeText(
 	confirmed: MergeNodeOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
+	console.log("mergeNode_removeText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		transformed.offset += confirmed.position;
@@ -286,6 +297,7 @@ function removeNode_removeText(
 	confirmed: RemoveNodeOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
+	console.log("removeNode_removeText");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -295,6 +307,7 @@ function insertText_insertNode(
 	confirmed: InsertTextOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("insertText_insertNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -304,6 +317,7 @@ function insertText_removeNode(
 	confirmed: InsertTextOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("insertText_removeNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -313,6 +327,7 @@ function removeText_insertNode(
 	confirmed: RemoveTextOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("removeText_insertNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -322,6 +337,7 @@ function removeText_removeNode(
 	confirmed: RemoveTextOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("removeText_removeNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -331,6 +347,7 @@ function insertNode_insertNode(
 	confirmed: InsertNodeOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("insertNode_insertNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -340,6 +357,7 @@ function insertNode_removeNode(
 	confirmed: InsertNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("insertNode_removeNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -349,6 +367,7 @@ function removeNode_insertNode(
 	confirmed: RemoveNodeOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("removeNode_insertNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -358,6 +377,7 @@ function removeNode_removeNode(
 	confirmed: RemoveNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("removeNode_removeNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -367,6 +387,7 @@ function splitNode_insertNode(
 	confirmed: SplitNodeOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("splitNode_insertNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);
@@ -378,6 +399,7 @@ function splitNode_removeNode(
 	confirmed: SplitNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("splitNode_removeNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);
@@ -389,6 +411,7 @@ function mergeNode_insertNode(
 	confirmed: MergeNodeOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("mergeNode_insertNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);
@@ -400,6 +423,7 @@ function mergeNode_removeNode(
 	confirmed: MergeNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("mergeNode_removeNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);
@@ -411,6 +435,7 @@ function setNode_insertNode(
 	confirmed: SetNodeOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
+	console.log("setNode_insertNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);
@@ -422,6 +447,7 @@ function setNode_removeNode(
 	confirmed: SetNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
+	console.log("setNode_removeNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);
@@ -433,6 +459,7 @@ function insertText_mergeNode(
 	confirmed: InsertTextOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
+	console.log("insertText_mergeNode");
 	const transformed = { ...toTransform };
 	if (
 		Path.isBefore(confirmed.path, toTransform.path) &&
@@ -450,6 +477,7 @@ function removeText_mergeNode(
 	confirmed: RemoveTextOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
+	console.log("removeText_mergeNode");
 	const transformed = { ...toTransform };
 	if (Path.isSibling(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.position) {
@@ -464,6 +492,7 @@ function insertNode_mergeNode(
 	confirmed: InsertNodeOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
+	console.log("insertNode_mergeNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -473,6 +502,7 @@ function removeNode_mergeNode(
 	confirmed: RemoveNodeOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
+	console.log("removeNode_mergeNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -482,6 +512,7 @@ function splitNode_mergeNode(
 	confirmed: SplitNodeOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
+	console.log("splitNode_mergeNode");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.position <= toTransform.position) {
@@ -496,6 +527,7 @@ function mergeNode_mergeNode(
 	confirmed: MergeNodeOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
+	console.log("mergeNode_mergeNode");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		transformed.position += confirmed.position;
@@ -508,6 +540,7 @@ function insertText_splitNode(
 	confirmed: InsertTextOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("insertText_splitNode");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.position) {
@@ -525,6 +558,7 @@ function removeText_splitNode(
 	confirmed: RemoveTextOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("removeText_splitNode");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		if (confirmed.offset <= toTransform.position) {
@@ -539,6 +573,7 @@ function insertNode_splitNode(
 	confirmed: InsertNodeOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("insertNode_splitNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -548,6 +583,7 @@ function removeNode_splitNode(
 	confirmed: RemoveNodeOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("removeNode_splitNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -557,6 +593,7 @@ function mergeNode_splitNode(
 	confirmed: MergeNodeOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("mergeNode_splitNode");
 	const transformed = { ...toTransform };
 	// todo fix - add length of merged
 	// if (Path.equals(confirmed.path, toTransform.path)) {
@@ -570,6 +607,7 @@ function splitNode_splitNode(
 	confirmed: SplitNodeOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("splitNode_splitNode");
 	const transformed = { ...toTransform };
 	// todo fix
 	// if (Path.equals(confirmed.path, toTransform.path)) {
@@ -585,6 +623,7 @@ function setNode_splitNode(
 	confirmed: SetNodeOperation,
 	toTransform: SplitNodeOperation,
 ): SplitNodeOperation {
+	console.log("setNode_splitNode");
 	const transformed = { ...toTransform };
 	transformed.properties = {
 		...transformed.properties,
@@ -598,6 +637,7 @@ function splitNode_setNode(
 	confirmed: SplitNodeOperation,
 	toTransform: SetNodeOperation,
 ): SetNodeOperation {
+	console.log("splitNode_setNode");
 	const transformed = { ...toTransform };
 	// todo adjust the path to apply set_node to both resulting nodes
 	// or add new set_node to set prev node to prev node
@@ -611,6 +651,7 @@ function mergeNode_setNode(
 	confirmed: MergeNodeOperation,
 	toTransform: SetNodeOperation,
 ): SetNodeOperation {
+	console.log("mergeNode_setNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -620,6 +661,7 @@ function insertNode_setNode(
 	confirmed: InsertNodeOperation,
 	toTransform: SetNodeOperation,
 ): SetNodeOperation {
+	console.log("insertNode_setNode");
 	const transformed = { ...toTransform };
 	transformPath(confirmed, transformed);
 	return transformed;
@@ -629,6 +671,7 @@ function removeNode_setNode(
 	confirmed: RemoveNodeOperation,
 	toTransform: SetNodeOperation,
 ): SetNodeOperation | undefined {
+	console.log("removeNode_setNode");
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		return undefined;
 	}
@@ -641,6 +684,7 @@ function setNode_setNode(
 	confirmed: SetNodeOperation,
 	toTransform: SetNodeOperation,
 ): SetNodeOperation {
+	console.log("setNode_setNode");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		// todo think on it
@@ -661,6 +705,7 @@ function transformRichTextOperation(
 	toTransform: RichTextOperation,
 	// board: Board,
 ): RichTextOperation | undefined {
+	console.log("transformRichTextOperation");
 	// groupEdit - groupEdit
 	if (
 		confirmed.method === "groupEdit" &&
@@ -847,6 +892,7 @@ export function transfromOperation(
 	toTransform: Operation,
 	// board,
 ): Operation | undefined {
+	console.log("transfromOperation");
 	if (confirmed.class === "RichText" && toTransform.class === "RichText") {
 		return transformRichTextOperation(confirmed, toTransform);
 		// return transformRichTextOperation(confirmed, toTransform, board);
