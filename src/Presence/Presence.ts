@@ -300,6 +300,9 @@ export class Presence {
 	}
 
 	processMessage(event: PresenceEventMsg): void {
+		if (!this.drawingContext) {
+			return;
+		}
 		const { userId, event: eventData } = event;
 
 		let user = this.users.get(userId);
