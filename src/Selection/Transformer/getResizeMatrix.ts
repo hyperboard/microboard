@@ -35,16 +35,28 @@ export function getProportionalResize(
 	const oldWidth = notLessThanOne(mbr.getWidth());
 	const oldHeight = notLessThanOne(mbr.getHeight());
 
-	const cos = mbr.getCos();
-	const sin = mbr.getSin();
+	// Calculate a uniform scale factor depending on handle
+	const originalHyp = Math.hypot(oldWidth, oldHeight);
+	let ratio: number;
 
-	const hypotenuse = resizedMbr.getHypotenuse();
+	if (resizeType === "left" || resizeType === "right") {
+		// horizontal drag → width drives the ratio
+		const width = resizedMbr.getWidth();
+		ratio = notLessThanOne(width) / oldWidth;
+	} else if (resizeType === "top" || resizeType === "bottom") {
+		// vertical drag → height drives the ratio
+		const height = resizedMbr.getHeight();
+		ratio = notLessThanOne(height) / oldHeight;
+	} else {
+		// corner drag → diagonal drives the ratio
+		const hyp = resizedMbr.getHypotenuse();
+		ratio = notLessThanOne(hyp) / originalHyp;
+	}
 
-	let newWidth = notLessThanOne(hypotenuse * cos);
-	let newHeight = notLessThanOne(hypotenuse * sin);
-
-	let scaleX = newWidth / oldWidth;
-	let scaleY = newHeight / oldHeight;
+	let newWidth = notLessThanOne(oldWidth * ratio);
+	let newHeight = notLessThanOne(oldHeight * ratio);
+	let scaleX = ratio;
+	let scaleY = ratio;
 
 	const { x, y } = pointer;
 	let newMbr = new Mbr();

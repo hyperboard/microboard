@@ -465,6 +465,7 @@ export class Transformer extends Tool {
 					);
 				}
 			}
+			// TODO DRY
 			if (followingComments) {
 				const translation = this.handleMultipleItemsResize(
 					{ matrix, mbr: resizedMbr },
@@ -475,7 +476,13 @@ export class Transformer extends Tool {
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
-			this.mbr = single.getMbr();
+
+			if (isWidth) {
+				const { left, top, bottom } = single.getMbr();
+				this.mbr = new Mbr(left, top, resizedMbr.right, bottom);
+			} else {
+				this.mbr = single.getMbr();
+			}
 		} else if (single instanceof AINode) {
 			const { matrix, mbr: resizedMbr } = getProportionalResize(
 				this.resizeType,
@@ -498,6 +505,7 @@ export class Transformer extends Tool {
 					this.beginTimeStamp,
 				);
 			}
+			// TODO DRY
 			if (followingComments) {
 				const translation = this.handleMultipleItemsResize(
 					{ matrix, mbr: resizedMbr },
@@ -508,7 +516,12 @@ export class Transformer extends Tool {
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
-			this.mbr = single.getMbr();
+			if (isWidth) {
+				const { left, top, bottom } = single.getMbr();
+				this.mbr = new Mbr(left, top, resizedMbr.right, bottom);
+			} else {
+				this.mbr = single.getMbr();
+			}
 		} else {
 			const items = this.selection.items.list();
 			const includesProportionalItem = items.some(
