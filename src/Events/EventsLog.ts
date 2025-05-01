@@ -254,20 +254,14 @@ function createEventsList(
 				]);
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					recordsToSend
-						.slice()
-						.reverse()
-						.map(rec => rec.event),
+					recordsToSend.slice().map(rec => rec.event),
 					// board,
 				);
 				console.log("Transformed Send Events:", transformedSend);
 
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					newRecords
-						.slice()
-						.reverse()
-						.map(rec => rec.event),
+					newRecords.slice().map(rec => rec.event),
 					// board,
 				);
 				console.log("Transformed New Events:", transformedNew);
@@ -285,9 +279,9 @@ function createEventsList(
 				console.log("New Records:", recsNew);
 
 				recordsToSend.length = 0;
-				recordsToSend.push(...recsToSend.reverse());
+				recordsToSend.push(...recsToSend);
 				newRecords.length = 0;
-				newRecords.push(...recsNew.reverse());
+				newRecords.push(...recsNew);
 				justConfirmed.length = 0;
 			}
 			apply(recordsToSend);
