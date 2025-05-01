@@ -797,6 +797,10 @@ function transformRichTextOperation(
 
 			transformedOps.push(actualyTransformed);
 		}
+		console.log("RETURNING TRANSAOFRMED...", {
+			...toTransform,
+			ops: transformedOps,
+		});
 
 		return {
 			...toTransform,
@@ -837,6 +841,11 @@ function transformRichTextOperation(
 			}
 		}
 
+		console.log("RETURNING TRANSAOFRMED...", {
+			...toTransform,
+			ops: transformedOps,
+		});
+
 		return {
 			...toTransform,
 			ops: transformedOps,
@@ -875,6 +884,11 @@ function transformRichTextOperation(
 				} else {
 					transformedOps.push(...toTransformItemOp.ops);
 				}
+
+				console.log("RETURNING TRANSAOFRMED...", {
+					...toTransformItemOp,
+					ops: transformedOps,
+				});
 
 				return {
 					...toTransformItemOp,
