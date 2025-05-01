@@ -247,9 +247,23 @@ function removeText_removeText(
 ): RemoveTextOperation {
 	console.log("removeText_removeText");
 	const transformed = { ...toTransform };
+
 	if (Path.equals(confirmed.path, toTransform.path)) {
-		if (confirmed.offset <= toTransform.offset) {
+		if (confirmed.offset < toTransform.offset) {
+			// If the confirmed operation is before the to-transform operation
 			transformed.offset -= confirmed.text.length;
+		} else if (confirmed.offset > toTransform.offset) {
+			// If the confirmed operation is after the to-transform operation
+			transformed.offset = toTransform.offset;
+
+			// Trim the text based on the overlap
+			const overlap = confirmed.offset - toTransform.offset;
+			transformed.text = toTransform.text.slice(0, overlap);
+		} else {
+			// If the confirmed operation starts at the same offset
+			const overlap = confirmed.text.length;
+			transformed.text = toTransform.text.slice(overlap);
+			transformed.offset = toTransform.offset;
 		}
 	}
 	return transformed;
