@@ -885,11 +885,6 @@ function transformRichTextOperation(
 					transformedOps.push(...toTransformItemOp.ops);
 				}
 
-				console.log("RETURNING TRANSAOFRMED...", {
-					...toTransformItemOp,
-					ops: transformedOps,
-				});
-
 				return {
 					...toTransformItemOp,
 					ops: transformedOps,
@@ -897,6 +892,10 @@ function transformRichTextOperation(
 			},
 		);
 
+		console.log("RETURNING TRANSAOFRMED...", {
+			...toTransform,
+			itemsOps: transformedItemsOps,
+		});
 		return {
 			...toTransform,
 			itemsOps: transformedItemsOps,
