@@ -700,7 +700,7 @@ function setNode_setNode(
 	return transformed;
 }
 
-function transformRichTextOperation(
+export function transformRichTextOperation(
 	confirmed: RichTextOperation,
 	toTransform: RichTextOperation,
 	// board: Board,
