@@ -66,6 +66,7 @@ export interface BoardEventPackBody {
 
 export interface SyncBoardEvent extends BoardEvent {
 	lastKnownOrder: number;
+	userId: string;
 }
 
 interface SyncBoardEventPackBody extends BoardEventPackBody {
@@ -539,16 +540,22 @@ export function createEvents(
 			return;
 		}
 
-		const eventUserId = parseFloat(event.body.eventId.split(":")[0]);
-		const currentUserId = getUserId();
+		// const eventUserId = parseFloat(event.body.eventId.split(":")[0]);
+		// const currentUserId = getUserId();
+		// const isEventFromCurrentUser = eventUserId === currentUserId;
 
-		const isEventFromCurrentUser = eventUserId === currentUserId;
+		const currentUserId = connection?.getCurrentUser() || "";
+		const messageUserId = message.userId;
+		const isEventFromCurrentUser = currentUserId === messageUserId;
 
 		if (isEventFromCurrentUser) {
 			return;
 		}
 
-		log.insertEventsFromOtherConnections(event);
+		log.insertEventsFromOtherConnections({
+			...event,
+			userId: message.userId,
+		});
 		const last = log.getLastConfirmed();
 		if (last) {
 			subject.publish(last);
@@ -574,15 +581,6 @@ export function createEvents(
 	}
 
 	messageRouter.addHandler<UserJoinMsg>("UserJoin", handleUserJoinMessage);
-
-	function handleBoardEventListMessage(message: BoardEventListMsg): void {
-		handleBoardEventListApplication(message.events);
-	}
-
-	messageRouter.addHandler<BoardEventListMsg>(
-		"BoardEventList",
-		handleBoardEventListMessage,
-	);
 
 	function handleCreateSnapshotRequestMessage(): void {
 		const { boardId, snapshot, lastOrder } = getSnapshotToPublish();
@@ -663,23 +661,23 @@ export function createEvents(
 		// board.saveSnapshot();
 	}
 
-	function handleNewerEvents(
-		snapshot: BoardSnapshot,
-		existingSnapshot: BoardSnapshot,
-	): void {
-		const newerEvents = snapshot.events.filter(
-			event => event.order > existingSnapshot.lastIndex,
-		);
-		if (newerEvents.length <= 0) {
-			return;
-		}
-		log.insertEventsFromOtherConnections(newerEvents);
-		const last = log.getLastConfirmed();
-		if (last) {
-			subject.publish(last);
-		}
-		lastIndex = log.getLastIndex();
-	}
+	// function handleNewerEvents(
+	// 	snapshot: BoardSnapshot,
+	// 	existingSnapshot: BoardSnapshot,
+	// ): void {
+	// 	const newerEvents = snapshot.events.filter(
+	// 		event => event.order > existingSnapshot.lastIndex,
+	// 	);
+	// 	if (newerEvents.length <= 0) {
+	// 		return;
+	// 	}
+	// 	log.insertEventsFromOtherConnections(newerEvents);
+	// 	const last = log.getLastConfirmed();
+	// 	if (last) {
+	// 		subject.publish(last);
+	// 	}
+	// 	lastIndex = log.getLastIndex();
+	// }
 
 	function handleSubscribeConfirmation(msg: SubscribeConfirmationMsg): void {
 		handleSeqNumApplication(msg.initialSequenceNumber);

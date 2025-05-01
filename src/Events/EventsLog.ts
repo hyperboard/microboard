@@ -510,7 +510,6 @@ export function createEventsLog(board: Board): EventsLog {
 		});
 	}
 
-	// function handleEventsInsertion(events: BoardEvent[]): void {
 	function handleEventsInsertion(events: SyncBoardEvent[]): void {
 		list;
 		const toDelete = TransformConnectorHelper.handleRemoveSnappedObject(
@@ -540,12 +539,14 @@ export function createEventsLog(board: Board): EventsLog {
 			) {
 				const confirmed = [
 					...list.getConfirmedRecords().map(rec => rec.event),
-					// ...events,
+					...events,
 				].filter(
 					evnt =>
 						evnt.body.eventId !== event.body.eventId &&
 						evnt.order > event.lastKnownOrder &&
-						evnt.order <= event.order,
+						evnt.order <= event.order &&
+						(event.userId !== evnt.userId ||
+							evnt?.userdId === undefined),
 				);
 				// const transf = transformEvents(confirmed, [event], board);
 				const transf = transformEvents(confirmed, [event]);
