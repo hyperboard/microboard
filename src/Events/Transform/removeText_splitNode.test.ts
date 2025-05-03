@@ -211,4 +211,103 @@ describe("removeText_splitNode transformation", () => {
 			properties: {},
 		});
 	});
+	it("should return a no-op split node operation when split node position is completely removed", () => {
+		const confirmed: RemoveTextOperation = {
+			type: "remove_text",
+			path: [1, 0],
+			offset: 5,
+			text: "entire", // Removes the entire split point position
+		};
+
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 7, // Position is within the removed text range
+			properties: {},
+		};
+
+		const result = removeText_splitNode(confirmed, toTransform);
+
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1, 0],
+			position: 0, // No-op position
+			properties: {},
+		});
+	});
+
+	it("should return a no-op split node operation when split node position is at the start of removed text", () => {
+		const confirmed: RemoveTextOperation = {
+			type: "remove_text",
+			path: [1, 0],
+			offset: 5,
+			text: "something",
+		};
+
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 5, // Exactly where removal starts
+			properties: {},
+		};
+
+		const result = removeText_splitNode(confirmed, toTransform);
+
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1, 0],
+			position: 0, // No-op position
+			properties: {},
+		});
+	});
+
+	it("should return a no-op split node operation when split node position is at the end of removed text", () => {
+		const confirmed: RemoveTextOperation = {
+			type: "remove_text",
+			path: [1, 0],
+			offset: 5,
+			text: "something",
+		};
+
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 14, // Exactly where removal ends
+			properties: {},
+		};
+
+		const result = removeText_splitNode(confirmed, toTransform);
+
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1, 0],
+			position: 0, // No-op position
+			properties: {},
+		});
+	});
+
+	it("should return a no-op split node operation for complex removal scenarios", () => {
+		const confirmed: RemoveTextOperation = {
+			type: "remove_text",
+			path: [1, 0],
+			offset: 3,
+			text: "large text segment that completely invalidates split position",
+		};
+
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 20, // Within removed text range
+			properties: { someProperty: true },
+		};
+
+		const result = removeText_splitNode(confirmed, toTransform);
+
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1, 0],
+			position: 0, // No-op position
+			properties: { someProperty: true }, // Preserve original properties
+		});
+	});
 });
