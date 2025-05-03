@@ -1,5 +1,6 @@
 import { RemoveNodeOperation, SetNodeOperation, Path } from "slate";
-import { undefined, transformPath } from "./Transform";
+import { undefined } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function removeNode_setNode(
 	confirmed: RemoveNodeOperation,

@@ -1,5 +1,5 @@
 import { RemoveTextOperation, InsertNodeOperation } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function removeText_insertNode(
 	confirmed: RemoveTextOperation,

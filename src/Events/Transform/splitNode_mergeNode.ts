@@ -1,5 +1,5 @@
 import { SplitNodeOperation, MergeNodeOperation, Path } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function splitNode_mergeNode(
 	confirmed: SplitNodeOperation,

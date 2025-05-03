@@ -1,5 +1,5 @@
 import { RemoveNodeOperation, RemoveTextOperation } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function removeNode_removeText(
 	confirmed: RemoveNodeOperation,

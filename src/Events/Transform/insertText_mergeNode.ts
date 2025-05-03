@@ -1,5 +1,5 @@
 import { InsertTextOperation, MergeNodeOperation, Path } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function insertText_mergeNode(
 	confirmed: InsertTextOperation,

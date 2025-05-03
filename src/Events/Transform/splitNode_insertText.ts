@@ -1,5 +1,5 @@
 import { SplitNodeOperation, InsertTextOperation, Path } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function splitNode_insertText(
 	confirmed: SplitNodeOperation,

@@ -1,5 +1,5 @@
 import { SetNodeOperation, InsertNodeOperation, Path } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function setNode_insertNode(
 	confirmed: SetNodeOperation,

@@ -1,5 +1,5 @@
 import { InsertNodeOperation, MergeNodeOperation } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function insertNode_mergeNode(
 	confirmed: InsertNodeOperation,

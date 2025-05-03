@@ -47,7 +47,6 @@ import { RichTextOperation } from "Board/Items";
 import { Operation } from "../EventsOperations";
 import {
 	NodeOperation,
-	Path,
 	Operation as SlateOp,
 	TextOperation,
 	BaseEditor,
@@ -61,7 +60,7 @@ type SlateOpTypesToTransform = Exclude<
 	TextOperation["type"] | NodeOperation["type"],
 	"move_node"
 >;
-type SlateOpsToTransform = Exclude<
+export type SlateOpsToTransform = Exclude<
 	TextOperation | NodeOperation,
 	{ type: "move_node" }
 >;
@@ -168,16 +167,6 @@ const operationTransformMap: OperationTransformMap = {
 		split_node: setNode_splitNode,
 	},
 };
-
-export function transformPath(
-	confirmed: SlateOpsToTransform,
-	toTransform: SlateOpsToTransform,
-): void {
-	const newPath = Path.transform(toTransform.path, confirmed);
-	if (newPath) {
-		toTransform.path = newPath;
-	}
-}
 
 export function transformRichTextOperation(
 	confirmed: RichTextOperation,

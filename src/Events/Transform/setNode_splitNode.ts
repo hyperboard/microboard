@@ -1,5 +1,5 @@
 import { SetNodeOperation, SplitNodeOperation } from "slate";
-import { transformPath } from "./Transform";
+import { transformPath } from "./transformPath";
 
 export function setNode_splitNode(
 	confirmed: SetNodeOperation,
