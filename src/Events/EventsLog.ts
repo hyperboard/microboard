@@ -10,8 +10,8 @@ import {
 	SyncEvent,
 } from "./Events";
 import { createSyncLog, SyncLog, SyncLogSubject } from "./SyncLog";
-import { transfromOperation } from "./Transform";
 import { TransformConnectorHelper } from "./TransforHelper";
+import { transfromOperation } from "./Transform";
 
 export interface HistoryRecord {
 	event: BoardEvent;
