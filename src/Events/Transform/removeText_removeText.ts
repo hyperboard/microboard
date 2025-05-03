@@ -13,11 +13,14 @@ export function removeText_removeText(
 		const toTransformStart = toTransform.offset;
 		const toTransformEnd = toTransform.offset + toTransform.text.length;
 
-		// Completely outside range
-		if (
-			confirmedEnd <= toTransformStart ||
-			confirmedStart >= toTransformEnd
-		) {
+		// Adjust offset for operations that come after the confirmed removal
+		if (confirmedEnd <= toTransformStart) {
+			transformed.offset = toTransformStart - confirmed.text.length;
+			return transformed;
+		}
+
+		// Completely outside range (confirmed comes AFTER to-transform)
+		if (confirmedStart >= toTransformEnd) {
 			return transformed;
 		}
 
