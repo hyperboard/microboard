@@ -237,6 +237,9 @@ function getBlockNode(
 				break;
 			}
 			case "text":
+				const fontScale =
+					(child.fontSize === "auto" ? 14 : (child.fontSize ?? 14)) /
+					14;
 				handleTextNode({
 					isFrame,
 					child,
@@ -244,7 +247,8 @@ function getBlockNode(
 					maxWidth,
 					paddingTop: i === 0 ? 16 * (data.paddingTop || 0) : 0,
 					marginLeft:
-						(listData ? 16 : 0) + (listData?.level || 0) * 24,
+						(listData ? fontScale * 16 : 0) +
+						(listData?.level || 0) * fontScale * 24,
 					newLine: i === 0 ? newLine : false,
 					listMark: i === 0 ? listMark : undefined,
 					link: child.link,
@@ -252,6 +256,10 @@ function getBlockNode(
 				break;
 			default:
 				if ("text" in child && typeof child.text === "string") {
+					const fontScale =
+						(child.fontSize === "auto"
+							? 14
+							: (child.fontSize ?? 14)) / 14;
 					handleTextNode({
 						isFrame,
 						child,
@@ -259,7 +267,8 @@ function getBlockNode(
 						maxWidth,
 						paddingTop: i === 0 ? 16 * (data.paddingTop || 0) : 0,
 						marginLeft:
-							(listData ? 16 : 0) + (listData?.level || 0) * 24,
+							(listData ? fontScale * 16 : 0) +
+							(listData?.level || 0) * fontScale * 24,
 						newLine: i === 0 ? newLine : false,
 						listMark: i === 0 ? listMark : undefined,
 						link: child.link,
