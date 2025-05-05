@@ -29,6 +29,8 @@ import { getOppositePoint } from "./getOppositePoint";
 import { getProportionalResize, getResize } from "./getResizeMatrix";
 import { getResizeType, ResizeType } from "./getResizeType";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
+import { ImageItem } from "Board/Items/Image/Image";
+import { tempStorage } from "App/SessionStorage";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -571,6 +573,12 @@ export class Transformer extends Tool {
 					resize.matrix.scaleY,
 				);
 				return false;
+			}
+			if (single instanceof ImageItem) {
+				tempStorage.setImageDimensions({
+					width: resize.mbr.getWidth(),
+					height: resize.mbr.getHeight(),
+				});
 			}
 			if (
 				this.canvasDrawer.getLastCreatedCanvas() &&
