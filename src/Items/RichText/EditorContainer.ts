@@ -860,7 +860,7 @@ export class EditorContainer {
 		if (
 			!textNode ||
 			textNode.type !== "text" ||
-			!textNode.text ||
+			typeof textNode.text !== "string" ||
 			!this.isCursorAtStartOfFirstChild(textNodePath)
 		) {
 			return false;
@@ -1271,8 +1271,13 @@ export class EditorContainer {
 		return true;
 	}
 
+	includesListNode(): boolean {
+		return this.getText().some(
+			node => node.type === "ol_list" || node.type === "ul_list",
+		);
+	}
+
 	toggleListType(targetListType: ListType, shouldWrap = true): boolean {
-		console.log(this.getText());
 		const { editor } = this;
 		const { selection } = editor;
 
