@@ -7,11 +7,18 @@ export function splitNode_insertText(
 ): InsertTextOperation {
 	console.log("splitNode_insertText");
 	const transformed = { ...toTransform };
-	if (Path.equals(confirmed.path, toTransform.path)) {
-		if (confirmed.position <= toTransform.offset) {
+	const confPath = confirmed.path;
+	const tPath = transformed.path;
+
+	// If it's the same node, only adjust the offset and skip path transforms
+	if (Path.equals(confPath, tPath)) {
+		if (confirmed.position <= transformed.offset) {
 			transformed.offset -= confirmed.position;
 		}
+		return transformed;
 	}
+
+	// Otherwise apply path shifting for siblings/descendants
 	transformPath(confirmed, transformed);
 	return transformed;
 }

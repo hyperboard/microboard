@@ -1,16 +1,28 @@
-import { SplitNodeOperation, SetNodeOperation } from "slate";
+import { SplitNodeOperation, SetNodeOperation, Path } from "slate";
 import { transformPath } from "./transformPath";
 
 export function splitNode_setNode(
 	confirmed: SplitNodeOperation,
 	toTransform: SetNodeOperation,
 ): SetNodeOperation {
-	console.log("splitNode_setNode");
 	const transformed = { ...toTransform };
-	// todo adjust the path to apply set_node to both resulting nodes
-	// or add new set_node to set prev node to prev node
-	// if (Path.equals(confirmed.path, toTransform.path)) {
-	// }
-	transformPath(confirmed, transformed);
+	const confirmedPath = confirmed.path;
+	const currentPath = transformed.path;
+
+	// Don’t run the generic sibling-shift when
+	// 1) it's exactly the same node, or
+	// 2) it's a deeper descendant of a nested split (we only shift descendants of root‐level splits)
+	const isSame = Path.equals(currentPath, confirmedPath);
+	const isDeepNestedDescendant =
+		confirmedPath.length > 1 &&
+		currentPath.length > confirmedPath.length &&
+		currentPath
+			.slice(0, confirmedPath.length)
+			.every((seg, i) => seg === confirmedPath[i]);
+
+	if (!isSame && !isDeepNestedDescendant) {
+		transformPath(confirmed, transformed);
+	}
+
 	return transformed;
 }
