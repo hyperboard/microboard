@@ -90,27 +90,8 @@ export class Shape implements Geometry {
 					op.method === "translateBy"
 				) {
 					this.text.transformCanvas();
-				} else if (op.method === "transformMany") {
-					const currItemOp = op.items[this.getId()];
-					if (
-						currItemOp.method === "translateBy" ||
-						currItemOp.method === "translateTo" ||
-						(currItemOp.method === "scaleByTranslateBy" &&
-							currItemOp.scale.x === 1 &&
-							currItemOp.scale.y === 1)
-					) {
-						// translating
-						this.text.transformCanvas();
-					} else {
-						// scaling
-						this.text.handleInshapeScale();
-					}
 				} else {
-					if (op.method === "scaleByTranslateBy") {
-						this.text.handleInshapeScale();
-					} else {
-						this.text.updateElement();
-					}
+					this.text.updateElement();
 				}
 				this.subject.publish(this);
 			},
