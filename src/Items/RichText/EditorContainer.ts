@@ -1372,6 +1372,53 @@ export class EditorContainer {
 		);
 	}
 
+	withAutoList(): boolean {
+		const editor = this.editor;
+		const { selection } = editor;
+		if (!selection) {
+			return false;
+		}
+
+		const nodes = this.getText();
+
+		if (
+			nodes.length !== 1 ||
+			nodes[0].type !== "paragraph" ||
+			nodes[0].children.length !== 1
+		) {
+			return false;
+		}
+
+		if (nodes[0].children[0].text !== "1.") {
+			return false;
+		}
+
+		Transforms.wrapNodes(
+			editor,
+			{ type: "ol_list", listLevel: 1, children: [] },
+			{ at: selection },
+		);
+		Transforms.wrapNodes(
+			editor,
+			{ type: "list_item", children: [] },
+			{ at: selection },
+		);
+
+		this.clearAllTextNodes();
+
+		return true;
+	}
+
+	clearAllTextNodes() {
+		const editor = this.editor;
+		for (const [node, path] of Editor.nodes(editor, {
+			match: n => n.type === "text",
+		})) {
+			Transforms.removeNodes(editor, { at: path });
+			Transforms.setNodes(editor, { ...node, text: "" }, { at: path });
+		}
+	}
+
 	getBlockParentList(
 		blockPath: number[],
 	): [node: BlockNode, path: number[]] | null {
