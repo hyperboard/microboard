@@ -5,7 +5,6 @@ export function mergeNode_removeText(
 	confirmed: MergeNodeOperation,
 	toTransform: RemoveTextOperation,
 ): RemoveTextOperation {
-	console.log("mergeNode_removeText");
 	const transformed = { ...toTransform };
 	if (Path.equals(confirmed.path, toTransform.path)) {
 		transformed.offset += confirmed.position;
