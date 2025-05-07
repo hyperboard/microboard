@@ -93,7 +93,7 @@ export class Select extends Tool {
 		if (this.board.keyboard.isShift) {
 			return false;
 		}
-		const increasedSnapThreshold = Array.isArray(item) ? 15 : 5;
+		const increasedSnapThreshold = Array.isArray(item) ? 40 : 35;
 
 		this.isSnapped = this.alignmentHelper.snapToClosestLine(
 			item,
@@ -127,15 +127,14 @@ export class Select extends Tool {
 				const itemCenter = Array.isArray(item)
 					? this.alignmentHelper.combineMBRs(item).getCenter()
 					: item.getMbr().getCenter();
-				const targetX =
-					this.board.pointer.point.x - this.initialCursorPos.x;
-				const targetY =
-					this.board.pointer.point.y - this.initialCursorPos.y;
 				const translateX =
-					targetX - (itemCenter.x - this.initialCursorPos.x);
+					this.board.pointer.point.x -
+					this.initialCursorPos.x -
+					itemCenter.x;
 				const translateY =
-					targetY - (itemCenter.y - this.initialCursorPos.y);
-				console.log(translateX, translateY);
+					this.board.pointer.point.y -
+					this.initialCursorPos.y -
+					itemCenter.y;
 				this.alignmentHelper.translateItems(
 					item,
 					translateX,
@@ -358,7 +357,9 @@ export class Select extends Tool {
 		if (this.isDraggingSelection) {
 			this.board.selection.transformationRenderBlock = true;
 			if (!this.initialCursorPos) {
-				const itemCenter = selectionItems[0].getMbr().getCenter();
+				const itemCenter = this.alignmentHelper
+					.combineMBRs(selectionItems)
+					.getCenter();
 				this.initialCursorPos = new Point(
 					this.board.pointer.point.x - itemCenter.x,
 					this.board.pointer.point.y - itemCenter.y,

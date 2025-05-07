@@ -69,6 +69,7 @@ export class Board {
 	private interfaceType: InterfaceType = "loading";
 	readonly subject = new Subject<void>();
 	private name: string | undefined;
+	private isOpen = false;
 
 	resolveConnecting!: () => void;
 	connecting = new Promise<void>(resolve => {
@@ -1408,6 +1409,14 @@ export class Board {
 
 	getName() {
 		return this.name;
+	}
+
+	setIsOpen(isOpen: boolean) {
+		this.isOpen = isOpen;
+	}
+
+	getIsOpen() {
+		return this.isOpen;
 	}
 
 	cleanup() {

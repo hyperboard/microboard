@@ -217,6 +217,7 @@ export class Presence {
 		}
 		this.drawingContext = null;
 		this.clear();
+		this.stopPointerRendering();
 	}
 
 	setupUpdateInterval(): void {
@@ -241,7 +242,11 @@ export class Presence {
 	}
 
 	emit(event: PresenceEventType): void {
-		if (this.events && this.board.getInterfaceType() === "edit") {
+		if (
+			this.events &&
+			this.board.getInterfaceType() === "edit" &&
+			this.board.getIsOpen()
+		) {
 			this.events.sendPresenceEvent(event);
 		}
 	}
@@ -1066,7 +1071,7 @@ export class Presence {
 	}
 
 	render(context: DrawingContext): void {
-		if (context) {
+		if (context && this.board.getIsOpen()) {
 			this.drawingContext = context;
 			this.renderPointer(context);
 			this.renderSelection(context);
