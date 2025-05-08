@@ -5,7 +5,6 @@ export function splitNode_removeNode(
 	confirmed: SplitNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
-	console.log("splitNode_removeNode");
 	const transformed = { ...toTransform };
 	const conf = confirmed.path;
 	const path = transformed.path;

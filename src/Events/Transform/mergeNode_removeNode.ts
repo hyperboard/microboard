@@ -5,7 +5,6 @@ export function mergeNode_removeNode(
 	confirmed: MergeNodeOperation,
 	toTransform: RemoveNodeOperation,
 ): RemoveNodeOperation {
-	console.log("mergeNode_removeNode");
 	const transformed = { ...toTransform };
 	if (Path.isBefore(confirmed.path, transformed.path)) {
 		transformPath(confirmed, transformed);

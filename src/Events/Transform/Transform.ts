@@ -173,7 +173,6 @@ export function transformRichTextOperation(
 	toTransform: RichTextOperation,
 	// board: Board,
 ): RichTextOperation | undefined {
-	console.log("transformRichTextOperation");
 	// groupEdit - groupEdit
 	if (
 		confirmed.method === "groupEdit" &&
@@ -222,11 +221,6 @@ export function transformRichTextOperation(
 			},
 		);
 
-		console.log("RETURNING TRANSAOFRMED...", {
-			...toTransform,
-			itemsOps: transformedItemsOps,
-		});
-
 		return {
 			...toTransform,
 			itemsOps: transformedItemsOps,
@@ -265,10 +259,6 @@ export function transformRichTextOperation(
 
 			transformedOps.push(actualyTransformed);
 		}
-		console.log("RETURNING TRANSAOFRMED...", {
-			...toTransform,
-			ops: transformedOps,
-		});
 
 		return {
 			...toTransform,
@@ -308,11 +298,6 @@ export function transformRichTextOperation(
 				transformedOps.push(...toTransform.ops);
 			}
 		}
-
-		console.log("RETURNING TRANSAOFRMED...", {
-			...toTransform,
-			ops: transformedOps,
-		});
 
 		return {
 			...toTransform,
@@ -360,10 +345,6 @@ export function transformRichTextOperation(
 			},
 		);
 
-		console.log("RETURNING TRANSAOFRMED...", {
-			...toTransform,
-			itemsOps: transformedItemsOps,
-		});
 		return {
 			...toTransform,
 			itemsOps: transformedItemsOps,
@@ -378,7 +359,6 @@ export function transfromOperation(
 	toTransform: Operation,
 	// board,
 ): Operation | undefined {
-	console.log("transfromOperation");
 	if (confirmed.class === "RichText" && toTransform.class === "RichText") {
 		return transformRichTextOperation(confirmed, toTransform);
 		// return transformRichTextOperation(confirmed, toTransform, board);

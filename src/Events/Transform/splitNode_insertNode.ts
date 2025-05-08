@@ -5,7 +5,6 @@ export function splitNode_insertNode(
 	confirmed: SplitNodeOperation,
 	toTransform: InsertNodeOperation,
 ): InsertNodeOperation {
-	console.log("splitNode_insertNode");
 	const transformed = { ...toTransform };
 	const conf = confirmed.path;
 	const path = transformed.path;

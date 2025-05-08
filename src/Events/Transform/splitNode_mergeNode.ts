@@ -5,7 +5,6 @@ export function splitNode_mergeNode(
 	confirmed: SplitNodeOperation,
 	toTransform: MergeNodeOperation,
 ): MergeNodeOperation {
-	console.log("splitNode_mergeNode");
 	const transformed = { ...toTransform };
 	const confPath = confirmed.path;
 	const tPath = transformed.path;
