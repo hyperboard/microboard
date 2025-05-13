@@ -42,6 +42,9 @@ import {
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
 import path from "path";
+import { isCursorAtStartOfFirstChild } from "./isCursorAtStartOfFirstChild";
+import { handleListMerge } from "./handleListMerge";
+import { getAreAllChildrenEmpty } from "./getAreAllChildrenEmpty";
 
 const { i18n } = conf;
 
@@ -845,115 +848,7 @@ export class EditorContainer {
 	}
 
 	handleListMerge(): boolean {
-		const editor = this.editor;
-		if (!editor.selection) {
-			return false;
-		}
-
-		const { anchor } = editor.selection;
-
-		if (anchor.offset !== 0 || !Range.isCollapsed(editor.selection)) {
-			return false;
-		}
-
-		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-		if (
-			!textNode ||
-			textNode.type !== "text" ||
-			typeof textNode.text !== "string" ||
-			!this.isCursorAtStartOfFirstChild(textNodePath)
-		) {
-			return false;
-		}
-
-		const paragraphPath = Path.parent(textNodePath);
-		const [paragraph] = Editor.node(editor, paragraphPath);
-		if (!paragraph || !this.isCursorAtStartOfFirstChild(paragraphPath)) {
-			return false;
-		}
-
-		const listItemPath = Path.parent(paragraphPath);
-		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || listItem.type !== "list_item") {
-			return false;
-		}
-
-		const listPath = Path.parent(listItemPath);
-		const [list] = Editor.node(editor, listPath);
-		if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
-			return false;
-		}
-
-		const listItemIndex = listItemPath[listItemPath.length - 1];
-		const currentListItemChildren = listItem.children;
-
-		if (listItemIndex === 0) {
-			const listParentPath = Path.parent(listPath);
-
-			const currentListItemChildren = [...listItem.children];
-
-			Transforms.removeNodes(editor, { at: listItemPath });
-
-			const [updatedList] = Editor.node(editor, listPath);
-			if (this.getAreAllChildrenEmpty(updatedList)) {
-				Transforms.removeNodes(editor, { at: listPath });
-			}
-			const listPosition = listPath[listPath.length - 1];
-
-			currentListItemChildren.forEach((childNode, index) => {
-				const copiedNode = structuredClone(childNode);
-				copiedNode.paddingTop = 0;
-				Transforms.insertNodes(editor, copiedNode, {
-					at: [...listParentPath, listPosition + index],
-				});
-			});
-			Transforms.select(editor, {
-				anchor: {
-					path: [...listParentPath, listPosition, 0],
-					offset: 0,
-				},
-				focus: {
-					path: [...listParentPath, listPosition, 0],
-					offset: 0,
-				},
-			});
-		} else {
-			const previousItemPath = Path.previous(listItemPath);
-			const [previousItem] = Editor.node(editor, previousItemPath);
-
-			currentListItemChildren.forEach((childNode, index) => {
-				const copiedNode = structuredClone(childNode);
-				copiedNode.paddingTop = 0;
-				Transforms.insertNodes(editor, copiedNode, {
-					at: [
-						...previousItemPath,
-						previousItem.children.length + index,
-					],
-				});
-			});
-
-			Transforms.removeNodes(editor, { at: listItemPath });
-			Transforms.select(editor, {
-				anchor: {
-					path: [
-						...previousItemPath,
-						previousItem.children.length,
-						0,
-					],
-					offset: 0,
-				},
-				focus: {
-					path: [
-						...previousItemPath,
-						previousItem.children.length,
-						0,
-					],
-					offset: 0,
-				},
-			});
-		}
-
-		return true;
+		handleListMerge(this.editor);
 	}
 
 	getListTypeAtSelectionStart(): ListType | null {
@@ -1089,7 +984,7 @@ export class EditorContainer {
 				});
 
 				const [updatedParentList] = Editor.node(editor, parentListPath);
-				if (this.getAreAllChildrenEmpty(updatedParentList)) {
+				if (getAreAllChildrenEmpty(updatedParentList)) {
 					Transforms.removeNodes(editor, { at: parentListPath });
 				}
 
@@ -1120,18 +1015,6 @@ export class EditorContainer {
 		}
 
 		return true;
-	}
-
-	getAreAllChildrenEmpty(node: BlockNode): boolean {
-		if ("text" in node) {
-			return !node.text;
-		}
-		if ("children" in node) {
-			return node.children.every(child =>
-				this.getAreAllChildrenEmpty(child),
-			);
-		}
-		return false;
 	}
 
 	toggleListTypeForSelection(targetListType: ListType) {
@@ -1452,14 +1335,17 @@ export class EditorContainer {
 			!textNode ||
 			textNode.type !== "text" ||
 			typeof textNode.text !== "string" ||
-			!this.isCursorAtStartOfFirstChild(textNodePath)
+			!isCursorAtStartOfFirstChild(this.editor, textNodePath)
 		) {
 			return false;
 		}
 
 		const paragraphPath = Path.parent(textNodePath);
 		const [paragraph] = Editor.node(editor, paragraphPath);
-		if (!paragraph || !this.isCursorAtStartOfFirstChild(paragraphPath)) {
+		if (
+			!paragraph ||
+			!isCursorAtStartOfFirstChild(this.editor, paragraphPath)
+		) {
 			return false;
 		}
 
@@ -1494,28 +1380,6 @@ export class EditorContainer {
 		this.subject.publish(this);
 		return true;
 	}
-
-	isCursorAtStartOfFirstChild = (path: Path): boolean => {
-		const editor = this.editor;
-		const { selection } = editor;
-
-		if (!selection) {
-			return false;
-		}
-
-		const [start] = Range.edges(selection);
-
-		const parentNode = Node.parent(editor, path);
-
-		if (!parentNode.children) {
-			return true;
-		}
-
-		return (
-			parentNode.children[0] === Node.get(editor, path) &&
-			start.offset === 0
-		);
-	};
 
 	getFirstSelectionLink(selection: BaseSelection): string | undefined {
 		if (!selection) {
