@@ -64,6 +64,7 @@ export interface Settings {
 	planNames: {
 		basic: string;
 		plus: string;
+		plusAI: string;
 	};
 	getDocumentWidth: () => number;
 	getDocumentHeight: () => number;
@@ -187,6 +188,7 @@ export const conf: Settings = {
 	planNames: {
 		basic: "Basic",
 		plus: "Plus",
+		plusAI: "PlusAI",
 	},
 	isNode: () => typeof window === "undefined",
 	SELECTION_COLOR: "rgb(71, 120, 245)",
