@@ -43,7 +43,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 				if (!events) {
 					return new NoOpCommand("Board Has No Events Record");
 				}
-				return new EventsCommand(events, operation);
+				return new EventsCommand(board, operation);
 			}
 			case "Board": {
 				return new BoardCommand(board, operation);

@@ -27,6 +27,7 @@ import { conf } from "Board/Settings";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
 const { i18n } = conf;
 
+// move to SETTINGS
 const SECOND = 1000;
 const CURSOR_FPS = 3;
 

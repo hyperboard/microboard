@@ -5,6 +5,7 @@ import { BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { NotifyFunction } from "shared/ui-lib/Toast/notify";
+import { Connection } from "App/Connection";
 
 /**
  * Allowed drawing tools.
@@ -51,6 +52,7 @@ export enum ExportQuality {
 }
 
 export interface Settings {
+	connection: Connection;
 	// Factories
 	path2DFactory: typeof Path2DFactory;
 	documentFactory: DocumentFactory;
@@ -191,6 +193,8 @@ export const conf: Settings = {
 		plusAI: "PlusAI",
 	},
 	isNode: () => typeof window === "undefined",
+	EVENTS_PUBLISH_INTERVAL: 100, // 100 ms (10 times per second)
+	EVENTS_RESEND_INTERVAL: 1000, // 1 second
 	SELECTION_COLOR: "rgb(71, 120, 245)",
 	SELECTION_LOCKED_COLOR: "#0B0C0E",
 	SELECTION_BACKGROUND: "none",

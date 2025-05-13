@@ -48,11 +48,12 @@ import {
 	INDEX_CSS,
 } from "../staticResources";
 import { deleteMedia, updateMediaUsage } from "Board/Items/Image/ImageHelpers";
+import { enforceMode } from "./Events/MessageRouter/handleModeMessage";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {
-	events: Events | undefined;
+	events: Events;
 	isBoardMenuOpen = false;
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
@@ -86,12 +87,12 @@ export class Board {
 		this.tools.navigate();
 	}
 
+	/**
+	 * Disconnects from the connection and sets the board mode to "loading"
+	 */
 	disconnect(): void {
-		if (!this.events) {
-			return;
-		}
-		this.events.disconnect();
-		this.events = undefined;
+		this.setInterfaceType("loading");
+		this.events.connection?.unsubscribe(this);
 		this.index = new SpatialIndex(this.camera, this.pointer);
 		this.items = this.index.items;
 		this.selection.events = this.events;
@@ -541,7 +542,7 @@ export class Board {
 		const head = `
 		<head>
 			<meta charset="utf-8" />
-			<meta name="last-event-order" content="${this.events?.getLastIndex()}" />
+			<meta name="last-event-order" content="${this.events?.log.getLastIndex()}" />
 			<title>Microboard ${this.getBoardId()}</title>
 			<link rel="preconnect" href="https://fonts.googleapis.com">
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -749,7 +750,7 @@ export class Board {
 			item.applyAddChild(itemData.children);
 		}
 
-		this.events?.deserialize(events);
+		this.events?.log.deserialize(events);
 	}
 
 	getCameraSnapshot(): Matrix | undefined {
@@ -930,7 +931,7 @@ export class Board {
 
 	getSnapshot(): BoardSnapshot {
 		if (this.events) {
-			return this.events.getSnapshot();
+			return this.events.log.getSnapshot();
 		} else {
 			return {
 				items: this.serialize(),

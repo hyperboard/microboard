@@ -568,7 +568,7 @@ export class RichText extends Mbr implements Geometry {
 
 	emit = (op: RichTextOperation): void => {
 		if (this.board.events) {
-			this.board.events.emitAndApply(op);
+			this.board.events.applyAndEmit(op);
 		} else {
 			this.apply(op);
 		}

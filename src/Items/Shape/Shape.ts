@@ -37,6 +37,7 @@ import { FixedPoint } from "Board/Items/Connector";
 import { toRelativePoint } from "Board/Items/Connector/ControlPoint";
 import { DocumentFactory } from "Board/api/DocumentFactory";
 import { conf } from "Board/Settings";
+import { handleUpdate } from "./handleUpdate";
 
 const defaultShapeData = new DefaultShapeData();
 
