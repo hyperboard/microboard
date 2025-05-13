@@ -5,7 +5,7 @@ import { mergeEvents } from "../mergeEvents";
 import { transformEvents } from "../transformEvents";
 import { EventsList } from "./createEventsList";
 import { expandEvents } from "./expandEvents";
-import { handleRemoveSnappedObject } from "../handleRemoveSnappedObject";
+// import { handleRemoveSnappedObject } from "../handleRemoveSnappedObject";
 
 export function insertEventsFromOtherConnectionsIntoList(
 	value: SyncEvent | SyncEvent[],
@@ -18,7 +18,7 @@ export function insertEventsFromOtherConnectionsIntoList(
 	}
 	const events = expandEvents(eventArray);
 
-	handleRemoveSnappedObject(board, events, list);
+	// handleRemoveSnappedObject(board, events, list); // should do it in other ways
 
 	list.revertUnconfirmed();
 
