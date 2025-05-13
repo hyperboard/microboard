@@ -2,10 +2,10 @@ import { Board } from "Board";
 import { createCommand } from "../Command";
 import { SyncEvent, BoardEvent } from "../Events";
 import { mergeEvents } from "../mergeEvents";
-import { TransformConnectorHelper } from "../TransforHelper";
 import { transformEvents } from "../transformEvents";
 import { EventsList } from "./createEventsList";
 import { expandEvents } from "./expandEvents";
+import { handleRemoveSnappedObject } from "../handleRemoveSnappedObject";
 
 export function insertEventsFromOtherConnectionsIntoList(
 	value: SyncEvent | SyncEvent[],
@@ -17,21 +17,8 @@ export function insertEventsFromOtherConnectionsIntoList(
 		return;
 	}
 	const events = expandEvents(eventArray);
-	const toDelete = TransformConnectorHelper.handleRemoveSnappedObject(
-		board,
-		events,
-	);
 
-	if (Array.isArray(toDelete) && toDelete.length > 0) {
-		list.removeUnconfirmedEventsByItems(toDelete);
-		toDelete.forEach(item => {
-			board.apply({
-				class: "Board",
-				method: "remove",
-				item: [item],
-			});
-		});
-	}
+	handleRemoveSnappedObject(board, events, list);
 
 	list.revertUnconfirmed();
 

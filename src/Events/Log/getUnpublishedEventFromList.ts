@@ -15,6 +15,7 @@ export function getUnpublishedEventFromList(
 	const operations = getOperationsFromEventRecords(recordsToSend);
 	return combineOperationsIntoPack(recordsToSend[0].event, operations);
 }
+
 function getOperationsFromEventRecords(
 	records: HistoryRecord[],
 ): (Operation & { actualId: string })[] {
@@ -23,6 +24,7 @@ function getOperationsFromEventRecords(
 		actualId: record.event.body.eventId,
 	}));
 }
+
 export function combineOperationsIntoPack(
 	baseEvent: BoardEvent,
 	operations: (Operation & { actualId: string })[],

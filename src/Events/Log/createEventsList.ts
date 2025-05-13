@@ -63,20 +63,6 @@ export function createEventsList(
 		}
 	}
 
-	function shouldRemoveEvent(
-		operation: Operation,
-		itemIds: string[],
-	): boolean {
-		if (operation.method === "add" && operation.class === "Board") {
-			return itemIds.includes(operation.item);
-		}
-
-		if (operation.method === "remove" && operation.class === "Board") {
-			return operation.item.some(id => itemIds.includes(id));
-		}
-
-		return false;
-	}
 	function mergeAndPushConfirmedRecords(records: HistoryRecord[]): void {
 		const lastConfirmedRecord = confirmedRecords.pop();
 		const recordsToMerge = lastConfirmedRecord
@@ -262,6 +248,23 @@ export function createEventsList(
 
 		// FIXME: should filter unconfirmed events and not send them
 		removeUnconfirmedEventsByItems(itemIds: string[]): void {
+			function shouldRemoveEvent(
+				operation: Operation,
+				itemIds: string[],
+			): boolean {
+				if (operation.method === "add" && operation.class === "Board") {
+					return itemIds.includes(operation.item);
+				}
+
+				if (
+					operation.method === "remove" &&
+					operation.class === "Board"
+				) {
+					return operation.item.some(id => itemIds.includes(id));
+				}
+
+				return false;
+			}
 			const removedFromToSend = recordsToSend.filter(record =>
 				shouldRemoveEvent(record.event.body.operation, itemIds),
 			);
