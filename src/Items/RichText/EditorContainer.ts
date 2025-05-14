@@ -344,6 +344,10 @@ export class EditorContainer {
 				this.id,
 				error,
 			);
+			console.error(
+				"Error applying this type operation: ",
+				"type" in op ? op.type : "setFontColor",
+			);
 		}
 	}
 
