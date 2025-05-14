@@ -53,17 +53,19 @@ import {
 } from "slate";
 import { ReactEditor } from "slate-react";
 import { HistoryEditor } from "slate-history";
+import { insertText_moveNode } from "./insertText_moveNode";
+import { removeText_moveNode } from "./removeText_moveNode";
+import { insertNode_moveNode } from "./insertNode_moveNode";
+import { splitNode_moveNode } from "./splitNode_moveNode";
+import { mergeNode_moveNode } from "./mergeNode_moveNode";
+import { removeNode_moveNode } from "./removeNode_moveNode";
+import { setNode_moveNode } from "./setNode_moveNode";
+import { basicTransformPath } from "./transformPath";
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
 
-type SlateOpTypesToTransform = Exclude<
-	TextOperation["type"] | NodeOperation["type"],
-	"move_node"
->;
-export type SlateOpsToTransform = Exclude<
-	TextOperation | NodeOperation,
-	{ type: "move_node" }
->;
+type SlateOpTypesToTransform = TextOperation["type"] | NodeOperation["type"];
+export type SlateOpsToTransform = TextOperation | NodeOperation;
 type TransformFunction<
 	T extends SlateOpsToTransform,
 	U extends SlateOpsToTransform,
@@ -90,7 +92,7 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: insertText_removeText,
 		insert_node: insertText_insertNode,
 		merge_node: insertText_mergeNode,
-		// move_node: () => {},
+		move_node: insertText_moveNode,
 		remove_node: insertText_removeNode,
 		set_node: () => {}, // nothing
 		split_node: insertText_splitNode,
@@ -100,7 +102,7 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: removeText_removeText,
 		insert_node: removeText_insertNode,
 		merge_node: removeText_mergeNode,
-		// move_node: () => {},
+		move_node: removeText_moveNode,
 		remove_node: removeText_removeNode,
 		set_node: () => {}, // nothing
 		split_node: removeText_splitNode,
@@ -110,7 +112,7 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: insertNode_removeText,
 		insert_node: insertNode_insertNode,
 		merge_node: insertNode_mergeNode,
-		// move_node: () => {},
+		move_node: insertNode_moveNode,
 		remove_node: insertNode_removeNode,
 		set_node: insertNode_setNode,
 		split_node: insertNode_splitNode,
@@ -120,7 +122,7 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: splitNode_removeText,
 		insert_node: splitNode_insertNode,
 		merge_node: splitNode_mergeNode,
-		// move_node: () => {},
+		move_node: splitNode_moveNode,
 		remove_node: splitNode_removeNode,
 		set_node: splitNode_setNode,
 		split_node: splitNode_splitNode,
@@ -130,28 +132,27 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: mergeNode_removeText,
 		insert_node: mergeNode_insertNode,
 		merge_node: mergeNode_mergeNode,
-		// move_node: () => {},
+		move_node: mergeNode_moveNode,
 		remove_node: mergeNode_removeNode,
 		set_node: mergeNode_setNode,
 		split_node: mergeNode_splitNode,
 	},
-	// move_node: {
-	// 	// DOES NOT APPEAR ?
-	// 	insert_text: () => {},
-	// 	remove_text: () => {},
-	// 	insert_node: () => {},
-	// 	merge_node: () => {},
-	// 	move_node: () => {},
-	// 	remove_node: () => {},
-	// 	set_node: () => {},
-	// 	split_node: () => {},
-	// },
+	move_node: {
+		insert_text: basicTransformPath,
+		remove_text: basicTransformPath,
+		insert_node: basicTransformPath,
+		merge_node: basicTransformPath,
+		move_node: basicTransformPath,
+		remove_node: basicTransformPath,
+		set_node: basicTransformPath,
+		split_node: basicTransformPath,
+	},
 	remove_node: {
 		insert_text: removeNode_insertText,
 		remove_text: removeNode_removeText,
 		insert_node: removeNode_insertNode,
 		merge_node: removeNode_mergeNode,
-		// move_node: () => {},
+		move_node: removeNode_moveNode,
 		remove_node: removeNode_removeNode,
 		set_node: removeNode_setNode,
 		split_node: removeNode_splitNode,
@@ -161,7 +162,7 @@ const operationTransformMap: OperationTransformMap = {
 		remove_text: () => {}, // nothing
 		insert_node: setNode_insertNode,
 		merge_node: () => {}, // nothing??
-		// move_node: () => {},
+		move_node: setNode_moveNode,
 		remove_node: setNode_removeNode,
 		set_node: setNode_setNode,
 		split_node: setNode_splitNode,
