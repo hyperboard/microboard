@@ -61,6 +61,14 @@ import { mergeNode_moveNode } from "./mergeNode_moveNode";
 import { removeNode_moveNode } from "./removeNode_moveNode";
 import { setNode_moveNode } from "./setNode_moveNode";
 import { basicTransformPath } from "./transformPath";
+import { moveNode_insertText } from "./moveNode_insertText";
+import { moveNode_removeText } from "./moveNode_removeText";
+import { moveNode_insertNode } from "./moveNode_insertNode";
+import { moveNode_mergeNode } from "./moveNode_mergeNode";
+import { moveNode_moveNode } from "./moveNode_moveNode";
+import { moveNode_removeNode } from "./moveNode_removeNode";
+import { moveNode_setNode } from "./moveNode_setNode";
+import { moveNode_splitNode } from "./moveNode_splitNode";
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
 
@@ -138,14 +146,14 @@ const operationTransformMap: OperationTransformMap = {
 		split_node: mergeNode_splitNode,
 	},
 	move_node: {
-		insert_text: basicTransformPath,
-		remove_text: basicTransformPath,
-		insert_node: basicTransformPath,
-		merge_node: basicTransformPath,
-		move_node: basicTransformPath,
-		remove_node: basicTransformPath,
-		set_node: basicTransformPath,
-		split_node: basicTransformPath,
+		insert_text: moveNode_insertText,
+		remove_text: moveNode_removeText,
+		insert_node: moveNode_insertNode,
+		merge_node: moveNode_mergeNode,
+		move_node: moveNode_moveNode,
+		remove_node: moveNode_removeNode,
+		set_node: moveNode_setNode,
+		split_node: moveNode_splitNode,
 	},
 	remove_node: {
 		insert_text: removeNode_insertText,
