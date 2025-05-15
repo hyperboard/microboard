@@ -1,4 +1,4 @@
-import { getParagraphWithPassedTextNode } from "Board/Items/RichText/getParagraph";
+import { getParagraphWithPassedTextNode } from "Board/Items/RichText/editorHelpers/common/getParagraph";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
 import { conf } from "Board/Settings";
 import markdown from "remark-parse";
@@ -32,7 +32,7 @@ import {
 	ParagraphNode,
 } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
-import { isTextEmpty } from "./isTextEmpty";
+import { isTextEmpty } from "./editorHelpers/common/isTextEmpty.ts";
 import { DEFAULT_TEXT_STYLES, DefaultTextStyles } from "./RichText";
 import {
 	RichTextOperation,
@@ -42,9 +42,14 @@ import {
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
 import path from "path";
-import { isCursorAtStartOfFirstChild } from "./isCursorAtStartOfFirstChild";
-import { handleListMerge } from "./handleListMerge";
-import { getAreAllChildrenEmpty } from "./getAreAllChildrenEmpty";
+import { isCursorAtStartOfFirstChild } from "./editorHelpers/common/isCursorAtStartOfFirstChild.ts";
+import { handleListMerge } from "./editorHelpers/lists/handleListMerge.ts";
+import { getAreAllChildrenEmpty } from "./editorHelpers/common/getAreAllChildrenEmpty.ts";
+import { handleSplitListItem } from "Board/Items/RichText/editorHelpers/lists/handleSplitListItem";
+import { createParagraphNode } from "Board/Items/RichText/editorHelpers/common/createParagraphNode";
+import { withAutoList } from "Board/Items/RichText/editorHelpers/lists/withAutoList";
+import { handleWrapIntoNestedList } from "Board/Items/RichText/editorHelpers/lists/handleWrapIntoNestedList";
+import { toggleListType } from "Board/Items/RichText/editorHelpers/lists/toggleListType";
 
 const { i18n } = conf;
 
@@ -852,7 +857,7 @@ export class EditorContainer {
 	}
 
 	handleListMerge(): boolean {
-		handleListMerge(this.editor);
+		return handleListMerge(this.editor);
 	}
 
 	getListTypeAtSelectionStart(): ListType | null {
@@ -882,280 +887,7 @@ export class EditorContainer {
 	}
 
 	handleSplitListItem(): boolean {
-		const editor = this.editor;
-		if (!editor.selection || !Range.isCollapsed(editor.selection)) {
-			return false;
-		}
-
-		const { anchor } = editor.selection;
-
-		const textNodeEntry = Editor.node(editor, anchor.path);
-		if (!textNodeEntry) {
-			return false;
-		}
-		const [textNode, textNodePath] = textNodeEntry;
-		if (
-			!Node.isNode(textNode) ||
-			Editor.isEditor(textNode) ||
-			!("text" in textNode)
-		) {
-			return false;
-		}
-
-		const paragraphPath = Path.parent(textNodePath);
-		const paragraphEntry = Editor.node(editor, paragraphPath);
-		if (!paragraphEntry) {
-			return false;
-		}
-		const [paragraphNode] = paragraphEntry;
-		if (
-			!Element.isElement(paragraphNode) ||
-			!Editor.isBlock(editor, paragraphNode)
-		) {
-			return false;
-		}
-
-		const listItemPath = Path.parent(paragraphPath);
-		const listItemEntry = Editor.node(editor, listItemPath);
-		if (!listItemEntry) {
-			return false;
-		}
-		const [listItemNode] = listItemEntry;
-		if (
-			!Element.isElement(listItemNode) ||
-			listItemNode.type !== "list_item"
-		) {
-			return false;
-		}
-
-		const listPath = Path.parent(listItemPath);
-		const listEntry = Editor.node(editor, listPath);
-		if (!listEntry) {
-			return false;
-		}
-		const [listNode] = listEntry;
-		if (
-			!Element.isElement(listNode) ||
-			(listNode.type !== "ol_list" && listNode.type !== "ul_list")
-		) {
-			return false;
-		}
-
-		const isBlockEmpty = textNode.text === "";
-		const isOnlyChildParagraph = listItemNode.children.length === 1;
-
-		if (isBlockEmpty && isOnlyChildParagraph) {
-			const listItemIndex = listItemPath[listItemPath.length - 1];
-			const [parentList, parentListPath] = Editor.parent(
-				editor,
-				listItemPath,
-			);
-			const listType = parentList.type;
-
-			Editor.withoutNormalizing(editor, () => {
-				const nextPath = Path.next(parentListPath);
-				Transforms.insertNodes(
-					editor,
-					{
-						...this.createParagraphNode(""),
-						paddingTop: 0.5,
-					},
-					{ at: nextPath },
-				);
-
-				if (parentList.children.length > listItemIndex + 1) {
-					const newListPath = Path.next(nextPath);
-					const itemsAfter = parentList.children.slice(
-						listItemIndex + 1,
-					) as Descendant[];
-
-					Transforms.insertNodes(
-						editor,
-						{
-							type: listType,
-							children: itemsAfter.map(item => ({
-								type: "list_item",
-								children: item.children,
-							})),
-						},
-						{ at: newListPath },
-					);
-				}
-
-				Transforms.removeNodes(editor, {
-					at: parentListPath,
-					match: (n, path) => path[path.length - 1] >= listItemIndex,
-				});
-
-				const [updatedParentList] = Editor.node(editor, parentListPath);
-				if (getAreAllChildrenEmpty(updatedParentList)) {
-					Transforms.removeNodes(editor, { at: parentListPath });
-				}
-
-				Transforms.select(editor, {
-					anchor: { path: [...nextPath, 0], offset: 0 },
-					focus: { path: [...nextPath, 0], offset: 0 },
-				});
-			});
-
-			return true;
-		}
-
-		Transforms.splitNodes(editor, {
-			at: editor.selection.anchor,
-			match: n => Element.isElement(n) && n.type === "list_item",
-			always: true,
-		});
-
-		const nextListItemPath = Path.next(listItemPath);
-		const newParagraphPath = [...nextListItemPath, 0];
-		const [newNode] = Editor.node(editor, newParagraphPath);
-		if (Element.isElement(newNode)) {
-			Transforms.setNodes(
-				editor,
-				{ paddingTop: 0.5 },
-				{ at: newParagraphPath },
-			);
-		}
-
-		return true;
-	}
-
-	toggleListTypeForSelection(targetListType: ListType) {
-		const { editor } = this;
-		const { selection } = editor;
-
-		if (!selection) {
-			return false;
-		}
-
-		Editor.withoutNormalizing(editor, () => {
-			const [start, end] = Range.edges(selection);
-			const commonAncestorPath = Path.common(start.path, end.path);
-
-			const nodes = Array.from(
-				Editor.nodes(editor, {
-					at: selection,
-					mode: "lowest",
-					match: n => Editor.isBlock(editor, n),
-				}),
-			);
-
-			const nodesWithLists: Record<
-				number,
-				[node: BlockNode, path: number[]][]
-			> = {};
-
-			nodes.forEach(([node, path]) => {
-				const parentList = this.getBlockParentList(path);
-				if (parentList) {
-					if (!nodesWithLists[parentList[1].length]) {
-						nodesWithLists[parentList[1].length] = [parentList];
-					} else if (
-						!nodesWithLists[parentList[1].length].some(
-							nodeEntry => nodeEntry[0] === parentList[0],
-						)
-					) {
-						if (nodesWithLists[parentList[1].length]) {
-							nodesWithLists[parentList[1].length].push(
-								parentList,
-							);
-						}
-					}
-				} else {
-					if (nodesWithLists[path.length]) {
-						nodesWithLists[path.length].push([node, path]);
-					} else {
-						nodesWithLists[path.length] = [[node, path]];
-					}
-				}
-			});
-
-			const [level, nodesArr] = Object.entries(nodesWithLists)[0];
-
-			if (nodesArr.length === 0) {
-				return false;
-			}
-
-			const nodePaths = nodesArr.map(([_, path]) => path);
-
-			const newSelectionStart: Path = nodesArr[0][1];
-			const newSelectionEnd: Path = [...nodesArr[nodesArr.length - 1][1]];
-			let diff = 0;
-
-			for (const [node, path] of nodesArr) {
-				if (Element.isElement(node)) {
-					if (node.type === "ol_list" || node.type === "ul_list") {
-						const childrenCount = node.children.length;
-						newSelectionEnd[newSelectionEnd.length - 1] =
-							newSelectionEnd[newSelectionEnd.length - 1] +
-							childrenCount -
-							1;
-						path[path.length - 1] = path[path.length - 1] + diff;
-						console.log(this.getText());
-						Transforms.unwrapNodes(editor, {
-							at: path,
-							mode: "highest",
-							match: n =>
-								Element.isElement(n) && n.type === "list_item",
-							split: true,
-						});
-
-						Transforms.unwrapNodes(editor, {
-							at: path,
-							mode: "highest",
-							match: n =>
-								Element.isElement(n) &&
-								(n.type === "ol_list" || n.type === "ul_list"),
-							split: true,
-						});
-						diff = diff + childrenCount - 1;
-					} else if (node.type === "list_item") {
-						Transforms.unwrapNodes(editor, {
-							at: path,
-							match: n =>
-								Element.isElement(n) && n.type === "list_item",
-							split: true,
-						});
-					}
-				}
-			}
-
-			const refreshedNodes = Array.from(
-				Editor.nodes(editor, {
-					at: Editor.range(
-						editor,
-						newSelectionStart,
-						newSelectionEnd,
-					),
-					mode: "all",
-					match: n => Element.isElement(n),
-				}),
-			).filter(([_, path]) => path.length === Number(level));
-
-			const refreshedPaths = refreshedNodes.map(([_, path]) => path);
-
-			for (const path of refreshedPaths) {
-				Transforms.wrapNodes(
-					editor,
-					{ type: "list_item", children: [] },
-					{ at: path },
-				);
-			}
-
-			const listRange = Editor.range(
-				editor,
-				refreshedPaths[0],
-				refreshedPaths[refreshedPaths.length - 1],
-			);
-			Transforms.wrapNodes(
-				editor,
-				{ type: targetListType, listLevel: 1, children: [] },
-				{ at: listRange },
-			);
-		});
-		this.subject.publish(this);
-		return true;
+		return handleSplitListItem(this.editor);
 	}
 
 	includesListNode(): boolean {
@@ -1165,224 +897,19 @@ export class EditorContainer {
 	}
 
 	toggleListType(targetListType: ListType, shouldWrap = true): boolean {
-		const { editor } = this;
-		const { selection } = editor;
-
-		if (!selection) {
-			return false;
-		}
-
-		if (!Range.isCollapsed(selection)) {
-			return this.toggleListTypeForSelection(targetListType);
-		}
-
-		Editor.withoutNormalizing(editor, () => {
-			const { anchor } = selection;
-			const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-			if (
-				!textNode ||
-				textNode.type !== "text" ||
-				typeof textNode.text !== "string"
-			) {
-				return false;
-			}
-
-			const paragraphPath = Path.parent(textNodePath);
-			const [paragraph] = Editor.node(editor, paragraphPath);
-			if (!paragraph) {
-				return false;
-			}
-
-			const listItemPath = Path.parent(paragraphPath);
-			const [listItem] = Editor.node(editor, listItemPath);
-			if (!listItem || listItem.type !== "list_item") {
-				if (shouldWrap) {
-					this.wrapIntoList(targetListType, selection);
-					this.subject.publish(this);
-				}
-				return false;
-			}
-
-			const listPath = Path.parent(listItemPath);
-			const [list] = Editor.node(editor, listPath);
-			if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
-				if (shouldWrap) {
-					this.wrapIntoList(targetListType, selection);
-					this.subject.publish(this);
-				}
-				return false;
-			}
-
-			if (list.type === targetListType) {
-				Transforms.unwrapNodes(editor, {
-					at: listPath,
-					match: n => Element.isElement(n) && n.type === "list_item",
-					split: true,
-				});
-
-				Transforms.unwrapNodes(editor, {
-					at: listPath,
-					match: n =>
-						Element.isElement(n) &&
-						(n.type === "ol_list" || n.type === "ul_list"),
-					split: true,
-				});
-			} else if (shouldWrap) {
-				Transforms.setNodes(
-					editor,
-					{
-						type: targetListType,
-						listLevel: list.listLevel || 1,
-					},
-					{ at: listPath },
-				);
-			}
-			return true;
-		});
-
+		const result = toggleListType(this.editor, targetListType, shouldWrap);
 		this.subject.publish(this);
-		return true;
-	}
-
-	wrapIntoList(targetListType: ListType, location: Location) {
-		const editor = this.editor;
-
-		Transforms.wrapNodes(
-			editor,
-			{ type: targetListType, listLevel: 1, children: [] },
-			{ at: location },
-		);
-		Transforms.wrapNodes(
-			editor,
-			{ type: "list_item", children: [] },
-			{ at: location },
-		);
+		return result;
 	}
 
 	withAutoList(): boolean {
-		const editor = this.editor;
-		const { selection } = editor;
-		if (!selection) {
-			return false;
-		}
-
-		const nodes = this.getText();
-
-		if (
-			nodes.length !== 1 ||
-			nodes[0].type !== "paragraph" ||
-			nodes[0].children.length !== 1
-		) {
-			return false;
-		}
-
-		if (nodes[0].children[0].text !== "1.") {
-			return false;
-		}
-
-		Transforms.wrapNodes(
-			editor,
-			{ type: "ol_list", listLevel: 1, children: [] },
-			{ at: selection },
-		);
-		Transforms.wrapNodes(
-			editor,
-			{ type: "list_item", children: [] },
-			{ at: selection },
-		);
-
-		this.clearAllTextNodes();
-
-		return true;
-	}
-
-	clearAllTextNodes() {
-		const editor = this.editor;
-		for (const [node, path] of Editor.nodes(editor, {
-			match: n => n.type === "text",
-		})) {
-			Transforms.removeNodes(editor, { at: path });
-			Transforms.setNodes(editor, { ...node, text: "" }, { at: path });
-		}
-	}
-
-	getBlockParentList(
-		blockPath: number[],
-	): [node: BlockNode, path: number[]] | null {
-		const editor = this.editor;
-		const listItemPath = Path.parent(blockPath);
-		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || listItem.type !== "list_item") {
-			return null;
-		}
-
-		const listPath = Path.parent(listItemPath);
-		const [list] = Editor.node(editor, listPath);
-		if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
-			return null;
-		}
-
-		return [list, listPath];
+		return withAutoList(this.editor);
 	}
 
 	handleWrapIntoNestedList(): boolean {
-		const editor = this.editor;
-		const { selection } = editor;
-
-		if (!selection) {
-			return false;
-		}
-
-		const { anchor } = selection;
-		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-		if (
-			!textNode ||
-			textNode.type !== "text" ||
-			typeof textNode.text !== "string" ||
-			!isCursorAtStartOfFirstChild(this.editor, textNodePath)
-		) {
-			return false;
-		}
-
-		const paragraphPath = Path.parent(textNodePath);
-		const [paragraph] = Editor.node(editor, paragraphPath);
-		if (
-			!paragraph ||
-			!isCursorAtStartOfFirstChild(this.editor, paragraphPath)
-		) {
-			return false;
-		}
-
-		const listItemPath = Path.parent(paragraphPath);
-		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || listItem.type !== "list_item") {
-			return false;
-		}
-
-		const listPath = Path.parent(listItemPath);
-		const [list] = Editor.node(editor, listPath);
-		if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
-			return false;
-		}
-
-		Transforms.wrapNodes(
-			editor,
-			{ type: "list_item", children: [] },
-			{ at: paragraphPath },
-		);
-
-		Transforms.wrapNodes(
-			editor,
-			{
-				type: list.type,
-				listLevel: (list.listLevel || 1) + 1,
-				children: [],
-			},
-			{ at: paragraphPath },
-		);
-
+		const result = handleWrapIntoNestedList(this.editor);
 		this.subject.publish(this);
-		return true;
+		return result;
 	}
 
 	getFirstSelectionLink(selection: BaseSelection): string | undefined {
@@ -1567,11 +1094,7 @@ export class EditorContainer {
 	}
 
 	private createParagraphNode(text: string): ParagraphNode {
-		return {
-			type: "paragraph",
-			children: [{ type: "text", text, ...Editor.marks(this.editor) }],
-			horisontalAlignment: this.horisontalAlignment,
-		};
+		return createParagraphNode(text, this.editor, this.horisontalAlignment);
 	}
 
 	insertCopiedText(text: string): boolean {

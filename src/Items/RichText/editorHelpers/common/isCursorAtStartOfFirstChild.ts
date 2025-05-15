@@ -1,5 +1,5 @@
 import { Path, Range, Node } from "slate";
-import { CustomEditor } from "./Editor/Editor";
+import { CustomEditor } from "../../Editor/Editor";
 
 export function isCursorAtStartOfFirstChild(
 	editor: CustomEditor,

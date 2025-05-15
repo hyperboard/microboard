@@ -1,7 +1,7 @@
 import { createEditor, Descendant, Node } from "slate";
 import { withReact } from "slate-react";
-import { handleListMerge } from "./handleListMerge";
-import { CustomEditor } from "./Editor/Editor";
+import { handleListMerge } from "./handleListMerge.ts";
+import { CustomEditor } from "../../Editor/Editor";
 import { describe, it, expect, beforeEach } from "bun:test";
 
 describe("handleListMerge", () => {

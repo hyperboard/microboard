@@ -1,6 +1,6 @@
-import { HorisontalAlignment } from "../Alignment";
-import { BlockNode } from "./Editor/BlockNode";
-import { TextNode, TextStyle } from "./Editor/TextNode";
+import { HorisontalAlignment } from "../../../Alignment.ts";
+import { BlockNode } from "../../Editor/BlockNode.ts";
+import { TextNode, TextStyle } from "../../Editor/TextNode.ts";
 
 export function getParagraph(
 	fontStyles: TextStyle[],

@@ -1,4 +1,4 @@
-import { BlockNode } from "./Editor/BlockNode";
+import { BlockNode } from "../../Editor/BlockNode.ts";
 
 export function getAreAllChildrenEmpty(node: BlockNode): boolean {
 	if ("text" in node) {

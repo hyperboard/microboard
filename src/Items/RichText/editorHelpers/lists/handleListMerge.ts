@@ -1,7 +1,7 @@
 import { Range, Editor, Path, Transforms } from "slate";
-import { CustomEditor } from "./Editor/Editor";
-import { isCursorAtStartOfFirstChild } from "./isCursorAtStartOfFirstChild";
-import { getAreAllChildrenEmpty } from "./getAreAllChildrenEmpty";
+import { CustomEditor } from "../../Editor/Editor";
+import { isCursorAtStartOfFirstChild } from "../common/isCursorAtStartOfFirstChild.ts";
+import { getAreAllChildrenEmpty } from "../common/getAreAllChildrenEmpty.ts";
 
 export function handleListMerge(editor: CustomEditor): boolean {
 	if (!editor.selection) {

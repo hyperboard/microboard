@@ -42,7 +42,10 @@ import { BlockNode, BlockType } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { EditorContainer } from "./EditorContainer";
 import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
-import { getParagraph, getParagraphWithPassedTextNode } from "./getParagraph";
+import {
+	getParagraph,
+	getParagraphWithPassedTextNode,
+} from "./editorHelpers/common/getParagraph.ts";
 import { RichTextOperation } from "./RichTextOperations";
 const { i18n } = conf;
 
