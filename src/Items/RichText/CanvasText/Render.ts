@@ -341,7 +341,11 @@ function handleTextNode({
 }
 
 function getTextNode(data: TextNode): LayoutTextNode {
-	const text = data.text.length === 0 ? "\u00A0" : data.text;
+	const text = data.text?.length === 0 ? "\u00A0" : data.text; // todo ?
+	if (!text) {
+		console.warn("Text is undefined!, HERE!");
+		console.log("data - ", data);
+	}
 	const node = {
 		type: "text",
 		text,
