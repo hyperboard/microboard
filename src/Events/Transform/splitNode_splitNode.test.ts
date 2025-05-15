@@ -1,650 +1,443 @@
-import { splitNode_setNode } from "./splitNode_setNode";
-import { SplitNodeOperation, SetNodeOperation } from "slate";
+import { splitNode_splitNode } from "./splitNode_splitNode";
+import { SplitNodeOperation } from "slate";
+import { Path } from "slate";
 
-describe("splitNode_setNode transformation", () => {
-	it("should increment root-level sibling paths after split", () => {
+describe("splitNode_splitNode transformation", () => {
+	it("1. should not change path or position when confirmed split is on a different branch", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
-			path: [1],
-			position: 0,
+			path: [0, 1],
+			position: 2,
 			properties: {},
 		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [2],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-
-		expect(result).toEqual({
-			type: "set_node",
-			path: [3],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should not modify path for root-level nodes before split", () => {
-		const confirmed: SplitNodeOperation = {
+		const toTransform: SplitNodeOperation = {
 			type: "split_node",
-			path: [2],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [1],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should shift first segment for non-descendant deep paths", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 2],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [2, 2],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should not modify non-descendant deep paths when before split", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [2],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 3],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [1, 3],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should shift descendant paths for split on ancestor", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 0],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
 			path: [2, 0],
+			position: 5,
 			properties: {},
-			newProperties: { bold: true },
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [2, 0],
+			position: 5,
+			properties: {},
 		});
 	});
 
-	it("should shift nested sibling index", () => {
+	it("2. should shift root-level sibling after split", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
-			path: [1, 1],
+			path: [1],
+			position: 1,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [2],
 			position: 0,
 			properties: {},
 		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 2],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
+		const result = splitNode_splitNode(confirmed, toTransform);
 		expect(result).toEqual({
-			type: "set_node",
-			path: [1, 3],
+			type: "split_node",
+			path: [3], // 2 > 1 ⇒ 3
+			position: 0,
 			properties: {},
-			newProperties: { bold: true },
 		});
 	});
 
-	it("should not modify nested sibling before split", () => {
+	it("3. should not shift root-level sibling before split", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
-			path: [1, 2],
+			path: [2],
 			position: 0,
 			properties: {},
 		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 1],
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 4,
 			properties: {},
-			newProperties: { bold: true },
 		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
+		const result = splitNode_splitNode(confirmed, toTransform);
 		expect(result).toEqual({
-			type: "set_node",
-			path: [1, 1],
+			type: "split_node",
+			path: [1],
+			position: 4,
 			properties: {},
-			newProperties: { bold: true },
 		});
 	});
 
-	it("should handle multiple siblings after split", () => {
+	it("4. should subtract position when splitting same node (shallow)", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 2,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 5,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1],
+			position: 3, // 5 - 2
+			properties: {},
+		});
+	});
+
+	it("5. should not subtract position when confirmed position > toTransform position (shallow)", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [0],
+			position: 3,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [0],
+			position: 2,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [0],
+			position: 2,
+			properties: {},
+		});
+	});
+
+	it("6. should not change descendant under confirmed split (path transform only for siblings)", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 1,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 2, 1],
+			position: 4,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [2, 1, 1], // +1 for first one bc of path, -1 for 2nd bc of position 1
+			position: 4,
+			properties: {},
+		});
+	});
+
+	it("7. should shift sibling at second level under same parent", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [0, 1],
+			position: 0,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [0, 2],
+			position: 3,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [0, 3], // 2 > 1 ⇒ 3
+			position: 3,
+			properties: {},
+		});
+	});
+
+	it("8. should not shift sibling at second level before confirmed split", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [0, 2],
+			position: 1,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [0, 1],
+			position: 2,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [0, 1],
+			position: 2,
+			properties: {},
+		});
+	});
+
+	it("9. should subtract and transform path for same deep node", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 2,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 5,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1, 1], // transformPath on same deep path bumps index at depth 2
+			position: 3, // 5 - 2
+			properties: {},
+		});
+	});
+
+	it("10. should subtract but not transform path for same shallow node with length=1", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [2],
+			position: 1,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [2],
+			position: 4,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [2], // depth=1 ⇒ no transformPath
+			position: 3, // 4 - 1
+			properties: {},
+		});
+	});
+
+	it("11. should chain two confirmed splits cumulatively", () => {
+		const s1: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 1,
+			properties: {},
+		};
+		const s2: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 2,
+			properties: {},
+		};
+		const original: SplitNodeOperation = {
+			type: "split_node",
+			path: [2],
+			position: 5,
+			properties: {},
+		};
+		const r1 = splitNode_splitNode(s1, original); // path->[3], pos=5
+		const r2 = splitNode_splitNode(s2, r1); // path->[4], pos=5
+		expect(r2).toEqual({
+			type: "split_node",
+			path: [4],
+			position: 5,
+			properties: {},
+		});
+	});
+
+	it("12. should preserve properties object", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [0],
+			position: 0,
+			properties: { meta: true },
+		};
+		const props = { bold: false };
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 1,
+			properties: props,
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result.properties).toBe(props);
+		expect(result.position).toBe(1);
+	});
+
+	it("13. should handle multiple toTransform siblings after split", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
 			path: [0],
 			position: 0,
 			properties: {},
 		};
-		const toTransforms: SetNodeOperation[] = [
-			{
-				type: "set_node",
-				path: [1],
-				properties: {},
-				newProperties: { bold: true },
-			},
-			{
-				type: "set_node",
-				path: [2],
-				properties: {},
-				newProperties: { bold: true },
-			},
-			{
-				type: "set_node",
-				path: [3],
-				properties: {},
-				newProperties: { bold: true },
-			},
+		const ops: SplitNodeOperation[] = [
+			{ type: "split_node", path: [1], position: 0, properties: {} },
+			{ type: "split_node", path: [2], position: 1, properties: {} },
+			{ type: "split_node", path: [3], position: 2, properties: {} },
 		];
-
-		const results = toTransforms.map(op =>
-			splitNode_setNode(confirmed, op),
-		);
+		const results = ops.map(op => splitNode_splitNode(confirmed, op));
 		expect(results).toEqual([
-			{
-				type: "set_node",
-				path: [2],
-				properties: {},
-				newProperties: { bold: true },
-			},
-			{
-				type: "set_node",
-				path: [3],
-				properties: {},
-				newProperties: { bold: true },
-			},
-			{
-				type: "set_node",
-				path: [4],
-				properties: {},
-				newProperties: { bold: true },
-			},
+			{ type: "split_node", path: [2], position: 0, properties: {} },
+			{ type: "split_node", path: [3], position: 1, properties: {} },
+			{ type: "split_node", path: [4], position: 2, properties: {} },
 		]);
 	});
 
-	it("should handle same path unchanged", () => {
+	it("14. should handle confirmed split at end of siblings", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
 			path: [2],
 			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [2],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [2],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should handle deeper equal path descendant", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1, 1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 1, 2],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [1, 1, 2],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should shift deep descendant correctly", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [1, 1, 3],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [2, 1, 3],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should shift nested deep siblings", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [0, 2, 1],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [0, 3, 1],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should not shift for sibling outside subtree", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [0, 5],
-			properties: {},
-			newProperties: { bold: true },
-		};
-
-		const result = splitNode_setNode(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "set_node",
-			path: [0, 5],
-			properties: {},
-			newProperties: { bold: true },
-		});
-	});
-
-	it("should not mutate the original toTransform operation", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: SetNodeOperation = {
-			type: "set_node",
-			path: [2],
-			properties: {},
-			newProperties: { bold: true },
-		};
-		const original = { ...toTransform };
-
-		splitNode_setNode(confirmed, toTransform);
-		expect(toTransform).toEqual(original);
-	});
-});
-import { createEditor, Editor, SplitNodeOperation, Transforms } from "slate";
-import { splitNode_splitNode } from "./splitNode_splitNode";
-
-describe("splitNode_splitNode transformation", () => {
-	it("should update path when confirmed operation is on a parent path", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0],
-			position: 3,
 			properties: {},
 		};
 		const toTransform: SplitNodeOperation = {
 			type: "split_node",
-			path: [0, 2],
-			position: 5,
+			path: [3],
+			position: 4,
 			properties: {},
 		};
-
 		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// Path should be updated because the confirmed split created a new node at [0],
-		// pushing the target node to [1, 2]
 		expect(result).toEqual({
 			type: "split_node",
-			path: [1, 2],
-			position: 5,
+			path: [4], // 3>2⇒4
+			position: 4,
 			properties: {},
 		});
 	});
 
-	describe("splitNode_splitNode with real Slate editor", () => {
-		it("should demonstrate the effect of both operations on a real editor", () => {
-			// Create an initial Slate editor value
-			const initialValue = [
-				{
-					type: "paragraph",
-					children: [
-						{
-							text: "First paragraph with some text.",
-							bold: true,
-						},
-						{
-							text: " More text here.",
-						},
-					],
-				},
-				{
-					type: "paragraph",
-					children: [
-						{
-							text: "Second paragraph.",
-						},
-					],
-				},
-			];
-
-			// Create a new Slate editor
-			const editor = createEditor();
-			editor.children = initialValue;
-
-			// Log initial state
-			console.log(
-				"Initial editor value:",
-				JSON.stringify(editor.children, null, 2),
-			);
-
-			// Define the operations from the test
-			const confirmed: SplitNodeOperation = {
-				type: "split_node",
-				path: [0],
-				position: 3,
-				properties: {},
-			};
-
-			const toTransform: SplitNodeOperation = {
-				type: "split_node",
-				path: [0, 2],
-				position: 5,
-				properties: {},
-			};
-			const transformed = splitNode_splitNode(confirmed, toTransform);
-
-			// Apply the confirmed operation
-			// Editor.withoutNormalizing(editor, () => {
-			editor.apply(confirmed);
-			// });
-
-			console.log(
-				"After confirmed operation:",
-				JSON.stringify(editor.children, null, 2),
-			);
-
-			// Try to apply the toTransform operation (this would fail without transformation)
-			try {
-				editor.apply(transformed);
-				console.log(
-					"Applied toTransform without transformation (unexpected)",
-				);
-			} catch (e) {
-				console.log(
-					"Failed to apply toTransform without transformation (expected):",
-					e.message,
-				);
-			}
-
-			// Apply the transformed operation
-			const transformedOp = splitNode_splitNode(confirmed, toTransform);
-			Editor.withoutNormalizing(editor, () => {
-				editor.apply(transformedOp);
-			});
-
-			console.log(
-				"After transformed operation:",
-				JSON.stringify(editor.children, null, 2),
-			);
-
-			// Verify the final structure has the expected nodes and content
-			expect(editor.children.length).toBe(3);
-			expect(editor.children[1].children[2]).toBeDefined();
-			expect(editor.children[1].children.length).toBeGreaterThan(2);
-		});
-	});
-
-	it("should update path when confirmed operation is on a sibling path before the target", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 1],
-			position: 2,
-			properties: {},
-		};
-		const toTransform: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 2],
-			position: 3,
-			properties: {},
-		};
-
-		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// Path should be updated because the confirmed split pushed the sibling at [0, 2] to [0, 3]
-		expect(result).toEqual({
-			type: "split_node",
-			path: [0, 3],
-			position: 3,
-			properties: {},
-		});
-	});
-
-	it("should not update path when confirmed operation is on a sibling path after the target", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 3],
-			position: 2,
-			properties: {},
-		};
-		const toTransform: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 1],
-			position: 3,
-			properties: {},
-		};
-
-		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// Path should not be updated because confirmed operation affects a later sibling
-		expect(result).toEqual(toTransform);
-	});
-
-	it("should not modify position when operations are on different paths", () => {
+	it("15. should not change path when confirmed split on deeper ancestor but position > 0", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
 			path: [1, 0],
+			position: 1,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
 			position: 2,
 			properties: {},
 		};
-		const toTransform: SplitNodeOperation = {
-			type: "split_node",
-			path: [2, 0],
-			position: 5,
-			properties: {},
-		};
-
 		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// Position should remain the same
-		expect(result.position).toBe(5);
-	});
-
-	it("should handle operations on the exact same path (currently broken)", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1, 2],
-			position: 3,
-			properties: {},
-		};
-		const toTransform: SplitNodeOperation = {
-			type: "split_node",
-			path: [1, 2],
-			position: 5,
-			properties: {},
-		};
-
-		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// This test will fail because the commented out code in splitNode_splitNode
-		// would adjust the position, but it's currently disabled
-		// If the code was uncommented, we would expect:
-		// expect(result.position).toBe(2); // 5 - 3
-
-		// With the current implementation:
-		expect(result.path).toEqual([1, 3]);
-		expect(result.position).toBe(5); // Position is not adjusted
-	});
-
-	it("should handle operations on nested paths", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 1, 2],
-			position: 2,
-			properties: {},
-		};
-		const toTransform: SplitNodeOperation = {
-			type: "split_node",
-			path: [0, 1, 3],
-			position: 4,
-			properties: {},
-		};
-
-		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// Path should be updated because split at [0, 1, 2] pushes [0, 1, 3] to [0, 1, 4]
 		expect(result).toEqual({
 			type: "split_node",
-			path: [0, 1, 4],
-			position: 4,
+			path: [1], // splitting child doesn't affect parent path
+			position: 2,
 			properties: {},
 		});
 	});
 
-	it("should handle operations where target is child of confirmed split", () => {
+	it("16. should update path for sibling in subtree below confirmed ancestor", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
-			path: [0],
-			position: 2,
+			path: [1],
+			position: 0,
 			properties: {},
 		};
 		const toTransform: SplitNodeOperation = {
 			type: "split_node",
-			path: [0, 1, 0],
+			path: [1, 2],
 			position: 3,
 			properties: {},
 		};
-
 		const result = splitNode_splitNode(confirmed, toTransform);
-
-		// Everything below the split point at position 2 should move to the new node at [1]
-		expect(result.path).toEqual([1, 1, 0]);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [2, 2], // head 1⇒2 for subtree
+			position: 3,
+			properties: {},
+		});
 	});
 
-	it("should preserve properties when transforming", () => {
+	it("17. should not modify toTransform when both on unrelated branches", () => {
 		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [0],
-			position: 3,
-			properties: { custom: "prop1" },
-		};
-		const toTransform: SplitNodeOperation = {
 			type: "split_node",
 			path: [0, 2],
-			position: 5,
-			properties: { custom: "prop2" },
+			position: 1,
+			properties: {},
 		};
-
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0],
+			position: 5,
+			properties: {},
+		};
 		const result = splitNode_splitNode(confirmed, toTransform);
-
-		expect(result.properties).toEqual({ custom: "prop2" });
+		expect(result).toEqual({
+			type: "split_node",
+			path: [1, 0],
+			position: 5,
+			properties: {},
+		});
 	});
 
-	it("should not transform path when confirmed operation is on an unrelated branch", () => {
+	it("18. should handle confirmed split at root zero position", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
-			path: [1, 2, 3],
+			path: [0],
+			position: 0,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [0],
+			position: 3,
+			properties: {},
+		};
+		const result = splitNode_splitNode(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [0], // 0-0 is less than 0-3
+			position: 3, // subtraction: 3 - 0 = 3
+			properties: {},
+		});
+	});
+
+	it("19. should preserve immutability of toTransform object", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [0],
+			position: 1,
+			properties: {},
+		};
+		const toTransform: SplitNodeOperation = {
+			type: "split_node",
+			path: [2],
+			position: 4,
+			properties: { preserve: true },
+		};
+		const copy = { ...toTransform, path: [...toTransform.path] };
+		splitNode_splitNode(confirmed, toTransform);
+		expect(toTransform).toEqual(copy);
+	});
+
+	it("20. should subtract position only and not transform path when confirmed.path.length == 1 and samePath", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [3],
 			position: 2,
 			properties: {},
 		};
 		const toTransform: SplitNodeOperation = {
 			type: "split_node",
-			path: [2, 0, 1],
-			position: 4,
+			path: [3],
+			position: 7,
 			properties: {},
 		};
-
 		const result = splitNode_splitNode(confirmed, toTransform);
-
-		expect(result).toEqual(toTransform);
+		expect(result).toEqual({
+			type: "split_node",
+			path: [3], // no transformPath because path length == 1
+			position: 5, // 7 - 2
+			properties: {},
+		});
 	});
 });

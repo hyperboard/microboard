@@ -66,8 +66,8 @@ describe("Split Node Operation at Position 0", () => {
 
 		// Check the document has been split correctly
 		expect(editor.children[0].children.length).toBe(2);
-		expect(Node.string(editor.children[0].children[0])).toBe("He");
-		expect(Node.string(editor.children[0].children[1])).toBe("llo world");
+		expect(Node.string(editor.children[0].children[0])).toBe("");
+		expect(Node.string(editor.children[0].children[1])).toBe("Hello world");
 
 		// Restore normalization
 		editor.normalizeNode = normalizeNode;
