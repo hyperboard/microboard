@@ -6,7 +6,6 @@ import slate from "remark-slate";
 import { Subject } from "shared/Subject";
 import {
 	BaseEditor,
-	BaseRange,
 	BaseSelection,
 	createEditor,
 	Descendant,
@@ -33,7 +32,7 @@ import {
 } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./editorHelpers/common/isTextEmpty.ts";
-import { DEFAULT_TEXT_STYLES, DefaultTextStyles } from "./RichText";
+import { DefaultTextStyles } from "./RichText";
 import {
 	RichTextOperation,
 	SelectionMethod,
@@ -41,15 +40,15 @@ import {
 	WholeTextOp,
 } from "./RichTextOperations";
 import { findCommonStrings } from "./utils";
-import path from "path";
-import { isCursorAtStartOfFirstChild } from "./editorHelpers/common/isCursorAtStartOfFirstChild.ts";
 import { handleListMerge } from "./editorHelpers/lists/handleListMerge.ts";
-import { getAreAllChildrenEmpty } from "./editorHelpers/common/getAreAllChildrenEmpty.ts";
 import { handleSplitListItem } from "Board/Items/RichText/editorHelpers/lists/handleSplitListItem";
 import { createParagraphNode } from "Board/Items/RichText/editorHelpers/common/createParagraphNode";
 import { withAutoList } from "Board/Items/RichText/editorHelpers/lists/withAutoList";
 import { handleWrapIntoNestedList } from "Board/Items/RichText/editorHelpers/lists/handleWrapIntoNestedList";
 import { toggleListType } from "Board/Items/RichText/editorHelpers/lists/toggleListType";
+import { getListTypeAtSelectionStart } from "Board/Items/RichText/editorHelpers/lists/getListTypeAtSelectionStart";
+import { setLink } from "Board/Items/RichText/editorHelpers/links/setLink";
+import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
 
 const { i18n } = conf;
 
@@ -359,7 +358,7 @@ export class EditorContainer {
 	addFontStyle(style: TextStyle): void {
 		this.shouldEmit = false;
 		const editor = this.editor;
-		this.selectWholeText();
+		selectWholeText(editor);
 
 		Editor.withoutNormalizing(editor, () => {
 			const marks = this.getSelectionMarks();
@@ -379,7 +378,7 @@ export class EditorContainer {
 		this.shouldEmit = false;
 		const editor = this.editor;
 		Editor.withoutNormalizing(editor, () => {
-			this.selectWholeText();
+			selectWholeText(editor);
 			const marks = this.getSelectionMarks();
 			if (!marks) {
 				return;
@@ -413,16 +412,9 @@ export class EditorContainer {
 		this.shouldEmit = true;
 	}
 
-	selectWholeText(): void {
-		const start = Editor.start(this.editor, []);
-		const end = Editor.end(this.editor, []);
-		const range = { anchor: start, focus: end };
-		Transforms.select(this.editor, range);
-	}
-
 	private applyWholeTextOp(op: WholeTextOp): void {
 		const selection = this.editor.selection;
-		this.selectWholeText();
+		selectWholeText(this.editor);
 		switch (op.method) {
 			case "setBlockType":
 				this.setSelectionBlockType(op.type);
@@ -520,36 +512,9 @@ export class EditorContainer {
 	}
 
 	setSelectionLink(link: string | undefined, selection: BaseSelection) {
-		const editor = this.editor;
-
-		if (!selection) {
-			this.selectWholeText();
-		} else {
-			Transforms.select(editor, selection);
-		}
-
-		const format = link
-			? "rgba(71, 120, 245, 1)"
-			: DEFAULT_TEXT_STYLES.fontColor;
-
-		if (!editor.selection) {
-			return;
-		}
-
 		this.startOpRecording();
-		Editor.addMark(editor, "fontColor", format);
 
-		for (const [node, path] of Editor.nodes(editor, {
-			match: n => n.type === "text",
-		})) {
-			const nodeRange = Editor.range(editor, path);
-			Transforms.select(editor, nodeRange);
-			Transforms.setNodes(
-				editor,
-				{ link },
-				{ split: false, match: n => n.type === "text" },
-			);
-		}
+		setLink(this.editor, link, selection);
 
 		return this.stopOpRecordingAndGetOps();
 	}
@@ -830,22 +795,6 @@ export class EditorContainer {
 		return textNodes;
 	}
 
-	getAllNodesInSelection(): BlockNode[] {
-		const { selection } = this.editor;
-		if (!selection) {
-			return [];
-		}
-
-		const nodes: BlockNode[] = [];
-		for (const [node, path] of Editor.nodes(this.editor, {
-			at: selection,
-		})) {
-			nodes.push(node);
-		}
-
-		return nodes;
-	}
-
 	getCursorPath() {
 		if (!this.editor.selection) {
 			return null;
@@ -861,29 +810,7 @@ export class EditorContainer {
 	}
 
 	getListTypeAtSelectionStart(): ListType | null {
-		const { selection } = this.editor;
-
-		if (!selection) {
-			this.selectWholeText();
-		}
-
-		if (!selection) {
-			return null;
-		}
-
-		const startPoint = Range.start(selection);
-
-		const listEntry = Editor.above<Element>(this.editor, {
-			at: startPoint,
-			match: n => n.type === "ol_list" || n.type === "ul_list",
-		});
-
-		if (listEntry) {
-			const [listNode] = listEntry;
-			return listNode.type as ListType;
-		}
-
-		return null;
+		return getListTypeAtSelectionStart(this.editor);
 	}
 
 	handleSplitListItem(): boolean {
@@ -1000,27 +927,6 @@ export class EditorContainer {
 			return null;
 		}
 		return node;
-	}
-
-	applyHyperlink(url: string, selection: BaseSelection): void {
-		const { editor } = this;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-
-		Transforms.wrapNodes(
-			editor,
-			{ type: "link", url },
-			{ at: selection, split: true },
-		);
-
-		Transforms.setNodes(
-			editor,
-			{ style: { color: "purple", textDecoration: "underline" } },
-			{ at: selection },
-		);
-
-		// ReactEditor.focus(editor);
 	}
 
 	appendText(text: string) {
@@ -1152,7 +1058,7 @@ export class EditorContainer {
 		}
 
 		if (isPrevTextEmpty) {
-			this.selectWholeText();
+			selectWholeText(editor);
 			Transforms.removeNodes(editor);
 			Transforms.insertNodes(editor, nodes);
 			this.moveCursorToEndOfTheText();
@@ -1272,7 +1178,7 @@ export class EditorContainer {
 			this.isProcessingChunk = false;
 			this.currentNode = "";
 			if (this.stopProcessingMarkDownCb) {
-				this.selectWholeText();
+				selectWholeText(this.editor);
 				this.stopProcessingMarkDownCb();
 				this.stopProcessingMarkDownCb = null;
 			}
@@ -1405,7 +1311,7 @@ export class EditorContainer {
 			anchor: Editor.start(this.editor, []),
 			focus: Editor.end(this.editor, []),
 		});
-		this.selectWholeText();
+		selectWholeText(this.editor);
 		Transforms.delete(this.editor);
 	}
 
@@ -1418,9 +1324,13 @@ export class EditorContainer {
 		});
 	}
 
+	selectWholeText() {
+		selectWholeText(this.editor);
+	}
+
 	moveCursorToEndOfTheText(delay = 10): Promise<void> {
 		const moveCursorToTheEndOfTheText = (): void => {
-			this.selectWholeText();
+			selectWholeText(this.editor);
 			Transforms.collapse(this.editor, { edge: "end" });
 		};
 
