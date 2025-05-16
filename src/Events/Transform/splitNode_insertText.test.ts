@@ -19,7 +19,8 @@ describe("splitNode_insertText transformation", () => {
 		const result = splitNode_insertText(confirmed, toTransform);
 		expect(result).toEqual({
 			type: "insert_text",
-			path: [1],
+			// since offset >= position, we now route into the new node at [2]
+			path: [2],
 			offset: 3,
 			text: "abc",
 		});
@@ -42,7 +43,8 @@ describe("splitNode_insertText transformation", () => {
 		const result = splitNode_insertText(confirmed, toTransform);
 		expect(result).toEqual({
 			type: "insert_text",
-			path: [0, 0],
+			// offset 4-4 = 0, and we route into the new node at [0,1]
+			path: [0, 1],
 			offset: 0,
 			text: "xyz",
 		});
@@ -216,7 +218,6 @@ describe("splitNode_insertText transformation", () => {
 		};
 
 		const result = splitNode_insertText(confirmed, toTransform);
-		// offset unchanged for different path, but path shifts from 2->3
 		expect(result).toEqual({
 			type: "insert_text",
 			path: [3],
@@ -225,127 +226,138 @@ describe("splitNode_insertText transformation", () => {
 		});
 	});
 
-	// Additional edge cases:
-	it("should not change offset or path when confirmed.position is zero on same path", () => {
+	it("should route insert into the new node when offset >= split position", () => {
 		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: InsertTextOperation = {
-			type: "insert_text",
-			path: [1],
-			offset: 3,
-			text: "edge",
-		};
-
-		const result = splitNode_insertText(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "insert_text",
-			path: [1],
-			offset: 3,
-			text: "edge",
-		});
-	});
-
-	it("should shift direct nested descendant path but not offset", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1],
-			position: 0,
-			properties: {},
-		};
-		const toTransform: InsertTextOperation = {
-			type: "insert_text",
-			path: [1, 0],
-			offset: 2,
-			text: "nest",
-		};
-
-		const result = splitNode_insertText(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "insert_text",
-			path: [2, 0],
-			offset: 2,
-			text: "nest",
-		});
-	});
-
-	it("should adjust offset for nested same-path but not shift path", () => {
-		const confirmed: SplitNodeOperation = {
-			type: "split_node",
-			path: [1, 0],
-			position: 3,
-			properties: {},
-		};
-		const toTransform: InsertTextOperation = {
-			type: "insert_text",
-			path: [1, 0],
-			offset: 5,
-			text: "deep",
-		};
-
-		const result = splitNode_insertText(confirmed, toTransform);
-		expect(result).toEqual({
-			type: "insert_text",
-			path: [1, 0],
-			offset: 2,
-			text: "deep",
-		});
-	});
-
-	it("should apply multiple sequential splits correctly", () => {
-		const splitA: SplitNodeOperation = {
-			type: "split_node",
-			path: [1],
-			position: 2,
-			properties: {},
-		};
-		const splitB: SplitNodeOperation = {
 			type: "split_node",
 			path: [0],
+			position: 10,
+			properties: {},
+		};
+		const toTransform: InsertTextOperation = {
+			type: "insert_text",
+			path: [0],
+			offset: 12,
+			text: "X",
+		};
+
+		const result = splitNode_insertText(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "insert_text",
+			path: [1],
+			offset: 2,
+			text: "X",
+		});
+	});
+});
+
+describe("splitNode_insertText transformation – additional edge cases", () => {
+	it("should shift multi-level sibling paths after split", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [1],
+			position: 0,
+			properties: {},
+		};
+		const toTransform: InsertTextOperation = {
+			type: "insert_text",
+			path: [2, 3],
+			offset: 4,
+			text: "foo",
+		};
+		const result = splitNode_insertText(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "insert_text",
+			path: [3, 3],
+			offset: 4,
+			text: "foo",
+		});
+	});
+
+	it("should shift only second-level siblings under a deeper split", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [0, 1],
 			position: 1,
 			properties: {},
 		};
 		const toTransform: InsertTextOperation = {
 			type: "insert_text",
-			path: [1],
-			offset: 5,
-			text: "multi",
+			path: [0, 2, 5],
+			offset: 1,
+			text: "bar",
 		};
-
-		const r1 = splitNode_insertText(splitA, toTransform);
-		const result = splitNode_insertText(splitB, r1);
-		// After first: offset=3, path stays [1]. After second, path shifts: 1->2
+		const result = splitNode_insertText(confirmed, toTransform);
 		expect(result).toEqual({
 			type: "insert_text",
-			path: [2],
-			offset: 3,
-			text: "multi",
+			path: [0, 3, 5],
+			offset: 1,
+			text: "bar",
 		});
 	});
 
-	it("should leave nested same-path unchanged when confirmed.position > offset", () => {
+	it("should not shift when split is on ancestor deeper than the toTransform path", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [1, 0, 2],
+			position: 2,
+			properties: {},
+		};
+		const toTransform: InsertTextOperation = {
+			type: "insert_text",
+			path: [1, 0],
+			offset: 3,
+			text: "baz",
+		};
+		const result = splitNode_insertText(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "insert_text",
+			path: [1, 0],
+			offset: 3,
+			text: "baz",
+		});
+	});
+
+	it("should decrement offset and route path when same deep path", () => {
 		const confirmed: SplitNodeOperation = {
 			type: "split_node",
 			path: [2, 1],
-			position: 5,
+			position: 3,
 			properties: {},
 		};
 		const toTransform: InsertTextOperation = {
 			type: "insert_text",
 			path: [2, 1],
-			offset: 3,
-			text: "unch",
+			offset: 6,
+			text: "deep",
 		};
-
 		const result = splitNode_insertText(confirmed, toTransform);
 		expect(result).toEqual({
 			type: "insert_text",
-			path: [2, 1],
+			path: [2, 2], // path bumped at last segment
 			offset: 3,
-			text: "unch",
+			text: "deep",
+		});
+	});
+
+	it("should treat confirmed.position at offset 0 as bumping path but no-op offset", () => {
+		const confirmed: SplitNodeOperation = {
+			type: "split_node",
+			path: [2],
+			position: 0,
+			properties: {},
+		};
+		const toTransform: InsertTextOperation = {
+			type: "insert_text",
+			path: [2],
+			offset: 4,
+			text: "noop",
+		};
+		const result = splitNode_insertText(confirmed, toTransform);
+		expect(result).toEqual({
+			type: "insert_text",
+			path: [3], // path bumped
+			offset: 4,
+			text: "noop",
 		});
 	});
 });

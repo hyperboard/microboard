@@ -9,10 +9,12 @@ export function splitNode_insertText(
 	const confPath = confirmed.path;
 	const tPath = transformed.path;
 
-	// If it's the same node, only adjust the offset and skip path transforms
 	if (Path.equals(confPath, tPath)) {
-		if (confirmed.position <= transformed.offset) {
+		if (transformed.offset >= confirmed.position) {
 			transformed.offset -= confirmed.position;
+			// route into the new node:
+			transformed.path = [...confPath];
+			transformed.path[confPath.length - 1]! += 1;
 		}
 		return transformed;
 	}
