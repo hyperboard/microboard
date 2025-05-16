@@ -23,11 +23,11 @@ import { ConnectorLineStyle } from "./Items/Connector";
 import { ConnectionLineWidth } from "./Items/Connector/Connector";
 import { DrawingData } from "./Items/Drawing";
 import { AINodeData } from "Board/Items/AINode/AINodeData";
-import { DEFAULT_TEXT_STYLES } from "./Items/RichText/RichText";
 import { getDOMParser } from "./api/DOMParser";
 import { VideoItemData } from "Board/Items/Video/Video";
 import { CommentData } from "Board/Items/Comment/Comment";
 import { AudioItemData } from "Board/Items/Audio/Audio";
+import { conf } from "Board/Settings";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -115,15 +115,17 @@ function parseHTMLRichText(
 				underline: node.style.textDecoration.includes("underline"),
 				"line-through":
 					node.style.textDecoration.includes("line-through"),
-				fontColor: node.style.color || DEFAULT_TEXT_STYLES.fontColor,
+				fontColor:
+					node.style.color || conf.DEFAULT_TEXT_STYLES.fontColor,
 				fontHighlight:
 					node.style.backgroundColor ||
-					DEFAULT_TEXT_STYLES.fontHighlight,
+					conf.DEFAULT_TEXT_STYLES.fontHighlight,
 				fontSize:
 					parseFloat(node.style.fontSize) ||
-					DEFAULT_TEXT_STYLES.fontSize,
+					conf.DEFAULT_TEXT_STYLES.fontSize,
 				fontFamily:
-					node.style.fontFamily || DEFAULT_TEXT_STYLES.fontFamily,
+					node.style.fontFamily ||
+					conf.DEFAULT_TEXT_STYLES.fontFamily,
 				overline: false,
 				subscript: false,
 				superscript: false,
@@ -211,7 +213,7 @@ function parseHTMLRichText(
 					...extractCommonProps(),
 					lineHeight:
 						parseFloat(node.style.lineHeight) ||
-						DEFAULT_TEXT_STYLES.lineHeight,
+						conf.DEFAULT_TEXT_STYLES.lineHeight,
 					children,
 				};
 

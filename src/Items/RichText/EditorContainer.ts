@@ -1,6 +1,6 @@
 import { getParagraphWithPassedTextNode } from "Board/Items/RichText/editorHelpers/common/getParagraph";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { conf } from "Board/Settings";
+import { conf, DefaultTextStyles } from "Board/Settings";
 import markdown from "remark-parse";
 import slate from "remark-slate";
 import { Subject } from "shared/Subject";
@@ -32,7 +32,6 @@ import {
 } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./editorHelpers/common/isTextEmpty.ts";
-import { DefaultTextStyles } from "./RichText";
 import {
 	RichTextOperation,
 	SelectionMethod,

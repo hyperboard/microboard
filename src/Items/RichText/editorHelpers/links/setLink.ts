@@ -1,6 +1,5 @@
 import { BaseSelection, Editor, Transforms } from "slate";
 import { CustomEditor } from "Board/Items/RichText/Editor/Editor.d";
-import { DEFAULT_TEXT_STYLES } from "Board/Items/RichText/RichText";
 import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
 
 export const setLink = (
@@ -18,9 +17,7 @@ export const setLink = (
 		return;
 	}
 
-	const format = link
-		? "rgba(71, 120, 245, 1)"
-		: DEFAULT_TEXT_STYLES.fontColor;
+	const format = link ? "rgba(71, 120, 245, 1)" : "rgb(20, 21, 26)";
 
 	Editor.addMark(editor, "fontColor", format);
 

@@ -9,7 +9,7 @@ import {
 } from "Board/HTMLRender/HTMLRender";
 import { decodeHtml } from "Board/parserHTML";
 import { SelectionContext } from "Board/Selection/Selection";
-import { conf } from "Board/Settings";
+import { conf, DefaultTextStyles } from "Board/Settings";
 import { Subject } from "shared/Subject";
 import {
 	BaseRange,
@@ -47,37 +47,8 @@ import {
 	getParagraphWithPassedTextNode,
 } from "./editorHelpers/common/getParagraph.ts";
 import { RichTextOperation } from "./RichTextOperations";
+
 const { i18n } = conf;
-
-export type DefaultTextStyles = {
-	fontFamily: string;
-	fontSize: number;
-	fontColor: string;
-	fontHighlight: string;
-	lineHeight: number;
-	bold: boolean;
-	italic: boolean;
-	underline: boolean;
-	"line-through": boolean;
-	overline: boolean;
-	subscript: boolean;
-	superscript: boolean;
-};
-
-export const DEFAULT_TEXT_STYLES: DefaultTextStyles = {
-	fontFamily: "Manrope",
-	fontSize: 14,
-	fontColor: "rgb(20, 21, 26)",
-	fontHighlight: "",
-	lineHeight: 1.4,
-	bold: false,
-	underline: false,
-	italic: false,
-	"line-through": false,
-	overline: false,
-	subscript: false,
-	superscript: false,
-};
 
 let isEditInProcessValue = false;
 
@@ -130,7 +101,7 @@ export class RichText extends Mbr implements Geometry {
 		public isInShape = false,
 		private autoSize = false,
 		public insideOf?: ItemType,
-		private initialTextStyles: DefaultTextStyles = DEFAULT_TEXT_STYLES,
+		private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES,
 	) {
 		super();
 		this.linkTo = linkTo || new LinkTo(this.id, this.board.events);
@@ -1115,14 +1086,15 @@ export class RichText extends Mbr implements Geometry {
 					]
 						.filter(Boolean)
 						.join(" "),
-					color: node.fontColor || DEFAULT_TEXT_STYLES.fontColor,
+					color: node.fontColor || conf.DEFAULT_TEXT_STYLES.fontColor,
 					backgroundColor:
-						node.fontHighlight || DEFAULT_TEXT_STYLES.fontHighlight,
+						node.fontHighlight ||
+						conf.DEFAULT_TEXT_STYLES.fontHighlight,
 					fontSize: node.fontSize
 						? `${node.fontSize}px`
 						: `${DEFAULT_TEXT_STYLES.fontSize}px`,
 					fontFamily:
-						node.fontFamily || DEFAULT_TEXT_STYLES.fontFamily,
+						node.fontFamily || conf.DEFAULT_TEXT_STYLES.fontFamily,
 				});
 
 				if (this.insideOf === "Frame") {
@@ -1225,7 +1197,7 @@ export class RichText extends Mbr implements Geometry {
 						Object.assign(par.style, {
 							lineHeight: node.lineHeight
 								? `${node.lineHeight}`
-								: DEFAULT_TEXT_STYLES.lineHeight,
+								: conf.DEFAULT_TEXT_STYLES.lineHeight,
 							margin: "0",
 						});
 						par.append(...children);

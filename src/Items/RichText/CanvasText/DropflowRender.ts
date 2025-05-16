@@ -9,7 +9,8 @@ import { getPublicUrl } from "Config";
 import { LayoutBlockNodes } from "./LayoutBlockNodes";
 import { convertLinkNodeToTextNode } from "./convertLinkNodeToTextNode";
 import { Descendant } from "slate";
-import { DEFAULT_TEXT_STYLES } from "../RichText";
+
+import { conf } from "Board/Settings";
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
@@ -134,7 +135,7 @@ function getChildStyle(
 					})()
 				: { r: 0, g: 0, b: 0, a: 1 },
 		fontSize,
-		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
+		fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
 		whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
 		overflowWrap: "break-word",
 		backgroundColor:
@@ -179,7 +180,7 @@ function convertNoneListNode(
 
 	const nodeStyle: flow.DeclaredStyle = {
 		textAlign: node.horisontalAlignment || "left",
-		fontFamily: [DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
+		fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
 		paddingTop: {
 			value: isFirstNode ? 0 : (node.paddingTop ?? 0),
 			unit: "em",
@@ -319,7 +320,7 @@ function createRootDiv(
 				lineHeight: 1.4,
 				width: maxWidth === Infinity ? "auto" : maxWidth,
 				fontFamily: [
-					DEFAULT_TEXT_STYLES.fontFamily,
+					conf.DEFAULT_TEXT_STYLES.fontFamily,
 					"Noto Color Emoji",
 				],
 			},

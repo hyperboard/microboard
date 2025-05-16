@@ -1,8 +1,9 @@
 import { Board } from "Board";
-import { DEFAULT_TEXT_STYLES, RichText } from "./RichText";
+import { RichText } from "./RichText";
 import { GroupEdit, RichTextOperation } from "./RichTextOperations";
 import { Command } from "Board/Events";
 import { Operation } from "slate";
+import { conf } from "Board/Settings";
 
 export class RichTextCommand implements Command {
 	private reverse: { item: string; operation: RichTextOperation }[];
@@ -71,7 +72,7 @@ export class RichTextCommand implements Command {
 								.getById(id)
 								?.getRichText()
 								?.getFontColor() ||
-							DEFAULT_TEXT_STYLES.fontColor,
+							conf.DEFAULT_TEXT_STYLES.fontColor,
 					},
 				}));
 
@@ -111,7 +112,7 @@ export class RichTextCommand implements Command {
 								.getById(id)
 								?.getRichText()
 								?.getFontFamily() ||
-							DEFAULT_TEXT_STYLES.fontFamily,
+							conf.DEFAULT_TEXT_STYLES.fontFamily,
 					},
 				}));
 
@@ -124,7 +125,8 @@ export class RichTextCommand implements Command {
 							this.board.items
 								.getById(id)
 								?.getRichText()
-								?.getFontSize() || DEFAULT_TEXT_STYLES.fontSize,
+								?.getFontSize() ||
+							conf.DEFAULT_TEXT_STYLES.fontSize,
 					},
 				}));
 
@@ -138,7 +140,7 @@ export class RichTextCommand implements Command {
 								.getById(id)
 								?.getRichText()
 								?.getFontHighlight() ||
-							DEFAULT_TEXT_STYLES.fontHighlight,
+							conf.DEFAULT_TEXT_STYLES.fontHighlight,
 					},
 				}));
 

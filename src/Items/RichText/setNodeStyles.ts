@@ -5,7 +5,8 @@ import { HistoryEditor } from "slate-history";
 import { LinkNode, TextNode } from "Board/Items/RichText/Editor/TextNode";
 import { HorisontalAlignment } from "Board/Items/Alignment";
 import { convertLinkNodeToTextNode } from "Board/Items/RichText/CanvasText/convertLinkNodeToTextNode";
-import { DEFAULT_TEXT_STYLES } from "./RichText";
+
+import { conf } from "Board/Settings";
 
 export function setNodeChildrenStyles({
 	editor,
@@ -16,9 +17,9 @@ export function setNodeChildrenStyles({
 	horisontalAlignment?: HorisontalAlignment;
 	node: BlockNode;
 }): void {
-	let fontStyles = DEFAULT_TEXT_STYLES;
+	let fontStyles = conf.DEFAULT_TEXT_STYLES;
 	if (editor) {
-		fontStyles = Editor.marks(editor) || DEFAULT_TEXT_STYLES;
+		fontStyles = Editor.marks(editor) || conf.DEFAULT_TEXT_STYLES;
 	}
 
 	switch (node.type) {
@@ -65,7 +66,10 @@ export function setNodeChildrenStyles({
 			}
 
 			let fontColor = fontStyles.fontColor;
-			if (fontColor === DEFAULT_TEXT_STYLES.fontColor && children.link) {
+			if (
+				fontColor === conf.DEFAULT_TEXT_STYLES.fontColor &&
+				children.link
+			) {
 				fontColor = "rgba(71, 120, 245, 1)";
 			}
 

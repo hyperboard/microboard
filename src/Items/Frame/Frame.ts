@@ -31,7 +31,8 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { translateElementBy } from "Board/HTMLRender";
 import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
 import { DocumentFactory } from "Board/api/DocumentFactory";
-import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
+
+import { conf } from "Board/Settings";
 const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {
@@ -77,7 +78,7 @@ export class Frame implements Geometry {
 			true,
 			false,
 			"Frame",
-			{ ...DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR },
+			{ ...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR },
 		);
 		this.text.setSelectionHorisontalAlignment("left");
 		this.transformation.subject.subscribe(() => {

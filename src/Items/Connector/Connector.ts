@@ -31,7 +31,6 @@ import {
 	scaleElementBy,
 } from "Board/HTMLRender";
 import { DocumentFactory } from "Board/api/DocumentFactory";
-import { DEFAULT_TEXT_STYLES } from "../RichText/RichText";
 import { ConnectorAnchorColors } from "./types";
 import { conf } from "Board/Settings";
 const { i18n } = conf;
@@ -114,17 +113,17 @@ export class Connector {
 			false,
 			"Connector",
 			{
-				...DEFAULT_TEXT_STYLES,
+				...conf.DEFAULT_TEXT_STYLES,
 				fontSize:
 					typeof window !== "undefined" &&
 					localStorage.getItem("lastConnectorTextSize")
 						? Number(localStorage.getItem("lastConnectorTextSize"))
-						: DEFAULT_TEXT_STYLES.fontSize,
+						: conf.DEFAULT_TEXT_STYLES.fontSize,
 				fontColor:
 					typeof window !== "undefined" &&
 					localStorage.getItem("lastConnectorTextColor")
 						? localStorage.getItem("lastConnectorTextColor")
-						: DEFAULT_TEXT_STYLES.fontColor,
+						: conf.DEFAULT_TEXT_STYLES.fontColor,
 			},
 		);
 		this.startPointer = getStartPointer(

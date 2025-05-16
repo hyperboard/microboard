@@ -7,7 +7,6 @@ import slate from "remark-slate";
 import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
 import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
 import { TextNode } from "Board/Items/RichText/Editor/TextNode";
-import { DEFAULT_TEXT_STYLES } from "./RichText";
 import { conf } from "Board/Settings";
 
 export const transformHtmlOrTextToMarkdown = async (
@@ -52,7 +51,7 @@ function createLinkNode(link: string): TextNode {
 		type: "text",
 		link,
 		text: link,
-		...DEFAULT_TEXT_STYLES,
+		...conf.DEFAULT_TEXT_STYLES,
 		fontColor: "rgba(71, 120, 245, 1)",
 	};
 }
@@ -88,7 +87,7 @@ async function convertMarkdownToSlate(text: string) {
 	// ) {
 	// 	nodes.unshift({
 	// 		type: "paragraph",
-	// 		children: [{ type: "text", text: "", ...DEFAULT_TEXT_STYLES }],
+	// 		children: [{ type: "text", text: "", ...conf.DEFAULT_TEXT_STYLES }],
 	// 		horisontalAlignment: "left",
 	// 	});
 	// }

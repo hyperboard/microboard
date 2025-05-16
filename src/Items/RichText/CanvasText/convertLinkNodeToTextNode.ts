@@ -1,5 +1,6 @@
 import { LinkNode, TextNode } from "../Editor/TextNode";
-import { DEFAULT_TEXT_STYLES } from "../RichText";
+
+import { conf } from "Board/Settings";
 
 export const convertLinkNodeToTextNode = (
 	node: LinkNode | TextNode,
@@ -11,7 +12,7 @@ export const convertLinkNodeToTextNode = (
 	const text = node.children.map(child => child.text).join("");
 
 	return {
-		...DEFAULT_TEXT_STYLES,
+		...conf.DEFAULT_TEXT_STYLES,
 		type: "text",
 		text,
 		link,

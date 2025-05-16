@@ -163,6 +163,8 @@ export interface Settings {
 	LISTMARK_NUMBERS: string[];
 	LISTMARK_LETTERS: string[];
 	LISTMARK_ROMAN: string[];
+
+	DEFAULT_TEXT_STYLES: DefaultTextStyles;
 }
 
 /**
@@ -485,6 +487,21 @@ export const conf: Settings = {
 		"xix.",
 		"xx.",
 	],
+
+	DEFAULT_TEXT_STYLES: {
+		fontFamily: "Manrope",
+		fontSize: 14,
+		fontColor: "rgb(20, 21, 26)",
+		fontHighlight: "",
+		lineHeight: 1.4,
+		bold: false,
+		underline: false,
+		italic: false,
+		"line-through": false,
+		overline: false,
+		subscript: false,
+		superscript: false,
+	},
 };
 
 export interface ExportSnapshotSelection {
@@ -510,3 +527,18 @@ type ExportFrameDecorationRecord = Record<
 	ExportFrameDecorationDirection,
 	ExportFrameDecoration
 >;
+
+export type DefaultTextStyles = {
+	fontFamily: string;
+	fontSize: number;
+	fontColor: string;
+	fontHighlight: string;
+	lineHeight: number;
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	"line-through": boolean;
+	overline: boolean;
+	subscript: boolean;
+	superscript: boolean;
+};
