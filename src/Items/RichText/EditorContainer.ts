@@ -304,9 +304,9 @@ export class EditorContainer {
 
 		const opsArr = op?.ops ?? op ?? [];
 
-		this.moveSelectionToTheEndOfNodeByOps(opsArr);
+		// this.moveSelectionToTheEndOfNodeByOps(opsArr);
 
-		return opsArr;
+		return opsArr.filter(op => op.type !== "set_selection");
 	}
 
 	applyRichTextOp(op: RichTextOperation): void {
