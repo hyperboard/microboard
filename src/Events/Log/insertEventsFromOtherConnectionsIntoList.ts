@@ -32,6 +32,7 @@ export function insertEventsFromOtherConnectionsIntoList(
 	// Previous implementation for handling snapped objects was removed
 	// handleRemoveSnappedObject(board, events, list); // should do it in other ways
 
+	board.selection.memoize();
 	// Revert any unconfirmed changes to ensure a clean state
 	list.revertUnconfirmed();
 
@@ -50,6 +51,8 @@ export function insertEventsFromOtherConnectionsIntoList(
 	}
 	// Re-apply any unconfirmed changes that were reverted earlier
 	list.applyUnconfirmed();
+
+	board.selection.applyMemoized();
 }
 
 /**
@@ -85,8 +88,7 @@ function transformConflictingEvents(
 				one =>
 					one.body.eventId !== event.body.eventId &&
 					one.order > event.lastKnownOrder &&
-					one.order <= event.order &&
-					(event.userId !== one.userId || one?.userdId === undefined),
+					one.order <= event.order,
 			);
 			// Transform the conflicting event against all confirmed events
 			transformed.push(...transformEvents(confirmed, [event]));

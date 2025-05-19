@@ -58,6 +58,11 @@ export class Selection {
 	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
 
+	memorySnapshot: {
+		selectedItems: string;
+		context: SelectionContext;
+	} | null = null;
+
 	constructor(
 		private board: Board,
 		public events?: Events,
@@ -70,7 +75,6 @@ export class Selection {
 	serialize(): string {
 		const selectedItems = this.items.list().map(item => item.getId());
 		return JSON.stringify(selectedItems);
-		this.removeFromBoard();
 	}
 
 	deserialize(serializedData: string): void {
@@ -82,6 +86,28 @@ export class Selection {
 				this.items.add(item);
 			}
 		});
+	}
+
+	memoize(): void {
+		this.memorySnapshot = {
+			selectedItems: this.serialize(),
+			context: this.context,
+		};
+	}
+
+	applyMemoized(): {
+		selectedItems: string;
+		context: SelectionContext;
+	} | null {
+		const savedData = this.memorySnapshot
+			? { ...this.memorySnapshot }
+			: null;
+		if (savedData) {
+			this.deserialize(savedData.selectedItems);
+			this.setContext(savedData.context);
+		}
+
+		return savedData;
 	}
 
 	private emit(operation: Operation): void {
@@ -230,6 +256,11 @@ export class Selection {
 		this.context = context;
 		if (context !== "EditTextUnderPointer") {
 			this.setTextToEdit(undefined);
+		} else {
+			const single = this.items.getSingle();
+			if (single) {
+				this.setTextToEdit(single);
+			}
 		}
 		if (context === "None") {
 			this.quickAddButtons.clear();

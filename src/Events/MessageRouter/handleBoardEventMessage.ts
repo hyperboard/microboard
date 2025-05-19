@@ -1,6 +1,7 @@
 import { Board } from "Board";
 import { conf } from "Board/Settings";
 import { SyncEvent } from "../Events";
+import { Storage } from "App/Storage";
 
 export interface BoardEventMsg {
 	type: "BoardEvent";
@@ -24,9 +25,9 @@ export function handleBoardEventMessage(
 		return;
 	}
 
-	const currentUserId = conf.connection?.getCurrentUser() || "";
-	const messageUserId = message.userId;
-	const isEventFromCurrentUser = currentUserId === messageUserId;
+	const eventUserId = parseFloat(event.body.eventId.split(":")[0]);
+	const currentUserId = +(new Storage().getUserId() || "0");
+	const isEventFromCurrentUser = eventUserId === currentUserId;
 
 	if (isEventFromCurrentUser) {
 		return;

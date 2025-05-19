@@ -200,13 +200,11 @@ export function createEventsList(
 
 		applyUnconfirmed(): void {
 			if (justConfirmed.length > 0) {
-				console.log("Transforming recordsToSend...");
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
 					recordsToSend.slice().map(rec => rec.event),
 				);
 
-				console.log("Transforming newRecords...");
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
 					newRecords.slice().map(rec => rec.event),
@@ -222,7 +220,6 @@ export function createEventsList(
 					command: createCommand(event.body.operation),
 				}));
 
-				console.log("PUSING BOTH REVERSED...");
 				recordsToSend.length = 0;
 				recordsToSend.push(...recsToSend);
 				newRecords.length = 0;

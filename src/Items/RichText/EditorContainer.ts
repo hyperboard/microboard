@@ -301,7 +301,7 @@ export class EditorContainer {
 		const op = this.recordedOps;
 		this.recordedOps = null;
 
-		const opsArr = op?.ops ?? op ?? [];
+		const opsArr = (op?.ops ?? op ?? []) as Operation[];
 
 		// this.moveSelectionToTheEndOfNodeByOps(opsArr);
 
