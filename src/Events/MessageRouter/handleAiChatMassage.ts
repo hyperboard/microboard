@@ -168,21 +168,27 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 			if (!item || item.itemType !== "AINode") {
 				return;
 			}
-			item.text.editor.processMarkdown(chunk.content || "");
+			item.text.editor.markdownProcessor.processMarkdown(
+				chunk.content || "",
+			);
 			break;
 		case "done":
 			if (!item || item.itemType !== "AINode") {
 				board.aiGeneratingOnItem = undefined;
 				return;
 			}
-			item.getRichText().editor.processMarkdown("StopProcessingMarkdown");
+			item.getRichText().editor.markdownProcessor.processMarkdown(
+				"StopProcessingMarkdown",
+			);
 			break;
 		case "end":
 			if (!item || item.itemType !== "AINode") {
 				board.aiGeneratingOnItem = undefined;
 				return;
 			}
-			item.getRichText().editor.processMarkdown("StopProcessingMarkdown");
+			item.getRichText().editor.markdownProcessor.processMarkdown(
+				"StopProcessingMarkdown",
+			);
 			break;
 		case "error":
 			board.camera.unsubscribeFromItem();
@@ -192,7 +198,7 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 					board.selection.removeAll();
 					board.selection.add(item);
 					if (item.itemType === "AINode") {
-						item.getRichText().editor.setStopProcessingMarkDownCb(
+						item.getRichText().editor.markdownProcessor.setStopProcessingMarkDownCb(
 							null,
 						);
 						if (chunk.isExternalApiError) {
@@ -233,7 +239,7 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 					board.selection.removeAll();
 					board.selection.add(item);
 					if (item.itemType === "AINode") {
-						item.getRichText().editor.setStopProcessingMarkDownCb(
+						item.getRichText().editor.markdownProcessor.setStopProcessingMarkDownCb(
 							null,
 						);
 						if (chunk.isExternalApiError) {

@@ -47,6 +47,8 @@ import {
 	getParagraphWithPassedTextNode,
 } from "./editorHelpers/common/getParagraph.ts";
 import { RichTextOperation } from "./RichTextOperations";
+import { applySelectionFontColor } from "./editorHelpers/selectionOps/applySelectionFontColor.ts";
+import { applySelectionFontSize } from "./editorHelpers/selectionOps/applySelectionFontSize.ts";
 
 const { i18n } = conf;
 
@@ -664,7 +666,7 @@ export class RichText extends Mbr implements Geometry {
 
 	applySelectionFontColor(fontColor: string): void {
 		this.editor.shouldEmit = false;
-		this.editor.applySelectionFontColor(fontColor);
+		applySelectionFontColor(this.editor, fontColor);
 		this.editor.shouldEmit = true;
 		this.updateElement();
 	}
@@ -693,10 +695,11 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.editor.shouldEmit = false;
 		if (this.isInShape) {
-			this.editor.applySelectionFontSize(fontSize, selectionContext);
+			applySelectionFontSize(this.editor, fontSize, selectionContext);
 		} else {
 			const scaledFontSize = fontSize / this.getScale();
-			this.editor.applySelectionFontSize(
+			applySelectionFontSize(
+				this.editor,
 				scaledFontSize,
 				selectionContext,
 			);

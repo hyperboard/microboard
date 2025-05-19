@@ -48,6 +48,10 @@ import { toggleListType } from "Board/Items/RichText/editorHelpers/lists/toggleL
 import { getListTypeAtSelectionStart } from "Board/Items/RichText/editorHelpers/lists/getListTypeAtSelectionStart";
 import { setLink } from "Board/Items/RichText/editorHelpers/links/setLink";
 import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
+import { getSelectionMarks } from "Board/Items/RichText/editorHelpers/common/getSelectionMarks";
+import { clearText } from "Board/Items/RichText/editorHelpers/common/clearText";
+import { hasTextInSelection } from "Board/Items/RichText/editorHelpers/common/hasTextInSelection";
+import { MarkdownProcessor } from "Board/Items/RichText/editorHelpers/markdown/markdownProcessor";
 
 const { i18n } = conf;
 
@@ -60,10 +64,7 @@ export class EditorContainer {
 	textScale = 1;
 	verticalAlignment: VerticalAlignment = "center";
 	textLength = 0;
-	private chunksQueue: string[] = [];
-	private isProcessingChunk = false;
-	private stopProcessingMarkDownCb: (() => void) | null = null;
-	private currentNode = "";
+	markdownProcessor: MarkdownProcessor;
 
 	private decorated = {
 		realapply: (_operation: SlateOp): void => {},
@@ -228,6 +229,13 @@ export class EditorContainer {
 		// Disable editor's native undo/redo
 		editor.redo = (): void => {};
 		editor.undo = (): void => {};
+
+		this.markdownProcessor = new MarkdownProcessor(editor);
+		this.markdownProcessor.subject.subscribe(
+			(_processor: MarkdownProcessor) => {
+				this.subject.publish(this);
+			},
+		);
 	}
 
 	setId(id: string): this {
@@ -559,48 +567,6 @@ export class EditorContainer {
 		return this.stopOpRecordingAndGetOps();
 	}
 
-	applySelectionFontColor(fontColor: string): void {
-		const editor = this.editor;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			return;
-		}
-		Editor.addMark(editor, "fontColor", fontColor);
-	}
-
-	applySelectionFontSize(fontSize: number, selectionContext?: string): void {
-		const size = fontSize;
-		const editor = this.editor;
-		const selection = editor.selection;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			return;
-		}
-
-		if (
-			JSON.stringify(selection?.anchor) ===
-			JSON.stringify(selection?.focus)
-		) {
-			Transforms.select(this.editor, {
-				anchor: Editor.start(this.editor, []),
-				focus: Editor.end(this.editor, []),
-			});
-		}
-		Editor.addMark(editor, "fontSize", size);
-
-		if (selectionContext === "EditTextUnderPointer") {
-			// ReactEditor.focus(editor);
-		}
-	}
-
 	setSelectionFontSize(
 		fontSize: number | "auto",
 		selectionContext?: string,
@@ -773,7 +739,7 @@ export class EditorContainer {
 	}
 
 	getSelectionMarks(): Omit<TextNode, "text"> | null {
-		return Editor.marks(this.editor);
+		return getSelectionMarks(this.editor);
 	}
 
 	getAllTextNodesInSelection(): TextNode[] {
@@ -1084,171 +1050,6 @@ export class EditorContainer {
 		return true;
 	}
 
-	setStopProcessingMarkDownCb(cb: (() => void) | null) {
-		this.stopProcessingMarkDownCb = cb;
-	}
-
-	getStopProcessingMarkDownCb() {
-		return this.stopProcessingMarkDownCb;
-	}
-
-	deserializeMarkdown(isNewParagraphNeeded: boolean) {
-		const lastNode = this.getText()[this.getText().length - 1];
-		if (lastNode.type !== "paragraph") {
-			this.subject.publish(this);
-			return true;
-		}
-
-		const text: string | undefined = lastNode.children[0]?.text;
-
-		if (!text) {
-			Transforms.insertNodes(this.editor, this.createParagraphNode(""), {
-				at: [0],
-			});
-			this.subject.publish(this);
-			return true;
-		}
-
-		if (text.startsWith(i18n.t("AIInput.generatingResponse"))) {
-			return true;
-		}
-
-		const isPrevTextEmpty = this.isEmpty();
-
-		if (!isPrevTextEmpty) {
-			Transforms.removeNodes(this.editor, {
-				at: [this.getText().length - 1],
-			});
-		}
-
-		unified()
-			.use(markdown)
-			.use(slate)
-			.process(text, (err, file) => {
-				if (err || !file) {
-					throw err;
-				}
-
-				const nodes = (file.result as BlockNode[]).map(
-					(item: BlockNode, index) => {
-						setNodeStyles({
-							node: item,
-							editor: this.editor,
-							horisontalAlignment: this.horisontalAlignment,
-							isPaddingTopNeeded: item.type !== "code_block",
-						});
-						return item;
-					},
-				);
-				if (isNewParagraphNeeded) {
-					nodes.push(this.createParagraphNode(""));
-				}
-
-				Transforms.insertNodes(this.editor, nodes, {
-					at: [this.getText().length],
-				});
-			});
-
-		this.subject.publish(this);
-		return true;
-	}
-
-	processMarkdown(chunk: string): boolean {
-		this.chunksQueue.push(chunk);
-
-		if (!this.isProcessingChunk) {
-			this.processNextChunk();
-		}
-
-		return true;
-	}
-
-	private async processNextChunk() {
-		if (this.chunksQueue.length === 0) {
-			this.isProcessingChunk = false;
-			return;
-		}
-
-		this.isProcessingChunk = true;
-		const chunk = this.chunksQueue.shift()!;
-
-		if (chunk === "StopProcessingMarkdown") {
-			await this.deserializeMarkdownAsync(false);
-			this.isProcessingChunk = false;
-			this.currentNode = "";
-			if (this.stopProcessingMarkDownCb) {
-				selectWholeText(this.editor);
-				this.stopProcessingMarkDownCb();
-				this.stopProcessingMarkDownCb = null;
-			}
-			return;
-		}
-
-		const prevText =
-			this.getText()?.[this.getText().length - 1]?.children[0]?.text;
-		if (prevText?.startsWith(i18n.t("AIInput.generatingResponse"))) {
-			this.clearText();
-		}
-
-		if (chunk.includes("\n\n")) {
-			// // sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
-			const numberedListItemRegex = /^\d+\.\s/;
-			if (numberedListItemRegex.test(this.currentNode)) {
-				this.insertChunk(chunk);
-			} else {
-				this.insertChunk(chunk.split("\n\n")[0]);
-				await this.deserializeMarkdownAsync();
-			}
-			this.currentNode = "";
-		} else {
-			this.currentNode += chunk;
-			this.insertChunk(chunk);
-		}
-		setTimeout(() => this.processNextChunk(), 0);
-	}
-
-	private async deserializeMarkdownAsync(isNewParagraphNeeded = true) {
-		return new Promise(resolve => {
-			setTimeout(() => {
-				this.deserializeMarkdown(isNewParagraphNeeded);
-				resolve(true);
-			}, 0);
-		});
-	}
-
-	insertChunk(text: string): boolean {
-		const lines = text.split(/\r\n|\r|\n/);
-		const combinedText = lines.join("\n");
-		const isPrevTextEmpty = this.isEmpty();
-
-		if (isPrevTextEmpty) {
-			this.editor.insertText(combinedText);
-		} else {
-			const lastParagraphPath = this.getText().length - 1;
-			const lastParagraph = this.getText()[lastParagraphPath];
-
-			const insertLocation = {
-				path: [lastParagraphPath, lastParagraph.children.length - 1],
-				offset: lastParagraph.children[
-					lastParagraph.children.length - 1
-				].text.length,
-			};
-
-			Transforms.insertText(this.editor, combinedText, {
-				at: insertLocation,
-			});
-		}
-		this.subject.publish(this);
-
-		return true;
-	}
-
-	insertData = (data: DataTransfer) => {
-		if (!this.editor.insertFragmentData(data)) {
-			this.editor.insertTextData(data);
-		}
-	};
-
 	insertFragmentData = (data: DataTransfer): boolean => {
 		/**
 		 * Checking copied fragment from application/x-slate-fragment or data-slate-fragment
@@ -1269,24 +1070,8 @@ export class EditorContainer {
 		return false;
 	};
 
-	insertTextData = (data: DataTransfer): boolean => {
-		const text = data.getData("text/plain");
-
-		if (text) {
-			return this.insertCopiedText(text);
-		}
-		return false;
-	};
-
 	hasTextInSelection(): boolean {
-		const { selection } = this.editor;
-		if (!selection || Range.isCollapsed(selection)) {
-			return false;
-		}
-
-		const [start, end] = Range.edges(selection);
-		const text = Editor.string(this.editor, { anchor: start, focus: end });
-		return text.length > 0;
+		return hasTextInSelection(this.editor);
 	}
 
 	getSelection(): BaseSelection {
@@ -1306,12 +1091,7 @@ export class EditorContainer {
 	}
 
 	clearText(): void {
-		Transforms.select(this.editor, {
-			anchor: Editor.start(this.editor, []),
-			focus: Editor.end(this.editor, []),
-		});
-		selectWholeText(this.editor);
-		Transforms.delete(this.editor);
+		clearText(this.editor);
 	}
 
 	addText(text: string): void {
