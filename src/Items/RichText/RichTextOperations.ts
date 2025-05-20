@@ -1,17 +1,11 @@
 import { BaseSelection, Operation } from "slate";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { BlockType } from "./Editor/BlockNode";
 import { TextStyle } from "./Editor/TextNode";
 import { SelectionContext } from "Board/Selection/Selection";
 
 interface RichTextBaseOp {
 	class: "RichText";
 	item: string[];
-}
-
-interface SetBlockType extends RichTextBaseOp {
-	method: "setBlockType";
-	type: BlockType;
 }
 
 interface SetFontColor extends RichTextBaseOp {
@@ -72,7 +66,6 @@ export interface SelectionOp extends RichTextBaseOp {
 }
 
 export type WholeTextOp =
-	| SetBlockType
 	| SetFontColor
 	| SetFontStyle
 	| SetFontFamily

@@ -337,28 +337,6 @@ export class Selection {
 		this.board.items.subject.publish(this.board.items);
 	}
 
-	async appendText(appendedText: string): Promise<void> {
-		if (this.items.isEmpty()) {
-			return;
-		}
-		if (!this.items.isSingle()) {
-			return;
-		}
-		const item = this.items.getSingle();
-		if (!item) {
-			return;
-		}
-		const text = item.getRichText();
-		if (!text) {
-			return;
-		}
-		await text.editor.moveCursorToEndOfTheText(); // prob should be 20 ms
-		text.editor.appendText(appendedText);
-		this.setTextToEdit(item);
-		this.setContext("EditTextUnderPointer");
-		this.board.items.subject.publish(this.board.items);
-	}
-
 	editUnderPointer(): void {
 		this.removeAll();
 		const stack = this.board.items.getUnderPointer();

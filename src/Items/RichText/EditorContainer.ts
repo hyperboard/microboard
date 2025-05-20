@@ -52,6 +52,18 @@ import { getSelectionMarks } from "Board/Items/RichText/editorHelpers/common/get
 import { clearText } from "Board/Items/RichText/editorHelpers/common/clearText";
 import { hasTextInSelection } from "Board/Items/RichText/editorHelpers/common/hasTextInSelection";
 import { MarkdownProcessor } from "Board/Items/RichText/editorHelpers/markdown/markdownProcessor";
+import { insertCopiedNodes } from "Board/Items/RichText/editorHelpers/selectionOps/insertCopiedNodes";
+import { moveCursorToEndOfTheText } from "Board/Items/RichText/editorHelpers/common/moveCursorToEndOfText";
+import { insertCopiedText } from "Board/Items/RichText/editorHelpers/selectionOps/insertCopiedText";
+import { getFirstSelectionLink } from "Board/Items/RichText/editorHelpers/links/getFirstSelectionLink";
+import { getAllTextNodesInSelection } from "Board/Items/RichText/editorHelpers/common/getAllTextNodesInSelection";
+import { getEachNodeInSelectionStyles } from "Board/Items/RichText/editorHelpers/common/getEachNodeInSelectionStyles";
+import { isBlockActive } from "Board/Items/RichText/editorHelpers/common/isBlockActive";
+import { setSelectionHorisontalAlignment } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionHorisontalAlignment";
+import { setSelectionFontHighlight } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontHighlight";
+import { setSelectionFontSize } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontSize";
+import { setSelectionFontStyle } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontStyle";
+import { setSelectionFontColor } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontColor";
 
 const { i18n } = conf;
 
@@ -278,40 +290,11 @@ export class EditorContainer {
 		return null;
 	}
 
-	getSelectionOp(method: SelectionMethod, ops: SlateOp[]): SelectionOp {
-		return {
-			class: "RichText",
-			method,
-			item: [this.id],
-			selection: this.getSelection(),
-			ops,
-		};
-	}
-
-	moveSelectionToTheEndOfNodeByOps(opsArr: Operation[]) {
-		if (
-			opsArr.length &&
-			opsArr[0].type === "insert_node" &&
-			opsArr.length === 1
-		) {
-			const op = opsArr[0];
-			const path = this.getEndNodePath(op.node, op.path);
-			if (path) {
-				Transforms.select(this.editor, {
-					anchor: path,
-					focus: path,
-				});
-			}
-		}
-	}
-
 	stopOpRecordingAndGetOps(): SlateOp[] {
 		const op = this.recordedOps;
 		this.recordedOps = null;
 
 		const opsArr = (op?.ops ?? op ?? []) as Operation[];
-
-		// this.moveSelectionToTheEndOfNodeByOps(opsArr);
 
 		return opsArr.filter(op => op.type !== "set_selection");
 	}
@@ -362,43 +345,43 @@ export class EditorContainer {
 		}
 	}
 
-	addFontStyle(style: TextStyle): void {
-		this.shouldEmit = false;
-		const editor = this.editor;
-		selectWholeText(editor);
-
-		Editor.withoutNormalizing(editor, () => {
-			const marks = this.getSelectionMarks();
-			if (!marks) {
-				return;
-			}
-			const styles = marks.styles ? marks.styles.slice() : [];
-			if (!styles.includes(style)) {
-				styles.push(style);
-				Editor.addMark(editor, "styles", styles);
-			}
-		});
-		this.shouldEmit = true;
-	}
-
-	removeFontStyle(style: TextStyle): void {
-		this.shouldEmit = false;
-		const editor = this.editor;
-		Editor.withoutNormalizing(editor, () => {
-			selectWholeText(editor);
-			const marks = this.getSelectionMarks();
-			if (!marks) {
-				return;
-			}
-			const styles = marks.styles ? marks.styles.slice() : [];
-			const index = styles.indexOf(style);
-			if (index !== -1) {
-				styles.splice(index, 1);
-				Editor.addMark(editor, "styles", styles);
-			}
-		});
-		this.shouldEmit = true;
-	}
+	// addFontStyle(style: TextStyle): void {
+	// 	this.shouldEmit = false;
+	// 	const editor = this.editor;
+	// 	selectWholeText(editor);
+	//
+	// 	Editor.withoutNormalizing(editor, () => {
+	// 		const marks = this.getSelectionMarks();
+	// 		if (!marks) {
+	// 			return;
+	// 		}
+	// 		const styles = marks.styles ? marks.styles.slice() : [];
+	// 		if (!styles.includes(style)) {
+	// 			styles.push(style);
+	// 			Editor.addMark(editor, "styles", styles);
+	// 		}
+	// 	});
+	// 	this.shouldEmit = true;
+	// }
+	//
+	// removeFontStyle(style: TextStyle): void {
+	// 	this.shouldEmit = false;
+	// 	const editor = this.editor;
+	// 	Editor.withoutNormalizing(editor, () => {
+	// 		selectWholeText(editor);
+	// 		const marks = this.getSelectionMarks();
+	// 		if (!marks) {
+	// 			return;
+	// 		}
+	// 		const styles = marks.styles ? marks.styles.slice() : [];
+	// 		const index = styles.indexOf(style);
+	// 		if (index !== -1) {
+	// 			styles.splice(index, 1);
+	// 			Editor.addMark(editor, "styles", styles);
+	// 		}
+	// 	});
+	// 	this.shouldEmit = true;
+	// }
 
 	private applySelectionEdit(op: SelectionOp): void {
 		this.shouldEmit = false;
@@ -423,9 +406,6 @@ export class EditorContainer {
 		const selection = this.editor.selection;
 		selectWholeText(this.editor);
 		switch (op.method) {
-			case "setBlockType":
-				this.setSelectionBlockType(op.type);
-				break;
 			case "setFontStyle":
 				this.setSelectionFontStyle(op.fontStyleList);
 				break;
@@ -460,30 +440,6 @@ export class EditorContainer {
 		this.maxWidth = maxWidth;
 	}
 
-	private setSelectionBlockType(blockType: BlockType): void {
-		const editor = this.editor;
-		const isActive = this.isBlockActive(blockType);
-		const isList = ListTypes.indexOf(blockType as ListType) !== -1;
-		Transforms.unwrapNodes(editor, {
-			match: node => {
-				return (
-					!Editor.isEditor(node) &&
-					Element.isElement(node) &&
-					ListTypes.indexOf(node.type as ListType) !== -1
-				);
-			},
-			split: true,
-		});
-		const newProperties: Partial<Element> = {
-			type: isActive ? "paragraph" : isList ? "list-item" : blockType,
-		};
-		Transforms.setNodes(editor, newProperties);
-		if (!isActive && isList) {
-			const block = { type: blockType as ListType, children: [] };
-			Transforms.wrapNodes(editor, block);
-		}
-	}
-
 	setMaxWidth(maxWidth: number): void {
 		this.emit({
 			class: "RichText",
@@ -497,73 +453,23 @@ export class EditorContainer {
 		format: string,
 		selectionContext?: string,
 	): SlateOp[] {
-		const editor = this.editor;
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			return [];
-		}
 		this.startOpRecording();
-		if (marks.fontColor !== format) {
-			Editor.addMark(editor, "fontColor", format);
-		}
-
-		if (selectionContext === "EditTextUnderPointer") {
-			try {
-				ReactEditor.focus(editor);
-			} catch (er) {
-				console.warn(er);
-			}
-		}
-
+		setSelectionFontColor(this.editor, format, selectionContext);
 		return this.stopOpRecordingAndGetOps();
 	}
 
-	setSelectionLink(link: string | undefined, selection: BaseSelection) {
+	setSelectionLink(
+		link: string | undefined,
+		selection: BaseSelection,
+	): Operation[] {
 		this.startOpRecording();
-
 		setLink(this.editor, link, selection);
-
 		return this.stopOpRecordingAndGetOps();
 	}
-
-	isMarkActive = (format: string) => {
-		const marks = Editor.marks(this.editor);
-		return marks ? marks[format] === true : false;
-	};
-
-	toggleMark = (format: string) => {
-		const isActive = this.isMarkActive(format);
-		if (isActive) {
-			Editor.removeMark(this.editor, format);
-		} else {
-			Editor.addMark(this.editor, format, true);
-		}
-	};
 
 	setSelectionFontStyle(style: TextStyle | TextStyle[]): SlateOp[] {
 		this.startOpRecording();
-		const styleList = Array.isArray(style) ? style : [style];
-		for (const style of styleList) {
-			const selectionStyles = this.getEachNodeInSelectionStyles();
-			const isAllNodesContainStyle = selectionStyles.every(styleArr =>
-				styleArr.includes(style),
-			);
-
-			const isSomeNodeContainStyle = selectionStyles.some(styleArr =>
-				styleArr.includes(style),
-			);
-
-			const isAllNodesNotContainStyle = selectionStyles.every(
-				styleArr => !styleArr.includes(style),
-			);
-
-			if (isAllNodesContainStyle) {
-				Editor.addMark(this.editor, style, false);
-			} else if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
-				Editor.addMark(this.editor, style, true);
-			}
-		}
-
+		setSelectionFontStyle(this.editor, style);
 		return this.stopOpRecordingAndGetOps();
 	}
 
@@ -571,52 +477,15 @@ export class EditorContainer {
 		fontSize: number | "auto",
 		selectionContext?: string,
 	): SlateOp[] {
-		const size = fontSize;
-		const editor = this.editor;
-		const selection = editor.selection;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			throw new Error("Editor can not get selection marks");
-		}
-
-		if (
-			JSON.stringify(selection?.anchor) ===
-			JSON.stringify(selection?.focus)
-		) {
-			Transforms.select(this.editor, {
-				anchor: Editor.start(this.editor, []),
-				focus: Editor.end(this.editor, []),
-			});
-		}
 		this.startOpRecording();
-
-		// changing empty Sticker fontSize type (number->auto / auto->number) leads to undefined behaviour
-		// next line doenst allow empty text to change fontSize type --- TODO fix
-		if (!this.isEmpty() || (size !== "auto" && !this.getAutosize())) {
-			if (size === 14 && this.getAutosize()) {
-				// autoSize is based on 14 => need to disable autoSizing in decorated.apply
-				Editor.addMark(editor, "fontSize", 1);
-			}
-			if (this.isEmpty()) {
-				const firstTextNode = this.getAllTextNodesInSelection()[0];
-				if (firstTextNode) {
-					const placeholderNode = structuredClone(firstTextNode);
-					placeholderNode.fontSize = fontSize;
-					const paragraph =
-						getParagraphWithPassedTextNode(placeholderNode);
-					this.insertCopiedNodes(paragraph);
-					this.updateElement();
-				}
-			} else {
-				Editor.addMark(editor, "fontSize", size);
-			}
-		}
-
-		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
+		const shouldUpdateElement = setSelectionFontSize(
+			this.editor,
+			this.getAutosize(),
+			fontSize,
+			selectionContext,
+		);
+		if (shouldUpdateElement) {
+			this.updateElement();
 		}
 
 		return this.stopOpRecordingAndGetOps();
@@ -626,27 +495,8 @@ export class EditorContainer {
 		format: string,
 		selectionContext?: string,
 	): SlateOp[] {
-		const editor = this.editor;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-		const marks = this.getSelectionMarks();
-		if (!marks) {
-			return [];
-		}
 		this.startOpRecording();
-		if (format === "none") {
-			Editor.removeMark(editor, "fontHighlight");
-		} else if (marks.fontHighlight === format) {
-			Editor.removeMark(editor, "fontHighlight");
-		} else {
-			Editor.addMark(editor, "fontHighlight", format);
-		}
-
-		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
-		}
-
+		setSelectionFontHighlight(this.editor, format, selectionContext);
 		return this.stopOpRecordingAndGetOps();
 	}
 
@@ -655,119 +505,16 @@ export class EditorContainer {
 		selectionContext?: string,
 	): SlateOp[] {
 		this.startOpRecording();
-		const editor = this.editor;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-
-		const { selection } = editor;
-		if (!selection) {
-			throw new Error("Nothing is selected");
-		}
-
-		// const [match] = Editor.nodes(editor, {
-		// 	at: Editor.unhangRange(editor, selection),
-		// 	match: node => {
-		// 		return (
-		// 			!Editor.isEditor(node) &&
-		// 			Element.isElement(node) &&
-		// 			node.horisontalAlignment === horisontalAlignment
-		// 		);
-		// 	},
-		// });
-
-		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
-		}
-
-		Transforms.setNodes(editor, {
-			horisontalAlignment: horisontalAlignment,
-		});
+		setSelectionHorisontalAlignment(
+			this.editor,
+			horisontalAlignment,
+			selectionContext,
+		);
 		return this.stopOpRecordingAndGetOps();
-	}
-
-	setPaddingTop(paddingTop: number) {
-		const editor = this.editor;
-		Transforms.setNodes(editor, {
-			paddingTop,
-		});
-	}
-
-	setPaddingBottom(paddingBottom: number) {
-		const editor = this.editor;
-		Transforms.setNodes(editor, {
-			paddingBottom,
-		});
-	}
-
-	setEditorFocus(selectionContext?: string): void {
-		const editor = this.editor;
-		if (!editor) {
-			throw new Error("Editor is not initialized");
-		}
-
-		if (selectionContext === "EditTextUnderPointer") {
-			ReactEditor.focus(editor);
-		}
-	}
-
-	isBlockActive(format: BlockType): boolean {
-		const editor = this.editor;
-		const { selection } = editor;
-		if (!selection) {
-			return false;
-		}
-		const [match] = Editor.nodes(editor, {
-			at: Editor.unhangRange(editor, selection),
-			match: node => {
-				return (
-					!Editor.isEditor(node) &&
-					Element.isElement(node) &&
-					node.type === format
-				);
-			},
-		});
-		return !!match;
-	}
-
-	isFormatActive(format: TextStyle): boolean {
-		const marks = Editor.marks(this.editor);
-		if (!marks || !marks.styles) {
-			return false;
-		}
-		return marks.styles.indexOf(format) !== -1;
 	}
 
 	getSelectionMarks(): Omit<TextNode, "text"> | null {
 		return getSelectionMarks(this.editor);
-	}
-
-	getAllTextNodesInSelection(): TextNode[] {
-		const { selection } = this.editor;
-		if (!selection) {
-			return [];
-		}
-
-		const textNodes: TextNode[] = [];
-		for (const [node, path] of Editor.nodes(this.editor, {
-			at: selection,
-			// @ts-expect-error
-			match: n => n.type === "text",
-		})) {
-			textNodes.push(node as TextNode);
-		}
-
-		return textNodes;
-	}
-
-	getCursorPath() {
-		if (!this.editor.selection) {
-			return null;
-		}
-
-		return this.editor.selection.anchor.path;
-
-		// return editor.selection.focus.path;
 	}
 
 	handleListMerge(): boolean {
@@ -805,118 +552,11 @@ export class EditorContainer {
 	}
 
 	getFirstSelectionLink(selection: BaseSelection): string | undefined {
-		if (!selection) {
-			return undefined;
-		}
-
-		for (const [node, path] of Editor.nodes(this.editor, {
-			at: selection,
-			// @ts-expect-error
-			match: n => !!n.link,
-		})) {
-			return node.link;
-		}
-
-		return undefined;
-	}
-
-	getEachNodeInSelectionStyles(): string[][] {
-		return this.getAllTextNodesInSelection().map(n => {
-			const styles: TextStyle[] = [];
-			if (n.bold) {
-				styles.push("bold");
-			}
-
-			if (n.italic) {
-				styles.push("italic");
-			}
-
-			if (n.underline) {
-				styles.push("underline");
-			}
-
-			if (n["line-through"]) {
-				styles.push("line-through");
-			}
-			return styles;
-		});
-	}
-
-	getSelectionStyles(): string[] | undefined {
-		const editor = this.editor;
-		const { selection } = editor;
-		if (!selection) {
-			return;
-		}
-
-		const nodes = this.getAllTextNodesInSelection();
-		const styles: TextStyle[][] = nodes.reduce(
-			(acc: TextStyle[][], node: TextNode) => {
-				const styles: TextStyle[] = [];
-				if (node.text === "") {
-					return acc;
-				}
-
-				if (node.bold) {
-					styles.push("bold");
-				}
-
-				if (node.italic) {
-					styles.push("italic");
-				}
-
-				if (node.underline) {
-					styles.push("underline");
-				}
-
-				if (node["line-through"]) {
-					styles.push("line-through");
-				}
-				acc.push(styles);
-				return acc;
-			},
-			[],
-		);
-
-		return findCommonStrings(styles);
-	}
-
-	getSelectedBlockNode(): BlockNode | null {
-		const editor = this.editor;
-		const { selection } = editor;
-		if (!selection) {
-			return null;
-		}
-		const [node] = Editor.node(editor, selection);
-		if (Editor.isEditor(node) || !Element.isElement(node)) {
-			return null;
-		}
-		return node;
-	}
-
-	appendText(text: string) {
-		const endPoint = Editor.end(this.editor, []);
-		Transforms.select(this.editor, endPoint);
-		Transforms.insertText(this.editor, text);
+		return getFirstSelectionLink(this.editor, selection);
 	}
 
 	getText(): Descendant[] {
 		return this.editor.children;
-	}
-
-	insertText(text: string): void {
-		if (this.getAutosize()) {
-			const relativeFontSize = this.getFontSize() / this.getMatrixScale();
-			if (relativeFontSize < 10) {
-				this.getOnLimitReached()();
-				return;
-			}
-		}
-		this.startOpRecording();
-		this.insertCopiedText(text);
-		this.emitWithoutApplying(
-			this.getSelectionOp("edit", this.stopOpRecordingAndGetOps()),
-		);
 	}
 
 	getTextParagraphs(lines: string[]): ParagraphNode[] {
@@ -970,32 +610,12 @@ export class EditorContainer {
 
 	insertCopiedText(text: string): boolean {
 		const lines = this.getTextParagraphs(text.split(/\r\n|\r|\n/));
-		const isPrevTextEmpty = this.isEmpty();
-		if (this.getAutosize()) {
-			if (this.getAutosize()) {
-				if (!this.checkIsAutoSizeTextScaleAllowed(lines)) {
-					this.getOnLimitReached()();
-					return true;
-				}
-			}
-		}
-		let insertLocation: Location | undefined = undefined;
-
-		if (isPrevTextEmpty) {
-			const text = lines[0].children[0].text;
-			insertLocation = { path: [0, 0], offset: text.length };
-			this.editor.insertText(text);
+		if (this.isLimitReached(lines)) {
+			return true;
 		}
 
-		Transforms.insertNodes(
-			this.editor,
-			lines.slice(isPrevTextEmpty ? 1 : 0),
-			{
-				at: insertLocation,
-			},
-		);
+		insertCopiedNodes(this.editor, lines);
 		this.subject.publish(this);
-
 		return true;
 	}
 
@@ -1011,64 +631,24 @@ export class EditorContainer {
 		);
 	}
 
-	insertCopiedNodes(nodes: BlockNode[]): boolean {
-		const isPrevTextEmpty = this.isEmpty();
-		const editor = this.editor;
-
+	isLimitReached(nodes: BlockNode[]): boolean {
 		if (this.getAutosize()) {
 			if (!this.checkIsAutoSizeTextScaleAllowed(nodes)) {
 				this.getOnLimitReached()();
 				return true;
 			}
 		}
+		return false;
+	}
 
-		if (isPrevTextEmpty) {
-			selectWholeText(editor);
-			Transforms.removeNodes(editor);
-			Transforms.insertNodes(editor, nodes);
-			this.moveCursorToEndOfTheText();
-			this.subject.publish(this);
+	insertCopiedNodes(nodes: BlockNode[]): boolean {
+		if (this.isLimitReached(nodes)) {
 			return true;
 		}
-
-		if (
-			nodes.length === 1 &&
-			nodes[0].type === "paragraph" &&
-			nodes[0].children.length === 1 &&
-			nodes[0].children[0].type === "text"
-		) {
-			Transforms.insertText(editor, nodes[0].children[0].text);
-			Transforms.collapse(this.editor, { edge: "end" });
-			this.subject.publish(this);
-			return true;
-		}
-
-		Transforms.insertNodes(editor, nodes);
-		Transforms.collapse(this.editor, { edge: "end" });
-
+		insertCopiedNodes(this.editor, nodes);
 		this.subject.publish(this);
 		return true;
 	}
-
-	insertFragmentData = (data: DataTransfer): boolean => {
-		/**
-		 * Checking copied fragment from application/x-slate-fragment or data-slate-fragment
-		 */
-		const fragment = data.getData("application/x-slate-fragment");
-		// || getSlateFragmentAttribute(data);
-
-		if (fragment) {
-			// const decoded = decodeURIComponent(
-			// 	Buffer.from(fragment, "base64").toString("utf-8"),
-			// );
-			// Window Smell window
-			const decoded = decodeURIComponent(window.atob(fragment));
-			const parsed = JSON.parse(decoded) as Node[];
-			this.editor.insertFragment(parsed);
-			return true;
-		}
-		return false;
-	};
 
 	hasTextInSelection(): boolean {
 		return hasTextInSelection(this.editor);
@@ -1107,22 +687,7 @@ export class EditorContainer {
 		selectWholeText(this.editor);
 	}
 
-	moveCursorToEndOfTheText(delay = 10): Promise<void> {
-		const moveCursorToTheEndOfTheText = (): void => {
-			selectWholeText(this.editor);
-			Transforms.collapse(this.editor, { edge: "end" });
-		};
-
-		return new Promise<void>(resolve => {
-			if (delay === 0) {
-				moveCursorToTheEndOfTheText();
-				resolve();
-			} else {
-				setTimeout(() => {
-					moveCursorToTheEndOfTheText();
-					resolve();
-				}, delay);
-			}
-		});
+	moveCursorToEndOfTheText(delay = 10) {
+		moveCursorToEndOfTheText(this.editor, delay);
 	}
 }
