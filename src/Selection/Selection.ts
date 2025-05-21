@@ -26,10 +26,12 @@ import {
 	AINode,
 	CONTEXT_NODE_HIGHLIGHT_COLOR,
 } from "Board/Items/AINode/AINode";
-import { BaseRange } from "slate";
+import { BaseRange, BaseSelection, Editor } from "slate";
 import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
 import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
 import { deleteMedia, updateMediaUsage } from "Board/Items/Image/ImageHelpers";
+import { getSlateSelectionRect } from "Board/Items/RichText/getSlateSelectionRect";
+import { ReactEditor } from "slate-react";
 const { i18n } = conf;
 
 const defaultShapeData = new DefaultShapeData();
@@ -61,6 +63,10 @@ export class Selection {
 	memorySnapshot: {
 		selectedItems: string;
 		context: SelectionContext;
+		focus: {
+			selection: BaseSelection;
+			textToEdit: string;
+		} | null;
 	} | null = null;
 
 	constructor(
@@ -88,10 +94,23 @@ export class Selection {
 		});
 	}
 
+	private getEditingFocus() {
+		if (!this.textToEdit) {
+			return null;
+		}
+
+		return {
+			textToEdit: this.textToEdit.getId(),
+			selection: this.textToEdit.editor.getSelection(),
+		};
+	}
+
 	memoize(): void {
+		const focus = this.getEditingFocus();
 		this.memorySnapshot = {
 			selectedItems: this.serialize(),
 			context: this.context,
+			focus,
 		};
 	}
 
@@ -105,6 +124,16 @@ export class Selection {
 		if (savedData) {
 			this.deserialize(savedData.selectedItems);
 			this.setContext(savedData.context);
+			const focusedText = this.board.items
+				.getById(savedData.focus?.textToEdit || "")
+				?.getRichText();
+			if (savedData.focus && focusedText) {
+				this.setTextToEdit(focusedText);
+				focusedText.editorTransforms.select(
+					focusedText.editor.editor,
+					savedData.focus.selection,
+				);
+			}
 		}
 
 		return savedData;
@@ -256,11 +285,6 @@ export class Selection {
 		this.context = context;
 		if (context !== "EditTextUnderPointer") {
 			this.setTextToEdit(undefined);
-		} else {
-			const single = this.items.getSingle();
-			if (single) {
-				this.setTextToEdit(single);
-			}
 		}
 		if (context === "None") {
 			this.quickAddButtons.clear();
