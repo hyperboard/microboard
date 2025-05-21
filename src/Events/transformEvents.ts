@@ -7,9 +7,6 @@ export function transformEvents(
 ): BoardEvent[] {
 	const transformed: BoardEvent[] = [];
 
-	console.log("transform events!. confirmed:", confirmed);
-	console.log("transform events!. to transform:", toTransform);
-
 	for (const transf of toTransform) {
 		let actualyTransformed = { ...transf };
 
