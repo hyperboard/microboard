@@ -131,7 +131,7 @@ export class Selection {
 				this.setTextToEdit(focusedText);
 				focusedText.editorTransforms.select(
 					focusedText.editor.editor,
-					savedData.focus.selection,
+					savedData.focus.selection || [],
 				);
 			}
 		}
