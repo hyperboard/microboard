@@ -52,7 +52,7 @@ export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {
 	events: Events;
-	isBoardMenuOpen = false;
+	private isBoardMenuOpen = false;
 	readonly selection: Selection;
 	readonly tools = new Tools(this);
 	readonly pointer = new Pointer();
@@ -1088,6 +1088,14 @@ export class Board {
 			return [];
 		}
 		return [parentItem, ...this.getParentAINodes(parentItem)];
+	}
+
+	setIsBoardMenuOpen(isOpen: boolean): void {
+		this.isBoardMenuOpen = isOpen;
+	}
+
+	getIsBoardMenuOpen(): boolean {
+		return this.isBoardMenuOpen;
 	}
 
 	// paste(itemsMap: ItemsMap, select = true): void {
