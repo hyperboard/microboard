@@ -105,6 +105,13 @@ export type NumberedListNode = {
 	paddingBottom?: number;
 };
 
+export type HeadingNode =
+	| HeadingOneNode
+	| HeadingTwoNode
+	| HeadingThreeNode
+	| HeadingFourNode
+	| HeadingFiveNode;
+
 export type ListItemChild = NumberedListNode | BulletedListNode | TextNode;
 
 export type ListItemNode = {

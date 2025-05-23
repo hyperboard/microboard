@@ -939,7 +939,11 @@ export class Board {
 		}
 	}
 
-	async paste(itemsMap: ItemsMap, select = true): Promise<void> {
+	async paste(
+		itemsMap: ItemsMap,
+		select = true,
+		shouldUpdateMediaUsage = true,
+	): Promise<void> {
 		const newItemIdMap: { [key: string]: string } = {};
 
 		for (const itemId in itemsMap) {
@@ -1001,7 +1005,7 @@ export class Board {
 
 		const { x, y } = this.pointer.point;
 
-		const mediaStorageIds = [];
+		const mediaStorageIds: string[] = [];
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
@@ -1040,11 +1044,13 @@ export class Board {
 			newMap[newItemId] = itemData;
 		}
 
-		const canDuplicate = mediaStorageIds.length
-			? await updateMediaUsage(mediaStorageIds, this.getBoardId())
-			: true;
-		if (!canDuplicate) {
-			return;
+		if (shouldUpdateMediaUsage) {
+			const canDuplicate = mediaStorageIds.length
+				? await updateMediaUsage(mediaStorageIds, this.getBoardId())
+				: true;
+			if (!canDuplicate) {
+				return;
+			}
 		}
 
 		this.emit({

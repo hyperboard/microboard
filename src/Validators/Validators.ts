@@ -1,4 +1,4 @@
-import { Item } from "Board/Items";
+import { ItemData } from "Board/Items";
 import { FrameData } from "Board/Items";
 import { DrawingData } from "Board/Items/Drawing";
 import { ImageItemData } from "Board/Items/Image";
@@ -21,7 +21,7 @@ import { AudioItemData } from "Board/Items/Audio/Audio";
 
 export const validator = new Ajv();
 
-export type ItemsMap = Record<string, Item>;
+export type ItemsMap = Record<string, ItemData>;
 
 type PointData = {
 	x: number;
