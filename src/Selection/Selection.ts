@@ -44,6 +44,14 @@ export type SelectionContext =
 	| "SelectByRect"
 	| "None";
 
+type SelectionSnapshot = {
+	selectedItems: string;
+	context: SelectionContext;
+	focus: {
+		selection: BaseSelection;
+		textToEdit: string;
+	} | null;
+};
 export class Selection {
 	readonly subject = new Subject<Selection>();
 	readonly itemSubject = new Subject<Item>();
@@ -60,14 +68,7 @@ export class Selection {
 	quickAddButtons: QuickAddButtons;
 	showQuickAddPanel = false;
 
-	memorySnapshot: {
-		selectedItems: string;
-		context: SelectionContext;
-		focus: {
-			selection: BaseSelection;
-			textToEdit: string;
-		} | null;
-	} | null = null;
+	memorySnapshot: SelectionSnapshot | null = null;
 
 	constructor(
 		private board: Board,
@@ -105,19 +106,18 @@ export class Selection {
 		};
 	}
 
-	memoize(): void {
+	memoize(): SelectionSnapshot {
 		const focus = this.getEditingFocus();
-		this.memorySnapshot = {
+		const snapshot = {
 			selectedItems: this.serialize(),
 			context: this.context,
 			focus,
 		};
+		this.memorySnapshot = snapshot;
+		return snapshot;
 	}
 
-	applyMemoized(): {
-		selectedItems: string;
-		context: SelectionContext;
-	} | null {
+	applyMemoized(): SelectionSnapshot | null {
 		const savedData = this.memorySnapshot
 			? { ...this.memorySnapshot }
 			: null;
@@ -129,10 +129,12 @@ export class Selection {
 				?.getRichText();
 			if (savedData.focus && focusedText) {
 				this.setTextToEdit(focusedText);
+				console.log("saved selection", savedData.focus.selection);
 				focusedText.editorTransforms.select(
 					focusedText.editor.editor,
 					savedData.focus.selection || [],
 				);
+				ReactEditor.focus(focusedText.editor.editor);
 			}
 		}
 
@@ -767,14 +769,11 @@ export class Selection {
 		return pointer?.getLineStyle() || "none";
 	}
 
-	getTextToEdit(): RichText[] {
+	getTextToEdit(): RichText | undefined {
 		if (this.context !== "EditTextUnderPointer") {
-			return [];
+			return undefined;
 		}
-		if (!this.textToEdit) {
-			return [];
-		}
-		return [this.textToEdit];
+		return this.textToEdit;
 	}
 
 	nestSelectedItems(unselectedItem?: Item | null, checkFrames = true): void {

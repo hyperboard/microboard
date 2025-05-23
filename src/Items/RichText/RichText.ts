@@ -66,6 +66,8 @@ export function toggleEdit(value: boolean): void {
 	isEditInProcessValue = value;
 }
 
+let counter = 0;
+
 /**
  * A geometric item to render a rich text on a DrawingContext.
  *
@@ -97,6 +99,8 @@ export class RichText extends Mbr implements Geometry {
 	private shrinkWidth = false;
 	prevMbr: Mbr | null = null;
 
+	rtCounter = 0;
+
 	constructor(
 		private board: Board,
 		public container: Mbr,
@@ -110,6 +114,9 @@ export class RichText extends Mbr implements Geometry {
 		private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES,
 	) {
 		super();
+		counter = counter + 1;
+		this.rtCounter = counter;
+
 		this.linkTo = linkTo || new LinkTo(this.id, this.board.events);
 		let textSizeFromStorage = new SessionStorage().getFontSize(
 			insideOf || "RichText",
