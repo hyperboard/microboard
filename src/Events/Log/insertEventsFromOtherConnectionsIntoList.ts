@@ -32,7 +32,7 @@ export function insertEventsFromOtherConnectionsIntoList(
 	// Previous implementation for handling snapped objects was removed
 	// handleRemoveSnappedObject(board, events, list); // should do it in other ways
 
-	board.selection.memoize();
+	// const savedSelection = board.selection.memoize();
 	// Revert any unconfirmed changes to ensure a clean state
 	list.revertUnconfirmed();
 
@@ -52,7 +52,17 @@ export function insertEventsFromOtherConnectionsIntoList(
 	// Re-apply any unconfirmed changes that were reverted earlier
 	list.applyUnconfirmed();
 
-	board.selection.applyMemoized();
+	// try {
+	// 	const currSelection = board.selection.list().map(item => item.getId()).sort();
+	// 	const savedItems: string[] = JSON.parse(savedSelection.selectedItems);
+	// 	// selection might change if reverting and applying remove and add selected item
+	// 	const selectionChanged = savedItems && savedItems.length !== currSelection.length;
+	// 	if (selectionChanged) {
+	// 		console.log("!@#@!UYI#T!@&^*#%!@#^%!@#%!@^&#%!@^&")
+	// 		// board.selection.applyMemoized(mergedEvents);
+	// 	}
+	// }
+	// catch {}
 }
 
 /**
