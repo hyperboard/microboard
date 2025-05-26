@@ -129,13 +129,20 @@ export class Selection {
 				?.getRichText();
 			if (savedData.focus && focusedText) {
 				this.setTextToEdit(focusedText);
-				Promise.resolve().then(() => {
+				setTimeout(() => {
 					focusedText.editorTransforms.select(
 						focusedText.editor.editor,
 						savedData.focus?.selection || [],
 					);
 					ReactEditor.focus(focusedText.editor.editor);
 				});
+				// Promise.resolve().then(() => {
+				// 	focusedText.editorTransforms.select(
+				// 		focusedText.editor.editor,
+				// 		savedData.focus?.selection || [],
+				// 	);
+				// 	ReactEditor.focus(focusedText.editor.editor);
+				// });
 			}
 		}
 
