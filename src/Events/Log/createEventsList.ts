@@ -7,6 +7,12 @@ import { transformEvents } from "../transformEvents";
 import { HistoryRecord } from "./EventsLog";
 import { Operation } from "../EventsOperations";
 
+export type FilterPredicate = (
+	value: HistoryRecord,
+	index: number,
+	array: HistoryRecord[],
+) => boolean;
+
 export interface EventsList {
 	addConfirmedRecords(records: HistoryRecord[]): void;
 	addNewRecords(records: HistoryRecord[]): void;
@@ -18,10 +24,12 @@ export interface EventsList {
 	prepareRecordsToSend(): HistoryRecord[];
 	forwardIterable(): Iterable<HistoryRecord>;
 	backwardIterable(): Iterable<HistoryRecord>;
-	// Reverts all unconfirmed events (records to send and new records) in reverse order
-	revertUnconfirmed(): void;
-	// Applies all unconfirmed events, transforming them if necessary
-	applyUnconfirmed(): void;
+	/** Reverts all unconfirmed events (records to send and new records) in reverse order
+	 * @argument filter - function that filters records to revert*/
+	revertUnconfirmed(predicate?: FilterPredicate): void;
+	/** Applies all unconfirmed events, transforming them if necessary
+	 * @argument filter - function that filters records to apply*/
+	applyUnconfirmed(predicate?: FilterPredicate): void;
 	justConfirmed: HistoryRecord[];
 	// Retrieves the synchronization log for tracking event changes
 	getSyncLog(): SyncLog;
@@ -189,25 +197,30 @@ export function createEventsList(
 			};
 		},
 
-		revertUnconfirmed(): void {
-			revert(newRecords.slice().reverse());
-			revert(recordsToSend.slice().reverse());
+		revertUnconfirmed(predicate?: FilterPredicate): void {
+			predicate = predicate ? predicate : () => true;
+
+			// do not .reverse original array, slice if no .filter
+			revert(newRecords.filter(predicate).reverse());
+			revert(recordsToSend.filter(predicate).reverse());
 			syncLog.push({
 				msg: "revertUnconfirmed",
 				records: [...recordsToSend, ...newRecords],
 			});
 		},
 
-		applyUnconfirmed(): void {
+		applyUnconfirmed(predicate?: FilterPredicate): void {
+			predicate = predicate ? predicate : () => true;
+
 			if (justConfirmed.length > 0) {
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					recordsToSend.slice().map(rec => rec.event),
+					recordsToSend.map(rec => rec.event),
 				);
 
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					newRecords.slice().map(rec => rec.event),
+					newRecords.map(rec => rec.event),
 				);
 
 				const recsToSend = transformedSend.map(event => ({
@@ -226,8 +239,8 @@ export function createEventsList(
 				newRecords.push(...recsNew);
 				justConfirmed.length = 0;
 			}
-			apply(recordsToSend);
-			apply(newRecords);
+			apply(recordsToSend.filter(predicate));
+			apply(newRecords.filter(predicate));
 			syncLog.push({
 				msg: "applyUnconfirmed",
 				records: [...recordsToSend, ...newRecords],

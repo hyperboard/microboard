@@ -3,7 +3,7 @@ import { createCommand } from "../Command";
 import { SyncEvent, BoardEvent, SyncBoardEvent } from "../Events";
 import { mergeEvents } from "../mergeEvents";
 import { transformEvents } from "../transformEvents";
-import { EventsList } from "./createEventsList";
+import { EventsList, FilterPredicate } from "./createEventsList";
 import { expandEvents } from "./expandEvents";
 // import { handleRemoveSnappedObject } from "../handleRemoveSnappedObject";
 
@@ -32,9 +32,20 @@ export function insertEventsFromOtherConnectionsIntoList(
 	// Previous implementation for handling snapped objects was removed
 	// handleRemoveSnappedObject(board, events, list); // should do it in other ways
 
-	const savedSelection = board.selection.memoize();
+	board.selection.memoize();
+	const createdItems: string[] = [];
+	const filter: FilterPredicate = rec => {
+		const op = rec.event.body.operation;
+		if (op.method === "add") {
+			const creating = Array.isArray(op.item) ? op.item : [op.item];
+			createdItems.push(...creating);
+			return false;
+		}
+
+		return true;
+	};
 	// Revert any unconfirmed changes to ensure a clean state
-	list.revertUnconfirmed();
+	list.revertUnconfirmed(filter);
 
 	// Transform events that might conflict with existing events
 	const transformed: BoardEvent[] = transformConflictingEvents(events, list);
@@ -50,21 +61,16 @@ export function insertEventsFromOtherConnectionsIntoList(
 		list.justConfirmed.push(record);
 	}
 	// Re-apply any unconfirmed changes that were reverted earlier
-	list.applyUnconfirmed();
+	list.applyUnconfirmed(filter);
 
-	try {
-		const currSelection = board.selection
-			.list()
-			.map(item => item.getId())
-			.sort();
-		const savedItems: string[] = JSON.parse(savedSelection.selectedItems);
-		// selection might change if reverting and applying remove and add selected item
-		const selectionChanged =
-			savedItems && savedItems.length !== currSelection.length;
-		if (selectionChanged) {
-			board.selection.applyMemoized();
-		}
-	} catch {}
+	const hasAnyOverlap = <T>(arr1: T[], arr2: T[]): boolean => {
+		const lookup = new Set(arr1);
+		return arr2.some(item => lookup.has(item));
+	};
+	const currSelection = board.selection.list().map(item => item.getId());
+	if (hasAnyOverlap(currSelection, createdItems)) {
+		board.selection.applyMemoizedCaretOrRange();
+	}
 }
 
 /**

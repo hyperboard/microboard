@@ -129,24 +129,28 @@ export class Selection {
 				?.getRichText();
 			if (savedData.focus && focusedText) {
 				this.setTextToEdit(focusedText);
-				setTimeout(() => {
-					focusedText.editorTransforms.select(
-						focusedText.editor.editor,
-						savedData.focus?.selection || [],
-					);
-					ReactEditor.focus(focusedText.editor.editor);
-				});
-				// Promise.resolve().then(() => {
-				// 	focusedText.editorTransforms.select(
-				// 		focusedText.editor.editor,
-				// 		savedData.focus?.selection || [],
-				// 	);
-				// 	ReactEditor.focus(focusedText.editor.editor);
-				// });
+				focusedText.editorTransforms.select(
+					focusedText.editor.editor,
+					savedData.focus.selection || [],
+				);
+				ReactEditor.focus(focusedText.editor.editor);
 			}
 		}
 
 		return savedData;
+	}
+
+	applyMemoizedCaretOrRange(): void {
+		const focusedText = this.board.items
+			.getById(this.memorySnapshot?.focus?.textToEdit || "")
+			?.getRichText();
+		if (this.memorySnapshot?.focus && focusedText) {
+			focusedText.editorTransforms.select(
+				focusedText.editor.editor,
+				this.memorySnapshot?.focus.selection || [],
+			);
+			ReactEditor.focus(focusedText.editor.editor);
+		}
 	}
 
 	private emit(operation: Operation): void {
