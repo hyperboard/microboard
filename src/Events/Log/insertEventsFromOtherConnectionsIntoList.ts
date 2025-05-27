@@ -34,12 +34,17 @@ export function insertEventsFromOtherConnectionsIntoList(
 
 	board.selection.memoize();
 	const createdItems: string[] = [];
+	const updatedText: string[] = [];
 	const filter: FilterPredicate = rec => {
 		const op = rec.event.body.operation;
 		if (op.method === "add") {
 			const creating = Array.isArray(op.item) ? op.item : [op.item];
 			createdItems.push(...creating);
 			return false;
+		}
+
+		if (op.class === "RichText" && op.method === "edit") {
+			updatedText.push(...op.item);
 		}
 
 		return true;
@@ -68,7 +73,10 @@ export function insertEventsFromOtherConnectionsIntoList(
 		return arr2.some(item => lookup.has(item));
 	};
 	const currSelection = board.selection.list().map(item => item.getId());
-	if (hasAnyOverlap(currSelection, createdItems)) {
+	if (
+		hasAnyOverlap(currSelection, createdItems) ||
+		hasAnyOverlap(currSelection, updatedText)
+	) {
 		board.selection.applyMemoizedCaretOrRange();
 	}
 }
