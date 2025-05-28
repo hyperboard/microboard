@@ -43,9 +43,9 @@ export function insertEventsFromOtherConnectionsIntoList(
 			return false;
 		}
 
-		if (op.class === "RichText" && op.method === "edit") {
-			updatedText.push(...op.item);
-		}
+		// if (op.class === "RichText" && op.method === "edit") {
+		// 	updatedText.push(...op.item);
+		// }
 
 		return true;
 	};
