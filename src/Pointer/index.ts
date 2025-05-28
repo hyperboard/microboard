@@ -1,2 +1,2 @@
 export { Pointer } from "./Pointer";
-export { Cursor, defaultCursors as cursors } from "./Cursor";
+export type { Cursor, defaultCursors as cursors } from "./Cursor";

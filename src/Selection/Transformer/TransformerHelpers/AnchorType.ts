@@ -1,4 +1,4 @@
-import { ResizeType } from "./getResizeType";
+import { ResizeType } from "./getResizeType.ts";
 
 export type AnchorType =
 	| "default"

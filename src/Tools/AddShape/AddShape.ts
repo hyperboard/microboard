@@ -3,7 +3,7 @@ import { Board } from "Board/Board";
 import { Line, Mbr, Point, Shape } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { ShapeType } from "Board/Items/Shape";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
+import { ResizeType } from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
 import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "Board/Items/Shape/ShapeData";
 import { conf } from "Board/Settings";
 import { BoardTool } from "../BoardTool";

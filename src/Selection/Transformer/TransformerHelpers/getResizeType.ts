@@ -1,4 +1,4 @@
-import { Mbr, Point } from "Board/Items";
+import { Mbr, Point } from "Board/Items/index";
 
 export type ResizeType =
 	| "left"

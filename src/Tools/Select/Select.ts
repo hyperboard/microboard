@@ -700,7 +700,7 @@ export class Select extends Tool {
 	private updateGuidelines(): void {
 		const { isShift } = this.board.keyboard;
 
-		if (isShift) {
+		if (isShift && this.isLeftDown) {
 			const mousePosition = this.board.pointer.point;
 			if (this.board.selection.list().length > 1) {
 				const items = this.board.selection.list();

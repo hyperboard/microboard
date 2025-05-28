@@ -20,8 +20,8 @@ import { FrameCommand } from "./FrameCommand";
 import {
 	getProportionalResize,
 	getResize,
-} from "Board/Selection/Transformer/getResizeMatrix";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
+} from "Board/Selection/Transformer/TransformerHelpers/getResizeMatrix";
+import { ResizeType } from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
 import { Board } from "Board/Board";
 import {
 	exportBoardSnapshot,

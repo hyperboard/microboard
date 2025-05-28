@@ -1,5 +1,5 @@
-import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "./getResizeType";
+import { Mbr, Point } from "Board/Items/index";
+import { ResizeType } from "./getResizeType.ts";
 
 export function getOppositePoint(resizeType: ResizeType, mbr: Mbr): Point {
 	switch (resizeType) {

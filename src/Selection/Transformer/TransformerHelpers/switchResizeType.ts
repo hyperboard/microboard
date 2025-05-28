@@ -1,5 +1,5 @@
-import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "./getResizeType";
+import { Mbr, Point } from "Board/Items/index";
+import { ResizeType } from "./getResizeType.ts";
 
 /**
  * A function that switches the resize type when the pointer is moved over an opposite edge or corner.

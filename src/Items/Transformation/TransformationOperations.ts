@@ -6,14 +6,14 @@ interface TransformationBase {
 	timestamp?: number;
 }
 
-interface TranslateOperation extends TransformationBase {
+export interface TranslateOperation extends TransformationBase {
 	method: "translateTo" | "translateBy";
 	x: number;
 	y: number;
 	timeStamp?: number;
 }
 
-interface ScaleOperation extends TransformationBase {
+export interface ScaleOperation extends TransformationBase {
 	method: "scaleTo" | "scaleBy";
 	x: number;
 	y: number;
@@ -34,7 +34,7 @@ interface ScaleRelativeToOperation extends TransformationBase {
 	timeStamp?: number;
 }
 
-interface ScaleByTranslateByOperation extends TransformationBase {
+export interface ScaleByTranslateByOperation extends TransformationBase {
 	method: "scaleByTranslateBy";
 	translate: { x: number; y: number };
 	scale: { x: number; y: number };

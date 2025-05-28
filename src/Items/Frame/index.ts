@@ -1,4 +1,4 @@
 export { Frame } from "./Frame";
-export { FrameOperation } from "./FrameOperation";
+export type { FrameOperation } from "./FrameOperation";
 export { FrameCommand } from "./FrameCommand";
-export { FrameData } from "./FrameData";
+export type { FrameData } from "./FrameData";

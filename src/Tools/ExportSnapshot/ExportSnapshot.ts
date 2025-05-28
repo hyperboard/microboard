@@ -1,12 +1,12 @@
 import { Board } from "Board";
 import { Mbr, Point, Transformation } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { getOppositePoint } from "Board/Selection/Transformer/getOppositePoint";
-import { getResize } from "Board/Selection/Transformer/getResizeMatrix";
+import { getOppositePoint } from "Board/Selection/Transformer/TransformerHelpers/getOppositePoint";
+import { getResize } from "Board/Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import {
 	getResizeType,
 	ResizeType,
-} from "Board/Selection/Transformer/getResizeType";
+} from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
 import { Tool } from "Board/Tools/Tool";
 import { conf } from "Board/Settings";
 import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";

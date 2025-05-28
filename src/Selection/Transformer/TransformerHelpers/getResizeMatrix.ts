@@ -1,6 +1,6 @@
-import { Matrix, Mbr, Point } from "Board/Items";
-import { getResizedMbr } from "./getResizedMbr";
-import { ResizeType } from "./getResizeType";
+import { Matrix, Mbr, Point } from "Board/Items/index";
+import { getResizedMbr } from "./getResizedMbr.ts";
+import { ResizeType } from "./getResizeType.ts";
 
 export function getResize(
 	resizeType: ResizeType,

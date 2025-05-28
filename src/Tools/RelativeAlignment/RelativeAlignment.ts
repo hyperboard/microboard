@@ -1,7 +1,7 @@
 import { Board } from "Board/Board";
 import { Frame, Item, Line, Point, type Mbr } from "Board/Items";
 import { DrawingContext } from "Board/Items/DrawingContext";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
+import { ResizeType } from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
 import { SpatialIndex } from "Board/SpatialIndex";
 import { CanvasDrawer } from "Board/drawMbrOnCanvas";
 import type { DebounceUpdater } from "../DebounceUpdater/DebounceUpdater";

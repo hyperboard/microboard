@@ -10,8 +10,8 @@ import {
 	Transformation,
 	TransformationOperation,
 } from "..";
-import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
+import { getProportionalResize } from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix.ts";
+import { ResizeType } from "../../Selection/Transformer/TransformerHelpers/getResizeType.ts";
 import { DrawingContext } from "../DrawingContext";
 import { GeometricNormal } from "../GeometricNormal";
 import { Geometry } from "../Geometry";

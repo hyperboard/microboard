@@ -1,9 +1,11 @@
-export { Connector, ConnectorLineStyle } from "./Connector";
-export { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
+export { Connector } from "./Connector";
+export type { ConnectorLineStyle } from "./Connector";
+export type { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
 export {
-	ControlPoint,
 	BoardPoint,
 	FloatingPoint,
 	FixedPoint,
 	FixedConnectorPoint,
 } from "./ControlPoint";
+
+export type { ControlPoint } from "./ControlPoint";

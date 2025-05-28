@@ -24,13 +24,24 @@ import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
 import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
 import AlignmentHelper from "Board/Tools/RelativeAlignment";
 import { Tool } from "Board/Tools/Tool";
-import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getOppositePoint } from "./getOppositePoint";
-import { getProportionalResize, getResize } from "./getResizeMatrix";
-import { getResizeType, ResizeType } from "./getResizeType";
+import {
+	AnchorType,
+	getAnchorFromResizeType,
+} from "./TransformerHelpers/AnchorType.ts";
+import { getOppositePoint } from "./TransformerHelpers/getOppositePoint.ts";
+import {
+	getProportionalResize,
+	getResize,
+} from "./TransformerHelpers/getResizeMatrix.ts";
+import {
+	getResizeType,
+	ResizeType,
+} from "./TransformerHelpers/getResizeType.ts";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { ImageItem } from "Board/Items/Image/Image";
 import { tempStorage } from "App/SessionStorage";
+import { getFollowingComments } from "Board/Selection/Transformer/TransformerHelpers/getFollowingComments";
+import { handleMultipleItemsResize } from "Board/Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -122,6 +133,22 @@ export class Transformer extends Tool {
 		return resizeType;
 	}
 
+	updateAlignmentBySnapLines(single: Item | null): void {
+		if (single) {
+			this.snapLines = this.alignmentHelper.checkAlignment(single);
+			const snapped = this.alignmentHelper.snapToSide(
+				single,
+				this.snapLines,
+				this.beginTimeStamp,
+				this.resizeType,
+			);
+
+			if (snapped) {
+				this.mbr = single.getMbr();
+			}
+		}
+	}
+
 	leftButtonDown(): boolean {
 		const isLockedItems = this.selection.getIsLockedSelection();
 		if (isLockedItems) {
@@ -168,12 +195,14 @@ export class Transformer extends Tool {
 				this.mbr,
 				this.oppositePoint,
 			);
-			const translation = this.handleMultipleItemsResize(
+			const translation = handleMultipleItemsResize({
+				board: this.board,
 				resize,
-				this.mbr,
+				initMbr: this.mbr,
 				isWidth,
 				isHeight,
-			);
+				isShiftPressed: this.isShiftPressed,
+			});
 			this.selection.transformMany(translation, this.beginTimeStamp);
 			this.mbr = resize.mbr;
 			this.debounceUpd.setFalse();
@@ -223,36 +252,14 @@ export class Transformer extends Tool {
 		const isHeight =
 			this.resizeType === "top" || this.resizeType === "bottom";
 		const single = this.selection.items.getSingle();
-		let followingComments: Comment[] | undefined = this.board.items
-			.getComments()
-			.filter(comment => {
-				return (
-					comment.getItemToFollow() &&
-					comment.getItemToFollow() === single?.getId()
-				);
-			});
-		if (!followingComments.length) {
-			followingComments = undefined;
-		}
+		const followingComments = getFollowingComments(this.board, single);
 
 		if (single?.transformation.isLocked) {
 			this.board.pointer.setCursor("default");
 			return false;
 		}
 
-		if (single) {
-			this.snapLines = this.alignmentHelper.checkAlignment(single);
-			const snapped = this.alignmentHelper.snapToSide(
-				single,
-				this.snapLines,
-				this.beginTimeStamp,
-				this.resizeType,
-			);
-
-			if (snapped) {
-				this.mbr = single.getMbr();
-			}
-		}
+		this.updateAlignmentBySnapLines(single);
 
 		if (
 			single instanceof Shape ||
@@ -268,12 +275,14 @@ export class Transformer extends Tool {
 					this.oppositePoint,
 				);
 				this.mbr = resizedMbr;
-				translation = this.handleMultipleItemsResize(
-					{ matrix, mbr: resizedMbr },
-					mbr,
+				translation = handleMultipleItemsResize({
+					board: this.board,
+					resize: { matrix, mbr: resizedMbr },
+					initMbr: mbr,
 					isWidth,
 					isHeight,
-				);
+					isShiftPressed: this.isShiftPressed,
+				});
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			} else {
 				this.mbr = single.doResize(
@@ -300,13 +309,15 @@ export class Transformer extends Tool {
 									mbr,
 									this.oppositePoint,
 								);
-					translation = this.handleMultipleItemsResize(
-						{ matrix, mbr: resizedMbr },
-						mbr,
+					translation = handleMultipleItemsResize({
+						board: this.board,
+						resize: { matrix, mbr: resizedMbr },
+						initMbr: mbr,
 						isWidth,
 						isHeight,
-						followingComments,
-					);
+						itemsToResize: followingComments,
+						isShiftPressed: this.isShiftPressed,
+					});
 					this.selection.transformMany(
 						translation,
 						this.beginTimeStamp,
@@ -469,13 +480,15 @@ export class Transformer extends Tool {
 			}
 			// TODO DRY
 			if (followingComments) {
-				const translation = this.handleMultipleItemsResize(
-					{ matrix, mbr: resizedMbr },
-					mbr,
+				const translation = handleMultipleItemsResize({
+					board: this.board,
+					resize: { matrix, mbr: resizedMbr },
+					initMbr: mbr,
 					isWidth,
 					isHeight,
-					followingComments,
-				);
+					itemsToResize: followingComments,
+					isShiftPressed: this.isShiftPressed,
+				});
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
 
@@ -509,13 +522,15 @@ export class Transformer extends Tool {
 			}
 			// TODO DRY
 			if (followingComments) {
-				const translation = this.handleMultipleItemsResize(
-					{ matrix, mbr: resizedMbr },
-					mbr,
+				const translation = handleMultipleItemsResize({
+					board: this.board,
+					resize: { matrix, mbr: resizedMbr },
+					initMbr: mbr,
 					isWidth,
 					isHeight,
-					followingComments,
-				);
+					itemsToResize: followingComments,
+					isShiftPressed: this.isShiftPressed,
+				});
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
 			if (isWidth) {
@@ -584,12 +599,14 @@ export class Transformer extends Tool {
 				this.canvasDrawer.getLastCreatedCanvas() &&
 				this.debounceUpd.shouldUpd()
 			) {
-				const translation = this.handleMultipleItemsResize(
+				const translation = handleMultipleItemsResize({
+					board: this.board,
 					resize,
-					mbr,
+					initMbr: mbr,
 					isWidth,
 					isHeight,
-				);
+					isShiftPressed: this.isShiftPressed,
+				});
 				this.selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
@@ -628,12 +645,14 @@ export class Transformer extends Tool {
 							verticalLines: [],
 							horizontalLines: [],
 						}; // Clear snap lines
-						const translation = this.handleMultipleItemsResize(
+						const translation = handleMultipleItemsResize({
+							board: this.board,
 							resize,
-							mbr,
+							initMbr: mbr,
 							isWidth,
 							isHeight,
-						);
+							isShiftPressed: this.isShiftPressed,
+						});
 						this.selection.transformMany(
 							translation,
 							this.beginTimeStamp,
@@ -650,12 +669,14 @@ export class Transformer extends Tool {
 					); // Ensure MBR matches items
 				} else {
 					this.snapCursorPos = null; // Reset snapping state
-					const translation = this.handleMultipleItemsResize(
+					const translation = handleMultipleItemsResize({
+						board: this.board,
 						resize,
-						mbr,
+						initMbr: mbr,
 						isWidth,
 						isHeight,
-					);
+						isShiftPressed: this.isShiftPressed,
+					});
 					this.selection.transformMany(
 						translation,
 						this.beginTimeStamp,
@@ -753,136 +774,6 @@ export class Transformer extends Tool {
 
 	handleSelectionUpdate(_items: SelectionItems): void {
 		// do nothing
-	}
-
-	handleMultipleItemsResize(
-		resize: { matrix: Matrix; mbr: Mbr },
-		initMbr: Mbr,
-		isWidth: boolean,
-		isHeight: boolean,
-		itemsToResize?: Item[],
-	): TransformManyItems {
-		const { matrix, mbr } = resize;
-		const translation: TransformManyItems = {};
-		const items = itemsToResize
-			? itemsToResize
-			: this.selection.items.list();
-		this.board.items.getComments().forEach(comment => {
-			if (
-				items.some(item => item.getId() === comment.getItemToFollow())
-			) {
-				items.push(comment);
-			}
-		});
-
-		for (const item of items) {
-			let itemX = item.getMbr().left;
-			let itemY = item.getMbr().top;
-
-			if (item.itemType === "Drawing") {
-				itemX = item.transformation.matrix.translateX;
-				itemY = item.transformation.matrix.translateY;
-			}
-
-			const deltaX = itemX - initMbr.left;
-			const translateX =
-				deltaX * matrix.scaleX - deltaX + matrix.translateX;
-			const deltaY = itemY - initMbr.top;
-			const translateY =
-				deltaY * matrix.scaleY - deltaY + matrix.translateY;
-
-			if (item instanceof RichText) {
-				if (isWidth) {
-					item.editor.setMaxWidth(
-						(item.getWidth() / item.transformation.getScale().x) *
-							matrix.scaleX,
-					);
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: matrix.translateX, y: 0 },
-						scale: { x: matrix.scaleX, y: matrix.scaleX },
-					};
-				} else if (isHeight) {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: 1, y: 1 },
-					};
-				} else {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: matrix.scaleX, y: matrix.scaleX },
-					};
-				}
-			} else if (item instanceof AINode) {
-				if (isWidth) {
-					item.text.editor.setMaxWidth(
-						(item.text.getWidth() /
-							item.transformation.getScale().x) *
-							matrix.scaleX,
-					);
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: matrix.translateX, y: 0 },
-						scale: { x: matrix.scaleX, y: matrix.scaleX },
-					};
-				} else if (isHeight) {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: 1, y: 1 },
-					};
-				} else {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: matrix.scaleX, y: matrix.scaleX },
-					};
-				}
-			} else {
-				if (item instanceof Sticker && (isWidth || isHeight)) {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: 1, y: 1 },
-					};
-				} else {
-					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
-						item: [item.getId()],
-						translate: { x: translateX, y: translateY },
-						scale: { x: matrix.scaleX, y: matrix.scaleY },
-					};
-
-					if (
-						item.itemType === "Frame" &&
-						item.getCanChangeRatio() &&
-						!this.isShiftPressed &&
-						item.getFrameType() !== "Custom"
-					) {
-						item.setFrameType("Custom");
-					}
-				}
-			}
-		}
-
-		return translation;
 	}
 
 	calcAnchors(): Geometry[] {

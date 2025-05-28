@@ -1,6 +1,6 @@
 import { Mbr, Point } from "Board/Items";
 import { assert } from "chai";
-import { getResize } from "./getResizeMatrix";
+import { getResize } from "./TransformerHelpers/getResizeMatrix.ts";
 
 describe("of transformer", () => {
 	describe("computes resize matrix", () => {

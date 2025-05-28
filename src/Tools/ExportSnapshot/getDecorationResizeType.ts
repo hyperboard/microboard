@@ -1,5 +1,5 @@
 import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
+import { ResizeType } from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
 import { conf } from "Board/Settings";
 
 export function getDecorationResizeType(

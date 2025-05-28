@@ -1,5 +1,8 @@
 import { Mbr, Point } from "Board/Items";
-import { ResizeType, getResizeType } from "../getResizeType";
+import {
+	ResizeType,
+	getResizeType,
+} from "../TransformerHelpers/getResizeType.ts";
 
 /**
  * A funciton to get the resize type of a text item.
