@@ -6,6 +6,7 @@ import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { NotifyFunction } from "shared/ui-lib/Toast/notify";
 import { Connection } from "App/Connection";
+import { MockPath2D } from "Board/api/MockPath2D";
 
 /**
  * Allowed drawing tools.
@@ -173,10 +174,7 @@ export interface Settings {
  * @property {DocumentFactory} - The factory for creating document elements.
  */
 export const conf: Settings = {
-	path2DFactory:
-		typeof Path2D !== "undefined"
-			? BrowserPath2D
-			: (undefined as unknown as typeof Path2DFactory),
+	path2DFactory: typeof Path2D !== "undefined" ? BrowserPath2D : MockPath2D,
 	documentFactory:
 		typeof document !== "undefined"
 			? new BrowserDocumentFactory()

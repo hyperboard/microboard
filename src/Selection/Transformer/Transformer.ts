@@ -12,11 +12,9 @@ import {
 } from "Board/Items";
 import { AINode } from "Board/Items/AINode/AINode";
 import { Anchor } from "Board/Items/Anchor";
-import { Comment } from "Board/Items/Comment/Comment";
 import { DrawingContext } from "Board/Items/DrawingContext";
 import { Geometry } from "Board/Items/Geometry";
 import { Sticker } from "Board/Items/Sticker";
-import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import { Selection } from "Board/Selection";
 import { SelectionItems } from "Board/Selection/SelectionItems";
 import { conf } from "Board/Settings";
@@ -42,6 +40,10 @@ import { ImageItem } from "Board/Items/Image/Image";
 import { tempStorage } from "App/SessionStorage";
 import { getFollowingComments } from "Board/Selection/Transformer/TransformerHelpers/getFollowingComments";
 import { handleMultipleItemsResize } from "Board/Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
+import { transformShape } from "Board/Selection/Transformer/TransformerHelpers/ransformShape";
+import { transformRichText } from "Board/Selection/Transformer/TransformerHelpers/transformRichText";
+import { transformAINode } from "Board/Selection/Transformer/TransformerHelpers/transformAINode";
+import { transformItems } from "Board/Selection/Transformer/TransformerHelpers/transformItems";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -266,280 +268,73 @@ export class Transformer extends Tool {
 			single instanceof Sticker ||
 			single instanceof Frame
 		) {
-			let translation: TransformManyItems | boolean = {};
-			if (this.isShiftPressed && single.itemType !== "Sticker") {
-				const { matrix, mbr: resizedMbr } = getProportionalResize(
-					this.resizeType,
-					this.board.pointer.point,
-					mbr,
-					this.oppositePoint,
-				);
-				this.mbr = resizedMbr;
-				translation = handleMultipleItemsResize({
-					board: this.board,
-					resize: { matrix, mbr: resizedMbr },
-					initMbr: mbr,
-					isWidth,
-					isHeight,
-					isShiftPressed: this.isShiftPressed,
-				});
+			const { resizedMbr, translation } = transformShape({
+				board: this.board,
+				mbr,
+				isWidth,
+				isHeight,
+				isShiftPressed: this.isShiftPressed,
+				single,
+				resizeType: this.resizeType,
+				oppositePoint: this.oppositePoint,
+				followingComments,
+				startMbr: this.startMbr,
+			});
+			this.mbr = resizedMbr;
+			if (translation) {
 				this.selection.transformMany(translation, this.beginTimeStamp);
-			} else {
-				this.mbr = single.doResize(
-					this.resizeType,
-					this.board.pointer.point,
-					mbr,
-					this.oppositePoint,
-					this.startMbr || new Mbr(),
-					this.beginTimeStamp,
-				).mbr;
-
-				if (followingComments) {
-					const { matrix, mbr: resizedMbr } =
-						single instanceof Sticker
-							? getProportionalResize(
-									this.resizeType,
-									this.board.pointer.point,
-									mbr,
-									this.oppositePoint,
-								)
-							: getResize(
-									this.resizeType,
-									this.board.pointer.point,
-									mbr,
-									this.oppositePoint,
-								);
-					translation = handleMultipleItemsResize({
-						board: this.board,
-						resize: { matrix, mbr: resizedMbr },
-						initMbr: mbr,
-						isWidth,
-						isHeight,
-						itemsToResize: followingComments,
-						isShiftPressed: this.isShiftPressed,
-					});
-					this.selection.transformMany(
-						translation,
-						this.beginTimeStamp,
-					);
-				}
 			}
 		} else if (single instanceof RichText) {
-			const isLongText = single.getTextString().length > 5000;
 			if (!this.mbr) {
 				return false;
 			}
-
-			const { matrix, mbr: resizedMbr } = getProportionalResize(
-				this.resizeType,
-				this.board.pointer.point,
+			const transformationData = transformRichText({
+				board: this.board,
+				single,
+				isWidth,
+				isHeight,
+				isShiftPressed: this.isShiftPressed,
 				mbr,
-				this.oppositePoint,
-			);
+				followingComments,
+				oppositePoint: this.oppositePoint,
+				resizeType: this.resizeType,
+			});
 
-			if (isWidth) {
-				if (isLongText) {
-					const isLeft = this.resizeType === "left";
-					if (this.board.selection.shouldRenderItemsMbr) {
-						this.board.selection.shouldRenderItemsMbr = false;
-					}
-					if (this.board.pointer.getCursor() !== "w-resize") {
-						this.board.pointer.setCursor("w-resize");
-					}
-					if (isLeft) {
-						if (
-							this.board.pointer.point.x >=
-							this.mbr.right - 100
-						) {
-							return false;
-						}
-						this.mbr.left = this.board.pointer.point.x;
-					} else {
-						if (this.board.pointer.point.x <= this.mbr.left + 100) {
-							return false;
-						}
-						this.mbr.right = this.board.pointer.point.x;
-					}
-					const newWidth = this.mbr.getWidth();
-					this.onPointerUpCb = () => {
-						this.board.pointer.setCursor("default");
-						this.board.selection.shouldRenderItemsMbr = true;
-						if (isLeft) {
-							single.transformation.translateBy(
-								single.getWidth() - newWidth,
-								0,
-							);
-						}
-						single.editor.setMaxWidth(newWidth);
-					};
-					return true;
-				} else {
-					single.editor.setMaxWidth(
-						resizedMbr.getWidth() / single.getScale(),
-					);
-					single.transformation.translateBy(matrix.translateX, 0);
-					matrix.translateY = 0;
-					matrix.scaleY = 1;
+			if (transformationData) {
+				this.mbr = transformationData.resizedMbr;
+				if (transformationData.onPointerUpCb) {
+					this.onPointerUpCb = transformationData.onPointerUpCb;
 				}
-			} else {
-				if (isLongText) {
-					if (this.board.selection.shouldRenderItemsMbr) {
-						this.board.selection.shouldRenderItemsMbr = false;
-					}
-					switch (this.resizeType) {
-						case "leftTop":
-							if (
-								this.board.pointer.getCursor() !== "nwse-resize"
-							) {
-								this.board.pointer.setCursor("nwse-resize");
-							}
-							if (
-								this.board.pointer.point.x >=
-									this.mbr.right - 100 ||
-								this.board.pointer.point.y >=
-									this.mbr.bottom - 100
-							) {
-								return false;
-							}
-							break;
-
-						case "rightTop":
-							if (
-								this.board.pointer.getCursor() !== "nesw-resize"
-							) {
-								this.board.pointer.setCursor("nesw-resize");
-							}
-							if (
-								this.board.pointer.point.x <=
-									this.mbr.left + 100 ||
-								this.board.pointer.point.y >=
-									this.mbr.bottom - 100
-							) {
-								return false;
-							}
-							break;
-
-						case "leftBottom":
-							if (
-								this.board.pointer.getCursor() !== "nesw-resize"
-							) {
-								this.board.pointer.setCursor("nesw-resize");
-							}
-							if (
-								this.board.pointer.point.x >=
-									this.mbr.right - 100 ||
-								this.board.pointer.point.y <= this.mbr.top + 100
-							) {
-								return false;
-							}
-							break;
-
-						case "rightBottom":
-							if (
-								this.board.pointer.getCursor() !== "nwse-resize"
-							) {
-								this.board.pointer.setCursor("nwse-resize");
-							}
-							if (
-								this.board.pointer.point.x <=
-									this.mbr.left + 100 ||
-								this.board.pointer.point.y <= this.mbr.top + 100
-							) {
-								return false;
-							}
-							break;
-
-						default:
-							break;
-					}
-					this.mbr = resizedMbr;
-					const mbrWidth = this.mbr.getWidth();
-					const mbrHeight = this.mbr.getHeight();
-					const { left, top } = this.mbr;
-					this.onPointerUpCb = () => {
-						this.board.pointer.setCursor("default");
-						this.board.selection.shouldRenderItemsMbr = true;
-						const scaleX = mbrWidth / single.getWidth();
-						const scaleY = mbrHeight / single.getHeight();
-						const translateX = left - single.left;
-						const translateY = top - single.top;
-						single.transformation.scaleByTranslateBy(
-							{ x: scaleX, y: scaleY },
-							{ x: translateX, y: translateY },
-							this.beginTimeStamp,
-						);
-					};
-					return true;
-				} else {
-					single.transformation.scaleByTranslateBy(
-						{ x: matrix.scaleX, y: matrix.scaleY },
-						{ x: matrix.translateX, y: matrix.translateY },
-						this.beginTimeStamp,
-					);
-				}
-			}
-			// TODO DRY
-			if (followingComments) {
-				const translation = handleMultipleItemsResize({
-					board: this.board,
-					resize: { matrix, mbr: resizedMbr },
-					initMbr: mbr,
-					isWidth,
-					isHeight,
-					itemsToResize: followingComments,
-					isShiftPressed: this.isShiftPressed,
-				});
-				this.selection.transformMany(translation, this.beginTimeStamp);
-			}
-
-			if (isWidth) {
-				const { left, top, bottom } = single.getMbr();
-				this.mbr = new Mbr(left, top, resizedMbr.right, bottom);
-			} else {
-				this.mbr = single.getMbr();
 			}
 		} else if (single instanceof AINode) {
-			const { matrix, mbr: resizedMbr } = getProportionalResize(
-				this.resizeType,
-				this.board.pointer.point,
+			this.mbr = transformAINode({
+				board: this.board,
+				single,
+				isWidth,
+				isHeight,
+				isShiftPressed: this.isShiftPressed,
 				mbr,
-				this.oppositePoint,
-			);
-
-			if (isWidth) {
-				single.text.editor.setMaxWidth(
-					resizedMbr.getWidth() / single.text.getScale(),
-				);
-				single.text.transformation.translateBy(matrix.translateX, 0);
-				matrix.translateY = 0;
-				matrix.scaleY = 1;
-			} else {
-				single.text.transformation.scaleByTranslateBy(
-					{ x: matrix.scaleX, y: matrix.scaleY },
-					{ x: matrix.translateX, y: matrix.translateY },
-					this.beginTimeStamp,
-				);
-			}
-			// TODO DRY
-			if (followingComments) {
-				const translation = handleMultipleItemsResize({
-					board: this.board,
-					resize: { matrix, mbr: resizedMbr },
-					initMbr: mbr,
-					isWidth,
-					isHeight,
-					itemsToResize: followingComments,
-					isShiftPressed: this.isShiftPressed,
-				});
-				this.selection.transformMany(translation, this.beginTimeStamp);
-			}
-			if (isWidth) {
-				const { left, top, bottom } = single.getMbr();
-				this.mbr = new Mbr(left, top, resizedMbr.right, bottom);
-			} else {
-				this.mbr = single.getMbr();
-			}
+				followingComments,
+				oppositePoint: this.oppositePoint,
+				resizeType: this.resizeType,
+			});
 		} else {
+			// if (!transformItems({
+			// 	mbr,
+			// 	board: this.board,
+			// 	isShiftPressed: this.isShiftPressed,
+			// 	oppositePoint: this.oppositePoint,
+			// 	resizeType: this.resizeType,
+			// 	debounceUpd: this.debounceUpd,
+			// 	alignmentHelper: this.alignmentHelper,
+			// 	isWidth,
+			// 	isHeight,
+			// 	beginTimeStamp: this.beginTimeStamp,
+			// 	canvasDrawer: this.canvasDrawer,
+			// 	selection: this.selection,
+			// })) {
+			// 	return false;
+			// }
 			const items = this.selection.items.list();
 			const includesProportionalItem = items.some(
 				item =>

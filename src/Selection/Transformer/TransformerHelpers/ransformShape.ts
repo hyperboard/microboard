@@ -1,4 +1,3 @@
-import { Shape } from "bezier-js";
 import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
 import {
 	getProportionalResize,
@@ -6,57 +5,89 @@ import {
 } from "Board/Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { Mbr } from "Board/Items/Mbr/Mbr";
 import { Sticker } from "Board/Items/Sticker/Sticker";
+import { handleMultipleItemsResize } from "Board/Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
+import { Shape } from "Board/Items/Shape/Shape";
+import { Frame } from "Board/Items/Frame/Frame";
+import { Board } from "Board/Board";
+import { ResizeType } from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
+import { Point } from "Board/Items/Point/Point";
+import { Comment } from "Board/Items/Comment/Comment";
 
-export function transform() {
-	let translation: TransformManyItems | boolean = {};
-	if (this.isShiftPressed && single.itemType !== "Sticker") {
+export function transformShape({
+	mbr,
+	board,
+	single,
+	oppositePoint,
+	resizeType,
+	isShiftPressed,
+	isHeight,
+	isWidth,
+	startMbr,
+	followingComments,
+}: {
+	single: Sticker | Shape | Frame;
+	board: Board;
+	resizeType: ResizeType;
+	mbr: Mbr;
+	oppositePoint: Point;
+	isShiftPressed: boolean;
+	isWidth: boolean;
+	isHeight: boolean;
+	followingComments?: Comment[];
+	startMbr?: Mbr;
+}): { resizedMbr: Mbr; translation: TransformManyItems | null } {
+	let translation: TransformManyItems | null = null;
+	if (isShiftPressed && single.itemType !== "Sticker") {
 		const { matrix, mbr: resizedMbr } = getProportionalResize(
-			this.resizeType,
-			this.board.pointer.point,
+			resizeType,
+			board.pointer.point,
 			mbr,
-			this.oppositePoint,
+			oppositePoint,
 		);
-		this.mbr = resizedMbr;
-		translation = this.handleMultipleItemsResize(
-			{ matrix, mbr: resizedMbr },
-			mbr,
+		translation = handleMultipleItemsResize({
+			board: board,
+			resize: { matrix, mbr: resizedMbr },
+			initMbr: mbr,
 			isWidth,
 			isHeight,
-		);
-		this.selection.transformMany(translation, this.beginTimeStamp);
+			isShiftPressed: isShiftPressed,
+		});
+		return { resizedMbr, translation };
 	} else {
-		this.mbr = single.doResize(
-			this.resizeType,
-			this.board.pointer.point,
+		const resizedMbr = single.doResize(
+			resizeType,
+			board.pointer.point,
 			mbr,
-			this.oppositePoint,
-			this.startMbr || new Mbr(),
-			this.beginTimeStamp,
+			oppositePoint,
+			startMbr || new Mbr(),
+			Date.now(),
 		).mbr;
 
 		if (followingComments) {
 			const { matrix, mbr: resizedMbr } =
 				single instanceof Sticker
 					? getProportionalResize(
-							this.resizeType,
-							this.board.pointer.point,
+							resizeType,
+							board.pointer.point,
 							mbr,
-							this.oppositePoint,
+							oppositePoint,
 						)
 					: getResize(
-							this.resizeType,
-							this.board.pointer.point,
+							resizeType,
+							board.pointer.point,
 							mbr,
-							this.oppositePoint,
+							oppositePoint,
 						);
-			translation = this.handleMultipleItemsResize(
-				{ matrix, mbr: resizedMbr },
-				mbr,
+			translation = handleMultipleItemsResize({
+				board,
+				resize: { matrix, mbr: resizedMbr },
+				initMbr: mbr,
 				isWidth,
 				isHeight,
-				followingComments,
-			);
-			this.selection.transformMany(translation, this.beginTimeStamp);
+				itemsToResize: followingComments,
+				isShiftPressed: isShiftPressed,
+			});
 		}
+		return { resizedMbr, translation };
 	}
 }

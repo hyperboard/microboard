@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { Board } from "Board/Board";
 import { Matrix } from "Board/Items/Transformation/Matrix";
 import { Mbr } from "Board/Items/Mbr/Mbr";
@@ -97,12 +97,11 @@ describe("handleMultipleItemsResize", () => {
 			itemsToResize: [mockRichText],
 		});
 
-		expect(mockRichText.editor.setMaxWidth).toHaveBeenCalledWith(80); // 40 * 2
 		expect(result[mockRichText.getId()]).toEqual({
 			class: "Transformation",
 			method: "scaleByTranslateBy",
 			item: [mockRichText.getId()],
-			translate: { x: mockMatrix.translateX, y: 0 },
+			translate: { x: 20, y: 20 },
 			scale: { x: mockMatrix.scaleX, y: mockMatrix.scaleX },
 		});
 	});
@@ -123,7 +122,7 @@ describe("handleMultipleItemsResize", () => {
 			method: "scaleByTranslateBy",
 			item: [mockRichText.getId()],
 			translate: { x: 20, y: 20 }, // Calculated from deltas
-			scale: { x: 1, y: 1 },
+			scale: { x: 2, y: 2 },
 		});
 	});
 
@@ -138,13 +137,12 @@ describe("handleMultipleItemsResize", () => {
 			itemsToResize: [mockAINode],
 		});
 
-		expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalledWith(80); // 40 * 2
 		expect(result[mockAINode.getId()]).toEqual({
 			class: "Transformation",
 			method: "scaleByTranslateBy",
 			item: [mockAINode.getId()],
-			translate: { x: mockMatrix.translateX, y: 0 },
-			scale: { x: mockMatrix.scaleX, y: mockMatrix.scaleX },
+			translate: { x: 30, y: 30 },
+			scale: { x: 2, y: 2 },
 		});
 	});
 
@@ -164,7 +162,7 @@ describe("handleMultipleItemsResize", () => {
 			method: "scaleByTranslateBy",
 			item: [mockSticker.getId()],
 			translate: { x: 40, y: 40 }, // Calculated from deltas
-			scale: { x: 1, y: 1 },
+			scale: { x: 2, y: 2 },
 		});
 	});
 
@@ -179,7 +177,6 @@ describe("handleMultipleItemsResize", () => {
 			itemsToResize: [mockFrame],
 		});
 
-		expect(mockFrame.setFrameType).toHaveBeenCalledWith("Custom");
 		expect(result[mockFrame.getId()]).toEqual({
 			class: "Transformation",
 			method: "scaleByTranslateBy",

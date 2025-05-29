@@ -10,7 +10,7 @@ import {
 } from "../Line";
 import { Geometry } from "../Geometry";
 import { GeometricNormal } from "../GeometricNormal";
-import { BorderStyle, Path, scalePatterns } from "../Path";
+import { BorderStyle } from "../Path";
 import { RichText } from "..";
 
 /**
@@ -171,9 +171,9 @@ export class Mbr implements Geometry {
 		];
 	}
 
-	getPath(): Path {
-		return new Path(this.getLines(), true);
-	}
+	// getPath(): Path {
+	// 	return new Path(this.getLines(), true);
+	// }
 
 	getSnapAnchorPoints(): Point[] {
 		const mbr = this;
@@ -398,7 +398,7 @@ export class Mbr implements Geometry {
 		if (this.strokeWidth) {
 			ctx.strokeStyle = this.borderColor;
 			ctx.lineWidth = this.strokeWidth;
-			ctx.setLineDash(scalePatterns(this.strokeWidth)[this.borderStyle]);
+			ctx.setLineDash([]);
 			ctx.strokeRect(
 				this.left,
 				this.top,
