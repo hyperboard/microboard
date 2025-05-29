@@ -1,6 +1,7 @@
 export { Connector } from "./Connector";
+export { ConnectorData } from "./ConnectorOperations";
 export type { ConnectorLineStyle } from "./Connector";
-export type { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
+export type { ConnectorOperation } from "./ConnectorOperations";
 export {
 	BoardPoint,
 	FloatingPoint,

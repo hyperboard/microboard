@@ -1,8 +1,5 @@
-import {
-	RichTextOperation,
-	TransformationOperation,
-	ConnectorOperation,
-} from "Board/Items";
+import type { TransformationOperation } from "Board/Items";
+import { RichTextOperation, ConnectorOperation } from "Board/Items";
 import { Path } from "slate";
 import { Operation } from "./EventsOperations";
 import { type ShapeOperation } from "Board/Items/Shape";

@@ -1,3 +1,4 @@
-export { Comment, CommentData } from "./Comment";
+export { Comment } from "./Comment";
+export type { CommentData } from "./Comment";
 export { CommentCommand } from "./CommentCommand";
-export { CommentOperation } from "./CommentOperation";
+export type { CommentOperation } from "./CommentOperation";

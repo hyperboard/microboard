@@ -1,7 +1,7 @@
 import { Descendant } from "slate";
+import type { RichTextData } from "./Items";
 import {
 	ItemType,
-	RichTextData,
 	Matrix,
 	ItemData,
 	FrameData,

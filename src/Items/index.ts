@@ -4,16 +4,17 @@ export { CubicBezier, QuadraticBezier } from "./Curve";
 export { Arc } from "./Arc";
 export { Path, Paths } from "./Path";
 export { Mbr } from "./Mbr";
-export { Matrix, Transformation } from "./Transformation/";
 export type { TransformationOperation } from "./Transformation/";
-export type { ConnectorData, ConnectorOperation } from "./Connector";
-export { Connector } from "./Connector";
-export { RichText } from "./RichText";
+export { Matrix, Transformation } from "./Transformation/";
+
+export { Connector, ConnectorData } from "./Connector";
+export type { ConnectorOperation } from "./Connector";
 export type { RichTextData, RichTextOperation } from "./RichText";
+export { RichText } from "./RichText";
 export type { ShapeData } from "./Shape";
 export { Shape } from "./Shape";
-export type { FrameData } from "./Frame";
 export { Frame } from "./Frame";
+export type { FrameData } from "./Frame";
 
 export type { Item, ItemType, ItemData } from "./Item";
 

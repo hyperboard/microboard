@@ -77,6 +77,7 @@ export function insertEventsFromOtherConnectionsIntoList(
 		hasAnyOverlap(currSelection, createdItems) ||
 		hasAnyOverlap(currSelection, updatedText)
 	) {
+		// todo transform selection by new events
 		board.selection.applyMemoizedCaretOrRange();
 	}
 }

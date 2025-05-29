@@ -1,4 +1,4 @@
-import { TransformationOperation } from "../Items";
+import type { TransformationOperation } from "../Items";
 import { ShapeOperation } from "../Items/Shape";
 import { RichTextOperation } from "../Items";
 import { BoardOps } from "../BoardOperations";

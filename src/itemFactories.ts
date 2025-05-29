@@ -1,10 +1,10 @@
+import type { RichTextData } from "./Items";
 import {
 	Mbr,
 	Connector,
 	RichText,
 	Shape,
 	ShapeData,
-	RichTextData,
 	ConnectorData,
 	Frame,
 	FrameData,

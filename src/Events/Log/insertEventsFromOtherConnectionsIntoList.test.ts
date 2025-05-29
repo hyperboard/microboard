@@ -1,15 +1,140 @@
+import { initNodeSettings } from "Board/api/initNodeSettings";
+initNodeSettings();
+
 import { v4 as uuidv4 } from "uuid";
 import { Board } from "Board";
-import { createEvents } from "../Events";
+import { BoardEvent, createEvents } from "../Events";
 import { insertEventsFromOtherConnectionsIntoList } from "./insertEventsFromOtherConnectionsIntoList";
-import { createEventsList } from "./createEventsList";
+import { createEventsList, EventsList } from "./createEventsList";
 import { createCommand } from "../Command";
 import { SyncBoardEvent } from "../Events";
 import { Operation } from "../EventsOperations";
+import { CreateItem } from "Board/BoardOperations";
+import { DefaultRichTextData } from "Board/Items/RichText/RichTextData";
+import { ItemData, Mbr, RichText, RichTextOperation } from "Board/Items";
+import { HistoryRecord } from "./EventsLog";
+import { Selection } from "slate";
+import { InsertTextOperation, Operation as SlateOp } from "slate";
+import { deserializeAndApplyToList } from "./deserializeAndApplyToList";
+import { ReactEditor } from "slate-react";
+interface GetEventOpts {
+	order?: number;
+	eventId?: string;
+	userId?: number;
+	boardId?: string;
+	lastKnownOrder?: number;
+}
+
+function getEvent(
+	operation: Operation,
+	{
+		order = 0,
+		eventId = "1",
+		userId = 42,
+		boardId = "1",
+		lastKnownOrder = 0,
+	}: GetEventOpts = {},
+): SyncBoardEvent {
+	return {
+		order,
+		userId: userId.toString(),
+		lastKnownOrder,
+		body: {
+			eventId,
+			userId,
+			boardId,
+			operation,
+		},
+	};
+}
+
+function getRecord(
+	board: Board,
+	operation: Operation,
+	optionals: GetEventOpts = {},
+): HistoryRecord {
+	const command = createCommand(board, operation);
+	const event = getEvent(operation, optionals);
+
+	return { command, event };
+}
+
+interface GetAddItemOpParams {
+	/** the single item ID (defaults to `"shapeId"`) */
+	itemId?: string;
+	/** override any of the default ItemData fields */
+	dataOverrides?: Partial<ItemData>;
+	/** optional timestamp */
+	timeStamp?: number;
+}
+
+export function getAddItemOp(
+	board: Board,
+	{
+		itemId = "shapeId",
+		dataOverrides = {},
+		timeStamp,
+	}: GetAddItemOpParams = {},
+): CreateItem {
+	const defaultData: ItemData = {
+		backgroundColor: "none",
+		backgroundOpacity: 1,
+		borderColor: "rgb(20, 21, 26)",
+		borderOpacity: 1,
+		borderStyle: "solid",
+		borderWidth: 1,
+		itemType: "Shape",
+		shapeType: "Rectangle",
+		transformation: {
+			isLocked: false,
+			rotate: 0,
+			scaleX: 1,
+			scaleY: 1,
+			translateX: 0,
+			translateY: 0,
+		},
+		text: { ...new RichText(board, new Mbr()).serialize() },
+	};
+
+	const op: CreateItem = {
+		method: "add",
+		class: "Board",
+		item: itemId,
+		data: { ...defaultData, ...dataOverrides },
+		...(timeStamp !== undefined ? { timeStamp } : {}),
+	};
+
+	return op;
+}
+interface GetEditTextOpParams {
+	/** the single rich-text item ID (defaults to `"richText"`) */
+	itemId?: string;
+	/** a resulting selection after operations */
+	selection?: Selection;
+	/** a list of insert_text ops (defaults to a single op inserting `"1"` at [0,0]) */
+	ops?: Omit<InsertTextOperation, "type">[];
+}
+
+function getEditTextOp({
+	itemId = "richText",
+	selection = {
+		anchor: { path: [0, 0], offset: 1 },
+		focus: { path: [0, 0], offset: 1 },
+	},
+	ops = [{ path: [0, 0], offset: 0, text: "1" }],
+}: GetEditTextOpParams = {}): RichTextOperation {
+	return {
+		class: "RichText",
+		method: "edit",
+		item: [itemId],
+		selection,
+		ops: ops.map(op => ({ ...op, type: "insert_text" })),
+	};
+}
 
 describe("insertEventsFromOtherConnectionsIntoList", () => {
 	let board: Board;
-	let eventsList;
+	let eventsList: EventsList;
 
 	beforeEach(() => {
 		// Создаем доску без реальной сетевой связи (используем boardId = "test-board")
@@ -22,593 +147,170 @@ describe("insertEventsFromOtherConnectionsIntoList", () => {
 		eventsList = createEventsList(operation =>
 			createCommand(board, operation),
 		);
-
-		// Шпионим за методами для проверки вызовов
-		jest.spyOn(eventsList, "revertUnconfirmed");
-		jest.spyOn(eventsList, "applyUnconfirmed");
-		jest.spyOn(eventsList, "addConfirmedRecords");
-		jest.spyOn(board.selection, "memoize");
-		jest.spyOn(board.selection, "applyMemoized");
 	});
 
-	test("должен игнорировать пустой массив событий", () => {
-		insertEventsFromOtherConnectionsIntoList([], eventsList, board);
+	test("local unconfirmed: insert text and update selection. After reverting and applying local selection should remain the same", () => {
+		// 1) add initial RichText item “text”
+		const initAddEvent = getEvent(getAddItemOp(board, { itemId: "text" }));
+		deserializeAndApplyToList([initAddEvent], eventsList, board);
 
-		expect(board.selection.memoize).not.toHaveBeenCalled();
-		expect(eventsList.revertUnconfirmed).not.toHaveBeenCalled();
-	});
-
-	test("должен корректно обрабатывать одно событие добавления элемента", () => {
-		const itemId = uuidv4();
-		const singleEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event1",
-			order: 1,
-			userId: "user1",
-			lastKnownOrder: 0,
-			body: {
-				eventId: "event1",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "add",
-					item: itemId,
-					data: {
-						itemType: "Shape",
-						shapeType: "rectangle",
-						transformation: {
-							translateX: 100,
-							translateY: 100,
-							scaleX: 1,
-							scaleY: 1,
-							shearX: 0,
-							shearY: 0,
-							rotation: 0,
-						},
-						style: {
-							fill: "#ff0000",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					},
-				} as Operation,
+		// 2) simulate offline local edit: insert "q","w","e" and select the "w"
+		const localEditOp = getEditTextOp({
+			itemId: "text",
+			ops: [
+				{ path: [0, 0], offset: 0, text: "q" },
+				{ path: [0, 0], offset: 1, text: "w" },
+				{ path: [0, 0], offset: 2, text: "e" },
+			],
+			selection: {
+				anchor: { path: [0, 0], offset: 3 },
+				focus: { path: [0, 0], offset: 3 },
 			},
-		};
+		});
+		const localEditRecord = getRecord(board, localEditOp, {
+			lastKnownOrder: 1,
+		});
+		eventsList.addNewRecords([localEditRecord]);
+		// localEditRecord.command.apply();
+		board.events.emit(localEditOp, localEditRecord.command);
 
+		const rtBefore = board.items.getById("text")?.getRichText();
+		if (!rtBefore) {
+			throw new Error("Shape not found");
+		}
+		const selectionBefore = {
+			anchor: { path: [0, 0], offset: 1 },
+			focus: { path: [0, 0], offset: 2 },
+		};
+		board.selection.setContext("EditTextUnderPointer");
+		board.selection.add(rtBefore);
+		board.selection.setTextToEdit(rtBefore);
+		rtBefore.editorTransforms.select(
+			rtBefore.editor.editor,
+			selectionBefore,
+		);
+		expect(rtBefore.editor.getSelection()).toEqual(selectionBefore);
+
+		// 3) generate 10 “remote” text edits on the same item
+		const remoteEventsAmount = 10;
+		const remoteEvents = Array.from(
+			{ length: remoteEventsAmount },
+			(_, i) => {
+				const remoteOp = getEditTextOp({
+					itemId: "text",
+					ops: [{ path: [0, 0], offset: i, text: `${i}` }],
+				});
+				return getEvent(remoteOp, {
+					order: 2,
+					lastKnownOrder: 1,
+					userId: 123,
+					eventId: `remote:${i}`,
+				});
+			},
+		);
+
+		// 4) call the fn under test
 		insertEventsFromOtherConnectionsIntoList(
-			singleEvent,
+			remoteEvents,
 			eventsList,
 			board,
 		);
 
-		// Проверки вызовов методов
-		expect(board.selection.memoize).toHaveBeenCalled();
-		expect(eventsList.revertUnconfirmed).toHaveBeenCalled();
-		expect(eventsList.addConfirmedRecords).toHaveBeenCalled();
-		expect(eventsList.applyUnconfirmed).toHaveBeenCalled();
-		expect(board.selection.applyMemoized).toHaveBeenCalled();
-
-		// Проверка, что элемент действительно добавлен в доску
-		const addedItem = board.items.getById(itemId);
-		expect(addedItem).toBeDefined();
-		expect(addedItem.itemType).toBe("Shape");
+		// 5) verify the Slate selection stayed at selected "w"
+		const expectedSelection = {
+			anchor: {
+				path: [0, 0],
+				offset: selectionBefore.anchor.offset + remoteEventsAmount,
+			},
+			focus: {
+				path: [0, 0],
+				offset: selectionBefore.focus.offset + remoteEventsAmount,
+			},
+		};
+		const rtAfter = board.items.getById("text")?.getRichText();
+		if (!rtAfter) {
+			throw new Error("Shape not found");
+		}
+		expect(rtAfter.editor.getSelection()).toEqual(expectedSelection);
 	});
 
-	test("должен корректно обрабатывать несколько событий", () => {
-		const itemId1 = uuidv4();
-		const itemId2 = uuidv4();
-		const events: SyncBoardEvent[] = [
-			{
-				type: "board",
-				id: "event1",
-				order: 1,
-				userId: "user1",
-				lastKnownOrder: 0,
-				body: {
-					eventId: "event1",
-					userId: 1,
-					boardId: "test-board",
-					operation: {
-						class: "Board",
-						method: "add",
-						item: itemId1,
-						data: {
-							itemType: "Shape",
-							shapeType: "rectangle",
-							transformation: {
-								translateX: 100,
-								translateY: 100,
-								scaleX: 1,
-								scaleY: 1,
-								shearX: 0,
-								shearY: 0,
-								rotation: 0,
-							},
-							style: {
-								fill: "#ff0000",
-								stroke: "#000000",
-								strokeWidth: 1,
-							},
-						},
-					} as Operation,
-				},
+	test("local unconfirmed: add new item, insert text and update selection. After reverting and applying local selection should remain the same", () => {
+		// 1) add initial RichText item “text”
+		const initAddEvent = getEvent(getAddItemOp(board, { itemId: "text" }));
+		deserializeAndApplyToList([initAddEvent], eventsList, board);
+
+		// 2) simulate local add and edit: insert "q","w","e" and select the "w"
+		const localAddOp = getAddItemOp(board, { itemId: "localText" });
+		const localAddRecord = getRecord(board, localAddOp, {
+			lastKnownOrder: 1,
+		});
+		eventsList.addNewRecords([localAddRecord]);
+		board.events.emit(localAddOp, localAddRecord.command);
+		localAddRecord.command.apply();
+
+		const localEditOp = getEditTextOp({
+			itemId: "localText",
+			ops: [
+				{ path: [0, 0], offset: 0, text: "q" },
+				{ path: [0, 0], offset: 1, text: "w" },
+				{ path: [0, 0], offset: 2, text: "e" },
+			],
+			selection: {
+				anchor: { path: [0, 0], offset: 3 },
+				focus: { path: [0, 0], offset: 3 },
 			},
-			{
-				type: "board",
-				id: "event2",
+		});
+		const localEditRecord = getRecord(board, localEditOp, {
+			lastKnownOrder: 1,
+		});
+		eventsList.addNewRecords([localEditRecord]);
+		board.events.emit(localEditOp, localEditRecord.command);
+
+		const rtBefore = board.items.getById("localText")?.getRichText();
+		if (!rtBefore) {
+			throw new Error("Shape not found");
+		}
+		const expectedSelection = {
+			anchor: { path: [0, 0], offset: 1 },
+			focus: { path: [0, 0], offset: 2 },
+		};
+		board.selection.setContext("EditTextUnderPointer");
+		board.selection.setTextToEdit(rtBefore);
+		board.selection.add(rtBefore);
+		rtBefore.editorTransforms.select(
+			rtBefore.editor.editor,
+			expectedSelection,
+		);
+		expect(rtBefore.editor.getSelection()).toEqual(expectedSelection);
+
+		// 3) generate 10 “remote” text edits on the same item
+		const remoteEvents = Array.from({ length: 10 }, (_, i) => {
+			const remoteOp = getEditTextOp({
+				itemId: "text",
+				ops: [{ path: [0, 0], offset: i, text: `${i}` }],
+			});
+			return getEvent(remoteOp, {
 				order: 2,
-				userId: "user1",
 				lastKnownOrder: 1,
-				body: {
-					eventId: "event2",
-					userId: 1,
-					boardId: "test-board",
-					operation: {
-						class: "Board",
-						method: "add",
-						item: itemId2,
-						data: {
-							itemType: "Shape",
-							shapeType: "ellipse",
-							transformation: {
-								translateX: 200,
-								translateY: 200,
-								scaleX: 1,
-								scaleY: 1,
-								shearX: 0,
-								shearY: 0,
-								rotation: 0,
-							},
-							style: {
-								fill: "#00ff00",
-								stroke: "#000000",
-								strokeWidth: 1,
-							},
-						},
-					} as Operation,
-				},
-			},
-		];
+				userId: 123,
+				eventId: `remote:${i}`,
+			});
+		});
 
-		insertEventsFromOtherConnectionsIntoList(events, eventsList, board);
-
-		// Проверка, что оба элемента добавлены на доску
-		expect(board.items.getById(itemId1)).toBeDefined();
-		expect(board.items.getById(itemId2)).toBeDefined();
-		expect(eventsList.addConfirmedRecords).toHaveBeenCalled();
-
-		// Проверка, что элементы правильного типа
-		expect(board.items.getById(itemId1).itemType).toBe("Shape");
-		expect(board.items.getById(itemId2).itemType).toBe("Shape");
-
-		// Проверка правильных форм
-		expect(board.items.getById(itemId1).getShapeType()).toBe("rectangle");
-		expect(board.items.getById(itemId2).getShapeType()).toBe("ellipse");
-	});
-
-	test("должен обрабатывать событие редактирования элемента", () => {
-		// Сначала добавляем элемент
-		const itemId = uuidv4();
-		const addEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event1",
-			order: 1,
-			userId: "user1",
-			lastKnownOrder: 0,
-			body: {
-				eventId: "event1",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "add",
-					item: itemId,
-					data: {
-						itemType: "Shape",
-						shapeType: "rectangle",
-						transformation: {
-							translateX: 100,
-							translateY: 100,
-							scaleX: 1,
-							scaleY: 1,
-							shearX: 0,
-							shearY: 0,
-							rotation: 0,
-						},
-						style: {
-							fill: "#ff0000",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					},
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(addEvent, eventsList, board);
-
-		// Проверяем начальный цвет заливки
-		const addedItem = board.items.getById(itemId);
-		expect(addedItem.style.fill).toBe("#ff0000");
-
-		// Теперь модифицируем элемент
-		const modifyEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event2",
-			order: 2,
-			userId: "user1",
-			lastKnownOrder: 1,
-			body: {
-				eventId: "event2",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Shape",
-					method: "setProperty",
-					item: itemId,
-					property: "style",
-					value: {
-						fill: "#0000ff",
-						stroke: "#000000",
-						strokeWidth: 1,
-					},
-				} as Operation,
-			},
-		};
-
+		// prevent .focus from slate react bc there is no react slate texteditor
+		jest.spyOn(ReactEditor, "focus").mockImplementation(() => {});
+		// 4) call the fn under test
 		insertEventsFromOtherConnectionsIntoList(
-			modifyEvent,
+			remoteEvents,
 			eventsList,
 			board,
 		);
 
-		// Проверяем, что цвет элемента изменился
-		const modifiedItem = board.items.getById(itemId);
-		expect(modifiedItem.style.fill).toBe("#0000ff");
-	});
-
-	test("должен обрабатывать событие перемещения элемента", () => {
-		// Сначала добавляем элемент
-		const itemId = uuidv4();
-		const addEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event1",
-			order: 1,
-			userId: "user1",
-			lastKnownOrder: 0,
-			body: {
-				eventId: "event1",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "add",
-					item: itemId,
-					data: {
-						itemType: "Shape",
-						shapeType: "rectangle",
-						transformation: {
-							translateX: 100,
-							translateY: 100,
-							scaleX: 1,
-							scaleY: 1,
-							shearX: 0,
-							shearY: 0,
-							rotation: 0,
-						},
-						style: {
-							fill: "#ff0000",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					},
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(addEvent, eventsList, board);
-
-		// Проверяем начальные координаты
-		const addedItem = board.items.getById(itemId);
-		expect(addedItem.transformation.translateX).toBe(100);
-		expect(addedItem.transformation.translateY).toBe(100);
-
-		// Теперь перемещаем элемент
-		const moveEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event2",
-			order: 2,
-			userId: "user1",
-			lastKnownOrder: 1,
-			body: {
-				eventId: "event2",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Transformation",
-					method: "set",
-					item: itemId,
-					property: "translateX",
-					value: 200,
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(moveEvent, eventsList, board);
-
-		// Проверяем, что координаты элемента изменились
-		const movedItem = board.items.getById(itemId);
-		expect(movedItem.transformation.translateX).toBe(200);
-		expect(movedItem.transformation.translateY).toBe(100); // Y не менялся
-	});
-
-	test("должен обрабатывать удаление элемента", () => {
-		// Сначала добавляем элемент
-		const itemId = uuidv4();
-		const addEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event1",
-			order: 1,
-			userId: "user1",
-			lastKnownOrder: 0,
-			body: {
-				eventId: "event1",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "add",
-					item: itemId,
-					data: {
-						itemType: "Shape",
-						shapeType: "rectangle",
-						transformation: {
-							translateX: 100,
-							translateY: 100,
-							scaleX: 1,
-							scaleY: 1,
-							shearX: 0,
-							shearY: 0,
-							rotation: 0,
-						},
-						style: {
-							fill: "#ff0000",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					},
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(addEvent, eventsList, board);
-
-		// Проверяем, что элемент добавлен
-		expect(board.items.getById(itemId)).toBeDefined();
-
-		// Теперь удаляем элемент
-		const removeEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event2",
-			order: 2,
-			userId: "user1",
-			lastKnownOrder: 1,
-			body: {
-				eventId: "event2",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "remove",
-					item: [itemId],
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(
-			removeEvent,
-			eventsList,
-			board,
-		);
-
-		// Проверяем, что элемент удален
-		expect(board.items.getById(itemId)).toBeUndefined();
-	});
-
-	test("должен обрабатывать события конфликтов (последовательность с пропусками)", () => {
-		// Добавляем начальное подтвержденное событие
-		const itemId = uuidv4();
-		const initialEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event1",
-			order: 1,
-			userId: "user1",
-			lastKnownOrder: 0,
-			body: {
-				eventId: "event1",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "add",
-					item: itemId,
-					data: {
-						itemType: "Shape",
-						shapeType: "rectangle",
-						transformation: {
-							translateX: 100,
-							translateY: 100,
-							scaleX: 1,
-							scaleY: 1,
-							shearX: 0,
-							shearY: 0,
-							rotation: 0,
-						},
-						style: {
-							fill: "#ff0000",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					},
-				} as Operation,
-			},
-		};
-
-		// Добавляем событие в список подтвержденных
-		const initialCommand = createCommand(
-			board,
-			initialEvent.body.operation,
-		);
-		initialCommand.apply();
-		eventsList.addConfirmedRecords([
-			{
-				event: initialEvent,
-				command: initialCommand,
-			},
-		]);
-
-		// Событие с последовательностью 3, но lastKnownOrder = 1
-		// Это указывает на пропуск события с order = 2
-		const conflictEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event3",
-			order: 3,
-			userId: "user1",
-			lastKnownOrder: 1, // Пропуск order=2
-			body: {
-				eventId: "event3",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Transformation",
-					method: "set",
-					item: itemId,
-					property: "translateY",
-					value: 300,
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(
-			conflictEvent,
-			eventsList,
-			board,
-		);
-
-		// Проверяем, что событие было применено несмотря на пропуск
-		const transformedItem = board.items.getById(itemId);
-		expect(transformedItem).toBeDefined();
-		expect(transformedItem.transformation.translateY).toBe(300);
-	});
-
-	test("должен объединять схожие события", () => {
-		// Добавляем элемент
-		const itemId = uuidv4();
-		const addEvent: SyncBoardEvent = {
-			type: "board",
-			id: "event1",
-			order: 1,
-			userId: "user1",
-			lastKnownOrder: 0,
-			body: {
-				eventId: "event1",
-				userId: 1,
-				boardId: "test-board",
-				operation: {
-					class: "Board",
-					method: "add",
-					item: itemId,
-					data: {
-						itemType: "Shape",
-						shapeType: "rectangle",
-						transformation: {
-							translateX: 100,
-							translateY: 100,
-							scaleX: 1,
-							scaleY: 1,
-							shearX: 0,
-							shearY: 0,
-							rotation: 0,
-						},
-						style: {
-							fill: "#ff0000",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					},
-				} as Operation,
-			},
-		};
-
-		insertEventsFromOtherConnectionsIntoList(addEvent, eventsList, board);
-
-		// Два события, которые могут быть объединены: изменение цвета одного и того же элемента
-		const colorEvents: SyncBoardEvent[] = [
-			{
-				type: "board",
-				id: "event2",
-				order: 2,
-				userId: "user1",
-				lastKnownOrder: 1,
-				body: {
-					eventId: "event2",
-					userId: 1,
-					boardId: "test-board",
-					operation: {
-						class: "Shape",
-						method: "setProperty",
-						item: itemId,
-						property: "style",
-						value: {
-							fill: "#00ff00",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					} as Operation,
-				},
-			},
-			{
-				type: "board",
-				id: "event3",
-				order: 3,
-				userId: "user1",
-				lastKnownOrder: 2,
-				body: {
-					eventId: "event3",
-					userId: 1,
-					boardId: "test-board",
-					operation: {
-						class: "Shape",
-						method: "setProperty",
-						item: itemId,
-						property: "style",
-						value: {
-							fill: "#0000ff",
-							stroke: "#000000",
-							strokeWidth: 1,
-						},
-					} as Operation,
-				},
-			},
-		];
-
-		// Перед применением событий, подсчитаем текущее количество событий в списке
-		const initialRecordsCount = eventsList.getConfirmedRecords().length;
-
-		insertEventsFromOtherConnectionsIntoList(
-			colorEvents,
-			eventsList,
-			board,
-		);
-
-		// Проверяем, что оба события были применены
-		const modifiedItem = board.items.getById(itemId);
-		expect(modifiedItem.style.fill).toBe("#0000ff"); // Последний цвет
-
-		// Проверяем, что события были объединены (количество записей должно увеличиться меньше чем на 2)
-		// В идеальном случае объединения, должна быть только одна запись
-		const finalRecordsCount = eventsList.getConfirmedRecords().length;
-		expect(finalRecordsCount).toBe(initialRecordsCount + 1);
+		// 5) verify the Slate selection stayed at selected "w"
+		const rtAfter = board.items.getById("localText")?.getRichText();
+		if (!rtAfter) {
+			throw new Error("Shape not found");
+		}
+		expect(rtAfter.editor.getSelection()).toEqual(expectedSelection);
 	});
 });
