@@ -13,10 +13,21 @@ import { CreateItem } from "Board/BoardOperations";
 import { DefaultRichTextData } from "Board/Items/RichText/RichTextData";
 import { ItemData, Mbr, RichText, RichTextOperation } from "Board/Items";
 import { HistoryRecord } from "./EventsLog";
-import { Selection } from "slate";
+import { BaseSelection, Selection } from "slate";
 import { InsertTextOperation, Operation as SlateOp } from "slate";
 import { deserializeAndApplyToList } from "./deserializeAndApplyToList";
 import { ReactEditor } from "slate-react";
+
+function setSelectionInText(
+	board: Board,
+	rt: RichText,
+	selection: BaseSelection,
+): void {
+	board.selection.setContext("EditTextUnderPointer");
+	board.selection.add(rt);
+	board.selection.setTextToEdit(rt);
+	rt.editorTransforms.select(rt.editor.editor, selection || []);
+}
 interface GetEventOpts {
 	order?: number;
 	eventId?: string;
@@ -182,13 +193,7 @@ describe("insertEventsFromOtherConnectionsIntoList", () => {
 			anchor: { path: [0, 0], offset: 1 },
 			focus: { path: [0, 0], offset: 2 },
 		};
-		board.selection.setContext("EditTextUnderPointer");
-		board.selection.add(rtBefore);
-		board.selection.setTextToEdit(rtBefore);
-		rtBefore.editorTransforms.select(
-			rtBefore.editor.editor,
-			selectionBefore,
-		);
+		setSelectionInText(board, rtBefore, selectionBefore);
 		expect(rtBefore.editor.getSelection()).toEqual(selectionBefore);
 
 		// 3) generate 10 “remote” text edits on the same item
@@ -274,13 +279,7 @@ describe("insertEventsFromOtherConnectionsIntoList", () => {
 			anchor: { path: [0, 0], offset: 1 },
 			focus: { path: [0, 0], offset: 2 },
 		};
-		board.selection.setContext("EditTextUnderPointer");
-		board.selection.setTextToEdit(rtBefore);
-		board.selection.add(rtBefore);
-		rtBefore.editorTransforms.select(
-			rtBefore.editor.editor,
-			expectedSelection,
-		);
+		setSelectionInText(board, rtBefore, expectedSelection);
 		expect(rtBefore.editor.getSelection()).toEqual(expectedSelection);
 
 		// 3) generate 10 “remote” text edits on the same item
