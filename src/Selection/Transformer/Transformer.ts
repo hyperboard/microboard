@@ -1,15 +1,6 @@
 import { Board } from "Board";
 import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
-import {
-	Frame,
-	Item,
-	Line,
-	Matrix,
-	Mbr,
-	Point,
-	RichText,
-	Shape,
-} from "Board/Items";
+import { Frame, Item, Line, Mbr, Point, RichText, Shape } from "Board/Items";
 import { AINode } from "Board/Items/AINode/AINode";
 import { Anchor } from "Board/Items/Anchor";
 import { DrawingContext } from "Board/Items/DrawingContext";
@@ -27,23 +18,19 @@ import {
 	getAnchorFromResizeType,
 } from "./TransformerHelpers/AnchorType.ts";
 import { getOppositePoint } from "./TransformerHelpers/getOppositePoint.ts";
-import {
-	getProportionalResize,
-	getResize,
-} from "./TransformerHelpers/getResizeMatrix.ts";
+import { getProportionalResize } from "./TransformerHelpers/getResizeMatrix.ts";
 import {
 	getResizeType,
 	ResizeType,
 } from "./TransformerHelpers/getResizeType.ts";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
-import { ImageItem } from "Board/Items/Image/Image";
-import { tempStorage } from "App/SessionStorage";
 import { getFollowingComments } from "Board/Selection/Transformer/TransformerHelpers/getFollowingComments";
 import { handleMultipleItemsResize } from "Board/Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
 import { transformShape } from "Board/Selection/Transformer/TransformerHelpers/ransformShape";
 import { transformRichText } from "Board/Selection/Transformer/TransformerHelpers/transformRichText";
 import { transformAINode } from "Board/Selection/Transformer/TransformerHelpers/transformAINode";
 import { transformItems } from "Board/Selection/Transformer/TransformerHelpers/transformItems";
+import { updateFrameChildren } from "Board/Selection/Transformer/TransformerHelpers/updateFrameChildren";
 
 export class Transformer extends Tool {
 	anchorType: AnchorType = "default";
@@ -319,222 +306,43 @@ export class Transformer extends Tool {
 				resizeType: this.resizeType,
 			});
 		} else {
-			// if (!transformItems({
-			// 	mbr,
-			// 	board: this.board,
-			// 	isShiftPressed: this.isShiftPressed,
-			// 	oppositePoint: this.oppositePoint,
-			// 	resizeType: this.resizeType,
-			// 	debounceUpd: this.debounceUpd,
-			// 	alignmentHelper: this.alignmentHelper,
-			// 	isWidth,
-			// 	isHeight,
-			// 	beginTimeStamp: this.beginTimeStamp,
-			// 	canvasDrawer: this.canvasDrawer,
-			// 	selection: this.selection,
-			// })) {
-			// 	return false;
-			// }
-			const items = this.selection.items.list();
-			const includesProportionalItem = items.some(
-				item =>
-					item.itemType === "Sticker" ||
-					item.itemType === "RichText" ||
-					item.itemType === "AINode" ||
-					item.itemType === "Video" ||
-					item.itemType === "Audio",
-			);
-
-			if (includesProportionalItem && (isWidth || isHeight)) {
+			const newMbr = transformItems({
+				mbr,
+				board: this.board,
+				isShiftPressed: this.isShiftPressed,
+				oppositePoint: this.oppositePoint,
+				resizeType: this.resizeType,
+				debounceUpd: this.debounceUpd,
+				alignmentHelper: this.alignmentHelper,
+				isWidth,
+				isHeight,
+				beginTimeStamp: this.beginTimeStamp,
+				canvasDrawer: this.canvasDrawer,
+				selection: this.selection,
+				single,
+				snapCursorPos: this.snapCursorPos,
+				setSnapCursorPos: this.setSnapCursorPos.bind(this),
+			});
+			if (!newMbr) {
 				return false;
 			}
-
-			const isIncludesFixedFrame = items.some(
-				item => item.itemType === "Frame" && !item.getCanChangeRatio(),
-			);
-
-			const shouldBeProportionalResize =
-				isIncludesFixedFrame ||
-				includesProportionalItem ||
-				this.isShiftPressed ||
-				(!isWidth && !isHeight);
-
-			const resize = shouldBeProportionalResize
-				? getProportionalResize(
-						this.resizeType,
-						this.board.pointer.point,
-						mbr,
-						this.oppositePoint,
-					)
-				: getResize(
-						this.resizeType,
-						this.board.pointer.point,
-						mbr,
-						this.oppositePoint,
-					);
-
-			if (
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd.shouldUpd()
-			) {
-				this.canvasDrawer.recoordinateCanvas(resize.mbr);
-				this.canvasDrawer.scaleCanvasTo(
-					resize.matrix.scaleX,
-					resize.matrix.scaleY,
-				);
-				return false;
-			}
-			if (single instanceof ImageItem) {
-				tempStorage.setImageDimensions({
-					width: resize.mbr.getWidth(),
-					height: resize.mbr.getHeight(),
-				});
-			}
-			if (
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				this.debounceUpd.shouldUpd()
-			) {
-				const translation = handleMultipleItemsResize({
-					board: this.board,
-					resize,
-					initMbr: mbr,
-					isWidth,
-					isHeight,
-					isShiftPressed: this.isShiftPressed,
-				});
-				this.selection.transformMany(translation, this.beginTimeStamp);
-				this.canvasDrawer.clearCanvasAndKeys();
-				this.mbr = resize.mbr;
-			} else {
-				this.snapLines = this.alignmentHelper.checkAlignment(items);
-				const snapped = this.alignmentHelper.snapToSide(
-					items,
-					this.snapLines,
-					this.beginTimeStamp,
-					this.resizeType,
-				);
-				if (snapped) {
-					const increasedSnapThreshold = 5;
-
-					if (!this.snapCursorPos) {
-						this.snapCursorPos = new Point(
-							this.board.pointer.point.x,
-							this.board.pointer.point.y,
-						);
-					}
-
-					const cursorDiffX = Math.abs(
-						this.board.pointer.point.x - this.snapCursorPos.x,
-					);
-					const cursorDiffY = Math.abs(
-						this.board.pointer.point.y - this.snapCursorPos.y,
-					);
-
-					// Disable snapping if the pointer moves more than 5 pixels
-					if (
-						cursorDiffX > increasedSnapThreshold ||
-						cursorDiffY > increasedSnapThreshold
-					) {
-						this.snapCursorPos = null; // Reset snapping
-						this.snapLines = {
-							verticalLines: [],
-							horizontalLines: [],
-						}; // Clear snap lines
-						const translation = handleMultipleItemsResize({
-							board: this.board,
-							resize,
-							initMbr: mbr,
-							isWidth,
-							isHeight,
-							isShiftPressed: this.isShiftPressed,
-						});
-						this.selection.transformMany(
-							translation,
-							this.beginTimeStamp,
-						);
-						this.mbr = this.alignmentHelper.combineMBRs(
-							this.selection.items.list(),
-						); // Update the MBR to match items
-						return false;
-					}
-
-					// If snapping is active, prevent resizing of the selection border
-					this.mbr = this.alignmentHelper.combineMBRs(
-						this.selection.items.list(),
-					); // Ensure MBR matches items
-				} else {
-					this.snapCursorPos = null; // Reset snapping state
-					const translation = handleMultipleItemsResize({
-						board: this.board,
-						resize,
-						initMbr: mbr,
-						isWidth,
-						isHeight,
-						isShiftPressed: this.isShiftPressed,
-					});
-					this.selection.transformMany(
-						translation,
-						this.beginTimeStamp,
-					);
-
-					if (Object.keys(translation).length > 10) {
-						this.canvasDrawer.updateCanvasAndKeys(
-							resize.mbr,
-							translation,
-							resize.matrix,
-						);
-						this.debounceUpd.setFalse();
-						this.debounceUpd.setTimeoutUpdate(1000);
-					}
-
-					this.mbr = this.alignmentHelper.combineMBRs(
-						this.selection.items.list(),
-					); // Update the MBR to match items
-				}
-			}
+			this.mbr = newMbr;
 		}
 
-		const frames = this.board.items.getFramesEnclosedOrCrossed(
-			mbr.left,
-			mbr.top,
-			mbr.right,
-			mbr.bottom,
-		);
-		list.forEach(item => {
-			if (item instanceof Frame) {
-				const currMbr = item.getMbr();
-				const itemsToCheck = this.board.items.getEnclosedOrCrossed(
-					currMbr.left,
-					currMbr.top,
-					currMbr.right,
-					currMbr.bottom,
-				);
-				itemsToCheck.forEach(currItem => {
-					if (
-						item.handleNesting(currItem) &&
-						(currItem.parent === "Board" ||
-							currItem.parent === item.getId())
-					) {
-						this.nestingHighlighter.add(item, currItem);
-					} else {
-						this.nestingHighlighter.remove(currItem);
-					}
-				});
-			} else {
-				frames.forEach(frame => {
-					if (frame.handleNesting(item)) {
-						this.nestingHighlighter.add(frame, item);
-					} else {
-						this.nestingHighlighter.remove(item);
-					}
-				});
-			}
+		updateFrameChildren({
+			board: this.board,
+			mbr,
+			nestingHighlighter: this.nestingHighlighter,
 		});
 
 		this.selection.off();
 		this.selection.subject.publish(this.selection);
 
 		return true;
+	}
+
+	setSnapCursorPos(position: Point | null) {
+		this.snapCursorPos = position;
 	}
 
 	render(context: DrawingContext): void {

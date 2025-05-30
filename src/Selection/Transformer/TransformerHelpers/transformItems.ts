@@ -13,6 +13,7 @@ import AlignmentHelper from "Board/Tools/RelativeAlignment";
 import { Mbr } from "Board/Items/Mbr/Mbr";
 import { ResizeType } from "Board/Selection/Transformer/TransformerHelpers/getResizeType";
 import { DebounceUpdater } from "Board/Tools/DebounceUpdater/DebounceUpdater";
+import { Item } from "Board/Items/Item";
 
 export function transformItems({
 	board,
@@ -27,8 +28,12 @@ export function transformItems({
 	isHeight,
 	isShiftPressed,
 	beginTimeStamp,
+	single,
+	snapCursorPos,
+	setSnapCursorPos,
 }: {
 	board: Board;
+	snapCursorPos: Point | null;
 	selection: Selection;
 	canvasDrawer: CanvasDrawer;
 	alignmentHelper: AlignmentHelper;
@@ -40,7 +45,9 @@ export function transformItems({
 	isHeight: boolean;
 	isShiftPressed: boolean;
 	beginTimeStamp: number;
-}): boolean {
+	single: Item | null;
+	setSnapCursorPos: (pos: Point | null) => void;
+}): Mbr | null {
 	const items = selection.items.list();
 	const includesProportionalItem = items.some(
 		item =>
@@ -52,7 +59,7 @@ export function transformItems({
 	);
 
 	if (includesProportionalItem && (isWidth || isHeight)) {
-		return false;
+		return null;
 	}
 
 	const isIncludesFixedFrame = items.some(
@@ -77,10 +84,9 @@ export function transformItems({
 	if (canvasDrawer.getLastCreatedCanvas() && !debounceUpd.shouldUpd()) {
 		canvasDrawer.recoordinateCanvas(resize.mbr);
 		canvasDrawer.scaleCanvasTo(resize.matrix.scaleX, resize.matrix.scaleY);
-		return false;
+		return null;
 	}
 
-	const single = items[0];
 	if (single instanceof ImageItem) {
 		tempStorage.setImageDimensions({
 			width: resize.mbr.getWidth(),
@@ -99,7 +105,7 @@ export function transformItems({
 		});
 		selection.transformMany(translation, beginTimeStamp);
 		canvasDrawer.clearCanvasAndKeys();
-		return false;
+		return resize.mbr;
 	}
 
 	const snapLines = alignmentHelper.checkAlignment(items);
@@ -110,26 +116,24 @@ export function transformItems({
 		resizeType,
 	);
 
-	let snapCursorPos: Point | null = null;
 	if (snapped) {
 		const increasedSnapThreshold = 5;
+		const pointerX = board.pointer.point.x;
+		const pointerY = board.pointer.point.y;
 
 		if (!snapCursorPos) {
-			snapCursorPos = new Point(
-				board.pointer.point.x,
-				board.pointer.point.y,
-			);
+			setSnapCursorPos(new Point(pointerX, pointerY));
 		}
 
-		const cursorDiffX = Math.abs(board.pointer.point.x - snapCursorPos.x);
-		const cursorDiffY = Math.abs(board.pointer.point.y - snapCursorPos.y);
+		const cursorDiffX = Math.abs(pointerX - (snapCursorPos?.x || pointerX));
+		const cursorDiffY = Math.abs(pointerY - (snapCursorPos?.y || pointerY));
 
 		// Disable snapping if the pointer moves more than 5 pixels
 		if (
 			cursorDiffX > increasedSnapThreshold ||
 			cursorDiffY > increasedSnapThreshold
 		) {
-			snapCursorPos = null; // Reset snapping
+			setSnapCursorPos(null); // Reset snapping
 			const translation = handleMultipleItemsResize({
 				board,
 				resize,
@@ -139,11 +143,11 @@ export function transformItems({
 				isShiftPressed,
 			});
 			selection.transformMany(translation, beginTimeStamp);
-			return false;
+			return null;
 		}
 
 		// If snapping is active, prevent resizing of the selection border
-		return false;
+		return alignmentHelper.combineMBRs(selection.items.list());
 	}
 
 	snapCursorPos = null; // Reset snapping state
@@ -167,5 +171,5 @@ export function transformItems({
 		debounceUpd.setTimeoutUpdate(1000);
 	}
 
-	return false;
+	return alignmentHelper.combineMBRs(selection.items.list());
 }
