@@ -1,5 +1,5 @@
-import { Editor, Transforms } from "slate";
-import { CustomEditor } from "Board/Items/RichText/Editor/Editor.d";
+import { Editor, Transforms } from 'slate';
+import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
 
 export function selectWholeText(editor: CustomEditor): void {
 	const start = Editor.start(editor, []);

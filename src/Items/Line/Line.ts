@@ -1,8 +1,8 @@
-import { forceNumberIntoInterval } from "Board/lib";
-import { Point } from "../Point";
-import { Mbr } from "../Mbr";
-import { Matrix } from "../Transformation";
-import { GeometricNormal } from "../GeometricNormal";
+import { forceNumberIntoInterval } from 'lib';
+import { Point } from '../Point';
+import { Mbr } from '../Mbr';
+import { Matrix } from '../Transformation';
+import { GeometricNormal } from '../GeometricNormal';
 
 interface RelationBase {
 	lineA: Line;
@@ -13,19 +13,19 @@ interface RelationBase {
 }
 
 interface NonIntersectingLines extends RelationBase {
-	type: "NonIntersecting";
+	type: 'NonIntersecting';
 }
 
 interface IntersectingLines extends RelationBase {
-	type: "Intersecting";
+	type: 'Intersecting';
 }
 
 interface ParallelLines extends RelationBase {
-	type: "Parallel";
+	type: 'Parallel';
 }
 
 interface ColenearLines extends RelationBase {
-	type: "Colenear";
+	type: 'Colenear';
 }
 
 export type LinesRelation =
@@ -55,17 +55,16 @@ export function getLinesRelationType(lineA: Line, lineB: Line): LinesRelation {
 	if (parameterB === Infinity || parameterB === -Infinity) {
 		parameterB = Number.MAX_VALUE;
 	}
-	let type: "NonIntersecting" | "Colenear" | "Parallel" | "Intersecting" =
-		"NonIntersecting";
+	let type: 'NonIntersecting' | 'Colenear' | 'Parallel' | 'Intersecting' = 'NonIntersecting';
 	if (denominator === 0 && parameterA === 0 && parameterB === 0) {
-		type = "Colenear";
+		type = 'Colenear';
 	} else if (denominator === 0) {
-		type = "Parallel";
+		type = 'Parallel';
 	} else {
 		const uA = parameterA / denominator;
 		const uB = parameterB / denominator;
 		if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
-			type = "Intersecting";
+			type = 'Intersecting';
 		}
 	}
 	return {
@@ -78,26 +77,20 @@ export function getLinesRelationType(lineA: Line, lineB: Line): LinesRelation {
 	};
 }
 
-export function getIntersectionPointFromIntersectingLines(
-	relation: IntersectingLines,
-): Point {
+export function getIntersectionPointFromIntersectingLines(relation: IntersectingLines): Point {
 	const { parameterA, denominator, lineA } = relation;
 	const uA = parameterA / denominator;
 	return new Point(
 		lineA.start.x + uA * (lineA.end.x - lineA.start.x),
-		lineA.start.y + uA * (lineA.end.y - lineA.start.y),
+		lineA.start.y + uA * (lineA.end.y - lineA.start.y)
 	);
 }
 
 export class Line {
-	type = "Line" as const;
+	type = 'Line' as const;
 	isCenter = false;
 
-	constructor(
-		public start = new Point(),
-		public end = new Point(),
-		isCenter?: boolean,
-	) {
+	constructor(public start = new Point(), public end = new Point(), isCenter?: boolean) {
 		this.isCenter = isCenter ?? false;
 	}
 
@@ -120,8 +113,7 @@ export class Line {
 		const { x, y } = point;
 		const { start, end } = this;
 		const parametr =
-			((x - start.x) * (end.x - start.x) +
-				(y - start.y) * (end.y - start.y)) /
+			((x - start.x) * (end.x - start.x) + (y - start.y) * (end.y - start.y)) /
 			(length * length);
 		return parametr;
 	}
@@ -130,7 +122,7 @@ export class Line {
 		const { start, end } = this;
 		return new Point(
 			start.x + parameter * (end.x - start.x),
-			start.y + parameter * (end.y - start.y),
+			start.y + parameter * (end.y - start.y)
 		);
 	}
 
@@ -167,7 +159,7 @@ export class Line {
 	getIntersectionPoints(segment: Line): Point[] {
 		const relation = getLinesRelationType(segment, this);
 		switch (relation.type) {
-			case "Intersecting":
+			case 'Intersecting':
 				return [getIntersectionPointFromIntersectingLines(relation)];
 			default:
 				return [];
@@ -176,9 +168,7 @@ export class Line {
 
 	hasIntersectionPoint(segment: Line): boolean {
 		const ccw = (p1: Point, p2: Point, p3: Point) => {
-			return (
-				(p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x)
-			);
+			return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
 		};
 
 		const intersect = (p1: Point, p2: Point, p3: Point, p4: Point) => {
@@ -215,13 +205,13 @@ export class Line {
 			Math.min(start.x, end.x),
 			Math.min(start.y, end.y),
 			Math.max(start.x, end.x),
-			Math.max(start.y, end.y),
+			Math.max(start.y, end.y)
 		);
 	}
 
 	isEnclosedOrCrossedBy(rect: Mbr): boolean {
 		for (const line of rect.getLines()) {
-			if (getLinesRelationType(line, this).type === "Intersecting") {
+			if (getLinesRelationType(line, this).type === 'Intersecting') {
 				return true;
 			}
 		}
@@ -257,10 +247,7 @@ export class Line {
 	}
 
 	getTransformed(matrix: Matrix): Line {
-		return new Line(
-			this.start.getTransformed(matrix),
-			this.end.getTransformed(matrix),
-		);
+		return new Line(this.start.getTransformed(matrix), this.end.getTransformed(matrix));
 	}
 
 	copy(): Line {
@@ -275,8 +262,7 @@ export class Line {
 		}
 		const { x, y } = point;
 		const parametr =
-			((x - start.x) * (end.x - start.x) +
-				(y - start.y) * (end.y - start.y)) /
+			((x - start.x) * (end.x - start.x) + (y - start.y) * (end.y - start.y)) /
 			(length * length);
 		return parametr;
 	}

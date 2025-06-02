@@ -1,18 +1,17 @@
-import { Item, Matrix, Mbr, Point } from "Board/Items";
-import { Pointer } from "Board/Pointer";
-import { Subject } from "shared/Subject";
-import { toFiniteNumber } from "Board/lib";
-import { throttle } from "shared/lib/throttle";
-import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-import { conf } from "Board/Settings";
-import { Keyboard } from "Board/Keyboard";
+import { safeRequestAnimationFrame } from 'api/safeRequestAnimationFrame';
+import { Matrix, Point, Mbr, Item } from 'Items';
+import { Keyboard } from 'Keyboard';
+import { toFiniteNumber } from 'lib';
+import { Pointer } from 'Pointer';
+import { conf } from 'Settings';
+import { Subject } from 'Subject';
 
 export class Camera {
 	subject = new Subject<Camera>();
 	resizeSubject = new Subject<Camera>();
 	scaleLevels = [
-		10, 9, 8, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 1.25, 1, 0.75, 0.5, 0.33, 0.2,
-		0.15, 0.1, 0.05, 0.03, 0.02, 0.01,
+		10, 9, 8, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 1.25, 1, 0.75, 0.5, 0.33, 0.2, 0.15, 0.1, 0.05, 0.03,
+		0.02, 0.01,
 	] as const;
 	maxScale = 10;
 	minScale = 0.001;
@@ -30,7 +29,7 @@ export class Camera {
 	private touchEvents: Map<number, PointerEvent> = new Map();
 	private previousDistance: number | null = null;
 	private previousPositions: { point1: Point; point2: Point } | null = null;
-	boardId = "";
+	boardId = '';
 	private observableItem: Item | null = null;
 	private throttledZoom: () => void;
 	private isAnimating = false;
@@ -124,12 +123,7 @@ export class Camera {
 		this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y, 0);
 	}
 
-	zoomRelativeToPointBy(
-		scale: number,
-		x: number,
-		y: number,
-		duration = 400,
-	): void {
+	zoomRelativeToPointBy(scale: number, x: number, y: number, duration = 400): void {
 		const startScaleX = this.matrix.scaleX;
 		const startScaleY = this.matrix.scaleY;
 		const startTranslateX = this.matrix.translateX;
@@ -165,26 +159,10 @@ export class Camera {
 			const progress = Math.min((currentTime - startTime) / duration, 1);
 			const easedProgress = this.easeOutQuad(progress);
 
-			this.matrix.translateX = this.lerp(
-				startTranslateX,
-				targetTranslateX,
-				easedProgress,
-			);
-			this.matrix.translateY = this.lerp(
-				startTranslateY,
-				targetTranslateY,
-				easedProgress,
-			);
-			this.matrix.scaleX = this.lerp(
-				startScaleX,
-				finalScaleX,
-				easedProgress,
-			);
-			this.matrix.scaleY = this.lerp(
-				startScaleY,
-				finalScaleY,
-				easedProgress,
-			);
+			this.matrix.translateX = this.lerp(startTranslateX, targetTranslateX, easedProgress);
+			this.matrix.translateY = this.lerp(startTranslateY, targetTranslateY, easedProgress);
+			this.matrix.scaleX = this.lerp(startScaleX, finalScaleX, easedProgress);
+			this.matrix.scaleY = this.lerp(startScaleY, finalScaleY, easedProgress);
 
 			this.subject.publish(this);
 
@@ -210,12 +188,12 @@ export class Camera {
 			if (snap) {
 				const matrix = JSON.parse(snap);
 				if (
-					"translateX" in matrix &&
-					"translateY" in matrix &&
-					"scaleX" in matrix &&
-					"scaleY" in matrix &&
-					"shearX" in matrix &&
-					"shearY" in matrix
+					'translateX' in matrix &&
+					'translateY' in matrix &&
+					'scaleX' in matrix &&
+					'scaleY' in matrix &&
+					'shearX' in matrix &&
+					'shearY' in matrix
 				) {
 					return matrix as Matrix;
 				}
@@ -228,10 +206,7 @@ export class Camera {
 
 	saveMatrixSnapshot(): void {
 		if (this.boardId) {
-			localStorage.setItem(
-				`camera_${this.boardId}`,
-				JSON.stringify(this.getMatrix()),
-			);
+			localStorage.setItem(`camera_${this.boardId}`, JSON.stringify(this.getMatrix()));
 		}
 	}
 
@@ -247,7 +222,7 @@ export class Camera {
 			matrix.scaleX,
 			matrix.scaleY,
 			matrix.shearX,
-			matrix.shearY,
+			matrix.shearY
 		);
 		this.subject.publish(this);
 	}
@@ -326,19 +301,19 @@ export class Camera {
 
 		function getDirection(deltaX: number, deltaY: number): string {
 			if (Math.abs(deltaX) > Math.abs(deltaY)) {
-				return deltaX > 0 ? "right" : "left";
+				return deltaX > 0 ? 'right' : 'left';
 			} else {
-				return deltaY > 0 ? "down" : "up";
+				return deltaY > 0 ? 'down' : 'up';
 			}
 		}
 
 		const direction1 = getDirection(
 			previous?.point1.x - current.point1.x,
-			previous?.point1.y - current.point1.y,
+			previous?.point1.y - current.point1.y
 		);
 		const direction2 = getDirection(
 			previous?.point2.x - current.point2.x,
-			previous?.point2.y - current.point2.y,
+			previous?.point2.y - current.point2.y
 		);
 		return (
 			direction1 !== direction2 &&
@@ -364,12 +339,8 @@ export class Camera {
 		}
 		const [touch1] = Array.from(this.touchEvents.values());
 		const delta1 = {
-			x:
-				(touch1.pageX - this.previousPositions.point1.x) /
-				this.matrix.scaleX,
-			y:
-				(touch1.pageY - this.previousPositions.point1.y) /
-				this.matrix.scaleX,
+			x: (touch1.pageX - this.previousPositions.point1.x) / this.matrix.scaleX,
+			y: (touch1.pageY - this.previousPositions.point1.y) / this.matrix.scaleX,
 		};
 		const delta = delta1;
 		return delta;
@@ -378,8 +349,7 @@ export class Camera {
 	private calculateDistance(): number {
 		const [touch1, touch2] = Array.from(this.touchEvents.values());
 		return Math.sqrt(
-			Math.pow(touch2.pageX - touch1.pageX, 2) +
-				Math.pow(touch2.pageY - touch1.pageY, 2),
+			Math.pow(touch2.pageX - touch1.pageX, 2) + Math.pow(touch2.pageY - touch1.pageY, 2)
 		);
 	}
 
@@ -410,9 +380,9 @@ export class Camera {
 				inView
 					.reduce(
 						(acc, item) => acc.combine(item.getMbr()),
-						inView[0]?.getMbr() ?? new Mbr(),
+						inView[0]?.getMbr() ?? new Mbr()
 					)
-					.combine(mbr),
+					.combine(mbr)
 			);
 		}
 	}
@@ -457,11 +427,9 @@ export class Camera {
 		// Calculate the translation values
 		// Center the Mbr in the view
 		const translationX =
-			this.window.width / 2 -
-			(mbrWithOffset.left + mbrWidth / 2) * targetScale;
+			this.window.width / 2 - (mbrWithOffset.left + mbrWidth / 2) * targetScale;
 		const translationY =
-			this.window.height / 2 -
-			(mbrWithOffset.top + mbrHeight / 2) * targetScale;
+			this.window.height / 2 - (mbrWithOffset.top + mbrHeight / 2) * targetScale;
 
 		const startTranslationX = this.matrix.translateX;
 		const startTranslationY = this.matrix.translateY;
@@ -483,21 +451,9 @@ export class Camera {
 			const progress = Math.min((currentTime - startTime) / duration, 1);
 			const easedProgress = this.easeOutQuad(progress);
 
-			this.matrix.translateX = this.lerp(
-				startTranslationX,
-				translationX,
-				easedProgress,
-			);
-			this.matrix.translateY = this.lerp(
-				startTranslationY,
-				translationY,
-				easedProgress,
-			);
-			this.matrix.scaleX = this.lerp(
-				startScale,
-				targetScale,
-				easedProgress,
-			);
+			this.matrix.translateX = this.lerp(startTranslationX, translationX, easedProgress);
+			this.matrix.translateY = this.lerp(startTranslationY, translationY, easedProgress);
+			this.matrix.scaleX = this.lerp(startScale, targetScale, easedProgress);
 			this.matrix.scaleY = this.matrix.scaleX;
 
 			this.subject.publish(this);
@@ -553,10 +509,8 @@ export class Camera {
 	}
 
 	private updateBoardPointer(): void {
-		const boardPointX =
-			(this.pointer.x - this.matrix.translateX) / this.matrix.scaleX;
-		const boardPointY =
-			(this.pointer.y - this.matrix.translateY) / this.matrix.scaleX;
+		const boardPointX = (this.pointer.x - this.matrix.translateX) / this.matrix.scaleX;
+		const boardPointY = (this.pointer.y - this.matrix.translateY) / this.matrix.scaleX;
 		this.boardPointer.pointTo(boardPointX, boardPointY);
 	}
 
@@ -598,21 +552,15 @@ export class Camera {
 		if (activeArrowKeys.length === 2) {
 			// If opposite keys are pressed simultaneously, ignore them
 			if (
-				(activeArrowKeys.includes("ArrowUp") &&
-					activeArrowKeys.includes("ArrowDown")) ||
-				(activeArrowKeys.includes("ArrowLeft") &&
-					activeArrowKeys.includes("ArrowRight"))
+				(activeArrowKeys.includes('ArrowUp') && activeArrowKeys.includes('ArrowDown')) ||
+				(activeArrowKeys.includes('ArrowLeft') && activeArrowKeys.includes('ArrowRight'))
 			) {
 				x = 0;
 				y = 0;
 			} else {
 				const [firstKey, secondKey] = activeArrowKeys;
-				x =
-					(directions[firstKey]?.[0] || 0) +
-					(directions[secondKey]?.[0] || 0);
-				y =
-					(directions[firstKey]?.[1] || 0) +
-					(directions[secondKey]?.[1] || 0);
+				x = (directions[firstKey]?.[0] || 0) + (directions[secondKey]?.[0] || 0);
+				y = (directions[firstKey]?.[1] || 0) + (directions[secondKey]?.[1] || 0);
 			}
 		} else if (activeArrowKeys.length === 1) {
 			const key = activeArrowKeys[0];
@@ -631,4 +579,31 @@ export class Camera {
 
 		requestAnimationFrame(animate);
 	}
+}
+
+export function throttle<T extends (...args: any[]) => unknown>(
+	func: T,
+	delay: number
+): (...args: Parameters<T>) => void {
+	let lastCall = 0;
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+	return function (...args: Parameters<T>) {
+		const now = Date.now();
+
+		if (lastCall + delay <= now) {
+			lastCall = now;
+			func(...args);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				timeoutId = null;
+			}
+		} else if (!timeoutId) {
+			timeoutId = setTimeout(() => {
+				lastCall = Date.now();
+				timeoutId = null;
+				func(...args);
+			}, delay - (now - lastCall));
+		}
+	};
 }

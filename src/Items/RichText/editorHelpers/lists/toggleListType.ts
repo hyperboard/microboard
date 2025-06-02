@@ -1,13 +1,13 @@
-import { ListType } from "Board/Items/RichText/Editor/BlockNode";
-import { Editor, Element, Path, Range, Transforms } from "slate";
-import { CustomEditor } from "Board/Items/RichText/Editor/Editor.d";
-import { wrapIntoList } from "Board/Items/RichText/editorHelpers/lists/wrapIntoList";
-import { toggleListTypeForSelection } from "Board/Items/RichText/editorHelpers/lists/toggleListTypeForSelection";
+import { ListType } from 'Items/RichText/Editor/BlockNode';
+import { Editor, Element, Path, Range, Transforms } from 'slate';
+import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
+import { wrapIntoList } from 'Items/RichText/editorHelpers/lists/wrapIntoList';
+import { toggleListTypeForSelection } from 'Items/RichText/editorHelpers/lists/toggleListTypeForSelection';
 
 export function toggleListType(
 	editor: CustomEditor,
 	targetListType: ListType,
-	shouldWrap = true,
+	shouldWrap = true
 ): boolean {
 	const { selection } = editor;
 
@@ -24,11 +24,7 @@ export function toggleListType(
 	Editor.withoutNormalizing(editor, () => {
 		const { anchor } = selection;
 		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-		if (
-			!textNode ||
-			textNode.type !== "text" ||
-			typeof textNode.text !== "string"
-		) {
+		if (!textNode || textNode.type !== 'text' || typeof textNode.text !== 'string') {
 			result = false;
 			return;
 		}
@@ -42,7 +38,7 @@ export function toggleListType(
 
 		const listItemPath = Path.parent(paragraphPath);
 		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || listItem.type !== "list_item") {
+		if (!listItem || listItem.type !== 'list_item') {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -53,7 +49,7 @@ export function toggleListType(
 
 		const listPath = Path.parent(listItemPath);
 		const [list] = Editor.node(editor, listPath);
-		if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
+		if (!list || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -70,15 +66,14 @@ export function toggleListType(
 				// If there's only one item, unwrap the entire list
 				Transforms.unwrapNodes(editor, {
 					at: listPath,
-					match: n => Element.isElement(n) && n.type === "list_item",
+					match: n => Element.isElement(n) && n.type === 'list_item',
 					split: true,
 				});
 
 				Transforms.unwrapNodes(editor, {
 					at: listPath,
 					match: n =>
-						Element.isElement(n) &&
-						(n.type === "ol_list" || n.type === "ul_list"),
+						Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
 					split: true,
 				});
 			} else {
@@ -89,8 +84,7 @@ export function toggleListType(
 				if (listItemIndex > 0) {
 					Transforms.splitNodes(editor, {
 						at: [...listItemPath, 0],
-						match: n =>
-							Element.isElement(n) && n.type === list.type,
+						match: n => Element.isElement(n) && n.type === list.type,
 					});
 				}
 
@@ -99,23 +93,21 @@ export function toggleListType(
 					const nextPath = Path.next(listItemPath);
 					Transforms.splitNodes(editor, {
 						at: nextPath,
-						match: n =>
-							Element.isElement(n) && n.type === list.type,
+						match: n => Element.isElement(n) && n.type === list.type,
 					});
 				}
 
 				// Now unwrap just the list item at the selection
 				Transforms.unwrapNodes(editor, {
 					at: paragraphPath,
-					match: n => Element.isElement(n) && n.type === "list_item",
+					match: n => Element.isElement(n) && n.type === 'list_item',
 					split: true,
 				});
 
 				Transforms.unwrapNodes(editor, {
 					at: paragraphPath,
 					match: n =>
-						Element.isElement(n) &&
-						(n.type === "ol_list" || n.type === "ul_list"),
+						Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
 					split: true,
 				});
 			}
@@ -126,7 +118,7 @@ export function toggleListType(
 					type: targetListType,
 					listLevel: list.listLevel || 1,
 				},
-				{ at: listPath },
+				{ at: listPath }
 			);
 		}
 		return;

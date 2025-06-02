@@ -1,24 +1,17 @@
-import { Board } from "Board/Board";
+import { Board } from 'Board';
 import {
-	Connector,
-	ConnectorData,
 	Item,
-	Matrix,
-	Mbr,
+	ConnectorData,
 	Point,
-	RichText,
 	ItemData,
+	Mbr,
+	Matrix,
 	Shape,
-} from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Selection } from "..";
-import { SessionStorage } from "../../../App/SessionStorage";
-import { getControlPointData } from "./";
-import styles from "./QuickAddButtons.module.css";
-import {
-	createAINode,
-	createRichText,
-} from "Board/Selection/QuickAddButtons/quickAddHelpers";
+	Connector,
+	RichText,
+} from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { createAINode, createRichText, getControlPointData } from './quickAddHelpers';
 
 export interface QuickAddButtons {
 	clear: () => void;
@@ -40,27 +33,24 @@ export interface HTMLQuickAddButton extends HTMLButtonElement {
 
 const offsets = { minX: 320, maxX: 320, minY: 120, maxY: 240 };
 
-export function getQuickAddButtons(
-	selection: Selection,
-	board: Board,
-): QuickAddButtons {
+export function getQuickAddButtons(selection: Selection, board: Board): QuickAddButtons {
 	let htmlButtons: HTMLQuickAddButton[] | undefined = undefined;
 	let quickAddItems: QuickAddItems | undefined = undefined;
 
 	function calculateQuickAddPosition(
 		index: number,
 		selectedItem: Item,
-		connectorStartPoint: Point,
+		connectorStartPoint: Point
 	): { newItem: Item; connectorData: ConnectorData } {
 		const connectorStorage = new SessionStorage();
 		const currMbr = selectedItem.getMbr();
 		const selectedItemData = selectedItem.serialize();
 		const width =
-			selectedItem.itemType === "Shape"
+			selectedItem.itemType === 'Shape'
 				? selectedItem.getPath().getMbr().getWidth()
 				: currMbr.getWidth();
 		const height =
-			selectedItem.itemType === "Shape"
+			selectedItem.itemType === 'Shape'
 				? selectedItem.getPath().getMbr().getHeight()
 				: currMbr.getHeight();
 		let offsetX = width;
@@ -68,12 +58,9 @@ export function getQuickAddButtons(
 		let newWidth = width;
 		let newHeight = height;
 		let itemData: ItemData;
-		if (
-			selectedItem.itemType === "AINode" ||
-			selectedItem.itemType === "RichText"
-		) {
+		if (selectedItem.itemType === 'AINode' || selectedItem.itemType === 'RichText') {
 			const item =
-				selectedItem.itemType === "AINode"
+				selectedItem.itemType === 'AINode'
 					? createAINode(board, selectedItem.getId(), index)
 					: createRichText(board);
 			newWidth = item.getMbr().getWidth();
@@ -88,11 +75,7 @@ export function getQuickAddButtons(
 			itemData = selectedItemData;
 		}
 		const guarded = itemData as Partial<ItemData>;
-		if (
-			"text" in guarded &&
-			guarded.itemType !== "AINode" &&
-			guarded.itemType !== "RichText"
-		) {
+		if ('text' in guarded && guarded.itemType !== 'AINode' && guarded.itemType !== 'RichText') {
 			delete guarded.text;
 		}
 
@@ -114,8 +97,7 @@ export function getQuickAddButtons(
 		const newItemData = { ...itemData };
 		if (newItemData.transformation) {
 			newItemData.transformation.translateX =
-				adjustment.translateX +
-				(selectedItemData.transformation?.translateX || 0);
+				adjustment.translateX + (selectedItemData.transformation?.translateX || 0);
 			newItemData.transformation.translateY =
 				adjustment.translateY +
 				(selectedItemData.transformation?.translateY || 0) +
@@ -126,30 +108,24 @@ export function getQuickAddButtons(
 			newItemData.transformation?.translateX,
 			newItemData.transformation?.translateY,
 			(newItemData.transformation?.translateX || 0) + newWidth,
-			(newItemData.transformation?.translateY || 0) + newHeight,
+			(newItemData.transformation?.translateY || 0) + newHeight
 		);
 
 		let step = 1;
 		while (
 			board.index
-				.getItemsEnclosedOrCrossed(
-					newMbr.left,
-					newMbr.top,
-					newMbr.right,
-					newMbr.bottom,
-				)
-				.filter(item => item.itemType !== "Connector").length > 0
+				.getItemsEnclosedOrCrossed(newMbr.left, newMbr.top, newMbr.right, newMbr.bottom)
+				.filter(item => item.itemType !== 'Connector').length > 0
 		) {
 			const xDirection = step % 2 === 0 ? -1 : 1;
-			const yDirection =
-				newItemData.itemType === "AINode" ? -1 : xDirection;
+			const yDirection = newItemData.itemType === 'AINode' ? -1 : xDirection;
 			newMbr.transform(
 				new Matrix(
 					iterAdjustment[index].x * xDirection * step,
 					iterAdjustment[index].y *
 						yDirection *
-						(newItemData.itemType === "AINode" ? 1 : step),
-				),
+						(newItemData.itemType === 'AINode' ? 1 : step)
+				)
 			);
 			if (newItemData.transformation) {
 				newItemData.transformation.translateX +=
@@ -157,28 +133,24 @@ export function getQuickAddButtons(
 				newItemData.transformation.translateY +=
 					iterAdjustment[index].y *
 					yDirection *
-					(newItemData.itemType === "AINode" ? 1 : step);
+					(newItemData.itemType === 'AINode' ? 1 : step);
 			}
 			step += 1;
 		}
 
 		const endPoints = getQuickButtonsPositions(newMbr);
 		const reverseIndexMap = { 0: 1, 1: 0, 2: 3, 3: 2 };
-		const connectorEndPoint =
-			endPoints?.positions[reverseIndexMap[index]] || new Point();
-		const fontSize =
-			selectedItem.itemType === "RichText"
-				? selectedItem.getFontSize()
-				: 14;
+		const connectorEndPoint = endPoints?.positions[reverseIndexMap[index]] || new Point();
+		const fontSize = selectedItem.itemType === 'RichText' ? selectedItem.getFontSize() : 14;
 		const newItem = board.createItem(board.getNewItemId(), newItemData);
-		if (newItem.itemType === "RichText") {
+		if (newItem.itemType === 'RichText') {
 			const storage = new SessionStorage();
-			storage.setFontSize("RichText", fontSize);
+			storage.setFontSize('RichText', fontSize);
 			newItem.editor.selectWholeText();
 			newItem.applySelectionFontSize(fontSize);
 		}
 		let newItemPlaceholder: Item | undefined;
-		if (newItem.itemType === "RichText") {
+		if (newItem.itemType === 'RichText') {
 			const shapeData = new Shape(board).serialize();
 			const newItemMbr = newItem.getMbr();
 			const scaleX = newItemMbr.getWidth() / 100;
@@ -193,13 +165,13 @@ export function getQuickAddButtons(
 
 		const defaultConnector = new Connector(board);
 		const connectorData = defaultConnector.serialize();
-		connectorData.lineStyle = "curved";
+		connectorData.lineStyle = 'curved';
 
-		const savedStart = connectorStorage.getConnectorPointer("start");
+		const savedStart = connectorStorage.getConnectorPointer('start');
 		if (savedStart) {
 			connectorData.startPointerStyle = savedStart;
 		}
-		const savedEnd = connectorStorage.getConnectorPointer("end");
+		const savedEnd = connectorStorage.getConnectorPointer('end');
 		if (savedEnd) {
 			connectorData.endPointerStyle = savedEnd;
 		}
@@ -208,7 +180,7 @@ export function getQuickAddButtons(
 		const endPointData = getControlPointData(
 			newItemPlaceholder ? newItemPlaceholder : newItem,
 			reverseIndexMap[index],
-			!!newItemPlaceholder,
+			!!newItemPlaceholder
 		);
 		connectorData.startPoint = startPointData;
 		connectorData.endPoint = endPointData;
@@ -244,22 +216,22 @@ export function getQuickAddButtons(
 
 	/** @returns positions of left, right, top, bottom points */
 	function getQuickButtonsPositions(
-		customMbr?: Mbr,
+		customMbr?: Mbr
 	): { positions: Point[]; item: Item } | undefined {
 		const single = selection.items.getSingle();
 		const itemMbr = customMbr ? customMbr : single?.getMbr();
 		if (
 			!itemMbr ||
-			(single?.itemType !== "Sticker" &&
-				single?.itemType !== "Shape" &&
-				single?.itemType !== "AINode" &&
-				single?.itemType !== "RichText")
+			(single?.itemType !== 'Sticker' &&
+				single?.itemType !== 'Shape' &&
+				single?.itemType !== 'AINode' &&
+				single?.itemType !== 'RichText')
 		) {
 			return;
 		}
 
 		let pathCenter: Point | undefined;
-		if (single.itemType === "Shape") {
+		if (single.itemType === 'Shape') {
 			pathCenter = single.getPath().getMbr().getCenter();
 		}
 		const center = itemMbr.getCenter();
@@ -283,7 +255,7 @@ export function getQuickAddButtons(
 			const { newItem, placeholderItem } = quickAddItems;
 			connectorData.optionalFindItemFn = () => newItem;
 
-			const floatingConnector = board.createItem("", connectorData);
+			const floatingConnector = board.createItem('', connectorData);
 			const originalAlpha = context.ctx.globalAlpha;
 			context.ctx.globalAlpha = 0.6;
 
@@ -296,7 +268,7 @@ export function getQuickAddButtons(
 
 	function renderQuickAddButtons(): void {
 		let timeoutId: number | undefined;
-		if (board.getInterfaceType() !== "edit") {
+		if (board.getInterfaceType() !== 'edit') {
 			clear();
 			return;
 		}
@@ -310,10 +282,10 @@ export function getQuickAddButtons(
 		const cameraMatrix = board.camera.getMatrix();
 		const cameraMbr = board.camera.getMbr();
 		const positionAdjustments = {
-			0: { left: -20, top: 0, rotate: "left" },
-			1: { left: 20, top: 0, rotate: "right" },
-			2: { left: 0, top: -20, rotate: "top" },
-			3: { left: 0, top: 20, rotate: "bottom" },
+			0: { left: -20, top: 0, rotate: 'left' },
+			1: { left: 20, top: 0, rotate: 'right' },
+			2: { left: 0, top: -20, rotate: 'top' },
+			3: { left: 0, top: 20, rotate: 'bottom' },
 		};
 
 		const existingButtons = htmlButtons;
@@ -324,12 +296,10 @@ export function getQuickAddButtons(
 					top: 0,
 				};
 				existingButtons[index].style.left = `${
-					(pos.x - cameraMbr.left) * cameraMatrix.scaleX +
-					adjustment.left
+					(pos.x - cameraMbr.left) * cameraMatrix.scaleX + adjustment.left
 				}px`;
 				existingButtons[index].style.top = `${
-					(pos.y - cameraMbr.top) * cameraMatrix.scaleY +
-					adjustment.top
+					(pos.y - cameraMbr.top) * cameraMatrix.scaleY + adjustment.top
 				}px`;
 			});
 		} else {
@@ -337,23 +307,19 @@ export function getQuickAddButtons(
 				const adjustment = positionAdjustments[index] || {
 					left: 0,
 					top: 0,
-					rotate: "right",
+					rotate: 'right',
 				};
-				const button = document.createElement(
-					"button",
-				) as HTMLQuickAddButton;
+				const button = document.createElement('button') as HTMLQuickAddButton;
 				button.classList.add(styles.quickAddButton);
-				if (item.itemType === "AINode" && index === 2) {
+				if (item.itemType === 'AINode' && index === 2) {
 					button.classList.add(styles.invisible);
 				}
 				button.classList.add(styles[adjustment.rotate]);
 				button.style.left = `${
-					(pos.x - cameraMbr.left) * cameraMatrix.scaleX +
-					adjustment.left
+					(pos.x - cameraMbr.left) * cameraMatrix.scaleX + adjustment.left
 				}px`;
 				button.style.top = `${
-					(pos.y - cameraMbr.top) * cameraMatrix.scaleY +
-					adjustment.top
+					(pos.y - cameraMbr.top) * cameraMatrix.scaleY + adjustment.top
 				}px`;
 
 				button.resetState = () => {
@@ -376,7 +342,7 @@ export function getQuickAddButtons(
 				};
 				button.ontouchmove = () => {
 					if (button.onmouseleave) {
-						button.onmouseleave(new MouseEvent("mouseleave"));
+						button.onmouseleave(new MouseEvent('mouseleave'));
 					}
 				};
 
@@ -387,11 +353,7 @@ export function getQuickAddButtons(
 						if (!selectedItem) {
 							return;
 						}
-						calculateQuickAddPosition(
-							index,
-							selectedItem,
-							positions[index],
-						);
+						calculateQuickAddPosition(index, selectedItem, positions[index]);
 						selection.subject.publish(selection);
 					}, 200);
 				};
@@ -401,7 +363,7 @@ export function getQuickAddButtons(
 				};
 				button.ontouchstart = () => {
 					if (button.onmousedown) {
-						button.onmousedown(new MouseEvent("mousedown"));
+						button.onmousedown(new MouseEvent('mousedown'));
 					}
 				};
 
@@ -414,23 +376,17 @@ export function getQuickAddButtons(
 
 					const mergeStamp = Date.now();
 					const addedItem = board.add(newItem, mergeStamp);
-					if ("itemId" in connectorData.endPoint) {
+					if ('itemId' in connectorData.endPoint) {
 						connectorData.endPoint.itemId = addedItem.getId();
 					}
 
-					board.add(
-						board.createItem(board.getNewItemId(), connectorData),
-						mergeStamp,
-					);
+					board.add(board.createItem(board.getNewItemId(), connectorData), mergeStamp);
 
 					quickAddItems = undefined;
 					selection.removeAll();
 					selection.add(addedItem);
 					board.selection.editText();
-					board.camera.addToView(
-						addedItem.getMbr(),
-						board.items.getInView(),
-					);
+					board.camera.addToView(addedItem.getMbr(), board.items.getInView());
 					button.resetState();
 				};
 

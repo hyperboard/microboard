@@ -1,11 +1,11 @@
-import { BoardSubscriptionCompletedMsg } from "App/Connection";
-import { Board } from "Board";
-import { BoardEventPack, SyncBoardEvent, SyncEvent } from "../Events";
-import { conf } from "Board/Settings";
+import { BoardSubscriptionCompletedMsg } from 'App/Connection';
+import { Board } from 'Board';
+import { BoardEventPack, SyncBoardEvent, SyncEvent } from '../Events';
+import { conf } from 'Settings';
 
 export function handleBoardSubscriptionCompletedMsg(
 	msg: BoardSubscriptionCompletedMsg,
-	board: Board,
+	board: Board
 ): void {
 	const { log } = board.events;
 	handleSeqNumApplication(msg.initialSequenceNumber, board);
@@ -18,10 +18,7 @@ export function handleBoardSubscriptionCompletedMsg(
 	onBoardLoad(board);
 }
 
-export function handleSeqNumApplication(
-	initialSequenceNumber: number,
-	board: Board,
-): void {
+export function handleSeqNumApplication(initialSequenceNumber: number, board: Board): void {
 	const { log } = board.events;
 	log.currentSequenceNumber = initialSequenceNumber;
 	if (log.pendingEvent) {
@@ -74,8 +71,7 @@ function tryResendEvent(board: Board): void {
 		return;
 	}
 	const isProbablyLostConnection =
-		log.firstSentTime &&
-		date - log.firstSentTime >= conf.EVENTS_RESEND_INTERVAL * 5;
+		log.firstSentTime && date - log.firstSentTime >= conf.EVENTS_RESEND_INTERVAL * 5;
 	if (isProbablyLostConnection) {
 		board.presence.clear();
 		conf.connection?.notifyAboutLostConnection();
@@ -106,17 +102,12 @@ function handleSnapshotApplication(snapshot: string, board: Board): void {
 	}
 }
 
-function handleBoardEventListApplication(
-	events: SyncBoardEvent[],
-	board: Board,
-): void {
+function handleBoardEventListApplication(events: SyncBoardEvent[], board: Board): void {
 	const { log } = board.events;
 
 	const existinglist = log.list.getAllRecords();
 
-	const maxOrder = Math.max(
-		...existinglist.map(record => record.event.order),
-	);
+	const maxOrder = Math.max(...existinglist.map(record => record.event.order));
 
 	const newEvents = events.filter(event => event.order > maxOrder);
 
@@ -126,11 +117,7 @@ function handleBoardEventListApplication(
 	}
 }
 
-function sendBoardEvent(
-	board: Board,
-	event: BoardEventPack,
-	sequenceNumber: number,
-): void {
+function sendBoardEvent(board: Board, event: BoardEventPack, sequenceNumber: number): void {
 	const { log } = board.events;
 
 	const toSend: SyncEvent = {
@@ -141,7 +128,7 @@ function sendBoardEvent(
 		},
 	};
 	conf.connection.send({
-		type: "BoardEvent",
+		type: 'BoardEvent',
 		boardId: board.getBoardId(),
 		event: toSend,
 		sequenceNumber,
@@ -161,7 +148,7 @@ function sendBoardEvent(
 
 export function onBoardLoad(board: Board): void {
 	const searchParams = new URLSearchParams(window.location.search.slice(1));
-	const toFocusId = searchParams.get("focus") ?? "";
+	const toFocusId = searchParams.get('focus') ?? '';
 	const toFocusItem = board.items.getById(toFocusId);
 	if (toFocusItem) {
 		const mbr = toFocusItem.getMbr();
@@ -174,8 +161,7 @@ export function onBoardLoad(board: Board): void {
 
 	const cameraSnapshot = board.getCameraSnapshot();
 	const hasItemsInBoard = board.items.listAll().length !== 0;
-	const isItemsOutOfView =
-		board.items.getItemsInView().length === 0 || !cameraSnapshot;
+	const isItemsOutOfView = board.items.getItemsInView().length === 0 || !cameraSnapshot;
 
 	if (isItemsOutOfView && hasItemsInBoard) {
 		board.camera.zoomToFit(board.items.getMbr());

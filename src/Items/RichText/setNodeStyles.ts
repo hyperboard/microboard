@@ -1,12 +1,12 @@
-import { BaseEditor, Editor } from "slate";
-import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
-import { ReactEditor } from "slate-react";
-import { HistoryEditor } from "slate-history";
-import { LinkNode, TextNode } from "Board/Items/RichText/Editor/TextNode";
-import { HorisontalAlignment } from "Board/Items/Alignment";
-import { convertLinkNodeToTextNode } from "Board/Items/RichText/CanvasText/convertLinkNodeToTextNode";
+import { BaseEditor, Editor } from 'slate';
+import { BlockNode } from 'Items/RichText/Editor/BlockNode';
+import { ReactEditor } from 'slate-react';
+import { HistoryEditor } from 'slate-history';
+import { LinkNode, TextNode } from 'Items/RichText/Editor/TextNode';
+import { HorisontalAlignment } from 'Items/Alignment';
+import { convertLinkNodeToTextNode } from 'Items/RichText/CanvasText/convertLinkNodeToTextNode';
 
-import { conf } from "Board/Settings";
+import { conf } from 'Settings';
 
 export function setNodeChildrenStyles({
 	editor,
@@ -23,19 +23,19 @@ export function setNodeChildrenStyles({
 	}
 
 	switch (node.type) {
-		case "heading_one":
+		case 'heading_one':
 			fontStyles = { ...fontStyles, bold: true, fontSize: 18 };
 			break;
-		case "heading_two":
+		case 'heading_two':
 			fontStyles = { ...fontStyles, bold: true, fontSize: 17 };
 			break;
-		case "heading_three":
+		case 'heading_three':
 			fontStyles = { ...fontStyles, bold: true, fontSize: 16 };
 			break;
-		case "heading_four":
+		case 'heading_four':
 			fontStyles = { ...fontStyles, bold: true, fontSize: 15 };
 			break;
-		case "heading_five":
+		case 'heading_five':
 			fontStyles = { ...fontStyles, bold: true, fontSize: 14 };
 			break;
 	}
@@ -57,20 +57,17 @@ export function setNodeChildrenStyles({
 				nextChildren &&
 				nextChildren.text &&
 				children.text &&
-				children.text[children.text.length - 1] !== " " &&
-				!nextChildren.text.startsWith(" ") &&
+				children.text[children.text.length - 1] !== ' ' &&
+				!nextChildren.text.startsWith(' ') &&
 				!isSymbol(nextChildren.text[0]);
 
 			if (isNoSpaceBetweenNextTextAndCurrent) {
-				children.text += " ";
+				children.text += ' ';
 			}
 
 			let fontColor = fontStyles.fontColor;
-			if (
-				fontColor === conf.DEFAULT_TEXT_STYLES.fontColor &&
-				children.link
-			) {
-				fontColor = "rgba(71, 120, 245, 1)";
+			if (fontColor === conf.DEFAULT_TEXT_STYLES.fontColor && children.link) {
+				fontColor = 'rgba(71, 120, 245, 1)';
 			}
 
 			return {
@@ -79,7 +76,7 @@ export function setNodeChildrenStyles({
 				fontColor,
 			};
 		});
-	node.horisontalAlignment = horisontalAlignment || "left";
+	node.horisontalAlignment = horisontalAlignment || 'left';
 }
 
 export function setNodeStyles({
@@ -95,7 +92,7 @@ export function setNodeStyles({
 	editor?: BaseEditor & ReactEditor & HistoryEditor;
 	horisontalAlignment?: HorisontalAlignment;
 }) {
-	if (node.type === "ol_list" || node.type === "ul_list") {
+	if (node.type === 'ol_list' || node.type === 'ul_list') {
 		node.listLevel = listLevel;
 		for (const listItem of node.children) {
 			for (const listItemChild of listItem.children) {

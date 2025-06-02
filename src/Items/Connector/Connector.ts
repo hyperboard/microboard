@@ -1,45 +1,37 @@
-import { RichText } from "Board/Items";
-import { Subject } from "shared/Subject";
-import { Board } from "../../Board";
-import { Operation } from "../../Events";
-import { CubicBezier } from "../Curve";
-import { DrawingContext } from "../DrawingContext";
-import { GeometricNormal } from "../GeometricNormal";
-import { Item } from "../Item";
-import { Line } from "../Line";
-import { Mbr } from "../Mbr";
-import { BorderStyle, Path, Paths } from "../Path";
-import { Point } from "../Point";
-import { Matrix, Transformation } from "../Transformation";
-import { ConnectorCommand } from "./ConnectorCommand";
-import { ConnectorData, ConnectorOperation } from "./ConnectorOperations";
+import { RichText } from 'Items';
+import { Subject } from 'Subject';
+import { Board } from 'Board';
+import { Operation } from 'Events';
+import { CubicBezier } from '../Curve';
+import { DrawingContext } from '../DrawingContext';
+import { GeometricNormal } from '../GeometricNormal';
+import { Item } from '../Item';
+import { Line } from '../Line';
+import { Mbr } from '../Mbr';
+import { BorderStyle, Path, Paths } from '../Path';
+import { Point } from '../Point';
+import { Matrix, Transformation } from '../Transformation';
+import { ConnectorCommand } from './ConnectorCommand';
+import { ConnectorData, ConnectorOperation } from './ConnectorOperations';
 import {
 	BoardPoint,
 	ControlPoint,
 	ControlPointData,
 	FindItemFn,
 	getControlPoint,
-} from "./ControlPoint";
-import { getLine } from "./getLine/getLine";
-import { ConnectorEdge } from "./Pointers";
-import { getStartPointer, getEndPointer } from "./Pointers/index";
-import { ConnectorPointerStyle, Pointer } from "./Pointers/Pointers";
-import { LinkTo } from "../LinkTo/LinkTo";
-import {
-	positionRelatively,
-	resetElementScale,
-	scaleElementBy,
-} from "Board/HTMLRender";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { ConnectorAnchorColors } from "./types";
-import { conf } from "Board/Settings";
+} from './ControlPoint';
+import { getLine } from './getLine/getLine';
+import { ConnectorEdge } from './Pointers';
+import { getStartPointer, getEndPointer } from './Pointers/index';
+import { ConnectorPointerStyle, Pointer } from './Pointers/Pointers';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { positionRelatively, resetElementScale, scaleElementBy } from 'HTMLRender';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { ConnectorAnchorColors } from './types';
+import { conf } from 'Settings';
 const { i18n } = conf;
 
-export const ConnectorLineStyles = [
-	"straight",
-	"curved",
-	"orthogonal",
-] as const;
+export const ConnectorLineStyles = ['straight', 'curved', 'orthogonal'] as const;
 
 export type ConnectorLineStyle = (typeof ConnectorLineStyles)[number];
 
@@ -47,29 +39,29 @@ export const ConnectionLineWidths = [1, 2, 3, 4, 5, 6, 7, 8, 12] as const;
 
 export type ConnectionLineWidth = (typeof ConnectionLineWidths)[number];
 
-export const CONNECTOR_COLOR = "rgb(20, 21, 26)";
+export const CONNECTOR_COLOR = 'rgb(20, 21, 26)';
 export const CONNECTOR_LINE_WIDTH = 1;
-export const CONNECTOR_BORDER_STYLE: BorderStyle = "solid";
-export const DEFAULT_END_POINTER = "TriangleFilled";
+export const CONNECTOR_BORDER_STYLE: BorderStyle = 'solid';
+export const DEFAULT_END_POINTER = 'TriangleFilled';
 export const DRAW_TEXT_BORDER = false;
 export const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
-	snapBorder: "rgb(71, 120, 245)",
-	snapBackgroundHighlight: "rgba(0,0,0,0.1)",
-	snapBackground: "rgba(0,0,0,0)",
-	anchorBorder: "rgb(147, 175, 246)",
-	anchorBackground: "rgb(255, 255, 255)",
-	anchorHighlight: "rgb(255, 255, 255)",
-	pointBorder: "rgb(147, 175, 246)",
-	pointBackground: "rgb(147, 175, 246)",
+	snapBorder: 'rgb(71, 120, 245)',
+	snapBackgroundHighlight: 'rgba(0,0,0,0.1)',
+	snapBackground: 'rgba(0,0,0,0)',
+	anchorBorder: 'rgb(147, 175, 246)',
+	anchorBackground: 'rgb(255, 255, 255)',
+	anchorHighlight: 'rgb(255, 255, 255)',
+	pointBorder: 'rgb(147, 175, 246)',
+	pointBackground: 'rgb(147, 175, 246)',
 };
 
-export const CONNECTOR_ANCHOR_TYPE = "rect";
-export const CONNECTOR_LINE_CAP = "round";
+export const CONNECTOR_ANCHOR_TYPE = 'rect';
+export const CONNECTOR_LINE_CAP = 'round';
 export class Connector {
-	readonly itemType = "Connector";
-	parent = "Board";
-	private id = "";
+	readonly itemType = 'Connector';
+	parent = 'Board';
+	private id = '';
 	readonly transformation: Transformation;
 	private middlePoint: ControlPoint | null = new BoardPoint();
 	private lineColor: string;
@@ -88,12 +80,12 @@ export class Connector {
 		private board: Board,
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
-		private lineStyle: ConnectorLineStyle = "straight",
-		private startPointerStyle: ConnectorPointerStyle = "None",
+		private lineStyle: ConnectorLineStyle = 'straight',
+		private startPointerStyle: ConnectorPointerStyle = 'None',
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
 		lineColor?: string,
 		lineWidth?: ConnectionLineWidth,
-		strokeStyle?: BorderStyle,
+		strokeStyle?: BorderStyle
 	) {
 		this.transformation = new Transformation(this.id, this.board.events);
 		this.linkTo = new LinkTo(this.id, this.board.events);
@@ -106,47 +98,45 @@ export class Connector {
 			this.id,
 			new Transformation(),
 			this.linkTo,
-			i18n.t("connector.textPlaceholder", {
-				ns: "default",
+			i18n.t('connector.textPlaceholder', {
+				ns: 'default',
 			}),
 			true,
 			false,
-			"Connector",
+			'Connector',
 			{
 				...conf.DEFAULT_TEXT_STYLES,
 				fontSize:
-					typeof window !== "undefined" &&
-					localStorage.getItem("lastConnectorTextSize")
-						? Number(localStorage.getItem("lastConnectorTextSize"))
+					typeof window !== 'undefined' && localStorage.getItem('lastConnectorTextSize')
+						? Number(localStorage.getItem('lastConnectorTextSize'))
 						: conf.DEFAULT_TEXT_STYLES.fontSize,
 				fontColor:
-					typeof window !== "undefined" &&
-					localStorage.getItem("lastConnectorTextColor")
-						? localStorage.getItem("lastConnectorTextColor")
+					typeof window !== 'undefined' && localStorage.getItem('lastConnectorTextColor')
+						? localStorage.getItem('lastConnectorTextColor')
 						: conf.DEFAULT_TEXT_STYLES.fontColor,
-			},
+			}
 		);
 		this.startPointer = getStartPointer(
 			this.startPoint,
 			this.startPointerStyle,
 			this.lineStyle,
 			this.lines,
-			this.lineWidth * 0.1 + 0.3,
+			this.lineWidth * 0.1 + 0.3
 		);
 		this.endPointer = getEndPointer(
 			this.endPoint,
 			this.endPointerStyle,
 			this.lineStyle,
 			this.lines,
-			this.lineWidth * 0.1 + 0.3,
+			this.lineWidth * 0.1 + 0.3
 		);
 		this.middlePoint = null;
 
 		this.transformation.subject.subscribe((_sub, op) => {
-			if (op.method === "transformMany") {
+			if (op.method === 'transformMany') {
 				const operation = op.items[this.getId()];
 				if (
-					operation.method === "scaleByTranslateBy" &&
+					operation.method === 'scaleByTranslateBy' &&
 					(operation.scale.x !== 1 || operation.scale.y !== 1)
 				) {
 					this.scalePoints();
@@ -171,17 +161,17 @@ export class Connector {
 		});
 
 		this.text.apply({
-			class: "RichText",
-			method: "setMaxWidth",
+			class: 'RichText',
+			method: 'setMaxWidth',
 			item: [this.id],
 			maxWidth: 300,
 		});
 		this.text.addMbr(this.getMbr());
-		this.text.setSelectionHorisontalAlignment("left");
-		this.text.editor.setSelectionHorisontalAlignment("left");
+		this.text.setSelectionHorisontalAlignment('left');
+		this.text.editor.setSelectionHorisontalAlignment('left');
 		this.text.editor.applyRichTextOp({
-			class: "RichText",
-			method: "setMaxWidth",
+			class: 'RichText',
+			method: 'setMaxWidth',
 			item: [this.id],
 			maxWidth: 300,
 		});
@@ -202,7 +192,7 @@ export class Connector {
 
 	observerStartPointItem = (): void => {
 		const point = this.startPoint;
-		if (point.pointType !== "Board") {
+		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
 			this.updatePaths();
 			this.subject.publish(this);
@@ -211,7 +201,7 @@ export class Connector {
 
 	observerEndPointItem = (): void => {
 		const point = this.endPoint;
-		if (point.pointType !== "Board") {
+		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
 			this.updatePaths();
 			this.subject.publish(this);
@@ -222,30 +212,24 @@ export class Connector {
 		const startPoint = this.getStartPoint();
 		const endPoint = this.getEndPoint();
 
-		if (startPoint.pointType !== "Board") {
+		if (startPoint.pointType !== 'Board') {
 			this.unsubscribeFromItem(startPoint, this.observerStartPointItem);
 		}
 
-		if (endPoint.pointType !== "Board") {
+		if (endPoint.pointType !== 'Board') {
 			this.unsubscribeFromItem(endPoint, this.observerEndPointItem);
 		}
 	}
 
-	private unsubscribeFromItem(
-		point: ControlPoint,
-		observer: (item: Item) => void,
-	): void {
-		if (point.pointType !== "Board") {
+	private unsubscribeFromItem(point: ControlPoint, observer: (item: Item) => void): void {
+		if (point.pointType !== 'Board') {
 			point.item.subject.unsubscribe(observer);
 		}
 	}
 
-	private subscribeToItem(
-		point: ControlPoint,
-		observer: (item: Item) => void,
-	): void {
+	private subscribeToItem(point: ControlPoint, observer: (item: Item) => void): void {
 		if (this.id) {
-			if (point.pointType !== "Board") {
+			if (point.pointType !== 'Board') {
 				point.item.subject.subscribe(observer);
 			}
 		}
@@ -276,41 +260,39 @@ export class Connector {
 
 	apply(operation: Operation): void {
 		switch (operation.class) {
-			case "RichText":
+			case 'RichText':
 				this.text.apply(operation);
 				break;
-			case "Connector":
+			case 'Connector':
 				switch (operation.method) {
-					case "setStartPoint":
+					case 'setStartPoint':
 						this.applyStartPoint(operation.startPointData);
 						break;
-					case "setEndPoint":
+					case 'setEndPoint':
 						this.applyEndPoint(operation.endPointData);
 						break;
-					case "setMiddlePoint":
+					case 'setMiddlePoint':
 						this.applyMiddlePoint(operation.middlePointData);
 						break;
-					case "setStartPointerStyle":
-						this.applyStartPointerStyle(
-							operation.startPointerStyle,
-						);
+					case 'setStartPointerStyle':
+						this.applyStartPointerStyle(operation.startPointerStyle);
 						break;
-					case "setEndPointerStyle":
+					case 'setEndPointerStyle':
 						this.applyEndPointerStyle(operation.endPointerStyle);
 						break;
-					case "setLineStyle":
+					case 'setLineStyle':
 						this.applyLineStyle(operation.lineStyle);
 						break;
-					case "setBorderStyle":
+					case 'setBorderStyle':
 						this.applyBorderStyle(operation.borderStyle);
 						break;
-					case "setLineColor":
+					case 'setLineColor':
 						this.applyLineColor(operation.lineColor);
 						break;
-					case "setLineWidth":
+					case 'setLineWidth':
 						this.applyLineWidth(operation.lineWidth);
 						break;
-					case "switchPointers":
+					case 'switchPointers':
 						this.applySwitchPointers();
 						break;
 				}
@@ -318,7 +300,7 @@ export class Connector {
 			// case "Transformation":
 			// 	this.transformation.apply(operation);
 			// 	break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(operation);
 				break;
 			default:
@@ -332,35 +314,29 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	setStartPoint(
-		point: ControlPoint | ControlPointData,
-		timestamp?: number,
-	): void {
+	setStartPoint(point: ControlPoint | ControlPointData, timestamp?: number): void {
 		this.emit({
-			class: "Connector",
-			method: "setStartPoint",
+			class: 'Connector',
+			method: 'setStartPoint',
 			item: [this.id],
-			startPointData: "serialize" in point ? point.serialize() : point,
+			startPointData: 'serialize' in point ? point.serialize() : point,
 			timestamp,
 		});
 	}
 
 	applyStartPoint(pointData: ControlPointData, updatePath = true): void {
 		if (
-			pointData.pointType !== "Board" &&
-			this.startPoint.pointType !== "Board" &&
+			pointData.pointType !== 'Board' &&
+			this.startPoint.pointType !== 'Board' &&
 			pointData.itemId === this.startPoint.item.getId()
 		) {
 			this.startPoint = getControlPoint(pointData, itemId =>
-				this.board.items.findById(itemId),
+				this.board.items.findById(itemId)
 			);
 		} else {
-			this.unsubscribeFromItem(
-				this.startPoint,
-				this.observerStartPointItem,
-			);
+			this.unsubscribeFromItem(this.startPoint, this.observerStartPointItem);
 			this.startPoint = getControlPoint(pointData, itemId =>
-				this.board.items.findById(itemId),
+				this.board.items.findById(itemId)
 			);
 			this.subscribeToItem(this.startPoint, this.observerStartPointItem);
 		}
@@ -369,15 +345,12 @@ export class Connector {
 		}
 	}
 
-	setEndPoint(
-		point: ControlPoint | ControlPointData,
-		timestamp?: number,
-	): void {
+	setEndPoint(point: ControlPoint | ControlPointData, timestamp?: number): void {
 		this.emit({
-			class: "Connector",
-			method: "setEndPoint",
+			class: 'Connector',
+			method: 'setEndPoint',
 			item: [this.id],
-			endPointData: "serialize" in point ? point.serialize() : point,
+			endPointData: 'serialize' in point ? point.serialize() : point,
 			timestamp,
 		});
 	}
@@ -387,9 +360,7 @@ export class Connector {
 		const optionalFn = this.getOptionalFindFn();
 		this.endPoint = getControlPoint(
 			pointData,
-			optionalFn
-				? optionalFn
-				: itemId => this.board.items.findById(itemId),
+			optionalFn ? optionalFn : itemId => this.board.items.findById(itemId)
 		);
 		this.subscribeToItem(this.endPoint, this.observerEndPointItem);
 		if (updatePath) {
@@ -402,9 +373,7 @@ export class Connector {
 		const optionalFn = this.getOptionalFindFn();
 		this.middlePoint = getControlPoint(
 			pointData,
-			optionalFn
-				? optionalFn
-				: itemId => this.board.items.findById(itemId),
+			optionalFn ? optionalFn : itemId => this.board.items.findById(itemId)
 		);
 		if (updatePath) {
 			this.updatePaths();
@@ -423,23 +392,20 @@ export class Connector {
 		this.updatePaths();
 	}
 
-	setMiddlePoint(
-		point: ControlPoint | ControlPointData,
-		timestamp?: number,
-	): void {
+	setMiddlePoint(point: ControlPoint | ControlPointData, timestamp?: number): void {
 		this.emit({
-			class: "Connector",
-			method: "setMiddlePoint",
+			class: 'Connector',
+			method: 'setMiddlePoint',
 			item: [this.id],
-			middlePointData: "serialize" in point ? point.serialize() : point,
+			middlePointData: 'serialize' in point ? point.serialize() : point,
 			timestamp,
 		});
 	}
 
 	setStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setStartPointerStyle",
+			class: 'Connector',
+			method: 'setStartPointerStyle',
 			item: [this.id],
 			startPointerStyle: style,
 		});
@@ -452,8 +418,8 @@ export class Connector {
 
 	setEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setEndPointerStyle",
+			class: 'Connector',
+			method: 'setEndPointerStyle',
 			item: [this.id],
 			endPointerStyle: style,
 		});
@@ -466,8 +432,8 @@ export class Connector {
 
 	setLineColor(color: string): void {
 		this.emit({
-			class: "Connector",
-			method: "setLineColor",
+			class: 'Connector',
+			method: 'setLineColor',
 			item: [this.id],
 			lineColor: color,
 		});
@@ -480,8 +446,8 @@ export class Connector {
 
 	setLineStyle(style: ConnectorLineStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setLineStyle",
+			class: 'Connector',
+			method: 'setLineStyle',
 			item: [this.id],
 			lineStyle: style,
 		});
@@ -494,8 +460,8 @@ export class Connector {
 
 	private setBorderStyle(style: BorderStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setBorderStyle",
+			class: 'Connector',
+			method: 'setBorderStyle',
 			item: [this.id],
 			borderStyle: style,
 		});
@@ -508,8 +474,8 @@ export class Connector {
 
 	setLineWidth(width: ConnectionLineWidth): void {
 		this.emit({
-			class: "Connector",
-			method: "setLineWidth",
+			class: 'Connector',
+			method: 'setLineWidth',
 			item: [this.id],
 			lineWidth: width,
 		});
@@ -533,7 +499,7 @@ export class Connector {
 	}
 
 	calculateMiddlePoint(): { x: number; y: number } {
-		if (this.lineStyle === "orthogonal") {
+		if (this.lineStyle === 'orthogonal') {
 			const segments = this.lines.getSegments();
 			const middle = segments[Math.floor(segments.length / 2)];
 			return {
@@ -645,10 +611,7 @@ export class Connector {
 	}
 
 	isConnected() {
-		return (
-			this.startPoint.pointType !== "Board" &&
-			this.endPoint.pointType !== "Board"
-		);
+		return this.startPoint.pointType !== 'Board' && this.endPoint.pointType !== 'Board';
 	}
 
 	getConnectedItems(): { startItem?: Item; endItem?: Item } {
@@ -656,65 +619,54 @@ export class Connector {
 			startItem: undefined,
 			endItem: undefined,
 		};
-		if (this.startPoint.pointType !== "Board") {
+		if (this.startPoint.pointType !== 'Board') {
 			connectedItems.startItem = this.startPoint.item;
 		}
-		if (this.endPoint.pointType !== "Board") {
+		if (this.endPoint.pointType !== 'Board') {
 			connectedItems.endItem = this.endPoint.item;
 		}
 		return connectedItems;
 	}
 
 	isConnectedOnePoint(): boolean {
-		return (
-			this.startPoint.pointType !== "Board" ||
-			this.endPoint.pointType !== "Board"
-		);
+		return this.startPoint.pointType !== 'Board' || this.endPoint.pointType !== 'Board';
 	}
 
 	render(context: DrawingContext): void {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		if (CONNECTOR_LINE_CAP === "round") {
-			context.ctx.lineCap = "round";
-			context.ctx.lineJoin = "round";
+		if (CONNECTOR_LINE_CAP === 'round') {
+			context.ctx.lineCap = 'round';
+			context.ctx.lineJoin = 'round';
 		}
 		const mbr = this.getMbr();
-		mbr.borderColor = "red";
+		mbr.borderColor = 'red';
 		mbr.strokeWidth = 3;
-		mbr.borderStyle = "solid";
+		mbr.borderStyle = 'solid';
 		// mbr.render(context)
 		this.clipText(context);
 		if (
 			!this.text.isRenderEnabled &&
-			this.board.selection.getContext() !== "EditTextUnderPointer"
+			this.board.selection.getContext() !== 'EditTextUnderPointer'
 		) {
 			this.lines.render(context);
 		}
-		if (this.startPointerStyle !== "None") {
+		if (this.startPointerStyle !== 'None') {
 			this.startPointer.path.render(context);
 		}
-		if (this.endPointerStyle !== "None") {
+		if (this.endPointerStyle !== 'None') {
 			this.endPointer.path.render(context);
 		}
 		if (this.getLinkTo()) {
 			const { top, right } = this.endPointer.path.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
 	clipText(context: DrawingContext): void {
 		const selectionContext = this.board.selection.getContext();
-		if (
-			this.text.isEmpty() &&
-			!this.board.selection.items.list().includes(this)
-		) {
+		if (this.text.isEmpty() && !this.board.selection.items.list().includes(this)) {
 			this.text.disableRender();
 			this.lines.render(context);
 			return;
@@ -723,9 +675,9 @@ export class Connector {
 		if (
 			this.text.isEmpty() &&
 			this.board.selection.items.list().includes(this) &&
-			(selectionContext === "SelectUnderPointer" ||
-				selectionContext === "EditUnderPointer" ||
-				selectionContext === "SelectByRect")
+			(selectionContext === 'SelectUnderPointer' ||
+				selectionContext === 'EditUnderPointer' ||
+				selectionContext === 'SelectByRect')
 		) {
 			this.text.disableRender();
 			this.lines.render(context);
@@ -742,35 +694,24 @@ export class Connector {
 		ctx.beginPath();
 		// Cover the entire canvas area with the rectangle path
 		const cameraMbr = context.camera.getMbr();
-		ctx.rect(
-			cameraMbr.left,
-			cameraMbr.top,
-			cameraMbr.getWidth(),
-			cameraMbr.getHeight(),
-		);
+		ctx.rect(cameraMbr.left, cameraMbr.top, cameraMbr.getWidth(), cameraMbr.getHeight());
 
 		// Remove the text rectangle area from the path to create the exclusion/clipping area
 		// This assumes a clockwise definition of the canvas rectangle and an anti-clockwise definition of the inner rectangle
-		ctx.moveTo(
-			textMbr.left - TEXT_BORDER_PADDING * 2,
-			textMbr.top - TEXT_BORDER_PADDING * 2,
-		);
+		ctx.moveTo(textMbr.left - TEXT_BORDER_PADDING * 2, textMbr.top - TEXT_BORDER_PADDING * 2);
 		ctx.lineTo(
 			textMbr.left - TEXT_BORDER_PADDING * 2,
-			textMbr.bottom + TEXT_BORDER_PADDING * 2,
+			textMbr.bottom + TEXT_BORDER_PADDING * 2
 		);
 		ctx.lineTo(
 			textMbr.right + TEXT_BORDER_PADDING * 2,
-			textMbr.bottom + TEXT_BORDER_PADDING * 2,
+			textMbr.bottom + TEXT_BORDER_PADDING * 2
 		);
-		ctx.lineTo(
-			textMbr.right + TEXT_BORDER_PADDING * 2,
-			textMbr.top - TEXT_BORDER_PADDING * 2,
-		);
+		ctx.lineTo(textMbr.right + TEXT_BORDER_PADDING * 2, textMbr.top - TEXT_BORDER_PADDING * 2);
 		ctx.closePath();
 
 		// Use the clip method to clip to the outside of the text rect
-		ctx.clip("evenodd"); // 'evenodd' is a fill rule that allows us to subtract the text rect from the clip area
+		ctx.clip('evenodd'); // 'evenodd' is a fill rule that allows us to subtract the text rect from the clip area
 
 		// Render lines that won't appear inside the text rect
 		this.lines.render(context);
@@ -782,17 +723,14 @@ export class Connector {
 		const { x, y } = this.calculateMiddlePoint();
 		const textWidth = this.text.getWidth();
 		const textHeight = this.text.getHeight();
-		this.text.transformation.applyTranslateTo(
-			x - textWidth / 2,
-			y - textHeight / 2,
-		);
+		this.text.transformation.applyTranslateTo(x - textWidth / 2, y - textHeight / 2);
 
 		this.text.render(context);
 
 		if (
 			DRAW_TEXT_BORDER &&
-			(selectionContext === "EditUnderPointer" ||
-				selectionContext === "EditTextUnderPointer") &&
+			(selectionContext === 'EditUnderPointer' ||
+				selectionContext === 'EditTextUnderPointer') &&
 			this.board.selection.items.list().includes(this)
 		) {
 			ctx.strokeStyle = conf.SELECTION_COLOR;
@@ -803,7 +741,7 @@ export class Connector {
 				textMbr.left - TEXT_BORDER_PADDING,
 				textMbr.top - TEXT_BORDER_PADDING,
 				textMbr.getWidth() + TEXT_BORDER_PADDING * 2,
-				textMbr.getHeight() + TEXT_BORDER_PADDING * 2,
+				textMbr.getHeight() + TEXT_BORDER_PADDING * 2
 			);
 			ctx.closePath();
 			ctx.stroke();
@@ -811,24 +749,20 @@ export class Connector {
 	}
 	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("connector-item");
+		const div = documentFactory.createElement('connector-item');
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const mbr = this.getMbr();
 		const width = mbr.getWidth();
 		const height = mbr.getHeight();
 		const unscaledWidth = width / scaleX;
 		const unscaledHeight = height / scaleY;
 
-		const svg = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"svg",
-		);
-		svg.setAttribute("width", `${unscaledWidth}px`);
-		svg.setAttribute("height", `${unscaledHeight}px`);
-		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-		svg.setAttribute("style", "position: absolute; overflow: visible;");
+		const svg = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		svg.setAttribute('width', `${unscaledWidth}px`);
+		svg.setAttribute('height', `${unscaledHeight}px`);
+		svg.setAttribute('viewBox', `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute('style', 'position: absolute; overflow: visible;');
 
 		// todo fix clip
 		// const clip = documentFactory.createElementNS("http://www.w3.org/2000/svg", "clipPath");
@@ -867,33 +801,27 @@ export class Connector {
 		const lines = this.renderPathHTML(documentFactory, this.lines);
 		svg.append(...lines);
 
-		if (this.getStartPointerStyle() !== "None") {
-			const startPointer = this.renderPathHTML(
-				documentFactory,
-				this.startPointer.path,
-			);
+		if (this.getStartPointerStyle() !== 'None') {
+			const startPointer = this.renderPathHTML(documentFactory, this.startPointer.path);
 			if (
 				!(
-					this.startPointer.name.toLowerCase().includes("filled") ||
-					this.startPointer.name.toLowerCase().includes("arrow")
+					this.startPointer.name.toLowerCase().includes('filled') ||
+					this.startPointer.name.toLowerCase().includes('arrow')
 				)
 			) {
-				startPointer.forEach(el => el.setAttribute("fill", "none"));
+				startPointer.forEach(el => el.setAttribute('fill', 'none'));
 			}
 			svg.append(...startPointer);
 		}
-		if (this.getEndPointerStyle() !== "None") {
-			const endPointer = this.renderPathHTML(
-				documentFactory,
-				this.endPointer.path,
-			);
+		if (this.getEndPointerStyle() !== 'None') {
+			const endPointer = this.renderPathHTML(documentFactory, this.endPointer.path);
 			if (
 				!(
-					this.endPointer.name.toLowerCase().includes("filled") ||
-					this.endPointer.name.toLowerCase().includes("arrow")
+					this.endPointer.name.toLowerCase().includes('filled') ||
+					this.endPointer.name.toLowerCase().includes('arrow')
 				)
 			) {
-				endPointer.forEach(el => el.setAttribute("fill", "none"));
+				endPointer.forEach(el => el.setAttribute('fill', 'none'));
 			}
 			svg.append(...endPointer);
 		}
@@ -901,85 +829,72 @@ export class Connector {
 		div.appendChild(svg);
 
 		div.id = this.getId();
-		div.style.width = unscaledWidth + "px";
-		div.style.height = unscaledHeight + "px";
-		div.style.transformOrigin = "left top";
+		div.style.width = unscaledWidth + 'px';
+		div.style.height = unscaledHeight + 'px';
+		div.style.transformOrigin = 'left top';
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-		div.style.position = "absolute";
-		div.setAttribute("data-line-color", this.lineColor);
-		div.setAttribute("data-line-width", this.lineWidth.toString());
-		div.setAttribute("data-line-style", this.lineStyle);
-		div.setAttribute("data-border-style", this.borderStyle);
+		div.style.position = 'absolute';
+		div.setAttribute('data-line-color', this.lineColor);
+		div.setAttribute('data-line-width', this.lineWidth.toString());
+		div.setAttribute('data-line-style', this.lineStyle);
+		div.setAttribute('data-border-style', this.borderStyle);
 
 		const setPointAttributes = (
 			div: HTMLElement,
 			point: ControlPoint,
-			variant: "start" | "end",
+			variant: 'start' | 'end'
 		): void => {
 			const prefix = `data-${variant}-point`;
 			div.setAttribute(
 				`${prefix}er-style`,
-				variant === "start"
-					? this.getStartPointerStyle()
-					: this.getEndPointerStyle(),
+				variant === 'start' ? this.getStartPointerStyle() : this.getEndPointerStyle()
 			);
 			div.setAttribute(`${prefix}-type`, point.pointType);
 			div.setAttribute(
 				`${prefix}-item`,
-				(point.pointType !== "Board" && point.item.getId()) || "",
+				(point.pointType !== 'Board' && point.item.getId()) || ''
 			);
 			div.setAttribute(
 				`${prefix}-relative-x`,
-				("relativePoint" in point &&
-					point.relativePoint.x.toString()) ||
-					"",
+				('relativePoint' in point && point.relativePoint.x.toString()) || ''
 			);
 			div.setAttribute(
 				`${prefix}-relative-y`,
-				("relativePoint" in point &&
-					point.relativePoint.y.toString()) ||
-					"",
+				('relativePoint' in point && point.relativePoint.y.toString()) || ''
 			);
 			div.setAttribute(`${prefix}-x`, point.x.toString());
 			div.setAttribute(`${prefix}-y`, point.y.toString());
 
-			if (point.pointType === "FixedConnector") {
+			if (point.pointType === 'FixedConnector') {
 				div.setAttribute(`${prefix}-tangent`, point.tangent.toString());
-				div.setAttribute(
-					`${prefix}-segment`,
-					point.segmentIndex.toString(),
-				);
+				div.setAttribute(`${prefix}-segment`, point.segmentIndex.toString());
 			}
 		};
 
-		setPointAttributes(div, this.startPoint, "start");
-		setPointAttributes(div, this.endPoint, "end");
+		setPointAttributes(div, this.startPoint, 'start');
+		setPointAttributes(div, this.endPoint, 'end');
 
 		const textElement = this.text.renderHTML(documentFactory, false);
 		textElement.id = `${this.getId()}_text`;
-		textElement.style.overflow = "auto";
+		textElement.style.overflow = 'auto';
 		positionRelatively(textElement, div);
 		resetElementScale(textElement);
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		div.appendChild(textElement);
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 
 		return div;
 	}
 
-	private renderPathHTML(
-		documentFactory: DocumentFactory,
-		path: Path | Paths,
-	): SVGPathElement[] {
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+	private renderPathHTML(documentFactory: DocumentFactory, path: Path | Paths): SVGPathElement[] {
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const pathElement = path.renderHTML(documentFactory);
 		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 
 		paths.forEach(element => {
 			element.setAttribute(
-				"transform",
-				`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`,
+				'transform',
+				`translate(${-translateX}, ${-translateY}) scale(${1 / scaleX}, ${1 / scaleY})`
 			);
 			// element.setAttribute("clip", `url(#${this.getId()}_clip)`);
 		});
@@ -1007,7 +922,7 @@ export class Connector {
 		transformation.matrix.translateX = mbr.left;
 		transformation.matrix.translateY = mbr.top;
 		return {
-			itemType: "Connector",
+			itemType: 'Connector',
 			transformation: transformation.serialize(),
 			startPoint: this.startPoint.serialize(),
 			endPoint: this.endPoint.serialize(),
@@ -1044,12 +959,9 @@ export class Connector {
 		}
 		const linkTo = data.linkTo;
 		if (linkTo) {
-			this.linkTo.deserialize(
-				typeof linkTo === "string" ? linkTo : linkTo.link,
-			);
+			this.linkTo.deserialize(typeof linkTo === 'string' ? linkTo : linkTo.link);
 		}
-		this.startPointerStyle =
-			data.startPointerStyle ?? this.startPointerStyle;
+		this.startPointerStyle = data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;
 		this.lineStyle = data.lineStyle ?? this.lineStyle;
 		this.lineColor = data.lineColor ?? this.lineColor;
@@ -1064,22 +976,16 @@ export class Connector {
 		return this;
 	}
 
-	getConnectorById(
-		items: Item[],
-		connectorId: string,
-	): Connector | undefined {
+	getConnectorById(items: Item[], connectorId: string): Connector | undefined {
 		return items.find(
-			item => item instanceof Connector && item.getId() === connectorId,
+			item => item instanceof Connector && item.getId() === connectorId
 		) as Connector;
 	}
 
 	updateTitle(): void {
 		const selection = this.board.selection;
 		const isConnectorSelected = selection.items.findById(this.id);
-		if (
-			isConnectorSelected &&
-			this.board.selection.getContext() === "EditTextUnderPointer"
-		) {
+		if (isConnectorSelected && this.board.selection.getContext() === 'EditTextUnderPointer') {
 			this.text.isRenderEnabled = false;
 		} else {
 			this.text.isRenderEnabled = true;
@@ -1091,10 +997,7 @@ export class Connector {
 		const height = this.text!.getHeight();
 		const width = this.text!.getWidth();
 
-		this.text.transformation.applyTranslateTo(
-			x - width / 2,
-			y - height / 2,
-		);
+		this.text.transformation.applyTranslateTo(x - width / 2, y - height / 2);
 		this.text.updateElement();
 
 		// this.animationFrameId = 0;
@@ -1110,17 +1013,17 @@ export class Connector {
 		currUnscaled.translateX = 0;
 		currUnscaled.translateY = 0;
 		const delta = previous.multiplyByMatrix(currUnscaled);
-		this.scalePoint(this.startPoint, origin, delta, "start");
-		this.scalePoint(this.endPoint, origin, delta, "end");
+		this.scalePoint(this.startPoint, origin, delta, 'start');
+		this.scalePoint(this.endPoint, origin, delta, 'end');
 	}
 
 	private scalePoint(
 		point: ControlPoint,
 		origin: Point,
 		scaleMatrix: Matrix,
-		edge: ConnectorEdge,
+		edge: ConnectorEdge
 	): void {
-		if (point.pointType !== "Board") {
+		if (point.pointType !== 'Board') {
 			return;
 		}
 		const deltaX = point.x - origin.x;
@@ -1130,7 +1033,7 @@ export class Connector {
 		const scaledY = origin.y + deltaY * scaleMatrix.scaleY;
 
 		const newPoint = new BoardPoint(scaledX, scaledY);
-		if (edge === "start") {
+		if (edge === 'start') {
 			this.startPoint = newPoint;
 		} else {
 			this.endPoint = newPoint;
@@ -1146,23 +1049,19 @@ export class Connector {
 		currUnscaled.scaleX = 1;
 		currUnscaled.scaleY = 1;
 		const delta = previous.multiplyByMatrix(currUnscaled);
-		this.translatePoint(this.startPoint, delta, "start");
-		this.translatePoint(this.endPoint, delta, "end");
+		this.translatePoint(this.startPoint, delta, 'start');
+		this.translatePoint(this.endPoint, delta, 'end');
 	}
 
-	private translatePoint(
-		point: ControlPoint,
-		delta: Matrix,
-		edge: ConnectorEdge,
-	): void {
-		if (point.pointType !== "Board") {
+	private translatePoint(point: ControlPoint, delta: Matrix, edge: ConnectorEdge): void {
+		if (point.pointType !== 'Board') {
 			return;
 		}
 		const newPoint = new BoardPoint(point.x, point.y);
 		newPoint.transform(delta);
-		if (edge === "start") {
+		if (edge === 'start') {
 			this.startPoint = newPoint;
-		} else if (edge === "middle") {
+		} else if (edge === 'middle') {
 			this.middlePoint = newPoint;
 		} else {
 			this.endPoint = newPoint;
@@ -1179,7 +1078,7 @@ export class Connector {
 			this.lineStyle,
 			startPoint,
 			endPoint,
-			this.middlePoint,
+			this.middlePoint
 		).addConnectedItemType(this.itemType);
 
 		this.startPointer = getStartPointer(
@@ -1187,7 +1086,7 @@ export class Connector {
 			this.startPointerStyle,
 			this.lineStyle,
 			this.lines,
-			this.lineWidth * 0.1 + 0.2,
+			this.lineWidth * 0.1 + 0.2
 		);
 		this.startPointer.path.setBorderColor(this.lineColor);
 		this.startPointer.path.setBorderWidth(this.lineWidth);
@@ -1197,7 +1096,7 @@ export class Connector {
 			this.endPointerStyle,
 			this.lineStyle,
 			this.lines,
-			this.lineWidth * 0.1 + 0.2,
+			this.lineWidth * 0.1 + 0.2
 		);
 		this.endPointer.path.setBorderColor(this.lineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
@@ -1215,8 +1114,8 @@ export class Connector {
 	private offsetLines(): void {
 		const segments = this.lines.getSegments();
 		const line = segments[0];
-		if (this.lineStyle === "orthogonal") {
-			if (this.startPoint.pointType !== "Board") {
+		if (this.lineStyle === 'orthogonal') {
+			if (this.startPoint.pointType !== 'Board') {
 				this.lines = new Path([
 					new Line(this.startPointer.start, line.start),
 					...segments,
@@ -1229,7 +1128,7 @@ export class Connector {
 			}
 			const updated = this.lines.getSegments();
 			const lastLine = updated[updated.length - 1];
-			if (this.endPoint.pointType !== "Board") {
+			if (this.endPoint.pointType !== 'Board') {
 				this.lines = new Path([
 					...updated,
 					new Line(lastLine.end, this.endPointer.start),
@@ -1257,7 +1156,7 @@ export class Connector {
 					this.startPointer.start,
 					line.startControl,
 					this.endPointer.start,
-					line.endControl,
+					line.endControl
 				),
 			]).addConnectedItemType(this.itemType);
 		}
@@ -1296,20 +1195,20 @@ export class Connector {
 	}
 }
 export const CONNECTOR_POINTER_TYPES = [
-	"None",
-	"ArrowBroad",
-	"ArrowThin",
-	"TriangleFilled",
-	"CircleFilled",
-	"Angle",
-	"TriangleEmpty",
-	"DiamondFilled",
-	"DiamondEmpty",
-	"Zero",
-	"One",
-	"Many",
-	"ManyMandatory",
-	"OneMandatory",
-	"ManyOptional",
-	"OneOptional",
+	'None',
+	'ArrowBroad',
+	'ArrowThin',
+	'TriangleFilled',
+	'CircleFilled',
+	'Angle',
+	'TriangleEmpty',
+	'DiamondFilled',
+	'DiamondEmpty',
+	'Zero',
+	'One',
+	'Many',
+	'ManyMandatory',
+	'OneMandatory',
+	'ManyOptional',
+	'OneOptional',
 ] as const;

@@ -1,15 +1,15 @@
-import { TransformationData } from "Board/Items/Transformation/TransformationData";
-import { RichTextData } from "Board/Items/RichText/RichTextData";
-import { ThreadDirection } from "Board/Items/AINode/AINode";
-import { Mbr } from "Board/Items/Mbr/Mbr";
-import { Path } from "Board/Items/Path/Path";
-import { CubicBezier } from "Board/Items/Curve/Curve";
-import { Point } from "Board/Items/Point/Point";
-import { Line } from "Board/Items/Line/Line";
-import { Matrix } from "Board/Items/Transformation/Matrix";
+import { TransformationData } from 'Items/Transformation/TransformationData';
+import { RichTextData } from 'Items/RichText/RichTextData';
+import { ThreadDirection } from 'Items/AINode/AINode';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { Path } from 'Items/Path/Path';
+import { CubicBezier } from 'Items/Curve/Curve';
+import { Point } from 'Items/Point/Point';
+import { Line } from 'Items/Line/Line';
+import { Matrix } from 'Items/Transformation/Matrix';
 
 export interface AINodeData {
-	readonly itemType: "AINode";
+	readonly itemType: 'AINode';
 	transformation: TransformationData;
 	text: RichTextData;
 	linkTo?: string;
@@ -32,45 +32,33 @@ export const createNodePath = (mbr: Mbr, matrix: Matrix) => {
 				new Point(0, farBreakpoint),
 				new Point(0, nearBreakpoint - convexity),
 				new Point(farBreakpoint, 0),
-				new Point(nearBreakpoint - convexity, 0),
+				new Point(nearBreakpoint - convexity, 0)
 			),
-			new Line(
-				new Point(farBreakpoint, 0),
-				new Point(width - farBreakpoint, 0),
-			),
+			new Line(new Point(farBreakpoint, 0), new Point(width - farBreakpoint, 0)),
 			new CubicBezier(
 				new Point(width - farBreakpoint, 0),
 				new Point(width - nearBreakpoint + convexity, 0),
 				new Point(width, farBreakpoint),
-				new Point(width, nearBreakpoint - convexity),
+				new Point(width, nearBreakpoint - convexity)
 			),
-			new Line(
-				new Point(width, farBreakpoint),
-				new Point(width, height - farBreakpoint),
-			),
+			new Line(new Point(width, farBreakpoint), new Point(width, height - farBreakpoint)),
 			new CubicBezier(
 				new Point(width, height - farBreakpoint),
 				new Point(width, height - nearBreakpoint - convexity),
 				new Point(width - farBreakpoint, height),
-				new Point(width - nearBreakpoint + convexity, height),
+				new Point(width - nearBreakpoint + convexity, height)
 			),
-			new Line(
-				new Point(width - farBreakpoint, height),
-				new Point(farBreakpoint, height),
-			),
+			new Line(new Point(width - farBreakpoint, height), new Point(farBreakpoint, height)),
 			new CubicBezier(
 				new Point(farBreakpoint, height),
 				new Point(nearBreakpoint - convexity, height),
 				new Point(0, height - farBreakpoint),
-				new Point(0, height - nearBreakpoint - convexity),
+				new Point(0, height - nearBreakpoint - convexity)
 			),
-			new Line(
-				new Point(0, height - farBreakpoint),
-				new Point(0, farBreakpoint),
-			),
+			new Line(new Point(0, height - farBreakpoint), new Point(0, farBreakpoint)),
 		],
 		true,
-		"rgb(255, 255, 255)",
-		"rgba(222, 224, 227, 1)",
+		'rgb(255, 255, 255)',
+		'rgba(222, 224, 227, 1)'
 	).getTransformed(new Matrix(matrix.translateX, matrix.translateY));
 };

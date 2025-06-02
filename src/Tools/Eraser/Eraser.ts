@@ -1,12 +1,12 @@
-import { Board } from "Board/Board";
-import { Drawing } from "Board/Items/Drawing";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { conf } from "Board/Settings";
-import { BorderStyle } from "../../Items/Path";
-import { BoardTool } from "../BoardTool";
+import { Board } from 'Board';
+import { Drawing } from 'Items/Drawing';
+import { DrawingContext } from 'Items/DrawingContext';
+import { BorderStyle } from 'Items/Path';
+import { conf } from 'Settings';
+import { BoardTool } from 'Tools/BoardTool';
 
 export class Eraser extends BoardTool {
-	itemType = "Eraser";
+	itemType = 'Eraser';
 	isDown = false;
 	strokeWidth = conf.ERASER_STROKE_WIDTH;
 	strokeColor = conf.ERASER_DEFAULT_COLOR;
@@ -20,7 +20,7 @@ export class Eraser extends BoardTool {
 	}
 
 	setCursor(): void {
-		this.board.pointer.setCursor("eraser");
+		this.board.pointer.setCursor('eraser');
 	}
 
 	leftButtonDown(): boolean {
@@ -31,37 +31,33 @@ export class Eraser extends BoardTool {
 
 	removeUnderPointOrLine() {
 		const segments = this.drawing.getLines();
-		const items = this.board.items
-			.getUnderPointer(this.strokeWidth / 2)
-			.filter(item => {
-				return (
-					item.itemType === "Drawing" &&
-					item.getLines().find(line => {
-						return (
-							line.getDistance(this.board.pointer.point) <=
-							item.strokeWidth / 2 + this.strokeWidth / 2
-						);
-					})
-				);
-			});
+		const items = this.board.items.getUnderPointer(this.strokeWidth / 2).filter(item => {
+			return (
+				item.itemType === 'Drawing' &&
+				item.getLines().find(line => {
+					return (
+						line.getDistance(this.board.pointer.point) <=
+						item.strokeWidth / 2 + this.strokeWidth / 2
+					);
+				})
+			);
+		});
 		items.push(
 			...this.board.items
 				.getEnclosedOrCrossed(
 					this.drawing.points[0].x,
 					this.drawing.points[0].y,
 					this.board.pointer.point.x,
-					this.board.pointer.point.y,
+					this.board.pointer.point.y
 				)
 				.filter(item => {
 					return (
-						item.itemType === "Drawing" &&
+						item.itemType === 'Drawing' &&
 						item.getLines().some(line => {
-							return segments.some(segment =>
-								segment.hasIntersectionPoint(line),
-							);
+							return segments.some(segment => segment.hasIntersectionPoint(line));
 						})
 					);
-				}),
+				})
 		);
 		if (items.length) {
 			this.board.selection.add(items);

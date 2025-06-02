@@ -1,18 +1,15 @@
-import { unified } from "unified";
-import rehypeParse from "rehype-parse";
-import rehypeRemark from "rehype-remark";
-import remarkStringify from "remark-stringify";
-import markdown from "remark-parse";
-import slate from "remark-slate";
-import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
-import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { TextNode } from "Board/Items/RichText/Editor/TextNode";
-import { conf } from "Board/Settings";
+import { unified } from 'unified';
+import rehypeParse from 'rehype-parse';
+import rehypeRemark from 'rehype-remark';
+import remarkStringify from 'remark-stringify';
+import markdown from 'remark-parse';
+import slate from 'remark-slate';
+import { BlockNode } from 'Items/RichText/Editor/BlockNode';
+import { setNodeStyles } from 'Items/RichText/setNodeStyles';
+import { TextNode } from 'Items/RichText/Editor/TextNode';
+import { conf } from 'Settings';
 
-export const transformHtmlOrTextToMarkdown = async (
-	text: string,
-	html?: string,
-) => {
+export const transformHtmlOrTextToMarkdown = async (text: string, html?: string) => {
 	let markdownString = text;
 	if (html) {
 		const file = await unified()
@@ -29,7 +26,7 @@ export const transformHtmlOrTextToMarkdown = async (
 		slateNodes = [createLinkNode(text)];
 	} else {
 		slateNodes = await convertMarkdownToSlate(
-			markdownString.replace(/<!--(Start|End)Fragment-->/g, ""),
+			markdownString.replace(/<!--(Start|End)Fragment-->/g, '')
 		);
 	}
 
@@ -40,44 +37,44 @@ export const transformHtmlOrTextToMarkdown = async (
 	// const encoded = buf.toString("base64");
 	// Smell: window
 	const encoded = window.btoa(encodeURIComponent(JSON.stringify(slateNodes)));
-	data.setData("application/x-slate-fragment", encoded);
-	data.setData("text/plain", text);
+	data.setData('application/x-slate-fragment', encoded);
+	data.setData('text/plain', text);
 
 	return data;
 };
 
 function createLinkNode(link: string): TextNode {
 	return {
-		type: "text",
+		type: 'text',
 		link,
 		text: link,
 		...conf.DEFAULT_TEXT_STYLES,
-		fontColor: "rgba(71, 120, 245, 1)",
+		fontColor: 'rgba(71, 120, 245, 1)',
 	};
 }
 
 async function convertMarkdownToSlate(text: string) {
 	if (!text) {
-		throw new Error("No text to convert");
+		throw new Error('No text to convert');
 	}
 
 	const file = await unified().use(markdown).use(slate).process(text);
 
 	if (!file || !file.result) {
-		throw new Error("Failed to process Markdown");
+		throw new Error('Failed to process Markdown');
 	}
 
 	let nodes: BlockNode[] = file.result as BlockNode[];
 
-	if (nodes.some(node => node.type === "list_item")) {
+	if (nodes.some(node => node.type === 'list_item')) {
 		const listType = detectListType(text);
 		nodes = [
 			{
 				type: listType,
 				listLevel: 1,
-				children: nodes.filter(node => node.type === "list_item"),
+				children: nodes.filter(node => node.type === 'list_item'),
 			},
-			...nodes.filter(node => node.type !== "list_item"),
+			...nodes.filter(node => node.type !== 'list_item'),
 		];
 	}
 
@@ -95,23 +92,23 @@ async function convertMarkdownToSlate(text: string) {
 	return nodes.map(item => {
 		setNodeStyles({
 			node: item,
-			isPaddingTopNeeded: item.type !== "code_block",
+			isPaddingTopNeeded: item.type !== 'code_block',
 		});
 		return item;
 	});
 }
 
-function detectListType(text: string): "ol_list" | "ul_list" {
-	const lines = text.split("\n").filter(Boolean);
+function detectListType(text: string): 'ol_list' | 'ul_list' {
+	const lines = text.split('\n').filter(Boolean);
 
 	for (const line of lines) {
 		if (/^(\d+)\.\s/.test(line)) {
-			return "ol_list";
+			return 'ol_list';
 		}
 		if (/^[-*+]\s/.test(line)) {
-			return "ul_list";
+			return 'ul_list';
 		}
 	}
 
-	return "ul_list";
+	return 'ul_list';
 }

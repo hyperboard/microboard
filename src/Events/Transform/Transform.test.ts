@@ -1,22 +1,22 @@
-import { RichTextOperation } from "Board/Items/RichText/RichTextOperations";
-import { transformRichTextOperation } from "./Transform";
+import { RichTextOperation } from 'Items/RichText/RichTextOperations';
+import { transformRichTextOperation } from './Transform';
 
-describe("transformRichTextOperation", () => {
-	describe("groupEdit - groupEdit transformation", () => {
-		it("should transform operations for the same item", () => {
+describe('transformRichTextOperation', () => {
+	describe('groupEdit - groupEdit transformation', () => {
+		it('should transform operations for the same item', () => {
 			const confirmed: RichTextOperation = {
-				class: "RichText",
-				method: "groupEdit",
+				class: 'RichText',
+				method: 'groupEdit',
 				itemsOps: [
 					{
-						item: "item1",
+						item: 'item1',
 						selection: null,
 						ops: [
 							{
-								type: "insert_text",
+								type: 'insert_text',
 								path: [0],
 								offset: 0,
-								text: "hello ",
+								text: 'hello ',
 							},
 						],
 					},
@@ -24,18 +24,18 @@ describe("transformRichTextOperation", () => {
 			};
 
 			const toTransform: RichTextOperation = {
-				class: "RichText",
-				method: "groupEdit",
+				class: 'RichText',
+				method: 'groupEdit',
 				itemsOps: [
 					{
-						item: "item1",
+						item: 'item1',
 						selection: null,
 						ops: [
 							{
-								type: "insert_text",
+								type: 'insert_text',
 								path: [0],
 								offset: 0,
-								text: "world",
+								text: 'world',
 							},
 						],
 					},
@@ -46,39 +46,39 @@ describe("transformRichTextOperation", () => {
 
 			expect(result).toBeDefined();
 			expect(result?.itemsOps[0].ops[0]).toEqual({
-				type: "insert_text",
+				type: 'insert_text',
 				path: [0],
 				offset: 6,
-				text: "world",
+				text: 'world',
 			});
 		});
 	});
-	it("should handle multiple item operations", () => {
+	it('should handle multiple item operations', () => {
 		const confirmed: RichTextOperation = {
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps: [
 				{
-					item: "item1",
+					item: 'item1',
 					selection: null,
 					ops: [
 						{
-							type: "insert_text",
+							type: 'insert_text',
 							path: [0],
 							offset: 0,
-							text: "hello ",
+							text: 'hello ',
 						},
 					],
 				},
 				{
-					item: "item2",
+					item: 'item2',
 					selection: null,
 					ops: [
 						{
-							type: "remove_text",
+							type: 'remove_text',
 							path: [0],
 							offset: 3,
-							text: "test",
+							text: 'test',
 						},
 					],
 				},
@@ -86,30 +86,30 @@ describe("transformRichTextOperation", () => {
 		};
 
 		const toTransform: RichTextOperation = {
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps: [
 				{
-					item: "item1",
+					item: 'item1',
 					selection: null,
 					ops: [
 						{
-							type: "insert_text",
+							type: 'insert_text',
 							path: [0],
 							offset: 0,
-							text: "world",
+							text: 'world',
 						},
 					],
 				},
 				{
-					item: "item2",
+					item: 'item2',
 					selection: null,
 					ops: [
 						{
-							type: "insert_text",
+							type: 'insert_text',
 							path: [0],
 							offset: 2,
-							text: "new",
+							text: 'new',
 						},
 					],
 				},
@@ -120,33 +120,33 @@ describe("transformRichTextOperation", () => {
 
 		expect(result).toBeDefined();
 		expect(result?.itemsOps[0].ops[0]).toEqual({
-			type: "insert_text",
+			type: 'insert_text',
 			path: [0],
 			offset: 6,
-			text: "world",
+			text: 'world',
 		});
 		expect(result?.itemsOps[1].ops[0]).toEqual({
-			type: "insert_text",
+			type: 'insert_text',
 			path: [0],
 			offset: 2,
-			text: "new",
+			text: 'new',
 		});
 	});
-	describe("groupEdit - edit transformation", () => {
-		it("should transform edit operation within group edit", () => {
+	describe('groupEdit - edit transformation', () => {
+		it('should transform edit operation within group edit', () => {
 			const confirmed: RichTextOperation = {
-				class: "RichText",
-				method: "groupEdit",
+				class: 'RichText',
+				method: 'groupEdit',
 				itemsOps: [
 					{
-						item: "item1",
+						item: 'item1',
 						selection: null,
 						ops: [
 							{
-								type: "insert_text",
+								type: 'insert_text',
 								path: [0],
 								offset: 0,
-								text: "hello ",
+								text: 'hello ',
 							},
 						],
 					},
@@ -154,15 +154,15 @@ describe("transformRichTextOperation", () => {
 			};
 
 			const toTransform: RichTextOperation = {
-				class: "RichText",
-				method: "edit",
-				item: ["item1"],
+				class: 'RichText',
+				method: 'edit',
+				item: ['item1'],
 				ops: [
 					{
-						type: "insert_text",
+						type: 'insert_text',
 						path: [0],
 						offset: 0,
-						text: "world",
+						text: 'world',
 					},
 				],
 			};
@@ -171,27 +171,27 @@ describe("transformRichTextOperation", () => {
 
 			expect(result).toBeDefined();
 			expect(result?.ops[0]).toEqual({
-				type: "insert_text",
+				type: 'insert_text',
 				path: [0],
 				offset: 6,
-				text: "world",
+				text: 'world',
 			});
 		});
 
-		it("should handle edit operation for different items in group edit", () => {
+		it('should handle edit operation for different items in group edit', () => {
 			const confirmed: RichTextOperation = {
-				class: "RichText",
-				method: "groupEdit",
+				class: 'RichText',
+				method: 'groupEdit',
 				itemsOps: [
 					{
-						item: "item1",
+						item: 'item1',
 						selection: null,
 						ops: [
 							{
-								type: "insert_text",
+								type: 'insert_text',
 								path: [0],
 								offset: 5,
-								text: "hello",
+								text: 'hello',
 							},
 						],
 					},
@@ -199,15 +199,15 @@ describe("transformRichTextOperation", () => {
 			};
 
 			const toTransform: RichTextOperation = {
-				class: "RichText",
-				method: "edit",
-				item: ["item2"],
+				class: 'RichText',
+				method: 'edit',
+				item: ['item2'],
 				ops: [
 					{
-						type: "insert_text",
+						type: 'insert_text',
 						path: [0],
 						offset: 3,
-						text: "world",
+						text: 'world',
 					},
 				],
 			};
@@ -216,45 +216,45 @@ describe("transformRichTextOperation", () => {
 
 			expect(result).toBeDefined();
 			expect(result?.ops[0]).toEqual({
-				type: "insert_text",
+				type: 'insert_text',
 				path: [0],
 				offset: 3,
-				text: "world",
+				text: 'world',
 			});
 		});
 	});
-	describe("Complex Transformation Scenarios", () => {
-		it("should handle multiple nested transformations", () => {
+	describe('Complex Transformation Scenarios', () => {
+		it('should handle multiple nested transformations', () => {
 			const confirmed: RichTextOperation = {
-				class: "RichText",
-				method: "groupEdit",
+				class: 'RichText',
+				method: 'groupEdit',
 				itemsOps: [
 					{
-						item: "item1",
+						item: 'item1',
 						selection: null,
 						ops: [
 							{
-								type: "insert_text",
+								type: 'insert_text',
 								path: [0],
 								offset: 0,
-								text: "hello ",
+								text: 'hello ',
 							},
 							{
-								type: "remove_text",
+								type: 'remove_text',
 								path: [0],
 								offset: 10,
-								text: "world",
+								text: 'world',
 							},
 						],
 					},
 					{
-						item: "item2",
+						item: 'item2',
 						selection: null,
 						ops: [
 							{
-								type: "insert_node",
+								type: 'insert_node',
 								path: [1],
-								node: { type: "paragraph" },
+								node: { type: 'paragraph' },
 							},
 						],
 					},
@@ -262,34 +262,34 @@ describe("transformRichTextOperation", () => {
 			};
 
 			const toTransform: RichTextOperation = {
-				class: "RichText",
-				method: "groupEdit",
+				class: 'RichText',
+				method: 'groupEdit',
 				itemsOps: [
 					{
-						item: "item1",
+						item: 'item1',
 						selection: null,
 						ops: [
 							{
-								type: "insert_text",
+								type: 'insert_text',
 								path: [0],
 								offset: 0,
-								text: "world",
+								text: 'world',
 							},
 							{
-								type: "set_node",
+								type: 'set_node',
 								path: [0],
 								newProperties: { bold: true },
 							},
 						],
 					},
 					{
-						item: "item2",
+						item: 'item2',
 						selection: null,
 						ops: [
 							{
-								type: "remove_node",
+								type: 'remove_node',
 								path: [1],
-								node: { type: "paragraph" },
+								node: { type: 'paragraph' },
 							},
 						],
 					},
@@ -298,31 +298,31 @@ describe("transformRichTextOperation", () => {
 			const result = transformRichTextOperation(confirmed, toTransform);
 			expect(result).toBeDefined();
 			expect(result?.itemsOps[0].ops[0]).toEqual({
-				type: "insert_text",
+				type: 'insert_text',
 				path: [0],
 				offset: 6,
-				text: "world",
+				text: 'world',
 			});
 			expect(result?.itemsOps[0].ops[1]).toEqual({
-				type: "set_node",
+				type: 'set_node',
 				path: [0],
 				newProperties: { bold: true },
 			});
 			expect(result?.itemsOps[1].ops[0]).toEqual({
-				type: "remove_node",
+				type: 'remove_node',
 				path: [2],
-				node: { type: "paragraph" },
+				node: { type: 'paragraph' },
 			});
 		});
 
-		it("should handle conflicting font style operations", () => {
+		it('should handle conflicting font style operations', () => {
 			const confirmed: RichTextOperation = {
-				class: "RichText",
-				method: "edit",
-				item: ["item1"],
+				class: 'RichText',
+				method: 'edit',
+				item: ['item1'],
 				ops: [
 					{
-						type: "set_node",
+						type: 'set_node',
 						path: [0],
 						properties: {},
 						newProperties: { bold: true },
@@ -331,12 +331,12 @@ describe("transformRichTextOperation", () => {
 			};
 
 			const toTransform: RichTextOperation = {
-				class: "RichText",
-				method: "edit",
-				item: ["item1"],
+				class: 'RichText',
+				method: 'edit',
+				item: ['item1'],
 				ops: [
 					{
-						type: "set_node",
+						type: 'set_node',
 						path: [0],
 						properties: {},
 						newProperties: { italic: true },
@@ -348,7 +348,7 @@ describe("transformRichTextOperation", () => {
 
 			expect(result).toBeDefined();
 			expect(result?.ops[0]).toEqual({
-				type: "set_node",
+				type: 'set_node',
 				path: [0],
 				properties: {
 					bold: true,

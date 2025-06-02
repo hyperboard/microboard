@@ -1,86 +1,78 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { removeText_removeText } from "./removeText_removeText";
-import { insertText_insertText } from "./insertText_insertText";
-import { removeText_insertText } from "./removeText_insertText";
-import { splitNode_insertText } from "./splitNode_insertText";
-import { removeNode_insertText } from "./removeNode_insertText";
-import { insertNode_insertText } from "./insertNode_insertText";
-import { mergeNode_insertText } from "./mergeNode_insertText";
-import { insertText_removeText } from "./insertText_removeText";
-import { insertNode_removeText } from "./insertNode_removeText";
-import { splitNode_removeText } from "./splitNode_removeText";
-import { mergeNode_removeText } from "./mergeNode_removeText";
-import { removeNode_removeText } from "./removeNode_removeText";
-import { insertText_insertNode } from "./insertText_insertNode";
-import { insertText_removeNode } from "./insertText_removeNode";
-import { removeText_insertNode } from "./removeText_insertNode";
-import { removeText_removeNode } from "./removeText_removeNode";
-import { insertNode_insertNode } from "./insertNode_insertNode";
-import { insertNode_removeNode } from "./insertNode_removeNode";
-import { removeNode_insertNode } from "./removeNode_insertNode";
-import { removeNode_removeNode } from "./removeNode_removeNode";
-import { splitNode_insertNode } from "./splitNode_insertNode";
-import { splitNode_removeNode } from "./splitNode_removeNode";
-import { mergeNode_insertNode } from "./mergeNode_insertNode";
-import { mergeNode_removeNode } from "./mergeNode_removeNode";
-import { setNode_insertNode } from "./setNode_insertNode";
-import { setNode_removeNode } from "./setNode_removeNode";
-import { insertText_mergeNode } from "./insertText_mergeNode";
-import { removeText_mergeNode } from "./removeText_mergeNode";
-import { insertNode_mergeNode } from "./insertNode_mergeNode";
-import { removeNode_mergeNode } from "./removeNode_mergeNode";
-import { splitNode_mergeNode } from "./splitNode_mergeNode";
-import { mergeNode_mergeNode } from "./mergeNode_mergeNode";
-import { insertText_splitNode } from "./insertText_splitNode";
-import { removeText_splitNode } from "./removeText_splitNode";
-import { insertNode_splitNode } from "./insertNode_splitNode";
-import { removeNode_splitNode } from "./removeNode_splitNode";
-import { mergeNode_splitNode } from "./mergeNode_splitNode";
-import { splitNode_splitNode } from "./splitNode_splitNode";
-import { setNode_splitNode } from "./setNode_splitNode";
-import { splitNode_setNode } from "./splitNode_setNode";
-import { mergeNode_setNode } from "./mergeNode_setNode";
-import { insertNode_setNode } from "./insertNode_setNode";
-import { removeNode_setNode } from "./removeNode_setNode";
-import { setNode_setNode } from "./setNode_setNode";
-import { RichTextOperation } from "Board/Items";
-import { Operation } from "../EventsOperations";
-import {
-	NodeOperation,
-	Operation as SlateOp,
-	TextOperation,
-	BaseEditor,
-} from "slate";
-import { ReactEditor } from "slate-react";
-import { HistoryEditor } from "slate-history";
-import { insertText_moveNode } from "./insertText_moveNode";
-import { removeText_moveNode } from "./removeText_moveNode";
-import { insertNode_moveNode } from "./insertNode_moveNode";
-import { splitNode_moveNode } from "./splitNode_moveNode";
-import { mergeNode_moveNode } from "./mergeNode_moveNode";
-import { removeNode_moveNode } from "./removeNode_moveNode";
-import { setNode_moveNode } from "./setNode_moveNode";
-import { basicTransformPath } from "./transformPath";
-import { moveNode_insertText } from "./moveNode_insertText";
-import { moveNode_removeText } from "./moveNode_removeText";
-import { moveNode_insertNode } from "./moveNode_insertNode";
-import { moveNode_mergeNode } from "./moveNode_mergeNode";
-import { moveNode_moveNode } from "./moveNode_moveNode";
-import { moveNode_removeNode } from "./moveNode_removeNode";
-import { moveNode_setNode } from "./moveNode_setNode";
-import { moveNode_splitNode } from "./moveNode_splitNode";
+import { removeText_removeText } from './removeText_removeText';
+import { insertText_insertText } from './insertText_insertText';
+import { removeText_insertText } from './removeText_insertText';
+import { splitNode_insertText } from './splitNode_insertText';
+import { removeNode_insertText } from './removeNode_insertText';
+import { insertNode_insertText } from './insertNode_insertText';
+import { mergeNode_insertText } from './mergeNode_insertText';
+import { insertText_removeText } from './insertText_removeText';
+import { insertNode_removeText } from './insertNode_removeText';
+import { splitNode_removeText } from './splitNode_removeText';
+import { mergeNode_removeText } from './mergeNode_removeText';
+import { removeNode_removeText } from './removeNode_removeText';
+import { insertText_insertNode } from './insertText_insertNode';
+import { insertText_removeNode } from './insertText_removeNode';
+import { removeText_insertNode } from './removeText_insertNode';
+import { removeText_removeNode } from './removeText_removeNode';
+import { insertNode_insertNode } from './insertNode_insertNode';
+import { insertNode_removeNode } from './insertNode_removeNode';
+import { removeNode_insertNode } from './removeNode_insertNode';
+import { removeNode_removeNode } from './removeNode_removeNode';
+import { splitNode_insertNode } from './splitNode_insertNode';
+import { splitNode_removeNode } from './splitNode_removeNode';
+import { mergeNode_insertNode } from './mergeNode_insertNode';
+import { mergeNode_removeNode } from './mergeNode_removeNode';
+import { setNode_insertNode } from './setNode_insertNode';
+import { setNode_removeNode } from './setNode_removeNode';
+import { insertText_mergeNode } from './insertText_mergeNode';
+import { removeText_mergeNode } from './removeText_mergeNode';
+import { insertNode_mergeNode } from './insertNode_mergeNode';
+import { removeNode_mergeNode } from './removeNode_mergeNode';
+import { splitNode_mergeNode } from './splitNode_mergeNode';
+import { mergeNode_mergeNode } from './mergeNode_mergeNode';
+import { insertText_splitNode } from './insertText_splitNode';
+import { removeText_splitNode } from './removeText_splitNode';
+import { insertNode_splitNode } from './insertNode_splitNode';
+import { removeNode_splitNode } from './removeNode_splitNode';
+import { mergeNode_splitNode } from './mergeNode_splitNode';
+import { splitNode_splitNode } from './splitNode_splitNode';
+import { setNode_splitNode } from './setNode_splitNode';
+import { splitNode_setNode } from './splitNode_setNode';
+import { mergeNode_setNode } from './mergeNode_setNode';
+import { insertNode_setNode } from './insertNode_setNode';
+import { removeNode_setNode } from './removeNode_setNode';
+import { setNode_setNode } from './setNode_setNode';
+import { RichTextOperation } from 'Items';
+import { Operation } from '../EventsOperations';
+import { NodeOperation, Operation as SlateOp, TextOperation, BaseEditor } from 'slate';
+import { ReactEditor } from 'slate-react';
+import { HistoryEditor } from 'slate-history';
+import { insertText_moveNode } from './insertText_moveNode';
+import { removeText_moveNode } from './removeText_moveNode';
+import { insertNode_moveNode } from './insertNode_moveNode';
+import { splitNode_moveNode } from './splitNode_moveNode';
+import { mergeNode_moveNode } from './mergeNode_moveNode';
+import { removeNode_moveNode } from './removeNode_moveNode';
+import { setNode_moveNode } from './setNode_moveNode';
+import { basicTransformPath } from './transformPath';
+import { moveNode_insertText } from './moveNode_insertText';
+import { moveNode_removeText } from './moveNode_removeText';
+import { moveNode_insertNode } from './moveNode_insertNode';
+import { moveNode_mergeNode } from './moveNode_mergeNode';
+import { moveNode_moveNode } from './moveNode_moveNode';
+import { moveNode_removeNode } from './moveNode_removeNode';
+import { moveNode_setNode } from './moveNode_setNode';
+import { moveNode_splitNode } from './moveNode_splitNode';
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
 
-type SlateOpTypesToTransform = TextOperation["type"] | NodeOperation["type"];
+type SlateOpTypesToTransform = TextOperation['type'] | NodeOperation['type'];
 export type SlateOpsToTransform = TextOperation | NodeOperation;
-type TransformFunction<
-	T extends SlateOpsToTransform,
-	U extends SlateOpsToTransform,
-> = (
+type TransformFunction<T extends SlateOpsToTransform, U extends SlateOpsToTransform> = (
 	confirmed: T,
 	toTransform: U,
-	editor: BaseEditor & ReactEditor & HistoryEditor,
+	editor: BaseEditor & ReactEditor & HistoryEditor
 ) => U | undefined;
 
 type OperationTransformMap = {
@@ -179,56 +171,49 @@ const operationTransformMap: OperationTransformMap = {
 
 export function transformRichTextOperation(
 	confirmed: RichTextOperation,
-	toTransform: RichTextOperation,
+	toTransform: RichTextOperation
 	// board: Board,
 ): RichTextOperation | undefined {
 	// groupEdit - groupEdit
-	if (
-		confirmed.method === "groupEdit" &&
-		toTransform.method === "groupEdit"
-	) {
-		const transformedItemsOps = toTransform.itemsOps.map(
-			toTransformItemOp => {
-				const confirmedItemOp = confirmed.itemsOps.find(
-					confItemOp => confItemOp.item === toTransformItemOp.item,
-				);
-				// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
+	if (confirmed.method === 'groupEdit' && toTransform.method === 'groupEdit') {
+		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
+			const confirmedItemOp = confirmed.itemsOps.find(
+				confItemOp => confItemOp.item === toTransformItemOp.item
+			);
+			// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
 
-				// if (!confirmedItemOp || !rt) {
-				if (!confirmedItemOp) {
-					return toTransformItemOp;
-				}
+			// if (!confirmedItemOp || !rt) {
+			if (!confirmedItemOp) {
+				return toTransformItemOp;
+			}
 
-				// const editor = rt.editor.editor;
-				const transformedOps: SlateOp[] = [];
+			// const editor = rt.editor.editor;
+			const transformedOps: SlateOp[] = [];
 
-				for (const transfOp of toTransformItemOp.ops) {
-					let actualyTransformed = { ...transfOp };
+			for (const transfOp of toTransformItemOp.ops) {
+				let actualyTransformed = { ...transfOp };
 
-					for (const confOp of confirmedItemOp.ops) {
-						const transformFunction =
-							operationTransformMap[confOp.type]?.[
-								actualyTransformed.type
-							];
-						const transformed =
-							transformFunction &&
-							// transformFunction(confOp, actualyTransformed, editor);
-							transformFunction(confOp, actualyTransformed);
+				for (const confOp of confirmedItemOp.ops) {
+					const transformFunction =
+						operationTransformMap[confOp.type]?.[actualyTransformed.type];
+					const transformed =
+						transformFunction &&
+						// transformFunction(confOp, actualyTransformed, editor);
+						transformFunction(confOp, actualyTransformed);
 
-						if (transformed) {
-							actualyTransformed = transformed;
-						}
+					if (transformed) {
+						actualyTransformed = transformed;
 					}
-
-					transformedOps.push(actualyTransformed);
 				}
 
-				return {
-					...toTransformItemOp,
-					ops: transformedOps,
-				};
-			},
-		);
+				transformedOps.push(actualyTransformed);
+			}
+
+			return {
+				...toTransformItemOp,
+				ops: transformedOps,
+			};
+		});
 
 		return {
 			...toTransform,
@@ -238,8 +223,8 @@ export function transformRichTextOperation(
 
 	// edit-edit
 	if (
-		confirmed.method === "edit" &&
-		toTransform.method === "edit" &&
+		confirmed.method === 'edit' &&
+		toTransform.method === 'edit' &&
 		toTransform.item[0] === confirmed.item[0]
 	) {
 		// const rt = board.items.getById(toTransform.item[0])?.getRichText();
@@ -253,9 +238,7 @@ export function transformRichTextOperation(
 
 			for (const confOp of confirmed.ops) {
 				const transformFunction =
-					operationTransformMap[confOp.type]?.[
-						actualyTransformed.type
-					];
+					operationTransformMap[confOp.type]?.[actualyTransformed.type];
 				const transformed =
 					transformFunction &&
 					// transformFunction(confOp, actualyTransformed, rt.editor.editor);
@@ -276,7 +259,7 @@ export function transformRichTextOperation(
 	}
 
 	// groupEdit - edit
-	if (confirmed.method === "groupEdit" && toTransform.method === "edit") {
+	if (confirmed.method === 'groupEdit' && toTransform.method === 'edit') {
 		const transformedOps: SlateOp[] = [];
 
 		for (const confItemOp of confirmed.itemsOps) {
@@ -288,12 +271,9 @@ export function transformRichTextOperation(
 
 					for (const confOp of confItemOp.ops) {
 						const transformFunction =
-							operationTransformMap[confOp.type]?.[
-								actualyTransformed.type
-							];
+							operationTransformMap[confOp.type]?.[actualyTransformed.type];
 						const transformed =
-							transformFunction &&
-							transformFunction(confOp, actualyTransformed);
+							transformFunction && transformFunction(confOp, actualyTransformed);
 						// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 
 						if (transformed) {
@@ -315,44 +295,39 @@ export function transformRichTextOperation(
 	}
 
 	// edit - groupEdit
-	if (confirmed.method === "edit" && toTransform.method === "groupEdit") {
-		const transformedItemsOps = toTransform.itemsOps.map(
-			toTransformItemOp => {
-				const transformedOps: SlateOp[] = [];
+	if (confirmed.method === 'edit' && toTransform.method === 'groupEdit') {
+		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
+			const transformedOps: SlateOp[] = [];
 
-				// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
-				// if (confirmed.item[0] === toTransformItemOp.item && rt ) {
-				if (confirmed.item[0] === toTransformItemOp.item) {
-					for (const transfOp of toTransformItemOp.ops) {
-						let actualyTransformed = { ...transfOp };
+			// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
+			// if (confirmed.item[0] === toTransformItemOp.item && rt ) {
+			if (confirmed.item[0] === toTransformItemOp.item) {
+				for (const transfOp of toTransformItemOp.ops) {
+					let actualyTransformed = { ...transfOp };
 
-						for (const confOp of confirmed.ops) {
-							const transformFunction =
-								operationTransformMap[confOp.type]?.[
-									actualyTransformed.type
-								];
-							const transformed =
-								transformFunction &&
-								transformFunction(confOp, actualyTransformed);
-							// transformFunction(confOp, actualyTransformed, rt.editor.editor);
+					for (const confOp of confirmed.ops) {
+						const transformFunction =
+							operationTransformMap[confOp.type]?.[actualyTransformed.type];
+						const transformed =
+							transformFunction && transformFunction(confOp, actualyTransformed);
+						// transformFunction(confOp, actualyTransformed, rt.editor.editor);
 
-							if (transformed) {
-								actualyTransformed = transformed;
-							}
+						if (transformed) {
+							actualyTransformed = transformed;
 						}
-
-						transformedOps.push(actualyTransformed);
 					}
-				} else {
-					transformedOps.push(...toTransformItemOp.ops);
-				}
 
-				return {
-					...toTransformItemOp,
-					ops: transformedOps,
-				};
-			},
-		);
+					transformedOps.push(actualyTransformed);
+				}
+			} else {
+				transformedOps.push(...toTransformItemOp.ops);
+			}
+
+			return {
+				...toTransformItemOp,
+				ops: transformedOps,
+			};
+		});
 
 		return {
 			...toTransform,
@@ -365,10 +340,10 @@ export function transformRichTextOperation(
 
 export function transfromOperation(
 	confirmed: Operation,
-	toTransform: Operation,
+	toTransform: Operation
 	// board,
 ): Operation | undefined {
-	if (confirmed.class === "RichText" && toTransform.class === "RichText") {
+	if (confirmed.class === 'RichText' && toTransform.class === 'RichText') {
 		return transformRichTextOperation(confirmed, toTransform);
 		// return transformRichTextOperation(confirmed, toTransform, board);
 	}

@@ -1,9 +1,9 @@
-import { Board } from "Board";
-import { RichText } from "./RichText";
-import { GroupEdit, RichTextOperation } from "./RichTextOperations";
-import { Command } from "Board/Events";
-import { Operation } from "slate";
-import { conf } from "Board/Settings";
+import { Board } from 'Board';
+import { RichText } from './RichText';
+import { GroupEdit, RichTextOperation } from './RichTextOperations';
+import { Command } from 'Events';
+import { Operation } from 'slate';
+import { conf } from 'Settings';
 
 export class RichTextCommand implements Command {
 	private reverse: { item: string; operation: RichTextOperation }[];
@@ -11,7 +11,7 @@ export class RichTextCommand implements Command {
 	constructor(
 		private board: Board,
 		private richText: string[],
-		private operation: RichTextOperation,
+		private operation: RichTextOperation
 	) {
 		this.reverse = this.getReverse();
 	}
@@ -37,21 +37,17 @@ export class RichTextCommand implements Command {
 	}
 
 	getReverse(): { item: string; operation: RichTextOperation }[] {
-		const items = Array.isArray(this.richText)
-			? this.richText
-			: [this.richText];
+		const items = Array.isArray(this.richText) ? this.richText : [this.richText];
 		switch (this.operation.method) {
-			case "edit":
-			case "setSelectionHorizontalAlignment":
-			case "setSelectionFontHighlight":
-			case "setSelectionFontSize":
-			case "setSelectionFontFamily":
-			case "setSelectionFontStyle":
-			case "setSelectionFontColor":
-			case "setSelectionBlockType":
-				const inverseOps = this.operation.ops
-					.map(op => Operation.inverse(op))
-					.reverse();
+			case 'edit':
+			case 'setSelectionHorizontalAlignment':
+			case 'setSelectionFontHighlight':
+			case 'setSelectionFontSize':
+			case 'setSelectionFontFamily':
+			case 'setSelectionFontStyle':
+			case 'setSelectionFontColor':
+			case 'setSelectionBlockType':
+				const inverseOps = this.operation.ops.map(op => Operation.inverse(op)).reverse();
 				// actually there is only one item
 				return items.map(item => {
 					const operation = {
@@ -62,123 +58,99 @@ export class RichTextCommand implements Command {
 				});
 			// should replace whole text ops with selection ops
 			// and handle them the same way, or the reverse ops would be incorrect
-			case "setFontColor":
+			case 'setFontColor':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						fontColor:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getFontColor() ||
+							this.board.items.getById(id)?.getRichText()?.getFontColor() ||
 							conf.DEFAULT_TEXT_STYLES.fontColor,
 					},
 				}));
 
-			case "setBlockType":
+			case 'setBlockType':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						type:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getBlockType() || "paragraph",
+							this.board.items.getById(id)?.getRichText()?.getBlockType() ||
+							'paragraph',
 					},
 				}));
 
-			case "setFontStyle":
+			case 'setFontStyle':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						fontStyleList:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getFontStyles() || [],
+							this.board.items.getById(id)?.getRichText()?.getFontStyles() || [],
 					},
 				}));
 
-			case "setFontFamily":
+			case 'setFontFamily':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						fontFamily:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getFontFamily() ||
+							this.board.items.getById(id)?.getRichText()?.getFontFamily() ||
 							conf.DEFAULT_TEXT_STYLES.fontFamily,
 					},
 				}));
 
-			case "setFontSize":
+			case 'setFontSize':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						fontSize:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getFontSize() ||
+							this.board.items.getById(id)?.getRichText()?.getFontSize() ||
 							conf.DEFAULT_TEXT_STYLES.fontSize,
 					},
 				}));
 
-			case "setFontHighlight":
+			case 'setFontHighlight':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						fontHighlight:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getFontHighlight() ||
+							this.board.items.getById(id)?.getRichText()?.getFontHighlight() ||
 							conf.DEFAULT_TEXT_STYLES.fontHighlight,
 					},
 				}));
 
-			case "setHorisontalAlignment":
+			case 'setHorisontalAlignment':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						horisontalAlignment:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getHorisontalAlignment() ?? "left",
+							this.board.items.getById(id)?.getRichText()?.getHorisontalAlignment() ??
+							'left',
 					},
 				}));
 
-			case "setVerticalAlignment":
+			case 'setVerticalAlignment':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
 						verticalAlignment:
-							this.board.items
-								.getById(id)
-								?.getRichText()
-								?.getVerticalAlignment() || "top",
+							this.board.items.getById(id)?.getRichText()?.getVerticalAlignment() ||
+							'top',
 					},
 				}));
 
-			case "setMaxWidth":
+			case 'setMaxWidth':
 				return items.map(id => ({
 					item: id,
 					operation: {
 						...this.operation,
-						maxWidth: this.board.items
-							.getById(id)
-							?.getRichText()
-							?.getMaxWidth(),
+						maxWidth: this.board.items.getById(id)?.getRichText()?.getMaxWidth(),
 					},
 				}));
 
@@ -206,10 +178,7 @@ export class RichTextGroupCommand implements Command {
 	private forwardOps: TextEdits[];
 	private reverseOps: TextEdits[];
 
-	constructor(
-		private richText: RichText[],
-		private operation: GroupEdit,
-	) {
+	constructor(private richText: RichText[], private operation: GroupEdit) {
 		this.forwardOps = this.getForward();
 		this.reverseOps = this.getReverse();
 	}
@@ -234,9 +203,9 @@ export class RichTextGroupCommand implements Command {
 			forward.push({
 				item: richText,
 				operation: {
-					class: "RichText",
-					method: "edit",
-					item: [richText.getId() ?? ""],
+					class: 'RichText',
+					method: 'edit',
+					item: [richText.getId() ?? ''],
 					ops,
 				},
 			});
@@ -252,9 +221,9 @@ export class RichTextGroupCommand implements Command {
 			reverse.push({
 				item: richText,
 				operation: {
-					class: "RichText",
-					method: "edit",
-					item: [richText.getId() ?? ""],
+					class: 'RichText',
+					method: 'edit',
+					item: [richText.getId() ?? ''],
 					ops: ops.map(op => Operation.inverse(op)).reverse(),
 				},
 			});

@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Cross = {
-	name: "Cross",
+	name: 'Cross',
 	textBounds: new Mbr(25, 25, 75, 75),
 	path: new Path(
 		[
@@ -18,14 +18,9 @@ export const Cross = {
 			new Line(new Point(25, 75), new Point(0, 75)),
 			new Line(new Point(0, 75), new Point(0, 25)),
 		],
-		true,
+		true
 	),
-	anchorPoints: [
-		new Point(0, 50),
-		new Point(50, 0),
-		new Point(100, 50),
-		new Point(50, 100),
-	],
+	anchorPoints: [new Point(0, 50), new Point(50, 0), new Point(100, 50), new Point(50, 100)],
 	createPath: (mbr: Mbr) => Cross.path.copy(),
 	useMbrUnderPointer: false,
 };

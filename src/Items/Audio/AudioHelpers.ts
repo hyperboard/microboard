@@ -1,29 +1,28 @@
-import { fileTosha256 } from "shared/sha256";
-import { Board } from "Board/Board";
-import { AudioItem } from "Board/Items/Audio/Audio";
-import { Matrix } from "Board/Items/Transformation/Matrix";
-import { conf } from "Board/Settings";
-import { catchErrorResponse } from "Board/Items/Image/ImageHelpers";
+import { fileTosha256 } from 'sha256';
+import { Board } from 'Board';
+import { AudioItem } from 'Items/Audio/Audio';
+import { Matrix } from 'Items/Transformation/Matrix';
+import { catchErrorResponse } from 'Items/Image/ImageHelpers';
 
 export const uploadAudioToStorage = async (
 	hash: string,
 	audioBlob: Blob,
 	accessToken: string | null,
-	boardId: string,
+	boardId: string
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fetch(`${window.location.origin}/api/v1/media/audio/${boardId}`, {
-			method: "POST",
+			method: 'POST',
 			headers: {
-				"Content-Type": audioBlob.type,
-				"x-audio-id": hash,
+				'Content-Type': audioBlob.type,
+				'x-audio-id': hash,
 				Authorization: `Bearer ${accessToken}`,
 			},
 			body: audioBlob,
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response, "audio");
+					return catchErrorResponse(response, 'audio');
 				}
 				return response.json();
 			})
@@ -32,7 +31,7 @@ export const uploadAudioToStorage = async (
 				resolve(data.src);
 			})
 			.catch(error => {
-				console.error("Media storage error:", error);
+				console.error('Media storage error:', error);
 				reject(error);
 			});
 	});
@@ -41,10 +40,10 @@ export const uploadAudioToStorage = async (
 export const prepareAudio = (
 	file: File,
 	accessToken: string | null,
-	boardId: string,
+	boardId: string
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		const audio = document.createElement("audio");
+		const audio = document.createElement('audio');
 		audio.src = URL.createObjectURL(file);
 		audio.onloadedmetadata = () => {
 			fileTosha256(file)
@@ -56,11 +55,11 @@ export const prepareAudio = (
 						.catch(reject);
 				})
 				.catch(() => {
-					reject(new Error("Failed to generate hash"));
+					reject(new Error('Failed to generate hash'));
 				});
 		};
 		audio.onerror = () => {
-			reject(new Error("Failed to load audio"));
+			reject(new Error('Failed to load audio'));
 		};
 	});
 };

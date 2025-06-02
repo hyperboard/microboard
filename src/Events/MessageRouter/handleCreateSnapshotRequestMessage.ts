@@ -1,9 +1,9 @@
-import { Board } from "Board";
-import { SnapshotToPublish } from "../Events";
-import { conf } from "Board/Settings";
+import { Board } from 'Board';
+import { SnapshotToPublish } from '../Events';
+import { conf } from 'Settings';
 
 export interface SnapshotRequestMsg {
-	type: "CreateSnapshotRequest";
+	type: 'CreateSnapshotRequest';
 	boardId: string;
 }
 
@@ -17,7 +17,7 @@ export function handleCreateSnapshotRequestMessage(msg, board: Board): void {
 	const { boardId, snapshot, lastOrder } = getSnapshotToPublish(board);
 
 	conf.connection.send({
-		type: "BoardSnapshot",
+		type: 'BoardSnapshot',
 		boardId,
 		snapshot,
 		lastEventOrder: lastOrder,

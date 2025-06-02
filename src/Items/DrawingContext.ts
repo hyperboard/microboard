@@ -1,6 +1,6 @@
-import { Camera } from "Board/Camera";
-import { Matrix } from "./Transformation/Matrix";
-import { conf } from "Board/Settings";
+import { Camera } from 'Camera';
+import { conf } from 'Settings';
+import { Matrix } from './Transformation';
 
 /** A container for a CanvasRenderingContext2D, to extend it with more data. */
 export class DrawingContext {
@@ -12,7 +12,7 @@ export class DrawingContext {
 		public camera: Camera,
 		public ctx: CanvasRenderingContext2D, // fix here
 		public cursorCtx?: CanvasRenderingContext2D,
-		public matrix = new Matrix(),
+		public matrix = new Matrix()
 	) {
 		this.setCamera(camera);
 	}
@@ -31,12 +31,7 @@ export class DrawingContext {
 	clear(): void {
 		this.ctx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
 		// used window.innerWidth and innerHeight before, if document works fine delete this comment
-		this.ctx.clearRect(
-			0,
-			0,
-			conf.getDocumentWidth(),
-			conf.getDocumentHeight(),
-		);
+		this.ctx.clearRect(0, 0, conf.getDocumentWidth(), conf.getDocumentHeight());
 		this.matrix.applyToContext(this.ctx);
 	}
 
@@ -46,12 +41,7 @@ export class DrawingContext {
 		}
 		this.cursorCtx.setTransform(1 * this.dpi(), 0, 0, 1 * this.dpi(), 0, 0);
 		// used window.innerWidth and innerHeight before, if document works fine delete this comment
-		this.cursorCtx.clearRect(
-			0,
-			0,
-			conf.getDocumentWidth(),
-			conf.getDocumentHeight(),
-		);
+		this.cursorCtx.clearRect(0, 0, conf.getDocumentWidth(), conf.getDocumentHeight());
 		this.matrix.applyToContext(this.cursorCtx);
 	}
 

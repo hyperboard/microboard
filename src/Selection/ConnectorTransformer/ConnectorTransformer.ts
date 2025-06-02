@@ -1,40 +1,34 @@
-import { Tool } from "../../Tools/Tool";
-import { Board } from "../../Board";
-import { Selection } from "../Selection";
-import { SelectionItems } from "../SelectionItems";
-import { Connector, Point } from "../../Items";
-import { DrawingContext } from "../../Items/DrawingContext";
-import { Cursor } from "../../Pointer";
-import { Anchor } from "Board/Items/Anchor";
-import { ConnectorSnap } from "Board/Items/Connector/ConnectorSnap";
-import {
-	CONNECTOR_ANCHOR_TYPE,
-	CONNECTOR_ANCHOR_COLOR,
-} from "Board/Items/Connector/Connector";
-import { ControlPoint } from "Board/Items/Connector";
-import { ControlPointData } from "Board/Items/Connector/ControlPoint";
+import { Board } from 'Board';
+import { Connector, Point } from 'Items';
+import { Anchor } from 'Items/Anchor';
+import { ControlPoint } from 'Items/Connector';
+// TODO move to conf
+import { CONNECTOR_ANCHOR_TYPE, CONNECTOR_ANCHOR_COLOR } from 'Items/Connector/Connector';
+import { ConnectorSnap } from 'Items/Connector/ConnectorSnap';
+import { ControlPointData } from 'Items/Connector/ControlPoint';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Cursor } from 'Pointer';
+import { SelectionItems } from 'Selection/SelectionItems';
+import { Tool } from 'Tools/Tool';
 
 const config = {
 	anchorDistance: 10,
 };
 
-type PointersState = "start" | "end" | "middle" | "none";
+type PointersState = 'start' | 'end' | 'middle' | 'none';
 export class ConnectorTransformer extends Tool {
 	private startPointerAnchor: Anchor | null = null;
 	private endPointerAnchor: Anchor | null = null;
 	private middlePointerAnchor: Anchor | null = null;
 
-	private statePointer: PointersState = "none";
-	private state: Cursor = "default";
+	private statePointer: PointersState = 'none';
+	private state: Cursor = 'default';
 
 	private snap: ConnectorSnap;
 	private connector: Connector | null = null;
 	beginTimeStamp = Date.now();
 
-	constructor(
-		private board: Board,
-		private selection: Selection,
-	) {
+	constructor(private board: Board, private selection: Selection) {
 		super();
 		this.snap = new ConnectorSnap(this.board);
 	}
@@ -47,7 +41,7 @@ export class ConnectorTransformer extends Tool {
 	private getConnector(items: SelectionItems): Connector | null {
 		if (items.isSingle()) {
 			const connector = items.getSingle();
-			if (connector?.itemType === "Connector") {
+			if (connector?.itemType === 'Connector') {
 				return connector;
 			}
 		}
@@ -56,28 +50,28 @@ export class ConnectorTransformer extends Tool {
 
 	leftButtonDown(): boolean {
 		if (this.isHoveringAnchor(this.startPointerAnchor)) {
-			this.statePointer = "start";
-			this.state = "grabbing";
+			this.statePointer = 'start';
+			this.state = 'grabbing';
 		} else if (this.isHoveringAnchor(this.endPointerAnchor)) {
-			this.statePointer = "end";
-			this.state = "grabbing";
+			this.statePointer = 'end';
+			this.state = 'grabbing';
 		} else if (this.isHoveringAnchor(this.middlePointerAnchor)) {
-			this.statePointer = "middle";
-			this.state = "grabbing";
+			this.statePointer = 'middle';
+			this.state = 'grabbing';
 		}
 
 		this.beginTimeStamp = Date.now();
-		return this.state !== "default";
+		return this.state !== 'default';
 	}
 
 	leftButtonUp(): boolean {
 		this.snap.clear();
 		const oldValue = this.state;
-		this.statePointer = "none";
-		this.state = "default";
+		this.statePointer = 'none';
+		this.state = 'default';
 		this.beginTimeStamp = Date.now();
 		this.board.tools.publish();
-		return oldValue !== "default";
+		return oldValue !== 'default';
 	}
 
 	pointerMoveBy(_x: number, _y: number): boolean {
@@ -85,20 +79,20 @@ export class ConnectorTransformer extends Tool {
 		const connector = this.board.selection.items.getSingle();
 
 		if (connector && connector.transformation.isLocked) {
-			pointer.setCursor("default");
+			pointer.setCursor('default');
 			return false;
 		}
 
-		if (this.state === "grabbing") {
+		if (this.state === 'grabbing') {
 			this.updateConnectorPoints();
-			pointer.setCursor("grabbing");
+			pointer.setCursor('grabbing');
 		} else if (
 			this.isHoveringAnchor(this.startPointerAnchor) ||
 			this.isHoveringAnchor(this.endPointerAnchor)
 		) {
-			pointer.setCursor("grab");
+			pointer.setCursor('grab');
 		} else {
-			pointer.setCursor("default");
+			pointer.setCursor('default');
 		}
 		return false;
 	}
@@ -112,15 +106,15 @@ export class ConnectorTransformer extends Tool {
 			this.snap.snap.anchor.render(context, CONNECTOR_ANCHOR_TYPE, true);
 		}
 
-		if (this.statePointer !== "start" && this.startPointerAnchor) {
+		if (this.statePointer !== 'start' && this.startPointerAnchor) {
 			this.startPointerAnchor.render(context);
 		}
-		if (this.statePointer !== "end" && this.endPointerAnchor) {
+		if (this.statePointer !== 'end' && this.endPointerAnchor) {
 			this.endPointerAnchor.render(context);
 		}
 
-		if (this.statePointer !== "middle" && this.middlePointerAnchor) {
-			this.middlePointerAnchor.render(context, "circle");
+		if (this.statePointer !== 'middle' && this.middlePointerAnchor) {
+			this.middlePointerAnchor.render(context, 'circle');
 		}
 	}
 
@@ -132,10 +126,7 @@ export class ConnectorTransformer extends Tool {
 			const point = this.snap.getControlPoint();
 			const setterMap: Record<
 				PointersState,
-				(
-					point: ControlPoint | ControlPointData,
-					timestamp?: number,
-				) => void
+				(point: ControlPoint | ControlPointData, timestamp?: number) => void
 			> = {
 				start: connector.setStartPoint,
 				end: connector.setEndPoint,
@@ -170,7 +161,7 @@ export class ConnectorTransformer extends Tool {
 				start.y,
 				5,
 				CONNECTOR_ANCHOR_COLOR.anchorBorder,
-				CONNECTOR_ANCHOR_COLOR.anchorBackground,
+				CONNECTOR_ANCHOR_COLOR.anchorBackground
 			);
 			const end = connector.getEndPoint();
 			this.endPointerAnchor = new Anchor(
@@ -178,19 +169,18 @@ export class ConnectorTransformer extends Tool {
 				end.y,
 				5,
 				CONNECTOR_ANCHOR_COLOR.anchorBorder,
-				CONNECTOR_ANCHOR_COLOR.anchorBackground,
+				CONNECTOR_ANCHOR_COLOR.anchorBackground
 			);
-			const middlePoints =
-				connector.getMiddlePoint() || connector.calculateMiddlePoint();
+			const middlePoints = connector.getMiddlePoint() || connector.calculateMiddlePoint();
 			const nearestMiddlePoint = connector.getNearestEdgePointTo(
-				new Point(middlePoints.x, middlePoints.y),
+				new Point(middlePoints.x, middlePoints.y)
 			);
 			this.middlePointerAnchor = new Anchor(
 				nearestMiddlePoint.x,
 				nearestMiddlePoint.y,
 				5,
 				CONNECTOR_ANCHOR_COLOR.anchorBorder,
-				CONNECTOR_ANCHOR_COLOR.anchorBorder,
+				CONNECTOR_ANCHOR_COLOR.anchorBorder
 			);
 		} else {
 			this.startPointerAnchor = null;

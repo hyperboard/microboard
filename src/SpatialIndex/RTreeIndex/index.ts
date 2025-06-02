@@ -1,8 +1,8 @@
-import RBush, { BBox } from "rbush";
-import knn from "rbush-knn";
-import { Point, Mbr } from "Board/Items";
-import { Item } from "Board/Items";
-import { Container } from "../LayeredIndex";
+import RBush, { BBox } from 'rbush';
+import knn from 'rbush-knn';
+import { Point, Mbr } from 'Items';
+import { Item } from 'Items';
+import { Container } from '../LayeredIndex';
 
 /* 
 RBush can not remove a rectangle if its bounds were changed. 
@@ -162,7 +162,7 @@ export class RTreeIndex {
 		point: Point,
 		maxItems: number,
 		filter: (item: Item) => boolean,
-		maxDistance: number,
+		maxDistance: number
 	): Item[] {
 		return knn<Container>(
 			this.tree,
@@ -170,7 +170,7 @@ export class RTreeIndex {
 			point.y,
 			maxItems,
 			container => filter(container.item),
-			maxDistance,
+			maxDistance
 		).map(container => container.item);
 		/*
 		function containerFilter(container: Container): boolean {

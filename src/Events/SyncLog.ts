@@ -1,13 +1,8 @@
-import { Subject } from "shared/Subject";
-import { HistoryRecord } from "./EventsLog";
+import { Subject } from 'Subject';
+import { HistoryRecord } from './EventsLog';
 
 export interface SyncLogMsg {
-	msg:
-		| "addedNew"
-		| "confirmed"
-		| "toSend"
-		| "revertUnconfirmed"
-		| "applyUnconfirmed";
+	msg: 'addedNew' | 'confirmed' | 'toSend' | 'revertUnconfirmed' | 'applyUnconfirmed';
 	records: HistoryRecord[];
 }
 

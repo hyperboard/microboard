@@ -1,6 +1,6 @@
-import { Matrix, Point } from "Board/Items";
-import { Subject } from "../../shared/Subject";
-import { Cursor, CursorName, CursorsMap } from "./Cursor";
+import { Point, Matrix } from 'Items';
+import { Subject } from 'Subject';
+import { CursorsMap, CursorName, Cursor } from './Cursor';
 
 export const cursorsMap: CursorsMap = {};
 export class Pointer {
@@ -10,7 +10,7 @@ export class Pointer {
 	previous = new Point();
 	delta = new Point();
 
-	private cursor = "default";
+	private cursor = 'default';
 
 	setCursor(cursor: CursorName): void {
 		if (this.cursor !== cursor) {

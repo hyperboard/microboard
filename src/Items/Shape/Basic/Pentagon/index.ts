@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Pentagon = {
-	name: "Pentagon",
+	name: 'Pentagon',
 	textBounds: new Mbr(20, 30, 80, 90),
 	path: new Path(
 		[
@@ -11,7 +11,7 @@ export const Pentagon = {
 			new Line(new Point(75, 100), new Point(25, 100)),
 			new Line(new Point(25, 100), new Point(0, 50)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(0, 35),

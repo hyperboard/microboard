@@ -1,20 +1,20 @@
-import { Events, Operation } from "Board/Events";
-import { Subject } from "shared/Subject";
-import { DrawingContext } from "../DrawingContext";
-import { Mbr } from "../Mbr";
-import { Transformation } from "../Transformation";
-import { TransformationData } from "../Transformation/TransformationData";
-import { Board } from "Board/Board";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Path } from "../Path";
-import { Point } from "Board/Items/Point/Point";
-import { Line } from "Board/Items/Line/Line";
-import { conf } from "Board/Settings";
-import { AudioCommand } from "Board/Items/Audio/AudioCommand";
+import { Events, Operation } from 'Events';
+import { Subject } from 'Subject';
+import { DrawingContext } from '../DrawingContext';
+import { Mbr } from '../Mbr';
+import { Transformation } from '../Transformation';
+import { TransformationData } from '../Transformation/TransformationData';
+import { Board } from 'Board';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { Path } from '../Path';
+import { Point } from 'Items/Point/Point';
+import { Line } from 'Items/Line/Line';
+import { conf } from 'Settings';
+import { AudioCommand } from 'Items/Audio/AudioCommand';
 
 export interface AudioItemData {
-	itemType: "Audio";
+	itemType: 'Audio';
 	url: string;
 	transformation: TransformationData;
 	isStorageUrl: boolean;
@@ -22,15 +22,15 @@ export interface AudioItemData {
 }
 
 export class AudioItem extends Mbr {
-	readonly itemType = "Audio";
-	parent = "Board";
+	readonly itemType = 'Audio';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	readonly subject = new Subject<AudioItem>();
 	loadCallbacks: ((audio: AudioItem) => void)[] = [];
 	beforeLoadCallbacks: ((audio: AudioItem) => void)[] = [];
 	transformationRenderBlock?: boolean = undefined;
-	private url = "";
+	private url = '';
 	board: Board;
 	private isPlaying = false;
 	private currentTime = 0;
@@ -41,8 +41,8 @@ export class AudioItem extends Mbr {
 		isStorageUrl: boolean,
 		url?: string,
 		private events?: Events,
-		private id = "",
-		private extension?: string,
+		private id = '',
+		private extension?: string
 	) {
 		super();
 		this.linkTo = new LinkTo(this.id, events);
@@ -110,15 +110,15 @@ export class AudioItem extends Mbr {
 
 	setUrl(url: string): void {
 		this.emit({
-			class: "Audio",
-			method: "setUrl",
+			class: 'Audio',
+			method: 'setUrl',
 			item: [this.getId()],
 			url,
 		});
 	}
 
 	getStorageId() {
-		return this.url.split("/").pop();
+		return this.url.split('/').pop();
 	}
 
 	getUrl() {
@@ -139,8 +139,7 @@ export class AudioItem extends Mbr {
 	};
 
 	updateMbr(): void {
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		this.left = translateX;
 		this.top = translateY;
 		this.right = this.left + conf.AUDIO_DIMENSIONS.width * scaleX;
@@ -155,7 +154,7 @@ export class AudioItem extends Mbr {
 		const radius = 12 * this.transformation.getScale().x;
 
 		ctx.save();
-		ctx.globalCompositeOperation = "destination-out";
+		ctx.globalCompositeOperation = 'destination-out';
 
 		ctx.beginPath();
 		ctx.moveTo(this.left + radius, this.top);
@@ -164,24 +163,21 @@ export class AudioItem extends Mbr {
 			this.left + this.getWidth(),
 			this.top,
 			this.left + this.getWidth(),
-			this.top + radius,
+			this.top + radius
 		);
-		ctx.lineTo(
-			this.left + this.getWidth(),
-			this.top + this.getHeight() - radius,
-		);
+		ctx.lineTo(this.left + this.getWidth(), this.top + this.getHeight() - radius);
 		ctx.quadraticCurveTo(
 			this.left + this.getWidth(),
 			this.top + this.getHeight(),
 			this.left + this.getWidth() - radius,
-			this.top + this.getHeight(),
+			this.top + this.getHeight()
 		);
 		ctx.lineTo(this.left + radius, this.top + this.getHeight());
 		ctx.quadraticCurveTo(
 			this.left,
 			this.top + this.getHeight(),
 			this.left,
-			this.top + this.getHeight() - radius,
+			this.top + this.getHeight() - radius
 		);
 		ctx.lineTo(this.left, this.top + radius);
 		ctx.quadraticCurveTo(this.left, this.top, this.left + radius, this.top);
@@ -192,32 +188,31 @@ export class AudioItem extends Mbr {
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("audio-item");
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const div = documentFactory.createElement('audio-item');
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 		div.id = this.getId();
 		div.style.width = `${conf.AUDIO_DIMENSIONS.width}px`;
 		div.style.height = `${conf.AUDIO_DIMENSIONS.height}px`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
-		div.setAttribute("audio-url", this.getUrl());
+		div.style.position = 'absolute';
+		div.setAttribute('audio-url', this.getUrl());
 		if (this.extension) {
-			div.setAttribute("extension", this.extension);
+			div.setAttribute('extension', this.extension);
 		}
 		if (this.isStorageUrl) {
-			div.setAttribute("is-storage-url", "true");
+			div.setAttribute('is-storage-url', 'true');
 		}
-		div.setAttribute("data-link-to", "");
+		div.setAttribute('data-link-to', '');
 
 		return div;
 	}
 
 	serialize(): AudioItemData {
 		return {
-			itemType: "Audio",
+			itemType: 'Audio',
 			url: this.url,
 			transformation: this.transformation.serialize(),
 			isStorageUrl: this.isStorageUrl,
@@ -244,14 +239,14 @@ export class AudioItem extends Mbr {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
-			case "Audio":
-				if (op.method === "setUrl") {
+			case 'Audio':
+				if (op.method === 'setUrl') {
 					this.applyUrl(op.url);
 				}
 				this.subject.publish(this);
@@ -304,7 +299,7 @@ export class AudioItem extends Mbr {
 				new Line(rightBottom, leftBottom),
 				new Line(leftBottom, leftTop),
 			],
-			true,
+			true
 		);
 	}
 
@@ -338,14 +333,9 @@ export class AudioItem extends Mbr {
 
 	download() {
 		if (this.extension) {
-			const linkElem = conf.documentFactory.createElement(
-				"a",
-			) as HTMLAnchorElement;
+			const linkElem = conf.documentFactory.createElement('a') as HTMLAnchorElement;
 			linkElem.href = this.url;
-			linkElem.setAttribute(
-				"download",
-				`${this.board.getBoardId()}.${this.extension}`,
-			);
+			linkElem.setAttribute('download', `${this.board.getBoardId()}.${this.extension}`);
 			linkElem.click();
 		}
 	}

@@ -1,7 +1,7 @@
-import { CubicBezier } from "Board/Items/Curve";
-import { Line } from "Board/Items/Line";
-import { Path, Paths } from "Board/Items/Path";
-import { Point } from "Board/Items/Point";
+import { CubicBezier } from 'Items/Curve';
+import { Line } from 'Items/Line';
+import { Path, Paths } from 'Items/Path';
+import { Point } from 'Items/Point';
 
 export interface Pointer {
 	name: ConnectorPointerStyle;
@@ -21,25 +21,25 @@ export function getPointer(style: string): Pointer {
 
 const Pointers = {
 	None: {
-		name: "None",
+		name: 'None',
 		path: new Path([new Line(new Point(99, 50), new Point(128, 50))]),
 		start: new Point(99, 50),
 		end: new Point(128, 50),
 	},
 	Angle: {
-		name: "Angle",
+		name: 'Angle',
 		path: new Path(
 			[
 				new Line(new Point(65, 35), new Point(95, 50)),
 				new Line(new Point(95, 50), new Point(65, 65)),
 			],
-			false,
+			false
 		),
 		start: new Point(94, 50),
 		end: new Point(95, 50),
 	},
 	ArrowBroad: {
-		name: "ArrowBroad",
+		name: 'ArrowBroad',
 		path: new Path(
 			[
 				new Line(new Point(65, 35), new Point(95, 50)),
@@ -48,16 +48,16 @@ const Pointers = {
 					new Point(65, 65),
 					new Point(71.398861, 55.223454),
 					new Point(65, 35),
-					new Point(71.930095, 45.242005),
+					new Point(71.930095, 45.242005)
 				),
 			],
-			true,
+			true
 		),
 		start: new Point(70, 50),
 		end: new Point(95, 50),
 	},
 	ArrowThin: {
-		name: "ArrowThin",
+		name: 'ArrowThin',
 		path: new Path(
 			[
 				new Line(new Point(65, 40), new Point(95, 50)),
@@ -66,38 +66,38 @@ const Pointers = {
 					new Point(65, 60),
 					new Point(71.701267, 49.930094),
 					new Point(65, 40),
-					new Point(72.023349, 49.516969),
+					new Point(72.023349, 49.516969)
 				),
 			],
-			true,
+			true
 		),
 		start: new Point(70, 50),
 		end: new Point(95, 50),
 	},
 	CircleFilled: {
-		name: "CircleFilled",
+		name: 'CircleFilled',
 		path: new Path(
 			[
 				new CubicBezier(
 					new Point(64.5, 50.5),
 					new Point(64.5, 70.5),
 					new Point(94.5, 50.5),
-					new Point(94.5, 70.5),
+					new Point(94.5, 70.5)
 				),
 				new CubicBezier(
 					new Point(94.5, 50.5),
 					new Point(94.5, 30.5),
 					new Point(64.5, 50.5),
-					new Point(64.5, 30.5),
+					new Point(64.5, 30.5)
 				),
 			],
-			true,
+			true
 		),
 		start: new Point(64.5, 50.5),
 		end: new Point(95, 50),
 	},
 	DiamondEmpty: {
-		name: "DiamondEmpty",
+		name: 'DiamondEmpty',
 		path: new Path(
 			[
 				new Line(new Point(65, 50), new Point(80, 35)),
@@ -105,13 +105,13 @@ const Pointers = {
 				new Line(new Point(95, 50), new Point(80, 65)),
 				new Line(new Point(80, 65), new Point(65, 50)),
 			],
-			false,
+			false
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
 	},
 	DiamondFilled: {
-		name: "DiamondFilled",
+		name: 'DiamondFilled',
 		path: new Path(
 			[
 				new Line(new Point(65, 50), new Point(80, 35)),
@@ -119,13 +119,13 @@ const Pointers = {
 				new Line(new Point(95, 50), new Point(80, 65)),
 				new Line(new Point(80, 65), new Point(65, 50)),
 			],
-			true,
+			true
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
 	},
 	Many: {
-		name: "Many",
+		name: 'Many',
 		path: new Paths([
 			new Path([new Line(new Point(65, 50), new Point(95, 50))], false),
 			new Path(
@@ -133,14 +133,14 @@ const Pointers = {
 					new Line(new Point(95, 35), new Point(65, 50)),
 					new Line(new Point(65, 50), new Point(95, 65)),
 				],
-				false,
+				false
 			),
 		]),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
 	},
 	ManyMandatory: {
-		name: "ManyManadatory",
+		name: 'ManyManadatory',
 		path: new Paths([
 			new Path([new Line(new Point(62.8, 50), new Point(95, 50))], false),
 			new Path(
@@ -148,7 +148,7 @@ const Pointers = {
 					new Line(new Point(95, 35), new Point(65, 50)),
 					new Line(new Point(65, 50), new Point(95, 65)),
 				],
-				false,
+				false
 			),
 			new Path([new Line(new Point(63, 35), new Point(63, 65))], false),
 		]),
@@ -156,7 +156,7 @@ const Pointers = {
 		end: new Point(95, 50),
 	},
 	ManyOptional: {
-		name: "ManyOptional",
+		name: 'ManyOptional',
 		path: new Paths([
 			new Path([new Line(new Point(65, 50), new Point(95, 50))], false),
 			new Path(
@@ -164,7 +164,7 @@ const Pointers = {
 					new Line(new Point(95, 35), new Point(65, 50)),
 					new Line(new Point(65, 50), new Point(95, 65)),
 				],
-				false,
+				false
 			),
 			new Path(
 				[
@@ -172,63 +172,45 @@ const Pointers = {
 						new Point(34.5, 49.5),
 						new Point(34.5, 69.5),
 						new Point(64.5, 49.5),
-						new Point(64.5, 69.5),
+						new Point(64.5, 69.5)
 					),
 					new CubicBezier(
 						new Point(64.5, 49.5),
 						new Point(64.5, 29.5),
 						new Point(34.5, 49.5),
-						new Point(34.5, 29.5),
+						new Point(34.5, 29.5)
 					),
 				],
-				false,
+				false
 			),
 		]),
 		start: new Point(34.5, 49.5),
 		end: new Point(95, 50),
 	},
 	One: {
-		name: "One",
+		name: 'One',
 		path: new Paths([
-			new Path(
-				[new Line(new Point(79.5, 35), new Point(79.5, 65))],
-				false,
-			),
-			new Path(
-				[new Line(new Point(95, 49.5), new Point(79.18, 49.5))],
-				false,
-			),
+			new Path([new Line(new Point(79.5, 35), new Point(79.5, 65))], false),
+			new Path([new Line(new Point(95, 49.5), new Point(79.18, 49.5))], false),
 		]),
 		start: new Point(79.1, 49.5),
 		end: new Point(95, 50),
 	},
 	OneMandatory: {
-		name: "OneMandatory",
+		name: 'OneMandatory',
 		path: new Paths([
-			new Path(
-				[new Line(new Point(79.5, 35), new Point(79.5, 65))],
-				false,
-			),
-			new Path(
-				[new Line(new Point(95, 49.5), new Point(79.18, 49.5))],
-				false,
-			),
+			new Path([new Line(new Point(79.5, 35), new Point(79.5, 65))], false),
+			new Path([new Line(new Point(95, 49.5), new Point(79.18, 49.5))], false),
 
-			new Path(
-				[new Line(new Point(64.5, 35), new Point(64.5, 65))],
-				false,
-			),
+			new Path([new Line(new Point(64.5, 35), new Point(64.5, 65))], false),
 		]),
 		start: new Point(64.5, 49.5),
 		end: new Point(95, 50),
 	},
 	OneOptional: {
-		name: "OneOptional",
+		name: 'OneOptional',
 		path: new Paths([
-			new Path(
-				[new Line(new Point(79.5, 35), new Point(79.5, 65))],
-				false,
-			),
+			new Path([new Line(new Point(79.5, 35), new Point(79.5, 65))], false),
 			new Path([new Line(new Point(95, 50), new Point(65, 50))], false),
 			new Path(
 				[
@@ -236,65 +218,65 @@ const Pointers = {
 						new Point(34.5, 49.5),
 						new Point(34.5, 69.5),
 						new Point(64.5, 49.5),
-						new Point(64.5, 69.5),
+						new Point(64.5, 69.5)
 					),
 					new CubicBezier(
 						new Point(64.5, 49.5),
 						new Point(64.5, 29.5),
 						new Point(34.5, 49.5),
-						new Point(34.5, 29.5),
+						new Point(34.5, 29.5)
 					),
 				],
-				false,
+				false
 			),
 		]),
 		start: new Point(34.5, 49.5),
 		end: new Point(95, 50),
 	},
 	TriangleEmpty: {
-		name: "TriangleEmpty",
+		name: 'TriangleEmpty',
 		path: new Path(
 			[
 				new Line(new Point(65, 35), new Point(95, 50)),
 				new Line(new Point(95, 50), new Point(65, 65)),
 				new Line(new Point(65, 65), new Point(65, 35)),
 			],
-			false,
+			false
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
 	},
 	TriangleFilled: {
-		name: "TriangleFilled",
+		name: 'TriangleFilled',
 		path: new Path(
 			[
 				new Line(new Point(65, 35), new Point(95, 50)),
 				new Line(new Point(95, 50), new Point(65, 65)),
 				new Line(new Point(65, 65), new Point(65, 35)),
 			],
-			true,
+			true
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
 	},
 	Zero: {
-		name: "Zero",
+		name: 'Zero',
 		path: new Path(
 			[
 				new CubicBezier(
 					new Point(64.5, 50.5),
 					new Point(64.5, 70.5),
 					new Point(94.5, 50.5),
-					new Point(94.5, 70.5),
+					new Point(94.5, 70.5)
 				),
 				new CubicBezier(
 					new Point(94.5, 50.5),
 					new Point(94.5, 30.5),
 					new Point(64.5, 50.5),
-					new Point(64.5, 30.5),
+					new Point(64.5, 30.5)
 				),
 			],
-			false,
+			false
 		),
 		start: new Point(64.5, 49.5),
 		end: new Point(95, 50),

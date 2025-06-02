@@ -1,6 +1,6 @@
-import { Editor, Path, Transforms } from "slate";
-import { isCursorAtStartOfFirstChild } from "Board/Items/RichText/editorHelpers/common/isCursorAtStartOfFirstChild";
-import { CustomEditor } from "Board/Items/RichText/Editor/Editor.d";
+import { Editor, Path, Transforms } from 'slate';
+import { isCursorAtStartOfFirstChild } from 'Items/RichText/editorHelpers/common/isCursorAtStartOfFirstChild';
+import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
 
 export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 	const { selection } = editor;
@@ -13,8 +13,8 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 	const [textNode, textNodePath] = Editor.node(editor, anchor.path);
 	if (
 		!textNode ||
-		textNode.type !== "text" ||
-		typeof textNode.text !== "string" ||
+		textNode.type !== 'text' ||
+		typeof textNode.text !== 'string' ||
 		!isCursorAtStartOfFirstChild(editor, textNodePath)
 	) {
 		return false;
@@ -28,21 +28,17 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 
 	const listItemPath = Path.parent(paragraphPath);
 	const [listItem] = Editor.node(editor, listItemPath);
-	if (!listItem || listItem.type !== "list_item") {
+	if (!listItem || listItem.type !== 'list_item') {
 		return false;
 	}
 
 	const listPath = Path.parent(listItemPath);
 	const [list] = Editor.node(editor, listPath);
-	if (!list || (list.type !== "ol_list" && list.type !== "ul_list")) {
+	if (!list || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
 		return false;
 	}
 
-	Transforms.wrapNodes(
-		editor,
-		{ type: "list_item", children: [] },
-		{ at: paragraphPath },
-	);
+	Transforms.wrapNodes(editor, { type: 'list_item', children: [] }, { at: paragraphPath });
 
 	Transforms.wrapNodes(
 		editor,
@@ -51,7 +47,7 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 			listLevel: (list.listLevel || 1) + 1,
 			children: [],
 		},
-		{ at: paragraphPath },
+		{ at: paragraphPath }
 	);
 
 	return true;

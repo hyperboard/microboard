@@ -1,11 +1,11 @@
-import { Board } from "Board";
-import { conf } from "Board/Settings";
-import { isTemplateView } from "shared/lib/queryStringParser";
+import { Board } from 'Board';
+import { conf } from 'Settings';
+import { isTemplateView } from 'shared/lib/queryStringParser';
 
-export type ViewMode = "view" | "edit" | "loading";
+export type ViewMode = 'view' | 'edit' | 'loading';
 
 export interface ModeMsg {
-	type: "Mode";
+	type: 'Mode';
 	boardId: string;
 	mode: ViewMode;
 }
@@ -17,11 +17,11 @@ export function handleModeMessage(message: ModeMsg, board: Board): void {
 			return;
 		}
 		conf.notify({
-			header: conf.i18n.t("sharing.settingsChanged.heading"),
+			header: conf.i18n.t('sharing.settingsChanged.heading'),
 			body:
-				message.mode === "edit"
-					? conf.i18n.t("sharing.settingsChanged.bodyEdit")
-					: conf.i18n.t("sharing.settingsChanged.bodyView"),
+				message.mode === 'edit'
+					? conf.i18n.t('sharing.settingsChanged.bodyEdit')
+					: conf.i18n.t('sharing.settingsChanged.bodyView'),
 			duration: 5000,
 		});
 	}

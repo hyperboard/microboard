@@ -1,15 +1,10 @@
-import { Mbr, Point } from "Board/Items";
-import { Item } from "Board/Items";
-import { Layers } from "./Layers";
-import { getContainersSortedByZIndex } from "./getContainersSortedByZIndex";
-import { RTreeIndex } from "../RTreeIndex";
+import { Mbr, Point } from 'Items';
+import { Item } from 'Items';
+import { Layers } from './Layers';
+import { getContainersSortedByZIndex } from './getContainersSortedByZIndex';
+import { RTreeIndex } from '../RTreeIndex';
 export class Container extends Mbr {
-	constructor(
-		public id: string,
-		public item: Item,
-		public layer: number,
-		public zIndex: number,
-	) {
+	constructor(public id: string, public item: Item, public layer: number, public zIndex: number) {
 		const rect = item.getMbr();
 		super(rect.left, rect.top, rect.right, rect.bottom);
 	}
@@ -112,13 +107,11 @@ export class LayeredIndex<T extends Item> {
 		point: Point,
 		maxItems: number,
 		filter: (item: Item) => boolean,
-		maxDistance: number,
+		maxDistance: number
 	): Item[] {
 		let items: Item[] = [];
 		for (const layer of this.layers.array) {
-			items = items.concat(
-				layer.getNearestTo(point, maxItems, filter, maxDistance),
-			);
+			items = items.concat(layer.getNearestTo(point, maxItems, filter, maxDistance));
 		}
 		return items;
 	}
@@ -160,10 +153,7 @@ export class LayeredIndex<T extends Item> {
 		const containersAbove: Container[] = [];
 		const containerZIndex = this.getZIndex(container.item);
 		for (const one of containersInBounds) {
-			if (
-				this.isT(one.item) &&
-				this.getZIndex(one.item) > containerZIndex
-			) {
+			if (this.isT(one.item) && this.getZIndex(one.item) > containerZIndex) {
 				containersAbove.push(one);
 			}
 		}
@@ -192,10 +182,7 @@ export class LayeredIndex<T extends Item> {
 		const containersBelow: Container[] = [];
 		const containerZIndex = this.getZIndex(container.item);
 		for (const one of containersInBounds) {
-			if (
-				this.isT(one.item) &&
-				this.getZIndex(one.item) < containerZIndex
-			) {
+			if (this.isT(one.item) && this.getZIndex(one.item) < containerZIndex) {
 				containersBelow.push(one);
 			}
 		}
@@ -214,12 +201,7 @@ export class LayeredIndex<T extends Item> {
 	}
 
 	insert(item: T): void {
-		const toInsert = new Container(
-			item.getId(),
-			item,
-			0,
-			this.getZIndex(item),
-		);
+		const toInsert = new Container(item.getId(), item, 0, this.getZIndex(item));
 		const bounds = item.getMbr();
 		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 
@@ -230,9 +212,7 @@ export class LayeredIndex<T extends Item> {
 		const containersInBounds = this.getContainersFromItems(inBounds);
 		const containersInBoundsCopy: Container[] = [];
 		for (const one of containersInBounds) {
-			containersInBoundsCopy.push(
-				new Container(one.id, one.item, one.layer, one.zIndex),
-			);
+			containersInBoundsCopy.push(new Container(one.id, one.item, one.layer, one.zIndex));
 		}
 
 		const containers = containersInBoundsCopy.concat([toInsert]);

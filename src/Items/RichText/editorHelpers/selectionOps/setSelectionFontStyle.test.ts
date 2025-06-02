@@ -1,36 +1,36 @@
-import { Editor, createEditor } from "slate";
-import { setSelectionFontStyle } from "./setSelectionFontStyle";
-import { withReact } from "slate-react";
-import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
-import { getSelectionMarks } from "Board/Items/RichText/editorHelpers/common/getSelectionMarks";
-import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
+import { Editor, createEditor } from 'slate';
+import { setSelectionFontStyle } from './setSelectionFontStyle';
+import { withReact } from 'slate-react';
+import { TextStyle } from 'Items/RichText/Editor/TextNode';
+import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
+import { selectWholeText } from 'Items/RichText/editorHelpers/common/selectWholeText';
 
-describe("setSelectionFontStyle", () => {
+describe('setSelectionFontStyle', () => {
 	let editor: Editor;
 
 	beforeEach(() => {
 		editor = withReact(createEditor());
 	});
 
-	it("applies style when no text has it", () => {
+	it('applies style when no text has it', () => {
 		editor.children = [
 			{
-				type: "paragraph",
-				children: [{ type: "text", text: "Normal text" }],
+				type: 'paragraph',
+				children: [{ type: 'text', text: 'Normal text' }],
 			},
 		];
 		selectWholeText(editor);
 
-		setSelectionFontStyle(editor, "bold");
+		setSelectionFontStyle(editor, 'bold');
 
 		expect(getSelectionMarks(editor)?.bold).toEqual(true);
 	});
 
-	it("removes style when all text has it", () => {
+	it('removes style when all text has it', () => {
 		editor.children = [
 			{
-				type: "paragraph",
-				children: [{ type: "text", text: "Bold text", bold: true }],
+				type: 'paragraph',
+				children: [{ type: 'text', text: 'Bold text', bold: true }],
 			},
 		];
 		editor.selection = {
@@ -38,18 +38,18 @@ describe("setSelectionFontStyle", () => {
 			focus: { path: [0, 0], offset: 9 },
 		};
 
-		setSelectionFontStyle(editor, "bold");
+		setSelectionFontStyle(editor, 'bold');
 
 		expect(getSelectionMarks(editor)?.bold).toEqual(false);
 	});
 
-	it("applies style when some text has it", () => {
+	it('applies style when some text has it', () => {
 		editor.children = [
 			{
-				type: "paragraph",
+				type: 'paragraph',
 				children: [
-					{ type: "text", text: "Partial ", bold: true },
-					{ type: "text", text: "text" },
+					{ type: 'text', text: 'Partial ', bold: true },
+					{ type: 'text', text: 'text' },
 				],
 			},
 		];
@@ -58,16 +58,16 @@ describe("setSelectionFontStyle", () => {
 			focus: { path: [0, 1], offset: 4 },
 		};
 
-		setSelectionFontStyle(editor, "bold");
+		setSelectionFontStyle(editor, 'bold');
 
 		expect(getSelectionMarks(editor)?.bold).toEqual(true);
 	});
 
-	it("handles multiple styles in one call", () => {
+	it('handles multiple styles in one call', () => {
 		editor.children = [
 			{
-				type: "paragraph",
-				children: [{ type: "text", text: "Sample text", italic: true }],
+				type: 'paragraph',
+				children: [{ type: 'text', text: 'Sample text', italic: true }],
 			},
 		];
 		editor.selection = {
@@ -75,53 +75,51 @@ describe("setSelectionFontStyle", () => {
 			focus: { path: [0, 0], offset: 11 },
 		};
 
-		setSelectionFontStyle(editor, ["bold", "italic"]);
+		setSelectionFontStyle(editor, ['bold', 'italic']);
 
 		expect(getSelectionMarks(editor)).toEqual({
-			type: "text",
+			type: 'text',
 			bold: true,
 			italic: false,
 		});
 	});
 
-	it("handles empty selection gracefully", () => {
-		editor.children = [
-			{ type: "paragraph", children: [{ type: "text", text: "Test" }] },
-		];
+	it('handles empty selection gracefully', () => {
+		editor.children = [{ type: 'paragraph', children: [{ type: 'text', text: 'Test' }] }];
 		editor.selection = null;
 
 		expect(() => {
-			setSelectionFontStyle(editor, "underline");
+			setSelectionFontStyle(editor, 'underline');
 		}).not.toThrow();
 	});
 
-	it("works with multiple paragraphs", () => {
+	it('works with multiple paragraphs', () => {
 		editor.children = [
 			{
-				type: "paragraph",
-				children: [{ type: "text", text: "First", bold: true }],
+				type: 'paragraph',
+				children: [{ type: 'text', text: 'First', bold: true }],
 			},
-			{ type: "paragraph", children: [{ type: "text", text: "Second" }] },
+			{ type: 'paragraph', children: [{ type: 'text', text: 'Second' }] },
 		];
 		editor.selection = {
 			anchor: { path: [0, 0], offset: 0 },
 			focus: { path: [1, 0], offset: 6 },
 		};
 
-		setSelectionFontStyle(editor, "bold");
+		setSelectionFontStyle(editor, 'bold');
 
 		expect(getSelectionMarks(editor)?.bold).toEqual(true);
 	});
 
-	it("toggles style correctly in mixed content", () => {
+	it('toggles style correctly in mixed content', () => {
 		editor.children = [
 			{
-				type: "paragraph",
+				type: 'paragraph',
 				children: [
-					{ type: "text", text: "Mixed ", bold: true, italic: false },
+					{ type: 'text', text: 'Mixed ', bold: true, italic: false },
 					{
-						type: "text",
-						text: "content",
+						type: 'text',
+						text: 'content',
 						bold: false,
 						italic: true,
 					},
@@ -134,36 +132,34 @@ describe("setSelectionFontStyle", () => {
 		};
 
 		// First call should apply both styles since they're mixed
-		setSelectionFontStyle(editor, ["bold", "italic"]);
+		setSelectionFontStyle(editor, ['bold', 'italic']);
 		expect(getSelectionMarks(editor)).toEqual({
-			type: "text",
+			type: 'text',
 			bold: true,
 			italic: true,
 		});
 
 		// Second call should remove both styles since they're now all applied
-		setSelectionFontStyle(editor, ["bold", "italic"]);
+		setSelectionFontStyle(editor, ['bold', 'italic']);
 		expect(getSelectionMarks(editor)).toEqual({
-			type: "text",
+			type: 'text',
 			bold: false,
 			italic: false,
 		});
 	});
 
-	it("handles all TextStyles correctly", () => {
+	it('handles all TextStyles correctly', () => {
 		const allStyles: TextStyle[] = [
-			"bold",
-			"italic",
-			"underline",
-			"line-through",
-			"overline",
-			"subscript",
-			"superscript",
+			'bold',
+			'italic',
+			'underline',
+			'line-through',
+			'overline',
+			'subscript',
+			'superscript',
 		];
 
-		editor.children = [
-			{ type: "paragraph", children: [{ type: "text", text: "Test" }] },
-		];
+		editor.children = [{ type: 'paragraph', children: [{ type: 'text', text: 'Test' }] }];
 		editor.selection = {
 			anchor: { path: [0, 0], offset: 0 },
 			focus: { path: [0, 0], offset: 4 },

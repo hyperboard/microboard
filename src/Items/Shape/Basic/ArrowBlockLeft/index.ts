@@ -1,8 +1,7 @@
-import { Mbr, Path, Line, Point } from "Board/Items";
-import { createRoundedRectanglePath } from "../RoundedRectangle";
+import { Mbr, Path, Line, Point } from 'Items';
 
 export const ArrowBlockLeft = {
-	name: "ArrowBlockLeft",
+	name: 'ArrowBlockLeft',
 	textBounds: new Mbr(15, 30, 70, 70),
 	path: new Path(
 		[
@@ -13,7 +12,7 @@ export const ArrowBlockLeft = {
 			new Line(new Point(100, 100), new Point(20, 100)),
 			new Line(new Point(20, 100), new Point(0, 50)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(0, 50),

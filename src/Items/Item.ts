@@ -1,47 +1,46 @@
+import { AINode, AINodeData } from "./AINode";
+import { AudioItem, AudioItemData } from "./Audio";
+import { Comment, CommentData } from "./Comment";
 import { Connector, ConnectorData } from "./Connector";
 import { Drawing, DrawingData } from "./Drawing";
 import { Frame, FrameData } from "./Frame";
-import { Group } from "./Group";
-import { GroupData } from "./Group";
+import { Group, GroupData } from "./Group";
 import { ImageItem, ImageItemData } from "./Image";
-import { Placeholder, PlaceholderData } from "./Placeholder/Placeholder";
+import { Placeholder, PlaceholderData } from "./Placeholder";
 import { RichText, RichTextData } from "./RichText";
 import { Shape, ShapeData } from "./Shape";
 import { Sticker } from "./Sticker";
 import { StickerData } from "./Sticker/StickerOperation";
-import { Comment, CommentData } from "./Comment";
-import { AINode } from "Board/Items/AINode/AINode";
-import { AINodeData } from "Board/Items/AINode/AINodeData";
-import { VideoItem, VideoItemData } from "Board/Items/Video/Video";
-import { AudioItem, AudioItemData } from "Board/Items/Audio/Audio";
+import { VideoItem, VideoItemData } from "./Video";
 
 export type Item =
-	| RichText
-	| Shape
-	| Connector
-	| ImageItem
-	| Drawing
-	| Sticker
-	| Frame
-	| Placeholder
-	| Comment
-	| Group
-	| AINode
-	| VideoItem
-	| AudioItem;
+  | RichText
+  | Shape
+  | Connector
+  | ImageItem
+  | Drawing
+  | Sticker
+  | Frame
+  | Placeholder
+  | Comment
+  | Group
+  | AINode
+  | VideoItem
+  | AudioItem
+  | Comment;
 
 export type ItemType = Item["itemType"];
 export type ItemData =
-	| ShapeData
-	| RichTextData
-	| ConnectorData
-	| ImageItemData
-	| DrawingData
-	| StickerData
-	| FrameData
-	| PlaceholderData
-	| CommentData
-	| GroupData
-	| AINodeData
-	| VideoItemData
-	| AudioItemData;
+  | ShapeData
+  | RichTextData
+  | ConnectorData
+  | ImageItemData
+  | DrawingData
+  | StickerData
+  | FrameData
+  | PlaceholderData
+  | CommentData
+  | GroupData
+  | AINodeData
+  | VideoItemData
+  | AudioItemData;

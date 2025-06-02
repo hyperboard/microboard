@@ -1,9 +1,9 @@
-import { getParagraphWithPassedTextNode } from "Board/Items/RichText/editorHelpers/common/getParagraph";
-import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { conf, DefaultTextStyles } from "Board/Settings";
-import markdown from "remark-parse";
-import slate from "remark-slate";
-import { Subject } from "shared/Subject";
+import { getParagraphWithPassedTextNode } from 'Items/RichText/editorHelpers/common/getParagraph';
+import { setNodeStyles } from 'Items/RichText/setNodeStyles';
+import { conf, DefaultTextStyles } from 'Settings';
+import markdown from 'remark-parse';
+import slate from 'remark-slate';
+import { Subject } from 'Subject';
 import {
 	BaseEditor,
 	BaseSelection,
@@ -18,52 +18,41 @@ import {
 	Transforms,
 	Path,
 	Operation,
-} from "slate";
-import { HistoryEditor, withHistory } from "slate-history";
-import { ReactEditor, withReact } from "slate-react";
-import { unified } from "unified";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import {
-	BlockNode,
-	BlockType,
-	ListType,
-	ListTypes,
-	ParagraphNode,
-} from "./Editor/BlockNode";
-import { TextNode, TextStyle } from "./Editor/TextNode";
-import { isTextEmpty } from "./editorHelpers/common/isTextEmpty.ts";
-import {
-	RichTextOperation,
-	SelectionMethod,
-	SelectionOp,
-	WholeTextOp,
-} from "./RichTextOperations";
-import { findCommonStrings } from "./utils";
-import { handleListMerge } from "./editorHelpers/lists/handleListMerge.ts";
-import { handleSplitListItem } from "Board/Items/RichText/editorHelpers/lists/handleSplitListItem";
-import { createParagraphNode } from "Board/Items/RichText/editorHelpers/common/createParagraphNode";
-import { withAutoList } from "Board/Items/RichText/editorHelpers/lists/withAutoList";
-import { handleWrapIntoNestedList } from "Board/Items/RichText/editorHelpers/lists/handleWrapIntoNestedList";
-import { toggleListType } from "Board/Items/RichText/editorHelpers/lists/toggleListType";
-import { getListTypeAtSelectionStart } from "Board/Items/RichText/editorHelpers/lists/getListTypeAtSelectionStart";
-import { setLink } from "Board/Items/RichText/editorHelpers/links/setLink";
-import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
-import { getSelectionMarks } from "Board/Items/RichText/editorHelpers/common/getSelectionMarks";
-import { clearText } from "Board/Items/RichText/editorHelpers/common/clearText";
-import { hasTextInSelection } from "Board/Items/RichText/editorHelpers/common/hasTextInSelection";
-import { MarkdownProcessor } from "Board/Items/RichText/editorHelpers/markdown/markdownProcessor";
-import { insertCopiedNodes } from "Board/Items/RichText/editorHelpers/selectionOps/insertCopiedNodes";
-import { moveCursorToEndOfTheText } from "Board/Items/RichText/editorHelpers/common/moveCursorToEndOfText";
-import { insertCopiedText } from "Board/Items/RichText/editorHelpers/selectionOps/insertCopiedText";
-import { getFirstSelectionLink } from "Board/Items/RichText/editorHelpers/links/getFirstSelectionLink";
-import { getAllTextNodesInSelection } from "Board/Items/RichText/editorHelpers/common/getAllTextNodesInSelection";
-import { getEachNodeInSelectionStyles } from "Board/Items/RichText/editorHelpers/common/getEachNodeInSelectionStyles";
-import { isBlockActive } from "Board/Items/RichText/editorHelpers/common/isBlockActive";
-import { setSelectionHorisontalAlignment } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionHorisontalAlignment";
-import { setSelectionFontHighlight } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontHighlight";
-import { setSelectionFontSize } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontSize";
-import { setSelectionFontStyle } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontStyle";
-import { setSelectionFontColor } from "Board/Items/RichText/editorHelpers/selectionOps/setSelectionFontColor";
+} from 'slate';
+import { HistoryEditor, withHistory } from 'slate-history';
+import { ReactEditor, withReact } from 'slate-react';
+import { unified } from 'unified';
+import { HorisontalAlignment, VerticalAlignment } from '../Alignment';
+import { BlockNode, BlockType, ListType, ListTypes, ParagraphNode } from './Editor/BlockNode';
+import { TextNode, TextStyle } from './Editor/TextNode';
+import { isTextEmpty } from './editorHelpers/common/isTextEmpty';
+import { RichTextOperation, SelectionMethod, SelectionOp, WholeTextOp } from './RichTextOperations';
+import { findCommonStrings } from './utils';
+import { handleListMerge } from './editorHelpers/lists/handleListMerge';
+import { handleSplitListItem } from 'Items/RichText/editorHelpers/lists/handleSplitListItem';
+import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createParagraphNode';
+import { withAutoList } from 'Items/RichText/editorHelpers/lists/withAutoList';
+import { handleWrapIntoNestedList } from 'Items/RichText/editorHelpers/lists/handleWrapIntoNestedList';
+import { toggleListType } from 'Items/RichText/editorHelpers/lists/toggleListType';
+import { getListTypeAtSelectionStart } from 'Items/RichText/editorHelpers/lists/getListTypeAtSelectionStart';
+import { setLink } from 'Items/RichText/editorHelpers/links/setLink';
+import { selectWholeText } from 'Items/RichText/editorHelpers/common/selectWholeText';
+import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
+import { clearText } from 'Items/RichText/editorHelpers/common/clearText';
+import { hasTextInSelection } from 'Items/RichText/editorHelpers/common/hasTextInSelection';
+import { MarkdownProcessor } from 'Items/RichText/editorHelpers/markdown/markdownProcessor';
+import { insertCopiedNodes } from 'Items/RichText/editorHelpers/selectionOps/insertCopiedNodes';
+import { moveCursorToEndOfTheText } from 'Items/RichText/editorHelpers/common/moveCursorToEndOfText';
+import { insertCopiedText } from 'Items/RichText/editorHelpers/selectionOps/insertCopiedText';
+import { getFirstSelectionLink } from 'Items/RichText/editorHelpers/links/getFirstSelectionLink';
+import { getAllTextNodesInSelection } from 'Items/RichText/editorHelpers/common/getAllTextNodesInSelection';
+import { getEachNodeInSelectionStyles } from 'Items/RichText/editorHelpers/common/getEachNodeInSelectionStyles';
+import { isBlockActive } from 'Items/RichText/editorHelpers/common/isBlockActive';
+import { setSelectionHorisontalAlignment } from 'Items/RichText/editorHelpers/selectionOps/setSelectionHorisontalAlignment';
+import { setSelectionFontHighlight } from 'Items/RichText/editorHelpers/selectionOps/setSelectionFontHighlight';
+import { setSelectionFontSize } from 'Items/RichText/editorHelpers/selectionOps/setSelectionFontSize';
+import { setSelectionFontStyle } from 'Items/RichText/editorHelpers/selectionOps/setSelectionFontStyle';
+import { setSelectionFontColor } from 'Items/RichText/editorHelpers/selectionOps/setSelectionFontColor';
 
 const { i18n } = conf;
 
@@ -74,7 +63,7 @@ export class EditorContainer {
 
 	maxWidth: number | undefined = undefined;
 	textScale = 1;
-	verticalAlignment: VerticalAlignment = "center";
+	verticalAlignment: VerticalAlignment = 'center';
 	textLength = 0;
 	markdownProcessor: MarkdownProcessor;
 
@@ -110,11 +99,8 @@ export class EditorContainer {
 		private getMatrixScale: () => number,
 		private getOnLimitReached: () => () => void,
 		private calcAutoSize: (textNodes?: BlockNode[]) => number,
-		private applyAutoSizeScale: (
-			textScale: number,
-			blockNodes?: BlockNode[],
-		) => void,
-		private updateElement: () => void,
+		private applyAutoSizeScale: (textScale: number, blockNodes?: BlockNode[]) => void,
+		private updateElement: () => void
 	) {
 		const baseEditor = createEditor();
 		this.editor = withHistory(withReact(baseEditor));
@@ -123,15 +109,15 @@ export class EditorContainer {
 		// horizontalAlignment for Shape - center, for RichText - left
 		editor.children = [
 			{
-				type: "paragraph",
+				type: 'paragraph',
 				horisontalAlignment,
 				children: [
 					{
-						type: "text",
-						text: "",
+						type: 'text',
+						text: '',
 						...{ ...initialTextStyles, fontSize },
 						overline: false,
-						"line-through": false,
+						'line-through': false,
 						subscript: false,
 						superscript: false,
 					},
@@ -147,10 +133,7 @@ export class EditorContainer {
 		this.decorated = {
 			realapply: editor.apply,
 			apply: op => {
-				if (
-					op.type === "set_node" &&
-					"enableAuto" in op.newProperties
-				) {
+				if (op.type === 'set_node' && 'enableAuto' in op.newProperties) {
 					if (op.newProperties.enableAuto) {
 						this.autosizeEnable();
 					} else if (op.newProperties.enableAuto === false) {
@@ -172,12 +155,11 @@ export class EditorContainer {
 			const isRecordingOperations = this.recordedOps !== null;
 			if (isRecordingOperations) {
 				const isSettingNodeFontSize =
-					operation.type === "set_node" &&
-					"fontSize" in operation.newProperties &&
-					"fontSize" in operation.properties;
+					operation.type === 'set_node' &&
+					'fontSize' in operation.newProperties &&
+					'fontSize' in operation.properties;
 				if (isSettingNodeFontSize) {
-					const isSettingNodeFontSizeToAuto =
-						operation.newProperties.fontSize === "auto";
+					const isSettingNodeFontSizeToAuto = operation.newProperties.fontSize === 'auto';
 					if (isSettingNodeFontSizeToAuto) {
 						operation.newProperties.fontSize = 14;
 						operation.newProperties.enableAuto = true;
@@ -192,19 +174,18 @@ export class EditorContainer {
 				this.recordedOps?.push(operation);
 				this.decorated.apply(operation);
 			} else {
-				if (operation.type === "set_selection") {
+				if (operation.type === 'set_selection') {
 					this.decorated.apply(operation);
 					this.subject.publish(this);
 				} else {
 					if (
-						operation.type !== "remove_node" &&
-						operation.type !== "remove_text" &&
-						operation.type !== "merge_node" &&
-						operation.type !== "set_node" &&
+						operation.type !== 'remove_node' &&
+						operation.type !== 'remove_text' &&
+						operation.type !== 'merge_node' &&
+						operation.type !== 'set_node' &&
 						this.getAutosize()
 					) {
-						const relativeFontSize =
-							this.getFontSize() / this.getMatrixScale();
+						const relativeFontSize = this.getFontSize() / this.getMatrixScale();
 						if (relativeFontSize < 10) {
 							this.getOnLimitReached()();
 							return;
@@ -222,12 +203,10 @@ export class EditorContainer {
 									return;
 								}
 								this.emitWithoutApplying({
-									class: "RichText",
-									method: "edit",
+									class: 'RichText',
+									method: 'edit',
 									item: [this.id],
-									selection: JSON.parse(
-										JSON.stringify(this.editor.selection),
-									),
+									selection: JSON.parse(JSON.stringify(this.editor.selection)),
 									ops,
 								});
 							});
@@ -243,11 +222,9 @@ export class EditorContainer {
 		editor.undo = (): void => {};
 
 		this.markdownProcessor = new MarkdownProcessor(editor);
-		this.markdownProcessor.subject.subscribe(
-			(_processor: MarkdownProcessor) => {
-				this.subject.publish(this);
-			},
-		);
+		this.markdownProcessor.subject.subscribe((_processor: MarkdownProcessor) => {
+			this.subject.publish(this);
+		});
 	}
 
 	setId(id: string): this {
@@ -260,32 +237,26 @@ export class EditorContainer {
 	}
 
 	getTextFromNode(node: BlockNode): string {
-		if ("text" in node) {
-			return node.text || "";
+		if ('text' in node) {
+			return node.text || '';
 		}
 
-		if ("children" in node && Array.isArray(node.children)) {
+		if ('children' in node && Array.isArray(node.children)) {
 			return node.children.reduce((acc: string, child: any) => {
 				return acc + this.getTextFromNode(child);
-			}, "");
+			}, '');
 		}
 
-		return "";
+		return '';
 	}
 
-	getEndNodePath(
-		node: BlockNode,
-		nodePath: number[],
-	): { path: number[]; offset: number } | null {
-		if ("text" in node) {
+	getEndNodePath(node: BlockNode, nodePath: number[]): { path: number[]; offset: number } | null {
+		if ('text' in node) {
 			return { path: nodePath, offset: node.text.length };
 		}
-		if ("children" in node && Array.isArray(node.children)) {
+		if ('children' in node && Array.isArray(node.children)) {
 			const childIndex = node.children.length - 1;
-			return this.getEndNodePath(node.children[childIndex], [
-				...nodePath,
-				childIndex,
-			]);
+			return this.getEndNodePath(node.children[childIndex], [...nodePath, childIndex]);
 		}
 		return null;
 	}
@@ -296,51 +267,47 @@ export class EditorContainer {
 
 		const opsArr = (op?.ops ?? op ?? []) as Operation[];
 
-		return opsArr.filter(op => op.type !== "set_selection");
+		return opsArr.filter(op => op.type !== 'set_selection');
 	}
 
 	applyRichTextOp(op: RichTextOperation): void {
 		try {
 			switch (op.method) {
-				case "edit":
+				case 'edit':
 					this.applySelectionEdit(op);
 					break;
-				case "setVerticalAlignment":
+				case 'setVerticalAlignment':
 					this.verticalAlignment = op.verticalAlignment;
 					break;
-				case "setSelectionBlockType":
-				case "setSelectionFontColor":
-				case "setSelectionFontFamily":
-				case "setSelectionFontSize":
+				case 'setSelectionBlockType':
+				case 'setSelectionFontColor':
+				case 'setSelectionFontFamily':
+				case 'setSelectionFontSize':
 					this.applyRichTextOp(op);
 					break;
-				case "setSelectionFontHighlight":
-				case "setSelectionFontStyle":
-				case "setSelectionHorizontalAlignment":
+				case 'setSelectionFontHighlight':
+				case 'setSelectionFontStyle':
+				case 'setSelectionHorizontalAlignment':
 					this.applySelectionOp(op);
 					break;
-				case "setBlockType":
-				case "setFontStyle":
-				case "setFontColor":
-				case "setFontFamily":
-				case "setFontSize":
-				case "setFontHighlight":
-				case "setHorisontalAlignment":
+				case 'setBlockType':
+				case 'setFontStyle':
+				case 'setFontColor':
+				case 'setFontFamily':
+				case 'setFontSize':
+				case 'setFontHighlight':
+				case 'setHorisontalAlignment':
 					this.applyWholeTextOp(op);
 					break;
-				case "setMaxWidth":
+				case 'setMaxWidth':
 					this.applyMaxWidth(op.maxWidth ?? 0);
 					break;
 			}
 		} catch (error) {
+			console.error('Error in applying RichText Operation in Item: ', this.id, error);
 			console.error(
-				"Error in applying RichText Operation in Item: ",
-				this.id,
-				error,
-			);
-			console.error(
-				"Error applying this type operation: ",
-				op.ops?.map(op => op.type),
+				'Error applying this type operation: ',
+				op.ops?.map(op => op.type)
 			);
 		}
 	}
@@ -406,28 +373,26 @@ export class EditorContainer {
 		const selection = this.editor.selection;
 		selectWholeText(this.editor);
 		switch (op.method) {
-			case "setFontStyle":
+			case 'setFontStyle':
 				this.setSelectionFontStyle(op.fontStyleList);
 				break;
-			case "setFontColor":
+			case 'setFontColor':
 				this.setSelectionFontColor(op.fontColor);
 				break;
-			case "setFontFamily":
+			case 'setFontFamily':
 				this.setSelectionFontFamily(op.fontFamily);
 				break;
-			case "setFontSize":
+			case 'setFontSize':
 				this.textScale =
-					Number(op.fontSize) /
-					this.getScale() /
-					this.initialTextStyles.fontSize;
+					Number(op.fontSize) / this.getScale() / this.initialTextStyles.fontSize;
 				break;
-			case "setFontHighlight":
+			case 'setFontHighlight':
 				this.setSelectionFontHighlight(op.fontHighlight);
 				break;
-			case "setHorisontalAlignment":
+			case 'setHorisontalAlignment':
 				this.setSelectionHorisontalAlignment(op.horisontalAlignment);
 				break;
-			case "setMaxWidth":
+			case 'setMaxWidth':
 				this.applyMaxWidth(op.maxWidth ?? 0);
 				break;
 		}
@@ -442,26 +407,20 @@ export class EditorContainer {
 
 	setMaxWidth(maxWidth: number): void {
 		this.emit({
-			class: "RichText",
-			method: "setMaxWidth",
+			class: 'RichText',
+			method: 'setMaxWidth',
 			item: [this.id],
 			maxWidth,
 		});
 	}
 
-	setSelectionFontColor(
-		format: string,
-		selectionContext?: string,
-	): SlateOp[] {
+	setSelectionFontColor(format: string, selectionContext?: string): SlateOp[] {
 		this.startOpRecording();
 		setSelectionFontColor(this.editor, format, selectionContext);
 		return this.stopOpRecordingAndGetOps();
 	}
 
-	setSelectionLink(
-		link: string | undefined,
-		selection: BaseSelection,
-	): Operation[] {
+	setSelectionLink(link: string | undefined, selection: BaseSelection): Operation[] {
 		this.startOpRecording();
 		setLink(this.editor, link, selection);
 		return this.stopOpRecordingAndGetOps();
@@ -473,16 +432,13 @@ export class EditorContainer {
 		return this.stopOpRecordingAndGetOps();
 	}
 
-	setSelectionFontSize(
-		fontSize: number | "auto",
-		selectionContext?: string,
-	): SlateOp[] {
+	setSelectionFontSize(fontSize: number | 'auto', selectionContext?: string): SlateOp[] {
 		this.startOpRecording();
 		const shouldUpdateElement = setSelectionFontSize(
 			this.editor,
 			this.getAutosize(),
 			fontSize,
-			selectionContext,
+			selectionContext
 		);
 		if (shouldUpdateElement) {
 			this.updateElement();
@@ -491,10 +447,7 @@ export class EditorContainer {
 		return this.stopOpRecordingAndGetOps();
 	}
 
-	setSelectionFontHighlight(
-		format: string,
-		selectionContext?: string,
-	): SlateOp[] {
+	setSelectionFontHighlight(format: string, selectionContext?: string): SlateOp[] {
 		this.startOpRecording();
 		setSelectionFontHighlight(this.editor, format, selectionContext);
 		return this.stopOpRecordingAndGetOps();
@@ -502,18 +455,14 @@ export class EditorContainer {
 
 	setSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
-		selectionContext?: string,
+		selectionContext?: string
 	): SlateOp[] {
 		this.startOpRecording();
-		setSelectionHorisontalAlignment(
-			this.editor,
-			horisontalAlignment,
-			selectionContext,
-		);
+		setSelectionHorisontalAlignment(this.editor, horisontalAlignment, selectionContext);
 		return this.stopOpRecordingAndGetOps();
 	}
 
-	getSelectionMarks(): Omit<TextNode, "text"> | null {
+	getSelectionMarks(): Omit<TextNode, 'text'> | null {
 		return getSelectionMarks(this.editor);
 	}
 
@@ -530,9 +479,7 @@ export class EditorContainer {
 	}
 
 	includesListNode(): boolean {
-		return this.getText().some(
-			node => node.type === "ol_list" || node.type === "ul_list",
-		);
+		return this.getText().some(node => node.type === 'ol_list' || node.type === 'ul_list');
 	}
 
 	toggleListType(targetListType: ListType, shouldWrap = true): boolean {
@@ -582,7 +529,7 @@ export class EditorContainer {
 	private getValidText(line: string, newlines: ParagraphNode[]): string {
 		let left = 0;
 		let right = line.length;
-		let validText = "";
+		let validText = '';
 
 		while (left <= right) {
 			const mid = Math.floor((left + right) / 2);
@@ -625,9 +572,7 @@ export class EditorContainer {
 		const marks = this.getSelectionMarks();
 		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
 		return (
-			Math.ceil(textScale * (fontSize === "auto" ? 14 : fontSize)) /
-				this.getMatrixScale() >
-			4
+			Math.ceil(textScale * (fontSize === 'auto' ? 14 : fontSize)) / this.getMatrixScale() > 4
 		);
 	}
 
@@ -676,7 +621,7 @@ export class EditorContainer {
 
 	addText(text: string): void {
 		this.editor.apply({
-			type: "insert_text",
+			type: 'insert_text',
 			text: text,
 			path: [0, 0],
 			offset: 0,

@@ -1,63 +1,63 @@
-import { BaseSelection, Operation } from "slate";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { TextStyle } from "./Editor/TextNode";
-import { SelectionContext } from "Board/Selection/Selection";
+import { BaseSelection, Operation } from 'slate';
+import { HorisontalAlignment, VerticalAlignment } from '../Alignment';
+import { TextStyle } from './Editor/TextNode';
+import { SelectionContext } from 'Selection/Selection';
 
 interface RichTextBaseOp {
-	class: "RichText";
+	class: 'RichText';
 	item: string[];
 }
 
 interface SetFontColor extends RichTextBaseOp {
-	method: "setFontColor";
+	method: 'setFontColor';
 	fontColor: string;
 }
 
 interface SetFontStyle extends RichTextBaseOp {
-	method: "setFontStyle";
+	method: 'setFontStyle';
 	fontStyleList: TextStyle[];
 }
 
 interface SetFontFamily extends RichTextBaseOp {
-	method: "setFontFamily";
+	method: 'setFontFamily';
 	fontFamily: string;
 }
 
 interface SetFontSize extends RichTextBaseOp {
-	method: "setFontSize";
-	fontSize: number | "auto";
+	method: 'setFontSize';
+	fontSize: number | 'auto';
 	context?: SelectionContext;
 }
 
 interface SetFontHighlight extends RichTextBaseOp {
-	method: "setFontHighlight";
+	method: 'setFontHighlight';
 	fontHighlight: string;
 }
 
 interface SetHorisontalAligment extends RichTextBaseOp {
-	method: "setHorisontalAlignment";
+	method: 'setHorisontalAlignment';
 	horisontalAlignment: HorisontalAlignment;
 }
 
 interface SetVerticalAlignment extends RichTextBaseOp {
-	method: "setVerticalAlignment";
+	method: 'setVerticalAlignment';
 	verticalAlignment: VerticalAlignment;
 }
 
 interface SetMaxWidth extends RichTextBaseOp {
-	method: "setMaxWidth";
+	method: 'setMaxWidth';
 	maxWidth: number | undefined;
 }
 
 export type SelectionMethod =
-	| "setSelectionHorizontalAlignment"
-	| "setSelectionFontHighlight"
-	| "setSelectionFontSize"
-	| "setSelectionFontFamily"
-	| "setSelectionFontStyle"
-	| "setSelectionFontColor"
-	| "setSelectionBlockType"
-	| "edit";
+	| 'setSelectionHorizontalAlignment'
+	| 'setSelectionFontHighlight'
+	| 'setSelectionFontSize'
+	| 'setSelectionFontFamily'
+	| 'setSelectionFontStyle'
+	| 'setSelectionFontColor'
+	| 'setSelectionBlockType'
+	| 'edit';
 
 export interface SelectionOp extends RichTextBaseOp {
 	method: SelectionMethod;
@@ -77,7 +77,7 @@ export type WholeTextOp =
 // | AddFontStyle
 // | RemoveFontStyle;
 
-export type WholeTextMethod = WholeTextOp["method"];
+export type WholeTextMethod = WholeTextOp['method'];
 
 export interface ItemOp {
 	item: string;
@@ -85,8 +85,8 @@ export interface ItemOp {
 	ops: Operation[];
 }
 export interface GroupEdit {
-	class: "RichText";
-	method: "groupEdit";
+	class: 'RichText';
+	method: 'groupEdit';
 	itemsOps: ItemOp[];
 }
 

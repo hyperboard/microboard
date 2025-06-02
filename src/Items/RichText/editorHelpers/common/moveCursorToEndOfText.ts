@@ -1,13 +1,10 @@
-import { Editor, Transforms } from "slate";
-import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
+import { Editor, Transforms } from 'slate';
+import { selectWholeText } from 'Items/RichText/editorHelpers/common/selectWholeText';
 
-export function moveCursorToEndOfTheText(
-	editor: Editor,
-	delay = 10,
-): Promise<void> {
+export function moveCursorToEndOfTheText(editor: Editor, delay = 10): Promise<void> {
 	const moveCursorToTheEndOfTheText = (): void => {
 		selectWholeText(editor);
-		Transforms.collapse(editor, { edge: "end" });
+		Transforms.collapse(editor, { edge: 'end' });
 	};
 
 	return new Promise<void>(resolve => {

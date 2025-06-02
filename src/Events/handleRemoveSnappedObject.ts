@@ -1,10 +1,10 @@
-import { Connector, ConnectorData, Item } from "Board/Items";
-import { BoardPoint } from "Board/Items/Connector";
-import { ConnectorEdge } from "Board/Items/Connector/Pointers";
-import { SyncBoardEvent } from "./Events";
-import { RemoveItem } from "Board/BoardOperations";
-import { Board } from "Board";
-import { EventsList } from "./Log/createEventsList";
+import { Connector, ConnectorData, Item } from 'Items';
+import { BoardPoint } from 'Items/Connector';
+import { ConnectorEdge } from 'Items/Connector/Pointers';
+import { SyncBoardEvent } from './Events';
+import { RemoveItem } from 'BoardOperations';
+import { Board } from 'Board';
+import { EventsList } from './Log/createEventsList';
 
 /**
  * Handles the removal of snapped objects from the board by replacing any connected
@@ -17,14 +17,12 @@ import { EventsList } from "./Log/createEventsList";
 export function handleRemoveSnappedObject(
 	board: Board,
 	events: SyncBoardEvent[],
-	list: EventsList,
+	list: EventsList
 ): void {
 	const connectorsToDelete: string[] = [];
 	const connectorsToAdd: ConnectorData[] = [];
 	const removeEvent = events.find(
-		ev =>
-			ev.body.operation.class === "Board" &&
-			ev.body.operation.method === "remove",
+		ev => ev.body.operation.class === 'Board' && ev.body.operation.method === 'remove'
 	);
 
 	if (!removeEvent) {
@@ -40,19 +38,19 @@ export function handleRemoveSnappedObject(
 	}
 
 	const connectors = board.items.listAll().filter(it => {
-		if (it.itemType !== "Connector") {
+		if (it.itemType !== 'Connector') {
 			return false;
 		}
 		const endPoint = it.getEndPoint();
 		const startPoint = it.getStartPoint();
 
-		if (endPoint.pointType !== "Board") {
+		if (endPoint.pointType !== 'Board') {
 			const endItemId = endPoint.item.getId();
 			if (endItemId === removedItemId) {
 				return true;
 			}
 		}
-		if (startPoint.pointType !== "Board") {
+		if (startPoint.pointType !== 'Board') {
 			const startItemId = startPoint.item.getId();
 			if (startItemId === removedItemId) {
 				return true;
@@ -70,8 +68,8 @@ export function handleRemoveSnappedObject(
 
 	connectorsToAdd.forEach(conData => {
 		board.apply({
-			class: "Board",
-			method: "add",
+			class: 'Board',
+			method: 'add',
 			data: conData,
 			item: board.getNewItemId(),
 		});
@@ -81,8 +79,8 @@ export function handleRemoveSnappedObject(
 		list.removeUnconfirmedEventsByItems(connectorsToDelete);
 		connectorsToDelete.forEach(item => {
 			board.apply({
-				class: "Board",
-				method: "remove",
+				class: 'Board',
+				method: 'remove',
 				item: [item],
 			});
 		});
@@ -96,30 +94,25 @@ export function handleRemoveSnappedObject(
  * @param connector - The connector whose edges need to be updated
  * @param removedItems - Array of items that have been removed from the board
  */
-function replaceConnectorEdges(
-	connector: Connector,
-	removedItems: Item[],
-): void {
+function replaceConnectorEdges(connector: Connector, removedItems: Item[]): void {
 	const edgePoints = [
-		{ point: connector.getStartPoint(), edge: "start" as ConnectorEdge },
-		{ point: connector.getEndPoint(), edge: "end" as ConnectorEdge },
+		{ point: connector.getStartPoint(), edge: 'start' as ConnectorEdge },
+		{ point: connector.getEndPoint(), edge: 'end' as ConnectorEdge },
 	];
 
 	for (const { point, edge } of edgePoints) {
-		if (point.pointType === "Board") {
+		if (point.pointType === 'Board') {
 			continue;
 		}
 
 		const pointData = new BoardPoint(point.x, point.y);
-		const itemFound = removedItems.find(
-			item => item.getId() === point.item.getId(),
-		);
+		const itemFound = removedItems.find(item => item.getId() === point.item.getId());
 
 		if (!itemFound) {
 			continue;
 		}
 
-		if (edge === "start") {
+		if (edge === 'start') {
 			connector.applyStartPoint(pointData);
 		} else {
 			connector.applyEndPoint(pointData);

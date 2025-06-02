@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Octagon = {
-	name: "Ocatagon",
+	name: 'Ocatagon',
 	textBounds: new Mbr(10, 15, 90, 85),
 	path: new Path(
 		[
@@ -14,7 +14,7 @@ export const Octagon = {
 			new Line(new Point(25, 100), new Point(0, 75)),
 			new Line(new Point(0, 75), new Point(0, 25)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(0, 50),

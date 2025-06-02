@@ -1,7 +1,7 @@
-import { Board } from "Board/Board";
-import { Camera } from "Board/Camera";
-import { Matrix, Mbr } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
+import { Board } from 'Board';
+import { Camera } from 'Camera';
+import { Mbr, Matrix } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
 
 export interface SnapshotInfo {
 	dataUrl: string;
@@ -19,7 +19,7 @@ type Args = {
 
 export async function exportBoardSnapshot({
 	board,
-	bgColor = "white",
+	bgColor = 'white',
 	selection,
 	nameToExport,
 	upscaleTo,
@@ -33,7 +33,7 @@ export async function exportBoardSnapshot({
 	const height = selection.getHeight() * scale;
 
 	if (!upscaleTo && !upscaleBy) {
-		throw new Error("Either upscaleTo or upscaleBy must be provided");
+		throw new Error('Either upscaleTo or upscaleBy must be provided');
 	}
 
 	const upscaleFactor = upscaleBy ?? upscaleTo! / Math.max(width, height);
@@ -41,9 +41,9 @@ export async function exportBoardSnapshot({
 	offscreenCanvas.width = Math.floor(width * upscaleFactor);
 	offscreenCanvas.height = Math.floor(height * upscaleFactor);
 
-	const ctx = offscreenCanvas.getContext("2d");
+	const ctx = offscreenCanvas.getContext('2d');
 	if (!ctx) {
-		throw new Error("Export Board: Unable to get 2D context");
+		throw new Error('Export Board: Unable to get 2D context');
 	}
 
 	ctx.rect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
@@ -62,17 +62,10 @@ export async function exportBoardSnapshot({
 
 		const scale = Math.min(scaleX, scaleY);
 
-		const translationX =
-			width / 2 - (selection.left + mbrWidth / 2) * scale;
-		const translationY =
-			height / 2 - (selection.top + mbrHeight / 2) * scale;
+		const translationX = width / 2 - (selection.left + mbrWidth / 2) * scale;
+		const translationY = height / 2 - (selection.top + mbrHeight / 2) * scale;
 
-		const selectionMatrix = new Matrix(
-			translationX,
-			translationY,
-			scaleX,
-			scaleY,
-		);
+		const selectionMatrix = new Matrix(translationX, translationY, scaleX, scaleY);
 
 		camera.matrix = selectionMatrix;
 	}
@@ -84,33 +77,26 @@ export async function exportBoardSnapshot({
 	context.matrix.applyToContext(context.ctx);
 
 	const { left, top, right, bottom } = selection;
-	const inView = board.items.index.getRectsEnclosedOrCrossed(
-		left,
-		top,
-		right,
-		bottom,
-	);
+	const inView = board.items.index.getRectsEnclosedOrCrossed(left, top, right, bottom);
 
 	for (const item of inView) {
 		item.render(context);
 	}
 
-	const blob = await offscreenCanvas.convertToBlob({ type: "image/png" });
+	const blob = await offscreenCanvas.convertToBlob({ type: 'image/png' });
 	const dataUrl = await convertBlobToDataUrl(blob);
 
 	if (!dataUrl) {
-		throw new Error("Export Board: Unable to convert to data URL");
+		throw new Error('Export Board: Unable to convert to data URL');
 	}
 
-	const link = document.createElement("a");
+	const link = document.createElement('a');
 	link.href = dataUrl;
-	link.download = nameToExport
-		? `${nameToExport}.png`
-		: `board-${boardId}.png`;
+	link.download = nameToExport ? `${nameToExport}.png` : `board-${boardId}.png`;
 	link.click();
 
 	const end = performance.now();
-	console.log("export performance", end - start);
+	console.log('export performance', end - start);
 	return {
 		dataUrl,
 		nameToExport: nameToExport ?? `board-${boardId}`,
@@ -123,7 +109,7 @@ function convertBlobToDataUrl(blob: Blob): Promise<string | null> {
 
 	return new Promise(res => {
 		reader.onload = () => {
-			if (typeof reader.result === "string") {
+			if (typeof reader.result === 'string') {
 				res(reader.result);
 			}
 			res(null);

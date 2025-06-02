@@ -1,6 +1,3 @@
-import { validator } from "Board/Validators";
-import { JSONSchemaType } from "ajv";
-
 export interface TransformationData {
 	translateX: number;
 	translateY: number;
@@ -10,29 +7,6 @@ export interface TransformationData {
 	isLocked: boolean;
 }
 
-const transformationDataSchema: JSONSchemaType<TransformationData> = {
-	type: "object",
-	properties: {
-		translateX: { type: "number" },
-		translateY: { type: "number" },
-		scaleX: { type: "number" },
-		scaleY: { type: "number" },
-		rotate: { type: "number" },
-		isLocked: { type: "boolean" },
-	},
-	required: [
-		"translateX",
-		"translateY",
-		"scaleX",
-		"scaleY",
-		"rotate",
-		"isLocked",
-	],
-	additionalProperties: false,
-};
-
-validator.addSchema(transformationDataSchema, "transformationDataSchema");
-
 export class DefaultTransformationData implements TransformationData {
 	constructor(
 		public translateX = 0,
@@ -40,6 +14,6 @@ export class DefaultTransformationData implements TransformationData {
 		public scaleX = 1,
 		public scaleY = 1,
 		public rotate = 0,
-		public isLocked = false,
+		public isLocked = false
 	) {}
 }

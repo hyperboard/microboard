@@ -1,23 +1,23 @@
-import { Subject } from "shared/Subject";
-import { DrawingContext } from "../DrawingContext";
-import { TransformationData } from "../Transformation/TransformationData";
-import { GroupOperation } from "./GroupOperation";
-import { GroupCommand } from "./GroupCommand";
-import { Events, Operation } from "Board/Events";
-import { Mbr, Line, Point, Transformation, Item } from "..";
-import { Board } from "Board/Board";
-import { LinkTo } from "../LinkTo/LinkTo";
+import { Subject } from 'Subject';
+import { DrawingContext } from '../DrawingContext';
+import { TransformationData } from '../Transformation/TransformationData';
+import { GroupOperation } from './GroupOperation';
+import { GroupCommand } from './GroupCommand';
+import { Events, Operation } from 'Events';
+import { Mbr, Line, Point, Transformation, Item } from '..';
+import { Board } from 'Board';
+import { LinkTo } from '../LinkTo/LinkTo';
 
 export interface GroupData {
-	readonly itemType: "Group";
+	readonly itemType: 'Group';
 	children: string[];
 	transformation: TransformationData;
 }
 
 export class Group extends Mbr {
 	readonly linkTo: LinkTo;
-	readonly itemType = "Group";
-	parent = "Board";
+	readonly itemType = 'Group';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	readonly subject = new Subject<Group>();
 	private mbr: Mbr = new Mbr();
@@ -27,7 +27,7 @@ export class Group extends Mbr {
 		private board: Board,
 		private events?: Events,
 		private children: string[] = [],
-		private id = "",
+		private id = ''
 	) {
 		super();
 		this.linkTo = new LinkTo(this.id, this.events);
@@ -46,8 +46,8 @@ export class Group extends Mbr {
 
 	addChild(childId: string): void {
 		this.emit({
-			class: "Group",
-			method: "addChild",
+			class: 'Group',
+			method: 'addChild',
 			item: [this.getId()],
 			childId,
 		});
@@ -62,17 +62,15 @@ export class Group extends Mbr {
 	}
 
 	private applyRemoveChild(childId: string): void {
-		this.children = this.children.filter(
-			currChild => currChild !== childId,
-		);
+		this.children = this.children.filter(currChild => currChild !== childId);
 		this.updateMbr();
 		this.subject.publish(this);
 	}
 
 	removeChild(childId: string): void {
 		this.emit({
-			class: "Group",
-			method: "removeChild",
+			class: 'Group',
+			method: 'removeChild',
 			item: [this.getId()],
 			childId,
 		});
@@ -80,19 +78,19 @@ export class Group extends Mbr {
 
 	emitRemoveChild(child: Item): void {
 		this.removeChild(child.getId());
-		child.parent = "Board";
+		child.parent = 'Board';
 	}
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Group":
-				if (op.method === "addChild") {
+			case 'Group':
+				if (op.method === 'addChild') {
 					this.applyAddChild(op.childId);
-				} else if (op.method === "removeChild") {
+				} else if (op.method === 'removeChild') {
 					this.applyRemoveChild(op.childId);
 				}
 				break;
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
 			default:
@@ -119,7 +117,7 @@ export class Group extends Mbr {
 
 	serialize(): GroupData {
 		return {
-			itemType: "Group",
+			itemType: 'Group',
 			children: this.children,
 			transformation: this.transformation.serialize(),
 		};
@@ -223,7 +221,7 @@ export class Group extends Mbr {
 	updateMbr(): void {
 		const rect = this.getMbr();
 		this.mbr = rect;
-		this.mbr.borderColor = "transparent";
+		this.mbr.borderColor = 'transparent';
 	}
 
 	setBoard(board: Board): void {

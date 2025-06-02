@@ -1,31 +1,31 @@
-import { Board } from "Board";
-import { Frame, Item, Line, Mbr } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { FrameType } from "Board/Items/Frame/Basic";
-import { BoardTool } from "../BoardTool";
-import { NestingHighlighter } from "../NestingHighlighter";
+import { Board } from 'Board';
+import { Line, Frame, Mbr, Item } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { FrameType } from 'Items/Frame/Basic';
+import { BoardTool } from 'Tools/BoardTool';
+import { NestingHighlighter } from 'Tools/NestingHighlighter';
 
 export class AddFrame extends BoardTool {
 	line: Line | undefined;
-	shape: FrameType = "Custom";
+	shape: FrameType = 'Custom';
 	frame: Frame;
 	mbr = new Mbr();
 	isDown = false;
 	nestingHighlighter = new NestingHighlighter();
 
-	constructor(private board: Board) {
+	constructor(board: Board) {
 		super(board);
 		this.frame = new Frame(
 			board,
 			board.items.getById.bind(board.items),
-			"",
-			`Frame ${this.board.getMaxFrameSerial() + 1}`,
+			'',
+			`Frame ${this.board.getMaxFrameSerial() + 1}`
 		);
 		this.setCursor();
 	}
 
 	setCursor(): void {
-		this.board.pointer.setCursor("crosshair");
+		this.board.pointer.setCursor('crosshair');
 	}
 
 	setShapeType(type: FrameType): void {
@@ -33,7 +33,7 @@ export class AddFrame extends BoardTool {
 	}
 
 	keyDown(key: string): boolean {
-		if (key === "Escape") {
+		if (key === 'Escape') {
 			this.board.tools.select();
 			return true;
 		}
@@ -52,25 +52,22 @@ export class AddFrame extends BoardTool {
 
 	pointerMoveBy(_x: number, _y: number): boolean {
 		if (this.line) {
-			this.line = new Line(
-				this.line.start.copy(),
-				this.board.pointer.point.copy(),
-			);
+			this.line = new Line(this.line.start.copy(), this.board.pointer.point.copy());
 			this.mbr = this.line.getMbr();
-			this.mbr.borderColor = "blue";
+			this.mbr.borderColor = 'blue';
 
 			this.nestingHighlighter.clear();
 			const enclosedOrCrossed = this.board.items.getEnclosedOrCrossed(
 				this.mbr.left,
 				this.mbr.top,
 				this.mbr.right,
-				this.mbr.bottom,
+				this.mbr.bottom
 			);
 			const inside = enclosedOrCrossed.filter(
 				item =>
 					!(item instanceof Frame) &&
-					item.parent === "Board" &&
-					this.mbr.isInside(item.getMbr().getCenter()),
+					item.parent === 'Board' &&
+					this.mbr.isInside(item.getMbr().getCenter())
 			);
 			this.nestingHighlighter.add(this.frame, inside);
 
@@ -91,24 +88,16 @@ export class AddFrame extends BoardTool {
 			this.transformToPointerCenter();
 		} else {
 			this.initTransformation(width / 100, height / 100);
-			localStorage.setItem(
-				"lastFrameScale",
-				JSON.stringify(this.frame.transformation.getScale()),
-			);
+			localStorage.setItem('lastFrameScale', JSON.stringify(this.frame.transformation.getScale()));
 		}
 
 		const currMbr = this.frame.getMbr();
 		const frameChildren = this.board.items
-			.getEnclosedOrCrossed(
-				currMbr.left,
-				currMbr.top,
-				currMbr.right,
-				currMbr.bottom,
-			)
-			.filter(item => item.parent === "Board")
+			.getEnclosedOrCrossed(currMbr.left, currMbr.top, currMbr.right, currMbr.bottom)
+			.filter(item => item.parent === 'Board')
 			.filter(item => this.frame.handleNesting(item));
 		this.applyAddChildren(frameChildren);
-		if (this.shape !== "Custom") {
+		if (this.shape !== 'Custom') {
 			this.applyCanChangeRatio(false);
 		}
 		const frame = this.board.add(this.frame);
@@ -128,7 +117,7 @@ export class AddFrame extends BoardTool {
 	addNextTo(): void {
 		const framesInView = this.board.items.getFramesInView();
 		if (framesInView.length === 0) {
-			if (this.shape === "Custom") {
+			if (this.shape === 'Custom') {
 				const { x, y } = this.frame.getLastFrameScale();
 				this.applyScaleTo(x, y);
 			} else {
@@ -138,9 +127,7 @@ export class AddFrame extends BoardTool {
 			}
 			this.transformToCenter();
 		} else {
-			const frames = this.board.items
-				.listFrames()
-				.filter(frame => frame !== this.frame);
+			const frames = this.board.items.listFrames().filter(frame => frame !== this.frame);
 			let nextTo = framesInView.reduce((rightest, frame) => {
 				if (frame.getMbr().right > rightest.getMbr().right) {
 					rightest = frame;
@@ -148,39 +135,32 @@ export class AddFrame extends BoardTool {
 				return rightest;
 			}, framesInView[0]);
 			this.applyTranslateTo(
-				nextTo.transformation.getTranslation().x +
-					nextTo.getMbr().getWidth() +
-					20,
-				nextTo.transformation.getTranslation().y,
+				nextTo.transformation.getTranslation().x + nextTo.getMbr().getWidth() + 20,
+				nextTo.transformation.getTranslation().y
 			);
 			const findNext = (): undefined | Frame =>
 				frames.find(
 					frame =>
 						frame.getMbr().left === this.frame.getMbr().left &&
-						frame.getMbr().top === this.frame.getMbr().top,
+						frame.getMbr().top === this.frame.getMbr().top
 				);
 			let foundNext = findNext();
 			while (foundNext) {
 				nextTo = foundNext;
 				this.applyTranslateTo(
-					nextTo.transformation.getTranslation().x +
-						nextTo.getMbr().getWidth() +
-						20,
-					nextTo.transformation.getTranslation().y,
+					nextTo.transformation.getTranslation().x + nextTo.getMbr().getWidth() + 20,
+					nextTo.transformation.getTranslation().y
 				);
 				foundNext = findNext();
 			}
 			this.applyFrameType(this.shape);
-			if (this.shape === "Custom") {
+			if (this.shape === 'Custom') {
 				this.applyFrameType(nextTo.getFrameType());
-				this.applyScaleBy(
-					nextTo.transformation.getScale().x,
-					nextTo.transformation.getScale().y,
-				);
+				this.applyScaleBy(nextTo.transformation.getScale().x, nextTo.transformation.getScale().y);
 			} else {
 				const min = Math.min(
 					nextTo.transformation.getScale().x,
-					nextTo.transformation.getScale().y,
+					nextTo.transformation.getScale().y
 				);
 				this.applyScaleBy(min, min);
 			}
@@ -188,13 +168,8 @@ export class AddFrame extends BoardTool {
 		}
 		const frameMbr = this.frame.getMbr();
 		this.board.items
-			.getEnclosedOrCrossed(
-				frameMbr.left,
-				frameMbr.top,
-				frameMbr.right,
-				frameMbr.bottom,
-			)
-			.filter(item => item.parent === "Board")
+			.getEnclosedOrCrossed(frameMbr.left, frameMbr.top, frameMbr.right, frameMbr.bottom)
+			.filter(item => item.parent === 'Board')
 			.filter(item => this.frame.handleNesting(item))
 			.forEach(item => this.applyAddChildren([item]));
 		const frame = this.board.add(this.frame);
@@ -219,29 +194,26 @@ export class AddFrame extends BoardTool {
 	transformToCenter(): void {
 		this.applyTranslateTo(
 			this.board.camera.getMbr().getCenter().x,
-			this.board.camera.getMbr().getCenter().y,
+			this.board.camera.getMbr().getCenter().y
 		);
 		this.applyTranslateBy(
 			-this.frame.getMbr().getWidth() / 2,
-			-this.frame.getMbr().getHeight() / 2,
+			-this.frame.getMbr().getHeight() / 2
 		);
 	}
 
 	transformToPointerCenter(): void {
-		this.applyTranslateTo(
-			this.board.pointer.point.copy().x,
-			this.board.pointer.point.copy().y,
-		);
+		this.applyTranslateTo(this.board.pointer.point.copy().x, this.board.pointer.point.copy().y);
 		this.applyTranslateBy(
 			-this.frame.getMbr().getWidth() / 2,
-			-this.frame.getMbr().getHeight() / 2,
+			-this.frame.getMbr().getHeight() / 2
 		);
 	}
 
 	applyScaleTo(x: number, y: number): void {
 		this.frame.transformation.apply({
-			class: "Transformation",
-			method: "scaleTo",
+			class: 'Transformation',
+			method: 'scaleTo',
 			item: [this.frame.getId()],
 			x,
 			y,
@@ -250,8 +222,8 @@ export class AddFrame extends BoardTool {
 
 	applyScaleBy(x: number, y: number): void {
 		this.frame.transformation.apply({
-			class: "Transformation",
-			method: "scaleBy",
+			class: 'Transformation',
+			method: 'scaleBy',
 			item: [this.frame.getId()],
 			x,
 			y,
@@ -260,8 +232,8 @@ export class AddFrame extends BoardTool {
 
 	applyTranslateTo(x: number, y: number): void {
 		this.frame.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
+			class: 'Transformation',
+			method: 'translateTo',
 			item: [this.frame.getId()],
 			x,
 			y,
@@ -270,8 +242,8 @@ export class AddFrame extends BoardTool {
 
 	applyTranslateBy(x: number, y: number): void {
 		this.frame.transformation.apply({
-			class: "Transformation",
-			method: "translateBy",
+			class: 'Transformation',
+			method: 'translateBy',
 			item: [this.frame.getId()],
 			x,
 			y,
@@ -289,8 +261,8 @@ export class AddFrame extends BoardTool {
 
 	applyCanChangeRatio(canChangeRatio: boolean): void {
 		this.frame.apply({
-			class: "Frame",
-			method: "setCanChangeRatio",
+			class: 'Frame',
+			method: 'setCanChangeRatio',
 			item: [this.frame.getId()],
 			canChangeRatio,
 		});
@@ -298,8 +270,8 @@ export class AddFrame extends BoardTool {
 
 	applyFrameType(shapeType: FrameType): void {
 		this.frame.apply({
-			class: "Frame",
-			method: "setFrameType",
+			class: 'Frame',
+			method: 'setFrameType',
 			item: [this.frame.getId()],
 			shapeType,
 			prevShapeType: this.frame.getFrameType(),

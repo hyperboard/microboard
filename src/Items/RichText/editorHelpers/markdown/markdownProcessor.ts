@@ -1,22 +1,22 @@
-import { Editor, Transforms } from "slate";
-import { unified } from "unified";
-import markdown from "remark-parse";
-import slate from "remark-slate";
-import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
-import { setNodeStyles } from "Board/Items/RichText/setNodeStyles";
-import { conf } from "Board/Settings";
-import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
-import { createParagraphNode } from "Board/Items/RichText/editorHelpers/common/createParagraphNode";
-import { clearText } from "Board/Items/RichText/editorHelpers/common/clearText";
-import { isTextEmpty } from "Board/Items/RichText/editorHelpers/common/isTextEmpty";
-import { Subject } from "shared/Subject";
+import { Editor, Transforms } from 'slate';
+import { unified } from 'unified';
+import markdown from 'remark-parse';
+import slate from 'remark-slate';
+import { BlockNode } from 'Items/RichText/Editor/BlockNode';
+import { setNodeStyles } from 'Items/RichText/setNodeStyles';
+import { conf } from 'Settings';
+import { selectWholeText } from 'Items/RichText/editorHelpers/common/selectWholeText';
+import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createParagraphNode';
+import { clearText } from 'Items/RichText/editorHelpers/common/clearText';
+import { isTextEmpty } from 'Items/RichText/editorHelpers/common/isTextEmpty';
+import { Subject } from 'Subject';
 const { i18n } = conf;
 
 export class MarkdownProcessor {
 	private chunksQueue: string[] = [];
 	private isProcessingChunk = false;
 	private stopProcessingMarkDownCb: (() => void) | null = null;
-	private currentNode = "";
+	private currentNode = '';
 	editor: Editor;
 	readonly subject = new Subject<MarkdownProcessor>();
 
@@ -34,7 +34,7 @@ export class MarkdownProcessor {
 
 	deserializeMarkdown(isNewParagraphNeeded: boolean) {
 		const lastNode = this.getText()[this.getText().length - 1];
-		if (lastNode.type !== "paragraph") {
+		if (lastNode.type !== 'paragraph') {
 			this.subject.publish(this);
 			return true;
 		}
@@ -42,18 +42,14 @@ export class MarkdownProcessor {
 		const text: string | undefined = lastNode.children[0]?.text;
 
 		if (!text) {
-			Transforms.insertNodes(
-				this.editor,
-				createParagraphNode("", this.editor),
-				{
-					at: [0],
-				},
-			);
+			Transforms.insertNodes(this.editor, createParagraphNode('', this.editor), {
+				at: [0],
+			});
 			this.subject.publish(this);
 			return true;
 		}
 
-		if (i18n.t && text.startsWith(i18n.t("AIInput.generatingResponse"))) {
+		if (i18n.t && text.startsWith(i18n.t('AIInput.generatingResponse'))) {
 			return true;
 		}
 
@@ -73,19 +69,17 @@ export class MarkdownProcessor {
 					throw err;
 				}
 
-				const nodes = (file.result as BlockNode[]).map(
-					(item: BlockNode) => {
-						setNodeStyles({
-							node: item,
-							editor: this.editor,
-							horisontalAlignment: "left",
-							isPaddingTopNeeded: item.type !== "code_block",
-						});
-						return item;
-					},
-				);
+				const nodes = (file.result as BlockNode[]).map((item: BlockNode) => {
+					setNodeStyles({
+						node: item,
+						editor: this.editor,
+						horisontalAlignment: 'left',
+						isPaddingTopNeeded: item.type !== 'code_block',
+					});
+					return item;
+				});
 				if (isNewParagraphNeeded) {
-					nodes.push(createParagraphNode("", this.editor));
+					nodes.push(createParagraphNode('', this.editor));
 				}
 
 				Transforms.insertNodes(this.editor, nodes, {
@@ -116,10 +110,10 @@ export class MarkdownProcessor {
 		this.isProcessingChunk = true;
 		const chunk = this.chunksQueue.shift()!;
 
-		if (chunk === "StopProcessingMarkdown") {
+		if (chunk === 'StopProcessingMarkdown') {
 			await this.deserializeMarkdownAsync(false);
 			this.isProcessingChunk = false;
-			this.currentNode = "";
+			this.currentNode = '';
 			if (this.stopProcessingMarkDownCb) {
 				selectWholeText(this.editor);
 				this.stopProcessingMarkDownCb();
@@ -128,25 +122,21 @@ export class MarkdownProcessor {
 			return;
 		}
 
-		const prevText =
-			this.getText()?.[this.getText().length - 1]?.children[0]?.text;
-		if (
-			i18n.t &&
-			prevText?.startsWith(i18n.t("AIInput.generatingResponse"))
-		) {
+		const prevText = this.getText()?.[this.getText().length - 1]?.children[0]?.text;
+		if (i18n.t && prevText?.startsWith(i18n.t('AIInput.generatingResponse'))) {
 			clearText(this.editor);
 		}
 
-		if (chunk.includes("\n\n")) {
+		if (chunk.includes('\n\n')) {
 			// // sometimes we get paragraphs that starts with 2. 3. ... so markdown transformer thinks that it is a list element and changes index to 1.
 			const numberedListItemRegex = /^\d+\.\s/;
 			if (numberedListItemRegex.test(this.currentNode)) {
 				this.insertChunk(chunk);
 			} else {
-				this.insertChunk(chunk.split("\n\n")[0]);
+				this.insertChunk(chunk.split('\n\n')[0]);
 				await this.deserializeMarkdownAsync();
 			}
-			this.currentNode = "";
+			this.currentNode = '';
 		} else {
 			this.currentNode += chunk;
 			this.insertChunk(chunk);
@@ -165,7 +155,7 @@ export class MarkdownProcessor {
 
 	insertChunk(text: string): boolean {
 		const lines = text.split(/\r\n|\r|\n/);
-		const combinedText = lines.join("\n");
+		const combinedText = lines.join('\n');
 		const isPrevTextEmpty = isTextEmpty(this.editor.children);
 
 		if (isPrevTextEmpty) {
@@ -176,9 +166,7 @@ export class MarkdownProcessor {
 
 			const insertLocation = {
 				path: [lastParagraphPath, lastParagraph.children.length - 1],
-				offset: lastParagraph.children[
-					lastParagraph.children.length - 1
-				].text.length,
+				offset: lastParagraph.children[lastParagraph.children.length - 1].text.length,
 			};
 
 			Transforms.insertText(this.editor, combinedText, {

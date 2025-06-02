@@ -1,27 +1,18 @@
-import type { Board } from "Board/Board";
-import { isHotkeyPushed } from "./isHotkeyPushed";
-import { logHotkey } from "./logHotkey";
-import type { HotkeyName, HotkeysMap } from "./types";
+import { Board } from 'Board';
+import { isHotkeyPushed } from './isHotkeyPushed';
+import { logHotkey } from './logHotkey';
+import { HotkeysMap, HotkeyName } from './types';
 
-export function checkHotkeys(
-	hotkeyMap: HotkeysMap,
-	event: KeyboardEvent,
-	board: Board,
-) {
+export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent, board: Board) {
 	const entries = Object.entries(hotkeyMap);
 	for (const [hotkey, configOrCb] of entries) {
 		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
 			const context = board.selection.getContext();
 
-			if (typeof configOrCb === "function") {
+			if (typeof configOrCb === 'function') {
 				event.preventDefault();
 				configOrCb(event);
-				logHotkey(
-					configOrCb,
-					hotkey as HotkeyName,
-					"triggered",
-					context,
-				);
+				logHotkey(configOrCb, hotkey as HotkeyName, 'triggered', context);
 				return true;
 			}
 			const {
@@ -39,45 +30,27 @@ export function checkHotkeys(
 				!allItemsType.some(itemType =>
 					board.selection.items.isAllItemsType(
 						itemType as
-							| "Shape"
-							| "Sticker"
-							| "Frame"
-							| "Connector"
-							| "Image"
-							| "RichText"
-							| "Drawing"
-							| "Eraser",
-					),
+							| 'Shape'
+							| 'Sticker'
+							| 'Frame'
+							| 'Connector'
+							| 'Image'
+							| 'RichText'
+							| 'Drawing'
+							| 'Eraser'
+					)
 				)
 			) {
-				logHotkey(
-					configOrCb,
-					hotkey as HotkeyName,
-					"canceledByAllItemsType",
-					context,
-				);
+				logHotkey(configOrCb, hotkey as HotkeyName, 'canceledByAllItemsType', context);
 				return false;
 			}
 
 			if (singleItemOnly && !isSingle) {
-				logHotkey(
-					configOrCb,
-					hotkey as HotkeyName,
-					"canceledBySingleItemOnly",
-					context,
-				);
+				logHotkey(configOrCb, hotkey as HotkeyName, 'canceledBySingleItemOnly', context);
 				return false;
 			}
-			if (
-				selectionContext?.length &&
-				!selectionContext.includes(context)
-			) {
-				logHotkey(
-					configOrCb,
-					hotkey as HotkeyName,
-					"canceledBySelectionContext",
-					context,
-				);
+			if (selectionContext?.length && !selectionContext.includes(context)) {
+				logHotkey(configOrCb, hotkey as HotkeyName, 'canceledBySelectionContext', context);
 				return false;
 			}
 
@@ -85,7 +58,7 @@ export function checkHotkeys(
 				event.preventDefault();
 			}
 			cb(event);
-			logHotkey(configOrCb, hotkey as HotkeyName, "triggered", context);
+			logHotkey(configOrCb, hotkey as HotkeyName, 'triggered', context);
 			return true;
 		}
 	}

@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Triangle = {
-	name: "Triangle",
+	name: 'Triangle',
 	textBounds: new Mbr(25, 50, 75, 95),
 	path: new Path(
 		[
@@ -9,7 +9,7 @@ export const Triangle = {
 			new Line(new Point(50, 0), new Point(100, 100)),
 			new Line(new Point(100, 100), new Point(0, 100)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(0, 100),

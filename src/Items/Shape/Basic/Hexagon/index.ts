@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Hexagon = {
-	name: "Hexagon",
+	name: 'Hexagon',
 	textBounds: new Mbr(15, 20, 85, 80),
 	path: new Path(
 		[
@@ -12,7 +12,7 @@ export const Hexagon = {
 			new Line(new Point(0, 75), new Point(0, 25)),
 			new Line(new Point(0, 25), new Point(50, 0)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(50, 0),

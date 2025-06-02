@@ -1,11 +1,11 @@
-import { type App } from "App";
-import { type Board } from "Board";
-import { Mbr } from "Board/Items";
-import { useAppSubscription } from "Board/useBoardSubscription";
-import { useForceUpdate } from "shared/lib/useForceUpdate";
-import { useEffect, useState, type RefObject, useRef } from "react";
-import { updateRects } from "./updateRects";
-import type { SubjectName } from "App/getSubscriptions";
+import { type App } from 'App';
+import { type Board } from 'Board';
+import { Mbr } from 'Items';
+import { useAppSubscription } from 'useBoardSubscription';
+import { useForceUpdate } from 'shared/lib/useForceUpdate';
+import { useEffect, useState, type RefObject, useRef } from 'react';
+import { updateRects } from './updateRects';
+import type { SubjectName } from 'App/getSubscriptions';
 
 type Params = {
 	app: App;
@@ -15,24 +15,18 @@ type Params = {
 	targetMbr?: Mbr;
 	verticalOffset?: number;
 	horizontalOffset?: number;
-	fit?:
-		| "contextPanel"
-		| "linkToBtn"
-		| "comment"
-		| "threadPanel"
-		| "boardMenu"
-		| "hyperLink";
+	fit?: 'contextPanel' | 'linkToBtn' | 'comment' | 'threadPanel' | 'boardMenu' | 'hyperLink';
 };
 
 export function useDomMbr({
 	app,
 	board,
 	ref,
-	subjects = ["camera", "selection"],
+	subjects = ['camera', 'selection'],
 	targetMbr,
 	horizontalOffset,
 	verticalOffset,
-	fit = "contextPanel",
+	fit = 'contextPanel',
 }: Params) {
 	const [mbr, setMbr] = useState(new Mbr());
 	const forceUpdate = useForceUpdate();
@@ -48,14 +42,7 @@ export function useDomMbr({
 	});
 	useEffect(() => {
 		isMounted.current = true;
-		const newMbr = updateRects(
-			board,
-			ref,
-			targetMbr,
-			verticalOffset,
-			horizontalOffset,
-			fit,
-		);
+		const newMbr = updateRects(board, ref, targetMbr, verticalOffset, horizontalOffset, fit);
 		if (newMbr && !newMbr?.isEqual(mbr)) {
 			setMbr(newMbr);
 		}

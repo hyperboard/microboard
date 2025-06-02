@@ -1,8 +1,8 @@
-import { Board } from "Board";
-import { conf } from "Board/Settings";
+import { Board } from 'Board';
+import { conf } from 'Settings';
 
 export interface ConfirmationMsg {
-	type: "Confirmation";
+	type: 'Confirmation';
 	boardId: string;
 	sequenceNumber: number;
 	order: number;
@@ -14,8 +14,7 @@ export function handleConfirmation(msg: ConfirmationMsg, board: Board): void {
 	if (!log.pendingEvent) {
 		return;
 	}
-	const isPendingEventConfirmation =
-		log.pendingEvent.sequenceNumber === msg.sequenceNumber;
+	const isPendingEventConfirmation = log.pendingEvent.sequenceNumber === msg.sequenceNumber;
 	if (!isPendingEventConfirmation) {
 		return;
 	}

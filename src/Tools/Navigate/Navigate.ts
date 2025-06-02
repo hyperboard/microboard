@@ -1,5 +1,5 @@
-import { Board } from "Board/Board";
-import { BoardTool } from "../BoardTool";
+import { Board } from 'Board';
+import { BoardTool } from 'Tools/BoardTool';
 
 export class Navigate extends BoardTool {
 	isDown = false;
@@ -7,7 +7,7 @@ export class Navigate extends BoardTool {
 
 	constructor(board: Board) {
 		super(board);
-		this.board.pointer.setCursor("grab");
+		this.board.pointer.setCursor('grab');
 	}
 
 	returnToTool = (): void => {};
@@ -21,7 +21,7 @@ export class Navigate extends BoardTool {
 	}
 
 	private down(): void {
-		this.board.pointer.setCursor("grabbing");
+		this.board.pointer.setCursor('grabbing');
 		this.isDown = true;
 	}
 
@@ -41,7 +41,7 @@ export class Navigate extends BoardTool {
 	}
 
 	private up(): void {
-		this.board.pointer.setCursor("grab");
+		this.board.pointer.setCursor('grab');
 		this.isDown = false;
 		if (!this.isDraggingBoard) {
 			this.board.selection.selectUnderPointer();
@@ -74,7 +74,7 @@ export class Navigate extends BoardTool {
 	}
 
 	keyDown(key: string): boolean {
-		if (key === "Shift") {
+		if (key === 'Shift') {
 			this.board.tools.select();
 			return true;
 		}

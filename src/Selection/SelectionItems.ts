@@ -1,4 +1,4 @@
-import { Item, ItemType, Mbr } from "../Items";
+import { Item, ItemType, Mbr } from 'Items';
 
 export class SelectionItems {
 	private items: Map<string, Item> = new Map<string, Item>();
@@ -52,7 +52,7 @@ export class SelectionItems {
 			return false;
 		}
 		for (const item of this.items.values()) {
-			if (item.itemType !== "RichText") {
+			if (item.itemType !== 'RichText') {
 				return false;
 			}
 		}
@@ -64,9 +64,7 @@ export class SelectionItems {
 			return false;
 		}
 
-		return Array.from(this.items).every(
-			([, item]) => item.itemType === itemType,
-		);
+		return Array.from(this.items).every(([, item]) => item.itemType === itemType);
 	}
 
 	isItemTypes(itemTypes: ItemType[]): boolean {
@@ -87,12 +85,10 @@ export class SelectionItems {
 		return Array.from(itemTypes);
 	}
 
-	getItemsByItemTypes<T extends ItemType>(
-		itemTypes: T[],
-	): Extract<Item, { itemType: T }>[] {
+	getItemsByItemTypes<T extends ItemType>(itemTypes: T[]): Extract<Item, { itemType: T }>[] {
 		return Array.from(this.items.values()).filter(
 			(item): item is Extract<Item, { itemType: T }> =>
-				(itemTypes as ItemType[]).includes(item.itemType),
+				(itemTypes as ItemType[]).includes(item.itemType)
 		);
 	}
 
@@ -111,9 +107,7 @@ export class SelectionItems {
 	}
 
 	listByIds(itemIdList: string[]): Item[] {
-		return itemIdList
-			.map(id => this.items.get(id))
-			.filter(item => item !== undefined);
+		return itemIdList.map(id => this.items.get(id)).filter(item => item !== undefined);
 	}
 
 	ids(): string[] {

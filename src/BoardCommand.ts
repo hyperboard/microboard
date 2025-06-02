@@ -1,15 +1,11 @@
-import { Command } from "./Events";
-import { BoardOps } from "./BoardOperations";
-import { Board } from "Board";
-import { Group } from "./Items/Group";
+import { Command } from './Events';
+import { BoardOps } from './BoardOperations';
+import { Board } from 'Board';
 
 export class BoardCommand implements Command {
 	private reverse: BoardOps | BoardOps[];
 
-	constructor(
-		private board: Board,
-		private operation: BoardOps,
-	) {
+	constructor(private board: Board, private operation: BoardOps) {
 		this.reverse = this.getReverse();
 	}
 
@@ -30,7 +26,7 @@ export class BoardCommand implements Command {
 	getReverse(): BoardOps | BoardOps[] {
 		const operation = this.operation;
 		switch (operation.method) {
-			case "bringToFront": {
+			case 'bringToFront': {
 				for (const id in operation.prevZIndex) {
 					const item = this.board.items.getById(id);
 					if (!item) {
@@ -38,12 +34,12 @@ export class BoardCommand implements Command {
 					}
 				}
 				return {
-					class: "Board",
-					method: "moveManyToZIndex",
+					class: 'Board',
+					method: 'moveManyToZIndex',
 					item: operation.prevZIndex,
 				};
 			}
-			case "sendToBack": {
+			case 'sendToBack': {
 				for (const id in operation.prevZIndex) {
 					const item = this.board.items.getById(id);
 					if (!item) {
@@ -51,30 +47,28 @@ export class BoardCommand implements Command {
 					}
 				}
 				return {
-					class: "Board",
-					method: "moveManyToZIndex",
+					class: 'Board',
+					method: 'moveManyToZIndex',
 					item: operation.prevZIndex,
 				};
 			}
-			case "moveSecondAfterFirst":
-			case "moveSecondBeforeFirst":
-			case "moveToZIndex": {
+			case 'moveSecondAfterFirst':
+			case 'moveSecondBeforeFirst':
+			case 'moveToZIndex': {
 				const items = this.board.items;
 				const item = items.getById(operation.item);
 				if (!item) {
-					throw new Error(
-						"Get reverse board operation. Item not found",
-					);
+					throw new Error('Get reverse board operation. Item not found');
 				}
 				const zIndex = this.board.getZIndex(item);
 				return {
-					class: "Board",
-					method: "moveToZIndex",
+					class: 'Board',
+					method: 'moveToZIndex',
 					item: operation.item,
 					zIndex,
 				};
 			}
-			case "moveManyToZIndex": {
+			case 'moveManyToZIndex': {
 				for (const id in operation.item) {
 					const item = this.board.items.getById(id);
 					if (!item) {
@@ -82,30 +76,26 @@ export class BoardCommand implements Command {
 					}
 				}
 				if (!operation.item) {
-					throw new Error(
-						"Get reverse board operation. Item not found",
-					);
+					throw new Error('Get reverse board operation. Item not found');
 				}
 				return {
-					class: "Board",
-					method: "moveManyToZIndex",
+					class: 'Board',
+					method: 'moveManyToZIndex',
 					item: operation.item,
 				};
 			}
-			case "remove": {
+			case 'remove': {
 				const items = this.board.items;
 				const reverse: BoardOps[] = [];
 
 				for (const itemId of operation.item) {
 					const item = items.getById(itemId);
 					if (!item) {
-						throw new Error(
-							"Get reverse board operation. Item not found",
-						);
+						throw new Error('Get reverse board operation. Item not found');
 					}
 					reverse.push({
-						class: "Board",
-						method: "add",
+						class: 'Board',
+						method: 'add',
 						item: itemId,
 						data: item.serialize(),
 					});
@@ -113,36 +103,32 @@ export class BoardCommand implements Command {
 
 				return reverse;
 			}
-			case "add": {
+			case 'add': {
 				return {
-					class: "Board",
-					method: "remove",
-					item: Array.isArray(operation.item)
-						? operation.item
-						: [operation.item],
+					class: 'Board',
+					method: 'remove',
+					item: Array.isArray(operation.item) ? operation.item : [operation.item],
 				};
 			}
-			case "addLockedGroup": {
+			case 'addLockedGroup': {
 				return {
-					class: "Board",
-					method: "removeLockedGroup",
+					class: 'Board',
+					method: 'removeLockedGroup',
 					item: [operation.item],
 				};
 			}
-			case "removeLockedGroup": {
+			case 'removeLockedGroup': {
 				const items = this.board.items;
 				const reverse: BoardOps[] = [];
 
 				for (const itemId of operation.item) {
 					const item = items.getById(itemId);
-					if (!item || item.itemType !== "Group") {
-						throw new Error(
-							"Get reverse board operation. Item not found",
-						);
+					if (!item || item.itemType !== 'Group') {
+						throw new Error('Get reverse board operation. Item not found');
 					}
 					reverse.push({
-						class: "Board",
-						method: "addLockedGroup",
+						class: 'Board',
+						method: 'addLockedGroup',
 						item: itemId,
 						data: item.serialize(),
 					});
@@ -150,8 +136,8 @@ export class BoardCommand implements Command {
 
 				return reverse;
 			}
-			case "duplicate":
-			case "paste": {
+			case 'duplicate':
+			case 'paste': {
 				const item: string[] = [];
 				const map = operation.itemsMap;
 				// iterate over map and add items to array
@@ -161,8 +147,8 @@ export class BoardCommand implements Command {
 					}
 				}
 				return {
-					class: "Board",
-					method: "remove",
+					class: 'Board',
+					method: 'remove',
 					item: item,
 				};
 			}

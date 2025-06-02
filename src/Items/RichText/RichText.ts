@@ -1,16 +1,13 @@
-import { SessionStorage } from "App/SessionStorage";
-import { Board } from "Board";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Camera } from "Board/Camera";
-import { Operation } from "Board/Events";
-import {
-	scaleElementBy,
-	translateElementBy,
-} from "Board/HTMLRender/HTMLRender";
-import { decodeHtml } from "Board/parserHTML";
-import { SelectionContext } from "Board/Selection/Selection";
-import { conf, DefaultTextStyles } from "Board/Settings";
-import { Subject } from "shared/Subject";
+import { SessionStorage } from 'SessionStorage';
+import { Board } from 'Board';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { Camera } from 'Camera';
+import { Operation } from 'Events';
+import { scaleElementBy, translateElementBy } from 'HTMLRender/HTMLRender';
+import { decodeHtml } from 'parserHTML';
+import { SelectionContext } from 'Selection';
+import { conf, DefaultTextStyles } from 'Settings';
+import { Subject } from 'Subject';
 import {
 	BaseRange,
 	BaseSelection,
@@ -20,9 +17,7 @@ import {
 	Operation as SlateOp,
 	Text,
 	Transforms,
-} from "slate";
-import { ReactEditor } from "slate-react";
-import { DOMPoint } from "slate-react/dist/utils/dom";
+} from 'slate';
 import {
 	ItemType,
 	Matrix,
@@ -31,28 +26,25 @@ import {
 	RichTextData,
 	Transformation,
 	TransformationOperation,
-} from "..";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { DrawingContext } from "../DrawingContext";
-import { Geometry } from "../Geometry";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
-import { getBlockNodes } from "./CanvasText/Render";
-import { BlockNode, BlockType } from "./Editor/BlockNode";
-import { TextNode, TextStyle } from "./Editor/TextNode";
-import { EditorContainer } from "./EditorContainer";
-import { findOptimalMaxWidthForTextAutoSize } from "./findOptimalMaxWidthForTextAutoSize";
-import {
-	getParagraph,
-	getParagraphWithPassedTextNode,
-} from "./editorHelpers/common/getParagraph.ts";
-import { RichTextOperation } from "./RichTextOperations";
-import { applySelectionFontColor } from "./editorHelpers/selectionOps/applySelectionFontColor.ts";
-import { applySelectionFontSize } from "./editorHelpers/selectionOps/applySelectionFontSize.ts";
-import { getSelectedBlockNode } from "Board/Items/RichText/editorHelpers/common/getSelectedBlockNode";
-import { getSelectionStyles } from "Board/Items/RichText/editorHelpers/common/getSelectionStyles";
-import { setEditorFocus } from "./editorHelpers/common/setEditorFocus.ts";
-import { getAllTextNodesInSelection } from "Board/Items/RichText/editorHelpers/common/getAllTextNodesInSelection";
+} from '..';
+import { HorisontalAlignment, VerticalAlignment } from '../Alignment';
+import { DrawingContext } from '../DrawingContext';
+import { Geometry } from '../Geometry';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { LayoutBlockNodes } from './CanvasText/LayoutBlockNodes';
+import { getBlockNodes } from './CanvasText/Render';
+import { BlockNode, BlockType } from './Editor/BlockNode';
+import { TextNode, TextStyle } from './Editor/TextNode';
+import { EditorContainer } from './EditorContainer';
+import { findOptimalMaxWidthForTextAutoSize } from './findOptimalMaxWidthForTextAutoSize';
+import { getParagraph, getParagraphWithPassedTextNode } from './editorHelpers/common/getParagraph';
+import { RichTextOperation } from './RichTextOperations';
+import { applySelectionFontColor } from './editorHelpers/selectionOps/applySelectionFontColor';
+import { applySelectionFontSize } from './editorHelpers/selectionOps/applySelectionFontSize';
+import { getSelectedBlockNode } from './editorHelpers/common/getSelectedBlockNode';
+import { getSelectionStyles } from './editorHelpers/common/getSelectionStyles';
+import { setEditorFocus } from './editorHelpers/common/setEditorFocus';
+import { getAllTextNodesInSelection } from './editorHelpers/common/getAllTextNodesInSelection';
 
 const { i18n } = conf;
 
@@ -73,8 +65,8 @@ let counter = 0;
  *
  */
 export class RichText extends Mbr implements Geometry {
-	readonly itemType = "RichText";
-	parent = "Board";
+	readonly itemType = 'RichText';
+	parent = 'Board';
 	readonly subject = new Subject<RichText>();
 	readonly editor: EditorContainer;
 
@@ -104,24 +96,22 @@ export class RichText extends Mbr implements Geometry {
 	constructor(
 		private board: Board,
 		public container: Mbr,
-		private id = "",
+		private id = '',
 		readonly transformation = new Transformation(id, board.events),
 		linkTo?: LinkTo,
-		public placeholderText = i18n?.t("board.textPlaceholder"),
+		public placeholderText = i18n?.t('board.textPlaceholder'),
 		public isInShape = false,
 		private autoSize = false,
 		public insideOf?: ItemType,
-		private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES,
+		private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES
 	) {
 		super();
 		counter = counter + 1;
 		this.rtCounter = counter;
 
 		this.linkTo = linkTo || new LinkTo(this.id, this.board.events);
-		let textSizeFromStorage = new SessionStorage().getFontSize(
-			insideOf || "RichText",
-		);
-		if (!textSizeFromStorage || textSizeFromStorage === "auto") {
+		let textSizeFromStorage = new SessionStorage().getFontSize(insideOf || 'RichText');
+		if (!textSizeFromStorage || textSizeFromStorage === 'auto') {
 			textSizeFromStorage = initialTextStyles.fontSize;
 		}
 		this.editor = new EditorContainer(
@@ -156,45 +146,43 @@ export class RichText extends Mbr implements Geometry {
 			() => this.onLimitReached,
 			this.calcAutoSize.bind(this),
 			this.applyAutoSizeScale.bind(this),
-			this.updateElement,
+			this.updateElement
 		);
 		this.editor.subject.subscribe((_editor: EditorContainer) => {
 			// this.updateElement();
 
 			this.subject.publish(this);
 		});
-		this.transformation.subject.subscribe(
-			(tr: Transformation, op: TransformationOperation) => {
-				this.prevMbr = this.getMbr();
-				if (
-					op.method === "translateTo" ||
-					op.method === "translateBy" ||
-					op.method === "transformMany"
-				) {
-					this.transformCanvas();
-				} else if (
-					op.method === "scaleTo" ||
-					op.method === "scaleBy" ||
-					op.method === "scaleByTranslateBy"
-				) {
-					this.setAINodeShirkWidth();
+		this.transformation.subject.subscribe((tr: Transformation, op: TransformationOperation) => {
+			this.prevMbr = this.getMbr();
+			if (
+				op.method === 'translateTo' ||
+				op.method === 'translateBy' ||
+				op.method === 'transformMany'
+			) {
+				this.transformCanvas();
+			} else if (
+				op.method === 'scaleTo' ||
+				op.method === 'scaleBy' ||
+				op.method === 'scaleByTranslateBy'
+			) {
+				this.setAINodeShirkWidth();
 
-					if (!this.isInShape) {
-						this.transformCanvas();
-					} else {
-						this.updateElement();
-					}
-				} else if (op.method === "deserialize") {
-					this.setAINodeShirkWidth();
+				if (!this.isInShape) {
+					this.transformCanvas();
+				} else {
 					this.updateElement();
 				}
-			},
-		);
+			} else if (op.method === 'deserialize') {
+				this.setAINodeShirkWidth();
+				this.updateElement();
+			}
+		});
 		if (
 			!insideOf ||
-			insideOf === "RichText" ||
-			insideOf === "Connector" ||
-			insideOf === "AINode"
+			insideOf === 'RichText' ||
+			insideOf === 'Connector' ||
+			insideOf === 'AINode'
 		) {
 			this.shrinkWidth = true;
 		}
@@ -207,18 +195,15 @@ export class RichText extends Mbr implements Geometry {
 			this.getBlockNodes(),
 			this.shrinkWidth ? Infinity : this.getMaxWidth() || 0,
 			this.shrinkWidth,
-			this.insideOf === "Frame",
+			this.insideOf === 'Frame'
 		);
 
-		this.editorTransforms.select(
-			this.editor.editor,
-			Editor.start(this.editor.editor, []),
-		);
+		this.editorTransforms.select(this.editor.editor, Editor.start(this.editor.editor, []));
 		this.setClipPath();
 	}
 
 	private setAINodeShirkWidth(): void {
-		if (this.insideOf !== "AINode") {
+		if (this.insideOf !== 'AINode') {
 			return;
 		}
 		this.shrinkWidth = true;
@@ -229,9 +214,7 @@ export class RichText extends Mbr implements Geometry {
 			return this.editor.getBlockNodes();
 		} else {
 			this.editor.selectWholeText();
-			const firstTextNode = getAllTextNodesInSelection(
-				this.editor.editor,
-			)[0];
+			const firstTextNode = getAllTextNodesInSelection(this.editor.editor)[0];
 			if (firstTextNode && !this.autoSize) {
 				const placeholderNode = structuredClone(firstTextNode);
 				placeholderNode.text = this.placeholderText;
@@ -243,7 +226,7 @@ export class RichText extends Mbr implements Geometry {
 				this.isAutosize() ? 14 : this.getFontSize(),
 				this.getFontFamily(),
 				this.getDefaultHorizontalAlignment(),
-				this.placeholderText,
+				this.placeholderText
 			);
 		}
 	}
@@ -252,7 +235,7 @@ export class RichText extends Mbr implements Geometry {
 		for (const link of this.layoutNodes.linkPositions) {
 			const { link: hyperLink, left, right, bottom, top } = link;
 			const mbr = new Mbr(left, top, right, bottom);
-			if (this.insideOf === "AINode") {
+			if (this.insideOf === 'AINode') {
 				mbr.left += 20;
 				mbr.top += 20;
 				mbr.right += 20;
@@ -268,12 +251,12 @@ export class RichText extends Mbr implements Geometry {
 
 	getDefaultHorizontalAlignment(): HorisontalAlignment {
 		switch (this.insideOf) {
-			case "Sticker":
-			case "Connector":
-			case "Shape":
-				return "center";
+			case 'Sticker':
+			case 'Connector':
+			case 'Shape':
+				return 'center';
 			default:
-				return "left";
+				return 'left';
 		}
 	}
 
@@ -307,7 +290,7 @@ export class RichText extends Mbr implements Geometry {
 			return;
 		}
 		try {
-			ReactEditor.focus(this.editor.editor);
+			conf.reactEditorFocus(this.editor.editor);
 		} catch {}
 	};
 
@@ -327,29 +310,21 @@ export class RichText extends Mbr implements Geometry {
 		} else {
 			this.layoutNodes = getBlockNodes(
 				this.getBlockNodes(),
-				this.shrinkWidth && this.isEmpty()
-					? Infinity
-					: this.getMaxWidth() || 0,
+				this.shrinkWidth && this.isEmpty() ? Infinity : this.getMaxWidth() || 0,
 				this.shrinkWidth,
-				this.insideOf === "Frame",
+				this.insideOf === 'Frame'
 			);
 			if (this.isEmpty() && this.shrinkWidth) {
 				if (this.layoutNodes.width > (this.getMaxWidth() || 0)) {
 					this.applyMaxWidth(Math.ceil(this.layoutNodes.width));
 				}
 			}
-			if (
-				this.containerMaxWidth &&
-				this.layoutNodes.width >= this.containerMaxWidth
-			) {
+			if (this.containerMaxWidth && this.layoutNodes.width >= this.containerMaxWidth) {
 				this.layoutNodes.width = this.containerMaxWidth;
 			}
 		}
 
-		this.alignInRectangle(
-			this.getTransformedContainer(),
-			this.editor.verticalAlignment,
-		);
+		this.alignInRectangle(this.getTransformedContainer(), this.editor.verticalAlignment);
 		this.transformCanvas();
 		this.subject.publish(this);
 
@@ -366,12 +341,12 @@ export class RichText extends Mbr implements Geometry {
 			nodes,
 			containerWidth,
 			containerHeight,
-			containerWidth,
+			containerWidth
 		);
 
 		return Math.min(
 			containerWidth / optimal.bestMaxWidth,
-			containerHeight / optimal.bestMaxHeight,
+			containerHeight / optimal.bestMaxHeight
 		);
 	}
 
@@ -457,10 +432,7 @@ export class RichText extends Mbr implements Geometry {
 			this.right = transformed.right;
 			this.bottom = transformed.bottom;
 		} else {
-			this.alignInRectangle(
-				this.getTransformedContainer(),
-				this.editor.verticalAlignment,
-			);
+			this.alignInRectangle(this.getTransformedContainer(), this.editor.verticalAlignment);
 		}
 		this.setClipPath();
 		if (!this.isInShape && !this.autoSize) {
@@ -479,17 +451,17 @@ export class RichText extends Mbr implements Geometry {
 			left = center.x - width / 2;
 		}
 		const top =
-			alignment === "top"
+			alignment === 'top'
 				? rect.top
-				: alignment === "bottom"
-					? rect.bottom - height
-					: center.y - height / 2;
+				: alignment === 'bottom'
+				? rect.bottom - height
+				: center.y - height / 2;
 		this.left = left;
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
 		this.bottom = top + height;
 
-		if (this.insideOf === "Sticker" || this.insideOf === "Shape") {
+		if (this.insideOf === 'Sticker' || this.insideOf === 'Shape') {
 			this.left = rect.left;
 			this.right = rect.right;
 		}
@@ -508,16 +480,13 @@ export class RichText extends Mbr implements Geometry {
 	setContainer(container: Mbr): void {
 		this.isContainerSet = true;
 		this.container = container;
-		this.alignInRectangle(
-			this.getTransformedContainer(),
-			this.editor.verticalAlignment,
-		);
+		this.alignInRectangle(this.getTransformedContainer(), this.editor.verticalAlignment);
 	}
 
 	applyMaxWidth(maxWidth: number): this {
 		const shouldNotShrink =
-			this.insideOf !== "RichText" &&
-			this.insideOf !== "AINode" &&
+			this.insideOf !== 'RichText' &&
+			this.insideOf !== 'AINode' &&
 			this.containerMaxWidth &&
 			this.shrinkWidth;
 		if (shouldNotShrink) {
@@ -536,14 +505,9 @@ export class RichText extends Mbr implements Geometry {
 	 */
 	getTransformedContainer(): Mbr {
 		let matrix = this.transformation.matrix;
-		if (this.insideOf === "Frame") {
+		if (this.insideOf === 'Frame') {
 			const scaleY = (this.getMbr().getHeight() * 2) / 10;
-			matrix = new Matrix(
-				matrix.translateX,
-				matrix.translateY,
-				matrix.scaleX,
-				scaleY,
-			);
+			matrix = new Matrix(matrix.translateX, matrix.translateY, matrix.scaleX, scaleY);
 		}
 		return this.container.getTransformed(matrix);
 	}
@@ -565,17 +529,17 @@ export class RichText extends Mbr implements Geometry {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
-			case "RichText":
-				if (op.method === "setMaxWidth") {
+			case 'RichText':
+				if (op.method === 'setMaxWidth') {
 					this.applyMaxWidth(op.maxWidth ?? 0);
-				} else if (op.method === "setFontSize") {
-					if (op.fontSize === "auto") {
+				} else if (op.method === 'setFontSize') {
+					if (op.fontSize === 'auto') {
 						this.autosizeEnable();
 						this.applySelectionFontSize(14, op.context);
 					} else {
@@ -621,17 +585,17 @@ export class RichText extends Mbr implements Geometry {
 		const getRows = (descendants: Descendant[]) => {
 			const rows: string[] = [];
 			for (const descendant of descendants) {
-				if ("children" in descendant) {
+				if ('children' in descendant) {
 					rows.push(...getRows(descendant.children));
 				}
-				if ("text" in descendant) {
+				if ('text' in descendant) {
 					rows.push(descendant.text);
 				}
 			}
 
 			return rows;
 		};
-		return getRows(this.getText()).join("\n");
+		return getRows(this.getText()).join('\n');
 	}
 
 	getScale = (): number => {
@@ -653,24 +617,18 @@ export class RichText extends Mbr implements Geometry {
 		this._onLimitReached = handler;
 	}
 
-	setSelectionFontColor(
-		format: string,
-		selectionContext?: SelectionContext,
-	): SlateOp[] {
-		if (selectionContext === "EditUnderPointer") {
+	setSelectionFontColor(format: string, selectionContext?: SelectionContext): SlateOp[] {
+		if (selectionContext === 'EditUnderPointer') {
 			this.editor.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontColor(format, selectionContext);
-		if (selectionContext !== "EditTextUnderPointer") {
+		if (selectionContext !== 'EditTextUnderPointer') {
 			this.updateElement();
 		}
 		return ops;
 	}
 
-	setHyperLink(
-		link: string | undefined,
-		selection: BaseRange | null,
-	): SlateOp[] {
+	setHyperLink(link: string | undefined, selection: BaseRange | null): SlateOp[] {
 		const ops = this.editor.setSelectionLink(link, selection);
 		this.updateElement();
 
@@ -686,12 +644,9 @@ export class RichText extends Mbr implements Geometry {
 
 	setSelectionFontStyle(
 		style: TextStyle | TextStyle[],
-		selectionContext?: SelectionContext,
+		selectionContext?: SelectionContext
 	): SlateOp[] {
-		if (
-			selectionContext === "EditUnderPointer" ||
-			selectionContext === "SelectByRect"
-		) {
+		if (selectionContext === 'EditUnderPointer' || selectionContext === 'SelectByRect') {
 			this.editor.selectWholeText();
 		}
 		const ops = this.editor.setSelectionFontStyle(style);
@@ -699,59 +654,39 @@ export class RichText extends Mbr implements Geometry {
 		return ops;
 	}
 
-	applySelectionFontSize(
-		fontSize: number,
-		selectionContext?: SelectionContext,
-	): void {
-		if (selectionContext === "EditUnderPointer") {
+	applySelectionFontSize(fontSize: number, selectionContext?: SelectionContext): void {
+		if (selectionContext === 'EditUnderPointer') {
 			this.editor.selectWholeText();
 		}
 		this.editor.shouldEmit = false;
 		if (this.isInShape) {
-			applySelectionFontSize(
-				this.editor.editor,
-				fontSize,
-				selectionContext,
-			);
+			applySelectionFontSize(this.editor.editor, fontSize, selectionContext);
 		} else {
 			const scaledFontSize = fontSize / this.getScale();
-			applySelectionFontSize(
-				this.editor.editor,
-				scaledFontSize,
-				selectionContext,
-			);
+			applySelectionFontSize(this.editor.editor, scaledFontSize, selectionContext);
 		}
 		this.editor.shouldEmit = true;
 		this.updateElement();
 	}
 
 	setSelectionFontSize(
-		fontSize: number | "auto",
-		selectionContext?: SelectionContext,
+		fontSize: number | 'auto',
+		selectionContext?: SelectionContext
 	): SlateOp[] {
-		if (selectionContext === "EditUnderPointer") {
+		if (selectionContext === 'EditUnderPointer') {
 			this.editor.selectWholeText();
 		}
-		const ops = this.editor.setSelectionFontSize(
-			fontSize,
-			selectionContext,
-		);
+		const ops = this.editor.setSelectionFontSize(fontSize, selectionContext);
 		this.updateElement();
 		return ops;
 	}
 
-	setSelectionFontHighlight(
-		format: string,
-		selectionContext?: SelectionContext,
-	): SlateOp[] {
-		if (selectionContext === "EditUnderPointer") {
+	setSelectionFontHighlight(format: string, selectionContext?: SelectionContext): SlateOp[] {
+		if (selectionContext === 'EditUnderPointer') {
 			this.editor.selectWholeText();
 		}
-		const ops = this.editor.setSelectionFontHighlight(
-			format,
-			selectionContext,
-		);
-		if (selectionContext !== "EditTextUnderPointer") {
+		const ops = this.editor.setSelectionFontHighlight(format, selectionContext);
+		if (selectionContext !== 'EditTextUnderPointer') {
 			this.updateElement();
 		}
 		return ops;
@@ -763,16 +698,16 @@ export class RichText extends Mbr implements Geometry {
 
 	setSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
-		selectionContext?: SelectionContext,
+		selectionContext?: SelectionContext
 	): SlateOp[] {
-		if (selectionContext === "EditUnderPointer") {
+		if (selectionContext === 'EditUnderPointer') {
 			this.editor.selectWholeText();
 		}
 		const ops = this.editor.setSelectionHorisontalAlignment(
 			horisontalAlignment,
-			selectionContext,
+			selectionContext
 		);
-		if (selectionContext !== "EditTextUnderPointer") {
+		if (selectionContext !== 'EditTextUnderPointer') {
 			this.updateElement();
 		}
 		return ops;
@@ -780,9 +715,9 @@ export class RichText extends Mbr implements Geometry {
 
 	applySetSelectionHorisontalAlignment(
 		horisontalAlignment: HorisontalAlignment,
-		selectionContext?: SelectionContext,
+		selectionContext?: SelectionContext
 	): void {
-		if (selectionContext === "EditUnderPointer") {
+		if (selectionContext === 'EditUnderPointer') {
 			this.editor.selectWholeText();
 		}
 		this.editor.setSelectionHorisontalAlignment(horisontalAlignment);
@@ -851,7 +786,7 @@ export class RichText extends Mbr implements Geometry {
 
 	getBlockType(): BlockType {
 		const blockNode = getSelectedBlockNode(this.editor);
-		return blockNode ? blockNode.type : "paragraph";
+		return blockNode ? blockNode.type : 'paragraph';
 	}
 
 	getHorisontalAlignment(): HorisontalAlignment | undefined {
@@ -859,10 +794,10 @@ export class RichText extends Mbr implements Geometry {
 			? getSelectedBlockNode(this.editor.editor)
 			: this.editor.editor.children[0];
 
-		if (blockNode && "horisontalAlignment" in blockNode) {
+		if (blockNode && 'horisontalAlignment' in blockNode) {
 			return blockNode.horisontalAlignment;
 		}
-		return "center";
+		return 'center';
 	}
 
 	getVerticalAlignment(): VerticalAlignment {
@@ -887,12 +822,7 @@ export class RichText extends Mbr implements Geometry {
 		if (ref && point) {
 			this.clearLastClickPoint();
 			const domMbr = ref.getBoundingClientRect();
-			const refMbr = new Mbr(
-				domMbr.left,
-				domMbr.top,
-				domMbr.right,
-				domMbr.bottom,
-			);
+			const refMbr = new Mbr(domMbr.left, domMbr.top, domMbr.right, domMbr.bottom);
 			// if there are TS errors, document.caretPositionFromPoint can support most browser, need to refactor
 			// FYI https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint
 			if (
@@ -901,14 +831,8 @@ export class RichText extends Mbr implements Geometry {
 					conf.documentFactory.caretRangeFromPoint)
 			) {
 				const domRange = conf.documentFactory.caretPositionFromPoint
-					? conf.documentFactory.caretPositionFromPoint(
-							point.x,
-							point.y,
-						)
-					: conf.documentFactory.caretRangeFromPoint(
-							point.x,
-							point.y,
-						);
+					? conf.documentFactory.caretPositionFromPoint(point.x, point.y)
+					: conf.documentFactory.caretRangeFromPoint(point.x, point.y);
 				// @ts-expect-error: Suppress TS error for non-existent method
 				const textNode = conf.documentFactory.caretPositionFromPoint
 					? domRange.offsetNode
@@ -917,18 +841,21 @@ export class RichText extends Mbr implements Geometry {
 				const offset = conf.documentFactory.caretPositionFromPoint
 					? domRange.offset
 					: domRange.startOffset;
-				const domPoint = [textNode, offset] as DOMPoint;
-				const slatePoint = ReactEditor.toSlatePoint(
+				const slatePoint = conf.reactEditorToSlatePoint(
 					this.editor.editor,
-					domPoint,
+					textNode,
+					offset,
 					{
 						exactMatch: false,
 						suppressThrow: false,
-					},
+					}
 				);
-				const nRange = { anchor: slatePoint, focus: slatePoint };
-				this.editorTransforms.select(this.editor.editor, nRange);
-				ReactEditor.focus(this.editor.editor);
+
+				if (slatePoint) {
+					const nRange = { anchor: slatePoint, focus: slatePoint };
+					this.editorTransforms.select(this.editor.editor, nRange);
+					conf.reactEditorFocus(this.editor.editor);
+				}
 			} else {
 				if (
 					!(
@@ -937,11 +864,11 @@ export class RichText extends Mbr implements Geometry {
 					)
 				) {
 					console.error(
-						"document.caretPositionFromPoint and document.caretRangeFromPoint are not available!",
+						'document.caretPositionFromPoint and document.caretRangeFromPoint are not available!'
 					);
 				}
 				// this.forceCursorToTheEnd(); // Uncomment if necessary
-				ReactEditor.focus(this.editor.editor);
+				conf.reactEditorFocus(this.editor.editor);
 			}
 		}
 	}
@@ -957,18 +884,16 @@ export class RichText extends Mbr implements Geometry {
 
 	serialize(): RichTextData {
 		return {
-			itemType: "RichText",
+			itemType: 'RichText',
 			verticalAlignment: this.editor.verticalAlignment,
 			children: this.editor.editor.children,
 			maxWidth: this.editor.maxWidth,
 			containerMaxWidth: this.getMaxWidth(),
 			placeholderText: this.placeholderText,
 			transformation:
-				this.isInShape || this.autoSize
-					? undefined
-					: this.transformation.serialize(),
+				this.isInShape || this.autoSize ? undefined : this.transformation.serialize(),
 			insideOf: this.insideOf ? this.insideOf : this.itemType,
-			realSize: this.autoSize ? "auto" : this.getFontSize(),
+			realSize: this.autoSize ? 'auto' : this.getFontSize(),
 			linkTo: this.linkTo.serialize(),
 		};
 	}
@@ -991,10 +916,7 @@ export class RichText extends Mbr implements Geometry {
 	deserialize(data: Partial<RichTextData>): this {
 		if (data.children) {
 			this.editor.editor.children = data.children;
-			this.editorTransforms.select(
-				this.editor.editor,
-				Editor.start(this.editor.editor, []),
-			);
+			this.editorTransforms.select(this.editor.editor, Editor.start(this.editor.editor, []));
 		}
 		if (data.verticalAlignment) {
 			this.editor.verticalAlignment = data.verticalAlignment;
@@ -1011,14 +933,14 @@ export class RichText extends Mbr implements Geometry {
 		if (data.placeholderText) {
 			this.placeholderText = data.placeholderText;
 		}
-		if (data.realSize === "auto") {
+		if (data.realSize === 'auto') {
 			this.autosizeEnable();
 		} else {
 			this.autosizeDisable();
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.insideOf = data.insideOf;
-		if (typeof document !== "undefined") {
+		if (typeof document !== 'undefined') {
 			document.fonts.ready.then(() => {
 				this.updateElement();
 			});
@@ -1033,8 +955,7 @@ export class RichText extends Mbr implements Geometry {
 		}
 		this.selection = null;
 		const shouldRender =
-			this.isRenderEnabled &&
-			(this.getTextString().length > 0 || this.insideOf === "Frame");
+			this.isRenderEnabled && (this.getTextString().length > 0 || this.insideOf === 'Frame');
 		if (!shouldRender) {
 			return;
 		}
@@ -1047,75 +968,57 @@ export class RichText extends Mbr implements Geometry {
 			const { scaleX, scaleY } = this.transformation.matrix;
 			ctx.scale(scaleX, scaleY);
 		}
-		const shouldClip =
-			this.insideOf === "Shape" || this.insideOf === "Sticker";
+		const shouldClip = this.insideOf === 'Shape' || this.insideOf === 'Sticker';
 		if (shouldClip) {
 			ctx.clip(this.clipPath.nativePath);
 		}
 		const autoSizeScale = this.autoSize ? this.autoSizeScale : undefined;
 		this.layoutNodes.render(ctx, autoSizeScale);
 		ctx.restore();
-		if (
-			this.getLinkTo() &&
-			(this.insideOf === "RichText" || !this.insideOf)
-		) {
+		if (this.getLinkTo() && (this.insideOf === 'RichText' || !this.insideOf)) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
-	renderHTML(
-		documentFactory: DocumentFactory,
-		enablePlaceholder = true,
-	): HTMLElement {
+	renderHTML(documentFactory: DocumentFactory, enablePlaceholder = true): HTMLElement {
 		const renderNode = (node: Descendant): HTMLElement => {
-			if (node.type === "text" || "text" in node) {
+			if (node.type === 'text' || 'text' in node) {
 				node = node as TextNode;
-				const text =
-					node.text.trim() !== ""
-						? decodeHtml(escapeHtml(node.text))
-						: "\u00A0";
+				const text = node.text.trim() !== '' ? decodeHtml(escapeHtml(node.text)) : '\u00A0';
 
 				const textElement = node.link
-					? Object.assign(conf.documentFactory.createElement("a"), {
+					? Object.assign(conf.documentFactory.createElement('a'), {
 							href: node.link,
-							target: "_blank",
-							rel: "noreferrer",
-						})
-					: conf.documentFactory.createElement("span");
+							target: '_blank',
+							rel: 'noreferrer',
+					  })
+					: conf.documentFactory.createElement('span');
 
 				Object.assign(textElement.style, {
-					fontWeight: node.bold ? "700" : "400",
-					fontStyle: node.italic ? "italic" : "",
+					fontWeight: node.bold ? '700' : '400',
+					fontStyle: node.italic ? 'italic' : '',
 					textDecoration: [
-						node.underline ? "underline" : "",
-						node["line-through"] ? "line-through" : "",
+						node.underline ? 'underline' : '',
+						node['line-through'] ? 'line-through' : '',
 					]
 						.filter(Boolean)
-						.join(" "),
+						.join(' '),
 					color: node.fontColor || conf.DEFAULT_TEXT_STYLES.fontColor,
-					backgroundColor:
-						node.fontHighlight ||
-						conf.DEFAULT_TEXT_STYLES.fontHighlight,
+					backgroundColor: node.fontHighlight || conf.DEFAULT_TEXT_STYLES.fontHighlight,
 					fontSize: node.fontSize
 						? `${node.fontSize}px`
 						: `${conf.DEFAULT_TEXT_STYLES.fontSize}px`,
-					fontFamily:
-						node.fontFamily || conf.DEFAULT_TEXT_STYLES.fontFamily,
+					fontFamily: node.fontFamily || conf.DEFAULT_TEXT_STYLES.fontFamily,
 				});
 
-				if (this.insideOf === "Frame") {
+				if (this.insideOf === 'Frame') {
 					Object.assign(textElement.style, {
-						whiteSpace: "nowrap",
-						overflow: "hidden",
-						textOverflow: "ellipsis",
-						display: "inline-block",
-						width: "100%",
+						whiteSpace: 'nowrap',
+						overflow: 'hidden',
+						textOverflow: 'ellipsis',
+						display: 'inline-block',
+						width: '100%',
 					});
 				}
 
@@ -1126,22 +1029,18 @@ export class RichText extends Mbr implements Geometry {
 			if (Element.isElement(node)) {
 				const children = node.children.map(renderNode);
 				const applyCommonStyles = (el: HTMLElement) => {
-					el.style.textAlign = node.horisontalAlignment || "left";
-					el.style.paddingTop = node.paddingTop
-						? `${node.paddingTop}px`
-						: "";
-					el.style.paddingBottom = node.paddingBottom
-						? `${node.paddingBottom}px`
-						: "";
+					el.style.textAlign = node.horisontalAlignment || 'left';
+					el.style.paddingTop = node.paddingTop ? `${node.paddingTop}px` : '';
+					el.style.paddingBottom = node.paddingBottom ? `${node.paddingBottom}px` : '';
 				};
 
 				switch (node.type) {
-					case "heading_one":
-					case "heading_two":
-					case "heading_three":
-					case "heading_four":
-					case "heading_five": {
-						const level = node.type.split("_")[1];
+					case 'heading_one':
+					case 'heading_two':
+					case 'heading_three':
+					case 'heading_four':
+					case 'heading_five': {
+						const level = node.type.split('_')[1];
 						const levels = {
 							one: 1,
 							two: 2,
@@ -1149,17 +1048,15 @@ export class RichText extends Mbr implements Geometry {
 							four: 4,
 							five: 5,
 						} as const;
-						const header = conf.documentFactory.createElement(
-							`h${levels[level]}`,
-						);
+						const header = conf.documentFactory.createElement(`h${levels[level]}`);
 						applyCommonStyles(header);
 						header.append(...children);
 						return header;
 					}
 
-					case "code_block": {
-						const pre = conf.documentFactory.createElement("pre");
-						const code = conf.documentFactory.createElement("code");
+					case 'code_block': {
+						const pre = conf.documentFactory.createElement('pre');
+						const code = conf.documentFactory.createElement('code');
 						applyCommonStyles(pre);
 						if (node.language) {
 							code.classList.add(`language-${node.language}`);
@@ -1167,50 +1064,49 @@ export class RichText extends Mbr implements Geometry {
 						code.append(...children);
 						pre.append(code);
 						Object.assign(pre.style, {
-							fontFamily: "monospace",
-							whiteSpace: "pre-wrap",
+							fontFamily: 'monospace',
+							whiteSpace: 'pre-wrap',
 						});
 						return pre;
 					}
 
-					case "block-quote": {
-						const blockquote =
-							conf.documentFactory.createElement("blockquote");
+					case 'block-quote': {
+						const blockquote = conf.documentFactory.createElement('blockquote');
 						applyCommonStyles(blockquote);
 						blockquote.append(...children);
 						return blockquote;
 					}
 
-					case "ul_list": {
-						const ul = conf.documentFactory.createElement("ul");
+					case 'ul_list': {
+						const ul = conf.documentFactory.createElement('ul');
 						applyCommonStyles(ul);
 						ul.append(...children);
 						return ul;
 					}
 
-					case "ol_list": {
-						const ol = conf.documentFactory.createElement("ol");
+					case 'ol_list': {
+						const ol = conf.documentFactory.createElement('ol');
 						applyCommonStyles(ol);
 						ol.append(...children);
 						return ol;
 					}
 
-					case "list_item": {
-						const li = conf.documentFactory.createElement("li");
+					case 'list_item': {
+						const li = conf.documentFactory.createElement('li');
 						applyCommonStyles(li);
 						li.append(...children);
 						return li;
 					}
 
-					case "paragraph":
+					case 'paragraph':
 					default: {
-						const par = conf.documentFactory.createElement("p");
+						const par = conf.documentFactory.createElement('p');
 						applyCommonStyles(par);
 						Object.assign(par.style, {
 							lineHeight: node.lineHeight
 								? `${node.lineHeight}`
 								: conf.DEFAULT_TEXT_STYLES.lineHeight,
-							margin: "0",
+							margin: '0',
 						});
 						par.append(...children);
 						return par;
@@ -1218,16 +1114,16 @@ export class RichText extends Mbr implements Geometry {
 				}
 			}
 
-			return conf.documentFactory.createElement("div");
+			return conf.documentFactory.createElement('div');
 		};
 
 		const escapeHtml = (unsafe: string): string => {
 			return unsafe
-				.replace(/&/g, "&amp;")
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;")
-				.replace(/"/g, "&quot;")
-				.replace(/'/g, "&#039;");
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;');
 		};
 
 		// const elements = enablePlaceholder
@@ -1235,62 +1131,48 @@ export class RichText extends Mbr implements Geometry {
 		// : this.editor.editor.children.map(renderNode);
 		const elements = this.editor.editor.children.map(renderNode);
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 		const transformedWidth = this.getTransformedContainer().getWidth();
 		const transformedHeight = this.getTransformedContainer().getHeight();
 
-		const div = documentFactory.createElement("rich-text");
+		const div = documentFactory.createElement('rich-text');
 		div.id = this.getId();
 		div.style.width = `${transformedWidth + 5}px`;
 		div.style.height = `${transformedHeight}px`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
-		div.style.overflow = "hidden";
-		div.style.overflowWrap = "break-word";
-		div.style.maxWidth = this.getMaxWidth()
-			? `${this.getMaxWidth()}px`
-			: "";
+		div.style.position = 'absolute';
+		div.style.overflow = 'hidden';
+		div.style.overflowWrap = 'break-word';
+		div.style.maxWidth = this.getMaxWidth() ? `${this.getMaxWidth()}px` : '';
 
 		if (this.layoutNodes.height < transformedHeight) {
 			const alignment = this.getVerticalAlignment();
-			if (alignment === "center") {
-				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / 2 / scaleY}px`;
-			} else if (alignment === "bottom") {
+			if (alignment === 'center') {
+				div.style.marginTop = `${
+					(transformedHeight - this.layoutNodes.height) / 2 / scaleY
+				}px`;
+			} else if (alignment === 'bottom') {
 				div.style.marginTop = `${(transformedHeight - this.layoutNodes.height) / scaleY}px`;
 			}
 		}
 
-		div.setAttribute(
-			"data-vertical-alignment",
-			this.getVerticalAlignment(),
-		);
-		div.setAttribute(
-			"data-horizontal-alignment",
-			this.getHorisontalAlignment() || "left",
-		);
-		div.setAttribute("data-placeholder-text", this.placeholderText);
-		div.setAttribute(
-			"data-real-size",
-			this.autoSize ? "auto" : this.getFontSize().toString(),
-		);
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-vertical-alignment', this.getVerticalAlignment());
+		div.setAttribute('data-horizontal-alignment', this.getHorisontalAlignment() || 'left');
+		div.setAttribute('data-placeholder-text', this.placeholderText);
+		div.setAttribute('data-real-size', this.autoSize ? 'auto' : this.getFontSize().toString());
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 
-		if (
-			this.getLinkTo() &&
-			(this.insideOf === "RichText" || !this.insideOf)
-		) {
+		if (this.getLinkTo() && (this.insideOf === 'RichText' || !this.insideOf)) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
-				(this.getMbr().getWidth() - parseInt(linkElement.style.width)) /
-					scaleX,
-				0,
+				(this.getMbr().getWidth() - parseInt(linkElement.style.width)) / scaleX,
+				0
 			);
 			div.appendChild(linkElement);
 		}
@@ -1317,11 +1199,7 @@ export class RichText extends Mbr implements Geometry {
 	autosizeDisable(): void {
 		this.autoSize = false;
 		this.autoSizeScale = 1;
-		if (
-			this.insideOf &&
-			this.insideOf !== "RichText" &&
-			this.insideOf !== "AINode"
-		) {
+		if (this.insideOf && this.insideOf !== 'RichText' && this.insideOf !== 'AINode') {
 			this.isInShape = true;
 		}
 	}
@@ -1340,8 +1218,7 @@ export class RichText extends Mbr implements Geometry {
 	}
 
 	realign(): void {
-		const realignWidth =
-			this.getMaxWidth() || this.getTransformedContainer().getWidth();
+		const realignWidth = this.getMaxWidth() || this.getTransformedContainer().getWidth();
 		this.layoutNodes.realign(realignWidth);
 	}
 
@@ -1352,10 +1229,10 @@ export class RichText extends Mbr implements Geometry {
 	hasWraps(): boolean {
 		if (Array.isArray(this.layoutNodes.nodes)) {
 			return this.layoutNodes.nodes.some(
-				node => node.height > node.lineHeight * this.getFontSize(),
+				node => node.height > node.lineHeight * this.getFontSize()
 			);
 		} else {
-			console.warn("layoutNodes.nodes is not an array");
+			console.warn('layoutNodes.nodes is not an array');
 			return false;
 		}
 	}
@@ -1363,7 +1240,7 @@ export class RichText extends Mbr implements Geometry {
 	getMaxFontSize(): number {
 		const marks = this.editor.getSelectionMarks();
 		const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
-		if (fontSize === "auto") {
+		if (fontSize === 'auto') {
 			return 14; // should not get here
 		}
 		return fontSize * this.autoSizeScale;

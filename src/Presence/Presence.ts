@@ -1,40 +1,35 @@
-import { Board } from "Board/Board";
-import { Camera } from "Board/Camera";
-import { Events } from "Board/Events";
-import { Item, Matrix, Mbr } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Selection } from "Board/Selection/Selection";
-import { Subject } from "shared/Subject";
+import { safeRequestAnimationFrame } from 'api/safeRequestAnimationFrame';
+import { Board } from 'Board';
+import { Camera } from 'Camera';
+import { Events } from 'Events';
+import { Matrix, Item, Mbr } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Subject } from 'Subject';
+import { PRESENCE_COLORS } from './consts';
 import {
-	BringToMeEvent,
-	CameraEvent,
-	CancelDrawSelectEvent,
-	DrawSelectEvent,
-	FollowEvent,
-	PointerMoveEvent,
-	PresenceEventMsg,
 	PresenceEventType,
-	PresencePingEvent,
+	PresenceEventMsg,
+	UserJoinMsg,
+	PointerMoveEvent,
 	SelectionEvent,
 	SetUserColorEvent,
+	DrawSelectEvent,
+	CancelDrawSelectEvent,
+	CameraEvent,
+	PresencePingEvent,
+	BringToMeEvent,
 	StopFollowingEvent,
-	UserJoinMsg,
-} from "./Events";
-import { PRESENCE_COLORS } from "./consts";
-import { catmullRomInterpolate, rgbToRgba } from "./helpers";
-import { throttleWithDebounce } from "shared/lib/throttle";
-import { conf } from "Board/Settings";
-import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-const { i18n } = conf;
+	FollowEvent,
+} from './Events';
+import { catmullRomInterpolate, rgbToRgba } from './helpers';
+import { throttleWithDebounce } from './throttle';
 
 // move to SETTINGS
 const SECOND = 1000;
 const CURSOR_FPS = 3;
 
 export const PRESENCE_CURSOR_THROTTLE = SECOND / CURSOR_FPS;
-export const CURSORS_ANIMATION_DURATION = Math.ceil(
-	(PRESENCE_CURSOR_THROTTLE / 100) * 85,
-);
+export const CURSORS_ANIMATION_DURATION = Math.ceil((PRESENCE_CURSOR_THROTTLE / 100) * 85);
 export const PRESENCE_CLEANUP_USER_TIMER = 180_000; // Matching Redis ttl
 export const PRESENCE_CLEANUP_IDLE_TIMER = 60_000;
 export const CURSORS_IDLE_CLEANUP_DELAY = 10_000;
@@ -113,11 +108,10 @@ export class Presence {
 		const throttleCameraEvent = throttleWithDebounce(
 			this.sendCameraPresence.bind(this),
 			150,
-			150,
+			150
 		);
 
-		const checkIsDisableTrackingNeeded =
-			this.getIsDisableTrackingNeeded.bind(this);
+		const checkIsDisableTrackingNeeded = this.getIsDisableTrackingNeeded.bind(this);
 
 		this.board.camera.subject.subscribe(_camera => {
 			throttleCameraEvent(this.board.camera);
@@ -130,7 +124,7 @@ export class Presence {
 		const throttleSelectionEvent = throttleWithDebounce(
 			this.sendSelectionEvent.bind(this),
 			400,
-			400,
+			400
 		);
 
 		this.board.selection.subject.subscribe(_selection => {
@@ -138,11 +132,8 @@ export class Presence {
 		});
 
 		// todo move browser api
-		if (typeof window !== "undefined") {
-			window.addEventListener(
-				"storage",
-				this.updateCurrentUser.bind(this),
-			);
+		if (typeof window !== 'undefined') {
+			window.addEventListener('storage', this.updateCurrentUser.bind(this));
 		}
 	}
 
@@ -159,7 +150,7 @@ export class Presence {
 	private sendCameraPresence(camera: Camera): void {
 		if (camera) {
 			this.emit({
-				method: "Camera",
+				method: 'Camera',
 				timestamp: Date.now(),
 				translateX: camera.matrix.translateX,
 				translateY: camera.matrix.translateY,
@@ -173,7 +164,7 @@ export class Presence {
 
 	private sendSelectionEvent(selection: Selection): void {
 		this.emit({
-			method: "Selection",
+			method: 'Selection',
 			selectedItems: selection.items.ids(),
 			timestamp: Date.now(),
 		});
@@ -191,8 +182,8 @@ export class Presence {
 				trackedUser.camera.scaleX,
 				trackedUser.camera.scaleY,
 				trackedUser.camera.shearX,
-				trackedUser.camera.shearY,
-			),
+				trackedUser.camera.shearY
+			)
 		);
 	}
 
@@ -201,7 +192,7 @@ export class Presence {
 	}
 
 	private updateCurrentUser(event: StorageEvent) {
-		if (event.key === "currentUser") {
+		if (event.key === 'currentUser') {
 			if (event.newValue) {
 				this.setCurrentUser(event.newValue);
 			}
@@ -210,11 +201,8 @@ export class Presence {
 
 	cleanup() {
 		// todo move browser api
-		if (typeof window !== "undefined") {
-			window.removeEventListener(
-				"storage",
-				this.updateCurrentUser.bind(this),
-			);
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('storage', this.updateCurrentUser.bind(this));
 		}
 		this.drawingContext = null;
 		this.clear();
@@ -228,11 +216,8 @@ export class Presence {
 		cleanupInterval = setInterval(() => {
 			this.users = new Map(
 				Array.from(this.users.entries()).filter(([_, user]) => {
-					return (
-						Date.now() - user.lastActivity <
-						PRESENCE_CLEANUP_USER_TIMER
-					);
-				}),
+					return Date.now() - user.lastActivity < PRESENCE_CLEANUP_USER_TIMER;
+				})
 			);
 			this.subject.publish(this);
 		}, 1000);
@@ -243,11 +228,7 @@ export class Presence {
 	}
 
 	emit(event: PresenceEventType): void {
-		if (
-			this.events &&
-			this.board.getInterfaceType() === "edit" &&
-			this.board.getIsOpen()
-		) {
+		if (this.events && this.board.getInterfaceType() === 'edit' && this.board.getIsOpen()) {
 			this.events.sendPresenceEvent(event);
 		}
 	}
@@ -263,7 +244,7 @@ export class Presence {
 	// Maintaining current user presence
 	ping(): void {
 		this.emit({
-			method: "Ping",
+			method: 'Ping',
 			timestamp: Date.now(),
 		});
 	}
@@ -280,15 +261,13 @@ export class Presence {
 			user =>
 				user.boardId === boardId &&
 				(user.lastPing > Date.now() - PING_CLEANUP ||
-					user.lastActivity > Date.now() - PING_CLEANUP),
+					user.lastActivity > Date.now() - PING_CLEANUP)
 		);
 
 		if (excludeSelf) {
-			const currentUser = localStorage.getItem("currentUser");
+			const currentUser = localStorage.getItem('currentUser');
 			if (currentUser) {
-				filteredUsers = filteredUsers.filter(
-					user => user.userId !== currentUser,
-				);
+				filteredUsers = filteredUsers.filter(user => user.userId !== currentUser);
 			}
 		}
 
@@ -333,7 +312,7 @@ export class Presence {
 				selection: [],
 				pointer: { x: 0, y: 0 },
 				colorChangeable: true,
-				nickname: event.nickname || "Anonymous",
+				nickname: event.nickname || 'Anonymous',
 				camera: null,
 				avatar: null,
 				boardId: this.board.getBoardId(),
@@ -343,57 +322,43 @@ export class Presence {
 		}
 
 		switch (eventData.method) {
-			case "PointerMove":
-				this.processPointerMove(
-					event as PresenceEventMsg<PointerMoveEvent>,
-				);
+			case 'PointerMove':
+				this.processPointerMove(event as PresenceEventMsg<PointerMoveEvent>);
 				break;
 
-			case "Selection":
-				this.processSelection(
-					event as PresenceEventMsg<SelectionEvent>,
-				);
+			case 'Selection':
+				this.processSelection(event as PresenceEventMsg<SelectionEvent>);
 				break;
 
-			case "SetUserColor":
-				this.processSetColor(
-					event as PresenceEventMsg<SetUserColorEvent>,
-				);
+			case 'SetUserColor':
+				this.processSetColor(event as PresenceEventMsg<SetUserColorEvent>);
 				break;
 
-			case "DrawSelect":
-				this.processDrawSelect(
-					event as PresenceEventMsg<DrawSelectEvent>,
-				);
+			case 'DrawSelect':
+				this.processDrawSelect(event as PresenceEventMsg<DrawSelectEvent>);
 				break;
 
-			case "CancelDrawSelect":
-				this.processCancelDrawSelect(
-					event as PresenceEventMsg<CancelDrawSelectEvent>,
-				);
+			case 'CancelDrawSelect':
+				this.processCancelDrawSelect(event as PresenceEventMsg<CancelDrawSelectEvent>);
 				break;
 
-			case "Camera":
+			case 'Camera':
 				this.processCameraEvent(event as PresenceEventMsg<CameraEvent>);
 				break;
 
-			case "Ping":
+			case 'Ping':
 				this.processPing(event as PresenceEventMsg<PresencePingEvent>);
 				break;
 
-			case "BringToMe":
-				this.processBringToMe(
-					event as PresenceEventMsg<BringToMeEvent>,
-				);
+			case 'BringToMe':
+				this.processBringToMe(event as PresenceEventMsg<BringToMeEvent>);
 				break;
 
-			case "StopFollowing":
-				this.processStopFollowing(
-					event as PresenceEventMsg<StopFollowingEvent>,
-				);
+			case 'StopFollowing':
+				this.processStopFollowing(event as PresenceEventMsg<StopFollowingEvent>);
 				break;
 
-			case "Follow":
+			case 'Follow':
 				this.processFollowEvent(event as PresenceEventMsg<FollowEvent>);
 				break;
 		}
@@ -404,7 +369,7 @@ export class Presence {
 	private updateUserMetaInfo(
 		msg: PresenceEventMsg,
 		userCopy: PresenceUser,
-		shouldUpdateActivity = true,
+		shouldUpdateActivity = true
 	): void {
 		if (msg.avatar) {
 			userCopy.avatar = msg.avatar;
@@ -453,9 +418,7 @@ export class Presence {
 			return;
 		}
 		if (msg.event.users.includes(currentUser)) {
-			this.followers = this.followers.filter(
-				follower => follower !== msg.userId.toString(),
-			);
+			this.followers = this.followers.filter(follower => follower !== msg.userId.toString());
 		}
 		if (!this.trackedUser) {
 			return;
@@ -463,10 +426,7 @@ export class Presence {
 		if (this.trackedUser.userId !== msg.userId) {
 			return;
 		}
-		if (
-			msg.event.users.includes(currentUser) &&
-			this.trackedUser.userId === msg.userId
-		) {
+		if (msg.event.users.includes(currentUser) && this.trackedUser.userId === msg.userId) {
 			this.disableTracking();
 		}
 	}
@@ -495,8 +455,8 @@ export class Presence {
 					eventData.scaleX,
 					eventData.scaleY,
 					eventData.shearX,
-					eventData.shearY,
-				),
+					eventData.shearY
+				)
 			);
 		}
 	}
@@ -511,9 +471,7 @@ export class Presence {
 		this.users.set(msg.userId.toString(), userCopy);
 	}
 
-	processCancelDrawSelect(
-		msg: PresenceEventMsg<CancelDrawSelectEvent>,
-	): void {
+	processCancelDrawSelect(msg: PresenceEventMsg<CancelDrawSelectEvent>): void {
 		const user = this.users.get(msg.userId.toString())!;
 		const userCopy = { ...user };
 		this.updateUserMetaInfo(msg, userCopy);
@@ -563,12 +521,12 @@ export class Presence {
 						this.trackedUser.camera.scaleX,
 						this.trackedUser.camera.scaleY,
 						this.trackedUser.camera.shearX,
-						this.trackedUser.camera.shearY,
-					),
+						this.trackedUser.camera.shearY
+					)
 				);
 			}
 			this.emit({
-				method: "Follow",
+				method: 'Follow',
 				user: userId,
 				timestamp: Date.now(),
 			});
@@ -580,7 +538,7 @@ export class Presence {
 			return;
 		}
 		this.emit({
-			method: "StopFollowing",
+			method: 'StopFollowing',
 			timestamp: Date.now(),
 			users: [this.trackedUser?.userId],
 		});
@@ -618,14 +576,9 @@ export class Presence {
 		this.users.forEach(user => {
 			if (user.userId !== this.currentUserId) {
 				const key =
-					user.hardId !== null
-						? `hardId:${user.hardId}`
-						: `softId:${user.userId}`;
+					user.hardId !== null ? `hardId:${user.hardId}` : `softId:${user.userId}`;
 				const existingUser = uniqueUsers.get(key);
-				if (
-					!existingUser ||
-					user.lastActivity > existingUser.lastActivity
-				) {
+				if (!existingUser || user.lastActivity > existingUser.lastActivity) {
 					uniqueUsers.set(key, user);
 				}
 			}
@@ -641,10 +594,7 @@ export class Presence {
 		}[] = [];
 
 		uniqueUsers.forEach(user => {
-			if (
-				user.select &&
-				Date.now() - user.lastActivity <= CURSORS_IDLE_CLEANUP_DELAY
-			) {
+			if (user.select && Date.now() - user.lastActivity <= CURSORS_IDLE_CLEANUP_DELAY) {
 				selects.push({
 					...user.select,
 					color: user.color,
@@ -674,14 +624,9 @@ export class Presence {
 				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
 			) {
 				const key =
-					user.hardId !== null
-						? `hardId:${user.hardId}`
-						: `softId:${user.userId}`;
+					user.hardId !== null ? `hardId:${user.hardId}` : `softId:${user.userId}`;
 				const existingUser = uniqueUsers.get(key);
-				if (
-					!existingUser ||
-					user.lastActivity > existingUser.lastActivity
-				) {
+				if (!existingUser || user.lastActivity > existingUser.lastActivity) {
 					uniqueUsers.set(key, user);
 				}
 			}
@@ -719,14 +664,9 @@ export class Presence {
 				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
 			) {
 				const key =
-					user.hardId !== null
-						? `hardId:${user.hardId}`
-						: `softId:${user.userId}`;
+					user.hardId !== null ? `hardId:${user.hardId}` : `softId:${user.userId}`;
 				const existingUser = uniqueUsers.get(key);
-				if (
-					!existingUser ||
-					user.lastActivity > existingUser.lastActivity
-				) {
+				if (!existingUser || user.lastActivity > existingUser.lastActivity) {
 					uniqueUsers.set(key, user);
 				}
 			}
@@ -752,28 +692,20 @@ export class Presence {
 	}
 
 	generateUserColor(shouldEmit = true): string {
-		const assignedColors = new Set(
-			Array.from(this.users.values()).map(user => user.color),
-		);
+		const assignedColors = new Set(Array.from(this.users.values()).map(user => user.color));
 
-		let generatedColor = "";
+		let generatedColor = '';
 
 		if (assignedColors.size < PRESENCE_COLORS.length) {
-			const unusedColors = PRESENCE_COLORS.filter(
-				color => !assignedColors.has(color),
-			);
-			generatedColor =
-				unusedColors[Math.floor(Math.random() * unusedColors.length)];
+			const unusedColors = PRESENCE_COLORS.filter(color => !assignedColors.has(color));
+			generatedColor = unusedColors[Math.floor(Math.random() * unusedColors.length)];
 		} else {
-			generatedColor =
-				PRESENCE_COLORS[
-					Math.floor(Math.random() * PRESENCE_COLORS.length)
-				];
+			generatedColor = PRESENCE_COLORS[Math.floor(Math.random() * PRESENCE_COLORS.length)];
 		}
 
 		if (shouldEmit) {
 			this.emit({
-				method: "SetUserColor",
+				method: 'SetUserColor',
 				color: generatedColor,
 				timestamp: Date.now(),
 			});
@@ -799,26 +731,20 @@ export class Presence {
 		context: DrawingContext,
 		item: Item,
 		color: string,
-		customScale?: number,
+		customScale?: number
 	): void {
 		const mbr = item.getMbr();
-		mbr.strokeWidth = !customScale
-			? 1 / context.matrix.scaleX
-			: 1 / customScale;
+		mbr.strokeWidth = !customScale ? 1 / context.matrix.scaleX : 1 / customScale;
 
 		mbr.borderColor = color;
 		mbr.render(context);
 	}
 
-	private saveImageCache(cursor: {
-		x: number;
-		y: number;
-		color: string;
-	}): void {
+	private saveImageCache(cursor: { x: number; y: number; color: string }): void {
 		if (!this.svgImageCache[cursor.color]) {
 			const svg = this.getCursorSvg(cursor.color, 1);
 			const svgBlob = new Blob([svg], {
-				type: "image/svg+xml",
+				type: 'image/svg+xml',
 			});
 			const url = URL.createObjectURL(svgBlob);
 			const img = new Image();
@@ -862,21 +788,20 @@ export class Presence {
 
 			ctx.save();
 			ctx.font = `${14 * scale}px Arial`;
-			ctx.textAlign = "left";
-			ctx.textBaseline = "middle";
+			ctx.textAlign = 'left';
+			ctx.textBaseline = 'middle';
 			const cameraMbr = this.board.camera.getMbr();
 			ctx.clearRect(
 				cameraMbr.left,
 				cameraMbr.top,
 				cameraMbr.getWidth(),
-				cameraMbr.getHeight(),
+				cameraMbr.getHeight()
 			);
 
 			Object.values(cursors).forEach(cursor => {
 				this.saveImageCache(cursor);
 
-				const cursorHistory =
-					this.cursorPositionHistory[cursor.userId] || [];
+				const cursorHistory = this.cursorPositionHistory[cursor.userId] || [];
 				const currentPosition = { x: cursor.x, y: cursor.y };
 				cursorHistory.push(currentPosition);
 
@@ -886,27 +811,20 @@ export class Presence {
 
 				if (cursorHistory.length < 4) {
 					const previousPosition =
-						this.previousCursorPositions[cursor.userId] ||
-						currentPosition;
-					const timeSinceLastUpdate =
-						currentTime - (previousPosition.timestamp || 0);
-					const progress = Math.min(
-						1,
-						timeSinceLastUpdate / CURSORS_ANIMATION_DURATION,
-					);
+						this.previousCursorPositions[cursor.userId] || currentPosition;
+					const timeSinceLastUpdate = currentTime - (previousPosition.timestamp || 0);
+					const progress = Math.min(1, timeSinceLastUpdate / CURSORS_ANIMATION_DURATION);
 
 					const interpolatedX =
-						previousPosition.x +
-						(currentPosition.x - previousPosition.x) * progress;
+						previousPosition.x + (currentPosition.x - previousPosition.x) * progress;
 					const interpolatedY =
-						previousPosition.y +
-						(currentPosition.y - previousPosition.y) * progress;
+						previousPosition.y + (currentPosition.y - previousPosition.y) * progress;
 
 					this.renderCursorWithLabel(
 						context,
 						cursor,
 						{ x: interpolatedX, y: interpolatedY },
-						scale,
+						scale
 					);
 
 					this.previousCursorPositions[cursor.userId] = {
@@ -918,28 +836,19 @@ export class Presence {
 					return;
 				}
 
-				const timeSinceLastUpdate =
-					currentTime - (cursorHistory[0].timestamp || 0);
+				const timeSinceLastUpdate = currentTime - (cursorHistory[0].timestamp || 0);
 
-				const progress = Math.min(
-					1,
-					timeSinceLastUpdate / CURSORS_ANIMATION_DURATION,
-				);
+				const progress = Math.min(1, timeSinceLastUpdate / CURSORS_ANIMATION_DURATION);
 
 				const interpolatedPoint = catmullRomInterpolate(
 					cursorHistory[0],
 					cursorHistory[1],
 					cursorHistory[2],
 					cursorHistory[3],
-					progress,
+					progress
 				);
 
-				this.renderCursorWithLabel(
-					context,
-					cursor,
-					interpolatedPoint,
-					scale,
-				);
+				this.renderCursorWithLabel(context, cursor, interpolatedPoint, scale);
 
 				this.previousCursorPositions[cursor.userId] = {
 					...interpolatedPoint,
@@ -969,7 +878,7 @@ export class Presence {
 		context: DrawingContext,
 		cursor: { x: number; y: number; nickname: string; color: string },
 		position: { x: number; y: number },
-		scale: number,
+		scale: number
 	): void {
 		if (!this.cursorsEnabled) {
 			return;
@@ -979,13 +888,12 @@ export class Presence {
 			return;
 		}
 
-		const anonTranslate = i18n.t("presence.anonymous");
-		const label =
-			cursor.nickname === "Anonymous" ? anonTranslate : cursor.nickname;
+		const anonTranslate = i18n.t('presence.anonymous');
+		const label = cursor.nickname === 'Anonymous' ? anonTranslate : cursor.nickname;
 		const textWidth = ctx.measureText(label).width;
 		const labelHeight = 20 * scale;
 
-		ctx.shadowColor = "rgba(20, 21, 26, 0.125)";
+		ctx.shadowColor = 'rgba(20, 21, 26, 0.125)';
 		ctx.shadowOffsetX = -4 * scale;
 		ctx.shadowOffsetY = 4 * scale;
 		ctx.shadowBlur = 8 * scale;
@@ -1002,33 +910,22 @@ export class Presence {
 			position.y + IMAGE_SIZE,
 			textWidth + X_PADDING * 2,
 			LABEL_BLOCK_HEIGHT,
-			10 * scale,
+			10 * scale
 		);
-		ctx.roundRect(
-			position.x + IMAGE_SIZE,
-			position.y + IMAGE_SIZE,
-			12 * scale,
-			8 * scale,
-		);
+		ctx.roundRect(position.x + IMAGE_SIZE, position.y + IMAGE_SIZE, 12 * scale, 8 * scale);
 		ctx.fill();
 
-		ctx.shadowColor = "transparent";
-		ctx.fillStyle = "#FFFFFF";
+		ctx.shadowColor = 'transparent';
+		ctx.fillStyle = '#FFFFFF';
 		ctx.fillText(
 			label,
 			position.x + IMAGE_SIZE + X_PADDING,
-			position.y + IMAGE_SIZE + Y_PADDING + labelHeight / 2,
+			position.y + IMAGE_SIZE + Y_PADDING + labelHeight / 2
 		);
 
 		const cachedImg = this.svgImageCache[cursor.color];
 		if (cachedImg) {
-			ctx.drawImage(
-				cachedImg,
-				position.x,
-				position.y,
-				IMAGE_SIZE,
-				IMAGE_SIZE,
-			);
+			ctx.drawImage(cachedImg, position.x, position.y, IMAGE_SIZE, IMAGE_SIZE);
 		}
 	}
 
@@ -1038,9 +935,7 @@ export class Presence {
 			if (selection.selection.length > 0) {
 				let selectionMbr = selection.selection[0].getMbr();
 				for (let i = 1; i < selection.selection.length; i++) {
-					selectionMbr = selectionMbr.combine([
-						selection.selection[i].getMbr(),
-					]);
+					selectionMbr = selectionMbr.combine([selection.selection[i].getMbr()]);
 				}
 				selectionMbr.strokeWidth = 1 / context.matrix.scaleX;
 				selectionMbr.borderColor = selection.color;
@@ -1055,12 +950,7 @@ export class Presence {
 	private renderSelect(context: DrawingContext): void {
 		const selects = this.getSelects();
 		for (const select of selects) {
-			const mbr = new Mbr(
-				select.left,
-				select.top,
-				select.right,
-				select.bottom,
-			);
+			const mbr = new Mbr(select.left, select.top, select.right, select.bottom);
 			mbr.strokeWidth = 1 / context.matrix.scaleX;
 			const backgroundColor = rgbToRgba(select.color, 0.2);
 			mbr.borderColor = select.color;

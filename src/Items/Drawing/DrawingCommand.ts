@@ -1,6 +1,6 @@
-import { Command } from "Board/Events";
-import { Drawing } from "./Drawing";
-import { DrawingOperation } from "./DrawingOperation";
+import { Command } from 'Events';
+import { Drawing } from './Drawing';
+import { DrawingOperation } from './DrawingOperation';
 
 export class DrawingCommand implements Command {
 	private item: Drawing[];
@@ -40,32 +40,32 @@ export class DrawingCommand implements Command {
 
 	getReverseOperation(item: Drawing): DrawingOperation {
 		switch (this.operation.method) {
-			case "setStrokeColor":
+			case 'setStrokeColor':
 				return {
-					class: "Drawing",
-					method: "setStrokeColor",
+					class: 'Drawing',
+					method: 'setStrokeColor',
 					item: [item.getId()],
 					color: item.getStrokeColor(),
 				};
-			case "setStrokeWidth":
+			case 'setStrokeWidth':
 				return {
-					class: "Drawing",
-					method: "setStrokeWidth",
+					class: 'Drawing',
+					method: 'setStrokeWidth',
 					item: [item.getId()],
 					width: this.operation.prevWidth,
 					prevWidth: item.getStrokeWidth(),
 				};
-			case "setStrokeOpacity":
+			case 'setStrokeOpacity':
 				return {
-					class: "Drawing",
-					method: "setStrokeOpacity",
+					class: 'Drawing',
+					method: 'setStrokeOpacity',
 					item: [item.getId()],
 					opacity: item.getStrokeOpacity(),
 				};
-			case "setStrokeStyle":
+			case 'setStrokeStyle':
 				return {
-					class: "Drawing",
-					method: "setStrokeStyle",
+					class: 'Drawing',
+					method: 'setStrokeStyle',
 					item: [item.getId()],
 					style: item.getBorderStyle(),
 				};

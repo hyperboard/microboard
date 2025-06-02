@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const ReversedParallelogram = {
-	name: "ReversedParallelogram",
+	name: 'ReversedParallelogram',
 	textBounds: new Mbr(10, 5, 90, 95),
 	path: new Path(
 		[
@@ -10,14 +10,9 @@ export const ReversedParallelogram = {
 			new Line(new Point(100, 100), new Point(10, 100)),
 			new Line(new Point(10, 100), new Point(0, 0)),
 		],
-		true,
+		true
 	),
-	anchorPoints: [
-		new Point(5, 50),
-		new Point(45, 0),
-		new Point(95, 50),
-		new Point(55, 100),
-	],
+	anchorPoints: [new Point(5, 50), new Point(45, 0), new Point(95, 50), new Point(55, 100)],
 	createPath: (mbr: Mbr) => ReversedParallelogram.path.copy(),
 	useMbrUnderPointer: false,
 };

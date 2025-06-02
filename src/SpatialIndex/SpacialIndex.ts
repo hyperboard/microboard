@@ -1,16 +1,15 @@
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Camera } from "Board/Camera";
-import { positionRelatively, translateElementBy } from "Board/HTMLRender";
-import { Connector, Frame, Item, ItemData, Mbr, Point } from "Board/Items";
-import { Drawing } from "Board/Items/Drawing";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Group } from "Board/Items/Group";
-import { Pointer } from "Board/Pointer";
-import { conf } from "Board/Settings";
-import { Subject } from "shared/Subject";
-import { ItemsIndexRecord } from "../BoardOperations";
-import { Comment } from "../Items/Comment";
-import { LayeredIndex } from "./LayeredIndex";
+import { DocumentFactory } from 'api/DocumentFactory';
+import { ItemsIndexRecord } from 'BoardOperations';
+import { Camera } from 'Camera';
+import { translateElementBy, positionRelatively } from 'HTMLRender';
+import { Item, Frame, Mbr, ItemData, Point, Connector } from 'Items';
+import { Drawing } from 'Items/Drawing';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Group } from 'Items/Group';
+import { Pointer } from 'Pointer';
+import { conf } from 'Settings';
+import { Subject } from 'Subject';
+import { LayeredIndex } from './LayeredIndex';
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -88,11 +87,8 @@ export class SpatialIndex {
 
 			item.emitRemoveChild(newItems);
 		}
-		if (item.parent !== "Board") {
-			const parentFrame = this.items.getById(item.parent) as
-				| Frame
-				| Group
-				| undefined;
+		if (item.parent !== 'Board') {
+			const parentFrame = this.items.getById(item.parent) as Frame | Group | undefined;
 			parentFrame?.emitRemoveChild(item);
 		}
 		if (item instanceof Frame) {
@@ -242,47 +238,27 @@ export class SpatialIndex {
 		return this.getById(id); // Reuse `getById` for consistency
 	}
 
-	getEnclosed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
+	getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
 		const enclosedItems = this.itemsIndex.getEnclosed(mbr);
 		const enclosedFrames = this.framesIndex.getEnclosed(mbr);
 		return enclosedFrames.concat(enclosedItems);
 	}
 
-	getEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
+	getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		const enclosedOrCrossedItems =
-			this.itemsIndex.getEnclosedOrCrossedBy(mbr);
-		const enclosedOrCrossedFrames =
-			this.framesIndex.getEnclosedOrCrossedBy(mbr);
+		const enclosedOrCrossedItems = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
+		const enclosedOrCrossedFrames = this.framesIndex.getEnclosedOrCrossedBy(mbr);
 		return enclosedOrCrossedFrames.concat(enclosedOrCrossedItems);
 	}
 
 	getUnderPoint(point: Point, tolerace = 5): Item[] {
 		const itemsUnderPoint = this.itemsIndex.getUnderPoint(point, tolerace);
-		const framesUnderPoint = this.framesIndex.getUnderPoint(
-			point,
-			tolerace,
-		);
+		const framesUnderPoint = this.framesIndex.getUnderPoint(point, tolerace);
 		return [...framesUnderPoint, ...itemsUnderPoint];
 	}
 
-	getRectsEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
+	getRectsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
 		const frames = this.framesIndex.getRectsEnclosedOrCrossedBy(mbr);
 		const woFrames = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
@@ -290,32 +266,21 @@ export class SpatialIndex {
 		return [...woFrames, ...frames];
 	}
 
-	getFramesEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Frame[] {
-		return this.framesIndex.getRectsEnclosedOrCrossedBy(
-			new Mbr(left, top, right, bottom),
-		);
+	getFramesEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Frame[] {
+		return this.framesIndex.getRectsEnclosedOrCrossedBy(new Mbr(left, top, right, bottom));
 	}
 
 	getItemsEnclosedOrCrossed(
 		left: number,
 		top: number,
 		right: number,
-		bottom: number,
+		bottom: number
 	): ItemWoFrames[] {
-		return this.itemsIndex.getRectsEnclosedOrCrossedBy(
-			new Mbr(left, top, right, bottom),
-		);
+		return this.itemsIndex.getRectsEnclosedOrCrossedBy(new Mbr(left, top, right, bottom));
 	}
 
 	getComments(): Comment[] {
-		return this.itemsArray.filter(
-			item => item instanceof Comment,
-		) as Comment[];
+		return this.itemsArray.filter(item => item instanceof Comment) as Comment[];
 	}
 
 	getMbr(): Mbr {
@@ -330,21 +295,11 @@ export class SpatialIndex {
 		point: Point,
 		maxItems: number,
 		filter: (item: Item) => boolean,
-		maxDistance: number,
+		maxDistance: number
 	): Item[] {
 		// Requires combining results from both indexes and sorting by distance, limited by maxItems.
-		const nearestItems = this.itemsIndex.getNearestTo(
-			point,
-			maxItems,
-			filter,
-			maxDistance,
-		);
-		const nearestFrames = this.framesIndex.getNearestTo(
-			point,
-			maxItems,
-			filter,
-			maxDistance,
-		);
+		const nearestItems = this.itemsIndex.getNearestTo(point, maxItems, filter, maxDistance);
+		const nearestFrames = this.framesIndex.getNearestTo(point, maxItems, filter, maxDistance);
 		const combined = nearestItems.concat(nearestFrames);
 		combined.sort((aa, bb) => {
 			const distA = point.getDistance(aa.getMbr().getCenter());
@@ -400,7 +355,7 @@ export class Items {
 		public index: SpatialIndex,
 		private view: Camera,
 		private pointer: Pointer,
-		readonly subject: Subject<Items>,
+		readonly subject: Subject<Items>
 	) {}
 
 	update(item: Item): void {
@@ -423,30 +378,15 @@ export class Items {
 		return this.index.findById(id);
 	}
 
-	getEnclosed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
+	getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
 		return this.index.getEnclosed(left, top, right, bottom);
 	}
 
-	getEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Item[] {
+	getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		return this.index.getEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getFramesEnclosedOrCrossed(
-		left: number,
-		top: number,
-		right: number,
-		bottom: number,
-	): Frame[] {
+	getFramesEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Frame[] {
 		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
 	}
 
@@ -481,14 +421,9 @@ export class Items {
 		const { x, y } = this.pointer.point;
 		const unmodifiedSize = size;
 		size = 16;
-		const tolerated = this.index.getEnclosedOrCrossed(
-			x - size,
-			y - size,
-			x + size,
-			y + size,
-		);
+		const tolerated = this.index.getEnclosedOrCrossed(x - size, y - size, x + size, y + size);
 
-		const groups = tolerated.filter(item => item.itemType === "Group");
+		const groups = tolerated.filter(item => item.itemType === 'Group');
 		if (groups.length > 0) {
 			return groups;
 		}
@@ -508,25 +443,19 @@ export class Items {
 
 		const { nearest } = enclosed.reduce(
 			(acc, item) => {
-				const area =
-					item.getMbr().getHeight() * item.getMbr().getWidth();
+				const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
-				if (
-					item.itemType === "Drawing" &&
-					!item.isPointNearLine(this.pointer.point)
-				) {
+				if (item.itemType === 'Drawing' && !item.isPointNearLine(this.pointer.point)) {
 					return acc;
 				}
 
 				const isItemTransparent =
-					item?.itemType === "Shape" &&
-					item?.getBackgroundColor() === "none";
+					item?.itemType === 'Shape' && item?.getBackgroundColor() === 'none';
 				const itemZIndex = this.getZIndex(item);
 				const accZIndex = this.getZIndex(acc.nearest!);
 
 				if (
-					(itemZIndex > accZIndex &&
-						(!isItemTransparent || area === acc.area)) ||
+					(itemZIndex > accZIndex && (!isItemTransparent || area === acc.area)) ||
 					area < acc.area
 				) {
 					return { nearest: item, area };
@@ -537,7 +466,7 @@ export class Items {
 			{ nearest: undefined, area: Infinity } as {
 				nearest?: Item;
 				area: number;
-			},
+			}
 		);
 
 		if (nearest) {
@@ -556,14 +485,9 @@ export class Items {
 	getNearPointer(
 		maxDistance = 100,
 		maxItems = 10,
-		filter: (item: Item) => boolean = () => true,
+		filter: (item: Item) => boolean = () => true
 	): Item[] {
-		return this.index.getNearestTo(
-			this.pointer.point,
-			maxItems,
-			filter,
-			maxDistance,
-		);
+		return this.index.getNearestTo(this.pointer.point, maxItems, filter, maxDistance);
 	}
 
 	getZIndex(item: Item): number {
@@ -580,7 +504,7 @@ export class Items {
 
 	getLinkedConnectorsById(id: string): Connector[] {
 		return this.listAll().filter(item => {
-			if (item.itemType !== "Connector") {
+			if (item.itemType !== 'Connector') {
 				return false;
 			}
 
@@ -593,15 +517,12 @@ export class Items {
 		});
 	}
 
-	getConnectorsByItemIds(
-		startPointerItemId?: string,
-		endPointerItemId?: string,
-	): Connector[] {
+	getConnectorsByItemIds(startPointerItemId?: string, endPointerItemId?: string): Connector[] {
 		if (!startPointerItemId && !endPointerItemId) {
 			return [];
 		}
 		return this.listAll().filter(item => {
-			if (item.itemType !== "Connector" || !item.isConnected()) {
+			if (item.itemType !== 'Connector' || !item.isConnected()) {
 				return false;
 			}
 			const { startItem, endItem } = item.getConnectedItems();
@@ -618,18 +539,10 @@ export class Items {
 				}
 				return false;
 			}
-			if (
-				startPointerItemId &&
-				startItem &&
-				startItem.getId() === startPointerItemId
-			) {
+			if (startPointerItemId && startItem && startItem.getId() === startPointerItemId) {
 				return true;
 			}
-			if (
-				endPointerItemId &&
-				endItem &&
-				endItem.getId() === endPointerItemId
-			) {
+			if (endPointerItemId && endItem && endItem.getId() === endPointerItemId) {
 				return true;
 			}
 			return false;
@@ -653,8 +566,8 @@ export class Items {
 					}
 				});
 		}); // background of frames
-		rest.filter(item => !frameChildrenIds.includes(item.getId())).forEach(
-			item => item.render(context),
+		rest.filter(item => !frameChildrenIds.includes(item.getId())).forEach(item =>
+			item.render(context)
 		); // non-frame items
 		frames.forEach(frame => frame.renderBorders(context)); // borders of frames
 		frames.forEach(frame => frame.renderName(context)); // names of frames
@@ -672,11 +585,7 @@ export class Items {
 		return this.getHTML(documentFactory, frames, rest);
 	}
 
-	getHTML(
-		documentFactory: DocumentFactory,
-		frames: Frame[],
-		rest: ItemWoFrames[],
-	): string {
+	getHTML(documentFactory: DocumentFactory, frames: Frame[], rest: ItemWoFrames[]): string {
 		const lowestCoordinates = [...frames, ...rest]
 			.map(item => item.getMbr())
 			.reduce(
@@ -684,73 +593,52 @@ export class Items {
 					left: Math.min(acc.left, mbr.left),
 					top: Math.min(acc.top, mbr.top),
 				}),
-				{ left: 0, top: 0 },
+				{ left: 0, top: 0 }
 			);
 
 		const childrenMap = new Map<string, string>();
 		const framesHTML = frames.map(frame => {
-			frame
-				.getChildrenIds()
-				.forEach(childId => childrenMap.set(childId, frame.getId()));
+			frame.getChildrenIds().forEach(childId => childrenMap.set(childId, frame.getId()));
 
 			const html = frame.renderHTML(documentFactory);
-			translateElementBy(
-				html,
-				-lowestCoordinates.left,
-				-lowestCoordinates.top,
-			);
+			translateElementBy(html, -lowestCoordinates.left, -lowestCoordinates.top);
 
 			return html;
 		});
 		const restHTML = rest
-			.map(
-				item =>
-					"renderHTML" in item && item.renderHTML(documentFactory),
-			)
+			.map(item => 'renderHTML' in item && item.renderHTML(documentFactory))
 			.filter(item => !!item)
 			.map(item => {
-				if (item.tagName.toLowerCase() === "connector-item") {
-					const startX = parseFloat(
-						item.getAttribute("data-start-point-x") || "0",
-					);
-					const startY = parseFloat(
-						item.getAttribute("data-start-point-y") || "0",
-					);
-					const endX = parseFloat(
-						item.getAttribute("data-end-point-x") || "0",
-					);
-					const endY = parseFloat(
-						item.getAttribute("data-end-point-y") || "0",
-					);
+				if (item.tagName.toLowerCase() === 'connector-item') {
+					const startX = parseFloat(item.getAttribute('data-start-point-x') || '0');
+					const startY = parseFloat(item.getAttribute('data-start-point-y') || '0');
+					const endX = parseFloat(item.getAttribute('data-end-point-x') || '0');
+					const endY = parseFloat(item.getAttribute('data-end-point-y') || '0');
 
 					item.setAttribute(
-						"data-start-point-x",
-						(startX - lowestCoordinates.left).toString(),
+						'data-start-point-x',
+						(startX - lowestCoordinates.left).toString()
 					);
 					item.setAttribute(
-						"data-start-point-y",
-						(startY - lowestCoordinates.top).toString(),
+						'data-start-point-y',
+						(startY - lowestCoordinates.top).toString()
 					);
 					item.setAttribute(
-						"data-end-point-x",
-						(endX - lowestCoordinates.left).toString(),
+						'data-end-point-x',
+						(endX - lowestCoordinates.left).toString()
 					);
 					item.setAttribute(
-						"data-end-point-y",
-						(endY - lowestCoordinates.top).toString(),
+						'data-end-point-y',
+						(endY - lowestCoordinates.top).toString()
 					);
 				}
-				return translateElementBy(
-					item,
-					-lowestCoordinates.left,
-					-lowestCoordinates.top,
-				);
+				return translateElementBy(item, -lowestCoordinates.left, -lowestCoordinates.top);
 			});
 
 		for (const item of restHTML) {
 			const parentFrameId = childrenMap.get(item.id);
 			const frame = framesHTML.find(
-				el => parentFrameId !== undefined && el.id === parentFrameId,
+				el => parentFrameId !== undefined && el.id === parentFrameId
 			);
 			if (frame) {
 				positionRelatively(item, frame);
@@ -758,7 +646,7 @@ export class Items {
 			}
 		}
 
-		let result = "";
+		let result = '';
 		for (const frame of framesHTML) {
 			result += frame.outerHTML;
 		}

@@ -1,5 +1,5 @@
-import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
-import { Editor, Element } from "slate";
+import { BlockNode } from 'Items/RichText/Editor/BlockNode';
+import { Editor, Element } from 'slate';
 
 export function getSelectedBlockNode(editor: Editor): BlockNode | null {
 	const { selection } = editor;

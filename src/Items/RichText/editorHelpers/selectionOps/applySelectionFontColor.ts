@@ -1,17 +1,14 @@
-import { Editor } from "slate";
-import { getSelectionMarks } from "Board/Items/RichText/editorHelpers/common/getSelectionMarks";
+import { Editor } from 'slate';
+import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 
-export function applySelectionFontColor(
-	editor: Editor,
-	fontColor: string,
-): void {
+export function applySelectionFontColor(editor: Editor, fontColor: string): void {
 	if (!editor) {
-		throw new Error("Editor is not initialized");
+		throw new Error('Editor is not initialized');
 	}
 
 	const marks = getSelectionMarks(editor);
 	if (!marks) {
 		return;
 	}
-	Editor.addMark(editor, "fontColor", fontColor);
+	Editor.addMark(editor, 'fontColor', fontColor);
 }

@@ -1,5 +1,5 @@
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Tool } from "./Tool";
+import { DrawingContext } from 'Items/DrawingContext';
+import { Tool } from './Tool';
 
 export class ToolContext implements Tool {
 	protected tool = new Tool();
