@@ -1,7 +1,7 @@
-import { Mbr, Path, Line, CubicBezier, Point } from "Board/Items";
+import { Mbr, Path, Line, CubicBezier, Point } from 'Items';
 
 export const BracesRight = {
-	name: "BracesRight",
+	name: 'BracesRight',
 	textBounds: new Mbr(5, 5, 75, 95),
 	path: new Path(
 		[
@@ -9,7 +9,7 @@ export const BracesRight = {
 				new Point(100, 0),
 				new Point(100, 0),
 				new Point(90, 10),
-				new Point(90, 0),
+				new Point(90, 0)
 			),
 			new Line(new Point(90, 10), new Point(90, 45)),
 			new Line(new Point(90, 45), new Point(80, 50)),
@@ -19,10 +19,10 @@ export const BracesRight = {
 				new Point(90, 90),
 				new Point(90, 90),
 				new Point(100, 100),
-				new Point(90, 100),
+				new Point(90, 100)
 			),
 		],
-		false,
+		false
 	),
 	anchorPoints: [],
 	createPath: (mbr: Mbr) => BracesRight.path.copy(),

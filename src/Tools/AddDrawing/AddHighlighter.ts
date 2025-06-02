@@ -1,7 +1,7 @@
-import { AddDrawing } from "./AddDrawing";
-import { conf } from "Board/Settings";
-import { BorderStyle } from "../../Items/Path";
-import { Board } from "../../Board";
+import { Board } from 'Board';
+import { BorderStyle } from 'Items/Path';
+import { conf } from 'Settings';
+import { AddDrawing } from './AddDrawing';
 
 export class AddHighlighter extends AddDrawing {
 	strokeWidth = conf.HIGHLIGHTER_INITIAL_STROKE_WIDTH;
@@ -13,12 +13,9 @@ export class AddHighlighter extends AddDrawing {
 		this.setCursor();
 
 		if (conf.HIGHLIGHTER_SETTINGS_KEY) {
-			const highlighterSettings = localStorage.getItem(
-				conf.HIGHLIGHTER_SETTINGS_KEY,
-			);
+			const highlighterSettings = localStorage.getItem(conf.HIGHLIGHTER_SETTINGS_KEY);
 			if (highlighterSettings) {
-				const { strokeWidth, strokeColor, strokeStyle } =
-					JSON.parse(highlighterSettings);
+				const { strokeWidth, strokeColor, strokeStyle } = JSON.parse(highlighterSettings);
 				this.strokeWidth = strokeWidth;
 				this.strokeColor = strokeColor;
 				this.strokeStyle = strokeStyle;
@@ -37,7 +34,7 @@ export class AddHighlighter extends AddDrawing {
 				strokeWidth: this.strokeWidth,
 				strokeColor: this.strokeColor,
 				strokeStyle: this.strokeStyle,
-			}),
+			})
 		);
 	}
 }

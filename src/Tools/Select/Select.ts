@@ -1,18 +1,15 @@
-import { isSafari } from "App/isSafari";
-import { Comment } from "Board/Items/Comment/Comment";
-import { Group } from "Board/Items/Group/Group.js";
-import { Selection } from "Board/Selection/index.js";
-import { quickAddItem } from "Board/Selection/QuickAddButtons";
-import { conf } from "Board/Settings.js";
-import { Board } from "../../Board";
-import createCanvasDrawer, { CanvasDrawer } from "../../drawMbrOnCanvas.js";
-import { Frame, Item, Line, Mbr, Point } from "../../Items";
-import { DrawingContext } from "../../Items/DrawingContext";
-import { createDebounceUpdater } from "../DebounceUpdater";
-import { NestingHighlighter } from "../NestingHighlighter";
-import AlignmentHelper from "../RelativeAlignment";
-import { RELATIVE_ALIGNMENT_COLOR } from "../RelativeAlignment/RelativeAlignment.js";
-import { Tool } from "../Tool";
+import { Board } from 'Board';
+import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
+import { Line, Mbr, Item, Point, Frame } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Group } from 'Items/Group';
+import { quickAddItem } from 'Selection/QuickAddButtons';
+import { conf } from 'Settings';
+import { createDebounceUpdater } from 'Tools/DebounceUpdater';
+import { NestingHighlighter } from 'Tools/NestingHighlighter';
+import AlignmentHelper from 'Tools/RelativeAlignment';
+import { RELATIVE_ALIGNMENT_COLOR } from 'Tools/RelativeAlignment/RelativeAlignment';
+import { Tool } from 'Tools/Tool';
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -59,7 +56,7 @@ export class Select extends Tool {
 			board,
 			board.index,
 			this.canvasDrawer,
-			this.debounceUpd,
+			this.debounceUpd
 		);
 	}
 
@@ -99,27 +96,19 @@ export class Select extends Tool {
 			item,
 			this.snapLines,
 			this.beginTimeStamp,
-			this.board.pointer.point,
+			this.board.pointer.point
 		);
 
 		if (this.isSnapped) {
 			if (!this.snapCursorPos) {
-				this.snapCursorPos = new Point(
-					this.board.pointer.point.x,
-					this.board.pointer.point.y,
-				);
+				this.snapCursorPos = new Point(this.board.pointer.point.x, this.board.pointer.point.y);
 			}
 
-			const cursorDiffX = Math.abs(
-				this.board.pointer.point.x - this.snapCursorPos.x,
-			);
-			const cursorDiffY = Math.abs(
-				this.board.pointer.point.y - this.snapCursorPos.y,
-			);
+			const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
+			const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
 
 			if (
-				(cursorDiffX > increasedSnapThreshold ||
-					cursorDiffY > increasedSnapThreshold) &&
+				(cursorDiffX > increasedSnapThreshold || cursorDiffY > increasedSnapThreshold) &&
 				this.initialCursorPos
 			) {
 				this.isSnapped = false;
@@ -127,20 +116,9 @@ export class Select extends Tool {
 				const itemCenter = Array.isArray(item)
 					? this.alignmentHelper.combineMBRs(item).getCenter()
 					: item.getMbr().getCenter();
-				const translateX =
-					this.board.pointer.point.x -
-					this.initialCursorPos.x -
-					itemCenter.x;
-				const translateY =
-					this.board.pointer.point.y -
-					this.initialCursorPos.y -
-					itemCenter.y;
-				this.alignmentHelper.translateItems(
-					item,
-					translateX,
-					translateY,
-					this.beginTimeStamp,
-				);
+				const translateX = this.board.pointer.point.x - this.initialCursorPos.x - itemCenter.x;
+				const translateY = this.board.pointer.point.y - this.initialCursorPos.y - itemCenter.y;
+				this.alignmentHelper.translateItems(item, translateX, translateY, this.beginTimeStamp);
 			}
 		}
 		return false;
@@ -155,44 +133,28 @@ export class Select extends Tool {
 		this.isSnapped = this.alignmentHelper.snapCanvasToClosestLine(
 			this.snapLines,
 			this.beginTimeStamp,
-			this.board.pointer.point,
+			this.board.pointer.point
 		);
 		if (this.isSnapped) {
 			if (!this.snapCursorPos) {
-				this.snapCursorPos = new Point(
-					this.board.pointer.point.x,
-					this.board.pointer.point.y,
-				);
+				this.snapCursorPos = new Point(this.board.pointer.point.x, this.board.pointer.point.y);
 			}
 
-			const cursorDiffX = Math.abs(
-				this.board.pointer.point.x - this.snapCursorPos.x,
-			);
-			const cursorDiffY = Math.abs(
-				this.board.pointer.point.y - this.snapCursorPos.y,
-			);
+			const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
+			const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
 
 			if (
-				(cursorDiffX > increasedSnapThreshold ||
-					cursorDiffY > increasedSnapThreshold) &&
+				(cursorDiffX > increasedSnapThreshold || cursorDiffY > increasedSnapThreshold) &&
 				this.initialCursorPos
 			) {
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 				const itemCenter = this.canvasDrawer.getMbr().getCenter();
-				const targetX =
-					this.board.pointer.point.x - this.initialCursorPos.x;
-				const targetY =
-					this.board.pointer.point.y - this.initialCursorPos.y;
-				const translateX =
-					targetX - (itemCenter.x - this.initialCursorPos.x);
-				const translateY =
-					targetY - (itemCenter.y - this.initialCursorPos.y);
-				this.alignmentHelper.translateCanvas(
-					translateX,
-					translateY,
-					this.beginTimeStamp,
-				);
+				const targetX = this.board.pointer.point.x - this.initialCursorPos.x;
+				const targetY = this.board.pointer.point.y - this.initialCursorPos.y;
+				const translateX = targetX - (itemCenter.x - this.initialCursorPos.x);
+				const translateY = targetY - (itemCenter.y - this.initialCursorPos.y);
+				this.alignmentHelper.translateCanvas(translateX, translateY, this.beginTimeStamp);
 			}
 		}
 		return false;
@@ -225,18 +187,13 @@ export class Select extends Tool {
 		return Math.min(angleDiff, 360 - angleDiff);
 	}
 
-	private handleShiftGuidelines(
-		item: Item | Item[],
-		mousePosition: Point,
-	): void {
+	private handleShiftGuidelines(item: Item | Item[], mousePosition: Point): void {
 		if (item) {
 			if (!this.originalCenter) {
 				this.originalCenter = Array.isArray(item)
 					? this.board.selection.getMbr()?.getCenter().copy()!
 					: item.getMbr().getCenter().copy();
-				this.guidelines = this.alignmentHelper.generateGuidelines(
-					this.originalCenter,
-				).lines;
+				this.guidelines = this.alignmentHelper.generateGuidelines(this.originalCenter).lines;
 			}
 			this.mainLine = new Line(this.originalCenter, mousePosition);
 			let minAngle = Infinity;
@@ -252,28 +209,17 @@ export class Select extends Tool {
 
 			if (newSnapLine) {
 				this.snapLine = newSnapLine as Line;
-				const mainLineLength = this.calculateLineLength(
-					this.mainLine,
-					this.originalCenter!,
-				);
+				const mainLineLength = this.calculateLineLength(this.mainLine, this.originalCenter!);
 
 				const snapDirectionX =
 					(this.snapLine.end.x - this.snapLine.start.x) /
-					this.calculateLineLength(
-						this.snapLine,
-						this.originalCenter!,
-					);
+					this.calculateLineLength(this.snapLine, this.originalCenter!);
 				const snapDirectionY =
 					(this.snapLine.end.y - this.snapLine.start.y) /
-					this.calculateLineLength(
-						this.snapLine,
-						this.originalCenter!,
-					);
+					this.calculateLineLength(this.snapLine, this.originalCenter!);
 
-				const newEndX =
-					this.originalCenter.x + snapDirectionX * mainLineLength;
-				const newEndY =
-					this.originalCenter.y + snapDirectionY * mainLineLength;
+				const newEndX = this.originalCenter.x + snapDirectionX * mainLineLength;
+				const newEndY = this.originalCenter.y + snapDirectionY * mainLineLength;
 
 				const threshold = Infinity; // Убрали ограничение
 				const translateX =
@@ -288,21 +234,10 @@ export class Select extends Tool {
 						: item.getMbr().getCenter().y);
 
 				if (Array.isArray(item)) {
-					const translation =
-						this.board.selection.getManyItemsTranslation(
-							translateX,
-							translateY,
-						);
-					this.board.selection.transformMany(
-						translation,
-						this.beginTimeStamp,
-					);
+					const translation = this.board.selection.getManyItemsTranslation(translateX, translateY);
+					this.board.selection.transformMany(translation, this.beginTimeStamp);
 				} else {
-					item.transformation.translateBy(
-						translateX,
-						translateY,
-						this.beginTimeStamp,
-					);
+					item.transformation.translateBy(translateX, translateY, this.beginTimeStamp);
 				}
 			}
 		}
@@ -323,17 +258,12 @@ export class Select extends Tool {
 		this.isLeftDown = true;
 		const { items, selection, pointer } = this.board;
 		selection.showQuickAddPanel = false;
-		const hover = [
-			...items
-				.getUnderPointer()
-				.filter(i => i.getId() !== hoveredItem?.getId()),
-		];
+		const hover = [...items.getUnderPointer().filter(i => i.getId() !== hoveredItem?.getId())];
 		if (hoveredItem) {
 			hover.push(hoveredItem);
 		}
 
-		const isHoverAiInput =
-			hover.length === 1 && hover[0].itemType === "AINode";
+		const isHoverAiInput = hover.length === 1 && hover[0].itemType === 'AINode';
 		const isLocked = this.board.selection.getIsLockedSelection();
 
 		if (isLocked && !(isHoverAiInput && !!this.board.aiGeneratingOnItem)) {
@@ -347,22 +277,16 @@ export class Select extends Tool {
 		this.isDownOnSelection =
 			selectionMbr !== undefined &&
 			selectionMbr.isUnderPoint(pointer.point) &&
-			hover.every(hovered =>
-				selectionItems.some(
-					selected => selected.getId() === hovered.getId(),
-				),
-			);
+			hover.every(hovered => selectionItems.some(selected => selected.getId() === hovered.getId()));
 
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
 			this.board.selection.transformationRenderBlock = true;
 			if (!this.initialCursorPos) {
-				const itemCenter = this.alignmentHelper
-					.combineMBRs(selectionItems)
-					.getCenter();
+				const itemCenter = this.alignmentHelper.combineMBRs(selectionItems).getCenter();
 				this.initialCursorPos = new Point(
 					this.board.pointer.point.x - itemCenter.x,
-					this.board.pointer.point.y - itemCenter.y,
+					this.board.pointer.point.y - itemCenter.y
 				);
 			}
 			this.board.selection.quickAddButtons.clear();
@@ -374,8 +298,7 @@ export class Select extends Tool {
 			hover.filter(item => !(item instanceof Frame)).length === 0 &&
 			hover
 				.filter((item): item is Frame => item instanceof Frame)
-				.filter(frame => frame.isTextUnderPoint(pointer.point))
-				.length === 0;
+				.filter(frame => frame.isTextUnderPoint(pointer.point)).length === 0;
 
 		if (this.isDrawingRectangle) {
 			const { x, y } = pointer.point;
@@ -386,7 +309,7 @@ export class Select extends Tool {
 			this.board.tools.publish();
 
 			this.board.presence.throttledEmit({
-				method: "DrawSelect",
+				method: 'DrawSelect',
 				timestamp: Date.now(),
 				size: {
 					left: this.rect.left,
@@ -405,7 +328,7 @@ export class Select extends Tool {
 		}
 
 		this.board.presence.throttledEmit({
-			method: "CancelDrawSelect",
+			method: 'CancelDrawSelect',
 			timestamp: Date.now(),
 		});
 
@@ -418,21 +341,17 @@ export class Select extends Tool {
 			}
 			this.downOnItem = hover[hover.length - 1];
 
-			if (
-				this.downOnItem &&
-				!this.initialCursorPos &&
-				this.downOnItem.itemType !== "Comment"
-			) {
+			if (this.downOnItem && !this.initialCursorPos && this.downOnItem.itemType !== 'Comment') {
 				const itemCenter = this.downOnItem.getMbr().getCenter();
 				this.initialCursorPos = new Point(
 					this.board.pointer.point.x - itemCenter.x,
-					this.board.pointer.point.y - itemCenter.y,
+					this.board.pointer.point.y - itemCenter.y
 				);
 			}
 
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			if (
-				this.downOnItem.itemType === "Connector" &&
+				this.downOnItem.itemType === 'Connector' &&
 				this.downOnItem.isConnectedOnePoint() &&
 				!this.board.keyboard.isCtrl
 			) {
@@ -455,9 +374,7 @@ export class Select extends Tool {
 		const { items, selection, pointer } = this.board;
 
 		const selectionMbr = selection.getMbr();
-		this.isDownOnSelection =
-			selectionMbr !== undefined &&
-			selectionMbr.isUnderPoint(pointer.point);
+		this.isDownOnSelection = selectionMbr !== undefined && selectionMbr.isUnderPoint(pointer.point);
 		if (this.isDownOnSelection) {
 			return false;
 		}
@@ -489,8 +406,7 @@ export class Select extends Tool {
 	}
 
 	pointerMoveBy(x: number, y: number): boolean {
-		const isDrawingSelectionMbr =
-			this.isDrawingRectangle && this.line && this.rect;
+		const isDrawingSelectionMbr = this.isDrawingRectangle && this.line && this.rect;
 		if (isDrawingSelectionMbr) {
 			const point = this.board.pointer.point.copy();
 			this.line = new Line(this.line.start, point);
@@ -500,7 +416,7 @@ export class Select extends Tool {
 			this.board.tools.publish();
 
 			this.board.presence.throttledEmit({
-				method: "DrawSelect",
+				method: 'DrawSelect',
 				timestamp: Date.now(),
 				size: {
 					left: this.rect.left,
@@ -512,7 +428,7 @@ export class Select extends Tool {
 			return false;
 		}
 
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			return false;
 		}
 		const { selection, items } = this.board;
@@ -528,7 +444,7 @@ export class Select extends Tool {
 
 		this.updateSnapLines();
 
-		if (this.downOnItem?.itemType === "Comment") {
+		if (this.downOnItem?.itemType === 'Comment') {
 			const topItem = this.board.items.getUnderPointer().pop();
 			this.nestingHighlighter.clear();
 			if (topItem) {
@@ -546,13 +462,10 @@ export class Select extends Tool {
 			}
 
 			// TODO: fix error case when not selected items are translated with selection
-			const isCanvasOk =
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd.shouldUpd();
+			const isCanvasOk = this.canvasDrawer.getLastCreatedCanvas() && !this.debounceUpd.shouldUpd();
 
 			const isCanvasNeedsUpdate =
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				this.debounceUpd.shouldUpd();
+				this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd.shouldUpd();
 
 			if (isCanvasOk) {
 				// if (this.handleCanvasSnapping()) {
@@ -566,12 +479,8 @@ export class Select extends Tool {
 				// 	return false;
 				// }
 				this.canvasDrawer.translateCanvasBy(x, y);
-				const { translateX, translateY } =
-					this.canvasDrawer.getMatrix();
-				const translation = selection.getManyItemsTranslation(
-					translateX,
-					translateY,
-				);
+				const { translateX, translateY } = this.canvasDrawer.getMatrix();
+				const translation = selection.getManyItemsTranslation(translateX, translateY);
 				this.canvasDrawer.highlightNesting();
 				selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
@@ -584,25 +493,13 @@ export class Select extends Tool {
 				const translation = selection.getManyItemsTranslation(x, y);
 
 				const translationKeys = Object.keys(translation);
-				const commentsSet = new Set(
-					this.board.items
-						.getComments()
-						.map(comment => comment.getId()),
-				);
+				const commentsSet = new Set(this.board.items.getComments().map(comment => comment.getId()));
 
-				if (
-					translationKeys.filter(item => !commentsSet.has(item))
-						.length > 10
-				) {
+				if (translationKeys.filter(item => !commentsSet.has(item)).length > 10) {
 					const selectedMbr = this.board.selection.getMbr()?.copy();
 					const sumMbr = this.canvasDrawer.countSumMbr(translation);
 					if (sumMbr) {
-						this.canvasDrawer.updateCanvasAndKeys(
-							sumMbr,
-							translation,
-							undefined,
-							selectedMbr,
-						);
+						this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation, undefined, selectedMbr);
 						this.canvasDrawer.translateCanvasBy(x, y);
 						this.canvasDrawer.highlightNesting();
 						this.debounceUpd.setFalse();
@@ -623,15 +520,8 @@ export class Select extends Tool {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
 			this.board.selection.removeAll();
-			const translation = this.board.selection.getManyItemsTranslation(
-				x,
-				y,
-				draggingItem,
-			);
-			this.board.selection.transformMany(
-				translation,
-				this.beginTimeStamp,
-			);
+			const translation = this.board.selection.getManyItemsTranslation(x, y, draggingItem);
+			this.board.selection.transformMany(translation, this.beginTimeStamp);
 
 			if (this.handleSnapping(this.downOnItem)) {
 				return false;
@@ -643,7 +533,7 @@ export class Select extends Tool {
 					draggingMbr.left,
 					draggingMbr.top,
 					draggingMbr.right,
-					draggingMbr.bottom,
+					draggingMbr.bottom
 				)
 				.filter((item): item is Frame => item instanceof Frame);
 			frames.forEach(frame => {
@@ -656,28 +546,27 @@ export class Select extends Tool {
 		}
 
 		const hover = items.getUnderPointer();
-		this.isHoverUnselectedItem =
-			hover.filter(item => item.itemType === "Placeholder").length === 1;
+		this.isHoverUnselectedItem = hover.filter(item => item.itemType === 'Placeholder').length === 1;
 
 		if (
 			this.isHoverUnselectedItem &&
 			!this.isDraggingUnselectedItem &&
-			selection.getContext() === "None"
+			selection.getContext() === 'None'
 		) {
-			selection.setContext("HoverUnderPointer");
+			selection.setContext('HoverUnderPointer');
 			return false;
 		}
 
 		if (
 			(!this.isHoverUnselectedItem || this.isDraggingUnselectedItem) &&
-			selection.getContext() === "HoverUnderPointer"
+			selection.getContext() === 'HoverUnderPointer'
 		) {
-			selection.setContext("None");
+			selection.setContext('None');
 			return false;
 		}
 
 		this.board.presence.throttledEmit({
-			method: "CancelDrawSelect",
+			method: 'CancelDrawSelect',
 			timestamp: Date.now(),
 		});
 
@@ -686,14 +575,12 @@ export class Select extends Tool {
 
 	private updateMovementFlag(): void {
 		const throttleTime = 10;
-		const timeDiff =
-			this.lastPointerMoveEventTime + throttleTime - Date.now();
+		const timeDiff = this.lastPointerMoveEventTime + throttleTime - Date.now();
 
 		if (timeDiff > 0) {
 			this.isMovedAfterDown = false;
 		} else {
-			this.isMovedAfterDown =
-				this.isLeftDown || this.isRightDown || this.isMiddleDown;
+			this.isMovedAfterDown = this.isLeftDown || this.isRightDown || this.isMiddleDown;
 		}
 	}
 
@@ -718,16 +605,13 @@ export class Select extends Tool {
 		}
 	}
 
-	private updateFramesNesting(
-		selectionMbr: Mbr | undefined,
-		selection: Selection,
-	): void {
+	private updateFramesNesting(selectionMbr: Mbr | undefined, selection: Selection): void {
 		const frames = this.board.items
 			.getEnclosedOrCrossed(
 				selectionMbr!.left,
 				selectionMbr!.top,
 				selectionMbr!.right,
-				selectionMbr!.bottom,
+				selectionMbr!.bottom
 			)
 			.filter((item): item is Frame => item instanceof Frame)
 			.filter(frame => !selection.items.list().includes(frame));
@@ -736,10 +620,7 @@ export class Select extends Tool {
 			.filter(item => item instanceof Frame)
 			.map(frame => frame.getId());
 		selection.list().forEach(item => {
-			if (
-				!(item instanceof Frame) &&
-				!draggingFramesIds.includes(item.parent)
-			) {
+			if (!(item instanceof Frame) && !draggingFramesIds.includes(item.parent)) {
 				frames.forEach(frame => {
 					if (frame.handleNesting(item)) {
 						this.nestingHighlighter.add(frame, item);
@@ -758,11 +639,10 @@ export class Select extends Tool {
 			if (this.canvasDrawer.getLastCreatedCanvas()) {
 				this.snapLines = this.alignmentHelper.checkAlignment(
 					alignmentItem,
-					this.board.selection.list(),
+					this.board.selection.list()
 				);
 			} else {
-				this.snapLines =
-					this.alignmentHelper.checkAlignment(alignmentItem);
+				this.snapLines = this.alignmentHelper.checkAlignment(alignmentItem);
 			}
 		} else {
 			this.snapLines = { verticalLines: [], horizontalLines: [] };
@@ -775,10 +655,8 @@ export class Select extends Tool {
 		const singleItem = this.board.selection.items.getSingle();
 		const groupItem = this.board.selection.items;
 
-		const isConnectorUnderPointer =
-			this.downOnItem?.itemType === "Connector";
-		const isDraggingSingleSelectedItem =
-			this.isDraggingSelection && singleItem;
+		const isConnectorUnderPointer = this.downOnItem?.itemType === 'Connector';
+		const isDraggingSingleSelectedItem = this.isDraggingSelection && singleItem;
 		// const isDregginGroupSelectedItem =
 		// 	this.isDraggingSelection && groupItem;
 		if (isConnectorUnderPointer) {
@@ -816,15 +694,10 @@ export class Select extends Tool {
 			this.rect.getHeight() &&
 			this.rect.getWidth()
 		) {
-			const isAddToSelection = this.board.keyboard.down === "Shift";
+			const isAddToSelection = this.board.keyboard.down === 'Shift';
 			if (isAddToSelection) {
 				const { left, top, right, bottom } = this.rect;
-				const items = this.board.items.getEnclosedOrCrossed(
-					left,
-					top,
-					right,
-					bottom,
-				);
+				const items = this.board.items.getEnclosedOrCrossed(left, top, right, bottom);
 				this.board.selection.add(items);
 			} else {
 				this.board.selection.selectEnclosedOrCrossedBy(this.rect);
@@ -840,11 +713,7 @@ export class Select extends Tool {
 			curr.setItemToFollow(topItem.getId());
 		}
 
-		if (
-			curr &&
-			curr.itemType === "AINode" &&
-			this.board.aiGeneratingOnItem
-		) {
+		if (curr && curr.itemType === 'AINode' && this.board.aiGeneratingOnItem) {
 			this.board.tools.publish();
 			this.clear();
 			return false;
@@ -857,8 +726,7 @@ export class Select extends Tool {
 
 			if (isCtrl || isShift) {
 				const underPointer = hovered[0];
-				const isEmptySelection =
-					this.board.selection.items.list().length === 0;
+				const isEmptySelection = this.board.selection.items.list().length === 0;
 				if (!underPointer && !isEmptySelection && isShift) {
 					this.board.selection.add(this.board.selection.items.list());
 					this.clear();
@@ -870,25 +738,17 @@ export class Select extends Tool {
 					this.clear();
 					return false;
 				}
-				const isNotInSelection =
-					this.board.selection.items.findById(
-						underPointer.getId(),
-					) === null;
+				const isNotInSelection = this.board.selection.items.findById(underPointer.getId()) === null;
 				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
-					if (underPointer.itemType === "Frame") {
-						const { left, right, top, bottom } =
-							underPointer.getMbr();
+					if (underPointer.itemType === 'Frame') {
+						const { left, right, top, bottom } = underPointer.getMbr();
 						const itemsInFrame = this.board.items
 							.getEnclosedOrCrossed(left, top, right, bottom)
-							.filter(item =>
-								underPointer
-									.getChildrenIds()
-									.includes(item.getId()),
-							);
+							.filter(item => underPointer.getChildrenIds().includes(item.getId()));
 						this.board.selection.add(itemsInFrame);
 					}
-					this.board.selection.setContext("EditUnderPointer");
+					this.board.selection.setContext('EditUnderPointer');
 				} else {
 					this.board.selection.remove(underPointer);
 				}
@@ -900,17 +760,14 @@ export class Select extends Tool {
 				const curr = this.board.selection.items.getSingle();
 
 				if (
-					this.board.selection.getContext() === "EditUnderPointer" &&
+					this.board.selection.getContext() === 'EditUnderPointer' &&
 					curr &&
 					topItem === curr &&
 					!this.board.selection.getIsLockedSelection()
 				) {
 					curr
 						.getRichText()
-						?.saveLastClickPoint(
-							this.board.pointer.point.copy(),
-							this.board.camera,
-						);
+						?.saveLastClickPoint(this.board.pointer.point.copy(), this.board.camera);
 					this.board.selection.editText();
 				} else {
 					this.board.selection.editUnderPointer();
@@ -927,7 +784,7 @@ export class Select extends Tool {
 			}
 		}
 
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.board.selection.removeAll();
 			this.clear();
 			return false;
@@ -940,15 +797,10 @@ export class Select extends Tool {
 			return false;
 		}
 		if (this.isDrawingRectangle && this.line && this.rect) {
-			const isAddToSelection = this.board.keyboard.down === "Shift";
+			const isAddToSelection = this.board.keyboard.down === 'Shift';
 			if (isAddToSelection) {
 				const { left, top, right, bottom } = this.rect;
-				const items = this.board.items.getEnclosedOrCrossed(
-					left,
-					top,
-					right,
-					bottom,
-				);
+				const items = this.board.items.getEnclosedOrCrossed(left, top, right, bottom);
 				this.board.selection.add(items);
 			} else {
 				this.board.selection.selectEnclosedOrCrossedBy(this.rect);
@@ -968,26 +820,23 @@ export class Select extends Tool {
 			// });
 
 			this.board.presence.emit({
-				method: "CancelDrawSelect",
+				method: 'CancelDrawSelect',
 				timestamp: Date.now(),
 			});
 
 			return false;
 		}
 		this.board.presence.emit({
-			method: "CancelDrawSelect",
+			method: 'CancelDrawSelect',
 			timestamp: Date.now(),
 		});
 		// this.board.selection.removeAll();
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
 			const translation = this.board.selection.getManyItemsTranslation(
 				this.canvasDrawer.getMatrix().translateX,
-				this.canvasDrawer.getMatrix().translateY,
+				this.canvasDrawer.getMatrix().translateY
 			);
-			this.board.selection.transformMany(
-				translation,
-				this.beginTimeStamp,
-			);
+			this.board.selection.transformMany(translation, this.beginTimeStamp);
 		}
 
 		if (this.isMovedAfterDown && this.downOnItem) {
@@ -1011,7 +860,7 @@ export class Select extends Tool {
 		if (
 			this.isDraggingUnselectedItem &&
 			this.downOnItem &&
-			this.downOnItem.itemType !== "Connector"
+			this.downOnItem.itemType !== 'Connector'
 		) {
 			this.board.selection.removeAll();
 			this.clear();
@@ -1032,13 +881,13 @@ export class Select extends Tool {
 	}
 
 	leftButtonDouble(): boolean {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			return false;
 		}
 		const toEdit = this.board.selection.items.getSingle();
 		if (
 			toEdit?.transformation.isLocked ||
-			(toEdit?.itemType === "AINode" && !!this.board.aiGeneratingOnItem)
+			(toEdit?.itemType === 'AINode' && !!this.board.aiGeneratingOnItem)
 		) {
 			return false;
 		}
@@ -1049,12 +898,7 @@ export class Select extends Tool {
 			return false;
 		}
 
-		toEdit
-			?.getRichText()
-			?.saveLastClickPoint(
-				this.board.pointer.point.copy(),
-				this.board.camera,
-			);
+		toEdit?.getRichText()?.saveLastClickPoint(this.board.pointer.point.copy(), this.board.camera);
 		this.board.selection.editText();
 		return false;
 	}
@@ -1063,10 +907,8 @@ export class Select extends Tool {
 		if (this.board.selection.showQuickAddPanel) {
 			this.board.selection.showQuickAddPanel = false;
 			this.board.selection.subject.publish(this.board.selection);
-		} else if (
-			this.board.selection.getContext() === "EditTextUnderPointer"
-		) {
-			this.board.selection.setContext("EditUnderPointer");
+		} else if (this.board.selection.getContext() === 'EditTextUnderPointer') {
+			this.board.selection.setContext('EditUnderPointer');
 		} else if (this.board.selection.items.list().length > 0) {
 			this.board.selection.removeAll();
 		}
@@ -1074,29 +916,21 @@ export class Select extends Tool {
 
 	onConfirm(): void {
 		const single = this.board.selection.items.getSingle();
-		if (
-			this.board.selection.showQuickAddPanel &&
-			single &&
-			single.itemType === "Connector"
-		) {
-			quickAddItem(this.board, "copy", single);
+		if (this.board.selection.showQuickAddPanel && single && single.itemType === 'Connector') {
+			quickAddItem(this.board, 'copy', single);
 		} else if (
 			single &&
-			this.board.selection.getContext() !== "EditTextUnderPointer" &&
+			this.board.selection.getContext() !== 'EditTextUnderPointer' &&
 			!this.board.selection.getIsLockedSelection()
 		) {
 			this.board.selection.editText(undefined, true);
 		} else if (
 			isSafari() &&
-			this.board.selection.getContext() === "EditTextUnderPointer" &&
+			this.board.selection.getContext() === 'EditTextUnderPointer' &&
 			!this.board.selection.getIsLockedSelection()
 		) {
-			if (
-				(single && "text" in single) ||
-				single?.itemType === "RichText"
-			) {
-				const text =
-					single.itemType === "RichText" ? single : single.text;
+			if ((single && 'text' in single) || single?.itemType === 'RichText') {
+				const text = single.itemType === 'RichText' ? single : single.text;
 				text.editor.splitNode();
 			}
 		}
@@ -1106,7 +940,7 @@ export class Select extends Tool {
 		const { isShift } = this.board.keyboard;
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
 			const mbr = this.canvasDrawer.getMbr();
-			mbr.borderColor = "red";
+			mbr.borderColor = 'red';
 			mbr.render(context);
 		}
 		if (this.isDrawingRectangle && this.rect) {
@@ -1116,11 +950,7 @@ export class Select extends Tool {
 			this.nestingHighlighter.render(context);
 		}
 
-		this.alignmentHelper.renderSnapLines(
-			context,
-			this.snapLines,
-			this.board.camera.getScale(),
-		);
+		this.alignmentHelper.renderSnapLines(context, this.snapLines, this.board.camera.getScale());
 
 		if (this.snapLine && isShift) {
 			context.ctx.save();

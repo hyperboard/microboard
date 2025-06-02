@@ -1,2 +1,2 @@
-export { AudioItem, AudioItemData } from "./Audio.ts";
-export { uploadAudio } from "./uploadAudio.ts";
+export { AudioItem, AudioItemData } from './Audio.js';
+export { uploadAudio } from './uploadAudio.js';

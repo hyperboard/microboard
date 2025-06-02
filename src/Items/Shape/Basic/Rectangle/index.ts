@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Rectangle = {
-	name: "Rectangle",
+	name: 'Rectangle',
 	textBounds: new Mbr(5, 5, 95, 95),
 	path: new Path(
 		[
@@ -10,14 +10,9 @@ export const Rectangle = {
 			new Line(new Point(100, 100), new Point(0, 100)),
 			new Line(new Point(0, 100), new Point(0, 0)),
 		],
-		true,
+		true
 	),
-	anchorPoints: [
-		new Point(0, 50),
-		new Point(100, 50),
-		new Point(50, 0),
-		new Point(50, 100),
-	],
+	anchorPoints: [new Point(0, 50), new Point(100, 50), new Point(50, 0), new Point(50, 100)],
 	createPath: (mbr: Mbr) => Rectangle.path.copy(),
 	useMbrUnderPointer: false,
 };

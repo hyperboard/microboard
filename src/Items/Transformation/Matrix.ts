@@ -1,5 +1,5 @@
-import { toFiniteNumber } from "Board/lib";
-import { Point } from "..";
+import { toFiniteNumber } from 'lib';
+import { Point } from '..';
 
 export class Matrix {
 	constructor(
@@ -8,7 +8,7 @@ export class Matrix {
 		public scaleX = 1,
 		public scaleY = 1,
 		public shearX = 0,
-		public shearY = 0,
+		public shearY = 0
 	) {
 		this.translateX = toFiniteNumber(translateX);
 		this.translateY = toFiniteNumber(translateY);
@@ -32,14 +32,8 @@ export class Matrix {
 
 	multiplyByMatrix(matrix: Matrix): this {
 		const { translateX, translateY, scaleX, scaleY, shearX, shearY } = this;
-		this.translateX =
-			scaleX * matrix.translateX +
-			shearX * matrix.translateY +
-			translateX;
-		this.translateY =
-			shearY * matrix.translateX +
-			scaleY * matrix.translateY +
-			translateY;
+		this.translateX = scaleX * matrix.translateX + shearX * matrix.translateY + translateX;
+		this.translateY = shearY * matrix.translateX + scaleY * matrix.translateY + translateY;
 		this.scaleX = scaleX * matrix.scaleX + shearX * matrix.shearY;
 		this.scaleY = shearY * matrix.shearX + scaleY * matrix.scaleY;
 		this.shearX = scaleX * matrix.shearX + shearX * matrix.scaleY;
@@ -70,7 +64,7 @@ export class Matrix {
 			this.scaleX,
 			this.scaleY,
 			this.shearX,
-			this.shearY,
+			this.shearY
 		);
 	}
 
@@ -100,14 +94,7 @@ export class Matrix {
 	rotateByRadian(radian: number): Matrix {
 		const cosAngle = Math.cos(radian);
 		const sinAngle = Math.sin(radian);
-		const rotationMatrix = new Matrix(
-			0,
-			0,
-			cosAngle,
-			cosAngle,
-			-sinAngle,
-			sinAngle,
-		);
+		const rotationMatrix = new Matrix(0, 0, cosAngle, cosAngle, -sinAngle, sinAngle);
 		return this.multiply(rotationMatrix);
 	}
 
@@ -123,7 +110,7 @@ export class Matrix {
 		scale: {
 			x: number;
 			y: number;
-		},
+		}
 	): void {
 		const angle = degree * (Math.PI / 180);
 		const width = size.width * scale.x;
@@ -131,10 +118,8 @@ export class Matrix {
 		const centerX = width / 2;
 		const centerY = height / 2;
 
-		const x =
-			centerX - (centerX * Math.cos(angle) - centerY * Math.sin(angle));
-		const y =
-			centerY - (centerX * Math.sin(angle) + centerY * Math.cos(angle));
+		const x = centerX - (centerX * Math.cos(angle) - centerY * Math.sin(angle));
+		const y = centerY - (centerX * Math.sin(angle) + centerY * Math.cos(angle));
 		this.rotateBy(degree);
 		this.translate(x, y);
 	}
@@ -163,16 +148,14 @@ export class Matrix {
 		point.y = this.shearY * x + this.scaleY * y + this.translateY;
 	}
 
-	applyToContext(
-		ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-	): void {
+	applyToContext(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D): void {
 		ctx.transform(
 			this.scaleX,
 			this.shearY,
 			this.shearX,
 			this.scaleY,
 			this.translateX,
-			this.translateY,
+			this.translateY
 		);
 	}
 
@@ -215,8 +198,7 @@ export class Matrix {
 	}
 
 	compare(matrix: Matrix): boolean {
-		const { translateX, translateY, scaleX, scaleY, shearX, shearY } =
-			matrix;
+		const { translateX, translateY, scaleX, scaleY, shearX, shearY } = matrix;
 		return (
 			this.translateX === translateX &&
 			this.translateY === translateY &&

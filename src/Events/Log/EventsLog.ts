@@ -1,24 +1,19 @@
-import { Board, BoardSnapshot } from "Board/Board";
-import { BoardOps } from "Board/BoardOperations";
-import {
-	BoardEvent,
-	BoardEventPack,
-	SyncBoardEvent,
-	SyncEvent,
-} from "../Events";
-import { createEventsList, EventsList } from "./createEventsList";
-import { Command } from "Plugin";
-import { createCommand } from "../Command";
-import { getRecordByIdFromList } from "./getRecordByIdFromList";
-import { getRedoRecordFromList } from "./getRedoRecordFromList";
-import { getUndoRecordFromList } from "./getUndoRecordFromList";
-import { getUnpublishedEventFromList } from "./getUnpublishedEventFromList";
-import { insertEventsFromOtherConnectionsIntoList } from "./insertEventsFromOtherConnectionsIntoList";
-import { expandEvents } from "./expandEvents";
-import { deserializeAndApplyToList } from "./deserializeAndApplyToList";
-import { deserializeIntoList } from "./deserializeIntoList";
-import { getLastIndexFromList } from "./getLastIndexFromList";
-import { getSnapshotFromList } from "./getSnapshotFromList";
+import { Board, BoardSnapshot } from 'Board';
+import { BoardOps } from 'BoardOperations';
+import { BoardEvent, BoardEventPack, SyncBoardEvent, SyncEvent } from '../Events';
+import { createEventsList, EventsList } from './createEventsList';
+import { Command } from 'Plugin';
+import { createCommand } from '../Command';
+import { getRecordByIdFromList } from './getRecordByIdFromList';
+import { getRedoRecordFromList } from './getRedoRecordFromList';
+import { getUndoRecordFromList } from './getUndoRecordFromList';
+import { getUnpublishedEventFromList } from './getUnpublishedEventFromList';
+import { insertEventsFromOtherConnectionsIntoList } from './insertEventsFromOtherConnectionsIntoList';
+import { expandEvents } from './expandEvents';
+import { deserializeAndApplyToList } from './deserializeAndApplyToList';
+import { deserializeIntoList } from './deserializeIntoList';
+import { getLastIndexFromList } from './getLastIndexFromList';
+import { getSnapshotFromList } from './getSnapshotFromList';
 
 export interface HistoryRecord {
 	event: BoardEvent;
@@ -51,9 +46,7 @@ export class EventsLog {
 
 	constructor(board: Board) {
 		this.board = board;
-		this.list = createEventsList((ops: BoardOps) =>
-			createCommand(board, ops),
-		);
+		this.list = createEventsList((ops: BoardOps) => createCommand(board, ops));
 	}
 
 	/**

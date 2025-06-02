@@ -1,11 +1,11 @@
-import { Command } from "Plugin";
-import { BoardEvent } from "../Events";
-import { mergeOperations } from "../Merge";
-import { mergeRecords } from "../mergeRecords";
-import { SyncLog, SyncLogSubject, createSyncLog } from "../SyncLog";
-import { transformEvents } from "../transformEvents";
-import { HistoryRecord } from "./EventsLog";
-import { Operation } from "../EventsOperations";
+import { Command } from 'Plugin';
+import { BoardEvent } from '../Events';
+import { mergeOperations } from '../Merge';
+import { mergeRecords } from '../mergeRecords';
+import { SyncLog, SyncLogSubject, createSyncLog } from '../SyncLog';
+import { transformEvents } from '../transformEvents';
+import { HistoryRecord } from './EventsLog';
+import { Operation } from '../EventsOperations';
 
 export interface EventsList {
 	addConfirmedRecords(records: HistoryRecord[]): void;
@@ -40,9 +40,7 @@ export interface EventsList {
 	getSnapshotLastIndex(): number;
 }
 
-export function createEventsList(
-	createCommand: (BoardOps) => Command,
-): EventsList {
+export function createEventsList(createCommand: (BoardOps) => Command): EventsList {
 	const confirmedRecords: HistoryRecord[] = [];
 	const recordsToSend: HistoryRecord[] = [];
 	const newRecords: HistoryRecord[] = [];
@@ -65,9 +63,7 @@ export function createEventsList(
 
 	function mergeAndPushConfirmedRecords(records: HistoryRecord[]): void {
 		const lastConfirmedRecord = confirmedRecords.pop();
-		const recordsToMerge = lastConfirmedRecord
-			? [lastConfirmedRecord, ...records]
-			: records;
+		const recordsToMerge = lastConfirmedRecord ? [lastConfirmedRecord, ...records] : records;
 		const mergedRecords = mergeRecords(recordsToMerge);
 		confirmedRecords.push(...mergedRecords);
 	}
@@ -78,7 +74,7 @@ export function createEventsList(
 
 		addConfirmedRecords(records: HistoryRecord[]): void {
 			syncLog.push({
-				msg: "confirmed",
+				msg: 'confirmed',
 				records: [...records],
 			});
 			mergeAndPushConfirmedRecords(records);
@@ -91,7 +87,7 @@ export function createEventsList(
 					const lastRecord = newRecords[newRecords.length - 1];
 					const mergedOperation = mergeOperations(
 						lastRecord.event.body.operation,
-						record.event.body.operation,
+						record.event.body.operation
 					);
 
 					if (mergedOperation) {
@@ -108,7 +104,7 @@ export function createEventsList(
 				}
 
 				syncLog.push({
-					msg: "addedNew",
+					msg: 'addedNew',
 					records: [record],
 				});
 				newRecords.push(record);
@@ -118,7 +114,7 @@ export function createEventsList(
 		confirmSentRecords(events: BoardEvent[]): void {
 			const records = recordsToSend;
 			if (records.length !== events.length) {
-				console.error("Mismatch between records and events length");
+				console.error('Mismatch between records and events length');
 				return;
 			}
 
@@ -127,7 +123,7 @@ export function createEventsList(
 			}
 
 			syncLog.push({
-				msg: "confirmed",
+				msg: 'confirmed',
 				records: [...records],
 			});
 			mergeAndPushConfirmedRecords(records);
@@ -160,7 +156,7 @@ export function createEventsList(
 		prepareRecordsToSend(): HistoryRecord[] {
 			if (recordsToSend.length === 0 && newRecords.length > 0) {
 				syncLog.push({
-					msg: "toSend",
+					msg: 'toSend',
 					records: [...newRecords],
 				});
 				recordsToSend.push(...newRecords);
@@ -193,7 +189,7 @@ export function createEventsList(
 			revert(newRecords.slice().reverse());
 			revert(recordsToSend.slice().reverse());
 			syncLog.push({
-				msg: "revertUnconfirmed",
+				msg: 'revertUnconfirmed',
 				records: [...recordsToSend, ...newRecords],
 			});
 		},
@@ -202,12 +198,12 @@ export function createEventsList(
 			if (justConfirmed.length > 0) {
 				const transformedSend = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					recordsToSend.slice().map(rec => rec.event),
+					recordsToSend.slice().map(rec => rec.event)
 				);
 
 				const transformedNew = transformEvents(
 					justConfirmed.map(rec => rec.event),
-					newRecords.slice().map(rec => rec.event),
+					newRecords.slice().map(rec => rec.event)
 				);
 
 				const recsToSend = transformedSend.map(event => ({
@@ -229,7 +225,7 @@ export function createEventsList(
 			apply(recordsToSend);
 			apply(newRecords);
 			syncLog.push({
-				msg: "applyUnconfirmed",
+				msg: 'applyUnconfirmed',
 				records: [...recordsToSend, ...newRecords],
 			});
 		},
@@ -245,48 +241,34 @@ export function createEventsList(
 
 		// FIXME: should filter unconfirmed events and not send them
 		removeUnconfirmedEventsByItems(itemIds: string[]): void {
-			function shouldRemoveEvent(
-				operation: Operation,
-				itemIds: string[],
-			): boolean {
-				if (operation.method === "add" && operation.class === "Board") {
+			function shouldRemoveEvent(operation: Operation, itemIds: string[]): boolean {
+				if (operation.method === 'add' && operation.class === 'Board') {
 					return itemIds.includes(operation.item);
 				}
 
-				if (
-					operation.method === "remove" &&
-					operation.class === "Board"
-				) {
+				if (operation.method === 'remove' && operation.class === 'Board') {
 					return operation.item.some(id => itemIds.includes(id));
 				}
 
 				return false;
 			}
 			const removedFromToSend = recordsToSend.filter(record =>
-				shouldRemoveEvent(record.event.body.operation, itemIds),
+				shouldRemoveEvent(record.event.body.operation, itemIds)
 			);
 			if (removedFromToSend.length > 0) {
 				const newRecordsToSend = recordsToSend.filter(
-					record =>
-						!shouldRemoveEvent(
-							record.event.body.operation,
-							itemIds,
-						),
+					record => !shouldRemoveEvent(record.event.body.operation, itemIds)
 				);
 				recordsToSend.length = 0;
 				recordsToSend.push(...newRecordsToSend);
 			}
 
 			const removedFromNew = newRecords.filter(record =>
-				shouldRemoveEvent(record.event.body.operation, itemIds),
+				shouldRemoveEvent(record.event.body.operation, itemIds)
 			);
 			if (removedFromNew.length > 0) {
 				const newRecordsArray = newRecords.filter(
-					record =>
-						!shouldRemoveEvent(
-							record.event.body.operation,
-							itemIds,
-						),
+					record => !shouldRemoveEvent(record.event.body.operation, itemIds)
 				);
 				newRecords.length = 0;
 				newRecords.push(...newRecordsArray);

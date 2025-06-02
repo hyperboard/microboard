@@ -1,7 +1,7 @@
-import { Mbr, Path, Line, Point } from "Board/Items";
+import { Mbr, Path, Line, Point } from 'Items';
 
 export const ArrowLeft = {
-	name: "ArrowLeft",
+	name: 'ArrowLeft',
 	textBounds: new Mbr(25, 30, 95, 70),
 	path: new Path(
 		[
@@ -13,7 +13,7 @@ export const ArrowLeft = {
 			new Line(new Point(50, 25), new Point(100, 25)),
 			new Line(new Point(100, 25), new Point(100, 75)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(0, 50),

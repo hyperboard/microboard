@@ -1,27 +1,23 @@
-import * as flow from "dropflow";
-import {
-	BlockNode,
-	BulletedListNode,
-	NumberedListNode,
-} from "../Editor/BlockNode";
-import { LinkNode, TextNode } from "../Editor/TextNode";
-import { getPublicUrl } from "Config";
-import { LayoutBlockNodes } from "./LayoutBlockNodes";
-import { convertLinkNodeToTextNode } from "./convertLinkNodeToTextNode";
-import { Descendant } from "slate";
+import * as flow from 'dropflow';
+import { BlockNode, BulletedListNode, NumberedListNode } from '../Editor/BlockNode';
+import { LinkNode, TextNode } from '../Editor/TextNode';
+import { getPublicUrl } from 'Config';
+import { LayoutBlockNodes } from './LayoutBlockNodes';
+import { convertLinkNodeToTextNode } from './convertLinkNodeToTextNode';
+import { Descendant } from 'slate';
 
-import { conf } from "Board/Settings";
+import { conf } from 'Settings';
 
 const rgbRegex = /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/;
 
 async function loadFonts(): Promise<void> {
 	function openFontDB(): Promise<IDBDatabase> {
 		return new Promise((resolve, reject) => {
-			const request = indexedDB.open("FontDB", 1);
+			const request = indexedDB.open('FontDB', 1);
 			request.onupgradeneeded = () => {
 				const db = request.result;
-				if (!db.objectStoreNames.contains("fonts")) {
-					db.createObjectStore("fonts");
+				if (!db.objectStoreNames.contains('fonts')) {
+					db.createObjectStore('fonts');
 				}
 			};
 			request.onsuccess = () => resolve(request.result);
@@ -29,27 +25,20 @@ async function loadFonts(): Promise<void> {
 		});
 	}
 
-	function storeFontInDB(
-		db: IDBDatabase,
-		key: string,
-		blob: Blob,
-	): Promise<void> {
+	function storeFontInDB(db: IDBDatabase, key: string, blob: Blob): Promise<void> {
 		return new Promise((resolve, reject) => {
-			const transaction = db.transaction("fonts", "readwrite");
-			const store = transaction.objectStore("fonts");
+			const transaction = db.transaction('fonts', 'readwrite');
+			const store = transaction.objectStore('fonts');
 			const request = store.put(blob, key);
 			request.onsuccess = () => resolve();
 			request.onerror = () => reject(request.error);
 		});
 	}
 
-	function getFontFromDB(
-		db: IDBDatabase,
-		key: string,
-	): Promise<Blob | undefined> {
+	function getFontFromDB(db: IDBDatabase, key: string): Promise<Blob | undefined> {
 		return new Promise((resolve, reject) => {
-			const transaction = db.transaction("fonts", "readonly");
-			const store = transaction.objectStore("fonts");
+			const transaction = db.transaction('fonts', 'readonly');
+			const store = transaction.objectStore('fonts');
 			const request = store.get(key);
 			request.onsuccess = () => resolve(request.result);
 			request.onerror = () => reject(request.error);
@@ -57,11 +46,11 @@ async function loadFonts(): Promise<void> {
 	}
 
 	const fonts = [
-		{ key: "OpenSans-Regular", path: "/fonts/OpenSans-Regular.ttf" },
-		{ key: "OpenSans-Bold", path: "/fonts/OpenSans-Bold.ttf" },
-		{ key: "OpenSans-Italic", path: "/fonts/OpenSans-Italic.ttf" },
-		{ key: "OpenSans-BoldItalic", path: "/fonts/OpenSans-BoldItalic.ttf" },
-		{ key: "RobotoMono-Regular", path: "/fonts/RobotoMono-Regular.ttf" },
+		{ key: 'OpenSans-Regular', path: '/fonts/OpenSans-Regular.ttf' },
+		{ key: 'OpenSans-Bold', path: '/fonts/OpenSans-Bold.ttf' },
+		{ key: 'OpenSans-Italic', path: '/fonts/OpenSans-Italic.ttf' },
+		{ key: 'OpenSans-BoldItalic', path: '/fonts/OpenSans-BoldItalic.ttf' },
+		{ key: 'RobotoMono-Regular', path: '/fonts/RobotoMono-Regular.ttf' },
 		// {
 		//	key: "NotoColorEmoji-Regular",
 		//	path: "/fonts/NotoColorEmoji-Regular.ttf",
@@ -84,7 +73,7 @@ async function loadFonts(): Promise<void> {
 			}
 			const blobUrl = URL.createObjectURL(fontBlob);
 			await flow.registerFont(new URL(blobUrl));
-		}),
+		})
 	);
 }
 
@@ -112,14 +101,11 @@ interface DropflowNodeWithType {
 	nodes: DropflowNodeData[];
 }
 
-function getChildStyle(
-	child: TextNode | LinkNode,
-	maxWidth: number,
-): flow.DeclaredStyle {
-	const fontSize = typeof child.fontSize === "number" ? child.fontSize : 14;
+function getChildStyle(child: TextNode | LinkNode, maxWidth: number): flow.DeclaredStyle {
+	const fontSize = typeof child.fontSize === 'number' ? child.fontSize : 14;
 	return {
 		fontWeight: child.bold ? 800 : 400,
-		fontStyle: child.italic ? "italic" : "normal",
+		fontStyle: child.italic ? 'italic' : 'normal',
 		color:
 			child.fontColor && rgbRegex.test(child.fontColor)
 				? (() => {
@@ -130,14 +116,14 @@ function getChildStyle(
 									g: parseInt(match[2]),
 									b: parseInt(match[3]),
 									a: 1,
-								}
+							  }
 							: { r: 0, g: 0, b: 0, a: 1 };
-					})()
+				  })()
 				: { r: 0, g: 0, b: 0, a: 1 },
 		fontSize,
-		fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
-		whiteSpace: maxWidth === Infinity ? "nowrap" : "pre-wrap",
-		overflowWrap: "break-word",
+		fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, 'Noto Color Emoji'],
+		whiteSpace: maxWidth === Infinity ? 'nowrap' : 'pre-wrap',
+		overflowWrap: 'break-word',
 		backgroundColor:
 			child.fontHighlight && rgbRegex.test(child.fontHighlight)
 				? (() => {
@@ -148,10 +134,10 @@ function getChildStyle(
 									g: parseInt(match[2]),
 									b: parseInt(match[3]),
 									a: 1,
-								}
-							: "transparent";
-					})()
-				: "transparent",
+							  }
+							: 'transparent';
+				  })()
+				: 'transparent',
 		lineHeight: {
 			value: 1.4,
 			unit: null,
@@ -162,7 +148,7 @@ function getChildStyle(
 function convertNoneListNode(
 	node: BlockNode,
 	maxWidth: number,
-	isFirstNode: boolean,
+	isFirstNode: boolean
 ): DropflowNodeData[] {
 	const newDropflowNodes: DropflowNodeData[] = [];
 	// let padding = 0;
@@ -179,13 +165,13 @@ function convertNoneListNode(
 	// }
 
 	const nodeStyle: flow.DeclaredStyle = {
-		textAlign: node.horisontalAlignment || "left",
-		fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, "Noto Color Emoji"],
+		textAlign: node.horisontalAlignment || 'left',
+		fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, 'Noto Color Emoji'],
 		paddingTop: {
-			value: isFirstNode ? 0 : (node.paddingTop ?? 0),
-			unit: "em",
+			value: isFirstNode ? 0 : node.paddingTop ?? 0,
+			unit: 'em',
 		},
-		paddingBottom: { value: node.paddingBottom ?? 0, unit: "em" },
+		paddingBottom: { value: node.paddingBottom ?? 0, unit: 'em' },
 	};
 
 	let currNode: DropflowNodeData = {
@@ -195,12 +181,12 @@ function convertNoneListNode(
 
 	for (const child of node.children) {
 		const childStyle = getChildStyle(child, maxWidth);
-		if (node.type === "code_block") {
+		if (node.type === 'code_block') {
 			childStyle.fontWeight = 400;
-			childStyle.fontFamily = ["Roboto Mono", "monospace"];
+			childStyle.fontFamily = ['Roboto Mono', 'monospace'];
 		}
 
-		const textParts = convertLinkNodeToTextNode(child).text.split("\n");
+		const textParts = convertLinkNodeToTextNode(child).text.split('\n');
 
 		if (textParts.length === 1) {
 			currNode.children.push({
@@ -239,7 +225,7 @@ function convertNoneListNode(
 
 function convertListNode(
 	node: BulletedListNode | NumberedListNode,
-	maxWidth: number,
+	maxWidth: number
 ): { type: string; nodes: DropflowNodeData[] | DropflowNodeWithType[] }[][] {
 	const newDropflowListNodes: {
 		type: string;
@@ -247,9 +233,7 @@ function convertListNode(
 	}[][] = [];
 
 	for (const listItem of node.children) {
-		newDropflowListNodes.push(
-			convertSlateToDropflow(listItem.children, maxWidth, true),
-		);
+		newDropflowListNodes.push(convertSlateToDropflow(listItem.children, maxWidth, true));
 	}
 	return newDropflowListNodes;
 }
@@ -257,7 +241,7 @@ function convertListNode(
 function convertSlateToDropflow(
 	slateNodes: BlockNode[],
 	maxWidth: number,
-	areNodesFromList = false,
+	areNodesFromList = false
 ) {
 	const dropflowNodes: {
 		type: string;
@@ -266,40 +250,32 @@ function convertSlateToDropflow(
 	for (let i = 0; i < slateNodes.length; i++) {
 		const node = slateNodes[i];
 		switch (node.type) {
-			case "heading_one":
-			case "heading_two":
-			case "heading_three":
-			case "heading_four":
-			case "heading_five":
-			case "paragraph":
+			case 'heading_one':
+			case 'heading_two':
+			case 'heading_three':
+			case 'heading_four':
+			case 'heading_five':
+			case 'paragraph':
 				dropflowNodes.push({
-					type: "paragraphNodes",
-					nodes: convertNoneListNode(
-						node,
-						maxWidth,
-						i === 0 && !areNodesFromList,
-					),
+					type: 'paragraphNodes',
+					nodes: convertNoneListNode(node, maxWidth, i === 0 && !areNodesFromList),
 				});
 				break;
-			case "code_block":
+			case 'code_block':
 				dropflowNodes.push({
-					type: "codeNodes",
-					nodes: convertNoneListNode(
-						node,
-						maxWidth,
-						i === 0 && !areNodesFromList,
-					),
+					type: 'codeNodes',
+					nodes: convertNoneListNode(node, maxWidth, i === 0 && !areNodesFromList),
 				});
 				break;
-			case "ol_list":
+			case 'ol_list':
 				dropflowNodes.push({
-					type: "numberedListNodes",
+					type: 'numberedListNodes',
 					nodes: convertListNode(node, maxWidth),
 				});
 				break;
-			case "ul_list":
+			case 'ul_list':
 				dropflowNodes.push({
-					type: "bulletedListNodes",
+					type: 'bulletedListNodes',
 					nodes: convertListNode(node, maxWidth),
 				});
 				break;
@@ -309,23 +285,17 @@ function convertSlateToDropflow(
 	return dropflowNodes;
 }
 
-function createRootDiv(
-	children: flow.HTMLElement[],
-	maxWidth: number,
-): flow.HTMLElement {
+function createRootDiv(children: flow.HTMLElement[], maxWidth: number): flow.HTMLElement {
 	return flow.h(
-		"div",
+		'div',
 		{
 			style: {
 				lineHeight: 1.4,
-				width: maxWidth === Infinity ? "auto" : maxWidth,
-				fontFamily: [
-					conf.DEFAULT_TEXT_STYLES.fontFamily,
-					"Noto Color Emoji",
-				],
+				width: maxWidth === Infinity ? 'auto' : maxWidth,
+				fontFamily: [conf.DEFAULT_TEXT_STYLES.fontFamily, 'Noto Color Emoji'],
 			},
 		},
-		children,
+		children
 	);
 }
 
@@ -334,14 +304,14 @@ function createFlowDiv(
 		style: flow.DeclaredStyle;
 		children: { style: flow.DeclaredStyle; text: string }[];
 	}[],
-	listData: ListCreationData | null = null,
+	listData: ListCreationData | null = null
 ): flow.HTMLElement[] {
 	return dropflowNodes.map(paragraph =>
 		flow.h(
-			"div",
+			'div',
 			{ style: paragraph.style },
-			getChildSpanElements(paragraph, listData, listData?.nodeIndex || 0),
-		),
+			getChildSpanElements(paragraph, listData, listData?.nodeIndex || 0)
+		)
 	);
 }
 
@@ -351,41 +321,40 @@ function getChildSpanElements(
 		children: { style: flow.DeclaredStyle; text: string }[];
 	},
 	listData: ListCreationData | null,
-	nodeIndex: number,
+	nodeIndex: number
 ) {
 	const childElements: flow.HTMLElement[] = [];
 	if (listData && nodeIndex === 0) {
-		const paddingLeft =
-			listData.listLevel > 1 ? (listData.listLevel - 1) * 2.5 : 0;
+		const paddingLeft = listData.listLevel > 1 ? (listData.listLevel - 1) * 2.5 : 0;
 		childElements.push(
 			flow.h(
-				"span",
+				'span',
 				{
 					style: {
 						...paragraph.children[0].style,
-						paddingLeft: { value: paddingLeft, unit: "em" },
+						paddingLeft: { value: paddingLeft, unit: 'em' },
 					},
 				},
-				[getListMark(listData.isNumberedList, listData.index)],
-			),
+				[getListMark(listData.isNumberedList, listData.index)]
+			)
 		);
 	}
 
 	for (let i = 0; i < paragraph.children.length; i++) {
 		const child = paragraph.children[i];
 		const text = child.text;
-		childElements.push(flow.h("span", { style: child.style }, [text]));
+		childElements.push(flow.h('span', { style: child.style }, [text]));
 	}
 
 	return childElements;
 }
 
 function getListMark(isNumberedList: boolean, listItemIndex: number) {
-	let mark = "";
+	let mark = '';
 	if (isNumberedList) {
-		mark += (listItemIndex + 1).toString() + ". ";
+		mark += (listItemIndex + 1).toString() + '. ';
 	} else {
-		mark += "•  ";
+		mark += '•  ';
 	}
 
 	return mark;
@@ -394,10 +363,10 @@ function getListMark(isNumberedList: boolean, listItemIndex: number) {
 function createFlowList(
 	dropflowNodes: DropflowNodeWithType[],
 	isNumberedList: boolean,
-	listData: ListCreationData | null = null,
+	listData: ListCreationData | null = null
 ): flow.HTMLElement {
 	return flow.h(
-		"div",
+		'div',
 		{},
 		dropflowNodes.map((listItem, listItemIndex) => {
 			let listCreationData: null | ListCreationData = null;
@@ -414,46 +383,37 @@ function createFlowList(
 					index: listItemIndex,
 				};
 			}
-			return flow.h(
-				"div",
-				{},
-				getElementsByNodes(listItem, listCreationData),
-			);
-		}),
+			return flow.h('div', {}, getElementsByNodes(listItem, listCreationData));
+		})
 	);
 }
 
-function sliceTextByWidth(
-	data: BlockNode[],
-	maxWidth: number,
-): LayoutBlockNodes {
+function sliceTextByWidth(data: BlockNode[], maxWidth: number): LayoutBlockNodes {
 	const text =
-		data[0].type === "paragraph"
-			? convertLinkNodeToTextNode(data[0].children[0]).text
-			: "";
+		data[0].type === 'paragraph' ? convertLinkNodeToTextNode(data[0].children[0]).text : '';
 	const newData: BlockNode = JSON.parse(JSON.stringify(data[0]));
-	let currentText = "";
+	let currentText = '';
 	let currentWidth = 0;
 
 	for (let i = 0; i < text.length; i++) {
 		currentText += text[i];
 		currentWidth =
 			(data[0].type &&
-				typeof data[0].children[0].fontSize === "number" &&
+				typeof data[0].children[0].fontSize === 'number' &&
 				measureText(
 					data[0].children[0].fontSize,
 					data[0].children[0].fontFamily,
-					currentText + "...",
+					currentText + '...'
 				).width) ||
 			0;
 
 		if (currentWidth > maxWidth) {
-			currentText = currentText.slice(0, -3) + "...";
+			currentText = currentText.slice(0, -3) + '...';
 			break;
 		}
 	}
 
-	if (newData.type === "paragraph") {
+	if (newData.type === 'paragraph') {
 		convertLinkNodeToTextNode(newData.children[0]).text = currentText;
 	}
 
@@ -465,7 +425,7 @@ function getElementsByNodes(
 		type: string;
 		nodes: DropflowNodeData[] | DropflowNodeWithType[];
 	}[],
-	listData: ListCreationData | null = null,
+	listData: ListCreationData | null = null
 ) {
 	return dropflowNodes.flatMap((node, index) => {
 		let listCreationData: null | ListCreationData = null;
@@ -478,10 +438,10 @@ function getElementsByNodes(
 		}
 
 		switch (node.type) {
-			case "numberedListNodes": {
+			case 'numberedListNodes': {
 				return createFlowList(node.nodes, true, listCreationData);
 			}
-			case "bulletedListNodes": {
+			case 'bulletedListNodes': {
 				return createFlowList(node.nodes, false, listCreationData);
 			}
 			default:
@@ -494,28 +454,23 @@ export function getBlockNodes(
 	data: BlockNode[],
 	maxWidth: number,
 	shrink = false,
-	isFrame?: boolean,
+	isFrame?: boolean
 ): LayoutBlockNodes {
-	if (isFrame && data[0].type === "paragraph") {
+	if (isFrame && data[0].type === 'paragraph') {
 		return sliceTextByWidth(data, maxWidth);
 	}
 
 	if (shrink) {
 		const filledEmptys = data.map(
 			des =>
-				(des.type === "paragraph" && {
+				(des.type === 'paragraph' && {
 					...des,
 					children: des.children.map(child => ({
 						...child,
-						text:
-							child.text?.length !== 0
-								? child.text
-								: child.link
-									? child.link
-									: "1",
+						text: child.text?.length !== 0 ? child.text : child.link ? child.link : '1',
 					})),
 				}) ||
-				des,
+				des
 		);
 
 		// non emptys width is calculated correctly
@@ -530,18 +485,12 @@ export function getBlockNodes(
 			return maxWidthLayout;
 		}
 
-		const bestWidth = findMinimumWidthForSingleLineHeight(
-			data,
-			singleLineHeight,
-			maxWidth,
-		);
+		const bestWidth = findMinimumWidthForSingleLineHeight(data, singleLineHeight, maxWidth);
 		const biggestOneSymbolWidth = getOneCharacterMaxWidth(data);
 
 		return getBlockNodes(
 			data,
-			bestWidth > biggestOneSymbolWidth
-				? bestWidth
-				: biggestOneSymbolWidth,
+			bestWidth > biggestOneSymbolWidth ? bestWidth : biggestOneSymbolWidth
 		);
 	}
 	const dropflowNodes = convertSlateToDropflow(data, maxWidth);
@@ -588,33 +537,29 @@ export function getBlockNodes(
 	};
 }
 
-const canvas = document.createElement("canvas");
-const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 
 export function getOneCharacterMaxWidth(data: Descendant[]): number {
 	let maxWidth = 0;
 
 	for (const desc of data) {
-		if ("children" in desc) {
+		if ('children' in desc) {
 			for (const child of desc.children) {
 				if (
-					child.type === "text" &&
-					typeof child.fontSize === "number" &&
+					child.type === 'text' &&
+					typeof child.fontSize === 'number' &&
 					convertLinkNodeToTextNode(child).text.length === 1
 				) {
-					const bold = (child.bold && "bold") || "";
-					const italic = (child.italic && "italic") || "";
+					const bold = (child.bold && 'bold') || '';
+					const italic = (child.italic && 'italic') || '';
 					context.font = `${bold} ${italic} ${child.fontSize}px ${child.fontFamily}`;
-					const metrics = context.measureText(
-						convertLinkNodeToTextNode(child).text,
-					);
+					const metrics = context.measureText(convertLinkNodeToTextNode(child).text);
 					if (metrics.width > maxWidth) {
 						maxWidth = metrics.width;
 					}
-				} else if ("children" in child) {
-					const currWidth = getOneCharacterMaxWidth(
-						child.children || [],
-					);
+				} else if ('children' in child) {
+					const currWidth = getOneCharacterMaxWidth(child.children || []);
 					if (currWidth > maxWidth) {
 						maxWidth = currWidth;
 					}
@@ -634,7 +579,7 @@ export function measureText(fontSize, fontFamily, text): TextMetrics {
 export function findMinimumWidthForSingleLineHeight(
 	data: BlockNode[],
 	singleLineHeight: number,
-	maxWidth: number,
+	maxWidth: number
 ): number {
 	let low = 0;
 	let high = maxWidth;

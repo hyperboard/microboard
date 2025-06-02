@@ -1,18 +1,17 @@
-import { tempStorage } from "App/SessionStorage";
-import { Board } from "Board/Board";
-import { Line, Mbr, Point, Shape } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { ShapeType } from "Board/Items/Shape";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { ADD_TO_SELECTION, DEFAULT_SHAPE } from "Board/Items/Shape/ShapeData";
-import { conf } from "Board/Settings";
-import { BoardTool } from "../BoardTool";
+import { Board } from 'Board';
+import { Line, Mbr, Shape, Point } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { ShapeType } from 'Items/Shape';
+import { DEFAULT_SHAPE, ADD_TO_SELECTION } from 'Items/Shape/ShapeData';
+import { ResizeType } from 'Selection/Transformer/getResizeType';
+import { conf } from 'Settings';
+import { BoardTool } from 'Tools/BoardTool';
 
 export class AddShape extends BoardTool {
 	line: Line | undefined;
-	resizeType: ResizeType = "leftBottom";
+	resizeType: ResizeType = 'leftBottom';
 	bounds = new Mbr();
-	type: ShapeType | "None" = DEFAULT_SHAPE;
+	type: ShapeType | 'None' = DEFAULT_SHAPE;
 	shape: Shape;
 	isDown = false;
 
@@ -23,14 +22,14 @@ export class AddShape extends BoardTool {
 		if (data) {
 			this.shape = new Shape(
 				board,
-				"",
+				'',
 				data.shapeType,
 				data.backgroundColor,
 				data.backgroundOpacity,
 				data.borderColor,
 				data.borderOpacity,
 				data.borderStyle,
-				data.borderWidth,
+				data.borderWidth
 			);
 			this.setShapeType(data.shapeType);
 		} else {
@@ -39,12 +38,12 @@ export class AddShape extends BoardTool {
 	}
 
 	setCursor(): void {
-		this.board.pointer.setCursor("crosshair");
+		this.board.pointer.setCursor('crosshair');
 	}
 
 	setShapeType(type: ShapeType): void {
-		const splittedCurrentType = this.type.split("_");
-		const splittedNewType = type.split("_");
+		const splittedCurrentType = this.type.split('_');
+		const splittedNewType = type.split('_');
 		if (
 			splittedCurrentType[0] !== splittedNewType[0] &&
 			!(splittedNewType.length === 1 && splittedCurrentType.length === 1)
@@ -59,15 +58,15 @@ export class AddShape extends BoardTool {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100;
 		this.shape.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
+			class: 'Transformation',
+			method: 'translateTo',
 			item: [this.shape.getId()],
 			x: this.bounds.left,
 			y: this.bounds.top,
 		});
 		this.shape.transformation.apply({
-			class: "Transformation",
-			method: "scaleTo",
+			class: 'Transformation',
+			method: 'scaleTo',
 			item: [this.shape.getId()],
 			x: sx,
 			y: sy,
@@ -75,7 +74,7 @@ export class AddShape extends BoardTool {
 	}
 
 	leftButtonDown(): boolean {
-		if (this.type === "None") {
+		if (this.type === 'None') {
 			return false;
 		}
 		this.isDown = true;
@@ -84,8 +83,8 @@ export class AddShape extends BoardTool {
 		this.bounds = this.line.getMbr();
 		this.bounds.borderColor = conf.SELECTION_COLOR;
 		this.shape.apply({
-			class: "Shape",
-			method: "setShapeType",
+			class: 'Shape',
+			method: 'setShapeType',
 			item: [this.shape.getId()],
 			shapeType: this.type,
 		});
@@ -119,17 +118,13 @@ export class AddShape extends BoardTool {
 	}
 
 	leftButtonUp(): boolean {
-		if (this.type === "None") {
+		if (this.type === 'None') {
 			return false;
 		}
 		const width =
-			this.bounds.getWidth() < 2
-				? tempStorage.getShapeWidth() || 100
-				: this.bounds.getWidth();
+			this.bounds.getWidth() < 2 ? tempStorage.getShapeWidth() || 100 : this.bounds.getWidth();
 		const height =
-			this.bounds.getHeight() < 2
-				? tempStorage.getShapeHeight() || 100
-				: this.bounds.getHeight();
+			this.bounds.getHeight() < 2 ? tempStorage.getShapeHeight() || 100 : this.bounds.getHeight();
 		if (this.bounds.getWidth() > 2) {
 			tempStorage.setShapeWidth(this.bounds.getWidth());
 		}
@@ -151,7 +146,7 @@ export class AddShape extends BoardTool {
 	}
 
 	keyDown(key: string): boolean {
-		if (key === "Escape") {
+		if (key === 'Escape') {
 			this.board.tools.select();
 			return true;
 		}
@@ -186,7 +181,7 @@ export class AddShape extends BoardTool {
 	};
 
 	createShapeInCenter(shape: ShapeType): void {
-		if (this.type === "None") {
+		if (this.type === 'None') {
 			return;
 		}
 		this.setShapeType(shape);
@@ -197,8 +192,8 @@ export class AddShape extends BoardTool {
 		this.line = new Line(new Point(x, y), new Point(x, y));
 		this.bounds.borderColor = conf.SELECTION_COLOR;
 		this.shape.apply({
-			class: "Shape",
-			method: "setShapeType",
+			class: 'Shape',
+			method: 'setShapeType',
 			item: [this.shape.getId()],
 			shapeType: this.type,
 		});

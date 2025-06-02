@@ -8,44 +8,43 @@ import {
 	Matrix,
 	TransformationOperation,
 	Connector,
-} from "..";
-import { BasicShapes } from "./Basic";
-import { ShapeType } from "./index";
-import { BorderStyle, BorderWidth, LinePatterns } from "../Path";
-import { Subject } from "shared/Subject";
-import { RichText } from "../RichText";
-import { ShapeOperation } from "./ShapeOperation";
-import { DefaultShapeData, ShapeData } from "./ShapeData";
-import { Geometry } from "../Geometry";
-import { DrawingContext } from "../DrawingContext";
-import { Operation } from "Board/Events";
-import { ShapeCommand } from "./ShapeCommand";
-import { GeometricNormal } from "../GeometricNormal";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
-import { getResize } from "../../Selection/Transformer/getResizeMatrix";
-import { tempStorage } from "App/SessionStorage";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { BPMN } from "./BPMN";
+} from '..';
+import { BasicShapes } from './Basic';
+import { ShapeType } from './index';
+import { BorderStyle, BorderWidth, LinePatterns } from '../Path';
+import { RichText } from '../RichText';
+import { ShapeOperation } from './ShapeOperation';
+import { DefaultShapeData, ShapeData } from './ShapeData';
+import { Geometry } from '../Geometry';
+import { DrawingContext } from '../DrawingContext';
+import { Operation } from 'Events';
+import { ShapeCommand } from './ShapeCommand';
+import { GeometricNormal } from '../GeometricNormal';
+import { ResizeType } from '../../Selection/Transformer/getResizeType';
+import { getResize } from '../../Selection/Transformer/getResizeMatrix';
+import { tempStorage } from 'SessionStorage';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { BPMN } from './BPMN';
+import { Board } from 'Board';
+import { Subject } from 'Subject';
+import { DocumentFactory } from 'api/DocumentFactory';
 import {
 	positionRelatively,
 	resetElementScale,
 	scaleElementBy,
 	translateElementBy,
-} from "Board/HTMLRender";
-import { Board } from "Board";
-import { FixedPoint } from "Board/Items/Connector";
-import { toRelativePoint } from "Board/Items/Connector/ControlPoint";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { conf } from "Board/Settings";
-import { handleUpdate } from "./handleUpdate";
+} from 'HTMLRender';
+import { FixedPoint } from 'Items/Connector';
+import { toRelativePoint } from 'Items/Connector/ControlPoint';
+import { conf } from 'Settings';
 
 const defaultShapeData = new DefaultShapeData();
 
 export const Shapes = { ...BasicShapes, ...BPMN };
 
 export class Shape implements Geometry {
-	readonly itemType = "Shape";
-	parent = "Board";
+	readonly itemType = 'Shape';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	private path: Path | Paths;
 	private textContainer: Mbr;
@@ -56,7 +55,7 @@ export class Shape implements Geometry {
 
 	constructor(
 		private board: Board,
-		private id = "",
+		private id = '',
 		private shapeType = defaultShapeData.shapeType,
 		private backgroundColor = defaultShapeData.backgroundColor,
 		private backgroundOpacity = defaultShapeData.backgroundOpacity,
@@ -64,7 +63,7 @@ export class Shape implements Geometry {
 		private borderOpacity = defaultShapeData.borderOpacity,
 		private borderStyle = defaultShapeData.borderStyle,
 		private borderWidth = defaultShapeData.borderWidth,
-		private mbr = Shapes[shapeType].path.getMbr().copy(),
+		private mbr = Shapes[shapeType].path.getMbr().copy()
 	) {
 		this.linkTo = new LinkTo(this.id, this.board.events);
 		this.transformation = new Transformation(this.id, this.board.events);
@@ -76,26 +75,23 @@ export class Shape implements Geometry {
 			this.id,
 			this.transformation,
 			this.linkTo,
-			"\u00A0",
+			'\u00A0',
 			true,
 			false,
-			"Shape",
+			'Shape'
 		);
 
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				this.transformPath();
 				this.updateMbr();
-				if (
-					op.method === "translateTo" ||
-					op.method === "translateBy"
-				) {
+				if (op.method === 'translateTo' || op.method === 'translateBy') {
 					this.text.transformCanvas();
 				} else {
 					this.text.updateElement();
 				}
 				this.subject.publish(this);
-			},
+			}
 		);
 		this.text.subject.subscribe(() => {
 			this.updateMbr();
@@ -133,7 +129,7 @@ export class Shape implements Geometry {
 
 	serialize(): ShapeData {
 		return {
-			itemType: "Shape",
+			itemType: 'Shape',
 			shapeType: this.shapeType,
 			backgroundColor: this.backgroundColor,
 			backgroundOpacity: this.backgroundOpacity,
@@ -156,8 +152,7 @@ export class Shape implements Geometry {
 			this.linkTo.deserialize(data.linkTo);
 		}
 		this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
-		this.backgroundOpacity =
-			data.backgroundOpacity ?? this.backgroundOpacity;
+		this.backgroundOpacity = data.backgroundOpacity ?? this.backgroundOpacity;
 		this.borderColor = data.borderColor ?? this.borderColor;
 		this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
 		this.borderStyle = data.borderStyle ?? this.borderStyle;
@@ -187,18 +182,18 @@ export class Shape implements Geometry {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Shape":
+			case 'Shape':
 				this.applyShapeOperation(op);
 				this.updateMbr();
 				break;
-			case "RichText":
+			case 'RichText':
 				this.text.apply(op);
 				break;
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				// this.text.setContainer(this.text.container);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
 			default:
@@ -209,25 +204,25 @@ export class Shape implements Geometry {
 
 	private applyShapeOperation(op: ShapeOperation): void {
 		switch (op.method) {
-			case "setBackgroundColor":
+			case 'setBackgroundColor':
 				this.applyBackgroundColor(op.backgroundColor);
 				break;
-			case "setBackgroundOpacity":
+			case 'setBackgroundOpacity':
 				this.applyBackgroundOpacity(op.backgroundOpacity);
 				break;
-			case "setBorderColor":
+			case 'setBorderColor':
 				this.applyBorderColor(op.borderColor);
 				break;
-			case "setBorderOpacity":
+			case 'setBorderOpacity':
 				this.applyBorderOpacity(op.borderOpacity);
 				break;
-			case "setBorderStyle":
+			case 'setBorderStyle':
 				this.applyBorderStyle(op.borderStyle);
 				break;
-			case "setBorderWidth":
+			case 'setBorderWidth':
 				this.applyBorderWidth(op.borderWidth);
 				break;
-			case "setShapeType":
+			case 'setShapeType':
 				this.applyShapeType(op.shapeType);
 				break;
 		}
@@ -251,38 +246,22 @@ export class Shape implements Geometry {
 		for (const connector of this.board.items.listAll()) {
 			if (
 				connector instanceof Connector &&
-				(connector.getConnectedItems().endItem?.getId() ===
-					this.getId() ||
-					connector.getConnectedItems().startItem?.getId() ===
-						this.getId())
+				(connector.getConnectedItems().endItem?.getId() === this.getId() ||
+					connector.getConnectedItems().startItem?.getId() === this.getId())
 			) {
-				if (
-					connector.getConnectedItems().endItem?.getId() ===
-					this.getId()
-				) {
-					const nearestPoint = this.getNearestEdgePointTo(
-						connector.getEndPoint().copy(),
-					);
+				if (connector.getConnectedItems().endItem?.getId() === this.getId()) {
+					const nearestPoint = this.getNearestEdgePointTo(connector.getEndPoint().copy());
 					connector.setEndPoint(
-						new FixedPoint(
-							this,
-							toRelativePoint(nearestPoint, this),
-						),
+						new FixedPoint(this, toRelativePoint(nearestPoint, this))
 					);
 				}
 
-				if (
-					connector.getConnectedItems().startItem?.getId() ===
-					this.getId()
-				) {
+				if (connector.getConnectedItems().startItem?.getId() === this.getId()) {
 					const nearestPoint = this.getNearestEdgePointTo(
-						connector.getStartPoint().copy(),
+						connector.getStartPoint().copy()
 					);
 					connector.setStartPoint(
-						new FixedPoint(
-							this,
-							toRelativePoint(nearestPoint, this),
-						),
+						new FixedPoint(this, toRelativePoint(nearestPoint, this))
 					);
 				}
 			}
@@ -291,8 +270,8 @@ export class Shape implements Geometry {
 
 	setShapeType(shapeType: ShapeType): void {
 		this.emit({
-			class: "Shape",
-			method: "setShapeType",
+			class: 'Shape',
+			method: 'setShapeType',
 			item: [this.getId()],
 			shapeType,
 		});
@@ -309,8 +288,8 @@ export class Shape implements Geometry {
 
 	setBackgroundColor(backgroundColor: string): void {
 		this.emit({
-			class: "Shape",
-			method: "setBackgroundColor",
+			class: 'Shape',
+			method: 'setBackgroundColor',
 			item: [this.getId()],
 			backgroundColor,
 		});
@@ -335,8 +314,8 @@ export class Shape implements Geometry {
 
 	setBackgroundOpacity(backgroundOpacity: number): void {
 		this.emit({
-			class: "Shape",
-			method: "setBackgroundOpacity",
+			class: 'Shape',
+			method: 'setBackgroundOpacity',
 			item: [this.getId()],
 			backgroundOpacity,
 		});
@@ -353,8 +332,8 @@ export class Shape implements Geometry {
 
 	setBorderColor(borderColor: string): void {
 		this.emit({
-			class: "Shape",
-			method: "setBorderColor",
+			class: 'Shape',
+			method: 'setBorderColor',
 			item: [this.getId()],
 			borderColor,
 		});
@@ -371,8 +350,8 @@ export class Shape implements Geometry {
 
 	setBorderOpacity(borderOpacity: number): void {
 		this.emit({
-			class: "Shape",
-			method: "setBorderOpacity",
+			class: 'Shape',
+			method: 'setBorderOpacity',
 			item: [this.getId()],
 			borderOpacity,
 		});
@@ -389,8 +368,8 @@ export class Shape implements Geometry {
 
 	setBorderStyle(borderStyle: BorderStyle): void {
 		this.emit({
-			class: "Shape",
-			method: "setBorderStyle",
+			class: 'Shape',
+			method: 'setBorderStyle',
 			item: [this.getId()],
 			borderStyle,
 		});
@@ -407,8 +386,8 @@ export class Shape implements Geometry {
 
 	setBorderWidth(borderWidth: BorderWidth): void {
 		this.emit({
-			class: "Shape",
-			method: "setBorderWidth",
+			class: 'Shape',
+			method: 'setBorderWidth',
 			item: [this.getId()],
 			borderWidth,
 			prevBorderWidth: this.borderWidth,
@@ -447,17 +426,14 @@ export class Shape implements Geometry {
 		if (
 			this.text.isEmpty() &&
 			(this.backgroundOpacity === 0 ||
-				this.backgroundColor === "none" ||
-				this.backgroundColor === "")
+				this.backgroundColor === 'none' ||
+				this.backgroundColor === '')
 		) {
 			// If there's no text and no background (opacity 0 or color is 'none' or empty string), check only the path edges
 			return this.path.isPointOverEdges(point, tolerance);
 		} else {
 			// Otherwise, use the original logic
-			return (
-				this.textContainer.isUnderPoint(point) ||
-				this.path.isUnderPoint(point)
-			);
+			return this.textContainer.isUnderPoint(point) || this.path.isUnderPoint(point);
 		}
 	}
 
@@ -467,8 +443,7 @@ export class Shape implements Geometry {
 
 	isEnclosedOrCrossedBy(rect: Mbr): boolean {
 		return (
-			this.textContainer.isEnclosedOrCrossedBy(rect) ||
-			this.path.isEnclosedOrCrossedBy(rect)
+			this.textContainer.isEnclosedOrCrossedBy(rect) || this.path.isEnclosedOrCrossedBy(rect)
 		);
 	}
 
@@ -492,75 +467,58 @@ export class Shape implements Geometry {
 		this.text.render(context);
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("shape-item");
+		const div = documentFactory.createElement('shape-item');
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const mbr = this.getMbr();
 		const width = mbr.getWidth();
 		const height = mbr.getHeight();
 		const unscaledWidth = width / scaleX;
 		const unscaledHeight = height / scaleY;
 
-		const svg = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"svg",
-		);
-		svg.setAttribute("width", `${unscaledWidth}px`);
-		svg.setAttribute("height", `${unscaledHeight}px`);
-		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-		svg.setAttribute("transform-origin", "0 0");
-		svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
-		svg.setAttribute("style", "position: absolute; overflow: visible;");
+		const svg = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		svg.setAttribute('width', `${unscaledWidth}px`);
+		svg.setAttribute('height', `${unscaledHeight}px`);
+		svg.setAttribute('viewBox', `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute('transform-origin', '0 0');
+		svg.setAttribute('transform', `scale(${1 / scaleX}, ${1 / scaleY})`);
+		svg.setAttribute('style', 'position: absolute; overflow: visible;');
 
-		const pathElement = Shapes[this.shapeType].path
-			.copy()
-			.renderHTML(documentFactory);
+		const pathElement = Shapes[this.shapeType].path.copy().renderHTML(documentFactory);
 		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 		paths.forEach(element => {
-			element.setAttribute("fill", this.backgroundColor);
-			element.setAttribute("stroke", this.borderColor);
-			element.setAttribute(
-				"stroke-dasharray",
-				LinePatterns[this.borderStyle].join(", "),
-			);
-			element.setAttribute("stroke-width", this.borderWidth.toString());
-			element.setAttribute("transform-origin", "0 0");
-			element.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
+			element.setAttribute('fill', this.backgroundColor);
+			element.setAttribute('stroke', this.borderColor);
+			element.setAttribute('stroke-dasharray', LinePatterns[this.borderStyle].join(', '));
+			element.setAttribute('stroke-width', this.borderWidth.toString());
+			element.setAttribute('transform-origin', '0 0');
+			element.setAttribute('transform', `scale(${scaleX}, ${scaleY})`);
 		});
 		svg.append(...paths);
 		div.appendChild(svg);
 
 		div.id = this.getId();
-		div.style.width = unscaledWidth + "px";
-		div.style.height = unscaledHeight + "px";
-		div.style.transformOrigin = "left top";
+		div.style.width = unscaledWidth + 'px';
+		div.style.height = unscaledHeight + 'px';
+		div.style.transformOrigin = 'left top';
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-		div.style.position = "absolute";
-		div.setAttribute("data-shape-type", this.shapeType);
-		div.setAttribute("fill", this.backgroundColor);
-		div.setAttribute("stroke", this.borderColor);
-		div.setAttribute("data-border-style", this.borderStyle);
-		div.setAttribute(
-			"stroke-dasharray",
-			LinePatterns[this.borderStyle].join(", "),
-		);
-		div.setAttribute("stroke-width", this.borderWidth.toString());
+		div.style.position = 'absolute';
+		div.setAttribute('data-shape-type', this.shapeType);
+		div.setAttribute('fill', this.backgroundColor);
+		div.setAttribute('stroke', this.borderColor);
+		div.setAttribute('data-border-style', this.borderStyle);
+		div.setAttribute('stroke-dasharray', LinePatterns[this.borderStyle].join(', '));
+		div.setAttribute('stroke-width', this.borderWidth.toString());
 
 		const textElement = this.text.renderHTML(documentFactory);
 		textElement.id = `${this.getId()}_text`;
 		textElement.style.maxWidth = `${width}px`;
-		textElement.style.overflow = "auto";
+		textElement.style.overflow = 'auto';
 		positionRelatively(textElement, div);
 		resetElementScale(textElement);
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
@@ -570,14 +528,14 @@ export class Shape implements Geometry {
 		];
 		translateElementBy(textElement, dx, dy);
 
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
 				(width - parseInt(linkElement.style.width)) / scaleX,
-				0,
+				0
 			);
 			div.appendChild(linkElement);
 		}
@@ -601,16 +559,13 @@ export class Shape implements Geometry {
 
 	private initPath(): void {
 		this.path = Shapes[this.shapeType].createPath(this.mbr);
-		if (this.shapeType.split("_").length > 1) {
+		if (this.shapeType.split('_').length > 1) {
 			this.borderWidth = this.path.getBorderWidth() || this.borderWidth;
 			this.borderStyle = this.path.getBorderStyle() || this.borderStyle;
-			this.backgroundColor =
-				this.path.getBackgroundColor() || this.backgroundColor;
-			this.backgroundOpacity =
-				this.path.getBackgroundOpacity() || this.backgroundOpacity;
+			this.backgroundColor = this.path.getBackgroundColor() || this.backgroundColor;
+			this.backgroundOpacity = this.path.getBackgroundOpacity() || this.backgroundOpacity;
 			this.borderColor = this.path.getBorderColor() || this.borderColor;
-			this.borderOpacity =
-				this.path.getBorderOpacity() || this.borderOpacity;
+			this.borderOpacity = this.path.getBorderOpacity() || this.borderOpacity;
 		}
 		this.textContainer = Shapes[this.shapeType].textBounds.copy();
 		this.text.setContainer(this.textContainer.copy());
@@ -666,7 +621,7 @@ export class Shape implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
-		timeStamp: number,
+		timeStamp: number
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getResize(resizeType, pointer, mbr, opposite);
 
@@ -679,7 +634,7 @@ export class Shape implements Geometry {
 				x: res.matrix.translateX,
 				y: res.matrix.translateY,
 			},
-			timeStamp,
+			timeStamp
 		);
 		res.mbr = this.getMbr();
 		return res;
@@ -697,8 +652,8 @@ export class Shape implements Geometry {
 	}
 
 	getIsBorderStyleEditable(): boolean {
-		switch (this.shapeType.split("_")[0]) {
-			case "BPMN":
+		switch (this.shapeType.split('_')[0]) {
+			case 'BPMN':
 				return false;
 		}
 		return true;

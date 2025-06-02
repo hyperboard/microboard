@@ -1,30 +1,30 @@
-import { Board } from "Board";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { Operation } from "Board/Events/EventsOperations";
+import { Board } from 'Board';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { Operation } from 'Events/EventsOperations';
 import {
 	positionRelatively,
 	resetElementScale,
 	scaleElementBy,
 	translateElementBy,
-} from "Board/HTMLRender/HTMLRender";
-import { AINodeData, createNodePath } from "Board/Items/AINode/AINodeData";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { GeometricNormal } from "Board/Items/GeometricNormal";
-import { Geometry } from "Board/Items/Geometry";
-import { Line } from "Board/Items/Line/Line";
-import { LinkTo } from "Board/Items/LinkTo/LinkTo";
-import { Mbr } from "Board/Items/Mbr/Mbr";
-import { LinePatterns, Path } from "Board/Items/Path/Path";
-import { Paths } from "Board/Items/Path/Paths";
-import { Point } from "Board/Items/Point/Point";
-import { RichText } from "Board/Items/RichText/RichText";
-import { Matrix } from "Board/Items/Transformation/Matrix";
-import { Transformation } from "Board/Items/Transformation/Transformation";
-import { TransformationOperation } from "Board/Items/Transformation/TransformationOperations";
-import { conf } from "Board/Settings";
-import { Subject } from "shared/Subject";
+} from 'HTMLRender/HTMLRender';
+import { AINodeData, createNodePath } from 'Items/AINode/AINodeData';
+import { DrawingContext } from 'Items/DrawingContext';
+import { GeometricNormal } from 'Items/GeometricNormal';
+import { Geometry } from 'Items/Geometry';
+import { Line } from 'Items/Line/Line';
+import { LinkTo } from 'Items/LinkTo/LinkTo';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { LinePatterns, Path } from 'Items/Path/Path';
+import { Paths } from 'Items/Path/Paths';
+import { Point } from 'Items/Point/Point';
+import { RichText } from 'Items/RichText/RichText';
+import { Matrix } from 'Items/Transformation/Matrix';
+import { Transformation } from 'Items/Transformation/Transformation';
+import { TransformationOperation } from 'Items/Transformation/TransformationOperations';
+import { conf } from 'Settings';
+import { Subject } from 'Subject';
 
-export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
+export const CONTEXT_NODE_HIGHLIGHT_COLOR = 'rgba(183, 138, 240, 1)';
 const BUTTON_SIZE = 20;
 export type ThreadDirection = 0 | 1 | 2 | 3;
 // TODO FIX node
@@ -34,8 +34,8 @@ const ICON_SRC =
 // arrowIcon.src = ICON_SRC;
 
 export class AINode implements Geometry {
-	readonly itemType = "AINode";
-	parent = "Board";
+	readonly itemType = 'AINode';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	readonly text: RichText;
 	readonly linkTo: LinkTo;
@@ -57,11 +57,9 @@ export class AINode implements Geometry {
 		parentNodeId?: string,
 		contextItems: string[] = [],
 		threadDirection?: ThreadDirection,
-		private id = "",
+		private id = ''
 	) {
-		this.buttonIcon = conf.documentFactory.createElement(
-			"img",
-		) as HTMLImageElement;
+		this.buttonIcon = conf.documentFactory.createElement('img') as HTMLImageElement;
 		this.buttonIcon.src = ICON_SRC;
 		this.contextItems = contextItems;
 		this.isUserRequest = isUserRequest;
@@ -77,28 +75,25 @@ export class AINode implements Geometry {
 			this.id,
 			this.transformation,
 			this.linkTo,
-			"\u00A0",
+			'\u00A0',
 			false,
 			false,
-			"AINode",
+			'AINode'
 		);
 
 		// this.text.setPaddingTop(0.5);
 
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
-				if (
-					op.method === "translateTo" ||
-					op.method === "translateBy"
-				) {
+				if (op.method === 'translateTo' || op.method === 'translateBy') {
 					this.text.transformCanvas();
-				} else if (op.method === "transformMany") {
+				} else if (op.method === 'transformMany') {
 					const currItemOp = op.items[this.getId()];
 					this.prevMbr = this.path?.getMbr();
 					if (
-						currItemOp.method === "translateBy" ||
-						currItemOp.method === "translateTo" ||
-						(currItemOp.method === "scaleByTranslateBy" &&
+						currItemOp.method === 'translateBy' ||
+						currItemOp.method === 'translateTo' ||
+						(currItemOp.method === 'scaleByTranslateBy' &&
 							currItemOp.scale.x === 1 &&
 							currItemOp.scale.y === 1)
 					) {
@@ -110,7 +105,7 @@ export class AINode implements Geometry {
 					}
 				} else {
 					this.prevMbr = this.path?.getMbr();
-					if (op.method === "scaleByTranslateBy") {
+					if (op.method === 'scaleByTranslateBy') {
 						this.text.handleInshapeScale();
 					} else {
 						this.text.updateElement();
@@ -118,7 +113,7 @@ export class AINode implements Geometry {
 				}
 				this.transformPath();
 				this.subject.publish(this);
-			},
+			}
 		);
 		this.text.subject.subscribe(() => {
 			this.prevMbr = this.path?.getMbr();
@@ -134,14 +129,13 @@ export class AINode implements Geometry {
 		this.linkTo.subject.subscribe(() => {
 			this.subject.publish(this);
 		});
-		this.text.insideOf = "AINode";
+		this.text.insideOf = 'AINode';
 
 		this.transformPath();
 	}
 
 	transformPath(): void {
-		const { left, right, top, bottom } =
-			this.text.getTransformedContainer();
+		const { left, right, top, bottom } = this.text.getTransformedContainer();
 		const { scaleX, scaleY } = this.transformation.matrix;
 		const minScale = Math.min(scaleX, scaleY);
 		const leftOffset = 20 * minScale;
@@ -159,7 +153,7 @@ export class AINode implements Geometry {
 
 		this.path = createNodePath(
 			new Mbr(left, top, nodeRight, nodeBottom),
-			this.transformation.matrix,
+			this.transformation.matrix
 		);
 		const scaledSize = BUTTON_SIZE * minScale;
 
@@ -167,13 +161,13 @@ export class AINode implements Geometry {
 			nodeRight - scaledSize * 2,
 			nodeBottom - scaledSize * 2,
 			nodeRight - scaledSize,
-			nodeBottom - scaledSize,
+			nodeBottom - scaledSize
 		);
 	}
 
 	serialize(isCopy = false): AINodeData {
 		return {
-			itemType: "AINode",
+			itemType: 'AINode',
 			transformation: this.transformation.serialize(),
 			text: this.text.serialize(),
 			linkTo: this.linkTo.serialize(),
@@ -250,19 +244,19 @@ export class AINode implements Geometry {
 
 	getPath(): Path | Paths {
 		const copy = this.path.copy();
-		copy.setBackgroundColor("none");
+		copy.setBackgroundColor('none');
 		return copy;
 	}
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "RichText":
+			case 'RichText':
 				this.text.apply(op);
 				break;
-			case "Transformation":
+			case 'Transformation':
 				this.text.transformation.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
 			default:
@@ -293,7 +287,7 @@ export class AINode implements Geometry {
 	}
 
 	getIntersectionPoints(segment: Line): Point[] {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	}
 
 	getMbr(): Mbr {
@@ -343,13 +337,7 @@ export class AINode implements Geometry {
 		ctx.save();
 
 		if (this.buttonIcon.complete) {
-			ctx.drawImage(
-				this.buttonIcon,
-				left,
-				top,
-				right - left,
-				bottom - top,
-			);
+			ctx.drawImage(this.buttonIcon, left, top, right - left, bottom - top);
 		}
 
 		ctx.restore();
@@ -366,20 +354,14 @@ export class AINode implements Geometry {
 		this.text.render(context);
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("ainode-item");
+		const div = documentFactory.createElement('ainode-item');
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const mbr = this.getMbr();
 		const width = mbr.getWidth();
 		const height = mbr.getHeight();
@@ -387,37 +369,25 @@ export class AINode implements Geometry {
 		const unscaledHeight = height;
 		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px)`;
 
-		const svg = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"svg",
-		);
-		svg.setAttribute("width", `${unscaledWidth}px`);
-		svg.setAttribute("height", `${unscaledHeight}px`);
-		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-		svg.setAttribute("transform-origin", "0 0");
-		svg.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
-		svg.setAttribute("style", "position: absolute; overflow: visible;");
+		const svg = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		svg.setAttribute('width', `${unscaledWidth}px`);
+		svg.setAttribute('height', `${unscaledHeight}px`);
+		svg.setAttribute('viewBox', `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute('transform-origin', '0 0');
+		svg.setAttribute('transform', `scale(${scaleX}, ${scaleY})`);
+		svg.setAttribute('style', 'position: absolute; overflow: visible;');
 
-		const pathElement = createNodePath(
-			this.getMbr(),
-			new Matrix(0, 0, scaleX, scaleY),
-		)
+		const pathElement = createNodePath(this.getMbr(), new Matrix(0, 0, scaleX, scaleY))
 			.copy()
 			.renderHTML(documentFactory);
 		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 		paths.forEach(element => {
-			element.setAttribute("fill", "rgb(255, 255, 255)");
-			element.setAttribute("stroke", "rgba(222, 224, 227, 1)");
-			element.setAttribute(
-				"stroke-dasharray",
-				LinePatterns["solid"].join(", "),
-			);
-			element.setAttribute("stroke-width", "1");
-			element.setAttribute("transform-origin", "0 0");
-			element.setAttribute(
-				"transform",
-				`scale(${1 / scaleX}, ${1 / scaleY})`,
-			);
+			element.setAttribute('fill', 'rgb(255, 255, 255)');
+			element.setAttribute('stroke', 'rgba(222, 224, 227, 1)');
+			element.setAttribute('stroke-dasharray', LinePatterns['solid'].join(', '));
+			element.setAttribute('stroke-width', '1');
+			element.setAttribute('transform-origin', '0 0');
+			element.setAttribute('transform', `scale(${1 / scaleX}, ${1 / scaleY})`);
 		});
 		svg.append(...paths);
 		div.appendChild(svg);
@@ -425,39 +395,39 @@ export class AINode implements Geometry {
 		div.id = this.getId();
 		div.style.width = `${unscaledWidth}px`;
 		div.style.height = `${unscaledHeight}px`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
+		div.style.position = 'absolute';
 		if (this.parentNodeId) {
-			div.setAttribute("parent-node-id", this.parentNodeId);
+			div.setAttribute('parent-node-id', this.parentNodeId);
 		}
 		if (this.isUserRequest) {
-			div.setAttribute("is-user-request", "true");
+			div.setAttribute('is-user-request', 'true');
 		}
 		if (this.contextItems.length) {
-			div.setAttribute("context-items", this.contextItems.join(","));
+			div.setAttribute('context-items', this.contextItems.join(','));
 		}
-		div.setAttribute("context-range", this.contextRange.toString());
+		div.setAttribute('context-range', this.contextRange.toString());
 
-		const button = documentFactory.createElement("button");
-		button.style.position = "absolute";
-		button.style.cursor = "pointer";
-		const img = documentFactory.createElement("img");
-		img.setAttribute("src", ICON_SRC);
-		img.setAttribute("alt", "#");
-		img.setAttribute("width", `${BUTTON_SIZE}px`);
-		img.setAttribute("height", `${BUTTON_SIZE}px`);
-		button.style.background = "none";
-		button.style.border = "none";
-		button.style.outline = "none";
-		button.style.cursor = "pointer";
-		button.setAttribute("width", `${BUTTON_SIZE}px`);
-		button.setAttribute("height", `${BUTTON_SIZE}px`);
+		const button = documentFactory.createElement('button');
+		button.style.position = 'absolute';
+		button.style.cursor = 'pointer';
+		const img = documentFactory.createElement('img');
+		img.setAttribute('src', ICON_SRC);
+		img.setAttribute('alt', '#');
+		img.setAttribute('width', `${BUTTON_SIZE}px`);
+		img.setAttribute('height', `${BUTTON_SIZE}px`);
+		button.style.background = 'none';
+		button.style.border = 'none';
+		button.style.outline = 'none';
+		button.style.cursor = 'pointer';
+		button.setAttribute('width', `${BUTTON_SIZE}px`);
+		button.setAttribute('height', `${BUTTON_SIZE}px`);
 		button.appendChild(img);
 		translateElementBy(
 			button,
 			width - BUTTON_SIZE * scaleX * 2,
-			height - BUTTON_SIZE * scaleY * 2,
+			height - BUTTON_SIZE * scaleY * 2
 		);
 		scaleElementBy(button, scaleX, scaleY);
 		div.appendChild(button);
@@ -468,22 +438,18 @@ export class AINode implements Geometry {
 		if (maxWidth) {
 			textElement.style.width = `${maxWidth}px`;
 		} else {
-			textElement.style.width = "600px";
+			textElement.style.width = '600px';
 		}
-		textElement.style.removeProperty("height");
-		textElement.style.overflow = "auto";
+		textElement.style.removeProperty('height');
+		textElement.style.overflow = 'auto';
 		positionRelatively(textElement, div);
 		translateElementBy(textElement, 20 * scaleX, 20 * scaleY);
 
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
 			resetElementScale(linkElement);
-			translateElementBy(
-				linkElement,
-				width - parseInt(linkElement.style.width),
-				0,
-			);
+			translateElementBy(linkElement, width - parseInt(linkElement.style.width), 0);
 			div.appendChild(linkElement);
 		}
 

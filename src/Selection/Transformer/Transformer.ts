@@ -1,39 +1,30 @@
-import { Board } from "Board";
-import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
-import {
-	Frame,
-	Item,
-	Line,
-	Matrix,
-	Mbr,
-	Point,
-	RichText,
-	Shape,
-} from "Board/Items";
-import { AINode } from "Board/Items/AINode/AINode";
-import { Anchor } from "Board/Items/Anchor";
-import { Comment } from "Board/Items/Comment/Comment";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Geometry } from "Board/Items/Geometry";
-import { Sticker } from "Board/Items/Sticker";
-import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import { Selection } from "Board/Selection";
-import { SelectionItems } from "Board/Selection/SelectionItems";
-import { conf } from "Board/Settings";
-import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
-import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
-import AlignmentHelper from "Board/Tools/RelativeAlignment";
-import { Tool } from "Board/Tools/Tool";
-import { AnchorType, getAnchorFromResizeType } from "./AnchorType";
-import { getOppositePoint } from "./getOppositePoint";
-import { getProportionalResize, getResize } from "./getResizeMatrix";
-import { getResizeType, ResizeType } from "./getResizeType";
-import { getTextResizeType } from "./TextTransformer/getTextResizeType";
-import { ImageItem } from "Board/Items/Image/Image";
-import { tempStorage } from "App/SessionStorage";
+import { Board } from 'Board';
+import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
+import { Frame, Item, Line, Matrix, Mbr, Point, RichText, Shape } from 'Items';
+import { AINode } from 'Items/AINode/AINode';
+import { Anchor } from 'Items/Anchor';
+import { Comment } from 'Items/Comment/Comment';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Geometry } from 'Items/Geometry';
+import { Sticker } from 'Items/Sticker';
+import { TransformManyItems } from 'Items/Transformation/TransformationOperations';
+import { Selection } from 'Selection';
+import { SelectionItems } from 'Selection/SelectionItems';
+import { conf } from 'Settings';
+import { createDebounceUpdater } from 'Tools/DebounceUpdater';
+import { NestingHighlighter } from 'Tools/NestingHighlighter';
+import AlignmentHelper from 'Tools/RelativeAlignment';
+import { Tool } from 'Tools/Tool';
+import { AnchorType, getAnchorFromResizeType } from './AnchorType';
+import { getOppositePoint } from './getOppositePoint';
+import { getProportionalResize, getResize } from './getResizeMatrix';
+import { getResizeType, ResizeType } from './getResizeType';
+import { getTextResizeType } from './TextTransformer/getTextResizeType';
+import { ImageItem } from 'Items/Image/Image';
+import { tempStorage } from 'SessionStorage';
 
 export class Transformer extends Tool {
-	anchorType: AnchorType = "default";
+	anchorType: AnchorType = 'default';
 	resizeType?: ResizeType;
 	oppositePoint?: Point;
 	mbr: Mbr | undefined;
@@ -54,10 +45,7 @@ export class Transformer extends Tool {
 	private snapCursorPos: Point | null = null;
 	private initialCursorPos: Point | null = null;
 
-	constructor(
-		private board: Board,
-		private selection: Selection,
-	) {
+	constructor(private board: Board, private selection: Selection) {
 		super();
 		this.canvasDrawer = createCanvasDrawer(board);
 
@@ -71,7 +59,7 @@ export class Transformer extends Tool {
 			board,
 			board.index,
 			this.canvasDrawer,
-			this.debounceUpd,
+			this.debounceUpd
 		);
 	}
 
@@ -84,7 +72,7 @@ export class Transformer extends Tool {
 	}
 
 	keyDown(key: string): boolean {
-		if (key === "Shift") {
+		if (key === 'Shift') {
 			this.isShiftPressed = true;
 			return true;
 		}
@@ -92,7 +80,7 @@ export class Transformer extends Tool {
 	}
 
 	keyUp(key: string): boolean {
-		if (key === "Shift") {
+		if (key === 'Shift') {
 			this.isShiftPressed = false;
 			return true;
 		}
@@ -107,15 +95,8 @@ export class Transformer extends Tool {
 		const item = items.getSingle();
 
 		let resizeType: ResizeType | undefined;
-		if (
-			item &&
-			(item.itemType === "RichText" || item.itemType === "Sticker")
-		) {
-			resizeType = getTextResizeType(
-				pointer.point,
-				camera.getScale(),
-				mbr,
-			);
+		if (item && (item.itemType === 'RichText' || item.itemType === 'Sticker')) {
+			resizeType = getTextResizeType(pointer.point, camera.getScale(), mbr);
 		} else {
 			resizeType = getResizeType(pointer.point, camera.getScale(), mbr);
 		}
@@ -158,22 +139,15 @@ export class Transformer extends Tool {
 			this.mbr &&
 			this.oppositePoint
 		) {
-			const isWidth =
-				this.clickedOn === "left" || this.clickedOn === "right";
-			const isHeight =
-				this.clickedOn === "top" || this.clickedOn === "bottom";
+			const isWidth = this.clickedOn === 'left' || this.clickedOn === 'right';
+			const isHeight = this.clickedOn === 'top' || this.clickedOn === 'bottom';
 			const resize = getProportionalResize(
 				this.clickedOn,
 				this.board.pointer.point,
 				this.mbr,
-				this.oppositePoint,
+				this.oppositePoint
 			);
-			const translation = this.handleMultipleItemsResize(
-				resize,
-				this.mbr,
-				isWidth,
-				isHeight,
-			);
+			const translation = this.handleMultipleItemsResize(resize, this.mbr, isWidth, isHeight);
 			this.selection.transformMany(translation, this.beginTimeStamp);
 			this.mbr = resize.mbr;
 			this.debounceUpd.setFalse();
@@ -198,7 +172,7 @@ export class Transformer extends Tool {
 	}
 
 	pointerMoveBy(_x: number, _y: number): boolean {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			return false;
 		}
 		const isLockedItems = this.selection.getIsLockedSelection();
@@ -218,25 +192,20 @@ export class Transformer extends Tool {
 			return false;
 		}
 
-		const isWidth =
-			this.resizeType === "left" || this.resizeType === "right";
-		const isHeight =
-			this.resizeType === "top" || this.resizeType === "bottom";
+		const isWidth = this.resizeType === 'left' || this.resizeType === 'right';
+		const isHeight = this.resizeType === 'top' || this.resizeType === 'bottom';
 		const single = this.selection.items.getSingle();
 		let followingComments: Comment[] | undefined = this.board.items
 			.getComments()
 			.filter(comment => {
-				return (
-					comment.getItemToFollow() &&
-					comment.getItemToFollow() === single?.getId()
-				);
+				return comment.getItemToFollow() && comment.getItemToFollow() === single?.getId();
 			});
 		if (!followingComments.length) {
 			followingComments = undefined;
 		}
 
 		if (single?.transformation.isLocked) {
-			this.board.pointer.setCursor("default");
+			this.board.pointer.setCursor('default');
 			return false;
 		}
 
@@ -246,7 +215,7 @@ export class Transformer extends Tool {
 				single,
 				this.snapLines,
 				this.beginTimeStamp,
-				this.resizeType,
+				this.resizeType
 			);
 
 			if (snapped) {
@@ -254,25 +223,21 @@ export class Transformer extends Tool {
 			}
 		}
 
-		if (
-			single instanceof Shape ||
-			single instanceof Sticker ||
-			single instanceof Frame
-		) {
+		if (single instanceof Shape || single instanceof Sticker || single instanceof Frame) {
 			let translation: TransformManyItems | boolean = {};
-			if (this.isShiftPressed && single.itemType !== "Sticker") {
+			if (this.isShiftPressed && single.itemType !== 'Sticker') {
 				const { matrix, mbr: resizedMbr } = getProportionalResize(
 					this.resizeType,
 					this.board.pointer.point,
 					mbr,
-					this.oppositePoint,
+					this.oppositePoint
 				);
 				this.mbr = resizedMbr;
 				translation = this.handleMultipleItemsResize(
 					{ matrix, mbr: resizedMbr },
 					mbr,
 					isWidth,
-					isHeight,
+					isHeight
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			} else {
@@ -282,7 +247,7 @@ export class Transformer extends Tool {
 					mbr,
 					this.oppositePoint,
 					this.startMbr || new Mbr(),
-					this.beginTimeStamp,
+					this.beginTimeStamp
 				).mbr;
 
 				if (followingComments) {
@@ -292,25 +257,22 @@ export class Transformer extends Tool {
 									this.resizeType,
 									this.board.pointer.point,
 									mbr,
-									this.oppositePoint,
-								)
+									this.oppositePoint
+							  )
 							: getResize(
 									this.resizeType,
 									this.board.pointer.point,
 									mbr,
-									this.oppositePoint,
-								);
+									this.oppositePoint
+							  );
 					translation = this.handleMultipleItemsResize(
 						{ matrix, mbr: resizedMbr },
 						mbr,
 						isWidth,
 						isHeight,
-						followingComments,
+						followingComments
 					);
-					this.selection.transformMany(
-						translation,
-						this.beginTimeStamp,
-					);
+					this.selection.transformMany(translation, this.beginTimeStamp);
 				}
 			}
 		} else if (single instanceof RichText) {
@@ -323,23 +285,20 @@ export class Transformer extends Tool {
 				this.resizeType,
 				this.board.pointer.point,
 				mbr,
-				this.oppositePoint,
+				this.oppositePoint
 			);
 
 			if (isWidth) {
 				if (isLongText) {
-					const isLeft = this.resizeType === "left";
+					const isLeft = this.resizeType === 'left';
 					if (this.board.selection.shouldRenderItemsMbr) {
 						this.board.selection.shouldRenderItemsMbr = false;
 					}
-					if (this.board.pointer.getCursor() !== "w-resize") {
-						this.board.pointer.setCursor("w-resize");
+					if (this.board.pointer.getCursor() !== 'w-resize') {
+						this.board.pointer.setCursor('w-resize');
 					}
 					if (isLeft) {
-						if (
-							this.board.pointer.point.x >=
-							this.mbr.right - 100
-						) {
+						if (this.board.pointer.point.x >= this.mbr.right - 100) {
 							return false;
 						}
 						this.mbr.left = this.board.pointer.point.x;
@@ -351,21 +310,16 @@ export class Transformer extends Tool {
 					}
 					const newWidth = this.mbr.getWidth();
 					this.onPointerUpCb = () => {
-						this.board.pointer.setCursor("default");
+						this.board.pointer.setCursor('default');
 						this.board.selection.shouldRenderItemsMbr = true;
 						if (isLeft) {
-							single.transformation.translateBy(
-								single.getWidth() - newWidth,
-								0,
-							);
+							single.transformation.translateBy(single.getWidth() - newWidth, 0);
 						}
 						single.editor.setMaxWidth(newWidth);
 					};
 					return true;
 				} else {
-					single.editor.setMaxWidth(
-						resizedMbr.getWidth() / single.getScale(),
-					);
+					single.editor.setMaxWidth(resizedMbr.getWidth() / single.getScale());
 					single.transformation.translateBy(matrix.translateX, 0);
 					matrix.translateY = 0;
 					matrix.scaleY = 1;
@@ -376,62 +330,48 @@ export class Transformer extends Tool {
 						this.board.selection.shouldRenderItemsMbr = false;
 					}
 					switch (this.resizeType) {
-						case "leftTop":
-							if (
-								this.board.pointer.getCursor() !== "nwse-resize"
-							) {
-								this.board.pointer.setCursor("nwse-resize");
+						case 'leftTop':
+							if (this.board.pointer.getCursor() !== 'nwse-resize') {
+								this.board.pointer.setCursor('nwse-resize');
 							}
 							if (
-								this.board.pointer.point.x >=
-									this.mbr.right - 100 ||
-								this.board.pointer.point.y >=
-									this.mbr.bottom - 100
+								this.board.pointer.point.x >= this.mbr.right - 100 ||
+								this.board.pointer.point.y >= this.mbr.bottom - 100
 							) {
 								return false;
 							}
 							break;
 
-						case "rightTop":
-							if (
-								this.board.pointer.getCursor() !== "nesw-resize"
-							) {
-								this.board.pointer.setCursor("nesw-resize");
+						case 'rightTop':
+							if (this.board.pointer.getCursor() !== 'nesw-resize') {
+								this.board.pointer.setCursor('nesw-resize');
 							}
 							if (
-								this.board.pointer.point.x <=
-									this.mbr.left + 100 ||
-								this.board.pointer.point.y >=
-									this.mbr.bottom - 100
+								this.board.pointer.point.x <= this.mbr.left + 100 ||
+								this.board.pointer.point.y >= this.mbr.bottom - 100
 							) {
 								return false;
 							}
 							break;
 
-						case "leftBottom":
-							if (
-								this.board.pointer.getCursor() !== "nesw-resize"
-							) {
-								this.board.pointer.setCursor("nesw-resize");
+						case 'leftBottom':
+							if (this.board.pointer.getCursor() !== 'nesw-resize') {
+								this.board.pointer.setCursor('nesw-resize');
 							}
 							if (
-								this.board.pointer.point.x >=
-									this.mbr.right - 100 ||
+								this.board.pointer.point.x >= this.mbr.right - 100 ||
 								this.board.pointer.point.y <= this.mbr.top + 100
 							) {
 								return false;
 							}
 							break;
 
-						case "rightBottom":
-							if (
-								this.board.pointer.getCursor() !== "nwse-resize"
-							) {
-								this.board.pointer.setCursor("nwse-resize");
+						case 'rightBottom':
+							if (this.board.pointer.getCursor() !== 'nwse-resize') {
+								this.board.pointer.setCursor('nwse-resize');
 							}
 							if (
-								this.board.pointer.point.x <=
-									this.mbr.left + 100 ||
+								this.board.pointer.point.x <= this.mbr.left + 100 ||
 								this.board.pointer.point.y <= this.mbr.top + 100
 							) {
 								return false;
@@ -446,7 +386,7 @@ export class Transformer extends Tool {
 					const mbrHeight = this.mbr.getHeight();
 					const { left, top } = this.mbr;
 					this.onPointerUpCb = () => {
-						this.board.pointer.setCursor("default");
+						this.board.pointer.setCursor('default');
 						this.board.selection.shouldRenderItemsMbr = true;
 						const scaleX = mbrWidth / single.getWidth();
 						const scaleY = mbrHeight / single.getHeight();
@@ -455,7 +395,7 @@ export class Transformer extends Tool {
 						single.transformation.scaleByTranslateBy(
 							{ x: scaleX, y: scaleY },
 							{ x: translateX, y: translateY },
-							this.beginTimeStamp,
+							this.beginTimeStamp
 						);
 					};
 					return true;
@@ -463,7 +403,7 @@ export class Transformer extends Tool {
 					single.transformation.scaleByTranslateBy(
 						{ x: matrix.scaleX, y: matrix.scaleY },
 						{ x: matrix.translateX, y: matrix.translateY },
-						this.beginTimeStamp,
+						this.beginTimeStamp
 					);
 				}
 			}
@@ -474,7 +414,7 @@ export class Transformer extends Tool {
 					mbr,
 					isWidth,
 					isHeight,
-					followingComments,
+					followingComments
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
@@ -490,13 +430,11 @@ export class Transformer extends Tool {
 				this.resizeType,
 				this.board.pointer.point,
 				mbr,
-				this.oppositePoint,
+				this.oppositePoint
 			);
 
 			if (isWidth) {
-				single.text.editor.setMaxWidth(
-					resizedMbr.getWidth() / single.text.getScale(),
-				);
+				single.text.editor.setMaxWidth(resizedMbr.getWidth() / single.text.getScale());
 				single.text.transformation.translateBy(matrix.translateX, 0);
 				matrix.translateY = 0;
 				matrix.scaleY = 1;
@@ -504,7 +442,7 @@ export class Transformer extends Tool {
 				single.text.transformation.scaleByTranslateBy(
 					{ x: matrix.scaleX, y: matrix.scaleY },
 					{ x: matrix.translateX, y: matrix.translateY },
-					this.beginTimeStamp,
+					this.beginTimeStamp
 				);
 			}
 			// TODO DRY
@@ -514,7 +452,7 @@ export class Transformer extends Tool {
 					mbr,
 					isWidth,
 					isHeight,
-					followingComments,
+					followingComments
 				);
 				this.selection.transformMany(translation, this.beginTimeStamp);
 			}
@@ -528,11 +466,11 @@ export class Transformer extends Tool {
 			const items = this.selection.items.list();
 			const includesProportionalItem = items.some(
 				item =>
-					item.itemType === "Sticker" ||
-					item.itemType === "RichText" ||
-					item.itemType === "AINode" ||
-					item.itemType === "Video" ||
-					item.itemType === "Audio",
+					item.itemType === 'Sticker' ||
+					item.itemType === 'RichText' ||
+					item.itemType === 'AINode' ||
+					item.itemType === 'Video' ||
+					item.itemType === 'Audio'
 			);
 
 			if (includesProportionalItem && (isWidth || isHeight)) {
@@ -540,7 +478,7 @@ export class Transformer extends Tool {
 			}
 
 			const isIncludesFixedFrame = items.some(
-				item => item.itemType === "Frame" && !item.getCanChangeRatio(),
+				item => item.itemType === 'Frame' && !item.getCanChangeRatio()
 			);
 
 			const shouldBeProportionalResize =
@@ -554,24 +492,13 @@ export class Transformer extends Tool {
 						this.resizeType,
 						this.board.pointer.point,
 						mbr,
-						this.oppositePoint,
-					)
-				: getResize(
-						this.resizeType,
-						this.board.pointer.point,
-						mbr,
-						this.oppositePoint,
-					);
+						this.oppositePoint
+				  )
+				: getResize(this.resizeType, this.board.pointer.point, mbr, this.oppositePoint);
 
-			if (
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				!this.debounceUpd.shouldUpd()
-			) {
+			if (this.canvasDrawer.getLastCreatedCanvas() && !this.debounceUpd.shouldUpd()) {
 				this.canvasDrawer.recoordinateCanvas(resize.mbr);
-				this.canvasDrawer.scaleCanvasTo(
-					resize.matrix.scaleX,
-					resize.matrix.scaleY,
-				);
+				this.canvasDrawer.scaleCanvasTo(resize.matrix.scaleX, resize.matrix.scaleY);
 				return false;
 			}
 			if (single instanceof ImageItem) {
@@ -580,16 +507,8 @@ export class Transformer extends Tool {
 					height: resize.mbr.getHeight(),
 				});
 			}
-			if (
-				this.canvasDrawer.getLastCreatedCanvas() &&
-				this.debounceUpd.shouldUpd()
-			) {
-				const translation = this.handleMultipleItemsResize(
-					resize,
-					mbr,
-					isWidth,
-					isHeight,
-				);
+			if (this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd.shouldUpd()) {
+				const translation = this.handleMultipleItemsResize(resize, mbr, isWidth, isHeight);
 				this.selection.transformMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.mbr = resize.mbr;
@@ -599,7 +518,7 @@ export class Transformer extends Tool {
 					items,
 					this.snapLines,
 					this.beginTimeStamp,
-					this.resizeType,
+					this.resizeType
 				);
 				if (snapped) {
 					const increasedSnapThreshold = 5;
@@ -607,16 +526,12 @@ export class Transformer extends Tool {
 					if (!this.snapCursorPos) {
 						this.snapCursorPos = new Point(
 							this.board.pointer.point.x,
-							this.board.pointer.point.y,
+							this.board.pointer.point.y
 						);
 					}
 
-					const cursorDiffX = Math.abs(
-						this.board.pointer.point.x - this.snapCursorPos.x,
-					);
-					const cursorDiffY = Math.abs(
-						this.board.pointer.point.y - this.snapCursorPos.y,
-					);
+					const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
+					const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
 
 					// Disable snapping if the pointer moves more than 5 pixels
 					if (
@@ -632,48 +547,36 @@ export class Transformer extends Tool {
 							resize,
 							mbr,
 							isWidth,
-							isHeight,
+							isHeight
 						);
-						this.selection.transformMany(
-							translation,
-							this.beginTimeStamp,
-						);
-						this.mbr = this.alignmentHelper.combineMBRs(
-							this.selection.items.list(),
-						); // Update the MBR to match items
+						this.selection.transformMany(translation, this.beginTimeStamp);
+						this.mbr = this.alignmentHelper.combineMBRs(this.selection.items.list()); // Update the MBR to match items
 						return false;
 					}
 
 					// If snapping is active, prevent resizing of the selection border
-					this.mbr = this.alignmentHelper.combineMBRs(
-						this.selection.items.list(),
-					); // Ensure MBR matches items
+					this.mbr = this.alignmentHelper.combineMBRs(this.selection.items.list()); // Ensure MBR matches items
 				} else {
 					this.snapCursorPos = null; // Reset snapping state
 					const translation = this.handleMultipleItemsResize(
 						resize,
 						mbr,
 						isWidth,
-						isHeight,
+						isHeight
 					);
-					this.selection.transformMany(
-						translation,
-						this.beginTimeStamp,
-					);
+					this.selection.transformMany(translation, this.beginTimeStamp);
 
 					if (Object.keys(translation).length > 10) {
 						this.canvasDrawer.updateCanvasAndKeys(
 							resize.mbr,
 							translation,
-							resize.matrix,
+							resize.matrix
 						);
 						this.debounceUpd.setFalse();
 						this.debounceUpd.setTimeoutUpdate(1000);
 					}
 
-					this.mbr = this.alignmentHelper.combineMBRs(
-						this.selection.items.list(),
-					); // Update the MBR to match items
+					this.mbr = this.alignmentHelper.combineMBRs(this.selection.items.list()); // Update the MBR to match items
 				}
 			}
 		}
@@ -682,7 +585,7 @@ export class Transformer extends Tool {
 			mbr.left,
 			mbr.top,
 			mbr.right,
-			mbr.bottom,
+			mbr.bottom
 		);
 		list.forEach(item => {
 			if (item instanceof Frame) {
@@ -691,13 +594,12 @@ export class Transformer extends Tool {
 					currMbr.left,
 					currMbr.top,
 					currMbr.right,
-					currMbr.bottom,
+					currMbr.bottom
 				);
 				itemsToCheck.forEach(currItem => {
 					if (
 						item.handleNesting(currItem) &&
-						(currItem.parent === "Board" ||
-							currItem.parent === item.getId())
+						(currItem.parent === 'Board' || currItem.parent === item.getId())
 					) {
 						this.nestingHighlighter.add(item, currItem);
 					} else {
@@ -735,11 +637,7 @@ export class Transformer extends Tool {
 			mbr.render(context);
 		}
 
-		this.alignmentHelper.renderSnapLines(
-			context,
-			this.snapLines,
-			this.board.camera.getScale(),
-		);
+		this.alignmentHelper.renderSnapLines(context, this.snapLines, this.board.camera.getScale());
 
 		if (!isLockedItems) {
 			const anchors = this.calcAnchors();
@@ -760,17 +658,13 @@ export class Transformer extends Tool {
 		initMbr: Mbr,
 		isWidth: boolean,
 		isHeight: boolean,
-		itemsToResize?: Item[],
+		itemsToResize?: Item[]
 	): TransformManyItems {
 		const { matrix, mbr } = resize;
 		const translation: TransformManyItems = {};
-		const items = itemsToResize
-			? itemsToResize
-			: this.selection.items.list();
+		const items = itemsToResize ? itemsToResize : this.selection.items.list();
 		this.board.items.getComments().forEach(comment => {
-			if (
-				items.some(item => item.getId() === comment.getItemToFollow())
-			) {
+			if (items.some(item => item.getId() === comment.getItemToFollow())) {
 				items.push(comment);
 			}
 		});
@@ -779,43 +673,40 @@ export class Transformer extends Tool {
 			let itemX = item.getMbr().left;
 			let itemY = item.getMbr().top;
 
-			if (item.itemType === "Drawing") {
+			if (item.itemType === 'Drawing') {
 				itemX = item.transformation.matrix.translateX;
 				itemY = item.transformation.matrix.translateY;
 			}
 
 			const deltaX = itemX - initMbr.left;
-			const translateX =
-				deltaX * matrix.scaleX - deltaX + matrix.translateX;
+			const translateX = deltaX * matrix.scaleX - deltaX + matrix.translateX;
 			const deltaY = itemY - initMbr.top;
-			const translateY =
-				deltaY * matrix.scaleY - deltaY + matrix.translateY;
+			const translateY = deltaY * matrix.scaleY - deltaY + matrix.translateY;
 
 			if (item instanceof RichText) {
 				if (isWidth) {
 					item.editor.setMaxWidth(
-						(item.getWidth() / item.transformation.getScale().x) *
-							matrix.scaleX,
+						(item.getWidth() / item.transformation.getScale().x) * matrix.scaleX
 					);
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: matrix.translateX, y: 0 },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
 					};
 				} else if (isHeight) {
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: 1, y: 1 },
 					};
 				} else {
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
@@ -824,29 +715,27 @@ export class Transformer extends Tool {
 			} else if (item instanceof AINode) {
 				if (isWidth) {
 					item.text.editor.setMaxWidth(
-						(item.text.getWidth() /
-							item.transformation.getScale().x) *
-							matrix.scaleX,
+						(item.text.getWidth() / item.transformation.getScale().x) * matrix.scaleX
 					);
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: matrix.translateX, y: 0 },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
 					};
 				} else if (isHeight) {
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: 1, y: 1 },
 					};
 				} else {
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleX },
@@ -855,28 +744,28 @@ export class Transformer extends Tool {
 			} else {
 				if (item instanceof Sticker && (isWidth || isHeight)) {
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: 1, y: 1 },
 					};
 				} else {
 					translation[item.getId()] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [item.getId()],
 						translate: { x: translateX, y: translateY },
 						scale: { x: matrix.scaleX, y: matrix.scaleY },
 					};
 
 					if (
-						item.itemType === "Frame" &&
+						item.itemType === 'Frame' &&
 						item.getCanChangeRatio() &&
 						!this.isShiftPressed &&
-						item.getFrameType() !== "Custom"
+						item.getFrameType() !== 'Custom'
 					) {
-						item.setFrameType("Custom");
+						item.setFrameType('Custom');
 					}
 				}
 			}
@@ -903,7 +792,7 @@ export class Transformer extends Tool {
 					conf.SELECTION_ANCHOR_RADIUS,
 					conf.SELECTION_COLOR,
 					conf.SELECTION_ANCHOR_COLOR,
-					conf.SELECTION_ANCHOR_WIDTH,
+					conf.SELECTION_ANCHOR_WIDTH
 				);
 				anchors.push(circle);
 			}

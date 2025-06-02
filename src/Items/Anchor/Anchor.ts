@@ -1,8 +1,8 @@
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Mbr, Point } from "..";
+import { DrawingContext } from 'Items/DrawingContext';
+import { Mbr, Point } from '..';
 
-export const ANCHOR_BORDER_COLOR = "rgb(147, 175, 246)";
-export const ANCHOR_BACKGROUND_COLOR = "rgb(255, 255, 255)";
+export const ANCHOR_BORDER_COLOR = 'rgb(147, 175, 246)';
+export const ANCHOR_BACKGROUND_COLOR = 'rgb(255, 255, 255)';
 export const ANCHOR_STROKE_WIDTH = 1;
 export const ANCHOR_RADIUS = 50;
 
@@ -18,7 +18,7 @@ export function renderAnchor(
 	borderColor: string,
 	backgroundColor: string,
 	strokeWidth: number,
-	scale: number,
+	scale: number
 ): void {
 	const sizeFactor = 0.8; // Adjust this factor to decrease the size
 	const adjustedWidth = width * sizeFactor;
@@ -33,10 +33,10 @@ export function renderAnchor(
 			center.y - adjustedWidth / scale / 2,
 			adjustedWidth / scale,
 			adjustedWidth / scale,
-			1 / scale,
+			1 / scale
 		);
 	}
-	if (backgroundColor !== "none") {
+	if (backgroundColor !== 'none') {
 		ctx.fillStyle = backgroundColor;
 		ctx.fill();
 	}
@@ -51,18 +51,10 @@ export function renderCircleAnchor(
 	borderColor: string,
 	backgroundColor: string,
 	strokeWidth: number,
-	scale: number,
+	scale: number
 ): void {
 	try {
-		renderAnchor(
-			ctx,
-			center,
-			radius,
-			borderColor,
-			backgroundColor,
-			strokeWidth,
-			scale,
-		);
+		renderAnchor(ctx, center, radius, borderColor, backgroundColor, strokeWidth, scale);
 	} catch {}
 }
 
@@ -77,7 +69,7 @@ export class Anchor extends Mbr {
 		public radius = 50,
 		public borderColor = ANCHOR_BORDER_COLOR,
 		public backgroundColor = ANCHOR_BACKGROUND_COLOR,
-		public strokeWidth = ANCHOR_STROKE_WIDTH,
+		public strokeWidth = ANCHOR_STROKE_WIDTH
 	) {
 		super(
 			x - radius,
@@ -86,31 +78,25 @@ export class Anchor extends Mbr {
 			y + radius,
 			borderColor,
 			backgroundColor,
-			strokeWidth,
+			strokeWidth
 		);
 	}
 
 	getDistanceTo(point: { x: number; y: number }): number {
-		return Math.sqrt(
-			Math.pow(point.x - this.x, 2) + Math.pow(point.y - this.y, 2),
-		);
+		return Math.sqrt(Math.pow(point.x - this.x, 2) + Math.pow(point.y - this.y, 2));
 	}
 
 	getCenter(): Point {
 		return new Point(this.x, this.y);
 	}
 
-	render(
-		context: DrawingContext,
-		type: "rect" | "circle" = "rect",
-		active = false,
-	): void {
+	render(context: DrawingContext, type: 'rect' | 'circle' = 'rect', active = false): void {
 		const center = this.getCenter();
 		const { ctx } = context;
 		const scale = context.getCameraScale();
 
 		switch (type) {
-			case "rect":
+			case 'rect':
 				try {
 					renderAnchor(
 						ctx,
@@ -119,11 +105,11 @@ export class Anchor extends Mbr {
 						this.borderColor,
 						this.backgroundColor,
 						this.strokeWidth,
-						scale,
+						scale
 					);
 				} catch {}
 				break;
-			case "circle":
+			case 'circle':
 				renderCircleAnchor(
 					ctx,
 					center,
@@ -131,7 +117,7 @@ export class Anchor extends Mbr {
 					this.borderColor,
 					active ? this.borderColor : this.backgroundColor,
 					this.strokeWidth,
-					scale,
+					scale
 				);
 				break;
 		}

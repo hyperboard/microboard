@@ -1,54 +1,34 @@
-import { v4 as uuidv4 } from "uuid";
-import { conf } from "./Settings";
-import { BoardCommand } from "./BoardCommand";
+import { BoardCommand } from 'BoardCommand';
 import {
 	BoardOps,
 	CreateItem,
 	CreateLockedGroupItem,
-	ItemsIndexRecord,
 	RemoveItem,
 	RemoveLockedGroup,
-} from "./BoardOperations";
-import { Camera } from "./Camera/";
-import { Events, ItemOperation, Operation } from "./Events";
-import { SyncBoardEvent } from "./Events/Events";
-import { itemFactories } from "./itemFactories";
-import {
-	Connector,
-	ConnectorData,
-	Frame,
-	FrameData,
-	Item,
-	ItemData,
-	Matrix,
-	Mbr,
-} from "./Items";
-import { ControlPointData } from "./Items/Connector/ControlPoint";
-// import { Group } from "./Items/Group";
-import { AINode } from "Board/Items/AINode/AINode";
-import { Subject } from "shared/Subject";
-import { Comment } from "./Items/Comment";
-import { DrawingContext } from "./Items/DrawingContext";
-import { Group } from "./Items/Group";
-import { ImageItem } from "./Items/Image";
-import { Keyboard } from "./Keyboard";
-import { parsersHTML } from "./parserHTML";
-import { Pointer } from "./Pointer";
-import { Presence } from "./Presence/Presence";
-import { Selection } from "./Selection";
-import { SpatialIndex } from "./SpatialIndex";
-import { Tools } from "./Tools";
-import { ItemsMap } from "./Validators";
-import { getDOMParser } from "./api/DOMParser";
-import {
-	CUSTOM_WEB_COMPONENTS_JS,
-	LOAD_LINKS_IMAGES_JS,
-	INDEX_CSS,
-} from "../staticResources";
-import { deleteMedia, updateMediaUsage } from "Board/Items/Image/ImageHelpers";
-import { enforceMode } from "./Events/MessageRouter/handleModeMessage";
+	ItemsIndexRecord,
+} from 'BoardOperations';
+import { Camera } from 'Camera';
+import { Events, Operation, ItemOperation } from 'Events';
+import { SyncBoardEvent } from 'Events/Events';
+import { itemFactories } from 'itemFactories';
+import { Item, ConnectorData, Frame, ItemData, FrameData, Connector, Matrix, Mbr } from 'Items';
+import { AINode } from 'Items/AINode';
+import { ControlPointData } from 'Items/Connector/ControlPoint';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Group } from 'Items/Group';
+import { ImageItem } from 'Items/Image';
+import { deleteMedia, updateMediaUsage } from 'Items/Image/ImageHelpers';
+import { Keyboard } from 'Keyboard';
+import { parsersHTML } from 'parserHTML';
+import { Pointer } from 'Pointer';
+import { Presence } from 'Presence/Presence';
+import { conf } from 'Settings';
+import { SpatialIndex } from 'SpatialIndex';
+import { Subject } from 'Subject';
+import { Tools } from 'Tools';
+import { ItemsMap } from 'Validators';
 
-export type InterfaceType = "edit" | "view" | "loading";
+export type InterfaceType = 'edit' | 'view' | 'loading';
 
 export class Board {
 	events: Events;
@@ -65,7 +45,7 @@ export class Board {
 	items = this.index.items;
 	readonly keyboard = new Keyboard();
 	private drawingContext: DrawingContext | null = null;
-	private interfaceType: InterfaceType = "loading";
+	private interfaceType: InterfaceType = 'loading';
 	readonly subject = new Subject<void>();
 	private name: string | undefined;
 	private isOpen = false;
@@ -76,9 +56,9 @@ export class Board {
 	});
 
 	constructor(
-		private boardId = "",
+		private boardId = '',
 		private accessKey?: string,
-		public saveEditingFile?: () => Promise<void>,
+		public saveEditingFile?: () => Promise<void>
 	) {
 		this.selection = new Selection(this, this.events);
 		this.presence = new Presence(this);
@@ -89,7 +69,7 @@ export class Board {
 	 * Disconnects from the connection and sets the board mode to "loading"
 	 */
 	disconnect(): void {
-		this.setInterfaceType("loading");
+		this.setInterfaceType('loading');
 		this.events.connection?.unsubscribe(this);
 		this.index = new SpatialIndex(this.camera, this.pointer);
 		this.items = this.index.items;
@@ -134,9 +114,9 @@ export class Board {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Board":
+			case 'Board':
 				return this.applyBoardOperation(op);
-			case "Events":
+			case 'Events':
 				return;
 			default:
 				return this.applyItemOperation(op);
@@ -145,14 +125,14 @@ export class Board {
 
 	private applyBoardOperation(op: BoardOps): void {
 		switch (op.method) {
-			case "moveToZIndex": {
+			case 'moveToZIndex': {
 				const item = this.index.getById(op.item);
 				if (!item) {
 					return;
 				}
 				return this.index.moveToZIndex(item, op.zIndex);
 			}
-			case "moveManyToZIndex": {
+			case 'moveManyToZIndex': {
 				for (const id in op.item) {
 					const item = this.items.getById(id);
 					if (!item) {
@@ -162,7 +142,7 @@ export class Board {
 
 				return this.index.moveManyToZIndex(op.item);
 			}
-			case "moveSecondBeforeFirst": {
+			case 'moveSecondBeforeFirst': {
 				const first = this.items.getById(op.item);
 				const second = this.items.getById(op.secondItem);
 				if (!first || !second) {
@@ -171,7 +151,7 @@ export class Board {
 				// @ts-expect-error incorrect type
 				return this.index.moveSecondBeforeFirst(first, second);
 			}
-			case "moveSecondAfterFirst":
+			case 'moveSecondAfterFirst':
 				const first = this.items.getById(op.item);
 				const second = this.items.getById(op.secondItem);
 				if (!first || !second) {
@@ -179,34 +159,34 @@ export class Board {
 				}
 				// @ts-expect-error incorrect type
 				return this.index.moveSecondAfterFirst(first, second);
-			case "bringToFront": {
+			case 'bringToFront': {
 				const items = op.item
 					.map(item => this.items.getById(item))
 					.filter((item): item is Item => item !== undefined);
 				// @ts-expect-error incorrect type
 				return this.index.bringManyToFront(items);
 			}
-			case "sendToBack": {
+			case 'sendToBack': {
 				const items = op.item
 					.map(item => this.items.getById(item))
 					.filter((item): item is Item => item !== undefined);
 				// @ts-expect-error incorrect type
 				return this.index.sendManyToBack(items);
 			}
-			case "add":
+			case 'add':
 				return this.applyAddItems(op);
-			case "addLockedGroup":
+			case 'addLockedGroup':
 				return this.applyAddLockedGroupOperation(op);
-			case "remove": {
+			case 'remove': {
 				return this.applyRemoveOperation(op);
 			}
-			case "removeLockedGroup": {
+			case 'removeLockedGroup': {
 				return this.applyRemoveLockedGroupOperation(op);
 			}
-			case "paste": {
+			case 'paste': {
 				return this.applyPasteOperation(op.itemsMap);
 			}
-			case "duplicate": {
+			case 'duplicate': {
 				return this.applyPasteOperation(op.itemsMap);
 			}
 		}
@@ -221,10 +201,8 @@ export class Board {
 			});
 			// todo think if should be removed
 			items.forEach(item => {
-				if (item.itemType === "Connector" && op.data[item.getId()]) {
-					const connectorData = op.data[
-						item.getId()
-					] as ConnectorData;
+				if (item.itemType === 'Connector' && op.data[item.getId()]) {
+					const connectorData = op.data[item.getId()] as ConnectorData;
 					item.applyStartPoint(connectorData.startPoint);
 					item.applyEndPoint(connectorData.endPoint);
 				}
@@ -241,9 +219,7 @@ export class Board {
 		const groupChildrenIds = item.getChildrenIds();
 		this.index.insert(item);
 
-		const lastChildrenId = this.index.getById(
-			groupChildrenIds[groupChildrenIds.length - 1],
-		);
+		const lastChildrenId = this.index.getById(groupChildrenIds[groupChildrenIds.length - 1]);
 		if (lastChildrenId) {
 			const zIndex = this.index.getZIndex(lastChildrenId) + 1;
 			this.index.moveToZIndex(item, zIndex);
@@ -262,7 +238,7 @@ export class Board {
 			this.index.remove(item);
 			this.selection.remove(item);
 
-			if (item.itemType === "Connector") {
+			if (item.itemType === 'Connector') {
 				item.clearObservedItems();
 			}
 			removedItems.push(item);
@@ -272,13 +248,13 @@ export class Board {
 	private applyRemoveLockedGroupOperation(op: RemoveLockedGroup): void {
 		const item = this.index.getById(op.item[0]);
 
-		if (!item || item.itemType !== "Group") {
+		if (!item || item.itemType !== 'Group') {
 			return;
 		}
 
 		item.getChildren().forEach(item => {
 			item.transformation.isLocked = false;
-			item.parent = "Board";
+			item.parent = 'Board';
 		});
 		item.transformation.isLocked = false;
 
@@ -296,10 +272,7 @@ export class Board {
 		});
 	}
 
-	private findItemAndApply(
-		item: string | string[],
-		apply: (item: Item) => void,
-	): void {
+	private findItemAndApply(item: string | string[], apply: (item: Item) => void): void {
 		if (Array.isArray(item)) {
 			for (const itemId of item) {
 				const found = this.items.findById(itemId);
@@ -329,8 +302,7 @@ export class Board {
 				.reduce((acc: Frame | undefined, frame) => {
 					if (
 						!acc ||
-						frame.getDistanceToPoint(itemCenter) >
-							acc.getDistanceToPoint(itemCenter)
+						frame.getDistanceToPoint(itemCenter) > acc.getDistanceToPoint(itemCenter)
 					) {
 						acc = frame;
 					}
@@ -359,7 +331,7 @@ export class Board {
 	}
 
 	parseHTML(
-		el: HTMLElement,
+		el: HTMLElement
 	): ItemData | { data: FrameData; childrenMap: { [id: string]: ItemData } } {
 		const parser = parsersHTML[el.tagName.toLowerCase()];
 		if (!parser) {
@@ -372,8 +344,8 @@ export class Board {
 	add<T extends Item>(item: T, timeStamp?: number): T {
 		const id = this.getNewItemId();
 		this.emit({
-			class: "Board",
-			method: "add",
+			class: 'Board',
+			method: 'add',
 			item: id,
 			data: item.serialize(),
 			timeStamp,
@@ -389,8 +361,8 @@ export class Board {
 	addLockedGroup(item: Group): Item {
 		const id = this.getNewItemId();
 		this.emit({
-			class: "Board",
-			method: "addLockedGroup",
+			class: 'Board',
+			method: 'addLockedGroup',
 			item: id,
 			data: item.serialize(),
 		});
@@ -410,23 +382,23 @@ export class Board {
 				.map(connector => connector.getId());
 		}
 		const shouldClearStorageUsage =
-			item.itemType === "Image" ||
-			(item.itemType === "Video" && item.getIsStorageUrl()) ||
-			(item.itemType === "Audio" && item.getIsStorageUrl());
+			item.itemType === 'Image' ||
+			(item.itemType === 'Video' && item.getIsStorageUrl()) ||
+			(item.itemType === 'Audio' && item.getIsStorageUrl());
 		if (shouldClearStorageUsage) {
 			deleteMedia([item.getStorageId()], this.boardId);
 		}
 		this.emit({
-			class: "Board",
-			method: "remove",
+			class: 'Board',
+			method: 'remove',
 			item: [item.getId(), ...connectors],
 		});
 	}
 
 	removeLockedGroup(item: Group): void {
 		this.emit({
-			class: "Board",
-			method: "removeLockedGroup",
+			class: 'Board',
+			method: 'removeLockedGroup',
 			item: [item.getId()],
 		});
 	}
@@ -445,16 +417,16 @@ export class Board {
 
 	moveManyToZIndex(items: ItemsIndexRecord): void {
 		this.emit({
-			class: "Board",
-			method: "moveManyToZIndex",
+			class: 'Board',
+			method: 'moveManyToZIndex',
 			item: items,
 		});
 	}
 
 	moveToZIndex(item: Item, zIndex: number): void {
 		this.emit({
-			class: "Board",
-			method: "moveToZIndex",
+			class: 'Board',
+			method: 'moveToZIndex',
 			item: item.getId(),
 			zIndex: zIndex,
 		});
@@ -462,8 +434,8 @@ export class Board {
 
 	moveSecondBeforeFirst(first: Item, second: Item): void {
 		this.emit({
-			class: "Board",
-			method: "moveSecondBeforeFirst",
+			class: 'Board',
+			method: 'moveSecondBeforeFirst',
 			item: first.getId(),
 			secondItem: second.getId(),
 		});
@@ -471,8 +443,8 @@ export class Board {
 
 	moveSecondAfterFirst(first: Item, second: Item): void {
 		this.emit({
-			class: "Board",
-			method: "moveSecondAfterFirst",
+			class: 'Board',
+			method: 'moveSecondAfterFirst',
 			item: first.getId(),
 			secondItem: second.getId(),
 		});
@@ -485,14 +457,11 @@ export class Board {
 		const boardItems = this.items.listAll();
 
 		this.emit({
-			class: "Board",
-			method: "bringToFront",
+			class: 'Board',
+			method: 'bringToFront',
 			item: items.map(item => item.getId()),
 			prevZIndex: Object.fromEntries(
-				boardItems.map(item => [
-					item.getId(),
-					boardItems.indexOf(item),
-				]),
+				boardItems.map(item => [item.getId(), boardItems.indexOf(item)])
 			),
 		});
 	}
@@ -503,14 +472,11 @@ export class Board {
 		}
 		const boardItems = this.items.listAll();
 		this.emit({
-			class: "Board",
-			method: "sendToBack",
+			class: 'Board',
+			method: 'sendToBack',
 			item: items.map(item => item.getId()),
 			prevZIndex: Object.fromEntries(
-				boardItems.map(item => [
-					item.getId(),
-					boardItems.indexOf(item),
-				]),
+				boardItems.map(item => [item.getId(), boardItems.indexOf(item)])
 			),
 		});
 	}
@@ -566,54 +532,44 @@ export class Board {
 					background-color: rgba(200, 200, 200, 0.2);
 				}
 			</style>
-		</head>`.replace(/\t|\n/g, "");
+		</head>`.replace(/\t|\n/g, '');
 		return `${head}${body}`;
 	}
 
 	/** @returns ids of added items */
 	deserializeHTMLAndEmit(stringedHTML: string): string[] {
-		const parser = getDOMParser();
-		const doc = parser.parseFromString(stringedHTML, "text/html");
-		const items = doc.body.querySelector("#items");
+		const parser = conf.getDOMParser();
+		const doc = parser.parseFromString(stringedHTML, 'text/html');
+		const items = doc.body.querySelector('#items');
 		if (items) {
 			const idsMap: Record<string, string> = {};
-			const addedConnectors: { item: Connector; data: ConnectorData }[] =
-				[];
-			const data = Array.from(items.children).map(el =>
-				this.parseHTML(el as HTMLElement),
-			);
+			const addedConnectors: { item: Connector; data: ConnectorData }[] = [];
+			const data = Array.from(items.children).map(el => this.parseHTML(el as HTMLElement));
 			for (const parsedData of data) {
-				if ("childrenMap" in parsedData) {
+				if ('childrenMap' in parsedData) {
 					// Frame
-					const addedChildren = Object.values(
-						parsedData.childrenMap,
-					).map((childData: ItemData & { id: string }) => {
-						const created = this.createItem(
-							this.getNewItemId(),
-							childData,
-						);
-						const added = this.add(created);
-						idsMap[childData.id] = added.getId();
-						if (added.itemType === "Connector") {
-							addedConnectors.push({
-								item: added,
-								data: childData,
-							});
+					const addedChildren = Object.values(parsedData.childrenMap).map(
+						(childData: ItemData & { id: string }) => {
+							const created = this.createItem(this.getNewItemId(), childData);
+							const added = this.add(created);
+							idsMap[childData.id] = added.getId();
+							if (added.itemType === 'Connector') {
+								addedConnectors.push({
+									item: added,
+									data: childData,
+								});
+							}
+							return added;
 						}
-						return added;
-					});
-					parsedData.data.children = addedChildren.map(item =>
-						item.getId(),
 					);
+					parsedData.data.children = addedChildren.map(item => item.getId());
 					const addedFrame = this.add(
-						this.createItem(this.getNewItemId(), parsedData.data),
+						this.createItem(this.getNewItemId(), parsedData.data)
 					);
 					idsMap[parsedData.data.id] = addedFrame.getId();
 				} else {
-					const added = this.add(
-						this.createItem(this.getNewItemId(), parsedData),
-					);
-					if (added.itemType === "Connector") {
+					const added = this.add(this.createItem(this.getNewItemId(), parsedData));
+					if (added.itemType === 'Connector') {
 						addedConnectors.push({
 							item: added,
 							data: parsedData,
@@ -625,13 +581,13 @@ export class Board {
 			addedConnectors.forEach(connector => {
 				const startData = {
 					...connector.data.startPoint,
-					...("itemId" in connector.data.startPoint
+					...('itemId' in connector.data.startPoint
 						? { itemId: idsMap[connector.data.startPoint.itemId] }
 						: {}),
 				};
 				const endData = {
 					...connector.data.endPoint,
-					...("itemId" in connector.data.endPoint
+					...('itemId' in connector.data.endPoint
 						? { itemId: idsMap[connector.data.endPoint.itemId] }
 						: {}),
 				};
@@ -646,32 +602,27 @@ export class Board {
 	}
 
 	deserializeHTML(stringedHTML: string): void {
-		const parser = getDOMParser();
-		const doc = parser.parseFromString(stringedHTML, "text/html");
-		const itemsDiv = doc.body.querySelector("#items");
+		const parser = conf.getDOMParser();
+		const doc = parser.parseFromString(stringedHTML, 'text/html');
+		const itemsDiv = doc.body.querySelector('#items');
 		if (!itemsDiv) {
 			return;
 		}
-		const items = Array.from(itemsDiv.children).map(el =>
-			this.parseHTML(el as HTMLElement),
-		);
+		const items = Array.from(itemsDiv.children).map(el => this.parseHTML(el as HTMLElement));
 
 		this.index.clear();
 		const createdConnectors: Record<
 			string,
 			{ item: Connector; itemData: ConnectorData & { id: string } }
 		> = {};
-		const createdFrames: Record<
-			string,
-			{ item: Frame; itemData: FrameData }
-		> = {};
+		const createdFrames: Record<string, { item: Frame; itemData: FrameData }> = {};
 
 		const addItem = (itemData: ItemData & { id: string }): Item => {
 			const item = this.createItem(itemData.id, itemData);
-			if (item.itemType === "Connector") {
+			if (item.itemType === 'Connector') {
 				createdConnectors[itemData.id] = { item, itemData };
 			}
-			if (item.itemType === "Frame") {
+			if (item.itemType === 'Frame') {
 				createdFrames[item.getId()] = { item, itemData };
 			}
 			this.index.insert(item);
@@ -679,11 +630,10 @@ export class Board {
 		};
 
 		for (const itemData of items) {
-			if ("childrenMap" in itemData) {
+			if ('childrenMap' in itemData) {
 				// Frame
-				Object.values(itemData.childrenMap).map(
-					(childData: ItemData & { id: string }) =>
-						addItem(childData),
+				Object.values(itemData.childrenMap).map((childData: ItemData & { id: string }) =>
+					addItem(childData)
 				);
 				addItem(itemData.data);
 			} else {
@@ -709,18 +659,15 @@ export class Board {
 			string,
 			{ item: Connector; itemData: ConnectorData & { id: string } }
 		> = {};
-		const createdFrames: Record<
-			string,
-			{ item: Frame; itemData: FrameData }
-		> = {};
+		const createdFrames: Record<string, { item: Frame; itemData: FrameData }> = {};
 
 		if (Array.isArray(items)) {
 			for (const itemData of items) {
 				const item = this.createItem(itemData.id, itemData);
-				if (item.itemType === "Connector") {
+				if (item.itemType === 'Connector') {
 					createdConnectors[itemData.id] = { item, itemData };
 				}
-				if (item.itemType === "Frame") {
+				if (item.itemType === 'Frame') {
 					createdFrames[item.getId()] = { item, itemData };
 				}
 				this.index.insert(item);
@@ -731,7 +678,7 @@ export class Board {
 			for (const key in items) {
 				const itemData = items[key];
 				const item = this.createItem(key, itemData);
-				if (item.itemType === "Connector") {
+				if (item.itemType === 'Connector') {
 					createdConnectors[key] = { item, itemData };
 				}
 				this.index.insert(item);
@@ -753,7 +700,7 @@ export class Board {
 
 	getCameraSnapshot(): Matrix | undefined {
 		try {
-			if (typeof localStorage === "undefined") {
+			if (typeof localStorage === 'undefined') {
 				throw new Error();
 			}
 
@@ -761,12 +708,12 @@ export class Board {
 			if (snap) {
 				const matrix = JSON.parse(snap);
 				if (
-					"translateX" in matrix &&
-					"translateY" in matrix &&
-					"scaleX" in matrix &&
-					"scaleY" in matrix &&
-					"shearX" in matrix &&
-					"shearY" in matrix
+					'translateX' in matrix &&
+					'translateY' in matrix &&
+					'scaleX' in matrix &&
+					'scaleY' in matrix &&
+					'shearX' in matrix &&
+					'shearY' in matrix
 				) {
 					return matrix as Matrix;
 				}
@@ -788,23 +735,23 @@ export class Board {
 
 	getSnapshotFromCache(): Promise<BoardSnapshot | undefined> {
 		return new Promise((resolve, reject) => {
-			const dbRequest = indexedDB.open("BoardDatabase", 2);
+			const dbRequest = indexedDB.open('BoardDatabase', 2);
 
 			dbRequest.onupgradeneeded = _event => {
 				const db = dbRequest.result;
-				if (!db.objectStoreNames.contains("snapshots")) {
-					db.createObjectStore("snapshots", { keyPath: "boardId" });
+				if (!db.objectStoreNames.contains('snapshots')) {
+					db.createObjectStore('snapshots', { keyPath: 'boardId' });
 				}
 			};
 
 			dbRequest.onsuccess = _event => {
 				const db = dbRequest.result;
-				if (!db.objectStoreNames.contains("snapshots")) {
+				if (!db.objectStoreNames.contains('snapshots')) {
 					resolve(undefined);
 					return;
 				}
-				const transaction = db.transaction("snapshots", "readonly");
-				const store = transaction.objectStore("snapshots");
+				const transaction = db.transaction('snapshots', 'readonly');
+				const store = transaction.objectStore('snapshots');
 				const getRequest = store.get(this.getBoardId());
 
 				getRequest.onsuccess = () => {
@@ -822,23 +769,21 @@ export class Board {
 		});
 	}
 
-	private async saveSnapshotToIndexedDB(
-		snapshot: BoardSnapshot,
-	): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 2);
+	private async saveSnapshotToIndexedDB(snapshot: BoardSnapshot): Promise<void> {
+		const dbRequest = indexedDB.open('BoardDatabase', 2);
 
 		dbRequest.onupgradeneeded = _event => {
 			const db = dbRequest.result;
-			if (!db.objectStoreNames.contains("snapshots")) {
-				db.createObjectStore("snapshots", { keyPath: "boardId" });
+			if (!db.objectStoreNames.contains('snapshots')) {
+				db.createObjectStore('snapshots', { keyPath: 'boardId' });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
 			dbRequest.onsuccess = _event => {
 				const db = dbRequest.result;
-				const transaction = db.transaction("snapshots", "readwrite");
-				const store = transaction.objectStore("snapshots");
+				const transaction = db.transaction('snapshots', 'readwrite');
+				const store = transaction.objectStore('snapshots');
 				store.put({ boardId: this.getBoardId(), data: snapshot });
 
 				transaction.oncomplete = () => resolve();
@@ -850,20 +795,20 @@ export class Board {
 	}
 
 	private async removeSnapshotFromIndexedDB(boardId: string): Promise<void> {
-		const dbRequest = indexedDB.open("BoardDatabase", 2);
+		const dbRequest = indexedDB.open('BoardDatabase', 2);
 
 		dbRequest.onupgradeneeded = _event => {
 			const db = dbRequest.result;
-			if (!db.objectStoreNames.contains("snapshots")) {
-				db.createObjectStore("snapshots", { keyPath: "boardId" });
+			if (!db.objectStoreNames.contains('snapshots')) {
+				db.createObjectStore('snapshots', { keyPath: 'boardId' });
 			}
 		};
 
 		return new Promise((resolve, reject) => {
 			dbRequest.onsuccess = _event => {
 				const db = dbRequest.result;
-				const transaction = db.transaction("snapshots", "readwrite");
-				const store = transaction.objectStore("snapshots");
+				const transaction = db.transaction('snapshots', 'readwrite');
+				const store = transaction.objectStore('snapshots');
 				store.delete(boardId);
 
 				transaction.oncomplete = () => resolve();
@@ -875,25 +820,17 @@ export class Board {
 	}
 
 	saveSnapshot(snapshot?: BoardSnapshot): void {
-		const actualSaveSnapshot = async (
-			snapshot: BoardSnapshot,
-		): Promise<void> => {
+		const actualSaveSnapshot = async (snapshot: BoardSnapshot): Promise<void> => {
 			try {
-				localStorage.setItem(
-					`lastVisit_${this.getBoardId()}`,
-					JSON.stringify(Date.now()),
-				);
+				localStorage.setItem(`lastVisit_${this.getBoardId()}`, JSON.stringify(Date.now()));
 				await this.saveSnapshotToIndexedDB(snapshot);
 			} catch {
-				const firstVisit = Array.from(
-					{ length: localStorage.length },
-					(_, i) => i,
-				).reduce(
+				const firstVisit = Array.from({ length: localStorage.length }, (_, i) => i).reduce(
 					(acc, i) => {
 						const key = localStorage.key(i);
-						if (key && key.startsWith("lastVisit")) {
-							const curr = +(localStorage.getItem(key) || "");
-							const currId = key.split("_")[1];
+						if (key && key.startsWith('lastVisit')) {
+							const curr = +(localStorage.getItem(key) || '');
+							const currId = key.split('_')[1];
 							if (!acc || curr < acc.minVal) {
 								return {
 									minVal: curr,
@@ -904,17 +841,14 @@ export class Board {
 						}
 						return acc;
 					},
-					undefined as { minVal: number; minId: string } | undefined,
+					undefined as { minVal: number; minId: string } | undefined
 				);
 				if (firstVisit && firstVisit.minId !== this.getBoardId()) {
 					localStorage.removeItem(`lastVisit_${firstVisit.minId}`);
 					localStorage.removeItem(`camera_${firstVisit.minId}`);
 					await this.removeSnapshotFromIndexedDB(firstVisit.minId);
 					await actualSaveSnapshot(snapshot);
-				} else if (
-					firstVisit &&
-					firstVisit.minId === this.getBoardId()
-				) {
+				} else if (firstVisit && firstVisit.minId === this.getBoardId()) {
 					return;
 				}
 			}
@@ -951,9 +885,9 @@ export class Board {
 		// Replace connector
 		function replaceConnectorItem(point: ControlPointData): void {
 			switch (point.pointType) {
-				case "Floating":
-				case "Fixed":
-				case "FixedConnector":
+				case 'Floating':
+				case 'Fixed':
+				case 'FixedConnector':
 					const newItemId = newItemIdMap[point.itemId];
 					if (newItemId) {
 						point.itemId = newItemId;
@@ -965,7 +899,7 @@ export class Board {
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
 
-			if (itemData.itemType === "Connector") {
+			if (itemData.itemType === 'Connector') {
 				replaceConnectorItem(itemData.startPoint);
 				replaceConnectorItem(itemData.endPoint);
 			}
@@ -1005,25 +939,25 @@ export class Board {
 
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
-			if (itemData.itemType === "Image") {
-				mediaStorageIds.push(itemData.storageLink.split("/").pop());
+			if (itemData.itemType === 'Image') {
+				mediaStorageIds.push(itemData.storageLink.split('/').pop());
 			} else if (
-				(itemData.itemType === "Video" && itemData.isStorageUrl) ||
-				(itemData.itemType === "Audio" && itemData.isStorageUrl)
+				(itemData.itemType === 'Video' && itemData.isStorageUrl) ||
+				(itemData.itemType === 'Audio' && itemData.isStorageUrl)
 			) {
-				mediaStorageIds.push(itemData.url.split("/").pop());
+				mediaStorageIds.push(itemData.url.split('/').pop());
 			}
 			const newItemId = newItemIdMap[itemId];
 			const { translateX, translateY } = itemData.transformation || {
 				translateX: 0,
 				translateY: 0,
 			};
-			if (itemData.itemType === "Connector") {
-				if (itemData.startPoint.pointType === "Board") {
+			if (itemData.itemType === 'Connector') {
+				if (itemData.startPoint.pointType === 'Board') {
 					itemData.startPoint.x += -minX + x;
 					itemData.startPoint.y += -minY + y;
 				}
-				if (itemData.endPoint.pointType === "Board") {
+				if (itemData.endPoint.pointType === 'Board') {
 					itemData.endPoint.x += -minX + x;
 					itemData.endPoint.y += -minY + y;
 				}
@@ -1031,11 +965,9 @@ export class Board {
 				itemData.transformation.translateX = translateX - minX + x;
 				itemData.transformation.translateY = translateY - minY + y;
 			}
-			if (itemData.itemType === "Frame") {
+			if (itemData.itemType === 'Frame') {
 				// handle new id for children
-				itemData.children = itemData.children.map(
-					childId => newItemIdMap[childId],
-				);
+				itemData.children = itemData.children.map(childId => newItemIdMap[childId]);
 			}
 			newMap[newItemId] = itemData;
 		}
@@ -1048,19 +980,19 @@ export class Board {
 		}
 
 		this.emit({
-			class: "Board",
-			method: "paste",
+			class: 'Board',
+			method: 'paste',
 			itemsMap: newMap,
 			select,
 		});
 
 		const items = Object.keys(newMap)
 			.map(id => this.items.getById(id))
-			.filter(item => typeof item !== "undefined");
+			.filter(item => typeof item !== 'undefined');
 		this.handleNesting(items);
 		this.selection.removeAll();
 		this.selection.add(items);
-		this.selection.setContext("EditUnderPointer");
+		this.selection.setContext('EditUnderPointer');
 
 		return;
 	}
@@ -1068,9 +1000,7 @@ export class Board {
 	removeVoidComments() {
 		const voidComments = this.items
 			.listAll()
-			.filter(
-				item => item instanceof Comment && !item.getThread().length,
-			);
+			.filter(item => item instanceof Comment && !item.getThread().length);
 		if (voidComments) {
 			for (const comment of voidComments) {
 				this.remove(comment);
@@ -1084,7 +1014,7 @@ export class Board {
 			return [];
 		}
 		const parentItem = this.items.findById(parentId);
-		if (!parentItem || parentItem.itemType !== "AINode") {
+		if (!parentItem || parentItem.itemType !== 'AINode') {
 			return [];
 		}
 		return [parentItem, ...this.getParentAINodes(parentItem)];
@@ -1208,9 +1138,9 @@ export class Board {
 
 		const replaceConnectorHeadItemId = (point: ControlPointData): void => {
 			switch (point.pointType) {
-				case "Floating":
-				case "Fixed":
-				case "FixedConnector":
+				case 'Floating':
+				case 'Fixed':
+				case 'FixedConnector':
 					const newItemId = newItemIdMap[point.itemId];
 					if (newItemId) {
 						point.itemId = newItemId;
@@ -1222,7 +1152,7 @@ export class Board {
 		for (const itemId in itemsMap) {
 			const itemData = itemsMap[itemId];
 
-			if (itemData.itemType === "Connector") {
+			if (itemData.itemType === 'Connector') {
 				replaceConnectorHeadItemId(itemData.startPoint);
 				replaceConnectorHeadItemId(itemData.endPoint);
 			}
@@ -1259,9 +1189,7 @@ export class Board {
 
 		const mbr = this.selection.getMbr();
 		const selectedItems = this.selection.items.list();
-		const isSelectedItemsMinWidth = selectedItems.some(
-			item => item.getMbr().getWidth() === 0,
-		);
+		const isSelectedItemsMinWidth = selectedItems.some(item => item.getMbr().getWidth() === 0);
 
 		const right = mbr ? mbr.right : 0;
 		const top = mbr ? mbr.top : 0;
@@ -1275,74 +1203,66 @@ export class Board {
 				translateX: 0,
 				translateY: 0,
 			};
-			if (itemData.itemType === "Connector") {
-				if (itemData.startPoint.pointType === "Board") {
+			if (itemData.itemType === 'Connector') {
+				if (itemData.startPoint.pointType === 'Board') {
 					itemData.startPoint.x += -minX + right + width;
 					itemData.startPoint.y += -minY + top;
 				}
-				if (itemData.endPoint.pointType === "Board") {
+				if (itemData.endPoint.pointType === 'Board') {
 					itemData.endPoint.x += -minX + right + width;
 					itemData.endPoint.y += -minY + top;
 				}
 			} else if (itemData.transformation) {
-				itemData.transformation.translateX =
-					translateX - minX + right + width;
+				itemData.transformation.translateX = translateX - minX + right + width;
 				itemData.transformation.translateY = translateY - minY + top;
 				itemData.transformation.isLocked = false;
 
-				if (itemData.itemType === "Drawing") {
+				if (itemData.itemType === 'Drawing') {
 					itemData.transformation.translateY = translateY;
 				}
 
 				if (height === 0 || isSelectedItemsMinWidth) {
-					itemData.transformation.translateX =
-						translateX + width * 10 + 10;
+					itemData.transformation.translateX = translateX + width * 10 + 10;
 				}
 			}
-			if (itemData.itemType === "Frame") {
+			if (itemData.itemType === 'Frame') {
 				// handle new id for children
-				itemData.children = itemData.children.map(
-					childId => newItemIdMap[childId],
-				);
+				itemData.children = itemData.children.map(childId => newItemIdMap[childId]);
 			}
 
 			newMap[newItemId] = itemData;
 		}
 
 		this.emit({
-			class: "Board",
-			method: "duplicate",
+			class: 'Board',
+			method: 'duplicate',
 			itemsMap: newMap,
 		});
 
 		const items = Object.keys(newMap)
 			.map(id => this.items.getById(id))
-			.filter(item => typeof item !== "undefined");
+			.filter(item => typeof item !== 'undefined');
 		this.handleNesting(items);
 		this.selection.removeAll();
 		this.selection.add(items);
-		this.selection.setContext("EditUnderPointer");
+		this.selection.setContext('EditUnderPointer');
 	}
 
 	applyPasteOperation(itemsMap: { [key: string]: ItemData }): void {
 		const items: Item[] = [];
 
-		const sortedItemsMap = Object.entries(itemsMap).sort(
-			([, dataA], [, dataB]) => {
-				return dataA.zIndex - dataB.zIndex;
-			},
-		);
+		const sortedItemsMap = Object.entries(itemsMap).sort(([, dataA], [, dataB]) => {
+			return dataA.zIndex - dataB.zIndex;
+		});
 
 		const pasteItem = (itemId: string, data: unknown): void => {
 			if (!data) {
 				throw new Error("Pasting itemId doesn't exist in itemsMap");
 			}
 			// @ts-expect-error data unknown
-			if (data.itemType === "Frame") {
+			if (data.itemType === 'Frame') {
 				// @ts-expect-error data unknown
-				data.text.placeholderText = `Frame ${
-					this.getMaxFrameSerial() + 1
-				}`;
+				data.text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
 			}
 
 			const item = this.createItem(itemId, data);
@@ -1351,7 +1271,7 @@ export class Board {
 		};
 
 		sortedItemsMap.map(([id, data]) => {
-			if (data.itemType === "Connector") {
+			if (data.itemType === 'Connector') {
 				return;
 			}
 
@@ -1359,7 +1279,7 @@ export class Board {
 		});
 
 		sortedItemsMap.map(([id, data]) => {
-			if (data.itemType === "Connector") {
+			if (data.itemType === 'Connector') {
 				return pasteItem(id, data);
 			}
 			return;
@@ -1376,7 +1296,7 @@ export class Board {
 			.map(frame =>
 				frame.text.getTextString().length === 0
 					? frame.text.placeholderText
-					: frame.text.getTextString(),
+					: frame.text.getTextString()
 			);
 		return existingNames
 			.map(name => name.match(/^Frame (\d+)$/))
@@ -1391,7 +1311,7 @@ export class Board {
 		if (!isMobile) {
 			this.tools.select();
 		}
-		if (interfaceType === "view") {
+		if (interfaceType === 'view') {
 			this.tools.navigate();
 		}
 		this.subject.publish();

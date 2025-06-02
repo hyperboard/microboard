@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Star = {
-	name: "Star",
+	name: 'Star',
 	textBounds: new Mbr(25, 40, 75, 75),
 	path: new Path(
 		[
@@ -16,7 +16,7 @@ export const Star = {
 			new Line(new Point(10, 95), new Point(25, 60)),
 			new Line(new Point(25, 60), new Point(0, 35)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(20, 35),

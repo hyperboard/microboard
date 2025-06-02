@@ -1,17 +1,14 @@
-import { Board } from "Board";
-import { Mbr, Point, Transformation } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { getOppositePoint } from "Board/Selection/Transformer/getOppositePoint";
-import { getResize } from "Board/Selection/Transformer/getResizeMatrix";
-import {
-	getResizeType,
-	ResizeType,
-} from "Board/Selection/Transformer/getResizeType";
-import { Tool } from "Board/Tools/Tool";
-import { conf } from "Board/Settings";
-import { exportBoardSnapshot, SnapshotInfo } from "./exportBoardSnapshot";
-import { getDecorationResizeType } from "./getDecorationResizeType";
-import { Path2DFactory } from "Board/api/Path2DFactory";
+import { Path2DFactory } from 'api/Path2DFactory';
+import { Board } from 'Board';
+import { Mbr, Transformation, Point } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { getOppositePoint } from 'Selection/Transformer/getOppositePoint';
+import { getResize } from 'Selection/Transformer/getResizeMatrix';
+import { ResizeType, getResizeType } from 'Selection/Transformer/getResizeType';
+import { conf } from 'Settings';
+import { Tool } from 'Tools/Tool';
+import { SnapshotInfo, exportBoardSnapshot } from './exportBoardSnapshot';
+import { getDecorationResizeType } from './getDecorationResizeType';
 
 const TOLERANCE = 30;
 
@@ -22,8 +19,8 @@ export class ExportSnapshot extends Tool {
 	isDragging = false;
 	resizeType: null | ResizeType = null;
 	oppositePoint: null | Point = null;
-	tempCanvas = document.getElementById("ExportLayer") as HTMLCanvasElement;
-	tempCtx = this.tempCanvas.getContext("2d")!;
+	tempCanvas = document.getElementById('ExportLayer') as HTMLCanvasElement;
+	tempCtx = this.tempCanvas.getContext('2d')!;
 	tempDrawingContext: DrawingContext;
 
 	constructor(private board: Board) {
@@ -34,15 +31,12 @@ export class ExportSnapshot extends Tool {
 			cameraCenter.y - conf.EXPORT_SELECTION_BOX_HEIGHT / 2,
 			cameraCenter.x + conf.EXPORT_SELECTION_BOX_WIDTH / 2,
 			cameraCenter.y + conf.EXPORT_SELECTION_BOX_HEIGHT / 2,
-			"transparent",
-			"transparent",
-			1,
+			'transparent',
+			'transparent',
+			1
 		);
 		this.board.selection.disable();
-		this.tempDrawingContext = new DrawingContext(
-			board.camera,
-			this.tempCtx,
-		);
+		this.tempDrawingContext = new DrawingContext(board.camera, this.tempCtx);
 	}
 
 	rectMoveTo(x: number, y: number): void {
@@ -57,7 +51,7 @@ export class ExportSnapshot extends Tool {
 				this.resizeType,
 				this.board.pointer.point,
 				this.mbr,
-				this.oppositePoint,
+				this.oppositePoint
 			);
 			if (resize.mbr.getWidth() > conf.EXPORT_MIN_WIDTH) {
 				this.mbr.left = resize.mbr.left;
@@ -78,50 +72,50 @@ export class ExportSnapshot extends Tool {
 		}
 		const { pointer } = this.board;
 		if (this.mbr?.isUnderPoint(pointer.point)) {
-			pointer.setCursor("pointer");
+			pointer.setCursor('pointer');
 		}
 		if (!this.mbr?.isUnderPoint(pointer.point)) {
 			if (this.isDown) {
-				pointer.setCursor("grabbing");
+				pointer.setCursor('grabbing');
 			}
-			pointer.setCursor("grab");
+			pointer.setCursor('grab');
 		}
 
 		const resizeType: ResizeType | undefined =
 			getDecorationResizeType(
 				this.board.pointer.point,
 				this.mbr,
-				TOLERANCE, // Increase this value to make the resize area larger
+				TOLERANCE // Increase this value to make the resize area larger
 			) ??
 			getResizeType(
 				this.board.pointer.point,
 				this.board.camera.getScale(),
 				this.mbr,
-				TOLERANCE, // Increase this value to make the resize area larger
+				TOLERANCE // Increase this value to make the resize area larger
 			);
 
 		if (
 			!resizeType ||
-			resizeType === "bottom" ||
-			resizeType === "left" ||
-			resizeType === "right" ||
-			resizeType === "top"
+			resizeType === 'bottom' ||
+			resizeType === 'left' ||
+			resizeType === 'right' ||
+			resizeType === 'top'
 		) {
 			return;
 		}
 
 		switch (resizeType) {
-			case "leftTop":
-				pointer.setCursor("nw-resize");
+			case 'leftTop':
+				pointer.setCursor('nw-resize');
 				break;
-			case "rightTop":
-				pointer.setCursor("ne-resize");
+			case 'rightTop':
+				pointer.setCursor('ne-resize');
 				break;
-			case "leftBottom":
-				pointer.setCursor("sw-resize");
+			case 'leftBottom':
+				pointer.setCursor('sw-resize');
 				break;
-			case "rightBottom":
-				pointer.setCursor("se-resize");
+			case 'rightBottom':
+				pointer.setCursor('se-resize');
 				break;
 		}
 	}
@@ -150,36 +144,29 @@ export class ExportSnapshot extends Tool {
 			getDecorationResizeType(
 				this.board.pointer.point,
 				this.mbr,
-				20, // Increase this value to make the resize area larger
+				20 // Increase this value to make the resize area larger
 			) ??
 			getResizeType(
 				this.board.pointer.point,
 				this.board.camera.getScale(),
 				this.mbr,
-				20, // Increase this value to make the resize area larger
+				20 // Increase this value to make the resize area larger
 			) ??
 			null;
 
 		if (
-			this.resizeType === "bottom" ||
-			this.resizeType === "left" ||
-			this.resizeType === "top" ||
-			this.resizeType === "right"
+			this.resizeType === 'bottom' ||
+			this.resizeType === 'left' ||
+			this.resizeType === 'top' ||
+			this.resizeType === 'right'
 		) {
 			this.resizeType = null;
 		}
 		this.isDown = true;
-		if (
-			this.mbr?.isUnderPoint(this.board.pointer.point) &&
-			!this.resizeType
-		) {
+		if (this.mbr?.isUnderPoint(this.board.pointer.point) && !this.resizeType) {
 			this.isDragging = true;
 		}
-		if (
-			this.mbr?.isUnderPoint(this.board.pointer.point) &&
-			this.resizeType &&
-			this.oppositePoint
-		) {
+		if (this.mbr?.isUnderPoint(this.board.pointer.point) && this.resizeType && this.oppositePoint) {
 			this.isDragging = false;
 		}
 		if (this.resizeType && this.mbr) {
@@ -198,7 +185,7 @@ export class ExportSnapshot extends Tool {
 
 	async takeSnapshot(): Promise<SnapshotInfo> {
 		if (!this.mbr) {
-			throw new Error("No selection");
+			throw new Error('No selection');
 		}
 		const res = await exportBoardSnapshot({
 			board: this.board,
@@ -217,7 +204,7 @@ export class ExportSnapshot extends Tool {
 		translateX: number,
 		translateY: number,
 		color: string,
-		lineWidth: number,
+		lineWidth: number
 	): void {
 		const ctx = context.ctx;
 		ctx.save();
@@ -244,49 +231,44 @@ export class ExportSnapshot extends Tool {
 		// this.tempCtx.drawImage(this.tempCanvas, 0, 0);
 		// this.tempCanvas.style.backdropFilter = "blur(5px)";
 
-		this.tempCtx.clearRect(
-			this.mbr.left,
-			this.mbr.top,
-			this.mbr.getWidth(),
-			this.mbr.getHeight(),
-		);
+		this.tempCtx.clearRect(this.mbr.left, this.mbr.top, this.mbr.getWidth(), this.mbr.getHeight());
 
 		if (conf.EXPORT_FRAME_DECORATIONS) {
-			const topLeft = conf.EXPORT_FRAME_DECORATIONS["top-left"];
+			const topLeft = conf.EXPORT_FRAME_DECORATIONS['top-left'];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topLeft.path,
 				this.mbr.left + (topLeft.offsetX ?? 0),
 				this.mbr.top + (topLeft.offsetY ?? 0),
 				topLeft.color,
-				topLeft.lineWidth,
+				topLeft.lineWidth
 			);
-			const topRight = conf.EXPORT_FRAME_DECORATIONS["top-right"];
+			const topRight = conf.EXPORT_FRAME_DECORATIONS['top-right'];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				topRight.path,
 				this.mbr.right + (topRight.offsetX ?? 0),
 				this.mbr.top + (topRight.offsetY ?? 0),
 				topRight.color,
-				topRight.lineWidth,
+				topRight.lineWidth
 			);
-			const bottomLeft = conf.EXPORT_FRAME_DECORATIONS["bottom-left"];
+			const bottomLeft = conf.EXPORT_FRAME_DECORATIONS['bottom-left'];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomLeft.path,
 				this.mbr.left + (bottomLeft.offsetX ?? 0),
 				this.mbr.bottom + (bottomLeft.offsetY ?? 0),
 				bottomLeft.color,
-				bottomLeft.lineWidth,
+				bottomLeft.lineWidth
 			);
-			const bottomRight = conf.EXPORT_FRAME_DECORATIONS["bottom-right"];
+			const bottomRight = conf.EXPORT_FRAME_DECORATIONS['bottom-right'];
 			this.renderDecoration(
 				this.tempDrawingContext,
 				bottomRight.path,
 				this.mbr.left + this.mbr.getWidth() - bottomRight.width,
 				this.mbr.top + this.mbr.getHeight() - bottomRight.width,
 				bottomRight.color,
-				bottomRight.lineWidth,
+				bottomRight.lineWidth
 			);
 		}
 	}

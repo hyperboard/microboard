@@ -1,16 +1,16 @@
-import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "./getResizeType";
+import { Point, Mbr } from 'Items';
+import { ResizeType } from './getResizeType';
 
 export function getResizedMbr(
 	resizeType: ResizeType,
 	pointer: Point,
 	mbr: Mbr,
-	opposite: Point,
+	opposite: Point
 ): Mbr {
 	const { left, top, right, bottom } = mbr;
 	const { x, y } = pointer;
 	switch (resizeType) {
-		case "leftTop": {
+		case 'leftTop': {
 			if (x < opposite.x && y < opposite.y) {
 				return new Mbr(x, y, opposite.x, opposite.y);
 			} else if (x > opposite.x && y > opposite.y) {
@@ -21,7 +21,7 @@ export function getResizedMbr(
 				return new Mbr(x, opposite.y, opposite.x, y);
 			}
 		}
-		case "rightBottom": {
+		case 'rightBottom': {
 			if (x > opposite.x && y > opposite.y) {
 				return new Mbr(opposite.x, opposite.y, x, y);
 			} else if (x < opposite.x && y < opposite.y) {
@@ -32,7 +32,7 @@ export function getResizedMbr(
 				return new Mbr(opposite.x, y, x, opposite.y);
 			}
 		}
-		case "rightTop": {
+		case 'rightTop': {
 			if (x > opposite.x && y < opposite.y) {
 				return new Mbr(opposite.x, y, x, opposite.y);
 			} else if (x < opposite.x && y > opposite.y) {
@@ -43,7 +43,7 @@ export function getResizedMbr(
 				return new Mbr(opposite.x, opposite.y, x, y);
 			}
 		}
-		case "leftBottom": {
+		case 'leftBottom': {
 			if (x < opposite.x && y > opposite.y) {
 				return new Mbr(x, opposite.y, opposite.x, y);
 			} else if (x > opposite.x && y < opposite.y) {
@@ -54,28 +54,28 @@ export function getResizedMbr(
 				return new Mbr(x, y, opposite.x, opposite.y);
 			}
 		}
-		case "top": {
+		case 'top': {
 			if (y < opposite.y) {
 				return new Mbr(left, y, right, opposite.y);
 			} else {
 				return new Mbr(left, opposite.y, right, y);
 			}
 		}
-		case "bottom": {
+		case 'bottom': {
 			if (y > opposite.y) {
 				return new Mbr(left, opposite.y, right, y);
 			} else {
 				return new Mbr(left, y, right, opposite.y);
 			}
 		}
-		case "right": {
+		case 'right': {
 			if (x > opposite.x) {
 				return new Mbr(opposite.x, top, x, bottom);
 			} else {
 				return new Mbr(x, top, opposite.x, bottom);
 			}
 		}
-		case "left": {
+		case 'left': {
 			if (x < opposite.x) {
 				return new Mbr(x, top, opposite.x, bottom);
 			} else {

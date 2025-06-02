@@ -1,12 +1,12 @@
-import { Mbr } from "../Mbr";
-import { DrawingContext } from "../DrawingContext";
-import { Geometry } from "../Geometry";
-import { Line } from "../Line";
-import { Point } from "../Point";
-import { BorderStyle, BorderWidth, Path, PathStylize } from "./Path";
-import { Matrix } from "../Transformation";
-import { GeometricNormal } from "../GeometricNormal";
-import { DocumentFactory } from "Board/api/DocumentFactory";
+import { Mbr } from '../Mbr';
+import { DrawingContext } from '../DrawingContext';
+import { Geometry } from '../Geometry';
+import { Line } from '../Line';
+import { Point } from '../Point';
+import { BorderStyle, BorderWidth, Path, PathStylize } from './Path';
+import { Matrix } from '../Transformation';
+import { GeometricNormal } from '../GeometricNormal';
+import { DocumentFactory } from 'api/DocumentFactory';
 
 export class Paths implements Geometry {
 	private x: number;
@@ -17,18 +17,13 @@ export class Paths implements Geometry {
 
 	constructor(
 		private paths: Path[],
-		private backgroundColor = "",
-		private borderColor = "black",
-		private borderStyle: BorderStyle = "solid",
+		private backgroundColor = '',
+		private borderColor = 'black',
+		private borderStyle: BorderStyle = 'solid',
 		private borderWidth: BorderWidth = 1,
 		private backgroundOpacity = 1,
 		private borderOpacity = 1,
-		private setterFilter: (
-			m: string,
-			v: any,
-			p: Path,
-			i: number,
-		) => boolean = () => true,
+		private setterFilter: (m: string, v: any, p: Path, i: number) => boolean = () => true
 	) {
 		this.setBackgroundColor(this.backgroundColor);
 		this.setBorderColor(this.borderColor);
@@ -59,7 +54,7 @@ export class Paths implements Geometry {
 	}
 
 	_setter<T extends keyof PathStylize>(p: any, method: T, v: any): void {
-		if (method === "setBorderStyle") {
+		if (method === 'setBorderStyle') {
 			const firstPathBorderStyle = this.paths[0].getBorderStyle();
 			for (const path of this.paths) {
 				if (path.getBorderStyle() !== firstPathBorderStyle) {
@@ -73,22 +68,22 @@ export class Paths implements Geometry {
 		this[p as keyof this] = v;
 	}
 	setBackgroundColor(color: string): void {
-		this._setter("backgroundColor", "setBackgroundColor", color);
+		this._setter('backgroundColor', 'setBackgroundColor', color);
 	}
 	setBorderColor(color: string): void {
-		this._setter("borderColor", "setBorderColor", color);
+		this._setter('borderColor', 'setBorderColor', color);
 	}
 	setBorderStyle(style: BorderStyle): void {
-		this._setter("borderStyle", "setBorderStyle", style);
+		this._setter('borderStyle', 'setBorderStyle', style);
 	}
 	setBorderWidth(width: BorderWidth): void {
-		this._setter("borderWidth", "setBorderWidth", width);
+		this._setter('borderWidth', 'setBorderWidth', width);
 	}
 	setBackgroundOpacity(opacity: number): void {
-		this._setter("backgroundOpacity", "setBackgroundOpacity", opacity);
+		this._setter('backgroundOpacity', 'setBackgroundOpacity', opacity);
 	}
 	setBorderOpacity(opacity: number): void {
-		this._setter("borderOpacity", "setBorderOpacity", opacity);
+		this._setter('borderOpacity', 'setBorderOpacity', opacity);
 	}
 
 	getBackgroundOpacity(): number {
@@ -101,9 +96,7 @@ export class Paths implements Geometry {
 	getIntersectionPoints(segment: Line): Point[] {
 		let intersections: Point[] = [];
 		for (const path of this.paths) {
-			intersections = intersections.concat(
-				path.getIntersectionPoints(segment),
-			);
+			intersections = intersections.concat(path.getIntersectionPoints(segment));
 		}
 		return intersections;
 	}
@@ -157,7 +150,7 @@ export class Paths implements Geometry {
 
 	getMbr(): Mbr {
 		if (this.paths.length === 0) {
-			throw new Error("The paths is empty.");
+			throw new Error('The paths is empty.');
 		}
 		const mbr = this.paths[0].getMbr();
 		for (let i = 1, len = this.paths.length; i < len; i++) {
@@ -190,17 +183,14 @@ export class Paths implements Geometry {
 		const candidates = this.paths.map(path => path.getNormal(point));
 		// with small distance
 		return candidates.reduce((prev, curr) =>
-			prev.getDistance() > curr.getDistance() ? curr : prev,
+			prev.getDistance() > curr.getDistance() ? curr : prev
 		);
 	}
 
 	updateMaxDimension(scale?: number) {
 		const mbr = this.getMbr();
 		if (scale) {
-			this.maxDimension = Math.max(
-				mbr.getWidth() * scale,
-				mbr.getHeight() * scale,
-			);
+			this.maxDimension = Math.max(mbr.getWidth() * scale, mbr.getHeight() * scale);
 		} else {
 			this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
 		}
@@ -251,7 +241,7 @@ export class Paths implements Geometry {
 			this.borderWidth,
 			this.backgroundOpacity,
 			this.borderOpacity,
-			this.setterFilter,
+			this.setterFilter
 		);
 	}
 
@@ -268,7 +258,7 @@ export class Paths implements Geometry {
 			this.borderWidth,
 			this.backgroundOpacity,
 			this.borderOpacity,
-			this.setterFilter,
+			this.setterFilter
 		);
 	}
 

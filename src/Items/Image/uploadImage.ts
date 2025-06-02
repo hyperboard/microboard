@@ -1,22 +1,16 @@
-import { Board } from "Board/Board";
-import { ImageItem } from "./Image";
-import { calculatePosition } from "./calculatePosition";
-import { prepareImage } from "./ImageHelpers";
-import * as PDFJS from "@bundled-es-modules/pdfjs-dist";
-import { RenderParameters } from "@bundled-es-modules/pdfjs-dist/types/src/display/api";
+import { Board } from 'Board';
+import { ImageItem } from './Image';
+import { calculatePosition } from './calculatePosition';
+import { prepareImage } from './ImageHelpers';
+import * as PDFJS from '@bundled-es-modules/pdfjs-dist';
+import { RenderParameters } from '@bundled-es-modules/pdfjs-dist/types/src/display/api';
 
-export function uploadImage(
-	file: File,
-	board: Board,
-	accessToken: string | null,
-) {
+export function uploadImage(file: File, board: Board, accessToken: string | null) {
 	const reader = new FileReader();
 
-	if (file.type === "application/pdf") {
+	if (file.type === 'application/pdf') {
 		reader.onload = event => {
-			const typedarray = new Uint8Array(
-				event.target?.result as ArrayBufferLike,
-			);
+			const typedarray = new Uint8Array(event.target?.result as ArrayBufferLike);
 			PDFJS.getDocument({ data: typedarray }).promise.then(
 				pdf => {
 					const maxPages = pdf.numPages;
@@ -29,8 +23,8 @@ export function uploadImage(
 								scale: 1,
 							});
 							pageHeight = viewport.height;
-							const canvas = document.createElement("canvas");
-							const context = canvas.getContext("2d");
+							const canvas = document.createElement('canvas');
+							const context = canvas.getContext('2d');
 							canvas.height = viewport.height;
 							canvas.width = viewport.width;
 
@@ -40,59 +34,38 @@ export function uploadImage(
 							};
 
 							if (renderContext.canvasContext) {
-								page.render(
-									renderContext as RenderParameters,
-								).promise.then(() => {
+								page.render(renderContext as RenderParameters).promise.then(() => {
 									pagesRendered++;
-									const base64String =
-										canvas.toDataURL("image/png");
-									prepareImage(
-										base64String,
-										accessToken,
-										board.getBoardId(),
-									)
+									const base64String = canvas.toDataURL('image/png');
+									prepareImage(base64String, accessToken, board.getBoardId())
 										.then(imageData => {
 											const image = new ImageItem(
 												imageData,
 												board,
 												board.events,
-												"",
+												''
 											);
 											const boardImage = board.add(image);
 											boardImage.doOnceOnLoad(() => {
-												const viewportMbr =
-													board.camera.getMbr();
+												const viewportMbr = board.camera.getMbr();
 												const scale = 1;
-												const viewportCenter =
-													viewportMbr.getCenter();
-												viewportCenter.y =
-													viewportMbr.top;
+												const viewportCenter = viewportMbr.getCenter();
+												viewportCenter.y = viewportMbr.top;
 												const offsetX =
 													((pagesRendered - 1) % 2) *
-														(scale *
-															image.getWidth()) -
-													(scale * image.getWidth()) /
-														2;
+														(scale * image.getWidth()) -
+													(scale * image.getWidth()) / 2;
 												const offsetY = viewportYOffset;
-												const centeredX =
-													viewportCenter.x + offsetX;
-												const centeredY =
-													viewportCenter.y + offsetY;
+												const centeredX = viewportCenter.x + offsetX;
+												const centeredY = viewportCenter.y + offsetY;
 												boardImage.transformation.translateTo(
 													centeredX,
-													centeredY,
+													centeredY
 												);
-												boardImage.transformation.scaleTo(
-													scale,
-													scale,
-												);
+												boardImage.transformation.scaleTo(scale, scale);
 
-												if (
-													pageNum % 2 === 0 ||
-													pageNum === maxPages
-												) {
-													viewportYOffset +=
-														pageHeight * scale;
+												if (pageNum % 2 === 0 || pageNum === maxPages) {
+													viewportYOffset += pageHeight * scale;
 												}
 
 												if (pagesRendered < maxPages) {
@@ -102,10 +75,7 @@ export function uploadImage(
 											canvas.remove();
 										})
 										.catch(er => {
-											console.error(
-												"Could not create pdf page:",
-												er,
-											);
+											console.error('Could not create pdf page:', er);
 											// TODO notification
 										});
 								});
@@ -117,7 +87,7 @@ export function uploadImage(
 				},
 				reason => {
 					console.error(reason);
-				},
+				}
 			);
 		};
 		reader.readAsArrayBuffer(file);
@@ -126,19 +96,13 @@ export function uploadImage(
 			const base64String = event.target?.result as string;
 			prepareImage(base64String, accessToken, board.getBoardId())
 				.then(imageData => {
-					const image = new ImageItem(
-						imageData,
-						board,
-						board.events,
-						"",
-					);
+					const image = new ImageItem(imageData, board, board.events, '');
 					image.doOnceBeforeOnLoad(() => {
-						const { scaleX, scaleY, translateX, translateY } =
-							calculatePosition(image, board);
-						image.transformation.applyTranslateTo(
-							translateX,
-							translateY,
+						const { scaleX, scaleY, translateX, translateY } = calculatePosition(
+							image,
+							board
 						);
+						image.transformation.applyTranslateTo(translateX, translateY);
 						image.transformation.applyScaleTo(scaleX, scaleY);
 						image.updateMbr();
 						const boardImage = board.add(image);
@@ -147,7 +111,7 @@ export function uploadImage(
 					});
 				})
 				.catch(er => {
-					console.error("Could not create image:", er);
+					console.error('Could not create image:', er);
 					// TODO notification
 				});
 		};

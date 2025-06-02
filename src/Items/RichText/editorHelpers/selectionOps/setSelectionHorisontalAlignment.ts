@@ -1,19 +1,19 @@
-import { HorisontalAlignment } from "Board/Items/Alignment";
-import { Editor, Transforms } from "slate";
-import { ReactEditor } from "slate-react";
+import { HorisontalAlignment } from 'Items/Alignment';
+import { Editor, Transforms } from 'slate';
+import { ReactEditor } from 'slate-react';
 
 export function setSelectionHorisontalAlignment(
 	editor: Editor,
 	horisontalAlignment: HorisontalAlignment,
-	selectionContext?: string,
+	selectionContext?: string
 ): void {
 	if (!editor) {
-		throw new Error("Editor is not initialized");
+		throw new Error('Editor is not initialized');
 	}
 
 	const { selection } = editor;
 	if (!selection) {
-		throw new Error("Nothing is selected");
+		throw new Error('Nothing is selected');
 	}
 
 	// const [match] = Editor.nodes(editor, {
@@ -27,7 +27,7 @@ export function setSelectionHorisontalAlignment(
 	// 	},
 	// });
 
-	if (selectionContext === "EditTextUnderPointer") {
+	if (selectionContext === 'EditTextUnderPointer') {
 		ReactEditor.focus(editor);
 	}
 

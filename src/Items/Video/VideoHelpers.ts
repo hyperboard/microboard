@@ -1,11 +1,8 @@
-import { fileTosha256 } from "shared/sha256";
-import {
-	catchErrorResponse,
-	prepareImage,
-} from "Board/Items/Image/ImageHelpers";
-import { VideoConstructorData, VideoItem } from "Board/Items/Video/Video";
-import { calculatePosition } from "Board/Items/Image/calculatePosition";
-import { Board } from "Board/Board";
+import { Board } from 'Board';
+import { calculatePosition } from 'Items/Image/calculatePosition';
+import { catchErrorResponse, prepareImage } from 'Items/Image/ImageHelpers';
+import { fileTosha256 } from 'sha256';
+import { VideoConstructorData, VideoItem } from './Video';
 
 // TODO move browser api
 // export const storageURL = `${window.location.origin}/api/v1/video`;
@@ -14,21 +11,21 @@ export const uploadVideoToStorage = async (
 	hash: string,
 	videoBlob: Blob,
 	accessToken: string | null,
-	boardId: string,
+	boardId: string
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fetch(`${window.location.origin}/api/v1/media/video/${boardId}`, {
-			method: "POST",
+			method: 'POST',
 			headers: {
-				"Content-Type": videoBlob.type,
-				"x-video-id": hash,
+				'Content-Type': videoBlob.type,
+				'x-video-id': hash,
 				Authorization: `Bearer ${accessToken}`,
 			},
 			body: videoBlob,
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response, "video");
+					return catchErrorResponse(response, 'video');
 				}
 				return response.json();
 			})
@@ -36,19 +33,17 @@ export const uploadVideoToStorage = async (
 				resolve(data.src);
 			})
 			.catch(error => {
-				console.error("Media storage error:", error);
+				console.error('Media storage error:', error);
 				// openModal(USER_PLAN_MODAL_ID);
 				reject(error);
 			});
 	});
 };
 
-export const getVideoMetadata = (
-	file: File,
-): Promise<{ width: number; height: number }> => {
+export const getVideoMetadata = (file: File): Promise<{ width: number; height: number }> => {
 	return new Promise((resolve, reject) => {
-		const video = document.createElement("video");
-		video.preload = "metadata";
+		const video = document.createElement('video');
+		video.preload = 'metadata';
 
 		video.onloadedmetadata = () => {
 			const { videoWidth: width, videoHeight: height } = video;
@@ -58,7 +53,7 @@ export const getVideoMetadata = (
 
 		video.onerror = () => {
 			URL.revokeObjectURL(video.src); // Cleanup
-			reject(new Error("Failed to load video metadata"));
+			reject(new Error('Failed to load video metadata'));
 		};
 
 		video.src = URL.createObjectURL(file);
@@ -67,16 +62,13 @@ export const getVideoMetadata = (
 
 export const createVideoItem = (
 	board: Board,
-	extension: "mp4" | "webm",
+	extension: 'mp4' | 'webm',
 	videoData: VideoConstructorData,
-	onLoadCb: (video: VideoItem) => void,
+	onLoadCb: (video: VideoItem) => void
 ) => {
-	const video = new VideoItem(videoData, board, board.events, "", extension);
+	const video = new VideoItem(videoData, board, board.events, '', extension);
 	video.doOnceBeforeOnLoad(() => {
-		const { scaleX, scaleY, translateX, translateY } = calculatePosition(
-			video,
-			board,
-		);
+		const { scaleX, scaleY, translateX, translateY } = calculatePosition(video, board);
 		video.transformation.applyTranslateTo(translateX, translateY);
 		video.transformation.applyScaleTo(scaleX, scaleY);
 		video.updateMbr();
@@ -90,31 +82,22 @@ export const createVideoItem = (
 export const prepareVideo = (
 	file: File,
 	accessToken: string | null,
-	boardId: string,
+	boardId: string
 ): Promise<{
 	url: string;
 	previewUrl: string;
 }> => {
 	return new Promise((resolve, reject) => {
-		const video = document.createElement("video");
+		const video = document.createElement('video');
 		video.src = URL.createObjectURL(file);
 		video.onloadedmetadata = () => {
 			video.onseeked = () => {
 				video.onseeked = null;
-				prepareImage(
-					captureFrame(0.1, video)?.src,
-					accessToken,
-					boardId,
-				)
+				prepareImage(captureFrame(0.1, video)?.src, accessToken, boardId)
 					.then(imageData => {
 						fileTosha256(file)
 							.then(hash => {
-								uploadVideoToStorage(
-									hash,
-									file,
-									accessToken,
-									boardId,
-								)
+								uploadVideoToStorage(hash, file, accessToken, boardId)
 									.then(url => {
 										resolve({
 											url,
@@ -124,43 +107,39 @@ export const prepareVideo = (
 									.catch(reject);
 							})
 							.catch(() => {
-								reject(new Error("Failed to generate hash"));
+								reject(new Error('Failed to generate hash'));
 							});
 					})
-					.catch(() =>
-						reject(new Error("Failed to load video preview")),
-					);
+					.catch(() => reject(new Error('Failed to load video preview')));
 			};
 			video.currentTime = 0.1;
 		};
 		video.onerror = () => {
-			reject(new Error("Failed to load video"));
+			reject(new Error('Failed to load video'));
 		};
 	});
 };
 
-export const getYouTubeVideoPreview = (
-	youtubeUrl: string,
-): Promise<HTMLImageElement> => {
+export const getYouTubeVideoPreview = (youtubeUrl: string): Promise<HTMLImageElement> => {
 	return new Promise((resolve, reject) => {
-		const preview = document.createElement("img");
+		const preview = document.createElement('img');
 		preview.src = youtubeUrl;
 		preview.onload = () => {
 			resolve(preview);
 		};
 		preview.onerror = () => {
-			reject(new Error("Failed to load preview"));
+			reject(new Error('Failed to load preview'));
 		};
 	});
 };
 
-export const getYouTubeThumbnail = (videoId: string, quality = "maxres") => {
+export const getYouTubeThumbnail = (videoId: string, quality = 'maxres') => {
 	const qualities = {
-		maxres: "maxresdefault", // 1280x720
-		sd: "sddefault", // 640x480
-		hq: "hqdefault", // 480x360
-		mq: "mqdefault", // 320x180
-		default: "default", // 120x90
+		maxres: 'maxresdefault', // 1280x720
+		sd: 'sddefault', // 640x480
+		hq: 'hqdefault', // 480x360
+		mq: 'mqdefault', // 320x180
+		default: 'default', // 120x90
 	};
 
 	return `https://img.youtube.com/vi/${videoId}/${qualities[quality]}.jpg`;
@@ -168,13 +147,13 @@ export const getYouTubeThumbnail = (videoId: string, quality = "maxres") => {
 
 export const captureFrame = (
 	frameTime: number,
-	video: HTMLVideoElement,
+	video: HTMLVideoElement
 ): HTMLImageElement | null => {
 	video.currentTime = frameTime;
-	const canvas = document.createElement("canvas");
+	const canvas = document.createElement('canvas');
 	canvas.width = video.videoWidth;
 	canvas.height = video.videoHeight;
-	const ctx = canvas.getContext("2d");
+	const ctx = canvas.getContext('2d');
 	if (ctx) {
 		ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 		const frame = new Image();

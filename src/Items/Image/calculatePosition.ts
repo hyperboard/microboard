@@ -1,11 +1,11 @@
-import type { Board } from "Board/Board";
-import type { ImageItem } from "./Image";
-import { VideoItem } from "Board/Items/Video/Video";
-import { tempStorage } from "App/SessionStorage";
+import type { Board } from 'Board';
+import type { ImageItem } from './Image';
+import { VideoItem } from 'Items/Video/Video';
+import { tempStorage } from 'SessionStorage';
 
 export function calculatePosition(
 	boardImage: ImageItem | VideoItem,
-	board: Board,
+	board: Board
 ): { scaleX: number; scaleY: number; translateX: number; translateY: number } {
 	const viewportMbr = board.camera.getMbr();
 

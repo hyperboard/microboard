@@ -1,25 +1,21 @@
-import {
-	RichTextOperation,
-	TransformationOperation,
-	ConnectorOperation,
-} from "Board/Items";
-import { Path } from "slate";
-import { Operation } from "./EventsOperations";
-import { type ShapeOperation } from "Board/Items/Shape";
-import { DrawingOperation } from "Board/Items/Drawing/DrawingOperation";
-import { BoardOps } from "Board/BoardOperations";
+import { RichTextOperation, TransformationOperation, ConnectorOperation } from 'Items';
+import { Path } from 'slate';
+import { Operation } from './EventsOperations';
+import { type ShapeOperation } from 'Items/Shape';
+import { DrawingOperation } from 'Items/Drawing/DrawingOperation';
+import { BoardOps } from 'BoardOperations';
 
 // TODO API Conditional to Map
 export function canNotBeMerged(op: Operation): boolean {
-	if (op.class === "Transformation") {
+	if (op.class === 'Transformation') {
 		return false;
 	}
-	if (op.class === "RichText" && op.method === "edit") {
+	if (op.class === 'RichText' && op.method === 'edit') {
 		return false;
 	}
 	if (
-		op.class === "Connector" &&
-		(op.method === "setStartPoint" || op.method === "setEndPoint")
+		op.class === 'Connector' &&
+		(op.method === 'setStartPoint' || op.method === 'setEndPoint')
 	) {
 		return false;
 	}
@@ -27,14 +23,13 @@ export function canNotBeMerged(op: Operation): boolean {
 }
 
 function areItemsTheSame(opA: Operation, opB: Operation): boolean {
-	if (opA.method === "transformMany" && opB.method === "transformMany") {
+	if (opA.method === 'transformMany' && opB.method === 'transformMany') {
 		const itemsA = Object.keys(opA.items);
 		const itemsB = Object.keys(opB.items);
 		const setA = new Set(itemsA);
 		const setB = new Set(itemsB);
 
-		const areArraysEqual =
-			setA.size === setB.size && [...setA].every(item => setB.has(item));
+		const areArraysEqual = setA.size === setB.size && [...setA].every(item => setB.has(item));
 		return areArraysEqual;
 	}
 	// @ts-expect-error incorrect type
@@ -55,16 +50,13 @@ function areItemsTheSame(opA: Operation, opB: Operation): boolean {
 	return true;
 }
 
-export function mergeOperations(
-	opA: Operation,
-	opB: Operation,
-): Operation | undefined {
+export function mergeOperations(opA: Operation, opB: Operation): Operation | undefined {
 	if (
-		opA.class === "Board" &&
-		opA.method === "add" &&
-		opA.data.itemType === "RichText" &&
-		opB.method === "edit" &&
-		opB.class === "RichText"
+		opA.class === 'Board' &&
+		opA.method === 'add' &&
+		opA.data.itemType === 'RichText' &&
+		opB.method === 'edit' &&
+		opB.class === 'RichText'
 	) {
 		return mergeRichTextCreation(opA, opB);
 	}
@@ -77,27 +69,27 @@ export function mergeOperations(
 		return;
 	}
 
-	if (opA.class === "Board" && opB.class === "Board") {
+	if (opA.class === 'Board' && opB.class === 'Board') {
 		return mergeBoardOperations(opA, opB);
 	}
 
-	if (opA.class === "Transformation" && opB.class === "Transformation") {
+	if (opA.class === 'Transformation' && opB.class === 'Transformation') {
 		return mergeTransformationOperations(opA, opB);
 	}
 
-	if (opA.class === "RichText" && opB.class === "RichText") {
+	if (opA.class === 'RichText' && opB.class === 'RichText') {
 		return mergeRichTextOperations(opA, opB);
 	}
 
-	if (opA.class === "Connector" && opB.class === "Connector") {
+	if (opA.class === 'Connector' && opB.class === 'Connector') {
 		return mergeConnectorOperations(opA, opB);
 	}
 
-	if (opA.class === "Shape" && opB.class === "Shape") {
+	if (opA.class === 'Shape' && opB.class === 'Shape') {
 		return mergeShapeOperations(opA, opB);
 	}
 
-	if (opA.class === "Drawing" && opB.class === "Drawing") {
+	if (opA.class === 'Drawing' && opB.class === 'Drawing') {
 		return mergeDrawingOperations(opA, opB);
 	}
 	return;
@@ -105,7 +97,7 @@ export function mergeOperations(
 
 function mergeTransformationOperations(
 	opA: TransformationOperation,
-	opB: TransformationOperation,
+	opB: TransformationOperation
 ): TransformationOperation | undefined {
 	if (!areItemsTheSame(opA, opB)) {
 		return;
@@ -115,48 +107,48 @@ function mergeTransformationOperations(
 	}
 	const method = opA.method;
 	switch (method) {
-		case "translateBy":
+		case 'translateBy':
 			if (opB.method !== method) {
 				return;
 			}
 			return {
-				class: "Transformation",
-				method: "translateBy",
+				class: 'Transformation',
+				method: 'translateBy',
 				item: opA.item,
 				x: opA.x + opB.x,
 				y: opA.y + opB.y,
 				timeStamp: opB.timeStamp,
 			};
-		case "scaleBy":
+		case 'scaleBy':
 			if (opB.method !== method) {
 				return;
 			}
 			return {
-				class: "Transformation",
-				method: "scaleBy",
+				class: 'Transformation',
+				method: 'scaleBy',
 				item: opA.item,
 				x: opA.x * opB.x,
 				y: opA.y * opB.y,
 				timeStamp: opB.timeStamp,
 			};
-		case "rotateBy":
+		case 'rotateBy':
 			if (opB.method !== method) {
 				return;
 			}
 			return {
-				class: "Transformation",
-				method: "rotateBy",
+				class: 'Transformation',
+				method: 'rotateBy',
 				item: opA.item,
 				degree: opA.degree + opB.degree,
 				timeStamp: opB.timeStamp,
 			};
-		case "scaleByTranslateBy":
+		case 'scaleByTranslateBy':
 			if (opB.method !== method) {
 				return;
 			}
 			return {
-				class: "Transformation",
-				method: "scaleByTranslateBy",
+				class: 'Transformation',
+				method: 'scaleByTranslateBy',
 				item: opA.item,
 				scale: {
 					x: opA.scale.x * opB.scale.x,
@@ -168,14 +160,14 @@ function mergeTransformationOperations(
 				},
 				timeStamp: opB.timeStamp,
 			};
-		case "transformMany":
+		case 'transformMany':
 			const items = mergeItems(opA, opB);
 			if (opB.method !== method) {
 				return;
 			}
 			return {
-				class: "Transformation",
-				method: "transformMany",
+				class: 'Transformation',
+				method: 'transformMany',
 				// @ts-expect-error wrong items type
 				items,
 				timeStamp: opB.timeStamp,
@@ -187,9 +179,9 @@ function mergeTransformationOperations(
 
 function mergeItems(
 	opA: TransformationOperation,
-	opB: TransformationOperation,
+	opB: TransformationOperation
 ): { [key: string]: TransformationOperation } | undefined {
-	if (opA.method === "transformMany" && opB.method === "transformMany") {
+	if (opA.method === 'transformMany' && opB.method === 'transformMany') {
 		interface Transformer {
 			x: number;
 			y: number;
@@ -197,29 +189,21 @@ function mergeItems(
 		const resolve = (
 			currScale: Transformer,
 			currTranslate: Transformer | undefined,
-			opB: TransformationOperation,
+			opB: TransformationOperation
 		): { scale: Transformer; translate: Transformer } | undefined => {
 			switch (opB.method) {
-				case "scaleByTranslateBy":
+				case 'scaleByTranslateBy':
 					return {
 						scale: {
-							x: currScale
-								? currScale.x * opB.scale.x
-								: opB.scale.x,
-							y: currScale
-								? currScale.y * opB.scale.y
-								: opB.scale.y,
+							x: currScale ? currScale.x * opB.scale.x : opB.scale.x,
+							y: currScale ? currScale.y * opB.scale.y : opB.scale.y,
 						},
 						translate: {
-							x: currTranslate
-								? currTranslate.x + opB.translate.x
-								: opB.translate.x,
-							y: currTranslate
-								? currTranslate.y + opB.translate.y
-								: opB.translate.y,
+							x: currTranslate ? currTranslate.x + opB.translate.x : opB.translate.x,
+							y: currTranslate ? currTranslate.y + opB.translate.y : opB.translate.y,
 						},
 					};
-				case "scaleBy":
+				case 'scaleBy':
 					return {
 						scale: {
 							x: currScale ? currScale.x * opB.x : opB.x,
@@ -230,7 +214,7 @@ function mergeItems(
 							y: currTranslate ? currTranslate.y : 0,
 						},
 					};
-				case "translateBy":
+				case 'translateBy':
 					return {
 						scale: {
 							x: currScale ? currScale.x : 1,
@@ -247,15 +231,15 @@ function mergeItems(
 		const items: { [key: string]: TransformationOperation } = {};
 		Object.keys(opB.items).forEach(itemId => {
 			if (opA.items[itemId] !== undefined) {
-				if (opA.items[itemId].method === "scaleByTranslateBy") {
+				if (opA.items[itemId].method === 'scaleByTranslateBy') {
 					const newTransformation = resolve(
 						opA.items[itemId].scale,
 						opA.items[itemId].translate,
-						opB.items[itemId],
+						opB.items[itemId]
 					);
 					items[itemId] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [itemId],
 						scale: newTransformation?.scale ?? { x: 0, y: 0 },
 						translate: newTransformation?.translate ?? {
@@ -263,31 +247,31 @@ function mergeItems(
 							y: 0,
 						},
 					};
-				} else if (opA.items[itemId].method === "scaleBy") {
+				} else if (opA.items[itemId].method === 'scaleBy') {
 					const newTransformation = resolve(
 						{ x: opA.items[itemId].x, y: opA.items[itemId].y },
 						undefined,
-						opB.items[itemId],
+						opB.items[itemId]
 					);
 					items[itemId] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [itemId],
 						// @ts-expect-error wrong type
 						scale: newTransformation.scale,
 						// @ts-expect-error wrong type
 						translate: newTransformation.translate,
 					};
-				} else if (opA.items[itemId].method === "translateBy") {
+				} else if (opA.items[itemId].method === 'translateBy') {
 					const newTransformation = resolve(
 						// @ts-expect-error wrong type
 						undefined,
 						{ x: opA.items[itemId].x, y: opA.items[itemId].y },
-						opB.items[itemId],
+						opB.items[itemId]
 					);
 					items[itemId] = {
-						class: "Transformation",
-						method: "scaleByTranslateBy",
+						class: 'Transformation',
+						method: 'scaleByTranslateBy',
 						item: [itemId],
 						// @ts-expect-error wrong type
 						scale: newTransformation.scale,
@@ -306,7 +290,7 @@ function mergeItems(
 
 function mergeRichTextOperations(
 	opA: RichTextOperation,
-	opB: RichTextOperation,
+	opB: RichTextOperation
 ): RichTextOperation | undefined {
 	if (!areItemsTheSame(opA, opB)) {
 		return;
@@ -316,7 +300,7 @@ function mergeRichTextOperations(
 		return;
 	}
 
-	if (opA.method !== "edit" || opB.method !== "edit") {
+	if (opA.method !== 'edit' || opB.method !== 'edit') {
 		return;
 	}
 	if (opA.ops.length !== 1 && opB.ops.length !== 1) {
@@ -327,10 +311,10 @@ function mergeRichTextOperations(
 	const B = opB.ops[0];
 
 	if (
-		A.type === "set_node" &&
-		B.type === "set_node" &&
-		"horisontalAlignment" in A.newProperties &&
-		"horisontalAlignment" in B.newProperties
+		A.type === 'set_node' &&
+		B.type === 'set_node' &&
+		'horisontalAlignment' in A.newProperties &&
+		'horisontalAlignment' in B.newProperties
 	) {
 		return {
 			...opB,
@@ -339,8 +323,8 @@ function mergeRichTextOperations(
 	}
 
 	if (
-		B.type === "insert_text" &&
-		A.type === "insert_text" &&
+		B.type === 'insert_text' &&
+		A.type === 'insert_text' &&
 		B.offset === A.offset + A.text.length &&
 		Path.equals(B.path, A.path)
 	) {
@@ -357,8 +341,8 @@ function mergeRichTextOperations(
 	}
 
 	if (
-		B.type === "remove_text" &&
-		A.type === "remove_text" &&
+		B.type === 'remove_text' &&
+		A.type === 'remove_text' &&
 		B.offset + B.text.length === A.offset &&
 		Path.equals(B.path, A.path)
 	) {
@@ -374,11 +358,7 @@ function mergeRichTextOperations(
 		};
 	}
 
-	if (
-		B.type === "split_node" &&
-		A.type === "split_node" &&
-		Path.isChild(A.path, B.path)
-	) {
+	if (B.type === 'split_node' && A.type === 'split_node' && Path.isChild(A.path, B.path)) {
 		return {
 			...opB,
 			ops: [...opA.ops, ...opB.ops],
@@ -386,8 +366,8 @@ function mergeRichTextOperations(
 	}
 
 	if (
-		B.type === "merge_node" &&
-		A.type === "merge_node" &&
+		B.type === 'merge_node' &&
+		A.type === 'merge_node' &&
 		A.path.length === 1 &&
 		A.path[0] === B.path[1]
 	) {
@@ -402,10 +382,10 @@ function mergeRichTextOperations(
 
 function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
 	if (
-		opA.method === "add" &&
-		opB.method === "edit" &&
+		opA.method === 'add' &&
+		opB.method === 'edit' &&
 		opA.item === opB.item[0] &&
-		opB.ops[0].type === "insert_text"
+		opB.ops[0].type === 'insert_text'
 	) {
 		const op = {
 			...opA,
@@ -417,9 +397,7 @@ function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
 						children: [
 							{
 								...opA.data.children[0].children[0],
-								text:
-									opA.data.children[0].children[0].text +
-									opB.ops[0].text,
+								text: opA.data.children[0].children[0].text + opB.ops[0].text,
 							},
 						],
 					},
@@ -433,15 +411,15 @@ function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
 
 function mergeConnectorOperations(
 	opA: ConnectorOperation,
-	opB: ConnectorOperation,
+	opB: ConnectorOperation
 ): ConnectorOperation | undefined {
 	if (!areItemsTheSame(opA, opB)) {
 		return;
 	}
 
 	if (
-		((opA.method === "setStartPoint" && opB.method === "setStartPoint") ||
-			(opA.method === "setEndPoint" && opB.method === "setEndPoint")) &&
+		((opA.method === 'setStartPoint' && opB.method === 'setStartPoint') ||
+			(opA.method === 'setEndPoint' && opB.method === 'setEndPoint')) &&
 		opA.timestamp &&
 		opB.timestamp &&
 		opA.timestamp !== opB.timestamp
@@ -449,13 +427,13 @@ function mergeConnectorOperations(
 		return;
 	}
 
-	if (opA.method === "setStartPoint" && opB.method === "setStartPoint") {
+	if (opA.method === 'setStartPoint' && opB.method === 'setStartPoint') {
 		return {
 			...opB,
 		};
 	}
 
-	if (opA.method === "setEndPoint" && opB.method === "setEndPoint") {
+	if (opA.method === 'setEndPoint' && opB.method === 'setEndPoint') {
 		return {
 			...opB,
 		};
@@ -466,12 +444,12 @@ function mergeConnectorOperations(
 
 function mergeShapeOperations(
 	opA: ShapeOperation,
-	opB: ShapeOperation,
+	opB: ShapeOperation
 ): ShapeOperation | undefined {
 	if (!areItemsTheSame(opA, opB)) {
 		return;
 	}
-	if (opA.method === "setBorderWidth" && opB.method === "setBorderWidth") {
+	if (opA.method === 'setBorderWidth' && opB.method === 'setBorderWidth') {
 		return {
 			...opB,
 			prevBorderWidth: opA.prevBorderWidth,
@@ -483,9 +461,9 @@ function mergeShapeOperations(
 
 function mergeDrawingOperations(
 	opA: DrawingOperation,
-	opB: DrawingOperation,
+	opB: DrawingOperation
 ): DrawingOperation | undefined {
-	if (opA.method === "setStrokeWidth" && opB.method === "setStrokeWidth") {
+	if (opA.method === 'setStrokeWidth' && opB.method === 'setStrokeWidth') {
 		return {
 			...opB,
 			prevWidth: opA.prevWidth,
@@ -494,25 +472,18 @@ function mergeDrawingOperations(
 	return;
 }
 
-function mergeBoardOperations(
-	opA: BoardOps,
-	opB: BoardOps,
-): BoardOps | undefined {
+function mergeBoardOperations(opA: BoardOps, opB: BoardOps): BoardOps | undefined {
 	if (
-		opA.method === "add" &&
-		opB.method === "add" &&
+		opA.method === 'add' &&
+		opB.method === 'add' &&
 		opA.timeStamp !== undefined &&
 		opA.timeStamp === opB.timeStamp
 	) {
 		const opBItems = Array.isArray(opB.item) ? opB.item : [opB.item];
 		const opAItems = Array.isArray(opA.item) ? opA.item : [opA.item];
 
-		const opBData = Array.isArray(opB.item)
-			? opB.data
-			: { [opB.item]: opB.data };
-		const opAData = Array.isArray(opA.item)
-			? opA.data
-			: { [opA.item]: opA.data };
+		const opBData = Array.isArray(opB.item) ? opB.data : { [opB.item]: opB.data };
+		const opAData = Array.isArray(opA.item) ? opA.data : { [opA.item]: opA.data };
 
 		return {
 			...opB,

@@ -1,10 +1,7 @@
-import type { Hotkey, HotkeyName } from "./types";
-import hotkeys from "features/hotkeys.json"; // Smell View from Board
+import type { Hotkey, HotkeyName } from './types';
+import hotkeys from 'hotkeys.json';
 
-export function isHotkeyPushed(
-	hotkey: HotkeyName,
-	event: KeyboardEvent,
-): boolean {
+export function isHotkeyPushed(hotkey: HotkeyName, event: KeyboardEvent): boolean {
 	if (!hotkeys[hotkey]) {
 		return false;
 	}
@@ -13,9 +10,7 @@ export function isHotkeyPushed(
 	const isShiftPushed = event.shiftKey;
 	const isAltPushed = event.altKey;
 	let isPushed =
-		(Array.isArray(key.button)
-			? key.button.includes(event.code)
-			: key.button === event.code) &&
+		(Array.isArray(key.button) ? key.button.includes(event.code) : key.button === event.code) &&
 		(!key.ctrl || isControlPushed) &&
 		(!key.alt || isAltPushed) &&
 		(!key.shift || isShiftPushed);

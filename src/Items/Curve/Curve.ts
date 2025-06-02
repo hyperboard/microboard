@@ -1,10 +1,10 @@
-import { Bezier, Projection } from "bezier-js";
-import { toFiniteNumber } from "Board/lib";
-import { Mbr } from "../Mbr";
-import { Line } from "../Line";
-import { Point } from "../Point";
-import { Matrix } from "../Transformation";
-import { GeometricNormal } from "../GeometricNormal";
+import { Bezier, Projection } from 'bezier-js';
+import { toFiniteNumber } from 'lib';
+import { Mbr } from '../Mbr';
+import { Line } from '../Line';
+import { Point } from '../Point';
+import { Matrix } from '../Transformation';
+import { GeometricNormal } from '../GeometricNormal';
 
 export class BaseCurve {
 	constructor(public curve: Bezier) {}
@@ -53,8 +53,7 @@ export class BaseCurve {
 
 	isEnclosedOrCrossedBy(bounds: Mbr): boolean {
 		const contains = this.getMbr().isEnclosedBy(bounds);
-		const intersects =
-			this.getIntersectionCurveRectangle(bounds).length > 0;
+		const intersects = this.getIntersectionCurveRectangle(bounds).length > 0;
 		return contains || intersects;
 	}
 
@@ -67,25 +66,21 @@ export class BaseCurve {
 		return new GeometricNormal(
 			point,
 			new Point(projection.x, projection.y),
-			new Point(normalPoint.x, normalPoint.y),
+			new Point(normalPoint.x, normalPoint.y)
 		);
 	}
 
-	getNewThatIntersectsPoints(
-		pointA: Point,
-		pointB: Point,
-		pointC: Point,
-	): CubicBezier {
+	getNewThatIntersectsPoints(pointA: Point, pointB: Point, pointC: Point): CubicBezier {
 		const [start, startControl, end, endControl] = Bezier.cubicFromPoints(
 			pointA,
 			pointB,
-			pointC,
+			pointC
 		).points;
 		return new CubicBezier(
 			new Point(start.x, start.y),
 			new Point(startControl.x, startControl.y),
 			new Point(end.x, end.y),
-			new Point(endControl.x, endControl.y),
+			new Point(endControl.x, endControl.y)
 		);
 	}
 
@@ -110,28 +105,22 @@ export class BaseCurve {
 }
 
 export class QuadraticBezier extends BaseCurve {
-	type = "QuadBezier" as const;
+	type = 'QuadBezier' as const;
 
-	static getCache(
-		start = new Point(),
-		control = new Point(),
-		end = new Point(),
-	): Bezier {
+	static getCache(start = new Point(), control = new Point(), end = new Point()): Bezier {
 		return new Bezier(start.x, start.y, control.x, control.y, end.x, end.y);
 	}
 
 	constructor(
 		public start = new Point(),
 		public control = new Point(),
-		public end = new Point(),
+		public end = new Point()
 	) {
 		super(QuadraticBezier.getCache(start, control, end));
 	}
 
 	protected updateCache(): void {
-		super.updateCache(
-			QuadraticBezier.getCache(this.start, this.control, this.end),
-		);
+		super.updateCache(QuadraticBezier.getCache(this.start, this.control, this.end));
 	}
 
 	getStartPoint(): Point {
@@ -158,27 +147,23 @@ export class QuadraticBezier extends BaseCurve {
 		return new QuadraticBezier(
 			this.start.getTransformed(matrix),
 			this.control.getTransformed(matrix),
-			this.end.getTransformed(matrix),
+			this.end.getTransformed(matrix)
 		);
 	}
 
 	copy(): QuadraticBezier {
-		return new QuadraticBezier(
-			this.start.copy(),
-			this.control.copy(),
-			this.end.copy(),
-		);
+		return new QuadraticBezier(this.start.copy(), this.control.copy(), this.end.copy());
 	}
 }
 
 export class CubicBezier extends BaseCurve {
-	type = "CubicBezier" as const;
+	type = 'CubicBezier' as const;
 
 	static getCache(
 		start = new Point(),
 		startControl = new Point(),
 		end = new Point(),
-		endControl = new Point(),
+		endControl = new Point()
 	): Bezier {
 		return new Bezier(
 			start.x,
@@ -188,7 +173,7 @@ export class CubicBezier extends BaseCurve {
 			endControl.x,
 			endControl.y,
 			end.x,
-			end.y,
+			end.y
 		);
 	}
 
@@ -196,19 +181,14 @@ export class CubicBezier extends BaseCurve {
 		public start = new Point(),
 		public startControl = new Point(),
 		public end = new Point(),
-		public endControl = new Point(),
+		public endControl = new Point()
 	) {
 		super(CubicBezier.getCache(start, startControl, end, endControl));
 	}
 
 	protected updateCache(): void {
 		super.updateCache(
-			CubicBezier.getCache(
-				this.start,
-				this.startControl,
-				this.end,
-				this.endControl,
-			),
+			CubicBezier.getCache(this.start, this.startControl, this.end, this.endControl)
 		);
 	}
 
@@ -222,14 +202,7 @@ export class CubicBezier extends BaseCurve {
 
 	render(ctx: Path2D | CanvasRenderingContext2D): void {
 		const { startControl, end, endControl } = this;
-		ctx.bezierCurveTo(
-			startControl.x,
-			startControl.y,
-			endControl.x,
-			endControl.y,
-			end.x,
-			end.y,
-		);
+		ctx.bezierCurveTo(startControl.x, startControl.y, endControl.x, endControl.y, end.x, end.y);
 	}
 
 	transform(matrix: Matrix): void {
@@ -245,7 +218,7 @@ export class CubicBezier extends BaseCurve {
 			this.start.getTransformed(matrix),
 			this.startControl.getTransformed(matrix),
 			this.end.getTransformed(matrix),
-			this.endControl.getTransformed(matrix),
+			this.endControl.getTransformed(matrix)
 		);
 	}
 
@@ -254,7 +227,7 @@ export class CubicBezier extends BaseCurve {
 			this.start.copy(),
 			this.startControl.copy(),
 			this.end.copy(),
-			this.endControl.copy(),
+			this.endControl.copy()
 		);
 	}
 
@@ -267,13 +240,7 @@ export class CubicBezier extends BaseCurve {
 	}
 }
 
-function findTForLength(
-	curve: Bezier,
-	target: number,
-	error = 0.05,
-	start = 0,
-	end = 1,
-): number {
+function findTForLength(curve: Bezier, target: number, error = 0.05, start = 0, end = 1): number {
 	// eslint-disable-next-line id-length
 	let t = (start + end) / 2;
 	let iterations = 0;
@@ -294,7 +261,7 @@ function findTForLength(
 		iterations++;
 
 		if (iterations > 100) {
-			console.warn("findTForLength: max iterations reached");
+			console.warn('findTForLength: max iterations reached');
 			break;
 		}
 	}

@@ -1,11 +1,10 @@
-import { Board } from "Board/Board";
-import { Line, Mbr } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Sticker } from "Board/Items/Sticker";
-import { conf } from "Board/Settings";
-import { BoardTool } from "../BoardTool";
-import { CursorName } from "Board/Pointer/Cursor";
-import { tempStorage } from "App/SessionStorage";
+import { Board } from 'Board';
+import { Line, Mbr } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Sticker } from 'Items/Sticker';
+import { CursorName } from 'Pointer/Cursor';
+import { conf } from 'Settings';
+import { BoardTool } from 'Tools/BoardTool';
 
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
@@ -18,11 +17,7 @@ export class AddSticker extends BoardTool {
 	constructor(board: Board) {
 		super(board);
 		const lastSticker = this.getLastSticker();
-		this.sticker = new Sticker(
-			board,
-			"",
-			lastSticker?.getBackgroundColor(),
-		);
+		this.sticker = new Sticker(board, '', lastSticker?.getBackgroundColor());
 
 		this.setCursor(this.sticker.getBackgroundColor());
 	}
@@ -33,19 +28,17 @@ export class AddSticker extends BoardTool {
 				? conf.STICKER_COLOR_NAMES[conf.STICKER_COLORS.indexOf(color)]
 				: undefined;
 			this.board.pointer.setCursor(
-				colorName
-					? (`sticker-${colorName}` as CursorName)
-					: "crosshair",
+				colorName ? (`sticker-${colorName}` as CursorName) : 'crosshair'
 			);
 		} else {
-			this.board.pointer.setCursor("crosshair");
+			this.board.pointer.setCursor('crosshair');
 		}
 	}
 
 	setBackgroundColor(color: string): void {
 		this.sticker.apply({
-			class: "Sticker",
-			method: "setBackgroundColor",
+			class: 'Sticker',
+			method: 'setBackgroundColor',
 			item: [this.sticker.getId()],
 			backgroundColor: color,
 		});
@@ -69,10 +62,7 @@ export class AddSticker extends BoardTool {
 
 	pointerMoveBy(_x: number, _y: number): boolean {
 		if (this.line) {
-			this.line = new Line(
-				this.line.start.copy(),
-				this.board.pointer.point.copy(),
-			);
+			this.line = new Line(this.line.start.copy(), this.board.pointer.point.copy());
 			this.sticker.applyDiagonal(this.line);
 			this.bounds = this.sticker.getMbr();
 			this.bounds.borderColor = conf.SELECTION_COLOR;
@@ -88,16 +78,13 @@ export class AddSticker extends BoardTool {
 			try {
 				AddSticker.defaultWidth = +lastSticker.getWidth();
 			} catch (err) {
-				console.error("Failed to set AddSticker.defaultWidth", err);
+				console.error('Failed to set AddSticker.defaultWidth', err);
 			}
 		}
 		const width = this.bounds.getWidth();
 		const height = this.bounds.getHeight();
 		if (width < AddSticker.MIN_SIZE && height < AddSticker.MIN_SIZE) {
-			this.sticker.applyTransformToCenter(
-				this.board.pointer.point.copy(),
-				AddSticker.defaultWidth,
-			);
+			this.sticker.applyTransformToCenter(this.board.pointer.point.copy(), AddSticker.defaultWidth);
 		}
 		const sticker = this.board.add(this.sticker);
 		this.board.selection.removeAll();
@@ -116,7 +103,7 @@ export class AddSticker extends BoardTool {
 	}
 
 	keyDown(key: string): boolean {
-		if (key === "Escape") {
+		if (key === 'Escape') {
 			this.board.tools.select();
 			return true;
 		}

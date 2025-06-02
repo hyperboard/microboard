@@ -1,27 +1,24 @@
-import { Events, Operation } from "Board/Events";
-import { Subject } from "shared/Subject";
-import { DrawingContext } from "../DrawingContext";
-import { Line } from "../Line";
-import { Mbr } from "../Mbr";
-import { Path, Paths } from "../Path";
-import { Point } from "../Point";
-import { Transformation } from "../Transformation";
-import { TransformationData } from "../Transformation/TransformationData";
-import { Placeholder } from "../Placeholder";
-import { Board } from "Board/Board";
-import { LinkTo } from "../LinkTo/LinkTo";
+import { Events, Operation } from 'Events';
+import { Subject } from 'Subject';
+import { DrawingContext } from '../DrawingContext';
+import { Line } from '../Line';
+import { Mbr } from '../Mbr';
+import { Path, Paths } from '../Path';
+import { Point } from '../Point';
+import { Transformation } from '../Transformation';
+import { TransformationData } from '../Transformation/TransformationData';
+import { Placeholder } from '../Placeholder';
+import { Board } from 'Board';
+import { LinkTo } from '../LinkTo/LinkTo';
 // import { storageURL } from "./ImageHelpers";
-import {
-	scaleElementBy,
-	translateElementBy,
-} from "Board/HTMLRender/HTMLRender";
-import { ImageOperation } from "./ImageOperation";
-import { ImageCommand } from "./ImageCommand";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { conf } from "Board/Settings";
+import { scaleElementBy, translateElementBy } from 'HTMLRender/HTMLRender';
+import { ImageOperation } from './ImageOperation';
+import { ImageCommand } from './ImageCommand';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { conf } from 'Settings';
 
 export interface ImageItemData {
-	itemType: "Image";
+	itemType: 'Image';
 	storageLink: string;
 	imageDimension: Dimension;
 	transformation: TransformationData;
@@ -34,14 +31,9 @@ export interface Dimension {
 }
 
 // smell have to redo without document
-export function getPlaceholderImage(
-	board: Board,
-	imageDimension?: Dimension,
-): HTMLImageElement {
-	const placeholderCanvas = conf.documentFactory.createElement("canvas");
-	const placeholderContext = placeholderCanvas.getContext(
-		"2d",
-	) as CanvasRenderingContext2D; // this does not fail
+export function getPlaceholderImage(board: Board, imageDimension?: Dimension): HTMLImageElement {
+	const placeholderCanvas = conf.documentFactory.createElement('canvas');
+	const placeholderContext = placeholderCanvas.getContext('2d') as CanvasRenderingContext2D; // this does not fail
 
 	const context = new DrawingContext(board.camera, placeholderContext);
 
@@ -51,10 +43,7 @@ export function getPlaceholderImage(
 		placeholderCanvas.width = imageDimension.width;
 		placeholderCanvas.height = imageDimension.height;
 
-		placeholder.transformation.scaleTo(
-			imageDimension.width / 100,
-			imageDimension.height / 100,
-		);
+		placeholder.transformation.scaleTo(imageDimension.width / 100, imageDimension.height / 100);
 	} else {
 		placeholderCanvas.width = 250;
 		placeholderCanvas.height = 50;
@@ -75,8 +64,8 @@ export interface ImageConstructorData {
 }
 
 export class ImageItem extends Mbr {
-	readonly itemType = "Image";
-	parent = "Board";
+	readonly itemType = 'Image';
+	parent = 'Board';
 	image: HTMLImageElement;
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
@@ -92,7 +81,7 @@ export class ImageItem extends Mbr {
 		{ base64, storageLink, imageDimension }: ImageConstructorData,
 		board: Board,
 		private events?: Events,
-		private id = "",
+		private id = ''
 	) {
 		super();
 		this.linkTo = new LinkTo(this.id, events);
@@ -101,10 +90,10 @@ export class ImageItem extends Mbr {
 		this.imageDimension = imageDimension;
 		this.transformation = new Transformation(id, events);
 		this.image = new Image();
-		this.image.crossOrigin = "anonymous";
+		this.image.crossOrigin = 'anonymous';
 		this.image.onload = this.onLoad;
 		this.image.onerror = this.onError;
-		if (typeof base64 === "string") {
+		if (typeof base64 === 'string') {
 			this.image.src = base64;
 		}
 		this.linkTo.subject.subscribe(() => {
@@ -126,12 +115,12 @@ export class ImageItem extends Mbr {
 	}
 
 	getStorageId() {
-		return this.storageLink.split("/").pop();
+		return this.storageLink.split('/').pop();
 	}
 
 	handleError = (): void => {
 		// Provide handling logic for errors
-		console.error("Invalid dataUrl or image failed to load.");
+		console.error('Invalid dataUrl or image failed to load.');
 		this.image = getPlaceholderImage(this.board);
 		this.updateMbr();
 		this.subject.publish(this);
@@ -158,8 +147,7 @@ export class ImageItem extends Mbr {
 	};
 
 	updateMbr(): void {
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		this.left = translateX;
 		this.top = translateY;
 		this.right = this.left + this.image.width * scaleX;
@@ -187,7 +175,7 @@ export class ImageItem extends Mbr {
 
 	serialize(): ImageItemData {
 		return {
-			itemType: "Image",
+			itemType: 'Image',
 			storageLink: this.storageLink,
 			imageDimension: this.imageDimension,
 			transformation: this.transformation.serialize(),
@@ -198,10 +186,8 @@ export class ImageItem extends Mbr {
 	private setCoordinates(): void {
 		this.left = this.transformation.matrix.translateX;
 		this.top = this.transformation.matrix.translateY;
-		this.right =
-			this.left + this.image.width * this.transformation.matrix.scaleX;
-		this.bottom =
-			this.top + this.image.height * this.transformation.matrix.scaleY;
+		this.right = this.left + this.image.width * this.transformation.matrix.scaleX;
+		this.bottom = this.top + this.image.height * this.transformation.matrix.scaleY;
 		this.subject.publish(this);
 	}
 
@@ -236,7 +222,7 @@ export class ImageItem extends Mbr {
 
 		this.image = getPlaceholderImage(
 			this.board,
-			data.imageDimension,
+			data.imageDimension
 			// "The image is loading from the storage",
 		);
 
@@ -268,13 +254,13 @@ export class ImageItem extends Mbr {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
-			case "Image":
+			case 'Image':
 				// this.deserialize(op.data);
 				if (op.data.base64) {
 					this.image.src = op.data.base64;
@@ -297,19 +283,13 @@ export class ImageItem extends Mbr {
 		ctx.restore();
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("image-item");
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const div = documentFactory.createElement('image-item');
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 		// const canvas = documentFactory.createElement('canvas');
@@ -324,20 +304,19 @@ export class ImageItem extends Mbr {
 		div.id = this.getId();
 		div.style.width = `${this.imageDimension.width}px`;
 		div.style.height = `${this.imageDimension.height}px`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
-		div.style.backgroundSize = "cover";
+		div.style.position = 'absolute';
+		div.style.backgroundSize = 'cover';
 
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
-				(this.getMbr().getWidth() - parseInt(linkElement.style.width)) /
-					scaleX,
-				0,
+				(this.getMbr().getWidth() - parseInt(linkElement.style.width)) / scaleX,
+				0
 			);
 			div.appendChild(linkElement);
 		}
@@ -358,7 +337,7 @@ export class ImageItem extends Mbr {
 				new Line(rightBottom, leftBottom),
 				new Line(leftBottom, leftTop),
 			],
-			true,
+			true
 		);
 	}
 
@@ -387,10 +366,10 @@ export class ImageItem extends Mbr {
 	}
 
 	download() {
-		const linkElem = document.createElement("a");
+		const linkElem = document.createElement('a');
 
 		linkElem.href = this.storageLink;
-		linkElem.setAttribute("download", "");
+		linkElem.setAttribute('download', '');
 		linkElem.click();
 	}
 }

@@ -1,21 +1,39 @@
-import { Settings, conf } from "Board/Settings";
-import { BrowserDocumentFactory } from "./BrowserDocumentFactory";
-import { BrowserPath2D } from "./BrowserPath2DFactory";
-import { initPaths } from "./initPaths";
-import { getMeasureCtx } from "./getMeasureCtx";
-import { initI18N } from "./initI18N";
-
-const documentFactory = new BrowserDocumentFactory();
-conf.documentFactory = documentFactory;
-conf.path2DFactory = BrowserPath2D;
-conf.measureCtx = getMeasureCtx();
-conf.getDocumentWidth = () => document.documentElement.clientWidth;
-conf.getDocumentHeight = () => document.documentElement.clientHeight;
-conf.getDPI = () => window.devicePixelRatio;
-initI18N();
-initPaths(BrowserPath2D);
+import { conf, Settings } from 'Settings';
+import { BrowserDocumentFactory } from './BrowserDocumentFactory';
+import { BrowserPath2D } from './BrowserPath2DFactory';
+import { getMeasureCtx } from './getMeasureCtx';
+import { initI18N } from './initI18N';
+import { getBrowserDOMParser } from './BrowserDOMParser';
+import { initPaths } from './initPaths';
+import { ReactEditor } from 'slate-react';
 
 // export dummy to prevent tree shake
 export function initBrowserSettings(): Settings {
+	conf.documentFactory = new BrowserDocumentFactory();
+	conf.path2DFactory = BrowserPath2D;
+	conf.measureCtx = getMeasureCtx();
+	conf.getDocumentWidth = () => document.documentElement.clientWidth;
+	conf.getDocumentHeight = () => document.documentElement.clientHeight;
+	conf.getDPI = () => window.devicePixelRatio;
+	conf.getDOMParser = getBrowserDOMParser;
+	initI18N();
+	initPaths(BrowserPath2D);
+	conf.reactEditorFocus = editor => {
+		try {
+			ReactEditor.focus(editor);
+		} catch (e) {
+			console.warn('Failed to focus editor:', e);
+		}
+	};
+
+	conf.reactEditorToSlatePoint = (editor, domNode, offset, options) => {
+		try {
+			return ReactEditor.toSlatePoint(editor, [domNode, offset], options);
+		} catch (e) {
+			console.warn('Failed to convert DOM point to Slate point:', e);
+			return null;
+		}
+	};
+
 	return conf;
 }

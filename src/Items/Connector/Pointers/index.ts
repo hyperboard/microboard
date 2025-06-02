@@ -1,13 +1,10 @@
-import { CubicBezier } from "Board/Items/Curve";
-import { Path } from "Board/Items/Path";
-import { Point } from "Board/Items/Point";
-import { Matrix } from "Board/Items/Transformation";
-import { ConnectorLineStyle } from "../Connector";
-import { ControlPoint } from "../ControlPoint";
-import { getPointer, Pointer } from "./Pointers";
+import { Point, Matrix, Path, CubicBezier } from 'Items';
+import { ConnectorLineStyle } from '../Connector';
+import { ControlPoint } from '../ControlPoint';
+import { getPointer, Pointer } from './Pointers';
 
-export type ConnectedPointerDirection = "top" | "bottom" | "right" | "left";
-export type ConnectorEdge = "start" | "end" | "middle";
+export type ConnectedPointerDirection = 'top' | 'bottom' | 'right' | 'left';
+export type ConnectorEdge = 'start' | 'end' | 'middle';
 
 interface GetRotationParams {
 	point: ControlPoint;
@@ -16,10 +13,8 @@ interface GetRotationParams {
 }
 
 /** If connected to item returns direction of connection otherwise returns undefined */
-export function getPointerDirection(
-	point: ControlPoint,
-): ConnectedPointerDirection | undefined {
-	if (point.pointType !== "Board") {
+export function getPointerDirection(point: ControlPoint): ConnectedPointerDirection | undefined {
+	if (point.pointType !== 'Board') {
 		const itemLines = point.item.getMbr().getLines();
 		const connectedLine = itemLines.reduce(
 			(acc, line, index) => {
@@ -28,13 +23,13 @@ export function getPointerDirection(
 				}
 				return acc;
 			},
-			{ line: itemLines[0], index: 0 },
+			{ line: itemLines[0], index: 0 }
 		);
 		const map: { [K in number]: ConnectedPointerDirection } = {
-			0: "top",
-			1: "bottom",
-			2: "right",
-			3: "left",
+			0: 'top',
+			1: 'bottom',
+			2: 'right',
+			3: 'left',
 		};
 		return map[connectedLine.index];
 	}
@@ -42,45 +37,33 @@ export function getPointerDirection(
 	return undefined;
 }
 
-function getStraightRotation({
-	point,
-	lines,
-	type,
-}: GetRotationParams): number {
-	if (type === "end" || type === "middle") {
-		return (
-			lines.getNormal(point).getAngleRadiansNormal() + (Math.PI / 2) * 3
-		);
+function getStraightRotation({ point, lines, type }: GetRotationParams): number {
+	if (type === 'end' || type === 'middle') {
+		return lines.getNormal(point).getAngleRadiansNormal() + (Math.PI / 2) * 3;
 	}
 	return lines.getNormal(point).getAngleRadiansNormal() + Math.PI / 2;
 }
 
 function getCurvedRotation({ point, lines, type }: GetRotationParams): number {
 	const segments = lines.getSegments();
-	const segment =
-		type === "end" ? segments[segments.length - 1] : segments[0];
+	const segment = type === 'end' ? segments[segments.length - 1] : segments[0];
 
 	if (!(segment instanceof CubicBezier)) {
 		return 0;
 	}
-	if (point.pointType !== "Board") {
-		const controlPoint =
-			type === "end" ? segment.endControl : segment.startControl;
-		const normalPoint = type === "end" ? segment.end : segment.start;
+	if (point.pointType !== 'Board') {
+		const controlPoint = type === 'end' ? segment.endControl : segment.startControl;
+		const normalPoint = type === 'end' ? segment.end : segment.start;
 		return radiansBetweenPoints(controlPoint, normalPoint);
 	} else {
-		const offset = type === "end" ? 0.95 : 0.05;
+		const offset = type === 'end' ? 0.95 : 0.05;
 		const point1 = segment.getPoint(offset);
-		const point2 = segment.getPoint(type === "end" ? 1 : 0);
+		const point2 = segment.getPoint(type === 'end' ? 1 : 0);
 		return radiansBetweenPoints(point1, point2);
 	}
 }
 
-function getOrthogonalRotation({
-	point,
-	lines,
-	type,
-}: GetRotationParams): number {
+function getOrthogonalRotation({ point, lines, type }: GetRotationParams): number {
 	const dir = getPointerDirection(point);
 	if (dir) {
 		const mapAngle = {
@@ -99,7 +82,7 @@ function getPointerRotation(
 	point: ControlPoint,
 	lineStyle: ConnectorLineStyle,
 	lines: Path,
-	type: ConnectorEdge,
+	type: ConnectorEdge
 ): number {
 	const rotationMap: {
 		[K in ConnectorLineStyle]: (data: GetRotationParams) => number;
@@ -117,9 +100,9 @@ export function getStartPointer(
 	pointerStyle: string,
 	lineStyle: ConnectorLineStyle,
 	lines: Path,
-	scale: number,
+	scale: number
 ): Pointer {
-	const angleRadians = getPointerRotation(point, lineStyle, lines, "start");
+	const angleRadians = getPointerRotation(point, lineStyle, lines, 'start');
 	const matrix = getPointerMatrix(point, angleRadians, scale);
 	const pointer = getPointer(pointerStyle);
 	return {
@@ -135,9 +118,9 @@ export function getEndPointer(
 	pointerStyle: string,
 	lineStyle: ConnectorLineStyle,
 	lines: Path,
-	scale: number,
+	scale: number
 ): Pointer {
-	const angleRadians = getPointerRotation(point, lineStyle, lines, "end");
+	const angleRadians = getPointerRotation(point, lineStyle, lines, 'end');
 	const matrix = getPointerMatrix(point, angleRadians, scale);
 	const pointer = getPointer(pointerStyle);
 	return {
@@ -148,11 +131,7 @@ export function getEndPointer(
 	};
 }
 
-function getPointerMatrix(
-	point: ControlPoint,
-	angleRadians: number,
-	scale = 0.3,
-): Matrix {
+function getPointerMatrix(point: ControlPoint, angleRadians: number, scale = 0.3): Matrix {
 	const matrix = new Matrix(point.x, point.y, scale, scale);
 	matrix.rotateByRadian(angleRadians);
 	const anchor = new Point(100, 50);

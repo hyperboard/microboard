@@ -1,73 +1,69 @@
-import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "./getResizeType";
+import { Mbr, Point } from 'Items';
+import { ResizeType } from './getResizeType';
 
 /**
  * A function that switches the resize type when the pointer is moved over an opposite edge or corner.
  * Currently, it is unused. But leave it here, just in case we need it in the future.
  */
-export function switchResizeType(
-	resizeType: ResizeType,
-	pointer: Point,
-	mbr: Mbr,
-): ResizeType {
+export function switchResizeType(resizeType: ResizeType, pointer: Point, mbr: Mbr): ResizeType {
 	const { left, top, right, bottom } = mbr;
 	const { x, y } = pointer;
 	switch (resizeType) {
-		case "leftTop": {
+		case 'leftTop': {
 			if (x < right && y < bottom) {
-				return "leftTop";
+				return 'leftTop';
 			} else if (x > left && y > top) {
-				return "rightBottom";
+				return 'rightBottom';
 			} else if (x > left) {
-				return "rightTop";
+				return 'rightTop';
 			} else {
-				return "leftBottom";
+				return 'leftBottom';
 			}
 		}
-		case "rightBottom": {
+		case 'rightBottom': {
 			if (x > left && y > top) {
-				return "rightBottom";
+				return 'rightBottom';
 			} else if (x < right && y < bottom) {
-				return "leftTop";
+				return 'leftTop';
 			} else if (x < right) {
-				return "leftBottom";
+				return 'leftBottom';
 			} else {
-				return "rightTop";
+				return 'rightTop';
 			}
 		}
-		case "rightTop": {
+		case 'rightTop': {
 			if (x > left && y < bottom) {
-				return "rightTop";
+				return 'rightTop';
 			} else if (x < right && y > top) {
-				return "leftBottom";
+				return 'leftBottom';
 			} else if (x < right) {
-				return "leftTop";
+				return 'leftTop';
 			} else {
-				return "rightBottom";
+				return 'rightBottom';
 			}
 		}
-		case "leftBottom": {
+		case 'leftBottom': {
 			if (x < right && y > top) {
-				return "leftBottom";
+				return 'leftBottom';
 			} else if (x > left && y < bottom) {
-				return "rightTop";
+				return 'rightTop';
 			} else if (x > left) {
-				return "rightBottom";
+				return 'rightBottom';
 			} else {
-				return "leftTop";
+				return 'leftTop';
 			}
 		}
-		case "top": {
-			return y < bottom ? "top" : "bottom";
+		case 'top': {
+			return y < bottom ? 'top' : 'bottom';
 		}
-		case "bottom": {
-			return y > top ? "bottom" : "top";
+		case 'bottom': {
+			return y > top ? 'bottom' : 'top';
 		}
-		case "right": {
-			return x > left ? "right" : "left";
+		case 'right': {
+			return x > left ? 'right' : 'left';
 		}
-		case "left": {
-			return x < right ? "left" : "right";
+		case 'left': {
+			return x < right ? 'left' : 'right';
 		}
 	}
 }

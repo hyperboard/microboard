@@ -1,7 +1,7 @@
-import { conf } from "Board/Settings";
-import { BlockNode } from "../Editor/BlockNode";
-import { TextNode } from "../Editor/TextNode";
-import { LayoutBlockNodes } from "./LayoutBlockNodes";
+import { conf } from 'Settings';
+import { BlockNode } from '../Editor/BlockNode';
+import { TextNode } from '../Editor/TextNode';
+import { LayoutBlockNodes } from './LayoutBlockNodes';
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -9,7 +9,7 @@ export function getBlockNodes(
 	data: BlockNode[],
 	maxWidth = Infinity,
 	shrink = false,
-	isFrame = false, // Smell
+	isFrame = false // Smell
 ): LayoutBlockNodes {
 	const nodes: LayoutBlockNode[] = [];
 	let didBreakWords = false;
@@ -42,10 +42,7 @@ export function getBlockNodes(
 						left: block.x,
 						top: block.y - block.measure.ascent,
 						right: block.width + block.x,
-						bottom:
-							block.y -
-							block.measure.ascent +
-							block.measure.height,
+						bottom: block.y - block.measure.ascent + block.measure.height,
 					});
 				}
 			}
@@ -88,21 +85,21 @@ export function getBlockNodes(
 
 interface LayoutBlockNode {
 	type:
-		| "paragraph"
-		| "heading_one"
-		| "heading_two"
-		| "heading_three"
-		| "heading_four"
-		| "heading_five"
-		| "code_block"
-		| "ul_list"
-		| "ol_list"
-		| "list_item"
-		| "text";
+		| 'paragraph'
+		| 'heading_one'
+		| 'heading_two'
+		| 'heading_three'
+		| 'heading_four'
+		| 'heading_five'
+		| 'code_block'
+		| 'ul_list'
+		| 'ol_list'
+		| 'list_item'
+		| 'text';
 	lineHeight: number;
 	children: LayoutTextNode[];
 	lines: LayoutTextBlock[][];
-	align: "left" | "center" | "right" | undefined;
+	align: 'left' | 'center' | 'right' | undefined;
 	width: number;
 	height: number;
 	didBreakWords: boolean;
@@ -110,19 +107,16 @@ interface LayoutBlockNode {
 	marginLeft: number;
 }
 
-const sliceTextByWidth = (
-	textChild: TextNode,
-	maxWidth: number,
-): LayoutTextNode => {
+const sliceTextByWidth = (textChild: TextNode, maxWidth: number): LayoutTextNode => {
 	const textNode = getTextNode(textChild);
 	const text = textNode.text;
 	const textStyle = getTextStyle(textChild).font;
-	let currentText = "";
+	let currentText = '';
 	let currentWidth = 0;
 
 	for (let i = 0; i < text.length; i++) {
 		const nextText = currentText + text[i];
-		const nextWidth = measureText(nextText + "...", textStyle).width;
+		const nextWidth = measureText(nextText + '...', textStyle).width;
 		currentWidth = nextWidth;
 
 		if (nextWidth > maxWidth) {
@@ -132,8 +126,7 @@ const sliceTextByWidth = (
 		currentText = nextText;
 	}
 
-	textNode.text =
-		currentWidth > maxWidth - 5 ? currentText + "..." : currentText;
+	textNode.text = currentWidth > maxWidth - 5 ? currentText + '...' : currentText;
 	return textNode;
 };
 
@@ -142,13 +135,13 @@ function getListMarkType(depth: number) {
 
 	switch (cycle) {
 		case 0:
-			return "LISTMARK_NUMBERS";
+			return 'LISTMARK_NUMBERS';
 		case 1:
-			return "LISTMARK_LETTERS";
+			return 'LISTMARK_LETTERS';
 		case 2:
-			return "LISTMARK_ROMAN";
+			return 'LISTMARK_ROMAN';
 		default:
-			return "LISTMARK_NUMBERS";
+			return 'LISTMARK_NUMBERS';
 	}
 }
 
@@ -158,7 +151,7 @@ function getBlockNode(
 	isFrame?: boolean, // Smell
 	listData?: { isNumberedList: boolean; level: number },
 	listMark?: string,
-	newLine = false,
+	newLine = false
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
 		type: data.type,
@@ -172,16 +165,16 @@ function getBlockNode(
 		paddingTop: 0,
 		marginLeft: 0,
 	};
-	if (node.type === "ol_list" && !listData) {
+	if (node.type === 'ol_list' && !listData) {
 		listData = { level: 0, isNumberedList: true };
-	} else if (node.type === "ul_list" && !listData) {
+	} else if (node.type === 'ul_list' && !listData) {
 		listData = { level: 0, isNumberedList: false };
 	}
 	const listMarks = conf[getListMarkType((listData?.level || 0) + 1)];
 	for (let i = 0; i < data.children.length; i++) {
 		const child = structuredClone(data.children[i]);
 		switch (child.type) {
-			case "ol_list": {
+			case 'ol_list': {
 				const currentListData = {
 					isNumberedList: true,
 					level: listData?.level || 0,
@@ -189,17 +182,12 @@ function getBlockNode(
 				if (listData) {
 					currentListData.level += 1;
 				}
-				const blockNode = getBlockNode(
-					child,
-					maxWidth,
-					isFrame,
-					currentListData,
-				);
+				const blockNode = getBlockNode(child, maxWidth, isFrame, currentListData);
 				node.children = node.children.concat(blockNode.children);
 				node.lines = node.lines.concat(blockNode.lines);
 				break;
 			}
-			case "ul_list": {
+			case 'ul_list': {
 				const currentListData = {
 					isNumberedList: false,
 					level: listData?.level || 0,
@@ -207,39 +195,26 @@ function getBlockNode(
 				if (listData) {
 					currentListData.level += 1;
 				}
-				const blockNode = getBlockNode(
-					child,
-					maxWidth,
-					isFrame,
-					currentListData,
-				);
+				const blockNode = getBlockNode(child, maxWidth, isFrame, currentListData);
 				node.children = node.children.concat(blockNode.children);
 				node.lines = node.lines.concat(blockNode.lines);
 				break;
 			}
-			case "list_item": {
-				let listMark = "";
+			case 'list_item': {
+				let listMark = '';
 				if (listData?.isNumberedList) {
 					listMark += listMarks[i % 20];
 				} else {
-					listMark += "•";
+					listMark += '•';
 				}
 
-				const blockNode = getBlockNode(
-					child,
-					maxWidth,
-					isFrame,
-					listData,
-					listMark,
-				);
+				const blockNode = getBlockNode(child, maxWidth, isFrame, listData, listMark);
 				node.children = node.children.concat(blockNode.children);
 				node.lines = node.lines.concat(blockNode.lines);
 				break;
 			}
-			case "text":
-				const fontScale =
-					(child.fontSize === "auto" ? 14 : (child.fontSize ?? 14)) /
-					14;
+			case 'text':
+				const fontScale = (child.fontSize === 'auto' ? 14 : child.fontSize ?? 14) / 14;
 				handleTextNode({
 					isFrame,
 					child,
@@ -247,19 +222,15 @@ function getBlockNode(
 					maxWidth,
 					paddingTop: i === 0 ? 16 * (data.paddingTop || 0) : 0,
 					marginLeft:
-						(listData ? fontScale * 16 : 0) +
-						(listData?.level || 0) * fontScale * 24,
+						(listData ? fontScale * 16 : 0) + (listData?.level || 0) * fontScale * 24,
 					newLine: i === 0 ? newLine : false,
 					listMark: i === 0 ? listMark : undefined,
 					link: child.link,
 				});
 				break;
 			default:
-				if ("text" in child && typeof child.text === "string") {
-					const fontScale =
-						(child.fontSize === "auto"
-							? 14
-							: (child.fontSize ?? 14)) / 14;
+				if ('text' in child && typeof child.text === 'string') {
+					const fontScale = (child.fontSize === 'auto' ? 14 : child.fontSize ?? 14) / 14;
 					handleTextNode({
 						isFrame,
 						child,
@@ -280,7 +251,7 @@ function getBlockNode(
 						isFrame,
 						listData,
 						i === 0 ? listMark : undefined,
-						true,
+						true
 					);
 					node.children = node.children.concat(blockNode.children);
 					node.lines = node.lines.concat(blockNode.lines);
@@ -327,9 +298,7 @@ function handleTextNode({
 	listMark?: string;
 	link?: string;
 }): void {
-	const newChild = isFrame
-		? sliceTextByWidth(child, maxWidth)
-		: getTextNode(child);
+	const newChild = isFrame ? sliceTextByWidth(child, maxWidth) : getTextNode(child);
 	node.children.push({
 		...newChild,
 		newLine,
@@ -341,13 +310,13 @@ function handleTextNode({
 }
 
 function getTextNode(data: TextNode): LayoutTextNode {
-	const text = data.text?.length === 0 ? "\u00A0" : data.text; // todo ?
+	const text = data.text?.length === 0 ? '\u00A0' : data.text; // todo ?
 	if (!text) {
-		console.warn("Text is undefined!, HERE!");
-		console.log("data - ", data);
+		console.warn('Text is undefined!, HERE!');
+		console.log('data - ', data);
 	}
 	const node = {
-		type: "text",
+		type: 'text',
 		text,
 		style: getTextStyle(data),
 		blocks: [],
@@ -362,61 +331,61 @@ interface LeafStyle {
 	backgroundColor: string | undefined;
 	fontSize: number;
 	fontFamily: string;
-	textDecorationLine?: "underline";
-	crossed?: "line-through";
-	verticalAlign?: "super" | "sub";
+	textDecorationLine?: 'underline';
+	crossed?: 'line-through';
+	verticalAlign?: 'super' | 'sub';
 	font?: string;
 }
 
 function getTextStyle(data: TextNode): LeafStyle {
 	const leafStyle: LeafStyle = {
-		fontStyle: "normal",
-		fontWeight: "normal",
-		color: data.fontColor ?? "black",
+		fontStyle: 'normal',
+		fontWeight: 'normal',
+		color: data.fontColor ?? 'black',
 		backgroundColor: data.fontHighlight,
 		fontSize: data.fontSize ?? 14,
-		fontFamily: data.fontFamily ?? "Arial",
+		fontFamily: data.fontFamily ?? 'Arial',
 	};
 
 	const styles: string[] = [];
 
 	if (data.bold) {
-		styles.push("bold");
+		styles.push('bold');
 	}
 	if (data.italic) {
-		styles.push("italic");
+		styles.push('italic');
 	}
 	if (data.underline) {
-		styles.push("underline");
+		styles.push('underline');
 	}
-	if (data["line-through"]) {
-		styles.push("line-through");
+	if (data['line-through']) {
+		styles.push('line-through');
 	}
 	if (data.subscript) {
-		styles.push("subscript");
+		styles.push('subscript');
 	}
 	if (data.superscript) {
-		styles.push("superscript");
+		styles.push('superscript');
 	}
 	for (const style of styles) {
 		switch (style) {
-			case "bold":
-				leafStyle.fontWeight = "bold";
+			case 'bold':
+				leafStyle.fontWeight = 'bold';
 				break;
-			case "italic":
-				leafStyle.fontStyle = "italic";
+			case 'italic':
+				leafStyle.fontStyle = 'italic';
 				break;
-			case "underline":
-				leafStyle.textDecorationLine = "underline";
+			case 'underline':
+				leafStyle.textDecorationLine = 'underline';
 				break;
-			case "line-through":
-				leafStyle.crossed = "line-through";
+			case 'line-through':
+				leafStyle.crossed = 'line-through';
 				break;
-			case "superscript":
-				leafStyle.verticalAlign = "super";
+			case 'superscript':
+				leafStyle.verticalAlign = 'super';
 				break;
-			case "subscript":
-				leafStyle.verticalAlign = "sub";
+			case 'subscript':
+				leafStyle.verticalAlign = 'sub';
 				break;
 		}
 	}
@@ -427,10 +396,10 @@ function getTextStyle(data: TextNode): LeafStyle {
 const defaultStyle = getTextStyle({} as TextNode);
 
 function getFont(style: LeafStyle): string {
-	const fontStyle = style.fontStyle || "normal";
+	const fontStyle = style.fontStyle || 'normal';
 	const fontWeight = style.fontWeight || 400;
-	const fontSize = style.fontSize || "14";
-	const fontFamily = style.fontFamily || "Arial";
+	const fontSize = style.fontSize || '14';
+	const fontFamily = style.fontFamily || 'Arial';
 	const font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
 	return font;
 }
@@ -449,10 +418,10 @@ function layoutTextNode(
 	blockNode: LayoutBlockNode,
 	lines: LayoutTextBlock[][],
 	textNode: LayoutTextNode,
-	maxWidth: number,
+	maxWidth: number
 ): void {
 	// Check if textNode.text is empty. If it is, return since there is no text to process.
-	if (textNode.text === "") {
+	if (textNode.text === '') {
 		return;
 	}
 
@@ -468,7 +437,7 @@ function layoutTextNode(
 	}
 
 	const style = textNode.style;
-	const nodeLines = textNode.text.split("\n");
+	const nodeLines = textNode.text.split('\n');
 
 	for (let nodeLine of nodeLines) {
 		let isFirstLineInNode = nodeLine === nodeLines[0];
@@ -476,12 +445,12 @@ function layoutTextNode(
 		if (isFirstLineInNode) {
 			listMark = textNode.listMark;
 		}
-		nodeLine = nodeLine.replace(/\t/g, "        ");
+		nodeLine = nodeLine.replace(/\t/g, '        ');
 		// Create an array of words by using the splitWords function on the textNode.text.
 		const words = splitTextIntoWords(nodeLine);
 
 		// Create a variable to hold the current text string.
-		let currentString = "";
+		let currentString = '';
 
 		// Shift words from the words array and process each word.
 		let hasWrapped = false;
@@ -490,8 +459,7 @@ function layoutTextNode(
 			if (!word) {
 				break;
 			}
-			const newText =
-				currentString === "" ? word : currentString + "" + word;
+			const newText = currentString === '' ? word : currentString + '' + word;
 
 			// Get the last line in the lines array and its width.
 			const lastLine = lines[lines.length - 1];
@@ -515,7 +483,7 @@ function layoutTextNode(
 			if (lastLineWidth + block.width <= maxWidth) {
 				currentString = newText;
 			} else {
-				if (currentString === "") {
+				if (currentString === '') {
 					// If the current string is empty, it means a single word does not fit the remaining width.
 					if (lastLine.length === 0) {
 						// If the last line is empty, a single word does not fit maxWidth and must be broken down.
@@ -524,7 +492,7 @@ function layoutTextNode(
 							word,
 							style,
 							maxWidth,
-							textNode.marginLeft,
+							textNode.marginLeft
 						).firstPart;
 						const remainingPart = word.slice(substring.length);
 
@@ -532,9 +500,7 @@ function layoutTextNode(
 						const newBlock = getTextBlock({
 							text: substring,
 							style,
-							paddingTop: isFirstLineInNode
-								? textNode.paddingTop
-								: 0,
+							paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
 							marginLeft: textNode.marginLeft,
 							listMark: !hasWrapped ? listMark : undefined,
 							link: textNode.link,
@@ -563,19 +529,15 @@ function layoutTextNode(
 							lastBlock.text,
 							lastBlock.style,
 							maxWidth,
-							lastBlock === lastLine[0]
-								? textNode.marginLeft
-								: lineWidth,
+							lastBlock === lastLine[0] ? textNode.marginLeft : lineWidth,
 							word,
-							style,
+							style
 						).secondPart;
 
 						const newBlock = getTextBlock({
 							text: substring,
 							style,
-							paddingTop: isFirstLineInNode
-								? textNode.paddingTop
-								: 0,
+							paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
 							link: textNode.link,
 						});
 
@@ -603,21 +565,15 @@ function layoutTextNode(
 					if (lastLine.length === 0 && hasWrapped) {
 						currentString = currentString.trimStart();
 					}
-					const isFirstBlockInLine =
-						lines[lines.length - 1].length === 0;
+					const isFirstBlockInLine = lines[lines.length - 1].length === 0;
 
 					// Create a text block from the current string.
 					const newBlock = getTextBlock({
 						text: currentString,
 						style,
 						paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
-						marginLeft: isFirstBlockInLine
-							? textNode.marginLeft
-							: 0,
-						listMark:
-							!hasWrapped && isFirstBlockInLine
-								? listMark
-								: undefined,
+						marginLeft: isFirstBlockInLine ? textNode.marginLeft : 0,
+						listMark: !hasWrapped && isFirstBlockInLine ? listMark : undefined,
 						link: textNode.link,
 					});
 
@@ -631,7 +587,7 @@ function layoutTextNode(
 					hasWrapped = true;
 
 					// Set the current string to an empty string.
-					currentString = "";
+					currentString = '';
 
 					// Insert the current word back at the start of the words array.
 					words.unshift(word);
@@ -640,15 +596,14 @@ function layoutTextNode(
 		}
 
 		// Push the last text block if it exists.
-		if (currentString !== "") {
+		if (currentString !== '') {
 			const isFirstBlockInLine = lines[lines.length - 1].length === 0;
 			const lastBlock = getTextBlock({
 				text: currentString,
 				style,
 				paddingTop: isFirstLineInNode ? textNode.paddingTop : 0,
 				marginLeft: isFirstBlockInLine ? textNode.marginLeft : 0,
-				listMark:
-					!hasWrapped && isFirstBlockInLine ? listMark : undefined,
+				listMark: !hasWrapped && isFirstBlockInLine ? listMark : undefined,
 				link: textNode.link,
 			});
 			lines[lines.length - 1].push(lastBlock);
@@ -676,9 +631,9 @@ function fillEmptyLines(blockNode: LayoutBlockNode): void {
 			}
 			line.push(
 				getTextBlock({
-					text: " ",
+					text: ' ',
 					style: previousStyle ?? defaultStyle,
-				}),
+				})
 			);
 		}
 	}
@@ -784,7 +739,7 @@ function getTextBlock({
 const measureCache: Record<string, Record<string, MeasuredRect>> = {};
 
 function isFiniteNumber(value: unknown): value is number {
-	return typeof value === "number" && isFinite(value);
+	return typeof value === 'number' && isFinite(value);
 }
 
 function toFiniteNumber(value: unknown, coerce = 0): number {
@@ -804,12 +759,7 @@ interface MeasuredRect {
 	height: number;
 }
 
-function measureText(
-	text: string,
-	style,
-	paddingTop = 0,
-	marginLeft = 0,
-): MeasuredRect {
+function measureText(text: string, style, paddingTop = 0, marginLeft = 0): MeasuredRect {
 	if (measureCache[style.font]) {
 		if (measureCache[style.font][text]) {
 			const rect = { ...measureCache[style.font][text] };
@@ -819,20 +769,12 @@ function measureText(
 	}
 	conf.measureCtx.font = style.font;
 	const measure = conf.measureCtx.measureText(text);
-	const actualBoundingBoxAscent = toFiniteNumber(
-		measure.actualBoundingBoxAscent,
-	);
-	const actualBoundingBoxDescent = toFiniteNumber(
-		measure.actualBoundingBoxDescent,
-	);
+	const actualBoundingBoxAscent = toFiniteNumber(measure.actualBoundingBoxAscent);
+	const actualBoundingBoxDescent = toFiniteNumber(measure.actualBoundingBoxDescent);
 	const actualBoundingBoxLeft = toFiniteNumber(measure.actualBoundingBoxLeft);
-	const actualBoundingBoxRight = toFiniteNumber(
-		measure.actualBoundingBoxRight,
-	);
+	const actualBoundingBoxRight = toFiniteNumber(measure.actualBoundingBoxRight);
 	const fontBoundingBoxAscent = toFiniteNumber(measure.fontBoundingBoxAscent);
-	const fontBoundingBoxDescent = toFiniteNumber(
-		measure.fontBoundingBoxDescent,
-	);
+	const fontBoundingBoxDescent = toFiniteNumber(measure.fontBoundingBoxDescent);
 	const width = toFiniteNumber(measure.width);
 	const ascent = Math.max(fontBoundingBoxAscent, actualBoundingBoxAscent);
 	const descent = Math.max(fontBoundingBoxDescent, actualBoundingBoxDescent);
@@ -860,7 +802,7 @@ function measureText(
 
 function splitTextIntoWords(text: string): string[] {
 	// filter is important, do not remove
-	return text.split(/(\s+)/).filter(element => element !== "");
+	return text.split(/(\s+)/).filter(element => element !== '');
 }
 
 function findLargestSubstring(
@@ -868,8 +810,8 @@ function findLargestSubstring(
 	firstStyle: LeafStyle,
 	maxWidth: number,
 	marginLeft = 0,
-	secondStr = "",
-	secondStyle?: LeafStyle,
+	secondStr = '',
+	secondStyle?: LeafStyle
 ): { firstPart: string; secondPart: string } {
 	// Use binary search to find the largest substring of the word that fits within the maxWidth.
 	let start = 0;
@@ -877,8 +819,8 @@ function findLargestSubstring(
 	const firstStrLength = firstStr.length;
 	let end = word.length;
 	const largestSubstring: { firstPart: string; secondPart: string } = {
-		firstPart: "",
-		secondPart: "",
+		firstPart: '',
+		secondPart: '',
 	};
 
 	while (start <= end) {
@@ -939,11 +881,7 @@ function setBlockNodesCoordinates(nodes: LayoutBlockNode[]): number {
 	for (const node of nodes) {
 		for (const line of node.lines) {
 			for (const block of line) {
-				if (
-					node !== nodes[0] ||
-					node.type === "ul_list" ||
-					node.type === "ol_list"
-				) {
+				if (node !== nodes[0] || node.type === 'ul_list' || node.type === 'ol_list') {
 					yOffset += block.paddingTop || 0;
 					paddingsSum += block.paddingTop || 0;
 				}
@@ -967,23 +905,19 @@ function align(nodes: LayoutBlockNode[], maxWidth: number, scale = 1): void {
 	const alignnentWidth = maxWidth === Infinity ? maxNodeWidth : maxWidth;
 	for (const node of nodes) {
 		switch (node.align) {
-			case "left":
+			case 'left':
 				break;
-			case "center":
+			case 'center':
 				alignToCenter(node, alignnentWidth, scale);
 				break;
-			case "right":
+			case 'right':
 				alignToRight(node, alignnentWidth, scale);
 				break;
 		}
 	}
 }
 
-function alignToCenter(
-	node: LayoutBlockNode,
-	maxWidth: number,
-	scale: number,
-): void {
+function alignToCenter(node: LayoutBlockNode, maxWidth: number, scale: number): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
@@ -996,11 +930,7 @@ function alignToCenter(
 	}
 }
 
-function alignToRight(
-	node: LayoutBlockNode,
-	maxWidth: number,
-	scale: number,
-): void {
+function alignToRight(node: LayoutBlockNode, maxWidth: number, scale: number): void {
 	for (const line of node.lines) {
 		let lineWidth = 0;
 		for (const block of line) {
@@ -1013,11 +943,7 @@ function alignToRight(
 	}
 }
 
-function renderBlockNodes(
-	ctx: Ctx,
-	nodes: LayoutBlockNode[],
-	scale?: number,
-): void {
+function renderBlockNodes(ctx: Ctx, nodes: LayoutBlockNode[], scale?: number): void {
 	if (scale) {
 		ctx.scale(scale, scale);
 	}
@@ -1038,7 +964,7 @@ function renderTextLines(ctx: Ctx, lines: LayoutTextBlock[][]): void {
 }
 
 function renderTextBlock(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	ctx.font = textBlock.style.font ?? "Arial";
+	ctx.font = textBlock.style.font ?? 'Arial';
 	fillHighlight(ctx, textBlock);
 	underline(ctx, textBlock);
 	cross(ctx, textBlock);
@@ -1046,25 +972,19 @@ function renderTextBlock(ctx: Ctx, textBlock: LayoutTextBlock): void {
 }
 
 function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	if (!textBlock.style.backgroundColor || textBlock.text === "\u00A0") {
+	if (!textBlock.style.backgroundColor || textBlock.text === '\u00A0') {
 		// U+00a0 is empty, for not highlighting emptyLine
 		return;
 	}
 	const measure = textBlock.measure;
 	ctx.fillStyle = textBlock.style.backgroundColor;
-	ctx.fillRect(
-		textBlock.x,
-		textBlock.y - measure.ascent,
-		measure.width,
-		measure.height,
-	);
+	ctx.fillRect(textBlock.x, textBlock.y - measure.ascent, measure.width, measure.height);
 }
 
 function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	if (
 		!textBlock.link &&
-		(textBlock.style.textDecorationLine !== "underline" ||
-			textBlock.text === "\u00A0")
+		(textBlock.style.textDecorationLine !== 'underline' || textBlock.text === '\u00A0')
 	) {
 		return;
 	}
@@ -1080,16 +1000,13 @@ function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	ctx.moveTo(x, y + (2 * textBlock.fontSize) / 14); // 14 - default fontSize
 	ctx.lineTo(x + width, y + (2 * textBlock.fontSize) / 14);
 	ctx.stroke();
-	ctx.strokeStyle = style.backgroundColor ?? "black";
+	ctx.strokeStyle = style.backgroundColor ?? 'black';
 	ctx.lineWidth = 2;
 	// ctx.strokeText(textBlock.text, x, y);
 }
 
 function cross(ctx: Ctx, textBlock: LayoutTextBlock): void {
-	if (
-		textBlock.style.crossed !== "line-through" ||
-		textBlock.text === "\u00A0"
-	) {
+	if (textBlock.style.crossed !== 'line-through' || textBlock.text === '\u00A0') {
 		return;
 	}
 	const x = textBlock.x;
@@ -1105,7 +1022,7 @@ function cross(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	ctx.moveTo(x, y - height / 4);
 	ctx.lineTo(x + width, y - height / 4);
 	ctx.stroke();
-	ctx.strokeStyle = style.backgroundColor ?? "black";
+	ctx.strokeStyle = style.backgroundColor ?? 'black';
 	ctx.lineWidth = 2;
 }
 
@@ -1114,10 +1031,6 @@ function fillText(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	ctx.fillStyle = style.color;
 	ctx.fillText(text, x, y);
 	if (textBlock.listMark) {
-		ctx.fillText(
-			textBlock.listMark,
-			x - measureText(textBlock.listMark, style).width - 4,
-			y,
-		);
+		ctx.fillText(textBlock.listMark, x - measureText(textBlock.listMark, style).width - 4, y);
 	}
 }

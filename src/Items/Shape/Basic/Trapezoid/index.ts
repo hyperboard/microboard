@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Trapezoid = {
-	name: "Trapezoid",
+	name: 'Trapezoid',
 	textBounds: new Mbr(20, 5, 80, 95),
 	path: new Path(
 		[
@@ -10,14 +10,9 @@ export const Trapezoid = {
 			new Line(new Point(80, 0), new Point(100, 100)),
 			new Line(new Point(100, 100), new Point(0, 100)),
 		],
-		true,
+		true
 	),
-	anchorPoints: [
-		new Point(10, 50),
-		new Point(55, 0),
-		new Point(90, 50),
-		new Point(45, 100),
-	],
+	anchorPoints: [new Point(10, 50), new Point(55, 0), new Point(90, 50), new Point(45, 100)],
 	createPath: (mbr: Mbr) => Trapezoid.path.copy(),
 	useMbrUnderPointer: false,
 };

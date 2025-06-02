@@ -1,27 +1,24 @@
-import { Events, Operation } from "Board/Events";
-import { Subject } from "shared/Subject";
-import { DrawingContext } from "../DrawingContext";
-import { Line } from "../Line";
-import { Mbr } from "../Mbr";
-import { BorderStyle, BorderWidth, Path, scalePatterns } from "../Path";
-import { Point } from "../Point";
-import { Transformation } from "../Transformation";
-import { DrawingCommand } from "./DrawingCommand";
-import { DrawingOperation } from "./DrawingOperation";
-import { TransformationData } from "../Transformation/TransformationData";
-import { Geometry } from "../Geometry";
-import { isSafari } from "App/isSafari";
-import { LinkTo } from "../LinkTo/LinkTo";
-import {
-	scaleElementBy,
-	translateElementBy,
-} from "Board/HTMLRender/HTMLRender";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { conf } from "Board/Settings";
-import { Board } from "Board/Board";
+import { Events, Operation } from 'Events';
+import { Subject } from 'Subject';
+import { DrawingContext } from '../DrawingContext';
+import { Line } from '../Line';
+import { Mbr } from '../Mbr';
+import { BorderStyle, BorderWidth, Path, scalePatterns } from '../Path';
+import { Point } from '../Point';
+import { Transformation } from '../Transformation';
+import { DrawingCommand } from './DrawingCommand';
+import { DrawingOperation } from './DrawingOperation';
+import { TransformationData } from '../Transformation/TransformationData';
+import { Geometry } from '../Geometry';
+import { isSafari } from 'isSafari';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { scaleElementBy, translateElementBy } from 'HTMLRender/HTMLRender';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { conf } from 'Settings';
+import { Board } from 'Board';
 
 export interface DrawingData {
-	itemType: "Drawing";
+	itemType: 'Drawing';
 	points: { x: number; y: number }[];
 	transformation: TransformationData;
 	strokeStyle: string;
@@ -30,8 +27,8 @@ export interface DrawingData {
 }
 
 export class Drawing extends Mbr implements Geometry {
-	readonly itemType = "Drawing";
-	parent = "Board";
+	readonly itemType = 'Drawing';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	private path2d = new conf.path2DFactory();
 	readonly subject = new Subject<Drawing>();
@@ -39,7 +36,7 @@ export class Drawing extends Mbr implements Geometry {
 	private lines: Line[] = [];
 	readonly linkTo: LinkTo;
 	strokeWidth: BorderWidth = 1;
-	borderStyle: BorderStyle = "solid";
+	borderStyle: BorderStyle = 'solid';
 	private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 	private borderOpacity = 1;
 	transformationRenderBlock?: boolean = undefined;
@@ -48,7 +45,7 @@ export class Drawing extends Mbr implements Geometry {
 		private board: Board,
 		public points: Point[],
 		private events?: Events,
-		private id = "",
+		private id = ''
 	) {
 		super();
 		this.transformation = new Transformation(id, events);
@@ -73,7 +70,7 @@ export class Drawing extends Mbr implements Geometry {
 			points.push({ x: point.x, y: point.y });
 		}
 		return {
-			itemType: "Drawing",
+			itemType: 'Drawing',
 			points,
 			transformation: this.transformation.serialize(),
 			strokeStyle: this.borderColor,
@@ -236,52 +233,40 @@ export class Drawing extends Mbr implements Geometry {
 		ctx.save();
 		ctx.strokeStyle = this.borderColor;
 		ctx.lineWidth = this.strokeWidth;
-		ctx.lineCap = "round";
+		ctx.lineCap = 'round';
 		ctx.setLineDash(this.linePattern);
 		this.transformation.matrix.applyToContext(ctx);
 		ctx.stroke(this.path2d.nativePath);
 		ctx.restore();
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("drawing-item");
+		const div = documentFactory.createElement('drawing-item');
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const mbr = this.getMbr();
 		const width = mbr.getWidth();
 		const height = mbr.getHeight();
 		const unscaledWidth = width / scaleX;
 		const unscaledHeight = height / scaleY;
 
-		const svg = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"svg",
-		);
-		svg.setAttribute("width", `${unscaledWidth}px`);
-		svg.setAttribute("height", `${unscaledHeight}px`);
-		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-		svg.setAttribute("style", "position: absolute; overflow: visible;");
+		const svg = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		svg.setAttribute('width', `${unscaledWidth}px`);
+		svg.setAttribute('height', `${unscaledHeight}px`);
+		svg.setAttribute('viewBox', `0 0 ${unscaledWidth} ${unscaledHeight}`);
+		svg.setAttribute('style', 'position: absolute; overflow: visible;');
 		// svg.setAttribute("transform-origin", "0 0");
 		// svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
 
-		const pathElement = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"path",
-		);
-		pathElement.setAttribute("d", this.getPathData());
-		pathElement.setAttribute("stroke", this.borderColor);
-		pathElement.setAttribute("stroke-width", `${this.strokeWidth}`);
-		pathElement.setAttribute("fill", "none");
+		const pathElement = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'path');
+		pathElement.setAttribute('d', this.getPathData());
+		pathElement.setAttribute('stroke', this.borderColor);
+		pathElement.setAttribute('stroke-width', `${this.strokeWidth}`);
+		pathElement.setAttribute('fill', 'none');
 		// pathElement.setAttribute("transform-origin", "0 0");
 		// pathElement.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
 		// pathElement.setAttribute("vector-effect", "non-scaling-stroke");
@@ -291,20 +276,20 @@ export class Drawing extends Mbr implements Geometry {
 		div.appendChild(svg);
 
 		div.id = this.getId();
-		div.style.width = unscaledWidth + "px";
-		div.style.height = unscaledHeight + "px";
-		div.style.transformOrigin = "left top";
+		div.style.width = unscaledWidth + 'px';
+		div.style.height = unscaledHeight + 'px';
+		div.style.transformOrigin = 'left top';
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-		div.style.position = "absolute";
+		div.style.position = 'absolute';
 
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
 				(width - parseInt(linkElement.style.width)) / scaleX,
-				0,
+				0
 			);
 			div.appendChild(linkElement);
 		}
@@ -315,7 +300,7 @@ export class Drawing extends Mbr implements Geometry {
 	private getPathData(): string {
 		const points = this.points;
 		if (points.length < 2) {
-			return "";
+			return '';
 		}
 
 		let pathData = `M ${points[0].x} ${points[0].y}`;
@@ -358,7 +343,7 @@ export class Drawing extends Mbr implements Geometry {
 				new Line(rightBottom, leftBottom),
 				new Line(leftBottom, leftTop),
 			],
-			true,
+			true
 		);
 	}
 
@@ -403,33 +388,29 @@ export class Drawing extends Mbr implements Geometry {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Drawing":
+			case 'Drawing':
 				switch (op.method) {
-					case "setStrokeColor":
+					case 'setStrokeColor':
 						this.borderColor = op.color;
 						break;
-					case "setStrokeWidth":
+					case 'setStrokeWidth':
 						this.strokeWidth = op.width;
-						this.linePattern = scalePatterns(this.strokeWidth)[
-							this.borderStyle
-						];
+						this.linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 						break;
-					case "setStrokeOpacity":
+					case 'setStrokeOpacity':
 						this.borderOpacity = op.opacity;
 						break;
-					case "setStrokeStyle":
+					case 'setStrokeStyle':
 						this.borderStyle = op.style;
-						this.linePattern = scalePatterns(this.strokeWidth)[
-							this.borderStyle
-						];
+						this.linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
 						break;
 				}
 				this.updateMbr();
 				break;
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
 			default:
@@ -440,8 +421,8 @@ export class Drawing extends Mbr implements Geometry {
 
 	setStrokeOpacity(opacity: number): this {
 		this.emit({
-			class: "Drawing",
-			method: "setStrokeOpacity",
+			class: 'Drawing',
+			method: 'setStrokeOpacity',
 			item: [this.id],
 			opacity,
 		});
@@ -454,8 +435,8 @@ export class Drawing extends Mbr implements Geometry {
 
 	setBorderStyle(style: BorderStyle): this {
 		this.emit({
-			class: "Drawing",
-			method: "setStrokeStyle",
+			class: 'Drawing',
+			method: 'setStrokeStyle',
 			item: [this.id],
 			style,
 		});
@@ -468,8 +449,8 @@ export class Drawing extends Mbr implements Geometry {
 
 	setStrokeColor(color: string): this {
 		this.emit({
-			class: "Drawing",
-			method: "setStrokeColor",
+			class: 'Drawing',
+			method: 'setStrokeColor',
 			item: [this.id],
 			color,
 		});
@@ -482,8 +463,8 @@ export class Drawing extends Mbr implements Geometry {
 
 	setStrokeWidth(width: number): this {
 		this.emit({
-			class: "Drawing",
-			method: "setStrokeWidth",
+			class: 'Drawing',
+			method: 'setStrokeWidth',
 			item: [this.id],
 			width,
 			prevWidth: this.strokeWidth,
@@ -505,15 +486,10 @@ export class Drawing extends Mbr implements Geometry {
 
 	isPointNearLine(point: Point, threshold: number | undefined = 10): boolean {
 		const transformedMouseX =
-			(point.x - this.transformation.matrix.translateX) /
-			this.transformation.matrix.scaleX;
+			(point.x - this.transformation.matrix.translateX) / this.transformation.matrix.scaleX;
 		const transformedMouseY =
-			(point.y - this.transformation.matrix.translateY) /
-			this.transformation.matrix.scaleY;
-		const transformedMouse = new Point(
-			transformedMouseX,
-			transformedMouseY,
-		);
+			(point.y - this.transformation.matrix.translateY) / this.transformation.matrix.scaleY;
+		const transformedMouse = new Point(transformedMouseX, transformedMouseY);
 		for (let i = 0; i < this.points.length - 1; i++) {
 			const p1 = this.points[i];
 			const p2 = this.points[i + 1];
@@ -528,18 +504,12 @@ export class Drawing extends Mbr implements Geometry {
 	}
 }
 
-function getPerpendicularDistance(
-	point: Point,
-	lineStart: Point,
-	lineEnd: Point,
-): number {
+function getPerpendicularDistance(point: Point, lineStart: Point, lineEnd: Point): number {
 	const { x: px, y: py } = point;
 	const { x: sx, y: sy } = lineStart;
 	const { x: ex, y: ey } = lineEnd;
 
-	const numerator = Math.abs(
-		(ey - sy) * px - (ex - sx) * py + ex * sy - ey * sx,
-	);
+	const numerator = Math.abs((ey - sy) * px - (ex - sx) * py + ex * sy - ey * sx);
 	const denominator = Math.sqrt(Math.pow(ey - sy, 2) + Math.pow(ex - sx, 2));
 	return numerator / denominator;
 }

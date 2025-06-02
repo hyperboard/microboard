@@ -1,6 +1,6 @@
-import { Transforms } from "slate";
-import { CustomEditor } from "Board/Items/RichText/Editor/Editor.d";
-import { clearAllTextNodes } from "Board/Items/RichText/editorHelpers/common/clearAllTextNodes";
+import { Transforms } from 'slate';
+import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
+import { clearAllTextNodes } from 'Items/RichText/editorHelpers/common/clearAllTextNodes';
 
 export function withAutoList(editor: CustomEditor): boolean {
 	const { selection } = editor;
@@ -10,28 +10,20 @@ export function withAutoList(editor: CustomEditor): boolean {
 
 	const nodes = editor.children;
 
-	if (
-		nodes.length !== 1 ||
-		nodes[0].type !== "paragraph" ||
-		nodes[0].children.length !== 1
-	) {
+	if (nodes.length !== 1 || nodes[0].type !== 'paragraph' || nodes[0].children.length !== 1) {
 		return false;
 	}
 
-	if (nodes[0].children[0].text !== "1.") {
+	if (nodes[0].children[0].text !== '1.') {
 		return false;
 	}
 
 	Transforms.wrapNodes(
 		editor,
-		{ type: "ol_list", listLevel: 1, children: [] },
-		{ at: selection },
+		{ type: 'ol_list', listLevel: 1, children: [] },
+		{ at: selection }
 	);
-	Transforms.wrapNodes(
-		editor,
-		{ type: "list_item", children: [] },
-		{ at: selection },
-	);
+	Transforms.wrapNodes(editor, { type: 'list_item', children: [] }, { at: selection });
 
 	clearAllTextNodes(editor);
 

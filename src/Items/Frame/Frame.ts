@@ -1,43 +1,27 @@
-import {
-	Mbr,
-	Line,
-	Point,
-	Transformation,
-	Path,
-	Paths,
-	Item,
-	RichText,
-	Matrix,
-} from "..";
-import { Geometry } from "../Geometry";
-import { Subject } from "shared/Subject";
-import { DrawingContext } from "../DrawingContext";
-import { Operation } from "Board/Events";
-import { FrameOperation } from "./FrameOperation";
-import { Frames, FrameType } from "./Basic";
-import { GeometricNormal } from "../GeometricNormal";
-import { FrameCommand } from "./FrameCommand";
-import {
-	getProportionalResize,
-	getResize,
-} from "Board/Selection/Transformer/getResizeMatrix";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { Board } from "Board/Board";
-import {
-	exportBoardSnapshot,
-	SnapshotInfo,
-} from "Board/Tools/ExportSnapshot/exportBoardSnapshot";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { translateElementBy } from "Board/HTMLRender";
-import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
-import { DocumentFactory } from "Board/api/DocumentFactory";
+import { Mbr, Line, Point, Transformation, Path, Paths, Item, RichText, Matrix } from '..';
+import { Geometry } from '../Geometry';
+import { Subject } from 'Subject';
+import { DrawingContext } from '../DrawingContext';
+import { Operation } from 'Events';
+import { FrameOperation } from './FrameOperation';
+import { Frames, FrameType } from './Basic';
+import { GeometricNormal } from '../GeometricNormal';
+import { FrameCommand } from './FrameCommand';
+import { getProportionalResize, getResize } from 'Selection/Transformer/getResizeMatrix';
+import { ResizeType } from 'Selection/Transformer/getResizeType';
+import { Board } from 'Board';
+import { exportBoardSnapshot, SnapshotInfo } from 'Tools/ExportSnapshot/exportBoardSnapshot';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { translateElementBy } from 'HTMLRender';
+import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from './FrameData';
+import { DocumentFactory } from 'api/DocumentFactory';
 
-import { conf } from "Board/Settings";
+import { conf } from 'Settings';
 const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {
-	readonly itemType = "Frame";
-	parent = "Board";
+	readonly itemType = 'Frame';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	readonly subject = new Subject<Frame>();
 	private textContainer: Mbr;
@@ -53,15 +37,15 @@ export class Frame implements Geometry {
 	constructor(
 		private board: Board,
 		private getItemById: (id: string) => Item | undefined,
-		private id = "",
-		private name = "",
+		private id = '',
+		private name = '',
 		private shapeType = defaultFrameData.shapeType,
 		private backgroundColor = defaultFrameData.backgroundColor,
 		private backgroundOpacity = defaultFrameData.backgroundOpacity,
 		private borderColor = defaultFrameData.borderColor,
 		private borderOpacity = defaultFrameData.borderOpacity,
 		private borderStyle = defaultFrameData.borderStyle,
-		private borderWidth = defaultFrameData.borderWidth,
+		private borderWidth = defaultFrameData.borderWidth
 	) {
 		this.textContainer = Frames[this.shapeType].textBounds.copy();
 		this.path = Frames[this.shapeType].path.copy();
@@ -77,10 +61,10 @@ export class Frame implements Geometry {
 			this.name,
 			true,
 			false,
-			"Frame",
-			{ ...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR },
+			'Frame',
+			{ ...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR }
 		);
-		this.text.setSelectionHorisontalAlignment("left");
+		this.text.setSelectionHorisontalAlignment('left');
 		this.transformation.subject.subscribe(() => {
 			this.transformPath();
 			this.updateMbr();
@@ -115,7 +99,7 @@ export class Frame implements Geometry {
 	emitRemoveChild(children: Item[] | Item): void {
 		const newChildren = Array.isArray(children) ? children : [children];
 		const childrenIds = newChildren.map(child => {
-			child.parent = "Board";
+			child.parent = 'Board';
 			return child.getId();
 		});
 		this.removeChild(childrenIds);
@@ -143,8 +127,8 @@ export class Frame implements Geometry {
 	 */
 	private addChild(childId: string[]): void {
 		this.emit({
-			class: "Frame",
-			method: "addChild",
+			class: 'Frame',
+			method: 'addChild',
 			item: [this.getId()],
 			childId,
 		});
@@ -172,16 +156,14 @@ export class Frame implements Geometry {
 	}
 
 	private applyRemoveChild(childId: string[]): void {
-		this.children = this.children.filter(
-			currChild => !childId.includes(currChild),
-		);
+		this.children = this.children.filter(currChild => !childId.includes(currChild));
 		this.subject.publish(this);
 	}
 
 	private removeChild(childId: string[]): void {
 		this.emit({
-			class: "Frame",
-			method: "removeChild",
+			class: 'Frame',
+			method: 'removeChild',
 			item: [this.getId()],
 			childId,
 		});
@@ -201,14 +183,14 @@ export class Frame implements Geometry {
 		options?: {
 			onlyForOut?: boolean;
 			cancelIfChild?: boolean;
-		},
+		}
 	): boolean {
-		const isItem = "itemType" in item;
+		const isItem = 'itemType' in item;
 		const itemMbr = isItem ? item.getMbr() : item;
 		if (item instanceof Frame) {
 			return false;
 		}
-		if (options?.cancelIfChild && isItem && item.parent !== "Board") {
+		if (options?.cancelIfChild && isItem && item.parent !== 'Board') {
 			return false;
 		}
 
@@ -285,10 +267,10 @@ export class Frame implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
-		timeStamp: number,
+		timeStamp: number
 	): { matrix: Matrix; mbr: Mbr } | boolean {
 		if (this.transformation.isLocked) {
-			this.board?.pointer.setCursor("default");
+			this.board?.pointer.setCursor('default');
 			return false;
 		}
 
@@ -305,24 +287,18 @@ export class Frame implements Geometry {
 
 		let { scaleX, scaleY, translateX, translateY } = res.matrix;
 
-		if (this.getCanChangeRatio() && this.shapeType !== "Custom") {
-			this.setFrameType("Custom");
+		if (this.getCanChangeRatio() && this.shapeType !== 'Custom') {
+			this.setFrameType('Custom');
 		}
 
 		const initMbr = Frames[this.shapeType].path.copy().getMbr();
 
-		if (
-			this.mbr.right - this.mbr.left < initMbr.getWidth() &&
-			res.matrix.scaleX < 1
-		) {
+		if (this.mbr.right - this.mbr.left < initMbr.getWidth() && res.matrix.scaleX < 1) {
 			scaleX = 1;
 			translateX = 0;
 		}
 
-		if (
-			this.mbr.bottom - this.mbr.top < initMbr.getHeight() &&
-			res.matrix.scaleY < 1
-		) {
+		if (this.mbr.bottom - this.mbr.top < initMbr.getHeight() && res.matrix.scaleY < 1) {
 			scaleY = 1;
 			translateY = 0;
 		}
@@ -336,7 +312,7 @@ export class Frame implements Geometry {
 				x: translateX,
 				y: translateY,
 			},
-			timeStamp,
+			timeStamp
 		);
 
 		this.setLastFrameScale();
@@ -345,7 +321,7 @@ export class Frame implements Geometry {
 	}
 
 	getLastFrameScale(): { x: number; y: number } {
-		const scaleString = localStorage.getItem("lastFrameScale");
+		const scaleString = localStorage.getItem('lastFrameScale');
 		return scaleString ? JSON.parse(scaleString) : { x: 4, y: 5.565 };
 	}
 
@@ -366,24 +342,17 @@ export class Frame implements Geometry {
 			Custom: { x: 1, y: 1 },
 		};
 		const proportionalScale = {
-			x:
-				this.transformation.getScale().x *
-				aspectRatios[this.getFrameType()].x,
-			y:
-				this.transformation.getScale().y *
-				aspectRatios[this.getFrameType()].y,
+			x: this.transformation.getScale().x * aspectRatios[this.getFrameType()].x,
+			y: this.transformation.getScale().y * aspectRatios[this.getFrameType()].y,
 		};
-		if (typeof window !== "undefined") {
-			localStorage.setItem(
-				"lastFrameScale",
-				JSON.stringify(proportionalScale),
-			);
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('lastFrameScale', JSON.stringify(proportionalScale));
 		}
 	}
 
 	serialize(): FrameData {
 		return {
-			itemType: "Frame",
+			itemType: 'Frame',
 			shapeType: this.shapeType,
 			backgroundColor: this.backgroundColor,
 			backgroundOpacity: this.backgroundOpacity,
@@ -406,8 +375,7 @@ export class Frame implements Geometry {
 		}
 		this.linkTo.deserialize(data.linkTo);
 		this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
-		this.backgroundOpacity =
-			data.backgroundOpacity ?? this.backgroundOpacity;
+		this.backgroundOpacity = data.backgroundOpacity ?? this.backgroundOpacity;
 		this.borderColor = data.borderColor ?? this.borderColor;
 		this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
 		this.borderStyle = data.borderStyle ?? this.borderStyle;
@@ -430,7 +398,7 @@ export class Frame implements Geometry {
 	getSavedProportionsMatrix(): Matrix {
 		const newScale = Math.min(
 			this.transformation.matrix.scaleX,
-			this.transformation.matrix.scaleY,
+			this.transformation.matrix.scaleY
 		);
 		const newMatrix = this.transformation.matrix.copy();
 		newMatrix.scaleX = newScale;
@@ -445,10 +413,7 @@ export class Frame implements Geometry {
 			const newMatrix = this.getSavedProportionsMatrix();
 			this.path.transform(newMatrix);
 			this.textContainer.transform(newMatrix);
-			this.transformation.applyScaleTo(
-				newMatrix.scaleX,
-				newMatrix.scaleY,
-			);
+			this.transformation.applyScaleTo(newMatrix.scaleX, newMatrix.scaleY);
 		} else {
 			this.path.transform(this.transformation.matrix);
 			this.textContainer.transform(this.transformation.matrix);
@@ -480,23 +445,23 @@ export class Frame implements Geometry {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Frame":
-				if (op.method === "setBackgroundColor") {
+			case 'Frame':
+				if (op.method === 'setBackgroundColor') {
 					this.applyBackgroundColor(op.backgroundColor);
-				} else if (op.method === "setCanChangeRatio") {
+				} else if (op.method === 'setCanChangeRatio') {
 					this.applyCanChangeRatio(op.canChangeRatio);
-				} else if (op.method === "setFrameType") {
+				} else if (op.method === 'setFrameType') {
 					this.applyFrameType(op.shapeType);
-				} else if (op.method === "addChild") {
+				} else if (op.method === 'addChild') {
 					this.applyAddChild(op.childId);
-				} else if (op.method === "removeChild") {
+				} else if (op.method === 'removeChild') {
 					this.applyRemoveChild(op.childId);
 				}
 				break;
-			case "RichText":
+			case 'RichText':
 				this.text.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
 			default:
@@ -576,10 +541,10 @@ export class Frame implements Geometry {
 
 	private applyFrameType(shapeType: FrameType): void {
 		this.shapeType = shapeType;
-		if (shapeType !== "Custom") {
+		if (shapeType !== 'Custom') {
 			this.setLastFrameScale();
 		}
-		if (this.newShape === "Custom" || shapeType === "Custom") {
+		if (this.newShape === 'Custom' || shapeType === 'Custom') {
 			const scale = this.getLastFrameScale();
 			this.transformation.applyScaleTo(scale.x, scale.y);
 			this.transformPath(false);
@@ -596,40 +561,32 @@ export class Frame implements Geometry {
 						child.parent = this.getId();
 					} else {
 						this.applyRemoveChild([child.getId()]);
-						child.parent = "Board";
+						child.parent = 'Board';
 					}
 					// this.handleNesting(child);
 				}
 			});
 			const currMbr = this.getMbr();
 			this.board.items
-				.getEnclosedOrCrossed(
-					currMbr.left,
-					currMbr.top,
-					currMbr.right,
-					currMbr.bottom,
-				)
+				.getEnclosedOrCrossed(currMbr.left, currMbr.top, currMbr.right, currMbr.bottom)
 				.forEach(item => {
-					if (item.parent === "Board") {
+					if (item.parent === 'Board') {
 						if (this.handleNesting(item)) {
 							this.applyAddChild([item.getId()]);
 							item.parent = this.getId();
 						}
 					}
 				});
-			this.board.camera.addToView(
-				this.getMbr(),
-				this.board.items.getInView(),
-			);
+			this.board.camera.addToView(this.getMbr(), this.board.items.getInView());
 		}
-		this.applyCanChangeRatio(shapeType === "Custom");
+		this.applyCanChangeRatio(shapeType === 'Custom');
 		this.updateMbr();
 	}
 
 	setFrameType(shapeType: FrameType): void {
 		this.emit({
-			class: "Frame",
-			method: "setFrameType",
+			class: 'Frame',
+			method: 'setFrameType',
 			item: [this.getId()],
 			shapeType,
 			prevShapeType: this.getFrameType(),
@@ -646,8 +603,8 @@ export class Frame implements Geometry {
 
 	setCanChangeRatio(canChangeRatio: boolean): void {
 		this.emit({
-			class: "Frame",
-			method: "setCanChangeRatio",
+			class: 'Frame',
+			method: 'setCanChangeRatio',
 			item: [this.getId()],
 			canChangeRatio,
 		});
@@ -677,8 +634,8 @@ export class Frame implements Geometry {
 
 	setBackgroundColor(backgroundColor: string): void {
 		this.emit({
-			class: "Frame",
-			method: "setBackgroundColor",
+			class: 'Frame',
+			method: 'setBackgroundColor',
 			item: [this.getId()],
 			backgroundColor,
 		});
@@ -687,15 +644,12 @@ export class Frame implements Geometry {
 	getExportName(): string {
 		return this.text
 			.getText()
-			.flatMap(el => (el.type === "paragraph" ? el.children : []))
-			.map(child => (child.type === "text" ? child.text : ""))
-			.join(" ");
+			.flatMap(el => (el.type === 'paragraph' ? el.children : []))
+			.map(child => (child.type === 'text' ? child.text : ''))
+			.join(' ');
 	}
 
-	export(
-		board: Board,
-		name: string = this.getExportName(),
-	): Promise<SnapshotInfo> {
+	export(board: Board, name: string = this.getExportName()): Promise<SnapshotInfo> {
 		return exportBoardSnapshot({
 			board,
 			nameToExport: name,
@@ -724,7 +678,7 @@ export class Frame implements Geometry {
 			return;
 		}
 		const copy = this.getPath();
-		copy.setBackgroundColor("none");
+		copy.setBackgroundColor('none');
 		copy.render(context);
 	}
 
@@ -736,12 +690,7 @@ export class Frame implements Geometry {
 		this.renderNewShape(context);
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
@@ -749,20 +698,20 @@ export class Frame implements Geometry {
 		if (this.newShape) {
 			const nMbr = Frames[this.newShape].path.copy().getMbr();
 			const nMatrix = this.getSavedProportionsMatrix();
-			if (this.newShape === "Custom") {
+			if (this.newShape === 'Custom') {
 				const scale = this.getLastFrameScale();
 				nMatrix.scaleX = scale.x;
 				nMatrix.scaleY = scale.y;
 			}
 			nMbr.transform(nMatrix);
-			nMbr.backgroundColor = "rgba(173, 216, 230, 0.25)";
+			nMbr.backgroundColor = 'rgba(173, 216, 230, 0.25)';
 			nMbr.render(context);
 		}
 	}
 
 	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("frame-item");
+		const div = documentFactory.createElement('frame-item');
 		div.id = this.getId();
 
 		div.style.backgroundColor = this.backgroundColor;
@@ -772,11 +721,12 @@ export class Frame implements Geometry {
 		div.style.borderWidth = `${this.borderWidth}px`;
 		div.style.borderStyle = this.borderStyle;
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 
 		// const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
-		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(1, 1)`;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(
+			translateY
+		)}px) scale(1, 1)`;
 
 		const width = this.getMbr().getWidth();
 		const height = this.getMbr().getHeight();
@@ -789,9 +739,9 @@ export class Frame implements Geometry {
 		// div.style.height = `${unscaledHeight}px`;
 		div.style.width = `${width}px`;
 		div.style.height = `${height}px`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
+		div.style.position = 'absolute';
 		// div.setAttribute("data-shape-type", this.shapeType);
 
 		const textElement = this.text.renderHTML(documentFactory);
@@ -801,17 +751,13 @@ export class Frame implements Geometry {
 		// scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		// translateElementBy(textElement, 0, -45 / scaleY);
 		textElement.id = `${this.getId()}_text`;
-		textElement.style.overflow = "visible";
+		textElement.style.overflow = 'visible';
 		div.appendChild(textElement);
 
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
-			translateElementBy(
-				linkElement,
-				width - parseInt(linkElement.style.width),
-				0,
-			);
+			translateElementBy(linkElement, width - parseInt(linkElement.style.width), 0);
 			div.appendChild(linkElement);
 		}
 

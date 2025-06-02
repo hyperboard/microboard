@@ -3,26 +3,16 @@
 // import { Path2D as CanvasPath2D } from "canvas";
 // import { CanvasRenderingContext2D as CanvasPath2D } from "canvas";
 // import { Canvas } from "canvas";
-import { Path2DFactory } from "./Path2DFactory";
+import { Path2DFactory } from './Path2DFactory';
 
 export class NodePath2D extends Path2DFactory {
-	// nativePath: CanvasPath2D;
 	nativePath = {};
-	private shouldLog = false;
-	private log(str: string) {
-		if (this.shouldLog) {
-			console.log(str);
-		}
-	}
 
 	constructor(d?: string) {
 		super();
-		this.log("DummyPath2D constructor called");
 	}
 
-	addPath(path: Path2DFactory, transform?: DOMMatrix2DInit): void {
-		this.log("addPath called");
-	}
+	addPath(path: Path2DFactory, transform?: DOMMatrix2DInit): void {}
 
 	arc(
 		x: number,
@@ -30,20 +20,10 @@ export class NodePath2D extends Path2DFactory {
 		radius: number,
 		startAngle: number,
 		endAngle: number,
-		anticlockwise?: boolean,
-	): void {
-		this.log("arc called");
-	}
+		anticlockwise?: boolean
+	): void {}
 
-	arcTo(
-		x1: number,
-		y1: number,
-		x2: number,
-		y2: number,
-		radius: number,
-	): void {
-		this.log("arcTo called");
-	}
+	arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void {}
 
 	bezierCurveTo(
 		cp1x: number,
@@ -51,14 +31,10 @@ export class NodePath2D extends Path2DFactory {
 		cp2x: number,
 		cp2y: number,
 		x: number,
-		y: number,
-	): void {
-		this.log("bezierCurveTo called");
-	}
+		y: number
+	): void {}
 
-	closePath(): void {
-		this.log("closePath called");
-	}
+	closePath(): void {}
 
 	ellipse(
 		x: number,
@@ -68,40 +44,25 @@ export class NodePath2D extends Path2DFactory {
 		rotation: number,
 		startAngle: number,
 		endAngle: number,
-		anticlockwise?: boolean,
-	): void {
-		this.log("ellipse called");
-	}
+		anticlockwise?: boolean
+	): void {}
 
-	lineTo(x: number, y: number): void {
-		this.log("lineTo called");
-	}
+	lineTo(x: number, y: number): void {}
 
-	moveTo(x: number, y: number): void {
-		this.log("moveTo called");
-	}
+	moveTo(x: number, y: number): void {}
 
-	quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void {
-		this.log("quadraticCurveTo called");
-	}
+	quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void {}
 
-	rect(x: number, y: number, w: number, h: number): void {
-		this.log("rect called");
-	}
+	rect(x: number, y: number, w: number, h: number): void {}
 
 	// Expose a dummy method for getNativePath
-	getNativePath(): void {
-		this.log("getNativePath called");
-	}
+	getNativePath(): void {}
 
 	roundRect(
 		x: number,
 		y: number,
 		width: number,
 		height: number,
-		radii?: number | DOMPointInit,
-	): void {
-		this.log("roundRect called");
-		// this.nativePath.roundRect(x, y, width, height, radii);
-	}
+		radii?: number | DOMPointInit
+	): void {}
 }

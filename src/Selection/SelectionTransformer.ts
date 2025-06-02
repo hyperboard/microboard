@@ -1,10 +1,9 @@
-import { Board } from "../Board";
-import { DrawingContext } from "../Items/DrawingContext";
-import { Tool } from "../Tools/Tool";
-import { ConnectorTransformer } from "./ConnectorTransformer";
-import { Selection } from "./Selection";
-import { SelectionItems } from "./SelectionItems";
-import { Transformer } from "./Transformer";
+import { Board } from 'Board';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Tool } from 'Tools/Tool';
+import { ConnectorTransformer } from './ConnectorTransformer';
+import { SelectionItems } from './SelectionItems';
+import { Transformer } from './Transformer';
 
 export class SelectionTransformer extends Tool {
 	private readonly defaultTransformerTool: Transformer;
@@ -12,17 +11,11 @@ export class SelectionTransformer extends Tool {
 
 	private tool: Transformer | ConnectorTransformer;
 
-	constructor(
-		private board: Board,
-		private selection: Selection,
-	) {
+	constructor(private board: Board, private selection: Selection) {
 		super();
 
 		this.defaultTransformerTool = new Transformer(this.board, selection);
-		this.connectorTransformerTool = new ConnectorTransformer(
-			this.board,
-			selection,
-		);
+		this.connectorTransformerTool = new ConnectorTransformer(this.board, selection);
 		this.tool = this.defaultTransformerTool;
 
 		selection.subject.subscribe(selection => {
@@ -40,12 +33,12 @@ export class SelectionTransformer extends Tool {
 	}
 
 	updateTool(): void {
-		if (this.selection.getContext() === "SelectUnderPointer") {
+		if (this.selection.getContext() === 'SelectUnderPointer') {
 			return;
 		}
 		if (this.selection.items.isSingle()) {
 			const item = this.selection.items.getSingle();
-			if (item?.itemType === "Connector") {
+			if (item?.itemType === 'Connector') {
 				this.tool = this.connectorTransformerTool;
 				return;
 			} else {

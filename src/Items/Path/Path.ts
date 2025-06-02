@@ -1,15 +1,15 @@
-import { isNumberOdd } from "Board/lib";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Geometry } from "../Geometry";
-import { Line } from "../Line";
-import { CubicBezier, QuadraticBezier } from "../Curve";
-import { Point } from "../Point";
-import { Mbr } from "../Mbr";
-import { Arc, Matrix } from "..";
-import { GeometricNormal } from "../GeometricNormal";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { conf } from "Board/Settings";
-import { Path2DFactory } from "Board/api/Path2DFactory";
+import { isNumberOdd } from 'lib';
+import { DrawingContext } from 'Items/DrawingContext';
+import { Geometry } from '../Geometry';
+import { Line } from '../Line';
+import { CubicBezier, QuadraticBezier } from '../Curve';
+import { Point } from '../Point';
+import { Mbr } from '../Mbr';
+import { Arc, Matrix } from '..';
+import { GeometricNormal } from '../GeometricNormal';
+import { DocumentFactory } from 'api/DocumentFactory';
+import { conf } from 'Settings';
+import { Path2DFactory } from 'api/Path2DFactory';
 
 export type Segment = Line | QuadraticBezier | CubicBezier | Arc;
 
@@ -26,13 +26,13 @@ export const LinePatterns = {
 export type BorderStyle = keyof typeof LinePatterns;
 
 export const LineStyles: BorderStyle[] = [
-	"solid",
-	"dot",
-	"dash",
-	"longDash",
-	"dotDash",
-	"tripleDotDash",
-	"looseDoubleDotDash",
+	'solid',
+	'dot',
+	'dash',
+	'longDash',
+	'dotDash',
+	'tripleDotDash',
+	'looseDoubleDotDash',
 ];
 
 const scaledPatterns: { [key: number]: typeof LinePatterns } = {};
@@ -50,13 +50,13 @@ export function scalePatterns(scale: number): typeof LinePatterns {
 
 	if (!scaledPatterns[scale]) {
 		scaledPatterns[scale] = {
-			solid: slp("solid"),
-			dot: slp("dot"),
-			dash: slp("dash"),
-			longDash: slp("longDash"),
-			dotDash: slp("dotDash"),
-			tripleDotDash: slp("tripleDotDash"),
-			looseDoubleDotDash: slp("looseDoubleDotDash"),
+			solid: slp('solid'),
+			dot: slp('dot'),
+			dash: slp('dash'),
+			longDash: slp('longDash'),
+			dotDash: slp('dotDash'),
+			tripleDotDash: slp('tripleDotDash'),
+			looseDoubleDotDash: slp('looseDoubleDotDash'),
 		};
 	}
 	return scaledPatterns[scale];
@@ -83,25 +83,25 @@ export class Path implements Geometry, PathStylize {
 	private height: number;
 	private maxDimension: number;
 	private linePattern: number[];
-	connectedItemType = "";
+	connectedItemType = '';
 
 	constructor(
 		private segments: Segment[] = [],
 		private isClosedValue = false,
-		private backgroundColor = "none",
-		private borderColor = "black",
-		private borderStyle: BorderStyle = "solid",
+		private backgroundColor = 'none',
+		private borderColor = 'black',
+		private borderStyle: BorderStyle = 'solid',
 		private borderWidth = 1,
 		private backgroundOpacity = 1,
 		private borderOpacity = 1,
-		private shadowColor: string = "transparent",
+		private shadowColor: string = 'transparent',
 		private shadowBlur: number = 0,
 		private shadowOffsetX: number = 0,
 		private shadowOffsetY: number = 0,
 		private paddingTop: number = 0,
 		private paddingRight: number = 0,
 		private paddingBottom: number = 0,
-		private paddingLeft: number = 0,
+		private paddingLeft: number = 0
 	) {
 		this.linePattern = scalePatterns(this.borderWidth)[this.borderStyle];
 		const mbr = this.getMbr();
@@ -227,9 +227,7 @@ export class Path implements Geometry, PathStylize {
 	getIntersectionPoints(segment: Line): Point[] {
 		let intersections: Point[] = [];
 		for (const item of this.segments) {
-			intersections = intersections.concat(
-				item.getIntersectionPoints(segment),
-			);
+			intersections = intersections.concat(item.getIntersectionPoints(segment));
 		}
 		return intersections;
 	}
@@ -276,9 +274,7 @@ export class Path implements Geometry, PathStylize {
 	}
 
 	isUnderPoint(point: Point): boolean {
-		return this.isEnclosedOrCrossedBy(
-			new Mbr(point.x, point.y, point.x, point.y),
-		);
+		return this.isEnclosedOrCrossedBy(new Mbr(point.x, point.y, point.x, point.y));
 	}
 
 	isPointOverEdges(point: Point, tolerance = 5): boolean {
@@ -297,7 +293,7 @@ export class Path implements Geometry, PathStylize {
 
 	getMbr(): Mbr {
 		if (this.segments.length === 0) {
-			throw new Error("The path is empty.");
+			throw new Error('The path is empty.');
 		}
 		const mbr = this.segments[0].getMbr();
 		for (let i = 1, len = this.segments.length; i < len; i++) {
@@ -330,10 +326,7 @@ export class Path implements Geometry, PathStylize {
 		const isEnclosedOrCrossedBy = this.isOpenEnclosedOrCrossedBy(rect);
 		const { left, top } = rect;
 		const infiniteLineIntersections = this.getIntersectionPoints(
-			new Line(
-				new Point(left, top),
-				new Point(Number.MAX_VALUE / 1000000000000000, top),
-			),
+			new Line(new Point(left, top), new Point(Number.MAX_VALUE / 1000000000000000, top))
 		);
 		const isBoundsInside = isNumberOdd(infiniteLineIntersections.length);
 		return isEnclosedOrCrossedBy || isBoundsInside;
@@ -342,10 +335,7 @@ export class Path implements Geometry, PathStylize {
 	isEnclosedBy(rect: Mbr): boolean {
 		const { left, top } = rect;
 		const infiniteLineIntersections = this.getIntersectionPoints(
-			new Line(
-				new Point(left, top),
-				new Point(Number.MAX_VALUE / 1000000000000000, top),
-			),
+			new Line(new Point(left, top), new Point(Number.MAX_VALUE / 1000000000000000, top))
 		);
 		return isNumberOdd(infiniteLineIntersections.length);
 	}
@@ -358,10 +348,7 @@ export class Path implements Geometry, PathStylize {
 		let bestCandidate;
 		for (const segment of this.segments) {
 			const candidate = segment.getNormal(point);
-			if (
-				!bestCandidate ||
-				candidate.getDistance() < bestCandidate.getDistance()
-			) {
+			if (!bestCandidate || candidate.getDistance() < bestCandidate.getDistance()) {
 				bestCandidate = candidate;
 			}
 		}
@@ -371,10 +358,7 @@ export class Path implements Geometry, PathStylize {
 	updateMaxDimension(scale?: number) {
 		const mbr = this.getMbr();
 		if (scale) {
-			this.maxDimension = Math.max(
-				mbr.getWidth() * scale,
-				mbr.getHeight() * scale,
-			);
+			this.maxDimension = Math.max(mbr.getWidth() * scale, mbr.getHeight() * scale);
 		} else {
 			this.maxDimension = Math.max(mbr.getWidth(), mbr.getHeight());
 		}
@@ -388,9 +372,7 @@ export class Path implements Geometry, PathStylize {
 			return;
 		}
 		const shouldFillBackground =
-			this.isClosedValue &&
-			this.backgroundColor !== "none" &&
-			this.backgroundColor !== "";
+			this.isClosedValue && this.backgroundColor !== 'none' && this.backgroundColor !== '';
 		const ctx = context.ctx;
 		if (this.maxDimension < context.shapeVisibilityTreshold) {
 			if (shouldFillBackground) {
@@ -411,14 +393,14 @@ export class Path implements Geometry, PathStylize {
 				ctx.shadowOffsetX = this.shadowOffsetX;
 				ctx.shadowOffsetY = this.shadowOffsetY;
 			} else {
-				ctx.shadowColor = "transparent";
+				ctx.shadowColor = 'transparent';
 			}
 			if (
-				this.borderColor === "transparent" ||
-				this.borderColor === "none" ||
+				this.borderColor === 'transparent' ||
+				this.borderColor === 'none' ||
 				!this.borderColor
 			) {
-				ctx.strokeStyle = "transparent";
+				ctx.strokeStyle = 'transparent';
 			} else {
 				ctx.strokeStyle = this.borderColor;
 			}
@@ -445,10 +427,10 @@ export class Path implements Geometry, PathStylize {
 
 	getSvgPath(): string {
 		if (this.segments.length === 0) {
-			return "";
+			return '';
 		}
 
-		let pathData = "";
+		let pathData = '';
 
 		const startPoint = this.segments[0].getStartPoint();
 		pathData += `M ${startPoint.x} ${startPoint.y} `;
@@ -467,14 +449,7 @@ export class Path implements Geometry, PathStylize {
 				const endPoint = segment.end;
 				pathData += `C ${startControl.x} ${startControl.y} ${endControl.x} ${endControl.y} ${endPoint.x} ${endPoint.y} `;
 			} else if (segment instanceof Arc) {
-				const {
-					radiusX,
-					radiusY,
-					rotation,
-					startAngle,
-					endAngle,
-					clockwise,
-				} = segment;
+				const { radiusX, radiusY, rotation, startAngle, endAngle, clockwise } = segment;
 
 				let arcSpan = endAngle - startAngle;
 				while (arcSpan < 0) {
@@ -505,7 +480,7 @@ export class Path implements Geometry, PathStylize {
 		}
 
 		if (this.isClosed()) {
-			pathData += "Z";
+			pathData += 'Z';
 		}
 
 		return pathData.trim();
@@ -513,28 +488,16 @@ export class Path implements Geometry, PathStylize {
 
 	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): SVGPathElement {
-		const pathElement = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"path",
-		);
+		const pathElement = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-		pathElement.setAttribute("d", this.getSvgPath());
-		pathElement.setAttribute("fill", this.backgroundColor);
-		pathElement.setAttribute(
-			"fill-opacity",
-			this.backgroundOpacity.toString(),
-		);
-		pathElement.setAttribute("stroke", this.borderColor);
-		pathElement.setAttribute("vector-effect", "non-scaling-stroke");
-		pathElement.setAttribute("stroke-width", this.borderWidth.toString());
-		pathElement.setAttribute(
-			"stroke-opacity",
-			this.borderOpacity.toString(),
-		);
-		pathElement.setAttribute(
-			"stroke-dasharray",
-			LinePatterns[this.borderStyle].join(", "),
-		);
+		pathElement.setAttribute('d', this.getSvgPath());
+		pathElement.setAttribute('fill', this.backgroundColor);
+		pathElement.setAttribute('fill-opacity', this.backgroundOpacity.toString());
+		pathElement.setAttribute('stroke', this.borderColor);
+		pathElement.setAttribute('vector-effect', 'non-scaling-stroke');
+		pathElement.setAttribute('stroke-width', this.borderWidth.toString());
+		pathElement.setAttribute('stroke-opacity', this.borderOpacity.toString());
+		pathElement.setAttribute('stroke-dasharray', LinePatterns[this.borderStyle].join(', '));
 
 		return pathElement;
 	}
@@ -573,7 +536,7 @@ export class Path implements Geometry, PathStylize {
 			this.paddingTop, // Include top padding in the copy
 			this.paddingRight, // Include right padding in the copy
 			this.paddingBottom, // Include bottom padding in the copy
-			this.paddingLeft, // Include left padding in the copy
+			this.paddingLeft // Include left padding in the copy
 		);
 	}
 

@@ -1,46 +1,37 @@
-import { Operation } from "Board/Events";
-import { Subject } from "shared/Subject";
-import {
-	Line,
-	Matrix,
-	Mbr,
-	Path,
-	Paths,
-	Point,
-	Transformation,
-	TransformationOperation,
-} from "..";
-import { getProportionalResize } from "../../Selection/Transformer/getResizeMatrix";
-import { ResizeType } from "../../Selection/Transformer/getResizeType";
-import { DrawingContext } from "../DrawingContext";
-import { GeometricNormal } from "../GeometricNormal";
-import { Geometry } from "../Geometry";
-import { RichText } from "../RichText";
-import { StickerCommand } from "./StickerCommand";
-import { StickerData, StickerOperation } from "./StickerOperation";
-import { LinkTo } from "../LinkTo/LinkTo";
+import { Operation } from 'Events';
+import { Subject } from 'Subject';
+import { Line, Matrix, Mbr, Path, Paths, Point, Transformation, TransformationOperation } from '..';
+import { getProportionalResize } from '../../Selection/Transformer/getResizeMatrix';
+import { ResizeType } from '../../Selection/Transformer/getResizeType';
+import { DrawingContext } from '../DrawingContext';
+import { GeometricNormal } from '../GeometricNormal';
+import { Geometry } from '../Geometry';
+import { RichText } from '../RichText';
+import { StickerCommand } from './StickerCommand';
+import { StickerData, StickerOperation } from './StickerOperation';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { SessionStorage } from 'SessionStorage';
+import { Board } from 'Board';
+import { DocumentFactory } from 'api/DocumentFactory';
 import {
 	positionRelatively,
 	resetElementScale,
 	scaleElementBy,
 	translateElementBy,
-} from "Board/HTMLRender";
-import { SessionStorage } from "App/SessionStorage";
-import { Board } from "Board";
-import { DocumentFactory } from "Board/api/DocumentFactory";
-import { conf } from "Board/Settings";
+} from 'HTMLRender';
+import { conf } from 'Settings';
 
 export const stickerColors = {
-	Purple: "rgb(233, 208, 255)",
-	Pink: "rgb(255, 209, 211)",
-	"Sky Blue": "rgb(206, 228, 255)",
-	Blue: "rgb(205, 250, 255)",
-	Green: "rgb(203, 232, 150)",
-	"Light Green": "rgb(180, 241, 198)",
-	Orange: "rgb(255, 180, 126)",
-	Yellow: "rgb(255, 235, 163)",
-	"Light Gray": "rgb(231, 232, 238)",
-	Gray: "rgb(156, 156, 156)",
+	Purple: 'rgb(233, 208, 255)',
+	Pink: 'rgb(255, 209, 211)',
+	'Sky Blue': 'rgb(206, 228, 255)',
+	Blue: 'rgb(205, 250, 255)',
+	Green: 'rgb(203, 232, 150)',
+	'Light Green': 'rgb(180, 241, 198)',
+	Orange: 'rgb(255, 180, 126)',
+	Yellow: 'rgb(255, 235, 163)',
+	'Light Gray': 'rgb(231, 232, 238)',
+	Gray: 'rgb(156, 156, 156)',
 } as { [color: string]: string };
 
 const width = 200;
@@ -56,10 +47,10 @@ export const StickerShape = {
 			new Line(new Point(0, height), new Point(0, 0)),
 		],
 		true,
-		stickerColors["Sky Blue"],
-		"transparent",
-		"solid",
-		0,
+		stickerColors['Sky Blue'],
+		'transparent',
+		'solid',
+		0
 	),
 	anchorPoints: [
 		new Point(width / 2, 0),
@@ -75,8 +66,8 @@ const _hypotenuse = Math.sqrt(height * height + width * width);
 const _relation = width / height;
 
 export class Sticker implements Geometry {
-	parent = "Board";
-	readonly itemType = "Sticker";
+	parent = 'Board';
+	readonly itemType = 'Sticker';
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	private stickerPath = StickerShape.stickerPath.copy();
@@ -87,8 +78,8 @@ export class Sticker implements Geometry {
 
 	constructor(
 		private board: Board,
-		private id = "",
-		private backgroundColor = defaultStickerData.backgroundColor,
+		private id = '',
+		private backgroundColor = defaultStickerData.backgroundColor
 	) {
 		this.linkTo = new LinkTo(this.id, this.board.events);
 		this.transformation = new Transformation(this.id, this.board.events);
@@ -98,36 +89,31 @@ export class Sticker implements Geometry {
 			this.id,
 			this.transformation,
 			this.linkTo,
-			"\u00A0",
+			'\u00A0',
 			false,
 			true,
-			this.itemType,
+			this.itemType
 		);
 
 		this.transformation.subject.subscribe(
 			(_subject: Transformation, op: TransformationOperation) => {
 				this.transformPath();
-				if (op.method === "scaleBy") {
+				if (op.method === 'scaleBy') {
 					this.text.updateElement();
-				} else if (op.method === "scaleByTranslateBy") {
+				} else if (op.method === 'scaleByTranslateBy') {
 					if (this.text.isAutosize()) {
-						this.text.scaleAutoSizeScale(
-							Math.min(op.scale.x, op.scale.y),
-						);
+						this.text.scaleAutoSizeScale(Math.min(op.scale.x, op.scale.y));
 						this.text.recoordinate();
 						this.text.transformCanvas();
 					} else {
 						this.text.handleInshapeScale();
 					}
-				} else if (op.method === "transformMany") {
+				} else if (op.method === 'transformMany') {
 					const transformOp = op.items[this.id];
-					if (transformOp.method === "scaleByTranslateBy") {
+					if (transformOp.method === 'scaleByTranslateBy') {
 						if (this.text.isAutosize()) {
 							this.text.scaleAutoSizeScale(
-								Math.min(
-									transformOp.scale.x,
-									transformOp.scale.y,
-								),
+								Math.min(transformOp.scale.x, transformOp.scale.y)
 							);
 							this.text.recoordinate();
 							this.text.transformCanvas();
@@ -137,7 +123,7 @@ export class Sticker implements Geometry {
 					}
 				}
 				this.subject.publish(this);
-			},
+			}
 		);
 		this.text.subject.subscribe(() => {
 			this.subject.publish(this);
@@ -166,7 +152,7 @@ export class Sticker implements Geometry {
 
 	serialize(): StickerData {
 		return {
-			itemType: "Sticker",
+			itemType: 'Sticker',
 			backgroundColor: this.backgroundColor,
 			transformation: this.transformation.serialize(),
 			text: this.text.serialize(),
@@ -185,9 +171,7 @@ export class Sticker implements Geometry {
 		this.text.updateElement();
 		const linkTo = data.linkTo;
 		if (linkTo) {
-			this.linkTo.deserialize(
-				typeof linkTo === "string" ? linkTo : linkTo.link,
-			);
+			this.linkTo.deserialize(typeof linkTo === 'string' ? linkTo : linkTo.link);
 		}
 		// this.transformPath();
 		this.subject.publish(this);
@@ -223,20 +207,20 @@ export class Sticker implements Geometry {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Sticker":
+			case 'Sticker':
 				switch (op.method) {
-					case "setBackgroundColor":
+					case 'setBackgroundColor':
 						this.applyBackgroundColor(op.backgroundColor);
 						break;
 				}
 				break;
-			case "RichText":
+			case 'RichText':
 				this.text.apply(op);
 				break;
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
-			case "LinkTo":
+			case 'LinkTo':
 				this.linkTo.apply(op);
 				break;
 			default:
@@ -260,15 +244,15 @@ export class Sticker implements Geometry {
 
 	setBackgroundColor(backgroundColor: string): void {
 		this.emit({
-			class: "Sticker",
-			method: "setBackgroundColor",
+			class: 'Sticker',
+			method: 'setBackgroundColor',
 			item: [this.getId()],
 			backgroundColor,
 		});
 	}
 
 	getIntersectionPoints(segment: Line): Point[] {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	}
 
 	getMbr(): Mbr {
@@ -286,10 +270,7 @@ export class Sticker implements Geometry {
 	}
 
 	isUnderPoint(point: Point): boolean {
-		return (
-			this.textContainer.isUnderPoint(point) ||
-			this.stickerPath.isUnderPoint(point)
-		);
+		return this.textContainer.isUnderPoint(point) || this.stickerPath.isUnderPoint(point);
 	}
 
 	isNearPoint(point: Point, distance: number): boolean {
@@ -324,21 +305,17 @@ export class Sticker implements Geometry {
 		this.text.render(context);
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
-			this.linkTo.render(
-				context,
-				top,
-				right,
-				this.board.camera.getScale(),
-			);
+			this.linkTo.render(context, top, right, this.board.camera.getScale());
 		}
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("sticker-item");
+		const div = documentFactory.createElement('sticker-item');
 
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
-		const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
+		const transform = `translate(${Math.round(translateX)}px, ${Math.round(
+			translateY
+		)}px) scale(${scaleX}, ${scaleY})`;
 		const itemMbr = this.getMbr();
 		const height = itemMbr.getHeight();
 		const unscaledWidth = itemMbr.getWidth() / scaleX;
@@ -348,46 +325,49 @@ export class Sticker implements Geometry {
 		div.style.backgroundColor = this.backgroundColor;
 		div.style.width = `${unscaledWidth}px`;
 		div.style.height = `${unscaledHeight}px`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
+		div.style.position = 'absolute';
 		div.style.boxShadow =
-			"0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)";
+			'0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)';
 
-		const autoScale =
-			(this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
+		const autoScale = (this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
 		const textElement = this.text.renderHTML(documentFactory);
 		const padding = 6;
 		textElement.id = `${this.getId()}_text`;
-		textElement.style.overflow = "auto";
+		textElement.style.overflow = 'auto';
 		positionRelatively(textElement, div, padding);
 		resetElementScale(textElement);
 		scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
 		scaleElementBy(textElement, autoScale, autoScale);
-		textElement.style.maxWidth = `${(width / autoScale - (2 * padding) / autoScale) * scaleX}px`;
+		textElement.style.maxWidth = `${
+			(width / autoScale - (2 * padding) / autoScale) * scaleX
+		}px`;
 		if (autoScale < 1) {
-			textElement.style.width = `${parseInt(textElement.style.width) / (scaleX * autoScale) - 2 * padding * scaleX}px`;
+			textElement.style.width = `${
+				parseInt(textElement.style.width) / (scaleX * autoScale) - 2 * padding * scaleX
+			}px`;
 		}
 		const textHeight = this.text.layoutNodes.height * autoScale;
 		if (textHeight < height) {
 			const alignment = this.text.getVerticalAlignment();
-			if (alignment === "center") {
+			if (alignment === 'center') {
 				textElement.style.marginTop = `${(height - textHeight) / 2 / scaleY}px`;
-			} else if (alignment === "bottom") {
+			} else if (alignment === 'bottom') {
 				textElement.style.marginTop = `${(height - textHeight) / scaleY}px`;
 			} else {
-				textElement.style.marginTop = "0px";
+				textElement.style.marginTop = '0px';
 			}
 		}
 
-		div.setAttribute("data-link-to", this.linkTo.serialize() || "");
+		div.setAttribute('data-link-to', this.linkTo.serialize() || '');
 		if (this.getLinkTo()) {
 			const linkElement = this.linkTo.renderHTML(documentFactory);
 			scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
 			translateElementBy(
 				linkElement,
 				unscaledWidth - parseInt(linkElement.style.width) / scaleX,
-				0,
+				0
 			);
 			div.appendChild(linkElement);
 		}
@@ -404,24 +384,18 @@ export class Sticker implements Geometry {
 		ctx.save();
 		// First shadow
 		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY =
-			(18 - 5) *
-			context.getCameraScale() *
-			this.transformation.getScale().y;
-		ctx.shadowColor = "rgba(20, 21, 26, 0.25)";
+		ctx.shadowOffsetY = (18 - 5) * context.getCameraScale() * this.transformation.getScale().y;
+		ctx.shadowColor = 'rgba(20, 21, 26, 0.25)';
 		ctx.shadowBlur = 24;
-		ctx.fillStyle = "rgba(20, 21, 26, 0.25)";
+		ctx.fillStyle = 'rgba(20, 21, 26, 0.25)';
 		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
 
 		// Second shadow
 		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY =
-			(8 - 5) *
-			context.getCameraScale() *
-			this.transformation.getScale().y;
-		ctx.shadowColor = "rgba(20, 21, 26, 0.125)";
+		ctx.shadowOffsetY = (8 - 5) * context.getCameraScale() * this.transformation.getScale().y;
+		ctx.shadowColor = 'rgba(20, 21, 26, 0.125)';
 		ctx.shadowBlur = 8;
-		ctx.fillStyle = "rgba(20, 21, 26, 0.125)";
+		ctx.fillStyle = 'rgba(20, 21, 26, 0.125)';
 		ctx.fillRect(mbr.left, mbr.top, mbr.getWidth(), mbr.getHeight());
 
 		ctx.restore();
@@ -437,7 +411,7 @@ export class Sticker implements Geometry {
 
 	getPath(): Path | Paths {
 		const path = this.stickerPath.copy();
-		path.setBackgroundColor("none");
+		path.setBackgroundColor('none');
 		return path;
 	}
 
@@ -462,15 +436,15 @@ export class Sticker implements Geometry {
 		}
 
 		this.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
+			class: 'Transformation',
+			method: 'translateTo',
 			item: [this.id],
 			x,
 			y,
 		});
 		this.transformation.apply({
-			class: "Transformation",
-			method: "scaleTo",
+			class: 'Transformation',
+			method: 'scaleTo',
 			item: [this.id],
 			x: l,
 			y: l,
@@ -485,30 +459,30 @@ export class Sticker implements Geometry {
 			const h = height * scale;
 
 			this.transformation.apply({
-				class: "Transformation",
-				method: "translateTo",
+				class: 'Transformation',
+				method: 'translateTo',
 				item: [this.id],
 				x: pt.x - w / 2,
 				y: pt.y - h / 2,
 			});
 			this.transformation.apply({
-				class: "Transformation",
-				method: "scaleTo",
+				class: 'Transformation',
+				method: 'scaleTo',
 				item: [this.id],
 				x: scale,
 				y: scale,
 			});
 		} else {
 			this.transformation.apply({
-				class: "Transformation",
-				method: "translateTo",
+				class: 'Transformation',
+				method: 'translateTo',
 				item: [this.id],
 				x: pt.x - width / 2,
 				y: pt.y - height / 2,
 			});
 			this.transformation.apply({
-				class: "Transformation",
-				method: "scaleTo",
+				class: 'Transformation',
+				method: 'scaleTo',
 				item: [this.id],
 				x: 1,
 				y: 1,
@@ -521,19 +495,17 @@ export class Sticker implements Geometry {
 		mbr: Mbr,
 		opposite: Point,
 		startMbr: Mbr,
-		timeStamp: number,
+		timeStamp: number
 	): { matrix: Matrix; mbr: Mbr } {
 		const res = getProportionalResize(resizeType, pointer, mbr, opposite);
 
-		if (["left", "right"].indexOf(resizeType) > -1) {
+		if (['left', 'right'].indexOf(resizeType) > -1) {
 			const d = startMbr.getWidth() / startMbr.getHeight();
-			const originallySquared =
-				d > 0.99 * _relation && d < 1.01 * _relation;
+			const originallySquared = d > 0.99 * _relation && d < 1.01 * _relation;
 			const d3 = this.getMbr().getWidth() / this.getMbr().getHeight();
 			const nowSquared = d3 > 0.99 * _relation && d3 < 1.01 * _relation;
 			const growSquared = res.mbr.getWidth() < startMbr.getWidth();
-			const shrinkSquared =
-				res.mbr.getWidth() / startMbr.getMbr().getWidth() < 0.8;
+			const shrinkSquared = res.mbr.getWidth() / startMbr.getMbr().getWidth() < 0.8;
 
 			const needGrow =
 				(originallySquared && !growSquared && nowSquared) ||
@@ -545,20 +517,20 @@ export class Sticker implements Geometry {
 			const startWidth = this.getMbr().getWidth();
 			if (needGrow) {
 				this.transformation.scaleBy(1.33, 1, timeStamp);
-				if (resizeType === "left") {
+				if (resizeType === 'left') {
 					this.transformation.translateBy(
 						startWidth - this.getMbr().getWidth(),
 						0,
-						timeStamp,
+						timeStamp
 					);
 				}
 			} else if (needShrink) {
 				this.transformation.scaleBy(1 / 1.33, 1, timeStamp);
-				if (resizeType === "left") {
+				if (resizeType === 'left') {
 					this.transformation.translateBy(
 						startWidth - this.getMbr().getWidth(),
 						0,
-						timeStamp,
+						timeStamp
 					);
 				}
 			}
@@ -572,7 +544,7 @@ export class Sticker implements Geometry {
 					x: res.matrix.translateX,
 					y: res.matrix.translateY,
 				},
-				timeStamp,
+				timeStamp
 			);
 		}
 		res.mbr = this.getMbr();

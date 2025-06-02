@@ -1,5 +1,5 @@
-import { TextNode } from "Board/Items/RichText/Editor/TextNode";
-import { Editor } from "slate";
+import { TextNode } from 'Items/RichText/Editor/TextNode';
+import { Editor } from 'slate';
 
 export function getAllTextNodesInSelection(editor: Editor): TextNode[] {
 	const { selection } = editor;
@@ -11,7 +11,7 @@ export function getAllTextNodesInSelection(editor: Editor): TextNode[] {
 	for (const [node] of Editor.nodes(editor, {
 		at: selection,
 		// @ts-expect-error
-		match: n => n.type === "text",
+		match: n => n.type === 'text',
 	})) {
 		textNodes.push(node as TextNode);
 	}

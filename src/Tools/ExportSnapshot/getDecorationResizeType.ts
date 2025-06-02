@@ -1,11 +1,11 @@
-import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { conf } from "Board/Settings";
+import { Point, Mbr } from 'Items';
+import { ResizeType } from 'Selection/Transformer/getResizeType';
+import { conf } from 'Settings';
 
 export function getDecorationResizeType(
 	point: Point,
 	mbr: Mbr,
-	tolerance = 10,
+	tolerance = 10
 ): ResizeType | undefined {
 	for (const key in conf.EXPORT_FRAME_DECORATIONS) {
 		const decoration = conf.EXPORT_FRAME_DECORATIONS[key];
@@ -23,14 +23,14 @@ export function getDecorationResizeType(
 			point.y <= decorationBounds.bottom + tolerance
 		) {
 			switch (key) {
-				case "top-left":
-					return "leftTop";
-				case "top-right":
-					return "rightTop";
-				case "bottom-left":
-					return "leftBottom";
-				case "bottom-right":
-					return "rightBottom";
+				case 'top-left':
+					return 'leftTop';
+				case 'top-right':
+					return 'rightTop';
+				case 'bottom-left':
+					return 'leftBottom';
+				case 'bottom-right':
+					return 'rightBottom';
 			}
 		}
 	}

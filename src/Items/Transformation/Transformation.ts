@@ -1,30 +1,21 @@
-import { SubjectOperation } from "shared/SubjectOperation";
-import { Events, Operation } from "../../Events";
-import { Point } from "../Point";
-import { Matrix } from "./Matrix";
-import { TransformationCommand } from "./TransformationCommand";
-import {
-	DefaultTransformationData,
-	TransformationData,
-} from "./TransformationData";
-import { TransformationOperation } from "./TransformationOperations";
+import { SubjectOperation } from 'SubjectOperation';
+import { Events, Operation } from '../../Events';
+import { Point } from '../Point';
+import { Matrix } from './Matrix';
+import { TransformationCommand } from './TransformationCommand';
+import { DefaultTransformationData, TransformationData } from './TransformationData';
+import { TransformationOperation } from './TransformationOperations';
 
 const defaultData = new DefaultTransformationData();
 
 export class Transformation {
-	readonly subject = new SubjectOperation<
-		Transformation,
-		TransformationOperation
-	>();
+	readonly subject = new SubjectOperation<Transformation, TransformationOperation>();
 	matrix = new Matrix();
 	previous = new Matrix();
 	private rotate = defaultData.rotate;
 	isLocked = false;
 
-	constructor(
-		private id = "",
-		private events?: Events,
-	) {}
+	constructor(private id = '', private events?: Events) {}
 
 	serialize(): TransformationData {
 		return {
@@ -43,7 +34,7 @@ export class Transformation {
 				width: number;
 				height: number;
 			};
-		},
+		}
 	): this {
 		this.previous = this.matrix.copy();
 		if (data.translateX) {
@@ -70,15 +61,15 @@ export class Transformation {
 						width: data.dimension.width,
 						height: data.dimension.height,
 					},
-					{ x: data.scaleX, y: data.scaleY },
+					{ x: data.scaleX, y: data.scaleY }
 				);
 			} else {
 				this.matrix.rotateBy(data.rotate);
 			}
 		}
 		this.subject.publish(this, {
-			class: "Transformation",
-			method: "deserialize",
+			class: 'Transformation',
+			method: 'deserialize',
 			item: [this.id],
 			data,
 		});
@@ -88,7 +79,7 @@ export class Transformation {
 	copy(id?: string): Transformation {
 		const { translateX, translateY, scaleX, scaleY } = this.matrix;
 		const { rotate } = this;
-		return new Transformation(id || "", this.events).deserialize({
+		return new Transformation(id || '', this.events).deserialize({
 			translateX,
 			translateY,
 			scaleX,
@@ -115,40 +106,40 @@ export class Transformation {
 	apply(op: Operation): void {
 		this.previous = this.matrix.copy();
 		switch (op.method) {
-			case "translateTo":
+			case 'translateTo':
 				this.applyTranslateTo(op.x, op.y);
 				break;
-			case "translateBy":
+			case 'translateBy':
 				this.applyTranslateBy(op.x, op.y);
 				break;
-			case "scaleTo":
+			case 'scaleTo':
 				this.applyScaleTo(op.x, op.y);
 				break;
-			case "scaleBy":
+			case 'scaleBy':
 				this.applyScaleBy(op.x, op.y);
 				break;
-			case "scaleToRelativeTo":
+			case 'scaleToRelativeTo':
 				this.applyScaleToRelativeTo(op.x, op.y, op.point);
 				break;
-			case "scaleByRelativeTo":
+			case 'scaleByRelativeTo':
 				this.applyScaleByRelativeTo(op.x, op.y, op.point);
 				break;
-			case "rotateTo":
+			case 'rotateTo':
 				this.applyRotateTo(op.degree);
 				break;
-			case "rotateBy":
+			case 'rotateBy':
 				this.applyRotateBy(op.degree);
 				break;
-			case "scaleByTranslateBy":
+			case 'scaleByTranslateBy':
 				this.applyScaleByTranslateBy(op.scale, op.translate);
 				break;
-			case "transformMany":
+			case 'transformMany':
 				this.applyTransformMany(op.items[this.id]);
 				break;
-			case "locked":
+			case 'locked':
 				this.applyLocked(op.locked);
 				break;
-			case "unlocked":
+			case 'unlocked':
 				this.applyUnlocked(op.locked);
 				break;
 			default:
@@ -177,27 +168,23 @@ export class Transformation {
 
 	applyScaleByTranslateBy(
 		scale: { x: number; y: number },
-		translate: { x: number; y: number },
+		translate: { x: number; y: number }
 	): void {
 		this.matrix.scale(scale.x, scale.y);
 		this.matrix.translate(translate.x, translate.y);
 	}
 
 	applyTransformMany(op: TransformationOperation): void {
-		if (op.method === "scaleByTranslateBy") {
+		if (op.method === 'scaleByTranslateBy') {
 			this.applyScaleByTranslateBy(op.scale, op.translate);
-		} else if (op.method === "scaleBy") {
+		} else if (op.method === 'scaleBy') {
 			this.applyScaleBy(op.x, op.y);
-		} else if (op.method === "translateBy") {
+		} else if (op.method === 'translateBy') {
 			this.applyTranslateBy(op.x, op.y);
 		}
 	}
 
-	applyScaleByRelativeTo(
-		x: number,
-		y: number,
-		point: { x: number; y: number },
-	): void {
+	applyScaleByRelativeTo(x: number, y: number, point: { x: number; y: number }): void {
 		const scaleX = this.matrix.scaleX * x;
 		const scaleY = this.matrix.scaleY * y;
 		this.matrix.translateX = -point.x * scaleX + point.x;
@@ -206,11 +193,7 @@ export class Transformation {
 		this.matrix.scaleY = scaleY;
 	}
 
-	applyScaleToRelativeTo(
-		x: number,
-		y: number,
-		point: { x: number; y: number },
-	): void {
+	applyScaleToRelativeTo(x: number, y: number, point: { x: number; y: number }): void {
 		this.applyTranslateBy(-point.x, -point.y);
 		this.applyScaleTo(x, y);
 		this.applyTranslateBy(point.x, point.y);
@@ -276,8 +259,8 @@ export class Transformation {
 			// TODO console.warn("Transformation.translateTo() has no itemId");
 		}
 		this.emit({
-			class: "Transformation",
-			method: "translateTo",
+			class: 'Transformation',
+			method: 'translateTo',
 			item: [this.id],
 			x,
 			y,
@@ -293,8 +276,8 @@ export class Transformation {
 			return;
 		}
 		this.emit({
-			class: "Transformation",
-			method: "translateBy",
+			class: 'Transformation',
+			method: 'translateBy',
 			item: [this.id],
 			x,
 			y,
@@ -304,8 +287,8 @@ export class Transformation {
 
 	scaleTo(x: number, y: number, timeStamp?: number): void {
 		this.emit({
-			class: "Transformation",
-			method: "scaleTo",
+			class: 'Transformation',
+			method: 'scaleTo',
 			item: [this.id],
 			x,
 			y,
@@ -318,8 +301,8 @@ export class Transformation {
 			return;
 		}
 		this.emit({
-			class: "Transformation",
-			method: "scaleBy",
+			class: 'Transformation',
+			method: 'scaleBy',
 			item: [this.id],
 			x,
 			y,
@@ -330,19 +313,14 @@ export class Transformation {
 	scaleByTranslateBy(
 		scale: { x: number; y: number },
 		translate: { x: number; y: number },
-		timeStamp?: number,
+		timeStamp?: number
 	): void {
-		if (
-			scale.x === 0 &&
-			scale.y === 0 &&
-			translate.x === 0 &&
-			translate.y === 0
-		) {
+		if (scale.x === 0 && scale.y === 0 && translate.x === 0 && translate.y === 0) {
 			return;
 		}
 		this.emit({
-			class: "Transformation",
-			method: "scaleByTranslateBy",
+			class: 'Transformation',
+			method: 'scaleByTranslateBy',
 			item: [this.id],
 			scale,
 			translate,
@@ -352,8 +330,8 @@ export class Transformation {
 
 	rotateTo(degree: number, timeStamp?: number): void {
 		this.emit({
-			class: "Transformation",
-			method: "rotateTo",
+			class: 'Transformation',
+			method: 'rotateTo',
 			item: [this.id],
 			degree,
 			timeStamp,
@@ -362,23 +340,18 @@ export class Transformation {
 
 	rotateBy(degree: number, timeStamp?: number): void {
 		this.emit({
-			class: "Transformation",
-			method: "rotateBy",
+			class: 'Transformation',
+			method: 'rotateBy',
 			item: [this.id],
 			degree,
 			timeStamp,
 		});
 	}
 
-	scaleToRelativeTo(
-		x: number,
-		y: number,
-		point: Point,
-		timeStamp?: number,
-	): void {
+	scaleToRelativeTo(x: number, y: number, point: Point, timeStamp?: number): void {
 		this.emit({
-			class: "Transformation",
-			method: "scaleToRelativeTo",
+			class: 'Transformation',
+			method: 'scaleToRelativeTo',
 			item: [this.id],
 			x,
 			y,
@@ -387,15 +360,10 @@ export class Transformation {
 		});
 	}
 
-	scaleByRelativeTo(
-		x: number,
-		y: number,
-		point: Point,
-		timeStamp?: number,
-	): void {
+	scaleByRelativeTo(x: number, y: number, point: Point, timeStamp?: number): void {
 		this.emit({
-			class: "Transformation",
-			method: "scaleByRelativeTo",
+			class: 'Transformation',
+			method: 'scaleByRelativeTo',
 			item: [this.id],
 			x,
 			y,
@@ -407,16 +375,16 @@ export class Transformation {
 	setIsLocked(isLocked: boolean, timestamp?: number): void {
 		if (isLocked) {
 			this.emit({
-				class: "Transformation",
-				method: "locked",
+				class: 'Transformation',
+				method: 'locked',
 				item: [this.id],
 				locked: true,
 				timestamp,
 			});
 		} else {
 			this.emit({
-				class: "Transformation",
-				method: "unlocked",
+				class: 'Transformation',
+				method: 'unlocked',
 				item: [this.id],
 				locked: false,
 				timestamp,

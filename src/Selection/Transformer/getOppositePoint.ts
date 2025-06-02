@@ -1,30 +1,30 @@
-import { Mbr, Point } from "Board/Items";
-import { ResizeType } from "./getResizeType";
+import { Mbr, Point } from 'Items';
+import { ResizeType } from './getResizeType';
 
 export function getOppositePoint(resizeType: ResizeType, mbr: Mbr): Point {
 	switch (resizeType) {
-		case "leftTop": {
+		case 'leftTop': {
 			return new Point(mbr.right, mbr.bottom);
 		}
-		case "rightBottom": {
+		case 'rightBottom': {
 			return new Point(mbr.left, mbr.top);
 		}
-		case "rightTop": {
+		case 'rightTop': {
 			return new Point(mbr.left, mbr.bottom);
 		}
-		case "leftBottom": {
+		case 'leftBottom': {
 			return new Point(mbr.right, mbr.top);
 		}
-		case "top": {
+		case 'top': {
 			return new Point(mbr.left, mbr.bottom);
 		}
-		case "bottom": {
+		case 'bottom': {
 			return new Point(mbr.left, mbr.top);
 		}
-		case "right": {
+		case 'right': {
 			return new Point(mbr.left, mbr.top);
 		}
-		case "left": {
+		case 'left': {
 			return new Point(mbr.right, mbr.top);
 		}
 	}

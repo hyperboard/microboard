@@ -1,17 +1,14 @@
-import { forceNumberIntoInterval, toFiniteNumber } from "Board/lib";
-import { Point } from "../Point";
-import { Line } from "../Line";
-import { Matrix } from "../Transformation";
-import { VerticalAlignment } from "Board/Items/Alignment";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import {
-	getIntersectionPointFromIntersectingLines,
-	getLinesRelationType,
-} from "../Line";
-import { Geometry } from "../Geometry";
-import { GeometricNormal } from "../GeometricNormal";
-import { BorderStyle, Path, scalePatterns } from "../Path";
-import { RichText } from "..";
+import { forceNumberIntoInterval, toFiniteNumber } from 'lib';
+import { Point } from '../Point';
+import { Line } from '../Line';
+import { Matrix } from '../Transformation';
+import { VerticalAlignment } from 'Items/Alignment';
+import { DrawingContext } from 'Items/DrawingContext';
+import { getIntersectionPointFromIntersectingLines, getLinesRelationType } from '../Line';
+import { Geometry } from '../Geometry';
+import { GeometricNormal } from '../GeometricNormal';
+import { BorderStyle, Path, scalePatterns } from '../Path';
+import { RichText } from '..';
 
 /**
  * The minimum bounding rectangle (MBR), also known as bounding box (BBOX) or envelope.
@@ -27,10 +24,10 @@ export class Mbr implements Geometry {
 		public top = 0,
 		public right = 0,
 		public bottom = 0,
-		public borderColor = "black",
-		public backgroundColor = "none",
+		public borderColor = 'black',
+		public backgroundColor = 'none',
 		public strokeWidth = 1,
-		public borderStyle: BorderStyle = "solid",
+		public borderStyle: BorderStyle = 'solid'
 	) {
 		this.left = toFiniteNumber(left);
 		this.top = toFiniteNumber(top);
@@ -50,7 +47,7 @@ export class Mbr implements Geometry {
 	getCenter(): Point {
 		return new Point(
 			this.left + (this.right - this.left) / 2,
-			this.top + (this.bottom - this.top) / 2,
+			this.top + (this.bottom - this.top) / 2
 		);
 	}
 
@@ -97,11 +94,11 @@ export class Mbr implements Geometry {
 		const center = rect.getCenter();
 		const left = center.x - width / 2;
 		const top =
-			alignment === "top"
+			alignment === 'top'
 				? rect.top
-				: alignment === "bottom"
-					? rect.bottom - height
-					: center.y - height / 2;
+				: alignment === 'bottom'
+				? rect.bottom - height
+				: center.y - height / 2;
 		this.left = Math.max(left, rect.left);
 		this.top = Math.max(top, rect.top);
 		this.right = left + width;
@@ -192,7 +189,7 @@ export class Mbr implements Geometry {
 		const { left, top, right, bottom } = this;
 		return new Point(
 			forceNumberIntoInterval(x, left, right),
-			forceNumberIntoInterval(y, top, bottom),
+			forceNumberIntoInterval(y, top, bottom)
 		);
 	}
 
@@ -258,12 +255,7 @@ export class Mbr implements Geometry {
 	isAlmostInside(point: Point, diff: number): boolean {
 		const { x, y } = point;
 		const { left, top, right, bottom } = this;
-		return (
-			x + diff >= left &&
-			x - diff <= right &&
-			y + diff >= top &&
-			y - diff <= bottom
-		);
+		return x + diff >= left && x - diff <= right && y + diff >= top && y - diff <= bottom;
 	}
 
 	isEqual(mbr: Mbr): boolean {
@@ -305,10 +297,8 @@ export class Mbr implements Geometry {
 		const points: Point[] = [];
 		for (const line of this.getLines()) {
 			const relation = getLinesRelationType(segment, line);
-			if (relation.type === "Intersecting") {
-				points.push(
-					getIntersectionPointFromIntersectingLines(relation),
-				);
+			if (relation.type === 'Intersecting') {
+				points.push(getIntersectionPointFromIntersectingLines(relation));
 			}
 		}
 		return points;
@@ -385,26 +375,16 @@ export class Mbr implements Geometry {
 
 	render(context: DrawingContext): void {
 		const { ctx } = context;
-		if (this.backgroundColor !== "none") {
+		if (this.backgroundColor !== 'none') {
 			ctx.fillStyle = this.backgroundColor;
-			ctx.fillRect(
-				this.left,
-				this.top,
-				this.getWidth(),
-				this.getHeight(),
-			);
+			ctx.fillRect(this.left, this.top, this.getWidth(), this.getHeight());
 		}
 
 		if (this.strokeWidth) {
 			ctx.strokeStyle = this.borderColor;
 			ctx.lineWidth = this.strokeWidth;
 			ctx.setLineDash(scalePatterns(this.strokeWidth)[this.borderStyle]);
-			ctx.strokeRect(
-				this.left,
-				this.top,
-				this.getWidth(),
-				this.getHeight(),
-			);
+			ctx.strokeRect(this.left, this.top, this.getWidth(), this.getHeight());
 		}
 	}
 }

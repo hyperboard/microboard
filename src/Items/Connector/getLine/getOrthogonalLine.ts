@@ -1,19 +1,19 @@
-import { Line, Mbr, Path } from "Board/Items";
-import { ControlPoint, BoardPoint } from "../ControlPoint";
-import { findOrthogonalPath } from "./findOrthogonalPath";
+import { Line, Mbr, Path } from 'Items';
+import { ControlPoint, BoardPoint } from '../ControlPoint';
+import { findOrthogonalPath } from './findOrthogonalPath';
 
 export function getOrthogonalLine(
 	start: ControlPoint,
 	end: ControlPoint,
 	middle: BoardPoint | null,
-	skipObstacles = false,
+	skipObstacles = false
 ): Path {
 	const obstacles: Mbr[] = [];
 
-	if (start.pointType !== "Board" && !skipObstacles) {
+	if (start.pointType !== 'Board' && !skipObstacles) {
 		obstacles.push(start.item.getMbr());
 	}
-	if (end.pointType !== "Board" && !skipObstacles) {
+	if (end.pointType !== 'Board' && !skipObstacles) {
 		obstacles.push(end.item.getMbr());
 	}
 
@@ -21,7 +21,7 @@ export function getOrthogonalLine(
 		start,
 		end,
 		obstacles,
-		middle ? [middle] : undefined,
+		middle ? [middle] : undefined
 	);
 
 	if (lines.length === 0) {

@@ -1,7 +1,7 @@
-import { Board } from "Board";
-import { Camera } from "Board/Camera";
-import { Mbr, RichText } from "Board/Items";
-import { RefObject } from "react";
+import { Board } from 'Board';
+import { Camera } from 'Camera';
+import { Mbr, RichText } from 'Items';
+import { RefObject } from 'react';
 
 export function updateRects(
 	board: Board,
@@ -10,12 +10,12 @@ export function updateRects(
 	verticalOffset?: number,
 	horizontalOffset?: number,
 	fit:
-		| "hyperLink"
-		| "boardMenu"
-		| "contextPanel"
-		| "linkToBtn"
-		| "comment"
-		| "threadPanel" = "contextPanel",
+		| 'hyperLink'
+		| 'boardMenu'
+		| 'contextPanel'
+		| 'linkToBtn'
+		| 'comment'
+		| 'threadPanel' = 'contextPanel'
 ): Mbr | null {
 	const { selection, camera } = board;
 	const panel = ref.current;
@@ -27,19 +27,19 @@ export function updateRects(
 			: undefined;
 
 	if (panel && selectionMbr) {
-		if (fit === "contextPanel") {
+		if (fit === 'contextPanel') {
 			const panelRect = getContextPanelRect(
 				selectionMbr,
 				camera,
 				panel,
 				!!richTextSelection,
 				horizontalOffset,
-				verticalOffset,
+				verticalOffset
 			);
 
 			return panelRect;
 		}
-		if (fit === "linkToBtn") {
+		if (fit === 'linkToBtn') {
 			if (!mbr) {
 				return null;
 			}
@@ -48,11 +48,11 @@ export function updateRects(
 				camera.window.getMbr(),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
 				verticalOffset,
-				horizontalOffset,
+				horizontalOffset
 			);
 			return panelRect;
 		}
-		if (fit === "comment") {
+		if (fit === 'comment') {
 			if (!mbr) {
 				return null;
 			}
@@ -60,11 +60,11 @@ export function updateRects(
 				selectionMbr.getTransformed(camera.getMatrix()),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
 				verticalOffset,
-				horizontalOffset,
+				horizontalOffset
 			);
 			return panelRect;
 		}
-		if (fit === "threadPanel") {
+		if (fit === 'threadPanel') {
 			if (!mbr) {
 				return null;
 			}
@@ -73,11 +73,11 @@ export function updateRects(
 				camera.window.getMbr(),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
 				verticalOffset,
-				horizontalOffset,
+				horizontalOffset
 			);
 			return panelRect;
 		}
-		if (fit === "boardMenu") {
+		if (fit === 'boardMenu') {
 			if (!mbr) {
 				return null;
 			}
@@ -86,11 +86,11 @@ export function updateRects(
 				camera.window.getMbr(),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
 				verticalOffset,
-				horizontalOffset,
+				horizontalOffset
 			);
 			return panelRect;
 		}
-		if (fit === "hyperLink") {
+		if (fit === 'hyperLink') {
 			if (!mbr) {
 				return null;
 			}
@@ -98,7 +98,7 @@ export function updateRects(
 				selectionMbr.getTransformed(camera.getMatrix()),
 				Mbr.fromDomRect(panel.getBoundingClientRect()),
 				camera.window.getMbr(),
-				verticalOffset,
+				verticalOffset
 			);
 			return panelRect;
 		}
@@ -111,7 +111,7 @@ export function getContextPanelRect(
 	panel: HTMLElement,
 	toLeft: boolean,
 	horizontalOffset?: number,
-	verticalOffset?: number,
+	verticalOffset?: number
 ): Mbr {
 	const transformedMbr = selectionMbr.getTransformed(camera.getMatrix());
 	const windowMbr = camera.window.getMbr();
@@ -123,15 +123,15 @@ export function getContextPanelRect(
 				windowMbr,
 				panelRectFromDom,
 				verticalOffset,
-				horizontalOffset,
-			)
+				horizontalOffset
+		  )
 		: fitContextPanelToCenter(
 				transformedMbr,
 				windowMbr,
 				panelRectFromDom,
 				verticalOffset,
-				horizontalOffset,
-			);
+				horizontalOffset
+		  );
 
 	return panelRect;
 }
@@ -141,7 +141,7 @@ export function fitContextPanelToLeft(
 	view: Mbr,
 	panel: Mbr,
 	verticalOffset = 40,
-	horizontalOffset = 80,
+	horizontalOffset = 80
 ): Mbr {
 	const panelHeight = panel.getHeight();
 	const panelWidth = panel.getWidth();
@@ -155,14 +155,10 @@ export function fitContextPanelToLeft(
 			newPanel.top = view.top + verticalOffset;
 		}
 	} else {
-		const usePanelTop =
-			panel.top > 1 && panel.top > selectionMbr.top + verticalOffset;
-		newPanel.top = usePanelTop
-			? panel.top
-			: selectionMbr.bottom + verticalOffset;
+		const usePanelTop = panel.top > 1 && panel.top > selectionMbr.top + verticalOffset;
+		newPanel.top = usePanelTop ? panel.top : selectionMbr.bottom + verticalOffset;
 		const isOverflowingBottom = newPanel.top + panelHeight > view.bottom;
-		const isLargeOffsetForRichText =
-			newPanel.top >= selectionMbr.bottom + verticalOffset * 2;
+		const isLargeOffsetForRichText = newPanel.top >= selectionMbr.bottom + verticalOffset * 2;
 		if (isOverflowingBottom || isLargeOffsetForRichText) {
 			newPanel.top = selectionMbr.bottom - (panelHeight + verticalOffset);
 		}
@@ -184,7 +180,7 @@ export function fitContextPanelToCenter(
 	view: Mbr,
 	panel: Mbr,
 	verticalOffset = 40,
-	horizontalOffset = 80,
+	horizontalOffset = 80
 ): Mbr {
 	const panelHeight = panel.getHeight();
 	const panelWidth = panel.getWidth();
@@ -201,8 +197,7 @@ export function fitContextPanelToCenter(
 	} else {
 		newPanel.top = selectionMbr.bottom + verticalOffset;
 		const isOverflowingBottom = newPanel.top + panelHeight > view.bottom;
-		const isLargeOffsetForRichText =
-			newPanel.top >= selectionMbr.bottom + verticalOffset * 2;
+		const isLargeOffsetForRichText = newPanel.top >= selectionMbr.bottom + verticalOffset * 2;
 		if (isOverflowingBottom || isLargeOffsetForRichText) {
 			newPanel.top = selectionMbr.bottom - (panelHeight + verticalOffset);
 		}
@@ -222,7 +217,7 @@ function adjustPanelHorizontal(
 	newPanel: Mbr,
 	panelWidth: number,
 	view: Mbr,
-	horizontalOffset: number,
+	horizontalOffset: number
 ): void {
 	newPanel.right = newPanel.left + panelWidth;
 	if (newPanel.left < view.left + horizontalOffset) {
@@ -233,11 +228,7 @@ function adjustPanelHorizontal(
 	newPanel.right = newPanel.left + panelWidth;
 }
 
-function fitContextPanelInViewRect(
-	panel: Mbr,
-	view: Mbr,
-	verticalOffset: number,
-): void {
+function fitContextPanelInViewRect(panel: Mbr, view: Mbr, verticalOffset: number): void {
 	const panelHeight = panel.getHeight();
 
 	if (panel.top <= view.top + verticalOffset) {
@@ -251,12 +242,7 @@ function fitContextPanelInViewRect(
 	}
 }
 
-export function fitContextMenu(
-	button: Mbr,
-	view: Mbr,
-	menu: Mbr,
-	panel: Mbr,
-): Mbr {
+export function fitContextMenu(button: Mbr, view: Mbr, menu: Mbr, panel: Mbr): Mbr {
 	const height = menu.getHeight();
 	const width = menu.getWidth();
 	const center = button.getCenter();
@@ -279,12 +265,7 @@ export function fitContextMenu(
 	return fit;
 }
 
-export function fitOnLeftOrRightOfItem(
-	item: Mbr,
-	view: Mbr,
-	bounds: Mbr,
-	offset: number,
-): Mbr {
+export function fitOnLeftOrRightOfItem(item: Mbr, view: Mbr, bounds: Mbr, offset: number): Mbr {
 	const leftSpace = item.left - view.left;
 	const rightSpace = view.right - item.right;
 	const height = bounds.getHeight();
@@ -321,7 +302,7 @@ export function fitLinkToBtn(
 	view: Mbr,
 	panel: Mbr,
 	verticalOffset = -2,
-	horizontalOffset = -2,
+	horizontalOffset = -2
 ): Mbr {
 	const panelHeight = panel.getHeight();
 	const newPanel = new Mbr();
@@ -338,12 +319,7 @@ export function fitLinkToBtn(
 	return newPanel;
 }
 
-export function fitHyperLink(
-	linkMbr: Mbr,
-	panel: Mbr,
-	view: Mbr,
-	offset = 20,
-): Mbr {
+export function fitHyperLink(linkMbr: Mbr, panel: Mbr, view: Mbr, offset = 20): Mbr {
 	const panelHeight = panel.getHeight();
 	const newPanel = new Mbr();
 
@@ -374,12 +350,7 @@ export function fitHyperLink(
 	return newPanel;
 }
 
-export function fitComment(
-	anchor: Mbr,
-	panel: Mbr,
-	verticalOffset = 0,
-	horizontalOffset = 0,
-): Mbr {
+export function fitComment(anchor: Mbr, panel: Mbr, verticalOffset = 0, horizontalOffset = 0): Mbr {
 	const panelHeight = panel.getHeight();
 	const newPanel = new Mbr();
 	newPanel.top = anchor.top - panelHeight - verticalOffset;
@@ -396,7 +367,7 @@ export function fitBoardMenu(
 	view: Mbr,
 	panel: Mbr,
 	verticalOffset = 20,
-	horizontalOffset = 20,
+	horizontalOffset = 20
 ): Mbr {
 	const panelHeight = panel.getHeight();
 	const panelWidth = panel.getWidth();
@@ -423,7 +394,7 @@ export function fitThreadPanel(
 	view: Mbr,
 	panel: Mbr,
 	verticalOffset = 50,
-	horizontalOffset = 50,
+	horizontalOffset = 50
 ): Mbr {
 	const panelHeight = panel.getHeight();
 	const panelWidth = panel.getWidth();
@@ -447,12 +418,7 @@ export function fitThreadPanel(
 	return newPanel;
 }
 
-export function fitOnTopOrBottomOfItem(
-	item: Mbr,
-	view: Mbr,
-	bounds: Mbr,
-	offset: number,
-): Mbr {
+export function fitOnTopOrBottomOfItem(item: Mbr, view: Mbr, bounds: Mbr, offset: number): Mbr {
 	const topSpace = item.top - view.top;
 	const bottomSpace = view.bottom - item.bottom;
 	const height = bounds.getHeight();

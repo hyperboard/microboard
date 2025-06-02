@@ -1,14 +1,14 @@
-import { createEditor, Editor } from "slate";
-import { MarkdownProcessor } from "./markdownProcessor";
-import { BlockNode } from "Board/Items/RichText/Editor/BlockNode";
-import { createParagraphNode } from "Board/Items/RichText/editorHelpers/common/createParagraphNode";
-import { withReact } from "slate-react";
-import { withHistory } from "slate-history";
-import { CustomEditor } from "Board/Items/RichText/Editor/Editor.d";
-import { selectWholeText } from "Board/Items/RichText/editorHelpers/common/selectWholeText";
-import { conf } from "Board/Settings";
+import { createEditor, Editor } from 'slate';
+import { MarkdownProcessor } from './markdownProcessor';
+import { BlockNode } from 'Items/RichText/Editor/BlockNode';
+import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createParagraphNode';
+import { withReact } from 'slate-react';
+import { withHistory } from 'slate-history';
+import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
+import { selectWholeText } from 'Items/RichText/editorHelpers/common/selectWholeText';
+import { conf } from 'Settings';
 
-describe("MarkdownProcessor Tests", () => {
+describe('MarkdownProcessor Tests', () => {
 	let editor: CustomEditor;
 	let processor: MarkdownProcessor;
 
@@ -16,23 +16,16 @@ describe("MarkdownProcessor Tests", () => {
 		const baseEditor = createEditor();
 		editor = withHistory(withReact(baseEditor));
 		// Initialize Slate editor
-		editor.children = [createParagraphNode("", editor)];
+		editor.children = [createParagraphNode('', editor)];
 		selectWholeText(editor);
 
 		// Initialize MarkdownProcessor
 		processor = new MarkdownProcessor(editor);
 	});
 
-	it("should process markdown chunks correctly", async () => {
+	it('should process markdown chunks correctly', async () => {
 		// Define a mock markdown input
-		const markdownChunks = [
-			"# He",
-			"ade",
-			"r\n\n",
-			"Some t",
-			"ext",
-			"StopProcessingMarkdown",
-		];
+		const markdownChunks = ['# He', 'ade', 'r\n\n', 'Some t', 'ext', 'StopProcessingMarkdown'];
 
 		// Feed chunks to processor
 		markdownChunks.forEach(chunk => {
@@ -44,13 +37,13 @@ describe("MarkdownProcessor Tests", () => {
 		// Define expected nodes
 		const expectedNodes: BlockNode[] = [
 			{
-				type: "heading_one",
-				horisontalAlignment: "left",
+				type: 'heading_one',
+				horisontalAlignment: 'left',
 				paddingTop: 0.5,
 				children: [
 					{
-						type: "text",
-						text: "Header",
+						type: 'text',
+						text: 'Header',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 						fontSize: 18,
@@ -58,13 +51,13 @@ describe("MarkdownProcessor Tests", () => {
 				],
 			},
 			{
-				type: "paragraph",
-				horisontalAlignment: "left",
+				type: 'paragraph',
+				horisontalAlignment: 'left',
 				paddingTop: 0.5,
 				children: [
 					{
-						type: "text",
-						text: "Some text",
+						type: 'text',
+						text: 'Some text',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 				],
@@ -75,10 +68,10 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedNodes);
 	});
 
-	it("should handle stop processing correctly", async () => {
+	it('should handle stop processing correctly', async () => {
 		// Process markdown and stop processing
-		processor.processMarkdown("# Tes");
-		processor.processMarkdown("t\n\nStopProcessingMarkdown");
+		processor.processMarkdown('# Tes');
+		processor.processMarkdown('t\n\nStopProcessingMarkdown');
 
 		// Wait for async processing
 		await new Promise(resolve => setTimeout(resolve, 1000));
@@ -86,13 +79,13 @@ describe("MarkdownProcessor Tests", () => {
 		// Define expected nodes after stop
 		const expectedNodesPostStop: BlockNode[] = [
 			{
-				type: "heading_one",
-				horisontalAlignment: "left",
+				type: 'heading_one',
+				horisontalAlignment: 'left',
 				paddingTop: 0.5,
 				children: [
 					{
-						type: "text",
-						text: "Test",
+						type: 'text',
+						text: 'Test',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 						fontSize: 18,
@@ -100,8 +93,8 @@ describe("MarkdownProcessor Tests", () => {
 				],
 			},
 			{
-				type: "paragraph",
-				children: [{ type: "text", text: "" }],
+				type: 'paragraph',
+				children: [{ type: 'text', text: '' }],
 			},
 		];
 
@@ -109,15 +102,15 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedNodesPostStop);
 	});
 
-	it("should process unordered list correctly", async () => {
+	it('should process unordered list correctly', async () => {
 		// Define a mock markdown input for unordered list
 		const unorderedListMarkdown = [
-			"- Item 1",
-			"  \n",
-			"- Item 2",
-			"  \n",
-			"- Item 3",
-			"StopProcessingMarkdown",
+			'- Item 1',
+			'  \n',
+			'- Item 2',
+			'  \n',
+			'- Item 3',
+			'StopProcessingMarkdown',
 		];
 
 		// Feed chunks to processor
@@ -130,20 +123,20 @@ describe("MarkdownProcessor Tests", () => {
 		// Define expected nodes for unordered list
 		const expectedUnorderedListNodes: BlockNode[] = [
 			{
-				type: "ul_list",
+				type: 'ul_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
-								type: "paragraph",
-								horisontalAlignment: "left",
+								type: 'paragraph',
+								horisontalAlignment: 'left',
 								paddingTop: 0.5,
 								children: [
 									{
-										type: "text",
-										text: "Item 1",
+										type: 'text',
+										text: 'Item 1',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -151,16 +144,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
-								type: "paragraph",
-								horisontalAlignment: "left",
+								type: 'paragraph',
+								horisontalAlignment: 'left',
 								paddingTop: 0.5,
 								children: [
 									{
-										type: "text",
-										text: "Item 2",
+										type: 'text',
+										text: 'Item 2',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -168,16 +161,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
-								type: "paragraph",
-								horisontalAlignment: "left",
+								type: 'paragraph',
+								horisontalAlignment: 'left',
 								paddingTop: 0.5,
 								children: [
 									{
-										type: "text",
-										text: "Item 3",
+										type: 'text',
+										text: 'Item 3',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -192,15 +185,15 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedUnorderedListNodes);
 	});
 
-	it("should process ordered list correctly", async () => {
+	it('should process ordered list correctly', async () => {
 		// Define a mock markdown input for ordered list
 		const orderedListMarkdown = [
-			"1. First",
-			"  \n",
-			"2. Second",
-			"  \n",
-			"3. Third",
-			"StopProcessingMarkdown",
+			'1. First',
+			'  \n',
+			'2. Second',
+			'  \n',
+			'3. Third',
+			'StopProcessingMarkdown',
 		];
 
 		// Feed chunks to processor
@@ -213,20 +206,20 @@ describe("MarkdownProcessor Tests", () => {
 		// Define expected nodes for ordered list
 		const expectedOrderedListNodes: BlockNode[] = [
 			{
-				type: "ol_list",
+				type: 'ol_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
-								type: "paragraph",
-								horisontalAlignment: "left",
+								type: 'paragraph',
+								horisontalAlignment: 'left',
 								paddingTop: 0.5,
 								children: [
 									{
-										type: "text",
-										text: "First",
+										type: 'text',
+										text: 'First',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -234,16 +227,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
-								type: "paragraph",
-								horisontalAlignment: "left",
+								type: 'paragraph',
+								horisontalAlignment: 'left',
 								paddingTop: 0.5,
 								children: [
 									{
-										type: "text",
-										text: "Second",
+										type: 'text',
+										text: 'Second',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -251,16 +244,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
-								type: "paragraph",
-								horisontalAlignment: "left",
+								type: 'paragraph',
+								horisontalAlignment: 'left',
 								paddingTop: 0.5,
 								children: [
 									{
-										type: "text",
-										text: "Third",
+										type: 'text',
+										text: 'Third',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -275,13 +268,13 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedOrderedListNodes);
 	});
 
-	it("should process nested lists correctly", async () => {
+	it('should process nested lists correctly', async () => {
 		const nestedListMarkdown = [
-			"- Parent Item 1\n",
-			"  - Child Item 1\n",
-			"  - Child Item 2\n",
-			"- Parent Item 2\n",
-			"StopProcessingMarkdown",
+			'- Parent Item 1\n',
+			'  - Child Item 1\n',
+			'  - Child Item 2\n',
+			'- Parent Item 2\n',
+			'StopProcessingMarkdown',
 		];
 
 		nestedListMarkdown.forEach(chunk => {
@@ -292,39 +285,39 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedNestedListNodes: BlockNode[] = [
 			{
-				type: "ul_list",
+				type: 'ul_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Parent Item 1",
+										type: 'text',
+										text: 'Parent Item 1',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
 							},
 							{
-								type: "ul_list",
+								type: 'ul_list',
 								listLevel: 2,
 								children: [
 									{
-										type: "list_item",
+										type: 'list_item',
 										children: [
 											{
 												paddingTop: 0.5,
-												horisontalAlignment: "left",
-												type: "paragraph",
+												horisontalAlignment: 'left',
+												type: 'paragraph',
 												children: [
 													{
-														type: "text",
-														text: "Child Item 1",
+														type: 'text',
+														text: 'Child Item 1',
 														...conf.DEFAULT_TEXT_STYLES,
 													},
 												],
@@ -332,16 +325,16 @@ describe("MarkdownProcessor Tests", () => {
 										],
 									},
 									{
-										type: "list_item",
+										type: 'list_item',
 										children: [
 											{
 												paddingTop: 0.5,
-												horisontalAlignment: "left",
-												type: "paragraph",
+												horisontalAlignment: 'left',
+												type: 'paragraph',
 												children: [
 													{
-														type: "text",
-														text: "Child Item 2",
+														type: 'text',
+														text: 'Child Item 2',
 														...conf.DEFAULT_TEXT_STYLES,
 													},
 												],
@@ -353,16 +346,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Parent Item 2",
+										type: 'text',
+										text: 'Parent Item 2',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -376,12 +369,12 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedNestedListNodes);
 	});
 
-	it("should process headers of different levels correctly", async () => {
+	it('should process headers of different levels correctly', async () => {
 		const headersMarkdown = [
-			"# Header 1\n",
-			"## Header 2\n",
-			"### Header 3\n",
-			"StopProcessingMarkdown",
+			'# Header 1\n',
+			'## Header 2\n',
+			'### Header 3\n',
+			'StopProcessingMarkdown',
 		];
 
 		headersMarkdown.forEach(chunk => {
@@ -392,13 +385,13 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedHeaderNodes: BlockNode[] = [
 			{
-				type: "heading_one",
+				type: 'heading_one',
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
+				horisontalAlignment: 'left',
 				children: [
 					{
-						type: "text",
-						text: "Header 1",
+						type: 'text',
+						text: 'Header 1',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 						fontSize: 18,
@@ -406,13 +399,13 @@ describe("MarkdownProcessor Tests", () => {
 				],
 			},
 			{
-				type: "heading_two",
+				type: 'heading_two',
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
+				horisontalAlignment: 'left',
 				children: [
 					{
-						type: "text",
-						text: "Header 2",
+						type: 'text',
+						text: 'Header 2',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 						fontSize: 17,
@@ -420,13 +413,13 @@ describe("MarkdownProcessor Tests", () => {
 				],
 			},
 			{
-				type: "heading_three",
+				type: 'heading_three',
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
+				horisontalAlignment: 'left',
 				children: [
 					{
-						type: "text",
-						text: "Header 3",
+						type: 'text',
+						text: 'Header 3',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 						fontSize: 16,
@@ -438,12 +431,8 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedHeaderNodes);
 	});
 
-	it("should process bold text correctly", async () => {
-		const boldMarkdown = [
-			"**Bold Text**",
-			"More Text",
-			"StopProcessingMarkdown",
-		];
+	it('should process bold text correctly', async () => {
+		const boldMarkdown = ['**Bold Text**', 'More Text', 'StopProcessingMarkdown'];
 
 		boldMarkdown.forEach(chunk => {
 			processor.processMarkdown(chunk);
@@ -453,19 +442,19 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedBoldTextNodes: BlockNode[] = [
 			{
-				type: "paragraph",
+				type: 'paragraph',
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
+				horisontalAlignment: 'left',
 				children: [
 					{
-						type: "text",
-						text: "Bold Text ",
+						type: 'text',
+						text: 'Bold Text ',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 					},
 					{
-						type: "text",
-						text: "More Text",
+						type: 'text',
+						text: 'More Text',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 				],
@@ -475,13 +464,13 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedBoldTextNodes);
 	});
 
-	it("should process code block correctly", async () => {
+	it('should process code block correctly', async () => {
 		const codeBlockMarkdown = [
-			"```\n",
-			"const a = 10;\n",
-			"console.log(a);\n",
-			"```\n",
-			"StopProcessingMarkdown",
+			'```\n',
+			'const a = 10;\n',
+			'console.log(a);\n',
+			'```\n',
+			'StopProcessingMarkdown',
 		];
 
 		codeBlockMarkdown.forEach(chunk => {
@@ -492,13 +481,13 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedCodeBlockNodes: BlockNode[] = [
 			{
-				type: "code_block",
+				type: 'code_block',
 				language: null,
-				horisontalAlignment: "left",
+				horisontalAlignment: 'left',
 				children: [
 					{
-						type: "text",
-						text: "const a = 10;\nconsole.log(a);",
+						type: 'text',
+						text: 'const a = 10;\nconsole.log(a);',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 				],
@@ -508,13 +497,13 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedCodeBlockNodes);
 	});
 
-	it("should process headers within lists correctly", async () => {
+	it('should process headers within lists correctly', async () => {
 		const headersInListMarkdown = [
-			"- List Item 1\n",
-			"  # Subheader 1\n",
-			"- List Item 2\n",
-			"  ## Subheader 2\n",
-			"StopProcessingMarkdown",
+			'- List Item 1\n',
+			'  # Subheader 1\n',
+			'- List Item 2\n',
+			'  ## Subheader 2\n',
+			'StopProcessingMarkdown',
 		];
 
 		headersInListMarkdown.forEach(chunk => {
@@ -525,31 +514,31 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedHeadersInListNodes: BlockNode[] = [
 			{
-				type: "ul_list",
+				type: 'ul_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "List Item 1",
+										type: 'text',
+										text: 'List Item 1',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
 							},
 							{
-								horisontalAlignment: "left",
-								type: "heading_one",
+								horisontalAlignment: 'left',
+								type: 'heading_one',
 								children: [
 									{
-										type: "text",
-										text: "Subheader 1",
+										type: 'text',
+										text: 'Subheader 1',
 										...conf.DEFAULT_TEXT_STYLES,
 										bold: true,
 										fontSize: 18,
@@ -559,27 +548,27 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "List Item 2",
+										type: 'text',
+										text: 'List Item 2',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
 							},
 							{
-								horisontalAlignment: "left",
-								type: "heading_two",
+								horisontalAlignment: 'left',
+								type: 'heading_two',
 								children: [
 									{
-										type: "text",
-										text: "Subheader 2",
+										type: 'text',
+										text: 'Subheader 2',
 										...conf.DEFAULT_TEXT_STYLES,
 										bold: true,
 										fontSize: 17,
@@ -595,15 +584,15 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedHeadersInListNodes);
 	});
 
-	it("should process code blocks within lists correctly", async () => {
+	it('should process code blocks within lists correctly', async () => {
 		const codeBlockInListMarkdown = [
-			"- Code List Item\n",
-			"  ```\n",
-			"  let x = 5;\n",
-			"  console.log(x);\n",
-			"  ```\n",
-			"- Another List Item\n",
-			"StopProcessingMarkdown",
+			'- Code List Item\n',
+			'  ```\n',
+			'  let x = 5;\n',
+			'  console.log(x);\n',
+			'  ```\n',
+			'- Another List Item\n',
+			'StopProcessingMarkdown',
 		];
 
 		codeBlockInListMarkdown.forEach(chunk => {
@@ -614,32 +603,32 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedCodeBlockInListNodes: BlockNode[] = [
 			{
-				type: "ul_list",
+				type: 'ul_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Code List Item",
+										type: 'text',
+										text: 'Code List Item',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
 							},
 							{
-								horisontalAlignment: "left",
-								type: "code_block",
+								horisontalAlignment: 'left',
+								type: 'code_block',
 								language: null,
 								children: [
 									{
-										type: "text",
-										text: "let x = 5;\nconsole.log(x);",
+										type: 'text',
+										text: 'let x = 5;\nconsole.log(x);',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -647,16 +636,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Another List Item",
+										type: 'text',
+										text: 'Another List Item',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -670,18 +659,18 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedCodeBlockInListNodes);
 	});
 
-	it("should process ordered list, followed by a paragraph, a header, and an unordered list correctly", async () => {
+	it('should process ordered list, followed by a paragraph, a header, and an unordered list correctly', async () => {
 		const complexStructureMarkdown = [
-			"1. Ordered Item 1\n",
-			"2. Ordered Item 2\n",
-			"\n", // paragraph separator
-			"This is a paragraph.\n",
-			"\n",
-			"# Header After Paragraph\n",
-			"\n",
-			"- Unordered Item 1\n",
-			"- Unordered Item 2\n",
-			"StopProcessingMarkdown",
+			'1. Ordered Item 1\n',
+			'2. Ordered Item 2\n',
+			'\n', // paragraph separator
+			'This is a paragraph.\n',
+			'\n',
+			'# Header After Paragraph\n',
+			'\n',
+			'- Unordered Item 1\n',
+			'- Unordered Item 2\n',
+			'StopProcessingMarkdown',
 		];
 
 		complexStructureMarkdown.forEach(chunk => {
@@ -692,20 +681,20 @@ describe("MarkdownProcessor Tests", () => {
 
 		const expectedComplexStructureNodes: BlockNode[] = [
 			{
-				type: "ol_list",
+				type: 'ol_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Ordered Item 1",
+										type: 'text',
+										text: 'Ordered Item 1',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -713,16 +702,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Ordered Item 2",
+										type: 'text',
+										text: 'Ordered Item 2',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -733,24 +722,24 @@ describe("MarkdownProcessor Tests", () => {
 			},
 			{
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
-				type: "paragraph",
+				horisontalAlignment: 'left',
+				type: 'paragraph',
 				children: [
 					{
-						type: "text",
-						text: "This is a paragraph.",
+						type: 'text',
+						text: 'This is a paragraph.',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 				],
 			},
 			{
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
-				type: "heading_one",
+				horisontalAlignment: 'left',
+				type: 'heading_one',
 				children: [
 					{
-						type: "text",
-						text: "Header After Paragraph",
+						type: 'text',
+						text: 'Header After Paragraph',
 						...conf.DEFAULT_TEXT_STYLES,
 						bold: true,
 						fontSize: 18,
@@ -758,20 +747,20 @@ describe("MarkdownProcessor Tests", () => {
 				],
 			},
 			{
-				type: "ul_list",
+				type: 'ul_list',
 				listLevel: 1,
 				children: [
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Unordered Item 1",
+										type: 'text',
+										text: 'Unordered Item 1',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -779,16 +768,16 @@ describe("MarkdownProcessor Tests", () => {
 						],
 					},
 					{
-						type: "list_item",
+						type: 'list_item',
 						children: [
 							{
 								paddingTop: 0.5,
-								horisontalAlignment: "left",
-								type: "paragraph",
+								horisontalAlignment: 'left',
+								type: 'paragraph',
 								children: [
 									{
-										type: "text",
-										text: "Unordered Item 2",
+										type: 'text',
+										text: 'Unordered Item 2',
 										...conf.DEFAULT_TEXT_STYLES,
 									},
 								],
@@ -802,17 +791,17 @@ describe("MarkdownProcessor Tests", () => {
 		expect(editor.children).toEqual(expectedComplexStructureNodes);
 	});
 
-	it("should process hyperlinks correctly", async () => {
+	it('should process hyperlinks correctly', async () => {
 		const hyperlinkMarkdown = [
-			"This is ",
-			"a [li",
-			"nk]",
-			"(https:/",
-			"/example.",
-			"com) in a paragraph.",
-			"\n\n",
-			"Another [example link](https://example.org)",
-			"StopProcessingMarkdown",
+			'This is ',
+			'a [li',
+			'nk]',
+			'(https:/',
+			'/example.',
+			'com) in a paragraph.',
+			'\n\n',
+			'Another [example link](https://example.org)',
+			'StopProcessingMarkdown',
 		];
 
 		hyperlinkMarkdown.forEach(chunk => {
@@ -824,44 +813,44 @@ describe("MarkdownProcessor Tests", () => {
 		const expectedHyperlinkNodes: BlockNode[] = [
 			{
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
-				type: "paragraph",
+				horisontalAlignment: 'left',
+				type: 'paragraph',
 				children: [
 					{
-						type: "text",
-						text: "This is a ",
+						type: 'text',
+						text: 'This is a ',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 					{
-						type: "text",
-						link: "https://example.com",
-						text: "link",
+						type: 'text',
+						link: 'https://example.com',
+						text: 'link',
 						...conf.DEFAULT_TEXT_STYLES,
-						fontColor: "rgba(71, 120, 245, 1)",
+						fontColor: 'rgba(71, 120, 245, 1)',
 					},
 					{
-						type: "text",
-						text: " in a paragraph.",
+						type: 'text',
+						text: ' in a paragraph.',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 				],
 			},
 			{
 				paddingTop: 0.5,
-				horisontalAlignment: "left",
-				type: "paragraph",
+				horisontalAlignment: 'left',
+				type: 'paragraph',
 				children: [
 					{
-						type: "text",
-						text: "Another ",
+						type: 'text',
+						text: 'Another ',
 						...conf.DEFAULT_TEXT_STYLES,
 					},
 					{
-						type: "text",
-						text: "example link",
-						link: "https://example.org",
+						type: 'text',
+						text: 'example link',
+						link: 'https://example.org',
 						...conf.DEFAULT_TEXT_STYLES,
-						fontColor: "rgba(71, 120, 245, 1)",
+						fontColor: 'rgba(71, 120, 245, 1)',
 					},
 				],
 			},

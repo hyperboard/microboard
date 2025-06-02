@@ -1,11 +1,11 @@
-import { Editor } from "slate";
-import { ReactEditor } from "slate-react";
-import { getSelectionMarks } from "Board/Items/RichText/editorHelpers/common/getSelectionMarks";
+import { Editor } from 'slate';
+import { ReactEditor } from 'slate-react';
+import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 
 export function setSelectionFontColor(
 	editor: Editor,
 	format: string,
-	selectionContext?: string,
+	selectionContext?: string
 ): void {
 	const marks = getSelectionMarks(editor);
 	if (!marks) {
@@ -13,10 +13,10 @@ export function setSelectionFontColor(
 	}
 
 	if (marks.fontColor !== format) {
-		Editor.addMark(editor, "fontColor", format);
+		Editor.addMark(editor, 'fontColor', format);
 	}
 
-	if (selectionContext === "EditTextUnderPointer") {
+	if (selectionContext === 'EditTextUnderPointer') {
 		try {
 			ReactEditor.focus(editor);
 		} catch (er) {

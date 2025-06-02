@@ -1,9 +1,9 @@
-import { Pointer } from "Board/Pointer";
-import { assert } from "chai";
-import { Camera } from "./Camera";
+import { Pointer } from 'Pointer';
+import { assert } from 'chai';
+import { Camera } from './Camera';
 
-describe("to view the diagram, a user", () => {
-	it("zooms in to pointer", () => {
+describe('to view the diagram, a user', () => {
+	it('zooms in to pointer', () => {
 		const view = new Camera();
 		view.pointTo(10, 10);
 		view.zoomRelativeToPointerBy(2);
@@ -16,7 +16,7 @@ describe("to view the diagram, a user", () => {
 		assert.deepEqual(view.getTranslation(), { x: -10, y: -10 });
 		assert.equal(view.getScale(), 4);
 	});
-	it("points to the board", () => {
+	it('points to the board', () => {
 		const pointer = new Pointer();
 		const view = new Camera(pointer);
 		view.zoomRelativeToPointerBy(2);

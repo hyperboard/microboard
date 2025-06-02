@@ -1,5 +1,5 @@
-import { getBlockNodes } from "./CanvasText/Render.ts";
-import { BlockNode } from "./Editor/BlockNode";
+import { getBlockNodes } from './CanvasText/Render.js';
+import { BlockNode } from './Editor/BlockNode.js';
 
 /*
 Вот 10 слов из 10 букв (не правда):
@@ -30,57 +30,51 @@ import { BlockNode } from "./Editor/BlockNode";
 
 */
 export function findOptimalMaxWidthForTextAutoSize(
-	text: BlockNode[],
-	containerWidth: number,
-	containerHeight: number,
-	initialMaxWidth: number,
-	tolerance = 0.05,
+  text: BlockNode[],
+  containerWidth: number,
+  containerHeight: number,
+  initialMaxWidth: number,
+  tolerance = 0.05
 ): {
-	bestMaxWidth: number;
-	bestMaxHeight: number;
+  bestMaxWidth: number;
+  bestMaxHeight: number;
 } {
-	const targetRatio = containerWidth / containerHeight;
-	let low = 0;
-	let high = initialMaxWidth * 3;
+  const targetRatio = containerWidth / containerHeight;
+  let low = 0;
+  let high = initialMaxWidth * 3;
 
-	let closestRatioDifference = Infinity;
-	let closestWidth = initialMaxWidth;
-	let closestHeight = initialMaxWidth / targetRatio;
-	const iterations = Math.min(Math.max(3, containerWidth / 80), 15);
+  let closestRatioDifference = Infinity;
+  let closestWidth = initialMaxWidth;
+  let closestHeight = initialMaxWidth / targetRatio;
+  const iterations = Math.min(Math.max(3, containerWidth / 80), 15);
 
-	for (let i = 0; i < iterations && low < high; i += 1) {
-		const mid = (low + high) / 2;
-		const { width: calcWidth, height: calcHeight } = getBlockNodes(
-			text,
-			mid,
-		);
+  for (let i = 0; i < iterations && low < high; i += 1) {
+    const mid = (low + high) / 2;
+    const { width: calcWidth, height: calcHeight } = getBlockNodes(text, mid);
 
-		const currentRatio = calcWidth / calcHeight;
-		const ratioDifference = Math.abs(currentRatio - targetRatio);
+    const currentRatio = calcWidth / calcHeight;
+    const ratioDifference = Math.abs(currentRatio - targetRatio);
 
-		if (ratioDifference < closestRatioDifference) {
-			closestRatioDifference = ratioDifference;
-			closestWidth = calcWidth;
-			closestHeight = calcHeight;
-		}
+    if (ratioDifference < closestRatioDifference) {
+      closestRatioDifference = ratioDifference;
+      closestWidth = calcWidth;
+      closestHeight = calcHeight;
+    }
 
-		if (ratioDifference <= tolerance) {
-			break;
-		}
+    if (ratioDifference <= tolerance) {
+      break;
+    }
 
-		if (currentRatio < targetRatio) {
-			low = mid + 1;
-		} else {
-			high = mid - 1;
-		}
-	}
+    if (currentRatio < targetRatio) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
 
-	const scale = Math.min(
-		containerWidth / closestWidth,
-		containerHeight / closestHeight,
-	);
-	return {
-		bestMaxWidth: initialMaxWidth / scale,
-		bestMaxHeight: initialMaxWidth / targetRatio / scale,
-	};
+  const scale = Math.min(containerWidth / closestWidth, containerHeight / closestHeight);
+  return {
+    bestMaxWidth: initialMaxWidth / scale,
+    bestMaxHeight: initialMaxWidth / targetRatio / scale,
+  };
 }

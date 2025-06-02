@@ -1,5 +1,5 @@
-import { BoardSnapshot } from "Board/Board";
-import { getLastIndexFromList } from "./getLastIndexFromList";
+import { BoardSnapshot } from 'Board';
+import { getLastIndexFromList } from './getLastIndexFromList';
 
 export function getSnapshotFromList(list, board): BoardSnapshot {
 	list.revertUnconfirmed();

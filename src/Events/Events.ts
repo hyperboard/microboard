@@ -1,11 +1,11 @@
-import { Connection } from "App/Connection";
-import { Board } from "Board";
-import { Subject } from "shared/Subject";
-import { Command, createCommand } from "./Command";
-import { createEventsLog, EventsLog } from "./Log";
-import { Operation } from "./EventsOperations";
-import { PresenceEventType } from "Board/Presence/Events";
-import { conf } from "Board/Settings";
+import { Connection } from 'App/Connection';
+import { Board } from 'Board';
+import { Subject } from 'Subject';
+import { Command, createCommand } from './Command';
+import { createEventsLog, EventsLog } from './Log';
+import { Operation } from './EventsOperations';
+import { PresenceEventType } from 'Presence/Events';
+import { conf } from 'Settings';
 
 export interface BoardEvent {
 	order: number;
@@ -53,11 +53,7 @@ export class Events {
 	private latestEvent: { [key: string]: number } = {};
 	private eventCounter = 0;
 
-	constructor(
-		board: Board,
-		connection: Connection | undefined,
-		lastIndex: number,
-	) {
+	constructor(board: Board, connection: Connection | undefined, lastIndex: number) {
 		this.board = board;
 		this.connection = connection;
 		this.log = createEventsLog(board);
@@ -91,7 +87,7 @@ export class Events {
 		this.setLatestUserEvent(operation, userId);
 		this.subject.publish(event);
 
-		if (this.board.getBoardId().includes("local")) {
+		if (this.board.getBoardId().includes('local')) {
 			if (this.log.saveFileTimeout) {
 				clearTimeout(this.log.saveFileTimeout);
 			}
@@ -131,8 +127,8 @@ export class Events {
 			return;
 		}
 		this.applyAndEmit({
-			class: "Events",
-			method: "undo",
+			class: 'Events',
+			method: 'undo',
 			eventId,
 		});
 	}
@@ -148,8 +144,8 @@ export class Events {
 			return;
 		}
 		this.applyAndEmit({
-			class: "Events",
-			method: "redo",
+			class: 'Events',
+			method: 'redo',
 			eventId: record.event.body.eventId,
 		});
 	}
@@ -164,10 +160,7 @@ export class Events {
 		if (!record) {
 			return false;
 		}
-		return this.canUndoEvent(
-			record.event.body.operation,
-			record.event.body.userId,
-		);
+		return this.canUndoEvent(record.event.body.operation, record.event.body.userId);
 	}
 
 	/**
@@ -189,13 +182,11 @@ export class Events {
 	} // TODO Switch to pulling from connection instead of pushing from presence, then remove this method
 
 	private canUndoEvent(op: Operation, byUserId?: number): boolean {
-		if (op.method === "undo") {
+		if (op.method === 'undo') {
 			return false;
 		}
 		const isRedoPasteOrDuplicate =
-			op.method === "redo" ||
-			op.method === "paste" ||
-			op.method === "duplicate";
+			op.method === 'redo' || op.method === 'paste' || op.method === 'duplicate';
 		if (isRedoPasteOrDuplicate) {
 			return true;
 		}
@@ -205,11 +196,7 @@ export class Events {
 	}
 
 	private setLatestUserEvent(op: Operation, userId: number): void {
-		if (
-			op.class !== "Events" &&
-			op.method !== "paste" &&
-			op.method !== "duplicate"
-		) {
+		if (op.class !== 'Events' && op.method !== 'paste' && op.method !== 'duplicate') {
 			const key = this.getOpKey(op);
 			this.latestEvent[key] = userId;
 		}
@@ -227,14 +214,14 @@ export class Events {
 	private getNextEventId(): string {
 		const id = ++this.eventCounter;
 		const userId = this.getUserId();
-		return userId + ":" + id;
+		return userId + ':' + id;
 	}
 }
 
 export function createEvents(
 	board: Board,
 	connection: Connection | undefined, // undefined for node or local
-	lastIndex: number,
+	lastIndex: number
 ): Events {
 	return new Events(board, connection, lastIndex);
 }

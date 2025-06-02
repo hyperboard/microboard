@@ -1,12 +1,12 @@
-import { Board } from "Board/Board";
-import { Frame, Item, Line, Point, type Mbr } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { ResizeType } from "Board/Selection/Transformer/getResizeType";
-import { SpatialIndex } from "Board/SpatialIndex";
-import { CanvasDrawer } from "Board/drawMbrOnCanvas";
-import type { DebounceUpdater } from "../DebounceUpdater/DebounceUpdater";
+import { Board } from 'Board';
+import { CanvasDrawer } from 'drawMbrOnCanvas';
+import { Item, Mbr, Line, Frame, Point } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { ResizeType } from 'Selection/Transformer/getResizeType';
+import { SpatialIndex } from 'SpatialIndex';
+import { DebounceUpdater } from 'Tools/DebounceUpdater/DebounceUpdater';
 
-export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
+export const RELATIVE_ALIGNMENT_COLOR = '#4778F5';
 
 type SnapAlignment = {
 	offset: number;
@@ -28,7 +28,7 @@ export class AlignmentHelper {
 		board: Board,
 		private spatialIndex: SpatialIndex,
 		private canvasDrawer: CanvasDrawer,
-		private debounceUpd: DebounceUpdater,
+		private debounceUpd: DebounceUpdater
 	) {
 		this.board = board;
 	}
@@ -43,76 +43,60 @@ export class AlignmentHelper {
 			if (i === 0) {
 				return acc;
 			}
-			const itemMbr =
-				item.itemType === "Shape"
-					? item.getPath().getMbr()
-					: item.getMbr();
+			const itemMbr = item.itemType === 'Shape' ? item.getPath().getMbr() : item.getMbr();
 			return acc.combine(itemMbr);
 		}, items[0].getMbr());
 	}
 
 	checkAlignment(
 		movingItem: Item | Item[],
-		excludeItems: Item[] = [],
+		excludeItems: Item[] = []
 	): {
 		verticalLines: Line[];
 		horizontalLines: Line[];
 	} {
-		if (!Array.isArray(movingItem) && movingItem.itemType === "Comment") {
+		if (!Array.isArray(movingItem) && movingItem.itemType === 'Comment') {
 			return { verticalLines: [], horizontalLines: [] };
 		}
 		const movingMBR = this.canvasDrawer.getLastCreatedCanvas()
 			? this.canvasDrawer.getMbr()
 			: Array.isArray(movingItem)
-				? this.combineMBRs(movingItem)
-				: movingItem.itemType === "Shape"
-					? movingItem.getPath().getMbr()
-					: movingItem.getMbr();
+			? this.combineMBRs(movingItem)
+			: movingItem.itemType === 'Shape'
+			? movingItem.getPath().getMbr()
+			: movingItem.getMbr();
 		const camera = this.board.camera.getMbr();
 		const cameraWidth = camera.getWidth();
 		const scale = this.board.camera.getScale();
 		const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 8);
-		const childrenIds =
-			movingItem instanceof Frame ? movingItem.getChildrenIds() : [];
+		const childrenIds = movingItem instanceof Frame ? movingItem.getChildrenIds() : [];
 
 		const nearbyItems = this.canvasDrawer.getLastCreatedCanvas()
 			? this.spatialIndex.getNearestTo(
 					movingMBR.getCenter(),
 					20,
 					item => !excludeItems.includes(item),
-					Math.ceil(cameraWidth),
-				)
+					Math.ceil(cameraWidth)
+			  )
 			: this.spatialIndex
 					.getNearestTo(
 						movingMBR.getCenter(),
 						20,
 						(otherItem: Item) =>
 							otherItem !== movingMBR &&
-							otherItem.itemType !== "Connector" &&
-							otherItem.itemType !== "Drawing" &&
+							otherItem.itemType !== 'Connector' &&
+							otherItem.itemType !== 'Drawing' &&
 							otherItem.isInView(camera) &&
 							!childrenIds.includes(otherItem.getId()),
-						Math.ceil(cameraWidth),
+						Math.ceil(cameraWidth)
 					)
-					.filter(item =>
-						Array.isArray(movingItem)
-							? !movingItem.includes(item)
-							: true,
-					);
+					.filter(item => (Array.isArray(movingItem) ? !movingItem.includes(item) : true));
 		// .filter(item => !excludeItems.includes(item));
 
-		const verticalAlignments: Map<number, { minY: number; maxY: number }> =
-			new Map();
-		const horizontalAlignments: Map<
-			number,
-			{ minX: number; maxX: number }
-		> = new Map();
+		const verticalAlignments: Map<number, { minY: number; maxY: number }> = new Map();
+		const horizontalAlignments: Map<number, { minX: number; maxX: number }> = new Map();
 
-		const addVerticalAlignment = (
-			x: number,
-			minY: number,
-			maxY: number,
-		) => {
+		const addVerticalAlignment = (x: number, minY: number, maxY: number) => {
 			if (verticalAlignments.has(x)) {
 				const alignment = verticalAlignments.get(x)!;
 				alignment.minY = Math.min(alignment.minY, minY);
@@ -122,11 +106,7 @@ export class AlignmentHelper {
 			}
 		};
 
-		const addHorizontalAlignment = (
-			y: number,
-			minX: number,
-			maxX: number,
-		) => {
+		const addHorizontalAlignment = (y: number, minX: number, maxX: number) => {
 			if (horizontalAlignments.has(y)) {
 				const alignment = horizontalAlignments.get(y)!;
 				alignment.minX = Math.min(alignment.minX, minX);
@@ -137,156 +117,121 @@ export class AlignmentHelper {
 		};
 
 		nearbyItems.forEach(item => {
-			if (item === movingItem || item.itemType === "Comment") {
+			if (item === movingItem || item.itemType === 'Comment') {
 				return;
 			}
-			const itemMbr =
-				item.itemType === "Shape"
-					? item.getPath().getMbr()
-					: item.getMbr();
+			const itemMbr = item.itemType === 'Shape' ? item.getPath().getMbr() : item.getMbr();
 
 			const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
 			const centerXItem = (itemMbr.left + itemMbr.right) / 2;
 
 			const centerYMoving = (movingMBR.top + movingMBR.bottom) / 2;
 			const centerYItem = (itemMbr.top + itemMbr.bottom) / 2;
-			const widthDifference = Math.abs(
-				movingMBR.getWidth() - itemMbr.getWidth(),
-			);
-			const heightDifference = Math.abs(
-				movingMBR.getHeight() - itemMbr.getHeight(),
-			);
+			const widthDifference = Math.abs(movingMBR.getWidth() - itemMbr.getWidth());
+			const heightDifference = Math.abs(movingMBR.getHeight() - itemMbr.getHeight());
 
 			const tolerance = 0.1;
 
 			const isSameWidth = widthDifference < tolerance;
 			const isSameHeight = heightDifference < tolerance;
 
-			if (
-				Math.abs(centerXMoving - centerXItem) < dynamicAlignThreshold &&
-				!isSameWidth
-			) {
+			if (Math.abs(centerXMoving - centerXItem) < dynamicAlignThreshold && !isSameWidth) {
 				addVerticalAlignment(
 					centerXItem,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
-			if (
-				Math.abs(itemMbr.left - movingMBR.left) < dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.left - movingMBR.left) < dynamicAlignThreshold) {
 				addVerticalAlignment(
 					itemMbr.left,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
-			if (
-				Math.abs(itemMbr.right - movingMBR.right) <
-				dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.right - movingMBR.right) < dynamicAlignThreshold) {
 				addVerticalAlignment(
 					itemMbr.right,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
-			if (
-				Math.abs(itemMbr.left - movingMBR.right) < dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.left - movingMBR.right) < dynamicAlignThreshold) {
 				addVerticalAlignment(
 					itemMbr.left,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
-			if (
-				Math.abs(itemMbr.right - movingMBR.left) < dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.right - movingMBR.left) < dynamicAlignThreshold) {
 				addVerticalAlignment(
 					itemMbr.right,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
 
-			if (
-				Math.abs(centerYMoving - centerYItem) < dynamicAlignThreshold &&
-				!isSameHeight
-			) {
+			if (Math.abs(centerYMoving - centerYItem) < dynamicAlignThreshold && !isSameHeight) {
 				addHorizontalAlignment(
 					centerYItem,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
 			if (Math.abs(itemMbr.top - movingMBR.top) < dynamicAlignThreshold) {
 				addHorizontalAlignment(
 					itemMbr.top,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
-			if (
-				Math.abs(itemMbr.bottom - movingMBR.bottom) <
-				dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.bottom - movingMBR.bottom) < dynamicAlignThreshold) {
 				addHorizontalAlignment(
 					itemMbr.bottom,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
-			if (
-				Math.abs(itemMbr.top - movingMBR.bottom) < dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.top - movingMBR.bottom) < dynamicAlignThreshold) {
 				addHorizontalAlignment(
 					itemMbr.top,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
-			if (
-				Math.abs(itemMbr.bottom - movingMBR.top) < dynamicAlignThreshold
-			) {
+			if (Math.abs(itemMbr.bottom - movingMBR.top) < dynamicAlignThreshold) {
 				addHorizontalAlignment(
 					itemMbr.bottom,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
-			if (
-				Math.abs(centerXMoving - itemMbr.left) < dynamicAlignThreshold
-			) {
+			if (Math.abs(centerXMoving - itemMbr.left) < dynamicAlignThreshold) {
 				addVerticalAlignment(
 					itemMbr.left,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
-			if (
-				Math.abs(centerXMoving - itemMbr.right) < dynamicAlignThreshold
-			) {
+			if (Math.abs(centerXMoving - itemMbr.right) < dynamicAlignThreshold) {
 				addVerticalAlignment(
 					itemMbr.right,
 					Math.min(itemMbr.top, movingMBR.top),
-					Math.max(itemMbr.bottom, movingMBR.bottom),
+					Math.max(itemMbr.bottom, movingMBR.bottom)
 				);
 			}
 			if (Math.abs(centerYMoving - itemMbr.top) < dynamicAlignThreshold) {
 				addHorizontalAlignment(
 					itemMbr.top,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
-			if (
-				Math.abs(centerYMoving - itemMbr.bottom) < dynamicAlignThreshold
-			) {
+			if (Math.abs(centerYMoving - itemMbr.bottom) < dynamicAlignThreshold) {
 				addHorizontalAlignment(
 					itemMbr.bottom,
 					Math.min(itemMbr.left, movingMBR.left),
-					Math.max(itemMbr.right, movingMBR.right),
+					Math.max(itemMbr.right, movingMBR.right)
 				);
 			}
 		});
@@ -294,45 +239,23 @@ export class AlignmentHelper {
 		const precisionThreshold = 1;
 
 		const verticalLines = Array.from(verticalAlignments.entries())
-			.map(
-				([x, range]) =>
-					new Line(
-						new Point(x, range.minY),
-						new Point(x, range.maxY),
-					),
-			)
+			.map(([x, range]) => new Line(new Point(x, range.minY), new Point(x, range.maxY)))
 			.filter((line, index, lines) => {
 				const mainLine = lines[0];
-				return (
-					index === 0 ||
-					Math.abs(line.start.x - mainLine.start.x) >= 20
-				);
+				return index === 0 || Math.abs(line.start.x - mainLine.start.x) >= 20;
 			})
 			.filter(line => {
-				return (
-					Math.abs(line.start.x - line.end.x) <= precisionThreshold
-				);
+				return Math.abs(line.start.x - line.end.x) <= precisionThreshold;
 			});
 
 		const horizontalLines = Array.from(horizontalAlignments.entries())
-			.map(
-				([y, range]) =>
-					new Line(
-						new Point(range.minX, y),
-						new Point(range.maxX, y),
-					),
-			)
+			.map(([y, range]) => new Line(new Point(range.minX, y), new Point(range.maxX, y)))
 			.filter((line, index, lines) => {
 				const mainLine = lines[0];
-				return (
-					index === 0 ||
-					Math.abs(line.start.y - mainLine.start.y) >= 20
-				);
+				return index === 0 || Math.abs(line.start.y - mainLine.start.y) >= 20;
 			})
 			.filter(line => {
-				return (
-					Math.abs(line.start.y - line.end.y) <= precisionThreshold
-				);
+				return Math.abs(line.start.y - line.end.y) <= precisionThreshold;
 			});
 
 		return { verticalLines, horizontalLines };
@@ -351,9 +274,7 @@ export class AlignmentHelper {
 			const endX2 = center.x - length * Math.cos(radians);
 			const endY2 = center.y - length * Math.sin(radians);
 
-			lines.push(
-				new Line(new Point(endX1, endY1), new Point(endX2, endY2)),
-			);
+			lines.push(new Line(new Point(endX1, endY1), new Point(endX2, endY2)));
 		});
 
 		return { lines };
@@ -363,7 +284,7 @@ export class AlignmentHelper {
 		draggingItem: Item | Item[],
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
-		cursorPosition: Point,
+		cursorPosition: Point
 	): boolean {
 		const itemMbr = Array.isArray(draggingItem)
 			? this.combineMBRs(draggingItem)
@@ -372,25 +293,16 @@ export class AlignmentHelper {
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 
 		const scale = this.board.camera.getScale();
-		const dynamicSnapThreshold = Math.min(
-			Math.max(this.snapThreshold / scale, 0.6),
-			3,
-		);
+		const dynamicSnapThreshold = Math.min(Math.max(this.snapThreshold / scale, 0.6), 3);
 
-		const getAlignmentInfo = (
-			line: Line,
-			isVertical: boolean,
-		): SnapAlignment => ({
+		const getAlignmentInfo = (line: Line, isVertical: boolean): SnapAlignment => ({
 			offset: isVertical ? line.start.x : line.start.y,
 			itemOffset: isVertical ? itemMbr.left : itemMbr.top,
 			itemSize: isVertical ? itemMbr.getWidth() : itemMbr.getHeight(),
 			itemCenter: isVertical ? itemCenterX : itemCenterY,
 		});
 
-		const trySnap = (
-			alignment: SnapAlignment,
-			isVertical: boolean,
-		): boolean => {
+		const trySnap = (alignment: SnapAlignment, isVertical: boolean): boolean => {
 			const snapConditions: {
 				check: number;
 				translation: number;
@@ -400,13 +312,8 @@ export class AlignmentHelper {
 					translation: alignment.offset - alignment.itemOffset,
 				},
 				{
-					check:
-						alignment.itemOffset +
-						alignment.itemSize -
-						alignment.offset,
-					translation:
-						alignment.offset -
-						(alignment.itemOffset + alignment.itemSize),
+					check: alignment.itemOffset + alignment.itemSize - alignment.offset,
+					translation: alignment.offset - (alignment.itemOffset + alignment.itemSize),
 				},
 				{
 					check: alignment.itemCenter - alignment.offset,
@@ -419,8 +326,7 @@ export class AlignmentHelper {
 					const x = isVertical ? translation : 0;
 					const y = isVertical ? 0 : translation;
 					this.translateItems(draggingItem, x, y, beginTimeStamp);
-					this.snapMemory[isVertical ? "x" : "y"] =
-						cursorPosition[isVertical ? "x" : "y"];
+					this.snapMemory[isVertical ? 'x' : 'y'] = cursorPosition[isVertical ? 'x' : 'y'];
 					return true;
 				}
 			}
@@ -441,50 +347,39 @@ export class AlignmentHelper {
 			return false;
 		};
 
-		for (const axis of ["x", "y"] as const) {
+		for (const axis of ['x', 'y'] as const) {
 			if (
 				this.snapMemory[axis] !== null &&
-				Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) >
-					dynamicSnapThreshold
+				Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) > dynamicSnapThreshold
 			) {
 				this.snapMemory[axis] = null;
 			}
 		}
 
 		return (
-			snapToLine(snapLines.verticalLines, true) ||
-			snapToLine(snapLines.horizontalLines, false)
+			snapToLine(snapLines.verticalLines, true) || snapToLine(snapLines.horizontalLines, false)
 		);
 	}
 
 	snapCanvasToClosestLine(
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
-		cursorPosition: Point,
+		cursorPosition: Point
 	): boolean {
 		const itemMbr = this.canvasDrawer.getMbr();
 		const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
 		const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 		const scale = this.board.camera.getScale();
-		const dynamicSnapThreshold = Math.min(
-			Math.max(this.snapThreshold / scale, 0.6),
-			3,
-		);
+		const dynamicSnapThreshold = Math.min(Math.max(this.snapThreshold / scale, 0.6), 3);
 
-		const getAlignmentInfo = (
-			line: Line,
-			isVertical: boolean,
-		): SnapAlignment => ({
+		const getAlignmentInfo = (line: Line, isVertical: boolean): SnapAlignment => ({
 			offset: isVertical ? line.start.x : line.start.y,
 			itemOffset: isVertical ? itemMbr.left : itemMbr.top,
 			itemSize: isVertical ? itemMbr.getWidth() : itemMbr.getHeight(),
 			itemCenter: isVertical ? itemCenterX : itemCenterY,
 		});
 
-		const trySnap = (
-			alignment: SnapAlignment,
-			isVertical: boolean,
-		): boolean => {
+		const trySnap = (alignment: SnapAlignment, isVertical: boolean): boolean => {
 			const snapConditions: {
 				check: number;
 				translation: number;
@@ -494,13 +389,8 @@ export class AlignmentHelper {
 					translation: alignment.offset - alignment.itemOffset,
 				},
 				{
-					check:
-						alignment.itemOffset +
-						alignment.itemSize -
-						alignment.offset,
-					translation:
-						alignment.offset -
-						(alignment.itemOffset + alignment.itemSize),
+					check: alignment.itemOffset + alignment.itemSize - alignment.offset,
+					translation: alignment.offset - (alignment.itemOffset + alignment.itemSize),
 				},
 				{
 					check: alignment.itemCenter - alignment.offset,
@@ -513,8 +403,7 @@ export class AlignmentHelper {
 					const x = isVertical ? translation : 0;
 					const y = isVertical ? 0 : translation;
 					this.translateCanvas(x, y, beginTimeStamp);
-					this.snapMemory[isVertical ? "x" : "y"] =
-						cursorPosition[isVertical ? "x" : "y"];
+					this.snapMemory[isVertical ? 'x' : 'y'] = cursorPosition[isVertical ? 'x' : 'y'];
 					return true;
 				}
 			}
@@ -535,19 +424,17 @@ export class AlignmentHelper {
 			return false;
 		};
 
-		for (const axis of ["x", "y"] as const) {
+		for (const axis of ['x', 'y'] as const) {
 			if (
 				this.snapMemory[axis] !== null &&
-				Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) >
-					dynamicSnapThreshold
+				Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) > dynamicSnapThreshold
 			) {
 				this.snapMemory[axis] = null;
 			}
 		}
 
 		return (
-			snapToLine(snapLines.verticalLines, true) ||
-			snapToLine(snapLines.horizontalLines, false)
+			snapToLine(snapLines.verticalLines, true) || snapToLine(snapLines.horizontalLines, false)
 		);
 	}
 
@@ -555,7 +442,7 @@ export class AlignmentHelper {
 		draggingItem: Item | Item[],
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
 		beginTimeStamp: number,
-		side: ResizeType,
+		side: ResizeType
 	): boolean {
 		const itemMbr = Array.isArray(draggingItem)
 			? this.combineMBRs(draggingItem)
@@ -612,17 +499,15 @@ export class AlignmentHelper {
 		};
 
 		const isVerticalSide = new Set([
-			"left",
-			"right",
-			"leftTop",
-			"leftBottom",
-			"rightTop",
-			"rightBottom",
+			'left',
+			'right',
+			'leftTop',
+			'leftBottom',
+			'rightTop',
+			'rightBottom',
 		]);
 		const isVertical = isVerticalSide.has(side);
-		const lines = isVertical
-			? snapLines.verticalLines
-			: snapLines.horizontalLines;
+		const lines = isVertical ? snapLines.verticalLines : snapLines.horizontalLines;
 
 		for (const line of lines) {
 			if (!line) {
@@ -631,10 +516,7 @@ export class AlignmentHelper {
 
 			const alignment = getAlignmentInfo(line, side);
 
-			if (
-				Math.abs(alignment.position - alignment.reference) <
-				this.snapThreshold
-			) {
+			if (Math.abs(alignment.position - alignment.reference) < this.snapThreshold) {
 				const x = isVertical ? alignment.offset : 0;
 				const y = isVertical ? 0 : alignment.offset;
 				this.translateItems(draggingItem, x, y, beginTimeStamp);
@@ -646,36 +528,25 @@ export class AlignmentHelper {
 		return false;
 	}
 
-	translateItems(
-		item: Item | Item[],
-		x: number,
-		y: number,
-		timeStamp: number,
-	): void {
+	translateItems(item: Item | Item[], x: number, y: number, timeStamp: number): void {
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
 			return;
 		}
 
 		if (Array.isArray(item)) {
-			const translation = this.board.selection.getManyItemsTranslation(
-				x,
-				y,
-			);
+			const translation = this.board.selection.getManyItemsTranslation(x, y);
 			this.board.selection.transformMany(translation, timeStamp);
 			return;
 		}
 
-		if (item.itemType === "Frame") {
-			const translation = this.board.selection.getManyItemsTranslation(
-				x,
-				y,
-			);
+		if (item.itemType === 'Frame') {
+			const translation = this.board.selection.getManyItemsTranslation(x, y);
 			this.board.selection.transformMany(translation, timeStamp);
 		} else {
 			const key = item.getId();
 			const transformMap = {};
 			transformMap[key] = {
-				method: "translateBy",
+				method: 'translateBy',
 				x,
 				y,
 				timeStamp,
@@ -689,13 +560,10 @@ export class AlignmentHelper {
 			return;
 		}
 
-		const isCanvasOk =
-			this.canvasDrawer.getLastCreatedCanvas() &&
-			!this.debounceUpd.shouldUpd();
+		const isCanvasOk = this.canvasDrawer.getLastCreatedCanvas() && !this.debounceUpd.shouldUpd();
 
 		const isCanvasNeedsUpdate =
-			this.canvasDrawer.getLastCreatedCanvas() &&
-			this.debounceUpd.shouldUpd();
+			this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd.shouldUpd();
 
 		if (isCanvasOk) {
 			this.canvasDrawer.translateCanvasBy(x, y);
@@ -703,10 +571,7 @@ export class AlignmentHelper {
 		} else if (isCanvasNeedsUpdate) {
 			this.canvasDrawer.translateCanvasBy(x, y);
 			const { translateX, translateY } = this.canvasDrawer.getMatrix();
-			const translation = this.board.selection.getManyItemsTranslation(
-				translateX,
-				translateY,
-			);
+			const translation = this.board.selection.getManyItemsTranslation(translateX, translateY);
 			this.canvasDrawer.highlightNesting();
 			this.board.selection.transformMany(translation, timeStamp);
 			this.canvasDrawer.clearCanvasAndKeys();
@@ -717,7 +582,7 @@ export class AlignmentHelper {
 	renderSnapLines(
 		context: DrawingContext,
 		snapLines: { verticalLines: Line[]; horizontalLines: Line[] },
-		scale: number,
+		scale: number
 	): void {
 		context.ctx.save();
 		const zoom = scale * 100;

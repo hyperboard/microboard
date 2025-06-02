@@ -1,8 +1,8 @@
-import { Board } from "Board/Board";
-import { Line, Mbr, Point, RichText } from "Board/Items";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { conf } from "Board/Settings";
-import { BoardTool } from "../BoardTool";
+import { Board } from 'Board';
+import { Line, Mbr, Point, RichText } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { conf } from 'Settings';
+import { BoardTool } from 'Tools/BoardTool';
 
 const height = 16;
 
@@ -16,7 +16,7 @@ export class AddText extends BoardTool {
 	}
 
 	setCursor(): void {
-		this.board.pointer.setCursor("text");
+		this.board.pointer.setCursor('text');
 	}
 
 	leftButtonDown(): boolean {
@@ -49,10 +49,7 @@ export class AddText extends BoardTool {
 			const board = this.board;
 
 			const richText = new RichText(this.board, new Mbr());
-			richText.transformation.applyTranslateTo(
-				this.bounds.left,
-				this.bounds.top,
-			);
+			richText.transformation.applyTranslateTo(this.bounds.left, this.bounds.top);
 			richText.transformation.applyScaleBy(1, 1);
 			richText.editor.maxWidth = 600;
 			richText.insideOf = richText.itemType;
@@ -68,7 +65,7 @@ export class AddText extends BoardTool {
 	}
 
 	keyDown(key: string): boolean {
-		if (key === "Escape") {
+		if (key === 'Escape') {
 			this.board.tools.select();
 			return true;
 		}

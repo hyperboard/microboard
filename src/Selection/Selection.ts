@@ -1,53 +1,46 @@
-import { Board } from "Board";
-import { Events, Operation } from "Board/Events";
-import { BoardPoint, ConnectorLineStyle } from "Board/Items/Connector";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { FrameType } from "Board/Items/Frame/Basic";
-import { TextStyle } from "Board/Items/RichText/Editor/TextNode";
-import { DefaultShapeData } from "Board/Items/Shape/ShapeData";
-import { Sticker } from "Board/Items/Sticker";
-import { Subject } from "shared/Subject";
-import { toFiniteNumber } from "Board/lib";
-import { conf } from "Board/Settings";
-import { Command, createCommand } from "../Events/Command";
-import { Connector, Frame, Item, ItemData, Mbr, RichText } from "../Items";
-import { HorisontalAlignment, VerticalAlignment } from "../Items/Alignment";
-import { BorderStyle } from "../Items/Path";
-import { ShapeType } from "../Items/Shape";
-import { getQuickAddButtons, QuickAddButtons } from "./QuickAddButtons";
-import { SelectionItems } from "./SelectionItems";
-import { SelectionTransformer } from "./SelectionTransformer";
-import { ConnectorPointerStyle } from "Board/Items/Connector/Pointers/Pointers";
-import { TransformManyItems } from "Board/Items/Transformation/TransformationOperations";
-import { ItemOp } from "Board/Items/RichText/RichTextOperations";
-import { tempStorage } from "App/SessionStorage";
-import { Tool } from "Board/Tools/Tool";
-import {
-	AINode,
-	CONTEXT_NODE_HIGHLIGHT_COLOR,
-} from "Board/Items/AINode/AINode";
-import { BaseRange } from "slate";
-import { CONNECTOR_COLOR } from "Board/Items/Connector/Connector";
-import { safeRequestAnimationFrame } from "Board/api/safeRequestAnimationFrame";
-import { deleteMedia, updateMediaUsage } from "Board/Items/Image/ImageHelpers";
-const { i18n } = conf;
+import { safeRequestAnimationFrame } from 'api/safeRequestAnimationFrame';
+import { Board } from 'Board';
+import { Events, Operation, Command } from 'Events';
+import { createCommand } from 'Events/Command';
+import { Item, RichText, Mbr, Frame, ItemData, Connector } from 'Items';
+import { AINode, CONTEXT_NODE_HIGHLIGHT_COLOR } from 'Items/AINode';
+import { HorisontalAlignment, VerticalAlignment } from 'Items/Alignment';
+import { BoardPoint, ConnectorLineStyle } from 'Items/Connector';
+import { CONNECTOR_COLOR } from 'Items/Connector/Connector';
+import { ConnectorPointerStyle } from 'Items/Connector/Pointers/Pointers';
+import { DrawingContext } from 'Items/DrawingContext';
+import { FrameType } from 'Items/Frame/Basic';
+import { deleteMedia, updateMediaUsage } from 'Items/Image/ImageHelpers';
+import { BorderStyle } from 'Items/Path';
+import { TextStyle } from 'Items/RichText';
+import { ItemOp } from 'Items/RichText/RichTextOperations';
+import { DefaultShapeData, ShapeType } from 'Items/Shape';
+import { Sticker } from 'Items/Sticker';
+import { TransformManyItems } from 'Items/Transformation/TransformationOperations';
+import { toFiniteNumber } from 'lib';
+import { conf } from 'Settings';
+import { Subject } from 'Subject';
+import { Tool } from 'Tools/Tool';
+import { QuickAddButtons, getQuickAddButtons } from './QuickAddButtons';
+import { SelectionItems } from './SelectionItems';
+import { SelectionTransformer } from './SelectionTransformer';
 
 const defaultShapeData = new DefaultShapeData();
 
 export type SelectionContext =
-	| "SelectUnderPointer"
-	| "HoverUnderPointer"
-	| "EditUnderPointer"
-	| "EditTextUnderPointer"
-	| "SelectByRect"
-	| "None";
+	| 'SelectUnderPointer'
+	| 'HoverUnderPointer'
+	| 'EditUnderPointer'
+	| 'EditTextUnderPointer'
+	| 'SelectByRect'
+	| 'None';
 
 export class Selection {
 	readonly subject = new Subject<Selection>();
 	readonly itemSubject = new Subject<Item>();
 	readonly itemsSubject = new Subject<Item[]>();
 	isOn = true;
-	private context: SelectionContext = "None";
+	private context: SelectionContext = 'None';
 	readonly items = new SelectionItems();
 	shouldPublish = true;
 	readonly tool: Tool;
@@ -63,10 +56,7 @@ export class Selection {
 		context: SelectionContext;
 	} | null = null;
 
-	constructor(
-		private board: Board,
-		public events?: Events,
-	) {
+	constructor(private board: Board, public events?: Events) {
 		safeRequestAnimationFrame(this.updateScheduledObservers);
 		this.tool = new SelectionTransformer(board, this);
 		this.quickAddButtons = getQuickAddButtons(this, board);
@@ -99,9 +89,7 @@ export class Selection {
 		selectedItems: string;
 		context: SelectionContext;
 	} | null {
-		const savedData = this.memorySnapshot
-			? { ...this.memorySnapshot }
-			: null;
+		const savedData = this.memorySnapshot ? { ...this.memorySnapshot } : null;
 		if (savedData) {
 			this.deserialize(savedData.selectedItems);
 			this.setContext(savedData.context);
@@ -134,9 +122,7 @@ export class Selection {
 
 	updateQueue: Set<() => void> = new Set();
 
-	decorateObserverToScheduleUpdate<T extends (...args: any[]) => void>(
-		observer: T,
-	): T {
+	decorateObserverToScheduleUpdate<T extends (...args: any[]) => void>(observer: T): T {
 		return ((...args: Parameters<T>) => {
 			if (!this.updateQueue.has(observer)) {
 				this.updateQueue.add(() => observer(...args));
@@ -161,9 +147,7 @@ export class Selection {
 		this.itemSubject.publish(item);
 	};
 
-	decoratedItemObserver = this.decorateObserverToScheduleUpdate(
-		this.itemObserver,
-	);
+	decoratedItemObserver = this.decorateObserverToScheduleUpdate(this.itemObserver);
 
 	add(value: Item | Item[]): void {
 		this.items.add(value);
@@ -179,15 +163,11 @@ export class Selection {
 	}
 
 	addAll(): void {
-		const items = this.board.items
-			.listAll()
-			.filter(item => !item.transformation.isLocked);
-		const frames = this.board.items
-			.listFrames()
-			.filter(item => !item.transformation.isLocked);
+		const items = this.board.items.listAll().filter(item => !item.transformation.isLocked);
+		const frames = this.board.items.listFrames().filter(item => !item.transformation.isLocked);
 		this.add(items);
 		this.add(frames);
-		this.setContext("SelectByRect");
+		this.setContext('SelectByRect');
 	}
 
 	remove(value: Item | Item[]): void {
@@ -200,7 +180,7 @@ export class Selection {
 			value.subject.unsubscribe(this.itemObserver);
 		}
 		if (this.items.isEmpty()) {
-			this.setContext("None");
+			this.setContext('None');
 		}
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
@@ -213,7 +193,7 @@ export class Selection {
 		}
 		this.board.removeVoidComments();
 		this.items.removeAll();
-		this.setContext("None");
+		this.setContext('None');
 		this.subject.publish(this);
 		this.itemsSubject.publish([]);
 	}
@@ -247,14 +227,14 @@ export class Selection {
 
 	disable(): void {
 		this.isOn = false;
-		this.setContext("None");
+		this.setContext('None');
 		this.items.removeAll();
 		this.subject.publish(this);
 	}
 
 	setContext(context: SelectionContext): void {
 		this.context = context;
-		if (context !== "EditTextUnderPointer") {
+		if (context !== 'EditTextUnderPointer') {
 			this.setTextToEdit(undefined);
 		} else {
 			const single = this.items.getSingle();
@@ -262,7 +242,7 @@ export class Selection {
 				this.setTextToEdit(single);
 			}
 		}
-		if (context === "None") {
+		if (context === 'None') {
 			this.quickAddButtons.clear();
 		}
 		this.showQuickAddPanel = false;
@@ -281,31 +261,27 @@ export class Selection {
 		if (top) {
 			this.add(top);
 			this.setTextToEdit(undefined);
-			this.setContext("SelectUnderPointer");
+			this.setContext('SelectUnderPointer');
 		} else {
-			this.setContext("None");
+			this.setContext('None');
 		}
 	}
 
 	editSelected(): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			return;
 		}
 		if (this.items.isEmpty()) {
 			return;
 		}
 
-		this.setContext("EditUnderPointer");
+		this.setContext('EditUnderPointer');
 
 		this.board.tools.select();
 	}
 
-	editText(
-		shouldReplace?: string,
-		moveCursorToEnd = false,
-		shouldSelect = false,
-	): void {
-		if (this.board.getInterfaceType() !== "edit") {
+	editText(shouldReplace?: string, moveCursorToEnd = false, shouldSelect = false): void {
+		if (this.board.getInterfaceType() !== 'edit') {
 			return;
 		}
 		if (this.items.isEmpty()) {
@@ -330,7 +306,7 @@ export class Selection {
 			text.editor.moveCursorToEndOfTheText();
 		}
 		this.setTextToEdit(item);
-		this.setContext("EditTextUnderPointer");
+		this.setContext('EditTextUnderPointer');
 		if (shouldSelect) {
 			text.editor.selectWholeText();
 		}
@@ -350,9 +326,9 @@ export class Selection {
 				text.editor.selectWholeText();
 				this.board.items.subject.publish(this.board.items);
 			}
-			this.setContext("EditUnderPointer");
+			this.setContext('EditUnderPointer');
 		} else {
-			this.setContext("None");
+			this.setContext('None');
 		}
 	}
 
@@ -374,34 +350,30 @@ export class Selection {
 			const textSize = tempStorage.getFontSize(item.itemType);
 			const highlightColor = tempStorage.getFontHighlight(item.itemType);
 			const styles = tempStorage.getFontStyles(item.itemType);
-			const horizontalAlignment = tempStorage.getHorizontalAlignment(
-				item.itemType,
-			);
-			const verticalAlignment = tempStorage.getVerticalAlignment(
-				item.itemType,
-			);
+			const horizontalAlignment = tempStorage.getHorizontalAlignment(item.itemType);
+			const verticalAlignment = tempStorage.getVerticalAlignment(item.itemType);
 			if (textColor) {
-				text.setSelectionFontColor(textColor, "None");
+				text.setSelectionFontColor(textColor, 'None');
 			}
 			if (
 				textSize &&
-				this.context !== "EditUnderPointer" &&
-				this.context !== "EditTextUnderPointer"
+				this.context !== 'EditUnderPointer' &&
+				this.context !== 'EditTextUnderPointer'
 			) {
 				this.emit({
-					class: "RichText",
-					method: "setFontSize",
+					class: 'RichText',
+					method: 'setFontSize',
 					item: [item.getId()],
 					fontSize: textSize,
 					context: this.getContext(),
 				});
 			}
 			if (highlightColor) {
-				text.setSelectionFontHighlight(highlightColor, "None");
+				text.setSelectionFontHighlight(highlightColor, 'None');
 			}
 			if (styles) {
 				const stylesArr = styles;
-				text.setSelectionFontStyle(stylesArr, "None");
+				text.setSelectionFontStyle(stylesArr, 'None');
 			}
 			if (horizontalAlignment && !(item instanceof Sticker)) {
 				text.setSelectionHorisontalAlignment(horizontalAlignment);
@@ -423,26 +395,21 @@ export class Selection {
 		if (top) {
 			this.add(top);
 			// this.setTextToEdit(top);
-			this.setContext("EditTextUnderPointer");
+			this.setContext('EditTextUnderPointer');
 			this.board.items.subject.publish(this.board.items);
 		} else {
-			this.setContext("None");
+			this.setContext('None');
 		}
 	}
 
 	selectEnclosedBy(rect: Mbr): void {
 		this.removeAll();
-		const list = this.board.items.getEnclosed(
-			rect.left,
-			rect.top,
-			rect.right,
-			rect.bottom,
-		);
+		const list = this.board.items.getEnclosed(rect.left, rect.top, rect.right, rect.bottom);
 		if (list.length !== 0) {
 			this.add(list);
-			this.setContext("SelectByRect");
+			this.setContext('SelectByRect');
 		} else {
-			this.setContext("None");
+			this.setContext('None');
 		}
 	}
 
@@ -455,15 +422,14 @@ export class Selection {
 			.getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
 			.filter(
 				item =>
-					(!(item instanceof Frame) ||
-						enclosedFrames.includes(item)) &&
-					!item.transformation.isLocked,
+					(!(item instanceof Frame) || enclosedFrames.includes(item)) &&
+					!item.transformation.isLocked
 			);
 		if (list.length !== 0) {
 			this.add(list);
-			this.setContext("SelectByRect");
+			this.setContext('SelectByRect');
 		} else {
-			this.setContext("None");
+			this.setContext('None');
 		}
 	}
 
@@ -472,42 +438,29 @@ export class Selection {
 	}
 
 	canChangeText(): boolean {
-		return Boolean(
-			this.items.isSingle() && this.items.getSingle()?.getRichText(),
-		);
+		return Boolean(this.items.isSingle() && this.items.getSingle()?.getRichText());
 	}
 
-	private handleItemCopy(
-		item: Item,
-		copiedItemsMap: { [key: string]: ItemData },
-	): void {
+	private handleItemCopy(item: Item, copiedItemsMap: { [key: string]: ItemData }): void {
 		const serializedData = item.serialize(true);
 		const zIndex = this.board.items.index.getZIndex(item);
-		if (item.itemType === "Comment") {
+		if (item.itemType === 'Comment') {
 			return;
 		}
 
 		// If the item is a Connector and the connected items are not part of selection,
 		// change the control points to BoardPoint.
-		if (
-			item.itemType === "Connector" &&
-			serializedData.itemType === "Connector"
-		) {
+		if (item.itemType === 'Connector' && serializedData.itemType === 'Connector') {
 			const connector = item as Connector;
 			const startPoint = connector.getStartPoint();
 			const endPoint = connector.getEndPoint();
 
 			// If the start or end point items are not in the selection,
 			// change them to BoardPoints with the current absolute position.
-			const startItemId =
-				startPoint.pointType !== "Board"
-					? startPoint.item.getId()
-					: null;
-			const endItemId =
-				endPoint.pointType !== "Board" ? endPoint.item.getId() : null;
+			const startItemId = startPoint.pointType !== 'Board' ? startPoint.item.getId() : null;
+			const endItemId = endPoint.pointType !== 'Board' ? endPoint.item.getId() : null;
 			const single = this.items.getSingle();
-			const frameChild =
-				single instanceof Frame ? single.getChildrenIds() : null;
+			const frameChild = single instanceof Frame ? single.getChildrenIds() : null;
 
 			const hasStartItem =
 				startItemId &&
@@ -519,37 +472,30 @@ export class Selection {
 				!frameChild?.some(child => child === endItemId);
 
 			if (hasStartItem) {
-				serializedData.startPoint = new BoardPoint(
-					startPoint.x,
-					startPoint.y,
-				).serialize();
+				serializedData.startPoint = new BoardPoint(startPoint.x, startPoint.y).serialize();
 			}
 
 			if (hasEndItem) {
-				serializedData.endPoint = new BoardPoint(
-					endPoint.x,
-					endPoint.y,
-				).serialize();
+				serializedData.endPoint = new BoardPoint(endPoint.x, endPoint.y).serialize();
 			}
 		}
 
 		const textItem = item.getRichText()?.getTextString();
-		const copyText = i18n.t("frame.copy");
+		const copyText = i18n.t('frame.copy');
 		const isCopyTextExist = textItem?.includes(copyText);
 		const isChangeCopiedFrameText =
-			item.itemType === "Frame" &&
-			serializedData.itemType === "Frame" &&
-			textItem !== "" &&
+			item.itemType === 'Frame' &&
+			serializedData.itemType === 'Frame' &&
+			textItem !== '' &&
 			!isCopyTextExist;
 
 		if (isChangeCopiedFrameText) {
-			const copiedFrameText =
-				copyText + (textItem || serializedData.text?.placeholderText);
+			const copiedFrameText = copyText + (textItem || serializedData.text?.placeholderText);
 			item.text.editor.clearText();
 			item.text.editor.addText(copiedFrameText);
 			serializedData.text = item.text.serialize();
 			item.text.editor.clearText();
-			item.text.editor.addText(textItem || "");
+			item.text.editor.addText(textItem || '');
 		}
 		copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
 	}
@@ -562,7 +508,7 @@ export class Selection {
 		  } {
 		const copiedItemsMap: { [key: string]: ItemData } = {};
 		const single = this.items.getSingle();
-		if (!skipImageBlobCopy && single && single.itemType === "Image") {
+		if (!skipImageBlobCopy && single && single.itemType === 'Image') {
 			this.handleItemCopy(single, copiedItemsMap);
 			return { imageElement: single.image, imageData: copiedItemsMap };
 		}
@@ -582,9 +528,7 @@ export class Selection {
 				if (!(id in copiedItemsMap)) {
 					const childItem = this.board.items.getById(id);
 					if (!childItem) {
-						console.warn(
-							`Didn't find item with ${id} while copying`,
-						);
+						console.warn(`Didn't find item with ${id} while copying`);
 					} else {
 						this.handleItemCopy(childItem, copiedItemsMap);
 					}
@@ -614,16 +558,10 @@ export class Selection {
 			}
 			const richText = item.getRichText();
 			if (richText) {
-				if (
-					!maxRichText ||
-					richText.getFontSize() > maxRichText.getFontSize()
-				) {
+				if (!maxRichText || richText.getFontSize() > maxRichText.getFontSize()) {
 					maxRichText = richText;
 				}
-				if (
-					!minRichText ||
-					richText.getFontSize() < minRichText.getFontSize()
-				) {
+				if (!minRichText || richText.getFontSize() < minRichText.getFontSize()) {
 					minRichText = richText;
 				}
 			}
@@ -636,7 +574,7 @@ export class Selection {
 	}
 
 	getAutosize(): boolean {
-		const sticker = this.items.getItemsByItemTypes(["Sticker"])[0];
+		const sticker = this.items.getItemsByItemTypes(['Sticker'])[0];
 		return sticker?.text.isAutosize() || false;
 	}
 
@@ -646,67 +584,59 @@ export class Selection {
 	}
 
 	getFontHighlight(): string {
-		const color = this.getText()?.getFontHighlight() || "none";
+		const color = this.getText()?.getFontHighlight() || 'none';
 		return color;
 	}
 
 	getFontColor(): string {
-		const color = this.getText()?.getFontColor() || "none";
+		const color = this.getText()?.getFontColor() || 'none';
 		return color;
 	}
 
 	getFillColor(): string {
-		const tmp = this.items.getItemsByItemTypes([
-			"Shape",
-			"Sticker",
-			"Frame",
-		])[0];
+		const tmp = this.items.getItemsByItemTypes(['Shape', 'Sticker', 'Frame'])[0];
 		return tmp?.getBackgroundColor() || defaultShapeData.backgroundColor;
 	}
 
 	getBorderStyle(): string {
-		const shape = this.items.getItemsByItemTypes([
-			"Shape",
-			"Drawing",
-			"Connector",
-		])[0];
+		const shape = this.items.getItemsByItemTypes(['Shape', 'Drawing', 'Connector'])[0];
 		return shape?.getBorderStyle() || defaultShapeData.borderStyle;
 	}
 
 	getStrokeColor(): string {
-		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
+		const shape = this.items.getItemsByItemTypes(['Shape', 'Drawing'])[0];
 		return shape?.getStrokeColor() || defaultShapeData.borderColor;
 	}
 
 	getStrokeWidth(): number {
-		const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
+		const shape = this.items.getItemsByItemTypes(['Shape', 'Drawing'])[0];
 		return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
 	}
 
 	getConnectorLineWidth(): number {
-		const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+		const connector = this.items.getItemsByItemTypes(['Connector'])[0];
 		return connector?.getLineWidth() || 1;
 	}
 
 	getConnectorLineColor(): string {
-		const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+		const connector = this.items.getItemsByItemTypes(['Connector'])[0];
 		return connector?.getLineColor() || CONNECTOR_COLOR;
 	}
 
 	getStartPointerStyle(): ConnectorPointerStyle {
-		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getStartPointerStyle() || "None";
+		const pointer = this.items.getItemsByItemTypes(['Connector'])[0];
+		return pointer?.getStartPointerStyle() || 'None';
 	}
 
 	getEndPointerStyle(): ConnectorPointerStyle {
-		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getEndPointerStyle() || "None";
+		const pointer = this.items.getItemsByItemTypes(['Connector'])[0];
+		return pointer?.getEndPointerStyle() || 'None';
 	}
 
 	setStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setStartPointerStyle",
+			class: 'Connector',
+			method: 'setStartPointerStyle',
 			item: this.items.ids(),
 			startPointerStyle: style,
 		});
@@ -714,8 +644,8 @@ export class Selection {
 
 	setEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setEndPointerStyle",
+			class: 'Connector',
+			method: 'setEndPointerStyle',
 			item: this.items.ids(),
 			endPointerStyle: style,
 		});
@@ -723,28 +653,28 @@ export class Selection {
 
 	switchPointers(): void {
 		this.emit({
-			class: "Connector",
-			method: "switchPointers",
+			class: 'Connector',
+			method: 'switchPointers',
 			item: this.items.ids(),
 		});
 	}
 
 	setConnectorLineStyle(style: ConnectorLineStyle): void {
 		this.emit({
-			class: "Connector",
-			method: "setLineStyle",
+			class: 'Connector',
+			method: 'setLineStyle',
 			item: this.items.ids(),
 			lineStyle: style,
 		});
 	}
 
 	getConnectorLineStyle(): string {
-		const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
-		return pointer?.getLineStyle() || "none";
+		const pointer = this.items.getItemsByItemTypes(['Connector'])[0];
+		return pointer?.getLineStyle() || 'none';
 	}
 
 	getTextToEdit(): RichText[] {
-		if (this.context !== "EditTextUnderPointer") {
+		if (this.context !== 'EditTextUnderPointer') {
 			return [];
 		}
 		if (!this.textToEdit) {
@@ -755,10 +685,7 @@ export class Selection {
 
 	nestSelectedItems(unselectedItem?: Item | null, checkFrames = true): void {
 		const selected = this.board.selection.items.list();
-		if (
-			unselectedItem &&
-			!selected.find(item => item.getId() === unselectedItem.getId())
-		) {
+		if (unselectedItem && !selected.find(item => item.getId() === unselectedItem.getId())) {
 			selected.push(unselectedItem);
 		}
 		const selectedMbr = selected.reduce((acc: Mbr | undefined, item) => {
@@ -770,14 +697,14 @@ export class Selection {
 
 		if (selectedMbr) {
 			const selectedMap = Object.fromEntries(
-				selected.map(item => [item.getId(), { item, nested: false }]),
+				selected.map(item => [item.getId(), { item, nested: false }])
 			) as { [k: string]: { item: Item; nested: false | Frame } };
 
 			const enclosedFrames = this.board.items.getFramesEnclosedOrCrossed(
 				selectedMbr?.left,
 				selectedMbr?.top,
 				selectedMbr?.right,
-				selectedMbr?.bottom,
+				selectedMbr?.bottom
 			);
 
 			enclosedFrames.forEach(frame => {
@@ -790,17 +717,12 @@ export class Selection {
 
 			Object.values(selectedMap).forEach(val => {
 				const parentFrame = this.board.items.getById(val.item.parent);
-				const isParentFrame = parentFrame?.itemType === "Frame";
-				const parentFrameId = isParentFrame
-					? parentFrame.getId()
-					: null;
+				const isParentFrame = parentFrame?.itemType === 'Frame';
+				const parentFrameId = isParentFrame ? parentFrame.getId() : null;
 
 				if (val.nested) {
-					const isRemoveChildFromFrame = Object.values(
-						selectedMap,
-					).some(
-						val =>
-							val.nested && val.nested.getId() !== parentFrameId,
+					const isRemoveChildFromFrame = Object.values(selectedMap).some(
+						val => val.nested && val.nested.getId() !== parentFrameId
 					);
 
 					if (isParentFrame && isRemoveChildFromFrame) {
@@ -808,17 +730,15 @@ export class Selection {
 					}
 
 					val.nested.emitAddChild([val.item]);
-				} else if (val.item.parent !== "Board") {
+				} else if (val.item.parent !== 'Board') {
 					if (isParentFrame) {
 						parentFrame.emitRemoveChild([val.item]);
 					} else {
-						console.warn(
-							`Didnt find frame with id ${val.item.parent}`,
-						);
+						console.warn(`Didnt find frame with id ${val.item.parent}`);
 					}
 				}
 
-				if (val.item.itemType === "Frame" && checkFrames) {
+				if (val.item.itemType === 'Frame' && checkFrames) {
 					const currFrame = val.item;
 					const currMbr = currFrame.getMbr();
 					const children = val.item
@@ -830,24 +750,20 @@ export class Selection {
 							currMbr.left,
 							currMbr.top,
 							currMbr.right,
-							currMbr.bottom,
+							currMbr.bottom
 						)
 						.filter(
-							item =>
-								item.parent === "Board" ||
-								item.parent === currFrame.getId(),
+							item => item.parent === 'Board' || item.parent === currFrame.getId()
 						);
 					const uniqueItems = new Set();
-					const toCheck = [...children, ...underFrame].filter(
-						item => {
-							const id = item.getId();
-							if (uniqueItems.has(id)) {
-								return false;
-							}
-							uniqueItems.add(id);
-							return true;
-						},
-					);
+					const toCheck = [...children, ...underFrame].filter(item => {
+						const id = item.getId();
+						if (uniqueItems.has(id)) {
+							return false;
+						}
+						uniqueItems.add(id);
+						return true;
+					});
 					// toCheck.forEach(child => currFrame.emitNesting(child));
 					currFrame.emitNesting(toCheck);
 				}
@@ -899,8 +815,8 @@ export class Selection {
 	transformMany(items: TransformManyItems, timeStamp?: number): void {
 		this.shouldPublish = false;
 		this.emit({
-			class: "Transformation",
-			method: "transformMany",
+			class: 'Transformation',
+			method: 'transformMany',
 			items,
 			timeStamp,
 		});
@@ -908,17 +824,13 @@ export class Selection {
 	}
 
 	/** transforms selected items with frames' children */
-	getManyItemsTranslation(
-		x: number,
-		y: number,
-		unselectedItem?: Item,
-	): TransformManyItems {
+	getManyItemsTranslation(x: number, y: number, unselectedItem?: Item): TransformManyItems {
 		const translation: TransformManyItems = {};
 
 		function addItemToTranslation(itemId: string): void {
 			translation[itemId] = {
-				class: "Transformation",
-				method: "scaleByTranslateBy",
+				class: 'Transformation',
+				method: 'scaleByTranslateBy',
 				item: [itemId],
 				scale: { x: 1, y: 1 },
 				translate: { x, y },
@@ -940,8 +852,8 @@ export class Selection {
 				.filter(comment => comment.getItemToFollow() === item.getId());
 			for (const comment of followedComments) {
 				translation[comment.getId()] = {
-					class: "Transformation",
-					method: "scaleByTranslateBy",
+					class: 'Transformation',
+					method: 'scaleByTranslateBy',
 					item: [comment.getId()],
 					scale: { x: 1, y: 1 },
 					translate: { x, y },
@@ -969,29 +881,29 @@ export class Selection {
 
 	setStrokeStyle(borderStyle: BorderStyle): void {
 		// TODO make single operation to set strokeStyle on any item with stroke
-		const shapes = this.items.getIdsByItemTypes(["Shape"]);
+		const shapes = this.items.getIdsByItemTypes(['Shape']);
 		if (shapes.length > 0) {
 			this.emit({
-				class: "Shape",
-				method: "setBorderStyle",
+				class: 'Shape',
+				method: 'setBorderStyle',
 				item: shapes,
 				borderStyle,
 			});
 		}
-		const drawings = this.items.getIdsByItemTypes(["Drawing"]);
+		const drawings = this.items.getIdsByItemTypes(['Drawing']);
 		if (drawings.length > 0) {
 			this.emit({
-				class: "Drawing",
-				method: "setStrokeStyle",
+				class: 'Drawing',
+				method: 'setStrokeStyle',
 				item: drawings,
 				style: borderStyle,
 			});
 		}
-		const connectors = this.items.getIdsByItemTypes(["Connector"]);
+		const connectors = this.items.getIdsByItemTypes(['Connector']);
 		if (connectors.length > 0) {
 			this.emit({
-				class: "Connector",
-				method: "setBorderStyle",
+				class: 'Connector',
+				method: 'setBorderStyle',
 				item: connectors,
 				borderStyle,
 			});
@@ -1000,29 +912,29 @@ export class Selection {
 
 	setStrokeColor(borderColor: string): void {
 		// TODO make single operation to set strokeColor on any item with stroke
-		const shapes = this.items.getIdsByItemTypes(["Shape"]);
+		const shapes = this.items.getIdsByItemTypes(['Shape']);
 		if (shapes.length > 0) {
 			this.emit({
-				class: "Shape",
-				method: "setBorderColor",
+				class: 'Shape',
+				method: 'setBorderColor',
 				item: shapes,
 				borderColor,
 			});
 		}
-		const connectors = this.items.getIdsByItemTypes(["Connector"]);
+		const connectors = this.items.getIdsByItemTypes(['Connector']);
 		if (connectors.length > 0) {
 			this.emit({
-				class: "Connector",
-				method: "setLineColor",
+				class: 'Connector',
+				method: 'setLineColor',
 				item: connectors,
 				lineColor: borderColor,
 			});
 		}
-		const drawings = this.items.getIdsByItemTypes(["Drawing"]);
+		const drawings = this.items.getIdsByItemTypes(['Drawing']);
 		if (drawings.length > 0) {
 			this.emit({
-				class: "Drawing",
-				method: "setStrokeColor",
+				class: 'Drawing',
+				method: 'setStrokeColor',
 				item: drawings,
 				color: borderColor,
 			});
@@ -1031,30 +943,30 @@ export class Selection {
 
 	setStrokeWidth(width: number): void {
 		// TODO make single operation to set strokeWidth on any item with stroke
-		const shapes = this.items.getIdsByItemTypes(["Shape"]);
+		const shapes = this.items.getIdsByItemTypes(['Shape']);
 		if (shapes.length > 0) {
 			this.emit({
-				class: "Shape",
-				method: "setBorderWidth",
+				class: 'Shape',
+				method: 'setBorderWidth',
 				item: shapes,
 				borderWidth: width,
 				prevBorderWidth: this.getStrokeWidth(),
 			});
 		}
-		const connectors = this.items.getIdsByItemTypes(["Connector"]);
+		const connectors = this.items.getIdsByItemTypes(['Connector']);
 		if (connectors.length > 0) {
 			this.emit({
-				class: "Connector",
-				method: "setLineWidth",
+				class: 'Connector',
+				method: 'setLineWidth',
 				item: connectors,
 				lineWidth: width,
 			});
 		}
-		const drawings = this.items.getIdsByItemTypes(["Drawing"]);
+		const drawings = this.items.getIdsByItemTypes(['Drawing']);
 		if (drawings.length > 0) {
 			this.emit({
-				class: "Drawing",
-				method: "setStrokeWidth",
+				class: 'Drawing',
+				method: 'setStrokeWidth',
 				item: drawings,
 				width: width,
 				prevWidth: this.getStrokeWidth(),
@@ -1064,29 +976,29 @@ export class Selection {
 
 	setFillColor(backgroundColor: string): void {
 		// TODO make single operation to set color on any item with fill
-		const shapes = this.items.getIdsByItemTypes(["Shape"]);
+		const shapes = this.items.getIdsByItemTypes(['Shape']);
 		if (shapes.length) {
 			this.emit({
-				class: "Shape",
-				method: "setBackgroundColor",
+				class: 'Shape',
+				method: 'setBackgroundColor',
 				item: shapes,
 				backgroundColor,
 			});
 		}
-		const stickers = this.items.getIdsByItemTypes(["Sticker"]);
+		const stickers = this.items.getIdsByItemTypes(['Sticker']);
 		if (stickers.length) {
 			this.emit({
-				class: "Sticker",
-				method: "setBackgroundColor",
+				class: 'Sticker',
+				method: 'setBackgroundColor',
 				item: stickers,
 				backgroundColor,
 			});
 		}
-		const frames = this.items.getIdsByItemTypes(["Frame"]);
+		const frames = this.items.getIdsByItemTypes(['Frame']);
 		if (frames.length) {
 			this.emit({
-				class: "Frame",
-				method: "setBackgroundColor",
+				class: 'Frame',
+				method: 'setBackgroundColor',
 				item: frames,
 				backgroundColor,
 			});
@@ -1094,11 +1006,11 @@ export class Selection {
 	}
 
 	setCanChangeRatio(canChangeRatio: boolean): void {
-		const frames = this.items.getIdsByItemTypes(["Frame"]);
+		const frames = this.items.getIdsByItemTypes(['Frame']);
 		if (frames.length) {
 			this.emit({
-				class: "Frame",
-				method: "setCanChangeRatio",
+				class: 'Frame',
+				method: 'setCanChangeRatio',
 				item: frames,
 				canChangeRatio,
 			});
@@ -1106,7 +1018,7 @@ export class Selection {
 	}
 
 	getCanChangeRatio(): boolean {
-		const frames = this.items.getItemsByItemTypes(["Frame"]) as Frame[];
+		const frames = this.items.getItemsByItemTypes(['Frame']) as Frame[];
 		return frames.every(frame => frame.getCanChangeRatio());
 	}
 
@@ -1131,21 +1043,21 @@ export class Selection {
 	}
 
 	getFrameType(): FrameType {
-		const frame = this.items.getItemsByItemTypes(["Frame"])[0] as Frame;
-		return frame?.getFrameType() ?? "Custom";
+		const frame = this.items.getItemsByItemTypes(['Frame'])[0] as Frame;
+		return frame?.getFrameType() ?? 'Custom';
 	}
 
 	setShapeType(shapeType: ShapeType): void {
 		this.emit({
-			class: "Shape",
-			method: "setShapeType",
+			class: 'Shape',
+			method: 'setShapeType',
 			item: this.items.ids(),
 			shapeType,
 		});
 	}
 
-	setFontSize(size: number | "auto"): void {
-		const fontSize = size === "auto" ? size : toFiniteNumber(size);
+	setFontSize(size: number | 'auto'): void {
+		const fontSize = size === 'auto' ? size : toFiniteNumber(size);
 
 		const itemsOps: ItemOp[] = [];
 		for (const item of this.items.list()) {
@@ -1159,9 +1071,9 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			if (item.itemType === "Sticker" && fontSize === "auto") {
+			if (item.itemType === 'Sticker' && fontSize === 'auto') {
 				tempStorage.remove(`fontSize_${item.itemType}`);
-			} else if (item.itemType !== "AINode") {
+			} else if (item.itemType !== 'AINode') {
 				tempStorage.setFontSize(item.itemType, fontSize);
 			}
 		}
@@ -1171,8 +1083,8 @@ export class Selection {
 		if (emptyOps.length) {
 			const ids = emptyOps.map(op => op.item);
 			this.emit({
-				class: "RichText",
-				method: "setFontSize",
+				class: 'RichText',
+				method: 'setFontSize',
 				item: ids,
 				fontSize: size,
 				context: this.getContext(),
@@ -1180,8 +1092,8 @@ export class Selection {
 		}
 
 		this.emitApplied({
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps,
 		});
 	}
@@ -1204,13 +1116,13 @@ export class Selection {
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			if (item.itemType !== "AINode") {
+			if (item.itemType !== 'AINode') {
 				tempStorage.setFontStyles(item.itemType, text.getFontStyles());
 			}
 		}
 		this.emitApplied({
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps,
 		});
 	}
@@ -1235,8 +1147,8 @@ export class Selection {
 			tempStorage.setFontColor(item.itemType, fontColor);
 		}
 		this.emitApplied({
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps,
 		});
 	}
@@ -1255,8 +1167,8 @@ export class Selection {
 		});
 
 		this.emitApplied({
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps,
 		});
 	}
@@ -1273,22 +1185,19 @@ export class Selection {
 			if (isMultiple) {
 				text.editor.selectWholeText();
 			}
-			const ops = text.setSelectionFontHighlight(
-				fontHighlight,
-				this.context,
-			);
+			const ops = text.setSelectionFontHighlight(fontHighlight, this.context);
 			itemsOps.push({
 				item: item.getId(),
 				selection: text.editor.getSelection(),
 				ops,
 			});
-			if (item.itemType !== "AINode") {
+			if (item.itemType !== 'AINode') {
 				tempStorage.setFontHighlight(item.itemType, fontHighlight);
 			}
 		}
 		this.emitApplied({
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps,
 		});
 	}
@@ -1305,32 +1214,26 @@ export class Selection {
 			if (isMultiple) {
 				text.editor.selectWholeText();
 			}
-			const ops = text.setSelectionHorisontalAlignment(
-				horisontalAlignment,
-				this.context,
-			);
+			const ops = text.setSelectionHorisontalAlignment(horisontalAlignment, this.context);
 			itemsOps.push({
 				item: item.getId(),
 				selection: text.editor.getSelection(),
 				ops,
 			});
 
-			tempStorage.setHorizontalAlignment(
-				item.itemType,
-				horisontalAlignment,
-			);
+			tempStorage.setHorizontalAlignment(item.itemType, horisontalAlignment);
 		}
 		this.emitApplied({
-			class: "RichText",
-			method: "groupEdit",
+			class: 'RichText',
+			method: 'groupEdit',
 			itemsOps,
 		});
 	}
 
 	setVerticalAlignment(verticalAlignment: VerticalAlignment): void {
 		this.emit({
-			class: "RichText",
-			method: "setVerticalAlignment",
+			class: 'RichText',
+			method: 'setVerticalAlignment',
 			item: this.items.ids(),
 			verticalAlignment,
 		});
@@ -1358,18 +1261,16 @@ export class Selection {
 			.list()
 			.filter(item => {
 				const shouldClearStorageUsage =
-					item.itemType === "Image" ||
-					(item.itemType === "Video" && item.getIsStorageUrl()) ||
-					(item.itemType === "Audio" && item.getIsStorageUrl());
+					item.itemType === 'Image' ||
+					(item.itemType === 'Video' && item.getIsStorageUrl()) ||
+					(item.itemType === 'Audio' && item.getIsStorageUrl());
 				return shouldClearStorageUsage;
 			})
 			.map(item => item.getStorageId());
 	}
 
 	removeFromBoard(): void {
-		const isLocked = this.items
-			.list()
-			.some(item => item.transformation.isLocked);
+		const isLocked = this.items.list().some(item => item.transformation.isLocked);
 
 		if (isLocked) {
 			return;
@@ -1377,7 +1278,7 @@ export class Selection {
 
 		const itemIds = this.items.ids();
 		for (const comment of this.board.items.getComments()) {
-			if (itemIds.includes(comment.getItemToFollow() || "")) {
+			if (itemIds.includes(comment.getItemToFollow() || '')) {
 				itemIds.push(comment.getId());
 			}
 		}
@@ -1416,12 +1317,12 @@ export class Selection {
 		deleteMedia(this.getMediaStorageIds(), this.board.getBoardId());
 
 		this.emit({
-			class: "Board",
-			method: "remove",
+			class: 'Board',
+			method: 'remove',
 			item: Array.from(new Set([...itemIds, ...connectors])),
 		});
 		this.board.tools.getSelect()?.nestingHighlighter.clear();
-		this.setContext("None");
+		this.setContext('None');
 	}
 
 	getIsLockedSelection(): boolean {
@@ -1436,16 +1337,16 @@ export class Selection {
 
 	lock(): void {
 		this.emit({
-			class: "Board",
-			method: "lock",
+			class: 'Board',
+			method: 'lock',
 			item: this.items.ids(),
 		});
 	}
 
 	unlock(): void {
 		this.emit({
-			class: "Board",
-			method: "unlock",
+			class: 'Board',
+			method: 'unlock',
 			item: this.items.ids(),
 		});
 	}
@@ -1468,12 +1369,10 @@ export class Selection {
 		}
 
 		const filteredItemMap = Object.fromEntries(
-			Object.entries(this.copy(true)).filter(
-				([_, item]) => item.itemType !== "Group",
-			),
+			Object.entries(this.copy(true)).filter(([_, item]) => item.itemType !== 'Group')
 		);
 		this.board.duplicate(filteredItemMap);
-		this.setContext("EditUnderPointer");
+		this.setContext('EditUnderPointer');
 	}
 
 	getMostNestedAINodeWithParents(): {
@@ -1481,7 +1380,7 @@ export class Selection {
 		parents: AINode[];
 		lastAssistantMessageId: string | undefined;
 	} | null {
-		const AINodes = this.items.getItemsByItemTypes(["AINode"]);
+		const AINodes = this.items.getItemsByItemTypes(['AINode']);
 		if (!AINodes.length) {
 			return null;
 		}
@@ -1515,15 +1414,9 @@ export class Selection {
 		};
 	}
 
-	renderItemMbr(
-		context: DrawingContext,
-		item: Item,
-		customScale?: number,
-	): void {
+	renderItemMbr(context: DrawingContext, item: Item, customScale?: number): void {
 		const mbr = item.getMbr();
-		mbr.strokeWidth = !customScale
-			? 1 / context.matrix.scaleX
-			: 1 / customScale;
+		mbr.strokeWidth = !customScale ? 1 / context.matrix.scaleX : 1 / customScale;
 
 		const selectionColor = item.transformation.isLocked
 			? conf.SELECTION_LOCKED_COLOR
@@ -1534,7 +1427,7 @@ export class Selection {
 
 	render(context: DrawingContext): void {
 		const single = this.items.getSingle();
-		const isSingleConnector = single && single.itemType === "Connector";
+		const isSingleConnector = single && single.itemType === 'Connector';
 		const isLocked = single && single.transformation.isLocked;
 
 		if (isSingleConnector) {
@@ -1557,7 +1450,7 @@ export class Selection {
 		}
 
 		const contextItems: Item[] = [];
-		if (single && single.itemType === "AINode") {
+		if (single && single.itemType === 'AINode') {
 			const contextItemsIds = single.getContextItems();
 			if (contextItemsIds.length) {
 				const newContextItems = this.board.items
@@ -1572,11 +1465,7 @@ export class Selection {
 			const contextRange = nodeWithParents.node.getContextRange();
 			const parents = nodeWithParents.parents;
 			let assistantMessagesCount = 0;
-			for (
-				let i = 0;
-				assistantMessagesCount < contextRange && i < parents.length;
-				i++
-			) {
+			for (let i = 0; assistantMessagesCount < contextRange && i < parents.length; i++) {
 				if (parents[i].getIsUserRequest()) {
 					contextItems.push(parents[i]);
 				} else {
@@ -1587,11 +1476,11 @@ export class Selection {
 		}
 
 		contextItems.forEach(item => {
-			if (item.itemType === "AINode") {
+			if (item.itemType === 'AINode') {
 				const path = item.getPath();
 				path.setBorderColor(CONTEXT_NODE_HIGHLIGHT_COLOR);
 				path.setBorderWidth(2);
-				path.setBackgroundColor("none");
+				path.setBackgroundColor('none');
 				path.render(context);
 			} else {
 				const itemRect = item.getMbr();

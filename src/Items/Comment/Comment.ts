@@ -1,18 +1,18 @@
-import { Subject } from "../../../shared/Subject";
-import { Events, Operation } from "../../Events";
-import { Point } from "../Point";
-import { Transformation, TransformationData } from "../Transformation";
-import { CommentOperation } from "./CommentOperation";
-import { CommentCommand } from "./CommentCommand";
-import { Mbr } from "../Mbr";
-import { Geometry } from "../Geometry";
-import { GeometricNormal } from "../GeometricNormal";
-import { RichText } from "../RichText";
-import { DrawingContext } from "../DrawingContext";
-import { Line } from "../Line";
-import { v4 as uuidv4 } from "uuid";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { DocumentFactory } from "Board/api/DocumentFactory";
+import { Subject } from '../../../Subject';
+import { Events, Operation } from '../../Events';
+import { Point } from '../Point';
+import { Transformation, TransformationData } from '../Transformation';
+import { CommentOperation } from './CommentOperation';
+import { CommentCommand } from './CommentCommand';
+import { Mbr } from '../Mbr';
+import { Geometry } from '../Geometry';
+import { GeometricNormal } from '../GeometricNormal';
+import { RichText } from '../RichText';
+import { DrawingContext } from '../DrawingContext';
+import { Line } from '../Line';
+import { v4 as uuidv4 } from 'uuid';
+import { LinkTo } from '../LinkTo/LinkTo';
+import { DocumentFactory } from 'api/DocumentFactory';
 
 export interface Commentator {
 	username: string;
@@ -29,7 +29,7 @@ export interface Message {
 }
 
 export interface CommentData {
-	readonly itemType: "Comment";
+	readonly itemType: 'Comment';
 	anchor: Point;
 	thread: Message[];
 	commentators: Commentator[];
@@ -42,8 +42,8 @@ export interface CommentData {
 const ANONYMOUS_ID = 9_999_999_999;
 
 export class Comment implements Geometry {
-	readonly itemType = "Comment";
-	parent = "Board";
+	readonly itemType = 'Comment';
+	parent = 'Board';
 	readonly transformation: Transformation;
 	private commentators: Commentator[] = [];
 	private thread: Message[] = [];
@@ -54,11 +54,7 @@ export class Comment implements Geometry {
 	readonly linkTo: LinkTo;
 	transformationRenderBlock?: boolean = undefined;
 
-	constructor(
-		private anchor = new Point(),
-		private events?: Events,
-		private id = "",
-	) {
+	constructor(private anchor = new Point(), private events?: Events, private id = '') {
 		this.transformation = new Transformation(id, events);
 		this.transformation.subject.subscribe(() => {
 			this.transform();
@@ -73,7 +69,7 @@ export class Comment implements Geometry {
 
 	serialize(): CommentData {
 		return {
-			itemType: "Comment",
+			itemType: 'Comment',
 			anchor: this.anchor,
 			thread: this.thread,
 			commentators: this.commentators,
@@ -120,8 +116,8 @@ export class Comment implements Geometry {
 
 	setItemToFollow(itemId: string | undefined): void {
 		this.emit({
-			class: "Comment",
-			method: "setItemToFollow",
+			class: 'Comment',
+			method: 'setItemToFollow',
 			item: [this.id],
 			itemId,
 		});
@@ -143,11 +139,11 @@ export class Comment implements Geometry {
 
 	apply(op: Operation): void {
 		switch (op.class) {
-			case "Comment":
+			case 'Comment':
 				this.applyCommentOperation(op);
 				this.transform();
 				break;
-			case "Transformation":
+			case 'Transformation':
 				this.transformation.apply(op);
 				break;
 			default:
@@ -158,20 +154,13 @@ export class Comment implements Geometry {
 
 	private applyCommentOperation(op: CommentOperation): void {
 		switch (op.method) {
-			case "createMessage":
+			case 'createMessage':
 				this.thread = [...this.thread, op.message];
-				if (
-					!this.commentators.some(
-						c => c.id === op.message.commentator.id,
-					)
-				) {
-					this.commentators = [
-						...this.commentators,
-						op.message.commentator,
-					];
+				if (!this.commentators.some(c => c.id === op.message.commentator.id)) {
+					this.commentators = [...this.commentators, op.message.commentator];
 				}
 				break;
-			case "editMessage":
+			case 'editMessage':
 				const thread = this.thread;
 				const index = thread.findIndex(mes => mes.id === op.message.id);
 				this.thread = [
@@ -180,40 +169,33 @@ export class Comment implements Geometry {
 					...thread.slice(index + 1, thread.length),
 				];
 				break;
-			case "removeMessage":
-				this.thread = this.thread.filter(
-					mes => mes.id !== op.messageId,
-				);
+			case 'removeMessage':
+				this.thread = this.thread.filter(mes => mes.id !== op.messageId);
 				break;
-			case "setResolved":
+			case 'setResolved':
 				this.resolved = op.resolved;
 				break;
-			case "setItemToFollow":
+			case 'setItemToFollow':
 				this.itemToFollow = op.itemId;
 				break;
-			case "markMessagesAsRead":
+			case 'markMessagesAsRead':
 				this.applyReadMessages(op.messageIds, op.userId);
 				break;
-			case "markThreadAsUnread":
+			case 'markThreadAsUnread':
 				this.usersUnreadMarks = [...this.usersUnreadMarks, op.userId];
 				break;
-			case "markThreadAsRead":
+			case 'markThreadAsRead':
 				this.usersUnreadMarks = this.usersUnreadMarks.filter(
-					userId => userId !== op.userId,
+					userId => userId !== op.userId
 				);
 				break;
 		}
 	}
 
-	saveMessage(
-		text: string,
-		username: string,
-		id: number,
-		avatar?: string,
-	): void {
+	saveMessage(text: string, username: string, id: number, avatar?: string): void {
 		this.emit({
-			class: "Comment",
-			method: "createMessage",
+			class: 'Comment',
+			method: 'createMessage',
 			item: [this.id],
 			message: {
 				text,
@@ -242,8 +224,8 @@ export class Comment implements Geometry {
 		newMessage.date = new Date();
 		newMessage.readers = [message.readers[0]];
 		this.emit({
-			class: "Comment",
-			method: "editMessage",
+			class: 'Comment',
+			method: 'editMessage',
 			item: [this.id],
 			message: newMessage,
 		});
@@ -254,8 +236,8 @@ export class Comment implements Geometry {
 
 	removeMessage(messageId: string): void {
 		this.emit({
-			class: "Comment",
-			method: "removeMessage",
+			class: 'Comment',
+			method: 'removeMessage',
 			item: [this.id],
 			messageId,
 		});
@@ -263,8 +245,8 @@ export class Comment implements Geometry {
 
 	setResolved(resolved: boolean): void {
 		this.emit({
-			class: "Comment",
-			method: "setResolved",
+			class: 'Comment',
+			method: 'setResolved',
 			item: [this.id],
 			resolved,
 		});
@@ -272,8 +254,8 @@ export class Comment implements Geometry {
 
 	markThreadAsUnread(userId: number): void {
 		this.emit({
-			class: "Comment",
-			method: "markThreadAsUnread",
+			class: 'Comment',
+			method: 'markThreadAsUnread',
 			item: [this.id],
 			userId,
 		});
@@ -281,8 +263,8 @@ export class Comment implements Geometry {
 
 	markThreadAsRead(userId: number): void {
 		this.emit({
-			class: "Comment",
-			method: "markThreadAsRead",
+			class: 'Comment',
+			method: 'markThreadAsRead',
 			item: [this.id],
 			userId,
 		});
@@ -299,9 +281,7 @@ export class Comment implements Geometry {
 	}
 
 	getUnreadMessages(userId = ANONYMOUS_ID): Message[] | null {
-		const unreadMessages = this.thread.filter(
-			mes => mes && !mes.readers.includes(userId),
-		);
+		const unreadMessages = this.thread.filter(mes => mes && !mes.readers.includes(userId));
 		if (unreadMessages.length === 0) {
 			return null;
 		}
@@ -322,8 +302,8 @@ export class Comment implements Geometry {
 		}
 
 		this.emit({
-			class: "Comment",
-			method: "markMessagesAsRead",
+			class: 'Comment',
+			method: 'markMessagesAsRead',
 			item: [this.id],
 			messageIds,
 			userId,
@@ -331,9 +311,7 @@ export class Comment implements Geometry {
 	}
 
 	applyReadMessages(messageIds: string[], userId: number) {
-		const readMessages = this.thread.filter(mes =>
-			messageIds.includes(mes.id),
-		);
+		const readMessages = this.thread.filter(mes => messageIds.includes(mes.id));
 		readMessages.forEach(mes => mes.readers.push(userId));
 	}
 
@@ -424,14 +402,13 @@ export class Comment implements Geometry {
 	render(context: DrawingContext): void {}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("comment-item");
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+		const div = documentFactory.createElement('comment-item');
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
 		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-		div.style.transformOrigin = "top left";
+		div.style.transformOrigin = 'top left';
 		div.style.transform = transform;
-		div.style.position = "absolute";
-		div.setAttribute("comment-data", JSON.stringify(this.serialize()));
+		div.style.position = 'absolute';
+		div.setAttribute('comment-data', JSON.stringify(this.serialize()));
 		return div;
 	}
 }

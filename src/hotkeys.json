@@ -1,0 +1,315 @@
+{
+	"select": {
+		"key": {
+			"button": "KeyV"
+		},
+		"label": {
+			"windows": "V",
+			"mac": "V"
+		}
+	},
+	"navigateMode": {
+		"key": {
+			"button": "Space"
+		},
+		"label": {
+			"windows": "Space",
+			"mac": "Space"
+		}
+	},
+	"text": {
+		"key": {
+			"button": "KeyT"
+		},
+		"label": {
+			"windows": "T",
+			"mac": "T"
+		}
+	},
+	"sticker": {
+		"key": {
+			"button": "KeyN"
+		},
+		"label": {
+			"mac": "N",
+			"windows": "N"
+		}
+	},
+	"shape": {
+		"key": {
+			"button": "KeyS"
+		},
+		"label": {
+			"mac": "S",
+			"windows": "S"
+		}
+	},
+	"connector": {
+		"key": {
+			"button": "KeyL"
+		},
+		"label": {
+			"mac": "L",
+			"windows": "L"
+		}
+	},
+	"pen": {
+		"key": {
+			"button": "KeyP"
+		},
+		"label": {
+			"mac": "P",
+			"windows": "P"
+		}
+	},
+	"eraser": {
+		"key": {
+			"button": "KeyE"
+		},
+		"label": {
+			"mac": "E",
+			"windows": "E"
+		}
+	},
+	"frame": {
+		"key": {
+			"button": "KeyF"
+		},
+		"label": {
+			"mac": "F",
+			"windows": "F"
+		}
+	},
+	"undo": {
+		"key": {
+			"button": "KeyZ",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘Z",
+			"windows": "Ctrl + Z"
+		}
+	},
+	"redo": {
+		"key": {
+			"button": "KeyZ",
+			"ctrl": true,
+			"shift": true
+		},
+		"label": {
+			"mac": "⌘⇧Z",
+			"windows": "Ctrl + Shift + Z"
+		}
+	},
+	"textBold": {
+		"key": {
+			"button": "KeyB",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘B",
+			"windows": "Ctrl + B"
+		}
+	},
+	"textStrike": {
+		"key": {
+			"button": "KeyS",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘S",
+			"windows": "Ctrl + S"
+		}
+	},
+	"textUnderline": {
+		"key": {
+			"button": "KeyU",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘U",
+			"windows": "Ctrl + U"
+		}
+	},
+	"textItalic": {
+		"key": {
+			"button": "KeyI",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘I",
+			"windows": "Ctrl + I"
+		}
+	},
+	"zoomOut": {
+		"key": {
+			"button": "Minus",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘-",
+			"windows": "Ctrl + -"
+		}
+	},
+	"zoomIn": {
+		"key": {
+			"button": "Equal",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘+",
+			"windows": "Ctrl + +"
+		}
+	},
+	"zoomDefault": {
+		"key": {
+			"button": "Digit0",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘0",
+			"windows": "Ctrl + 0"
+		}
+	},
+	"duplicate": {
+		"key": {
+			"button": "KeyD",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘D",
+			"windows": "Ctrl + D"
+		}
+	},
+	"bringToFront": {
+		"key": {
+			"button": "PageUp"
+		},
+		"label": {
+			"mac": "fn↑ (PgUp)",
+			"windows": "PgUp"
+		}
+	},
+	"sendToBack": {
+		"key": {
+			"button": "PageDown"
+		},
+		"label": {
+			"mac": "fn↓ (PgDn)",
+			"windows": "PgDn"
+		}
+	},
+	"delete": {
+		"key": {
+			"button": ["Delete", "Backspace"]
+		},
+		"label": {
+			"mac": "Delete",
+			"windows": "Delete"
+		}
+	},
+	"cancel": {
+		"key": {
+			"button": "Escape"
+		},
+		"label": {
+			"mac": "Esc",
+			"windows": "Esc"
+		}
+	},
+	"selectAll": {
+		"key": {
+			"button": "KeyA",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘A",
+			"windows": "Ctrl + A"
+		}
+	},
+	"copy": {
+		"key": {
+			"button": "KeyC",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘C",
+			"windows": "Ctrl + C"
+		}
+	},
+	"paste": {
+		"key": {
+			"button": "KeyV",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘V",
+			"windows": "Ctrl + V"
+		}
+	},
+	"confirm": {
+		"key": {
+			"button": "Enter"
+		},
+		"label": {
+			"mac": "⏎",
+			"windows": "⏎"
+		}
+	},
+	"frameNavigationNext": {
+		"key": {
+			"button": "ArrowRight",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘→",
+			"windows": "Ctrl→"
+		}
+	},
+	"frameNavigationPrev": {
+		"key": {
+			"button": "ArrowLeft",
+			"ctrl": true
+		},
+		"label": {
+			"mac": "⌘←",
+			"windows": "Ctrl←"
+		}
+	},
+	"navigationRight": {
+		"key": {
+			"button": "ArrowRight"
+		},
+		"label": {
+			"mac": "→",
+			"windows": "→"
+		}
+	},
+	"navigationLeft": {
+		"key": {
+			"button": "ArrowLeft"
+		},
+		"label": {
+			"mac": "←",
+			"windows": "←"
+		}
+	},
+	"navigationUp": {
+		"key": {
+			"button": "ArrowUp"
+		},
+		"label": {
+			"mac": "↑",
+			"windows": "↑"
+		}
+	},
+	"navigationDown": {
+		"key": {
+			"button": "ArrowDown"
+		},
+		"label": {
+			"mac": "↓",
+			"windows": "↓"
+		}
+	}
+}

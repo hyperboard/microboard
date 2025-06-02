@@ -1,11 +1,11 @@
-import { BlockNode } from "../../Editor/BlockNode.ts";
+import { BlockNode } from '../../Editor/BlockNode.js';
 
 export function getAreAllChildrenEmpty(node: BlockNode): boolean {
-	if ("text" in node) {
-		return !node.text;
-	}
-	if ("children" in node) {
-		return node.children.every(child => getAreAllChildrenEmpty(child));
-	}
-	return false;
+  if ('text' in node) {
+    return !node.text;
+  }
+  if ('children' in node) {
+    return node.children.every(child => getAreAllChildrenEmpty(child));
+  }
+  return false;
 }

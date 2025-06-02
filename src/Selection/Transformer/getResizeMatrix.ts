@@ -1,12 +1,12 @@
-import { Matrix, Mbr, Point } from "Board/Items";
-import { getResizedMbr } from "./getResizedMbr";
-import { ResizeType } from "./getResizeType";
+import { Point, Mbr, Matrix } from 'Items';
+import { getResizedMbr } from './getResizedMbr';
+import { ResizeType } from './getResizeType';
 
 export function getResize(
 	resizeType: ResizeType,
 	pointer: Point,
 	mbr: Mbr,
-	opposite: Point,
+	opposite: Point
 ): { matrix: Matrix; mbr: Mbr } {
 	const oldWidth = notLessThanOne(mbr.getWidth());
 	const oldHeight = notLessThanOne(mbr.getHeight());
@@ -28,7 +28,7 @@ export function getProportionalResize(
 	resizeType: ResizeType,
 	pointer: Point,
 	mbr: Mbr,
-	opposite: Point,
+	opposite: Point
 ): { matrix: Matrix; mbr: Mbr } {
 	const resizedMbr = getResizedMbr(resizeType, pointer, mbr, opposite);
 
@@ -39,11 +39,11 @@ export function getProportionalResize(
 	const originalHyp = Math.hypot(oldWidth, oldHeight);
 	let ratio: number;
 
-	if (resizeType === "left" || resizeType === "right") {
+	if (resizeType === 'left' || resizeType === 'right') {
 		// horizontal drag → width drives the ratio
 		const width = resizedMbr.getWidth();
 		ratio = notLessThanOne(width) / oldWidth;
-	} else if (resizeType === "top" || resizeType === "bottom") {
+	} else if (resizeType === 'top' || resizeType === 'bottom') {
 		// vertical drag → height drives the ratio
 		const height = resizedMbr.getHeight();
 		ratio = notLessThanOne(height) / oldHeight;
@@ -62,164 +62,164 @@ export function getProportionalResize(
 	let newMbr = new Mbr();
 
 	switch (resizeType) {
-		case "leftTop": {
+		case 'leftTop': {
 			if (x < opposite.x && y < opposite.y) {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y - newHeight,
 					opposite.x,
-					opposite.y,
+					opposite.y
 				);
 			} else if (x > opposite.x && y > opposite.y) {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y,
 					opposite.x + newWidth,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			} else if (x > opposite.x) {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y - newHeight,
 					opposite.x + newWidth,
-					opposite.y,
+					opposite.y
 				);
 			} else {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y,
 					opposite.x,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			}
 			break;
 		}
-		case "rightBottom": {
+		case 'rightBottom': {
 			if (x > opposite.x && y > opposite.y) {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y,
 					opposite.x + newWidth,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			} else if (x < opposite.x && y < opposite.y) {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y - newHeight,
 					opposite.x,
-					opposite.y,
+					opposite.y
 				);
 			} else if (x < opposite.x) {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y,
 					opposite.x,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			} else {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y - newHeight,
 					opposite.x + newWidth,
-					opposite.y,
+					opposite.y
 				);
 			}
 			break;
 		}
-		case "rightTop": {
+		case 'rightTop': {
 			if (x > opposite.x && y < opposite.y) {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y - newHeight,
 					opposite.x + newWidth,
-					opposite.y,
+					opposite.y
 				);
 			} else if (x < opposite.x && y > opposite.y) {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y,
 					opposite.x,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			} else if (x < opposite.x) {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y - newHeight,
 					opposite.x,
-					opposite.y,
+					opposite.y
 				);
 			} else {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y,
 					opposite.x + newWidth,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			}
 			break;
 		}
-		case "leftBottom": {
+		case 'leftBottom': {
 			if (x < opposite.x && y > opposite.y) {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y,
 					opposite.x,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			} else if (x > opposite.x && y < opposite.y) {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y - newHeight,
 					opposite.x + newWidth,
-					opposite.y,
+					opposite.y
 				);
 			} else if (x > opposite.x) {
 				newMbr = new Mbr(
 					opposite.x,
 					opposite.y,
 					opposite.x + newWidth,
-					opposite.y + newHeight,
+					opposite.y + newHeight
 				);
 			} else {
 				newMbr = new Mbr(
 					opposite.x - newWidth,
 					opposite.y - newHeight,
 					opposite.x,
-					opposite.y,
+					opposite.y
 				);
 			}
 			break;
 		}
-		case "left":
-		case "right": {
-			if (resizeType === "left") {
+		case 'left':
+		case 'right': {
+			if (resizeType === 'left') {
 				if (x < opposite.x && y > opposite.y) {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y,
 						opposite.x,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				} else if (x > opposite.x && y < opposite.y) {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y - newHeight,
 						opposite.x + newWidth,
-						opposite.y,
+						opposite.y
 					);
 				} else if (x > opposite.x) {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y,
 						opposite.x + newWidth,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				} else {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y - newHeight,
 						opposite.x,
-						opposite.y,
+						opposite.y
 					);
 				}
 			} else {
@@ -228,64 +228,64 @@ export function getProportionalResize(
 						opposite.x,
 						opposite.y,
 						opposite.x + newWidth,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				} else if (x < opposite.x && y < opposite.y) {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y - newHeight,
 						opposite.x,
-						opposite.y,
+						opposite.y
 					);
 				} else if (x < opposite.x) {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y,
 						opposite.x,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				} else {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y - newHeight,
 						opposite.x + newWidth,
-						opposite.y,
+						opposite.y
 					);
 				}
 				break;
 			}
 			break;
 		}
-		case "top":
-		case "bottom": {
-			if (resizeType === "top") {
+		case 'top':
+		case 'bottom': {
+			if (resizeType === 'top') {
 				if (x < opposite.x && y < opposite.y) {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y - newHeight,
 						opposite.x + newWidth,
-						opposite.y,
+						opposite.y
 					);
 				} else if (x > opposite.x && y > opposite.y) {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y,
 						opposite.x + newWidth,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				} else if (x > opposite.x) {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y - newHeight,
 						opposite.x + newWidth,
-						opposite.y,
+						opposite.y
 					);
 				} else {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y - newHeight,
 						opposite.x,
-						opposite.y,
+						opposite.y
 					);
 				}
 			} else {
@@ -294,28 +294,28 @@ export function getProportionalResize(
 						opposite.x,
 						opposite.y - newHeight,
 						opposite.x + newWidth,
-						opposite.y,
+						opposite.y
 					);
 				} else if (x < opposite.x && y > opposite.y) {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y,
 						opposite.x,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				} else if (x < opposite.x) {
 					newMbr = new Mbr(
 						opposite.x - newWidth,
 						opposite.y - newHeight,
 						opposite.x,
-						opposite.y,
+						opposite.y
 					);
 				} else {
 					newMbr = new Mbr(
 						opposite.x,
 						opposite.y,
 						opposite.x + newWidth,
-						opposite.y + newHeight,
+						opposite.y + newHeight
 					);
 				}
 			}

@@ -1,25 +1,24 @@
-import { Board } from "Board";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { isIframe } from "shared/lib/isIframe";
-import { Subject } from "shared/Subject";
-import { AddConnector } from "./AddConnector";
-import { AddDrawing, AddHighlighter } from "./AddDrawing";
-import { AddFrame } from "./AddFrame";
-import { AddShape } from "./AddShape";
-import { AddSticker } from "./AddSticker";
-import { AddText } from "./AddText";
-import { BoardTool } from "./BoardTool";
-import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
-import { Navigate } from "./Navigate";
-import { Select } from "./Select";
-import { ToolContext } from "./ToolContext";
-import { Frame, Item, Point } from "Board/Items";
-import { Eraser } from "./Eraser";
-import { AddComment } from "./AddComment";
+import { Board } from 'Board';
+import { Item, Point, Frame } from 'Items';
+import { DrawingContext } from 'Items/DrawingContext';
+import { AddComment } from './AddComment';
+import { AddConnector } from './AddConnector';
+import { AddDrawing, AddHighlighter } from './AddDrawing';
+import { AddFrame } from './AddFrame';
+import { AddShape } from './AddShape';
+import { AddSticker } from './AddSticker';
+import { AddText } from './AddText';
+import { BoardTool } from './BoardTool';
+import { Eraser } from './Eraser';
+import { ExportSnapshot } from './ExportSnapshot/ExportSnapshot';
+import { Navigate } from './Navigate';
+import { Select } from './Select';
+import { ToolContext } from './ToolContext';
+import { Subject } from 'Subject';
 
 export class Tools extends ToolContext {
 	readonly subject = new Subject<Tools>();
-	beforeNavigateMode: "navigate" | "select" = "navigate";
+	beforeNavigateMode: 'navigate' | 'select' = 'navigate';
 
 	constructor(protected board: Board) {
 		super();
@@ -45,7 +44,7 @@ export class Tools extends ToolContext {
 
 	select(clearSelection = false): void {
 		this.tool = new Select(this.board);
-		this.board.pointer.setCursor("default");
+		this.board.pointer.setCursor('default');
 		if (clearSelection) {
 			this.board.selection.removeAll();
 		}
@@ -57,7 +56,7 @@ export class Tools extends ToolContext {
 	}
 
 	addSticker(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -73,7 +72,7 @@ export class Tools extends ToolContext {
 	}
 
 	addShape(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -97,7 +96,7 @@ export class Tools extends ToolContext {
 	}
 
 	addText(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -116,12 +115,8 @@ export class Tools extends ToolContext {
 		return this.tool instanceof AddText ? this.tool : undefined;
 	}
 
-	addConnector(
-		clearSelection = false,
-		itemToStart?: Item,
-		position?: Point,
-	): void {
-		if (this.board.getInterfaceType() !== "edit") {
+	addConnector(clearSelection = false, itemToStart?: Item, position?: Point): void {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -141,7 +136,7 @@ export class Tools extends ToolContext {
 	}
 
 	addDrawing(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -163,7 +158,7 @@ export class Tools extends ToolContext {
 	}
 
 	addHighlighter(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -185,7 +180,7 @@ export class Tools extends ToolContext {
 	}
 
 	eraser(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -205,7 +200,7 @@ export class Tools extends ToolContext {
 	}
 
 	addComment(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -225,7 +220,7 @@ export class Tools extends ToolContext {
 	}
 
 	export(): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -242,7 +237,7 @@ export class Tools extends ToolContext {
 	}
 
 	addFrame(clearSelection = false): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -262,7 +257,7 @@ export class Tools extends ToolContext {
 	}
 
 	cancel(): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -272,7 +267,7 @@ export class Tools extends ToolContext {
 	}
 
 	confirm(): void {
-		if (this.board.getInterfaceType() !== "edit") {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -301,34 +296,29 @@ export class Tools extends ToolContext {
 		return sortedFrames;
 	}
 
-	getNewFrameIndex(frames: Frame[], direction: "next" | "prev"): number {
+	getNewFrameIndex(frames: Frame[], direction: 'next' | 'prev'): number {
 		const currentFrameId = localStorage.getItem(`lastVisitedFrame`);
-		let currentFrameIndex = frames.findIndex(
-			frame => frame.getId() === currentFrameId,
-		);
+		let currentFrameIndex = frames.findIndex(frame => frame.getId() === currentFrameId);
 
 		if (currentFrameIndex < 0) {
 			currentFrameIndex = 0;
 		}
 
-		const newIndex =
-			direction === "prev"
-				? currentFrameIndex - 1
-				: currentFrameIndex + 1;
+		const newIndex = direction === 'prev' ? currentFrameIndex - 1 : currentFrameIndex + 1;
 
-		if (direction === "prev" && newIndex < 0) {
+		if (direction === 'prev' && newIndex < 0) {
 			return frames.length - 1;
 		}
 
-		if (direction === "next" && newIndex > frames.length - 1) {
+		if (direction === 'next' && newIndex > frames.length - 1) {
 			return 0;
 		}
 
 		return newIndex;
 	}
 
-	frameNavigation(direction: "next" | "prev"): void {
-		if (this.board.getInterfaceType() !== "edit") {
+	frameNavigation(direction: 'next' | 'prev'): void {
+		if (this.board.getInterfaceType() !== 'edit') {
 			this.tool = new Navigate(this.board);
 			return;
 		}
@@ -353,9 +343,7 @@ export class Tools extends ToolContext {
 	setNavigateMode(isSpacePressed: boolean): void {
 		const navigateActive = this.board.tools.getNavigate();
 		if (!isSpacePressed) {
-			this.board.tools.beforeNavigateMode = navigateActive
-				? "navigate"
-				: "select";
+			this.board.tools.beforeNavigateMode = navigateActive ? 'navigate' : 'select';
 
 			if (!navigateActive) {
 				this.navigate();
@@ -364,7 +352,7 @@ export class Tools extends ToolContext {
 	}
 
 	exitNavigateMode(): void {
-		if (this.board.tools.beforeNavigateMode === "select") {
+		if (this.board.tools.beforeNavigateMode === 'select') {
 			this.select();
 		}
 	}

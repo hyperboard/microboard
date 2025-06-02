@@ -1,11 +1,8 @@
-import { toFiniteNumber } from "Board/lib";
-import { Matrix } from "..";
+import { toFiniteNumber } from 'lib';
+import { Matrix } from '..';
 
 export class Point {
-	constructor(
-		public x = 0,
-		public y = 0,
-	) {
+	constructor(public x = 0, public y = 0) {
 		this.x = toFiniteNumber(x);
 		this.y = toFiniteNumber(y);
 	}
@@ -37,8 +34,7 @@ export class Point {
 	barelyEqual(point: Point): boolean {
 		return (
 			this.equal(point) ||
-			(Math.abs(this.x - point.x) < 0.01 &&
-				Math.abs(this.y - point.y) < 0.01)
+			(Math.abs(this.x - point.x) < 0.01 && Math.abs(this.y - point.y) < 0.01)
 		);
 	}
 }

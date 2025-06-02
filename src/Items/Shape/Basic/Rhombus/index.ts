@@ -1,7 +1,7 @@
-import { Mbr, Line, Path, Point } from "Board/Items";
+import { Mbr, Line, Path, Point } from 'Items';
 
 export const Rhombus = {
-	name: "Rhombus",
+	name: 'Rhombus',
 	textBounds: new Mbr(25, 25, 75, 75),
 	path: new Path(
 		[
@@ -10,7 +10,7 @@ export const Rhombus = {
 			new Line(new Point(100, 50), new Point(50, 100)),
 			new Line(new Point(50, 100), new Point(0, 50)),
 		],
-		true,
+		true
 	),
 	anchorPoints: [
 		new Point(25, 25),

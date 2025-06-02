@@ -1,7 +1,7 @@
-import { Line, Mbr } from "Board/Items";
-import { Point } from "../../Point";
-import { ControlPoint } from "../ControlPoint";
-import { ConnectedPointerDirection, getPointerDirection } from "../Pointers";
+import { Line, Mbr } from 'Items';
+import { Point } from '../../Point';
+import { ControlPoint } from '../ControlPoint';
+import { ConnectedPointerDirection, getPointerDirection } from '../Pointers';
 
 interface Node {
 	point: Point;
@@ -13,7 +13,7 @@ interface Node {
 	yGrid: number;
 }
 
-type Direction = "vertical" | "horizontal";
+type Direction = 'vertical' | 'horizontal';
 
 const ITEM_OFFSET = 1;
 
@@ -22,9 +22,9 @@ export function getDirection(from: Point, to?: Point): Direction | null {
 		return null;
 	}
 	if (from.x === to.x) {
-		return "vertical";
+		return 'vertical';
 	} else if (from.y === to.y) {
-		return "horizontal";
+		return 'horizontal';
 	}
 	return null;
 }
@@ -33,13 +33,13 @@ function isChangingDirection(
 	current: Node,
 	neighbor: Node,
 	newStart?: ControlPoint,
-	newEnd?: ControlPoint,
+	newEnd?: ControlPoint
 ): number {
 	const dirMap: Record<ConnectedPointerDirection, Direction> = {
-		top: "vertical",
-		bottom: "vertical",
-		right: "horizontal",
-		left: "horizontal",
+		top: 'vertical',
+		bottom: 'vertical',
+		right: 'horizontal',
+		left: 'horizontal',
 	};
 
 	const comingDirection =
@@ -54,18 +54,12 @@ function isChangingDirection(
 		}
 	}
 
-	return comingDirection &&
-		goingDirection &&
-		comingDirection !== goingDirection
-		? 1
-		: 0;
+	return comingDirection && goingDirection && comingDirection !== goingDirection ? 1 : 0;
 }
 
 function heuristic(start: Node, end: Node): number {
 	// Manhattan distance in grid
-	return (
-		Math.abs(start.xGrid - end.xGrid) + Math.abs(start.yGrid - end.yGrid)
-	);
+	return Math.abs(start.xGrid - end.xGrid) + Math.abs(start.yGrid - end.yGrid);
 }
 
 function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
@@ -83,9 +77,7 @@ function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
 			const newPoint = grid[pos.x][pos.y];
 			if (
 				newPoint &&
-				!obstacles.some(obstacle =>
-					obstacle.isAlmostInside(newPoint, ITEM_OFFSET - 1),
-				)
+				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, ITEM_OFFSET - 1))
 			) {
 				neighbors.push({
 					point: newPoint,
@@ -107,21 +99,17 @@ function findCenterLine(
 	grid: Point[][],
 	start: ControlPoint,
 	end: ControlPoint,
-	middle?: Point,
+	middle?: Point
 ): Point[] {
 	const centerLine: Point[] = [];
-	const middlePoint = middle
-		? middle
-		: new Point((start.x + end.x) / 2, (start.y + end.y) / 2);
+	const middlePoint = middle ? middle : new Point((start.x + end.x) / 2, (start.y + end.y) / 2);
 	const min = new Point(Math.min(start.x, end.x), Math.min(start.y, end.y));
 	const max = new Point(Math.max(start.x, end.x), Math.max(start.y, end.y));
 	const width = max.x - min.x;
 	const height = max.y - min.y;
 
-	if (start.pointType !== "Board" && end.pointType !== "Board") {
-		const isInGrid = grid.some(row =>
-			row.some(point => point.barelyEqual(middlePoint)),
-		);
+	if (start.pointType !== 'Board' && end.pointType !== 'Board') {
+		const isInGrid = grid.some(row => row.some(point => point.barelyEqual(middlePoint)));
 		return isInGrid ? [middlePoint] : [];
 	}
 
@@ -164,9 +152,7 @@ function findCenterLine(
 
 	if (width > height) {
 		const centerIdx = grid.findIndex(
-			row =>
-				row[0].x === middlePoint.x ||
-				Math.abs(row[0].x - middlePoint.x) < 0.01,
+			row => row[0].x === middlePoint.x || Math.abs(row[0].x - middlePoint.x) < 0.01
 		);
 		for (let y = 0; y < grid[0].length && centerIdx !== -1; y++) {
 			if (
@@ -181,9 +167,7 @@ function findCenterLine(
 		}
 	} else {
 		const centerIdx = grid[0].findIndex(
-			point =>
-				point.y === middlePoint.y ||
-				Math.abs(point.y - middlePoint.y) < 0.01,
+			point => point.y === middlePoint.y || Math.abs(point.y - middlePoint.y) < 0.01
 		);
 		for (let x = 0; x < grid.length && centerIdx !== -1; x++) {
 			if (
@@ -203,7 +187,7 @@ function findCenterLine(
 function createGrid(
 	start: ControlPoint,
 	end: ControlPoint,
-	toVisitPoints: Point[] = [],
+	toVisitPoints: Point[] = []
 ): {
 	grid: Point[][];
 	newStart?: ControlPoint;
@@ -226,16 +210,13 @@ function createGrid(
 	let newStart: ControlPoint | undefined;
 	let newEnd: ControlPoint | undefined;
 
-	const processPoint = (
-		point: ControlPoint,
-		dir: ConnectedPointerDirection,
-	): ControlPoint => {
+	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): ControlPoint => {
 		const itemMbr = point.item.getMbr();
 		const mbrFloored = new Mbr(
 			Math.floor(itemMbr.left),
 			Math.floor(itemMbr.top),
 			Math.floor(itemMbr.right),
-			Math.floor(itemMbr.bottom),
+			Math.floor(itemMbr.bottom)
 		);
 
 		const pointOnMbr = mbrFloored
@@ -244,7 +225,7 @@ function createGrid(
 
 		const newPoint = Object.create(
 			Object.getPrototypeOf(point),
-			Object.getOwnPropertyDescriptors(point),
+			Object.getOwnPropertyDescriptors(point)
 		);
 
 		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
@@ -255,7 +236,7 @@ function createGrid(
 			mbrFloored.left,
 			pointOnMbr.x,
 			mbrFloored.right,
-			mbrFloored.right + ITEM_OFFSET,
+			mbrFloored.right + ITEM_OFFSET
 		);
 
 		horizontalLines.push(
@@ -263,27 +244,24 @@ function createGrid(
 			mbrFloored.top,
 			pointOnMbr.y,
 			mbrFloored.bottom,
-			mbrFloored.bottom + ITEM_OFFSET,
+			mbrFloored.bottom + ITEM_OFFSET
 		);
 
 		return newPoint;
 	};
 
-	if (start.pointType !== "Board" && startDir) {
+	if (start.pointType !== 'Board' && startDir) {
 		newStart = processPoint(start, startDir);
 	}
 
-	if (end.pointType !== "Board" && endDir) {
+	if (end.pointType !== 'Board' && endDir) {
 		newEnd = processPoint(end, endDir);
 	}
 
 	const finalStart = newStart || start;
 	const finalEnd = newEnd || end;
 
-	const middle = new Point(
-		(finalStart.x + finalEnd.x) / 2,
-		(finalStart.y + finalEnd.y) / 2,
-	);
+	const middle = new Point((finalStart.x + finalEnd.x) / 2, (finalStart.y + finalEnd.y) / 2);
 
 	horizontalLines.push(middle.y, finalStart.y, finalEnd.y);
 	verticalLines.push(middle.x, finalStart.x, finalEnd.x);
@@ -293,15 +271,11 @@ function createGrid(
 		verticalLines.push(p.x);
 	});
 
-	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort(
-		(a, b) => a - b,
-	);
-	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort(
-		(a, b) => a - b,
-	);
+	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
+	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
 
 	const grid: Point[][] = uniqueVerticalLines.map(x =>
-		uniqueHorizontalLines.map(y => new Point(x, y)),
+		uniqueHorizontalLines.map(y => new Point(x, y))
 	);
 
 	return {
@@ -510,22 +484,16 @@ function findPath(
 	grid: Point[][],
 	obstacles: Mbr[],
 	newStart?: ControlPoint,
-	newEnd?: ControlPoint,
+	newEnd?: ControlPoint
 ): Point[] | undefined {
-	const startIdx = grid.findIndex(row =>
-		row.some(point => point.barelyEqual(start)),
-	);
-	const endIdx = grid.findIndex(row =>
-		row.some(point => point.barelyEqual(end)),
-	);
+	const startIdx = grid.findIndex(row => row.some(point => point.barelyEqual(start)));
+	const endIdx = grid.findIndex(row => row.some(point => point.barelyEqual(end)));
 
 	if (startIdx === -1 || endIdx === -1) {
-		throw new Error("Start or end point not found in the grid");
+		throw new Error('Start or end point not found in the grid');
 	}
 
-	const startPointIdx = grid[startIdx].findIndex(point =>
-		point.barelyEqual(start),
-	);
+	const startPointIdx = grid[startIdx].findIndex(point => point.barelyEqual(start));
 	const endPointIdx = grid[endIdx].findIndex(point => point.barelyEqual(end));
 
 	const endNode: Node = {
@@ -542,11 +510,11 @@ function findPath(
 		costSoFar: 0,
 		heuristic: heuristic(
 			{ point: start, xGrid: startIdx, yGrid: startPointIdx } as Node,
-			endNode,
+			endNode
 		),
 		toFinish: heuristic(
 			{ point: start, xGrid: startIdx, yGrid: startPointIdx } as Node,
-			endNode,
+			endNode
 		),
 		xGrid: startIdx,
 		yGrid: startPointIdx,
@@ -572,19 +540,13 @@ function findPath(
 				continue;
 			}
 
-			const extraCost = isChangingDirection(
-				current,
-				neighbor,
-				newStart,
-				newEnd,
-			);
+			const extraCost = isChangingDirection(current, neighbor, newStart, newEnd);
 			const tentativeCost = current.costSoFar + 1;
 
 			if (
 				!openSet.some(
 					node =>
-						node.point.barelyEqual(neighbor.point) &&
-						node.costSoFar <= tentativeCost,
+						node.point.barelyEqual(neighbor.point) && node.costSoFar <= tentativeCost
 				)
 			) {
 				neighbor.costSoFar = tentativeCost + extraCost;
@@ -603,19 +565,12 @@ function findPathPoints(
 	grid: Point[][],
 	obstacles: Mbr[],
 	newStart?: ControlPoint,
-	newEnd?: ControlPoint,
+	newEnd?: ControlPoint
 ): Point[] {
 	const pathPoints: Point[] = [];
 
 	for (let i = 0; i < points.length - 1; i += 1) {
-		const segmentPath = findPath(
-			points[i],
-			points[i + 1],
-			grid,
-			obstacles,
-			newStart,
-			newEnd,
-		);
+		const segmentPath = findPath(points[i], points[i + 1], grid, obstacles, newStart, newEnd);
 
 		if (segmentPath) {
 			pathPoints.push(...segmentPath.slice(0, -1));
@@ -639,25 +594,20 @@ function findPathPoints(
 export function removeUnnecessaryPoints(
 	pathToCenterLine: Point[],
 	centerLine: Point[],
-	fromStart: boolean,
+	fromStart: boolean
 ): void {
-	const foundPoint = pathToCenterLine.reduce(
-		(acc, point, index) => {
-			if (acc) {
-				return acc;
-			}
-			if (
-				index !== pathToCenterLine.length - 1 &&
-				centerLine.some(centerLinePoint =>
-					centerLinePoint.barelyEqual(point),
-				)
-			) {
-				return point;
-			}
-			return undefined;
-		},
-		undefined as undefined | Point,
-	);
+	const foundPoint = pathToCenterLine.reduce((acc, point, index) => {
+		if (acc) {
+			return acc;
+		}
+		if (
+			index !== pathToCenterLine.length - 1 &&
+			centerLine.some(centerLinePoint => centerLinePoint.barelyEqual(point))
+		) {
+			return point;
+		}
+		return undefined;
+	}, undefined as undefined | Point);
 	if (foundPoint) {
 		const foundIndex = centerLine.reduce((acc, point, index) => {
 			if (acc !== -1) {
@@ -740,13 +690,9 @@ export function findOrthogonalPath(
 	start: ControlPoint,
 	end: ControlPoint,
 	obstacles: Mbr[],
-	toVisitPoints: Point[] = [],
+	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	const { grid, newStart, newEnd, middlePoint } = createGrid(
-		start,
-		end,
-		toVisitPoints,
-	);
+	const { grid, newStart, newEnd, middlePoint } = createGrid(start, end, toVisitPoints);
 
 	const startPoint = newStart ? newStart : start;
 	const endPoint = newEnd ? newEnd : end;
@@ -755,7 +701,7 @@ export function findOrthogonalPath(
 	const adjustedCenterLine =
 		centerLine.length > 0
 			? startPoint.getDistance(centerLine[0]) <
-				startPoint.getDistance(centerLine[centerLine.length - 1])
+			  startPoint.getDistance(centerLine[centerLine.length - 1])
 				? centerLine
 				: centerLine.reverse()
 			: centerLine;
@@ -766,13 +712,7 @@ export function findOrthogonalPath(
 		endPoint,
 	];
 
-	const pathPoints = findPathPoints(
-		points,
-		grid,
-		obstacles,
-		newStart,
-		newEnd,
-	);
+	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
 	return {
 		lines: getLines(pathPoints),
 		newStart,
