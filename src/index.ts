@@ -1,1 +1,25 @@
-export { Board } from "./Board";
+export * from "./Board";
+export * from "./Items";
+export * from "./BoardCommand";
+export * from "./BoardOperations";
+export * from "./SubjectOperation";
+export * from "./Subject";
+export * from "./Camera";
+export * from "./Pointer";
+export * from "./Presence";
+export * from "./ReversibleOps";
+export * from "./Selection";
+export * from "./SessionStorage";
+export * from "./Validators";
+export * from "./Events";
+export * from "./Keyboard";
+export * from "./Settings";
+export * from "./SpatialIndex";
+export * from "./Tools";
+export * from "./HTMLRender";
+
+export * from "./drawMbrOnCanvas";
+export * from "./itemFactories";
+export * from "./parserHTML";
+export * from "./sha256";
+export * from "./lib";
