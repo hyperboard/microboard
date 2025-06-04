@@ -23,6 +23,3 @@ export * from "./itemFactories";
 export * from "./parserHTML";
 export * from "./sha256";
 export * from "./lib";
-
-export * from "./api/initBrowserSettings"
-export * from "./api/initNodeSettings"

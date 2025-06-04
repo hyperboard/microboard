@@ -1,14 +1,24 @@
 {
   "name": "microboard-temp",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A flexible interactive whiteboard library",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/cjs/index.js",
+      "browser": {
+        "import": "./dist/esm/browser.js",
+        "require": "./dist/cjs/browser.js"
+      },
+      "node": {
+        "import": "./dist/esm/node.js",
+        "require": "./dist/cjs/node.js"
+      },
+      "default": {
+        "import": "./dist/esm/index.js",
+        "require": "./dist/cjs/index.js"
+      },
       "types": "./dist/types/index.d.ts"
     }
   },
@@ -16,10 +26,14 @@
     "dist"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm",
-    "build:cjs": "bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs",
+    "build:browser:esm": "bun build ./src/browser-entry.ts --outdir ./dist/esm --target browser --format esm",
+    "build:browser:cjs": "bun build ./src/browser-entry.ts --outdir ./dist/cjs --target browser --format cjs",
+    "build:node:esm": "bun build ./src/node-entry.ts --outdir ./dist/esm --target node --format esm",
+    "build:node:cjs": "bun build ./src/node-entry.ts --outdir ./dist/cjs --target node --format cjs",
+    "build:index:esm": "bun build ./src/index.ts --outdir ./dist/esm --target browser --format esm",
+    "build:index:cjs": "bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs",
     "build:types": "tsc --noEmit false --emitDeclarationOnly --declaration --declarationDir ./dist/types --skipLibCheck",
-    "build:all": "bun run build && bun run build:cjs && bun run build:types",
+    "build": "bun run build:browser:esm && bun run build:browser:cjs && bun run build:node:esm && bun run build:node:cjs && bun run build:index:esm && bun run build:index:cjs && bun run build:types",
     "dev": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --watch",
     "test": "bun test",
     "lint": "eslint src/**/*.{ts,tsx}"
@@ -47,7 +61,13 @@
     "slate-history": "^0.113.1",
     "unified": "^11.0.5",
     "remark-parse": "^11.0.0",
-    "remark-slate": "^1.8.6"
+    "remark-slate": "^1.8.6",
+    "canvas": "^2.11.2",
+    "css.escape": "^1.5.1",
+    "i18next": "^23.4.4",
+    "i18next-browser-languagedetector": "^7.1.0",
+    "react-i18next": "^13.4.1",
+    "jsdom": "26.1.0"
   },
   "repository": {
     "type": "git",
