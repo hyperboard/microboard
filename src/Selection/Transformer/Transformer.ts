@@ -1,36 +1,36 @@
 import { Board } from "Board";
-import createCanvasDrawer, { CanvasDrawer } from "Board/drawMbrOnCanvas";
-import { Frame, Item, Line, Mbr, Point, RichText, Shape } from "Board/Items";
-import { AINode } from "Board/Items/AINode/AINode";
-import { Anchor } from "Board/Items/Anchor";
-import { DrawingContext } from "Board/Items/DrawingContext";
-import { Geometry } from "Board/Items/Geometry";
-import { Sticker } from "Board/Items/Sticker";
-import { Selection } from "Board/Selection";
-import { SelectionItems } from "Board/Selection/SelectionItems";
-import { conf } from "Board/Settings";
-import { createDebounceUpdater } from "Board/Tools/DebounceUpdater";
-import { NestingHighlighter } from "Board/Tools/NestingHighlighter";
-import AlignmentHelper from "Board/Tools/RelativeAlignment";
-import { Tool } from "Board/Tools/Tool";
+import createCanvasDrawer, { CanvasDrawer } from "drawMbrOnCanvas";
+import { Frame, Item, Line, Mbr, Point, RichText, Shape } from "Items";
+import { AINode } from "Items/AINode/AINode";
+import { Anchor } from "Items/Anchor";
+import { DrawingContext } from "Items/DrawingContext";
+import { Geometry } from "Items/Geometry";
+import { Sticker } from "Items/Sticker";
+import { Selection } from "Selection";
+import { SelectionItems } from "Selection/SelectionItems";
+import { conf } from "Settings";
+import { createDebounceUpdater } from "Tools/DebounceUpdater";
+import { NestingHighlighter } from "Tools/NestingHighlighter";
+import AlignmentHelper from "Tools/RelativeAlignment";
+import { Tool } from "Tools/Tool";
 import {
   AnchorType,
   getAnchorFromResizeType,
-} from "./TransformerHelpers/AnchorType.ts";
-import { getOppositePoint } from "./TransformerHelpers/getOppositePoint.ts";
-import { getProportionalResize } from "./TransformerHelpers/getResizeMatrix.ts";
+} from "./TransformerHelpers/AnchorType";
+import { getOppositePoint } from "./TransformerHelpers/getOppositePoint";
+import { getProportionalResize } from "./TransformerHelpers/getResizeMatrix";
 import {
   getResizeType,
   ResizeType,
 } from "./TransformerHelpers/getResizeType.ts";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
-import { getFollowingComments } from "Board/Selection/Transformer/TransformerHelpers/getFollowingComments";
-import { handleMultipleItemsResize } from "Board/Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
-import { transformShape } from "Board/Selection/Transformer/TransformerHelpers/ransformShape";
-import { transformRichText } from "Board/Selection/Transformer/TransformerHelpers/transformRichText";
-import { transformAINode } from "Board/Selection/Transformer/TransformerHelpers/transformAINode";
-import { transformItems } from "Board/Selection/Transformer/TransformerHelpers/transformItems";
-import { updateFrameChildren } from "Board/Selection/Transformer/TransformerHelpers/updateFrameChildren";
+import { getFollowingComments } from "Selection/Transformer/TransformerHelpers/getFollowingComments";
+import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
+import { transformShape } from "Selection/Transformer/TransformerHelpers/ransformShape";
+import { transformRichText } from "Selection/Transformer/TransformerHelpers/transformRichText";
+import { transformAINode } from "Selection/Transformer/TransformerHelpers/transformAINode";
+import { transformItems } from "Selection/Transformer/TransformerHelpers/transformItems";
+import { updateFrameChildren } from "Selection/Transformer/TransformerHelpers/updateFrameChildren";
 
 export class Transformer extends Tool {
   anchorType: AnchorType = "default";

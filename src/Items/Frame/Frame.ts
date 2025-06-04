@@ -17,11 +17,6 @@ import { FrameOperation } from "./FrameOperation";
 import { Frames, FrameType } from "./Basic";
 import { GeometricNormal } from "../GeometricNormal";
 import { FrameCommand } from "./FrameCommand";
-import {
-  getProportionalResize,
-  getResize,
-} from "Selection/Transformer/getResizeMatrix";
-import { ResizeType } from "Selection/Transformer/getResizeType";
 import { Board } from "Board";
 import {
   exportBoardSnapshot,
@@ -33,6 +28,11 @@ import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
 import { DocumentFactory } from "api/DocumentFactory";
 
 import { conf } from "Settings";
+import {
+  getResize,
+  getProportionalResize,
+} from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
+import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 const defaultFrameData = new DefaultFrameData();
 
 export class Frame implements Geometry {

@@ -43,7 +43,7 @@ export interface NotifyFunction {
     loader?: "loader" | "MediaLoader";
   }): string; // Returns notification id
 }
-import { MockPath2D } from "Board/api/MockPath2D";
+import { MockPath2D } from "api/MockPath2D";
 
 /**
  * Allowed drawing tools.
