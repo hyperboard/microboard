@@ -5,7 +5,7 @@
 	  "moduleResolution": "bundler",
 	  "esModuleInterop": true,
 	  "lib": ["ESNext", "DOM"],
-	  "types": ["bun-types", "jest"],
+	  "types": ["bun-types"],
 	  "jsx": "react",
 	  "strict": true,
 	  "declaration": true,

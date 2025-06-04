@@ -1,6 +1,6 @@
 {
   "name": "microboard-temp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A flexible interactive whiteboard library",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -18,7 +18,8 @@
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --declaration",
     "build:cjs": "bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs --declaration",
-    "build:all": "bun run build && bun run build:cjs",
+    "build:types": "tsc --noEmit false --emitDeclarationOnly --declaration --declarationDir ./dist/types --skipLibCheck",
+    "build:all": "bun run build && bun run build:cjs && bun run build:types",
     "dev": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --watch",
     "test": "bun test",
     "lint": "eslint src/**/*.{ts,tsx}"
