@@ -1,63 +1,63 @@
 {
-	"name": "microboard",
-	"version": "0.1.0",
-	"description": "A flexible interactive whiteboard library",
-	"main": "dist/index.js",
-	"module": "dist/index.esm.js",
-	"types": "dist/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.js",
-			"types": "./dist/index.d.ts"
-		}
-	},
-	"files": [
-		"dist"
-	],
-	"scripts": {
-		"build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm",
-		"build:cjs": "bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs",
-		"build:all": "bun run build && bun run build:cjs",
-		"dev": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --watch",
-		"test": "bun test",
-		"lint": "eslint src/**/*.{ts,tsx}"
-	},
-	"dependencies": {
-		"uuid": "^11.1.0",
-		"slate": "^0.114.0",
-		"rbush": "^4.0.1",
-		"rbush-knn": "^4.0.0",
-		"bezier-js": "^6.1.4"
-	},
-	"peerDependencies": {
-		"slate-react": "^0.114.2"
-	},
-	"peerDependenciesMeta": {
-		"slate-react": {
-			"optional": true
-		}
-	},
-	"devDependencies": {
-		"typescript": "^5.8.3",
-		"eslint": "^9.27.0",
-		"bun-types": "^1.2.13",
-		"slate-react": "^0.114.2",
-		"slate-history": "^0.113.1",
-		"unified": "^11.0.5",
-		"remark-parse": "^11.0.0",
-		"remark-slate": "^1.8.6"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/yourusername/microboard.git"
-	},
-	"keywords": [
-		"whiteboard",
-		"canvas",
-		"drawing",
-		"collaboration"
-	],
-	"author": "microboard",
-	"license": "Apache-2.0"
+  "name": "microboard-temp",
+  "version": "0.1.0",
+  "description": "A flexible interactive whiteboard library",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --declaration",
+    "build:cjs": "bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs --declaration",
+    "build:all": "bun run build && bun run build:cjs",
+    "dev": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --watch",
+    "test": "bun test",
+    "lint": "eslint src/**/*.{ts,tsx}"
+  },
+  "dependencies": {
+    "uuid": "^11.1.0",
+    "slate": "^0.114.0",
+    "rbush": "^4.0.1",
+    "rbush-knn": "^4.0.0",
+    "bezier-js": "^6.1.4"
+  },
+  "peerDependencies": {
+    "slate-react": "^0.114.2"
+  },
+  "peerDependenciesMeta": {
+    "slate-react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "eslint": "^9.27.0",
+    "bun-types": "^1.2.13",
+    "slate-react": "^0.114.2",
+    "slate-history": "^0.113.1",
+    "unified": "^11.0.5",
+    "remark-parse": "^11.0.0",
+    "remark-slate": "^1.8.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hyperboard/microboard.git"
+  },
+  "keywords": [
+    "whiteboard",
+    "canvas",
+    "drawing",
+    "collaboration"
+  ],
+  "author": "hyperboard",
+  "license": "Apache-2.0"
 }
