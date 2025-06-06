@@ -4,8 +4,7 @@ import { catchErrorResponse, prepareImage } from 'Items/Image/ImageHelpers';
 import { fileTosha256 } from 'sha256';
 import { VideoConstructorData, VideoItem } from './Video';
 
-// TODO move browser api
-// export const storageURL = `${window.location.origin}/api/v1/video`;
+// todo remove unnecessary fns
 
 export const uploadVideoToStorage = async (
 	hash: string,

@@ -46,6 +46,6 @@ export class Keyboard {
 }
 
 export { isHotkeyPushed } from "./isHotkeyPushed";
-export { checkHotkeys } from "./checkHotkeys";
+export * from "./checkHotkeys";
 export { getHotkeyLabel } from "./getHotkeyLabel";
 export { isControlCharacter } from "./isControlCharacter";
