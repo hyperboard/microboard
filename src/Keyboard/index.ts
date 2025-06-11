@@ -49,3 +49,4 @@ export { isHotkeyPushed } from "./isHotkeyPushed";
 export * from "./checkHotkeys";
 export { getHotkeyLabel } from "./getHotkeyLabel";
 export { isControlCharacter } from "./isControlCharacter";
+export type { HotkeysMap } from "./types";

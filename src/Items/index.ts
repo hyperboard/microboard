@@ -2,20 +2,26 @@ export { Point } from "./Point";
 export { Line } from "./Line";
 export { CubicBezier, QuadraticBezier } from "./Curve";
 export { Arc } from "./Arc";
-export { Path, Paths } from "./Path";
-export { Mbr } from "./Mbr";
+export { Mbr, updateRects } from "./Mbr";
+export { DrawingContext } from "./DrawingContext";
+export * from "./Path";
 export * from "./Transformation";
 
-export type { ConnectorOperation } from "./Connector";
-export type { RichTextData, RichTextOperation } from "./RichText";
-export type { ShapeData } from "./Shape";
-export type { FrameData } from "./Frame";
-export { Connector, ConnectorData } from "./Connector";
-export { RichText } from "./RichText";
-export { Shape } from "./Shape";
-export { Frame } from "./Frame";
+export * from "./Connector";
+export * from "./RichText";
+export * from "./Shape";
+export * from "./Sticker";
+export * from "./Frame";
 export * from "./Video";
+export * from "./Audio";
+export * from "./AINode";
+export * from "./Point";
+export * from "./Image";
+export * from "./Drawing";
+export * from "./Placeholder";
+export * from "./Group";
 
 export type { Item, ItemType, ItemData } from "./Item";
 
 export { Comment } from "./Comment";
+export type { HorisontalAlignment, VerticalAlignment } from "./Alignment";
