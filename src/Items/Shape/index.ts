@@ -6,3 +6,4 @@ export { ShapeCommand } from "./ShapeCommand";
 export type { ShapeOperation } from "./ShapeOperation";
 export type * from "./ShapeData";
 export type ShapeType = keyof typeof BasicShapes | BPMN;
+export { DefaultShapeData } from "./ShapeData";
