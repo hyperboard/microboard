@@ -7,7 +7,7 @@ import { tempStorage } from "SessionStorage";
 import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
 import { Point } from "Items/Point/Point";
 import { Board } from "Board";
-import { Selection } from "Selection/Selection";
+import { BoardSelection } from "Selection/Selection";
 import { CanvasDrawer } from "drawMbrOnCanvas";
 import AlignmentHelper from "Tools/RelativeAlignment";
 import { Mbr } from "Items/Mbr/Mbr";
@@ -34,7 +34,7 @@ export function transformItems({
 }: {
   board: Board;
   snapCursorPos: Point | null;
-  selection: Selection;
+  selection: BoardSelection;
   canvasDrawer: CanvasDrawer;
   alignmentHelper: AlignmentHelper;
   debounceUpd: DebounceUpdater;

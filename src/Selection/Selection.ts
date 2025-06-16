@@ -26,6 +26,7 @@ import { SelectionItems } from "./SelectionItems";
 import { SelectionTransformer } from "./SelectionTransformer";
 import { BaseSelection, BaseRange } from "slate";
 import { ReactEditor } from "slate-react";
+import { tempStorage } from "SessionStorage";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -45,8 +46,8 @@ type SelectionSnapshot = {
     textToEdit: string;
   } | null;
 };
-export class Selection {
-  readonly subject = new Subject<Selection>();
+export class BoardSelection {
+  readonly subject = new Subject<BoardSelection>();
   readonly itemSubject = new Subject<Item>();
   readonly itemsSubject = new Subject<Item[]>();
   isOn = true;
@@ -57,13 +58,12 @@ export class Selection {
   textToEdit: RichText | undefined;
   transformationRenderBlock?: boolean = undefined;
   shouldRenderItemsMbr = true;
-
   quickAddButtons: QuickAddButtons;
   showQuickAddPanel = false;
 
   memorySnapshot: SelectionSnapshot | null = null;
 
-  constructor(private board: Board, public events?: Events) {
+  constructor(private board: Board) {
     safeRequestAnimationFrame(this.updateScheduledObservers);
     this.tool = new SelectionTransformer(board, this);
     this.quickAddButtons = getQuickAddButtons(this, board);
@@ -142,12 +142,12 @@ export class Selection {
   }
 
   private emit(operation: Operation): void {
-    if (!this.events) {
+    if (!this.board.events) {
       return;
     }
     const command = createCommand(this.board, operation);
     command.apply();
-    this.events.emit(operation, command);
+    this.board.events.emit(operation, command);
   }
 
   private emitApplied(operation: Operation): void {
@@ -155,11 +155,11 @@ export class Selection {
   }
 
   private emitCommand(operation: Operation): Command | null {
-    if (!this.events) {
+    if (!this.board.events) {
       return null;
     }
     const command = createCommand(this.board, operation);
-    this.events.emit(operation, command);
+    this.board.events.emit(operation, command);
     return command;
   }
 

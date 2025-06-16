@@ -1,6 +1,6 @@
 {
   "name": "microboard-temp",
-  "version": "0.1.12",
+  "version": "0.1.17",
   "description": "A flexible interactive whiteboard library",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -27,25 +27,26 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build:browser:esm": "bun build ./src/browser.ts --outdir ./dist/esm --target browser --format esm",
-    "build:browser:cjs": "bun build ./src/browser.ts --outdir ./dist/cjs --target browser --format cjs",
-    "build:node:esm": "bun build ./src/node.ts --outdir ./dist/esm --target node --format esm",
-    "build:node:cjs": "bun build ./src/node.ts --outdir ./dist/cjs --target node --format cjs",
-    "build:index:esm": "bun build ./src/index.ts --outdir ./dist/esm --target browser --format esm",
-    "build:index:cjs": "bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs",
-    "build:types": "tsc --noEmit false --emitDeclarationOnly --declaration --declarationDir ./dist/types --skipLibCheck",
-    "build": "bun run clean && bun run build:browser:esm && bun run build:browser:cjs && bun run build:node:esm && bun run build:node:cjs && bun run build:index:esm && bun run build:index:cjs && bun run build:types",
-    "dev": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --watch",
+    "build": "bun run build.ts",
+    "dev": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --watch --external canvas",
     "test": "bun test",
     "lint": "eslint src/**/*.{ts,tsx}"
   },
   "dependencies": {},
   "peerDependencies": {
     "slate": "^0.114.0",
-    "slate-react": "^0.114.2"
+    "slate-react": "^0.114.2",
+    "canvas": "^3.1.0",
+    "jsdom": "26.0.0"
   },
   "peerDependenciesMeta": {
     "slate-react": {
+      "optional": true
+    },
+    "canvas": {
+      "optional": true
+    },
+    "jsdom": {
       "optional": true
     }
   },
@@ -65,12 +66,10 @@
     "remark-slate": "^1.8.6",
     "rehype-parse": "9.0.1",
     "rehype-remark": "10.0.1",
-    "canvas": "^2.11.2",
     "css.escape": "^1.5.1",
     "i18next": "^23.4.4",
     "i18next-browser-languagedetector": "^7.1.0",
     "react-i18next": "^13.4.1",
-    "jsdom": "26.1.0",
     "rimraf": "^6.0.1"
   },
   "repository": {

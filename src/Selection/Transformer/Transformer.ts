@@ -6,7 +6,7 @@ import { Anchor } from "Items/Anchor";
 import { DrawingContext } from "Items/DrawingContext";
 import { Geometry } from "Items/Geometry";
 import { Sticker } from "Items/Sticker";
-import { Selection } from "Selection";
+import { BoardSelection } from "Selection";
 import { SelectionItems } from "Selection/SelectionItems";
 import { conf } from "Settings";
 import { createDebounceUpdater } from "Tools/DebounceUpdater";
@@ -54,7 +54,7 @@ export class Transformer extends Tool {
   private snapCursorPos: Point | null = null;
   private initialCursorPos: Point | null = null;
 
-  constructor(private board: Board, private selection: Selection) {
+  constructor(private board: Board, private selection: BoardSelection) {
     super();
     this.canvasDrawer = createCanvasDrawer(board);
 

@@ -3,6 +3,7 @@ import { Path2DFactory } from "./api/Path2DFactory";
 import { BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
+import { MockDocumentFactory } from "./api/MockDocumentFactory";
 
 export interface Connection {
   connectionId: number;
@@ -44,6 +45,7 @@ export interface NotifyFunction {
   }): string; // Returns notification id
 }
 import { MockPath2D } from "api/MockPath2D";
+import { cursorsMap } from "Pointer/Pointer";
 
 /**
  * Allowed drawing tools.
@@ -163,7 +165,7 @@ export const conf = {
   documentFactory:
     typeof document !== "undefined"
       ? new BrowserDocumentFactory()
-      : (undefined as unknown as DocumentFactory),
+      : new MockDocumentFactory(),
 
   getDOMParser: undefined as unknown as GetDOMParser,
 
@@ -506,6 +508,7 @@ export const conf = {
   FORCE_HOTKEYS: "auto" as "auto" | "windows" | "macos",
   debug: false,
   FALLBACK_LNG: "en",
+  cursorsMap,
 };
 
 export type Settings = typeof conf;
