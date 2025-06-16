@@ -17,18 +17,14 @@ export function initI18N(isNode = false): typeof i18n {
     .use(initReactI18next)
     .use(LanguageDetector)
     .init({
-      // @ts-expect-error import.meta object didn't exists in common-js modules
-      debug: import.meta.env
-        ? import.meta.env.NODE_ENV === "development"
-        : false,
+      debug: conf.debug,
       detection: {
         order: ["navigator"],
       },
       supportedLngs: ["en", "ru"],
       defaultNS,
       resources,
-      // @ts-expect-error import.meta object didn't exists in common-js modules
-      fallbackLng: import.meta.env ? import.meta.env.FALLBACK_LNG : "en",
+      fallbackLng: conf.FALLBACK_LNG,
       interpolation: {
         escapeValue: false,
       },

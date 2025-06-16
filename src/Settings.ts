@@ -501,7 +501,11 @@ export const conf = {
     overline: false,
     subscript: false,
     superscript: false,
-  },
+  } as DefaultTextStyles,
+  LOG_HOTKEYS: false,
+  FORCE_HOTKEYS: "auto" as "auto" | "windows" | "macos",
+  debug: false,
+  FALLBACK_LNG: "en",
 };
 
 export type Settings = typeof conf;
