@@ -9,7 +9,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { Point } from "Items/Point/Point";
 import { Path } from "Items/Path/Path";
 import { Line } from "Items/Line/Line";
-import { Subject } from "shared/Subject";
+import { Subject } from "Subject";
 import { Paths } from "Items/Path/Paths";
 import { registerItem } from "Items/RegisterItem";
 import { AddCounter } from "Items/Examples/Counter/AddCounter";

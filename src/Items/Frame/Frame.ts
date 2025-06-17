@@ -9,33 +9,34 @@ import {
   RichText,
   Matrix,
 } from "..";
-import { Geometry } from "../Geometry";
-import { Subject } from "Subject";
-import { DrawingContext } from "../DrawingContext";
-import { Operation } from "Events";
-import { FrameOperation } from "./FrameOperation";
-import { Frames, FrameType } from "./Basic";
-import { GeometricNormal } from "../GeometricNormal";
-import { FrameCommand } from "./FrameCommand";
-import { Board } from "Board";
+import {Subject} from "Subject";
+import {DrawingContext} from "../DrawingContext";
+import {Operation} from "Events";
+import {FrameOperation} from "./FrameOperation";
+import {Frames, FrameType} from "./Basic";
+import {GeometricNormal} from "../GeometricNormal";
+import {FrameCommand} from "./FrameCommand";
+import {Board} from "Board";
 import {
   exportBoardSnapshot,
   SnapshotInfo,
 } from "Tools/ExportSnapshot/exportBoardSnapshot";
-import { LinkTo } from "../LinkTo/LinkTo";
-import { translateElementBy } from "HTMLRender";
-import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
-import { DocumentFactory } from "api/DocumentFactory";
+import {LinkTo} from "../LinkTo/LinkTo";
+import {translateElementBy} from "HTMLRender";
+import {DefaultFrameData, FRAME_TITLE_COLOR, FrameData} from "./FrameData";
+import {DocumentFactory} from "api/DocumentFactory";
 
-import { conf } from "Settings";
+import {conf} from "Settings";
 import {
   getResize,
   getProportionalResize,
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
-import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
+import {ResizeType} from "Selection/Transformer/TransformerHelpers/getResizeType";
+import {BaseItem} from "../BaseItem";
+
 const defaultFrameData = new DefaultFrameData();
 
-export class Frame implements Geometry {
+export class Frame extends BaseItem {
   readonly itemType = "Frame";
   parent = "Board";
   readonly transformation: Transformation;
@@ -51,18 +52,19 @@ export class Frame implements Geometry {
   transformationRenderBlock?: boolean = undefined;
 
   constructor(
-    private board: Board,
+    board: Board,
     private getItemById: (id: string) => Item | undefined,
-    private id = "",
+    id = "",
     private name = "",
     private shapeType = defaultFrameData.shapeType,
-    private backgroundColor = defaultFrameData.backgroundColor,
-    private backgroundOpacity = defaultFrameData.backgroundOpacity,
-    private borderColor = defaultFrameData.borderColor,
-    private borderOpacity = defaultFrameData.borderOpacity,
-    private borderStyle = defaultFrameData.borderStyle,
-    private borderWidth = defaultFrameData.borderWidth
+    public backgroundColor = defaultFrameData.backgroundColor,
+    public backgroundOpacity = defaultFrameData.backgroundOpacity,
+    public borderColor = defaultFrameData.borderColor,
+    public borderOpacity = defaultFrameData.borderOpacity,
+    public borderStyle = defaultFrameData.borderStyle,
+    public borderWidth = defaultFrameData.borderWidth
   ) {
+    super(board, id);
     this.textContainer = Frames[this.shapeType].textBounds.copy();
     this.path = Frames[this.shapeType].path.copy();
     this.transformation = new Transformation(this.id, this.board.events);
@@ -78,7 +80,7 @@ export class Frame implements Geometry {
       true,
       false,
       "Frame",
-      { ...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR }
+      {...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR}
     );
     this.text.setSelectionHorisontalAlignment("left");
     this.transformation.subject.subscribe(() => {
@@ -303,7 +305,7 @@ export class Frame implements Geometry {
       };
     }
 
-    let { scaleX, scaleY, translateX, translateY } = res.matrix;
+    let {scaleX, scaleY, translateX, translateY} = res.matrix;
 
     if (this.getCanChangeRatio() && this.shapeType !== "Custom") {
       this.setFrameType("Custom");
@@ -346,7 +348,7 @@ export class Frame implements Geometry {
 
   getLastFrameScale(): { x: number; y: number } {
     const scaleString = localStorage.getItem("lastFrameScale");
-    return scaleString ? JSON.parse(scaleString) : { x: 4, y: 5.565 };
+    return scaleString ? JSON.parse(scaleString) : {x: 4, y: 5.565};
   }
 
   scaleLikeLastFrame(): void {
@@ -356,14 +358,14 @@ export class Frame implements Geometry {
 
   setLastFrameScale(): void {
     const aspectRatios = {
-      A4: { x: 1, y: 1.41 },
-      Letter: { x: 1, y: 1.29 },
-      Frame16x9: { x: 1.78, y: 1 },
-      Frame4x3: { x: 1.33, y: 1 },
-      Frame1x1: { x: 1, y: 1 },
-      Frame3x2: { x: 1.5, y: 1 },
-      Frame9x18: { x: 1, y: 2 },
-      Custom: { x: 1, y: 1 },
+      A4: {x: 1, y: 1.41},
+      Letter: {x: 1, y: 1.29},
+      Frame16x9: {x: 1.78, y: 1},
+      Frame4x3: {x: 1.33, y: 1},
+      Frame1x1: {x: 1, y: 1},
+      Frame3x2: {x: 1.5, y: 1},
+      Frame9x18: {x: 1, y: 2},
+      Custom: {x: 1, y: 1},
     };
     const proportionalScale = {
       x: this.transformation.getScale().x * aspectRatios[this.getFrameType()].x,
@@ -721,7 +723,7 @@ export class Frame implements Geometry {
     this.path.render(context);
     this.renderNewShape(context);
     if (this.getLinkTo()) {
-      const { top, right } = this.getMbr();
+      const {top, right} = this.getMbr();
       this.linkTo.render(context, top, right, this.board.camera.getScale());
     }
   }
@@ -753,7 +755,7 @@ export class Frame implements Geometry {
     div.style.borderWidth = `${this.borderWidth}px`;
     div.style.borderStyle = this.borderStyle;
 
-    const { translateX, translateY, scaleX, scaleY } =
+    const {translateX, translateY, scaleX, scaleY} =
       this.transformation.matrix;
 
     // const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;

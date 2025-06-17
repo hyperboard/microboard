@@ -9,11 +9,11 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { Point } from "Items/Point/Point";
 import { BorderStyle, BorderWidth, Path } from "Items/Path/Path";
 import { Line } from "Items/Line/Line";
-import { Subject } from "shared/Subject";
+import { Subject } from "Subject";
 import { TransformationData } from "Items/Transformation/TransformationData";
 import { Paths } from "Items/Path/Paths";
 import { registerItem } from "Items/RegisterItem";
-import { AddStar } from "../Star/AddStar";
+import { AddStar } from "./AddStar";
 import { StarOperation } from "Items/Examples/Star/StarOperation";
 
 export interface StarData {

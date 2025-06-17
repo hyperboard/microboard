@@ -23,5 +23,9 @@ export * from "./Group";
 
 export type { Item, ItemType, ItemData } from "./Item";
 
+export { registerItem } from "./RegisterItem";
+
+export { Star } from "./Examples/Star";
+export { Counter } from "./Examples/Counter";
 export { Comment } from "./Comment";
 export type { HorisontalAlignment, VerticalAlignment } from "./Alignment";

@@ -1,1 +1,1 @@
-export { Star } from "./Star.ts";
+export { Star } from "./Star";
