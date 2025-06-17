@@ -1,272 +1,278 @@
-import { Subject } from 'Subject';
-import { DrawingContext } from '../DrawingContext';
-import { TransformationData } from '../Transformation/TransformationData';
-import { GroupOperation } from './GroupOperation';
-import { GroupCommand } from './GroupCommand';
-import { Events, Operation } from 'Events';
-import { Mbr, Line, Point, Transformation, Item } from '..';
-import { Board } from 'Board';
-import { LinkTo } from '../LinkTo/LinkTo';
+import { Subject } from "Subject";
+import { DrawingContext } from "../DrawingContext";
+import { TransformationData } from "../Transformation/TransformationData";
+import { GroupOperation } from "./GroupOperation";
+import { GroupCommand } from "./GroupCommand";
+import { Events, Operation } from "Events";
+import { Mbr, Line, Point, Transformation, Item } from "..";
+import { Board } from "Board";
+import { LinkTo } from "../LinkTo/LinkTo";
+import { BaseItem } from "Items/BaseItem/BaseItem";
+import { DocumentFactory } from "api/DocumentFactory";
 
 export interface GroupData {
-	readonly itemType: 'Group';
-	children: string[];
-	transformation: TransformationData;
+  readonly itemType: "Group";
+  children: string[];
+  transformation: TransformationData;
 }
 
-export class Group extends Mbr {
-	readonly linkTo: LinkTo;
-	readonly itemType = 'Group';
-	parent = 'Board';
-	readonly transformation: Transformation;
-	readonly subject = new Subject<Group>();
-	private mbr: Mbr = new Mbr();
-	transformationRenderBlock?: boolean = undefined;
+export class Group extends BaseItem {
+  readonly linkTo: LinkTo;
+  readonly itemType = "Group";
+  parent = "Board";
+  readonly transformation: Transformation;
+  readonly subject = new Subject<Group>();
+  private mbr: Mbr = new Mbr();
+  transformationRenderBlock?: boolean = undefined;
 
-	constructor(
-		private board: Board,
-		private events?: Events,
-		private children: string[] = [],
-		private id = ''
-	) {
-		super();
-		this.linkTo = new LinkTo(this.id, this.events);
-		this.transformation = new Transformation(this.id, this.events);
-		this.children = children;
+  constructor(
+    board: Board,
+    private events?: Events,
+    private children: string[] = [],
+    id = ""
+  ) {
+    super(board, id);
+    this.linkTo = new LinkTo(this.id, this.events);
+    this.transformation = new Transformation(this.id, this.events);
+    this.children = children;
 
-		this.transformation.subject.subscribe(() => {
-			this.updateMbr();
-			this.subject.publish(this);
-		});
-	}
+    this.transformation.subject.subscribe(() => {
+      this.updateMbr();
+      this.subject.publish(this);
+    });
+  }
 
-	getRichText(): null {
-		return null;
-	}
+  isClosed(): boolean {
+    return false;
+  }
 
-	addChild(childId: string): void {
-		this.emit({
-			class: 'Group',
-			method: 'addChild',
-			item: [this.getId()],
-			childId,
-		});
-	}
+  getRichText(): null {
+    return null;
+  }
 
-	private applyAddChild(childId: string): void {
-		if (!this.children.includes(childId)) {
-			this.children.push(childId);
-			this.updateMbr();
-			this.subject.publish(this);
-		}
-	}
+  addChild(childId: string): void {
+    this.emit({
+      class: "Group",
+      method: "addChild",
+      item: [this.getId()],
+      childId,
+    });
+  }
 
-	private applyRemoveChild(childId: string): void {
-		this.children = this.children.filter(currChild => currChild !== childId);
-		this.updateMbr();
-		this.subject.publish(this);
-	}
+  private applyAddChild(childId: string): void {
+    if (!this.children.includes(childId)) {
+      this.children.push(childId);
+      this.updateMbr();
+      this.subject.publish(this);
+    }
+  }
 
-	removeChild(childId: string): void {
-		this.emit({
-			class: 'Group',
-			method: 'removeChild',
-			item: [this.getId()],
-			childId,
-		});
-	}
+  private applyRemoveChild(childId: string): void {
+    this.children = this.children.filter((currChild) => currChild !== childId);
+    this.updateMbr();
+    this.subject.publish(this);
+  }
 
-	emitRemoveChild(child: Item): void {
-		this.removeChild(child.getId());
-		child.parent = 'Board';
-	}
+  removeChild(childId: string): void {
+    this.emit({
+      class: "Group",
+      method: "removeChild",
+      item: [this.getId()],
+      childId,
+    });
+  }
 
-	apply(op: Operation): void {
-		switch (op.class) {
-			case 'Group':
-				if (op.method === 'addChild') {
-					this.applyAddChild(op.childId);
-				} else if (op.method === 'removeChild') {
-					this.applyRemoveChild(op.childId);
-				}
-				break;
-			case 'Transformation':
-				this.transformation.apply(op);
-				break;
-			default:
-				return;
-		}
-		this.subject.publish(this);
-	}
+  emitRemoveChild(child: Item): void {
+    this.removeChild(child.getId());
+    child.parent = "Board";
+  }
 
-	emit(operation: GroupOperation): void {
-		if (this.events) {
-			const command = new GroupCommand([this], operation);
-			command.apply();
-			this.events.emit(operation, command);
-		} else {
-			this.apply(operation);
-		}
-	}
+  apply(op: Operation): void {
+    switch (op.class) {
+      case "Group":
+        if (op.method === "addChild") {
+          this.applyAddChild(op.childId);
+        } else if (op.method === "removeChild") {
+          this.applyRemoveChild(op.childId);
+        }
+        break;
+      case "Transformation":
+        this.transformation.apply(op);
+        break;
+      default:
+        return;
+    }
+    this.subject.publish(this);
+  }
 
-	setId(id: string): this {
-		this.id = id;
-		this.transformation.setId(id);
-		return this;
-	}
+  emit(operation: GroupOperation): void {
+    if (this.events) {
+      const command = new GroupCommand([this], operation);
+      command.apply();
+      this.events.emit(operation, command);
+    } else {
+      this.apply(operation);
+    }
+  }
 
-	serialize(): GroupData {
-		return {
-			itemType: 'Group',
-			children: this.children,
-			transformation: this.transformation.serialize(),
-		};
-	}
+  setId(id: string): this {
+    this.id = id;
+    this.transformation.setId(id);
+    return this;
+  }
 
-	deserialize(data: GroupData): this {
-		if (data.children) {
-			data.children.forEach(childId => {
-				this.applyAddChild(childId);
-				const item = this.board.items.getById(childId);
+  serialize(): GroupData {
+    return {
+      itemType: "Group",
+      children: this.children,
+      transformation: this.transformation.serialize(),
+    };
+  }
 
-				if (item) {
-					item.parent = this.getId();
-				}
-			});
-		}
+  deserialize(data: GroupData): this {
+    if (data.children) {
+      data.children.forEach((childId) => {
+        this.applyAddChild(childId);
+        const item = this.board.items.getById(childId);
 
-		this.transformation.deserialize(data.transformation);
-		this.subject.publish(this);
-		return this;
-	}
+        if (item) {
+          item.parent = this.getId();
+        }
+      });
+    }
 
-	getId(): string {
-		return this.id;
-	}
+    this.transformation.deserialize(data.transformation);
+    this.subject.publish(this);
+    return this;
+  }
 
-	getIntersectionPoints(segment: Line): Point[] {
-		const lines = this.getMbr().getLines();
-		const initPoints: Point[] = [];
-		const points = lines.reduce((acc, line) => {
-			const intersections = line.getIntersectionPoints(segment);
-			if (intersections.length > 0) {
-				acc.push(...intersections);
-			}
-			return acc;
-		}, initPoints);
-		return points;
-	}
+  getId(): string {
+    return this.id;
+  }
 
-	getMbr(): Mbr {
-		const mbr = new Mbr();
-		let left = Number.MAX_SAFE_INTEGER;
-		let top = Number.MAX_SAFE_INTEGER;
-		let right = Number.MIN_SAFE_INTEGER;
-		let bottom = Number.MIN_SAFE_INTEGER;
+  getIntersectionPoints(segment: Line): Point[] {
+    const lines = this.getMbr().getLines();
+    const initPoints: Point[] = [];
+    const points = lines.reduce((acc, line) => {
+      const intersections = line.getIntersectionPoints(segment);
+      if (intersections.length > 0) {
+        acc.push(...intersections);
+      }
+      return acc;
+    }, initPoints);
+    return points;
+  }
 
-		const mbrs = this.children.flatMap((childId: string) => {
-			const item = this.board.items.getById(childId);
-			if (!item) {
-				return [];
-			}
+  getMbr(): Mbr {
+    const mbr = new Mbr();
+    let left = Number.MAX_SAFE_INTEGER;
+    let top = Number.MAX_SAFE_INTEGER;
+    let right = Number.MIN_SAFE_INTEGER;
+    let bottom = Number.MIN_SAFE_INTEGER;
 
-			const mbr = item.getMbr();
-			if (!mbr) {
-				return [];
-			}
+    const mbrs = this.children.flatMap((childId: string) => {
+      const item = this.board.items.getById(childId);
+      if (!item) {
+        return [];
+      }
 
-			if (left > mbr.left) {
-				left = mbr.left;
-			}
-			if (top > mbr.top) {
-				top = mbr.top;
-			}
-			if (right < mbr.right) {
-				right = mbr.right;
-			}
-			if (bottom < mbr.bottom) {
-				bottom = mbr.bottom;
-			}
-			return [mbr];
-		});
+      const mbr = item.getMbr();
+      if (!mbr) {
+        return [];
+      }
 
-		if (mbrs.length) {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-expect-error
-			mbr.combine(mbrs);
+      if (left > mbr.left) {
+        left = mbr.left;
+      }
+      if (top > mbr.top) {
+        top = mbr.top;
+      }
+      if (right < mbr.right) {
+        right = mbr.right;
+      }
+      if (bottom < mbr.bottom) {
+        bottom = mbr.bottom;
+      }
+      return [mbr];
+    });
 
-			mbr.left = left !== Number.MAX_SAFE_INTEGER ? left : 0;
-			mbr.top = top !== Number.MAX_SAFE_INTEGER ? top : 0;
-			mbr.right = right !== Number.MIN_SAFE_INTEGER ? right : 0;
-			mbr.bottom = bottom !== Number.MIN_SAFE_INTEGER ? bottom : 0;
-			this.left = mbr.left;
-			this.bottom = mbr.bottom;
-			this.right = mbr.right;
-			this.top = mbr.top;
-		}
+    if (mbrs.length) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      mbr.combine(mbrs);
 
-		return mbr;
-	}
+      mbr.left = left !== Number.MAX_SAFE_INTEGER ? left : 0;
+      mbr.top = top !== Number.MAX_SAFE_INTEGER ? top : 0;
+      mbr.right = right !== Number.MIN_SAFE_INTEGER ? right : 0;
+      mbr.bottom = bottom !== Number.MIN_SAFE_INTEGER ? bottom : 0;
+      this.left = mbr.left;
+      this.bottom = mbr.bottom;
+      this.right = mbr.right;
+      this.top = mbr.top;
+    }
 
-	getChildrenIds(): string[] {
-		return this.children;
-	}
+    return mbr;
+  }
 
-	getChildren(): Item[] {
-		return this.children
-			.map(itemId => this.board.items.getById(itemId))
-			.filter((item): item is Item => item !== undefined);
-	}
+  getChildrenIds(): string[] {
+    return this.children;
+  }
 
-	updateMbr(): void {
-		const rect = this.getMbr();
-		this.mbr = rect;
-		this.mbr.borderColor = 'transparent';
-	}
+  getChildren(): Item[] {
+    return this.children
+      .map((itemId) => this.board.items.getById(itemId))
+      .filter((item): item is Item => item !== undefined);
+  }
 
-	setBoard(board: Board): void {
-		this.board = board;
-	}
+  updateMbr(): void {
+    const rect = this.getMbr();
+    this.mbr = rect;
+    this.mbr.borderColor = "transparent";
+  }
 
-	setChildren(items: string[]): void {
-		items.forEach(itemId => {
-			this.addChild(itemId);
+  setBoard(board: Board): void {
+    this.board = board;
+  }
 
-			const item = this.board.items.getById(itemId);
-			if (item) {
-				item.parent = this.getId();
-			}
-		});
+  setChildren(items: string[]): void {
+    items.forEach((itemId) => {
+      this.addChild(itemId);
 
-		this.updateMbr();
-	}
+      const item = this.board.items.getById(itemId);
+      if (item) {
+        item.parent = this.getId();
+      }
+    });
 
-	removeChildren(): void {
-		this.children.forEach(itemId => {
-			this.removeChild(itemId);
+    this.updateMbr();
+  }
 
-			const item = this.board.items.getById(itemId);
-			if (item) {
-				item.parent = this.parent;
-			}
-		});
+  removeChildren(): void {
+    this.children.forEach((itemId) => {
+      this.removeChild(itemId);
 
-		this.updateMbr();
-	}
+      const item = this.board.items.getById(itemId);
+      if (item) {
+        item.parent = this.parent;
+      }
+    });
 
-	getLinkTo(): string | undefined {
-		return this.linkTo.link;
-	}
+    this.updateMbr();
+  }
 
-	render(context: DrawingContext): void {
-		if (this.transformationRenderBlock) {
-			return;
-		}
+  getLinkTo(): string | undefined {
+    return this.linkTo.link;
+  }
 
-		this.mbr.render(context);
-	}
+  render(context: DrawingContext): void {
+    if (this.transformationRenderBlock) {
+      return;
+    }
 
-	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		return documentFactory.createElement("div");
-	}
+    this.mbr.render(context);
+  }
+
+  renderHTML(documentFactory: DocumentFactory): HTMLElement {
+    return documentFactory.createElement("div");
+  }
 }

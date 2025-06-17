@@ -20,8 +20,8 @@ import { DrawingContext } from "../DrawingContext";
 import { Operation } from "Events";
 import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
-import { ResizeType } from "../../Selection/Transformer/TransformerHelpers/getResizeType.ts";
-import { getResize } from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix.ts";
+import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
+import { getResize } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { tempStorage } from "SessionStorage";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BPMN } from "./BPMN";
@@ -37,12 +37,13 @@ import {
 import { FixedPoint } from "Items/Connector";
 import { toRelativePoint } from "Items/Connector/ControlPoint";
 import { conf } from "Settings";
+import { BaseItem } from "Items/BaseItem/BaseItem";
 
 const defaultShapeData = new DefaultShapeData();
 
 export const Shapes = { ...BasicShapes, ...BPMN };
 
-export class Shape implements Geometry {
+export class Shape extends BaseItem {
   readonly itemType = "Shape";
   parent = "Board";
   readonly transformation: Transformation;
@@ -54,17 +55,18 @@ export class Shape implements Geometry {
   transformationRenderBlock?: boolean = undefined;
 
   constructor(
-    private board: Board,
-    private id = "",
-    private shapeType = defaultShapeData.shapeType,
-    private backgroundColor = defaultShapeData.backgroundColor,
-    private backgroundOpacity = defaultShapeData.backgroundOpacity,
-    private borderColor = defaultShapeData.borderColor,
-    private borderOpacity = defaultShapeData.borderOpacity,
-    private borderStyle = defaultShapeData.borderStyle,
-    private borderWidth = defaultShapeData.borderWidth,
+    board: Board,
+    id = "",
+    public shapeType = defaultShapeData.shapeType,
+    public backgroundColor = defaultShapeData.backgroundColor,
+    public backgroundOpacity = defaultShapeData.backgroundOpacity,
+    public borderColor = defaultShapeData.borderColor,
+    public borderOpacity = defaultShapeData.borderOpacity,
+    public borderStyle = defaultShapeData.borderStyle,
+    public borderWidth = defaultShapeData.borderWidth,
     private mbr = Shapes[shapeType].path.getMbr().copy()
   ) {
+    super(board, id);
     this.linkTo = new LinkTo(this.id, this.board.events);
     this.transformation = new Transformation(this.id, this.board.events);
     this.path = Shapes[this.shapeType].path.copy();
