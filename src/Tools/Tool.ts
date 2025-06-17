@@ -37,6 +37,12 @@ export class Tool {
 	pointerMoveBy(_x: number, _y: number): boolean {
 		return false;
 	}
+	pointerDown(): boolean {
+		return false;
+	}
+	pointerUp(): boolean {
+		return false;
+	}
 	onCancel(): void {}
 	onConfirm(): void {}
 	render(_context: DrawingContext): void {}

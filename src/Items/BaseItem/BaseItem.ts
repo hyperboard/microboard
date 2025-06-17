@@ -1,15 +1,48 @@
-import { Matrix } from ".";
-import { Mbr, RichText } from "..";
-import { ResizeOp } from "./BaseItemOperation";
+import { Mbr } from "Items/Mbr/Mbr";
+import { Geometry } from "Items/Geometry";
+import { RichText } from "Items/RichText/RichText";
+import { LinkTo } from "Items/LinkTo/LinkTo";
+import { Transformation } from "Items/Transformation/Transformation";
+import { Board } from "Board";
+import { DrawingContext } from "Items/DrawingContext";
+import { DocumentFactory } from "api/DocumentFactory";
+import { Operation } from "Events";
+import { TransformationData } from "Items/Transformation/TransformationData";
+import { BaseOperation } from "Events/EventsOperations";
+import { BaseCommand } from "Events/Command";
 
-export class BaseItem extends Mbr {
-	matrix = new Matrix();
-	previous = new Matrix();
-	isLocked = false;
-	link: string | null = null;
+export type BaseItemData = { itemType: string } & Record<string, any>;
+export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
+	linkTo?: string;
+	transformation: TransformationData;
+} & T;
 
-	constructor(private id = "") {
+export class BaseItem extends Mbr implements Geometry {
+	readonly transformation: Transformation;
+	readonly linkTo: LinkTo;
+	readonly parent: string = "Board";
+	transformationRenderBlock?: boolean = undefined;
+	board: Board;
+	id: string;
+	shouldUseCustomRender = false;
+	shouldRenderOutsideViewRect = true;
+	itemType = "";
+
+	constructor(
+		board: Board,
+		id = "",
+		private defaultItemData?: BaseItemData,
+	) {
 		super();
+		this.board = board;
+		this.id = id;
+		if (defaultItemData) {
+			Object.entries(defaultItemData).forEach(([key, value]) => {
+				this[key] = value;
+			});
+		}
+		this.linkTo = new LinkTo(this.id, this.board.events);
+		this.transformation = new Transformation(this.id, this.board.events);
 	}
 
 	getId(): string {
@@ -18,55 +51,74 @@ export class BaseItem extends Mbr {
 
 	setId(id: string): this {
 		this.id = id;
+		this.transformation.setId(id);
+		this.linkTo.setId(id);
 		this.getRichText()?.setId(id);
 		return this;
 	}
 
-	/** Get RichText handle if exists */
+	getLinkTo(): string | undefined {
+		return this.linkTo.link;
+	}
+
 	getRichText(): RichText | null {
 		return null;
 	}
 
-	/** Get link from this item to another item */
-	getLinkFromItem(): string | null {
-		return this.link;
+	deserialize(data: SerializedItemData): this {
+		Object.entries(data).forEach(([key, value]) => {
+			if (this[key]?.deserialize) {
+				this[key].deserialize(value);
+			} else {
+				this[key] = value;
+			}
+		});
+
+		return this;
 	}
 
-	setLinkFromItem(link: string): void {
-		this.link = link;
+	serialize(): SerializedItemData {
+		const serializedData: SerializedItemData = {
+			linkTo: this.linkTo.serialize(),
+			transformation: this.transformation.serialize(),
+			itemType: this.defaultItemData?.itemType || this.itemType,
+		};
+		Object.keys(this.defaultItemData || {}).forEach((key: string) => {
+			const value = this[key];
+			serializedData[key] = value?.serialize?.() || value;
+		});
+
+		return serializedData;
 	}
 
-	/** Get link to this */
-	getLinkToItem(): string {
-		return `${window.location.origin}${
-			window.location.pathname
-		}?focus=${this.getId()}`;
+	isClosed() {
+		return true;
 	}
 
-	isOnlyProportionalScalingAllowed(): boolean {
-		return false;
+	emit(operation: Operation | BaseOperation): void {
+		if (this.board.events) {
+			const command = new BaseCommand([this], operation as BaseOperation);
+			command.apply();
+			this.board.events.emit(operation as Operation, command);
+		} else {
+			this.apply(operation);
+		}
 	}
 
-	transform(matrix: Matrix): void {
-		this.matrix.multiplyByMatrix(matrix);
+	apply(op: Operation | BaseOperation): void {
+		op = op as Operation;
+		switch (op.class) {
+			case "Transformation":
+				this.transformation.apply(op);
+				break;
+			case "LinkTo":
+				this.linkTo.apply(op);
+				break;
+		}
 	}
 
-	resize(data: ResizeOp): void {
-		const itemMbr = this.getMbr();
-
-		this.matrix.scaleX *= data.matrix.scaleX;
-		this.matrix.scaleY *= data.matrix.scaleY;
-
-		const deltaX = itemMbr.left - data.mbrBefore.left;
-		const deltaY = itemMbr.top - data.mbrBefore.top;
-
-		this.matrix.translateX +=
-			deltaX * data.matrix.scaleX - deltaX + data.matrix.translateX;
-		this.matrix.translateY +=
-			deltaY * data.matrix.scaleY - deltaY + data.matrix.translateY;
-	}
-
-	setLock(isLocked: boolean): void {
-		this.isLocked = isLocked;
+	render(context: DrawingContext): void {}
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		return documentFactory.createElement("div");
 	}
 }

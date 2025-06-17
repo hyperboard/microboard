@@ -1,5 +1,5 @@
-import { Board } from 'Board';
-import { BoardTool } from 'Tools/BoardTool';
+import { Board } from "Board";
+import { BoardTool } from "Tools/BoardTool";
 
 export class AddComment extends BoardTool {
   isDown = false;
@@ -10,7 +10,7 @@ export class AddComment extends BoardTool {
   }
 
   setCursor(): void {
-    this.board.pointer.setCursor('comment');
+    this.board.pointer.setCursor("comment");
   }
 
   leftButtonDown(): boolean {
@@ -29,13 +29,16 @@ export class AddComment extends BoardTool {
   leftButtonUp(): boolean {
     this.isDown = false;
     this.board.selection.removeAll();
-    this.comment = this.board.add(new Comment(this.board.pointer.point));
+    this.comment = this.board.add(
+      this.board,
+      new Comment(this.board.pointer.point)
+    );
     this.board.tools.publish();
     return true;
   }
 
   keyDown(key: string): boolean {
-    if (key === 'Escape') {
+    if (key === "Escape") {
       this.board.tools.select(true);
       return true;
     }

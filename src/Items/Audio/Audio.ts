@@ -88,6 +88,7 @@ export class AudioItem extends Mbr {
 
 	setIsPlaying(isPlaying: boolean) {
 		this.isPlaying = isPlaying;
+		this.shouldRenderOutsideViewRect = isPlaying;
 		this.subject.publish(this);
 	}
 

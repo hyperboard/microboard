@@ -265,4 +265,8 @@ export class Group extends Mbr {
 
 		this.mbr.render(context);
 	}
+
+	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+		return documentFactory.createElement("div");
+	}
 }

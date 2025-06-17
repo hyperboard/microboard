@@ -61,4 +61,12 @@ export class ToolContext implements Tool {
 	}
 
 	render(_context: DrawingContext): void {}
+
+	pointerDown(): boolean {
+		return this.tool.pointerDown();
+	}
+
+	pointerUp(): boolean {
+		return this.tool.pointerUp();
+	}
 }
