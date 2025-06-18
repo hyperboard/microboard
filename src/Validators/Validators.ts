@@ -44,7 +44,7 @@ export function validateItemsMap(parsedObject: any): parsedObject is ItemsMap {
   return true;
 }
 
-const itemValidators: Record<string, (data: any) => boolean> = {
+export const itemValidators: Record<string, (data: any) => boolean> = {
   Sticker: validateStickerData,
   Shape: validateShapeData,
   RichText: validateRichTextData,

@@ -6,6 +6,7 @@ import { CustomTool } from "Tools/CustomTool";
 import { registeredTools } from "Tools/Tools";
 import { BaseItem, BaseItemData } from "Items/BaseItem/BaseItem";
 import { BaseOperation, ItemOperation } from "Events/EventsOperations";
+import { itemValidators } from "Validators";
 
 type RegisterItemArgs = {
   item: any;
@@ -20,7 +21,7 @@ export function registerItem({
 }: RegisterItemArgs): void {
   const { itemType } = defaultData;
   itemFactories[itemType] = createItemFactory(item, defaultData);
-  validators[itemType] = createItemValidator(defaultData);
+  itemValidators[itemType] = createItemValidator(defaultData);
   registeredTools[toolData.name] = toolData.tool;
 
   itemCommandFactories[itemType] = createItemCommandFactory(itemType);
