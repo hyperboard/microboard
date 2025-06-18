@@ -4,6 +4,10 @@ import { BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { MockDocumentFactory } from "./api/MockDocumentFactory";
+import { MockPath2D } from "api/MockPath2D";
+import { cursorsMap } from "Pointer/Pointer";
+import { initI18N } from "api/initI18N";
+import i18n from "i18next";
 
 export interface Connection {
   connectionId: number;
@@ -44,8 +48,6 @@ export interface NotifyFunction {
     loader?: "loader" | "MediaLoader";
   }): string; // Returns notification id
 }
-import { MockPath2D } from "api/MockPath2D";
-import { cursorsMap } from "Pointer/Pointer";
 
 /**
  * Allowed drawing tools.
@@ -172,7 +174,7 @@ export const conf = {
   measureCtx: undefined as unknown as CanvasRenderingContext2D,
 
   // Internationalization
-  i18n: {} as unknown as I18NextInterface,
+  i18n,
 
   openModal: (() => {}) as OpenModalFunction,
   notify: (() => "") as NotifyWrapperFunction,
@@ -512,3 +514,5 @@ export const conf = {
 };
 
 export type Settings = typeof conf;
+
+initI18N();
