@@ -38,6 +38,7 @@ import { Tools } from "Tools";
 import { ItemsMap } from "Validators";
 import { BoardSelection } from "Selection";
 import { v4 as uuidv4 } from "uuid";
+import {BaseItem} from "./Items/BaseItem";
 export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {

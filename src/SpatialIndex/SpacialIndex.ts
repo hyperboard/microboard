@@ -10,6 +10,7 @@ import { Pointer } from 'Pointer';
 import { conf } from 'Settings';
 import { Subject } from 'Subject';
 import { LayeredIndex } from './LayeredIndex';
+import {BaseItem} from "../Items/BaseItem";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -370,7 +371,7 @@ export class Items {
 		return this.index.listFrames();
 	}
 
-	getById(id: string): Item | undefined {
+	getById(id: string): BaseItem | undefined {
 		return this.index.getById(id);
 	}
 

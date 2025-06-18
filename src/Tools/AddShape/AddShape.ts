@@ -6,6 +6,7 @@ import { DEFAULT_SHAPE, ADD_TO_SELECTION } from "Items/Shape/ShapeData";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { conf } from "Settings";
 import { BoardTool } from "Tools/BoardTool";
+import {tempStorage} from "../../SessionStorage";
 
 export class AddShape extends BoardTool {
   line: Line | undefined;

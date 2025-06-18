@@ -98,9 +98,9 @@ export class RichText extends BaseItem {
   rtCounter = 0;
 
   constructor(
-    private board: Board,
+    board: Board,
     public container: Mbr,
-    private id = "",
+    id = "",
     readonly transformation = new Transformation(id, board.events),
     linkTo?: LinkTo,
     public placeholderText = i18n?.t("board.textPlaceholder"),

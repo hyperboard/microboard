@@ -12,7 +12,7 @@ import { Shape, ShapeData } from "./Shape";
 import { Sticker } from "./Sticker";
 import { StickerData } from "./Sticker/StickerOperation";
 import { VideoItem, VideoItemData } from "./Video";
-import { SerializedItemData } from "Items/BaseItem/BaseItem";
+import {BaseItem, SerializedItemData} from "Items/BaseItem/BaseItem";
 
 export type Item =
   | RichText
@@ -28,7 +28,7 @@ export type Item =
   | AINode
   | VideoItem
   | AudioItem
-  | Comment;
+  | BaseItem;
 
 export type ItemType = Item["itemType"];
 export type ItemData =
