@@ -71,7 +71,6 @@ export class Star extends BaseItem {
 			this.updateMbr();
 			this.subject.publish(this);
 		});
-		board.add(new Star(board, ""))
 
 		this.updateMbr();
 	}
