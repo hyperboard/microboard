@@ -18,6 +18,7 @@ import {
 } from "./quickAddHelpers";
 import { BoardSelection } from "Selection";
 import { SessionStorage } from "SessionStorage";
+import styles from "./QuickAddButtons.module.css";
 
 export interface QuickAddButtons {
   clear: () => void;
