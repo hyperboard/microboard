@@ -1,4 +1,4 @@
-import { Connection } from 'App/Connection';
+import { Connection } from 'Settings';
 import { Board } from 'Board';
 import { Subject } from 'Subject';
 import { Command, createCommand } from './Command';

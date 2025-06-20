@@ -96,25 +96,6 @@ export type SocketMsg =
 	| AiChatMsg
 	| BoardAccessDeniedMsg;
 
-export interface Connection {
-	connectionId: number;
-	getCurrentUser: () => string;
-	connect(): Promise<void>;
-	subscribe(board: Board): void;
-	unsubscribe(board: Board): void;
-
-	publishPresenceEvent(boardId: string, event: PresenceEventType): void;
-	publishAuth(): Promise<void>;
-	publishLogout(): void;
-
-	onMessage?: (msg: SocketMsg) => void;
-	onAccessDenied: (boardId: string, forceUpdate?: boolean) => void;
-	notifyAboutLostConnection: () => void;
-	dismissNotificationAboutLostConnection: () => void;
-	resetConnection: () => void;
-	send: (msg: SocketMsg) => void;
-}
-
 type Subscription = {
 	board: Board;
 	publish: (message: EventsMsg) => void;
