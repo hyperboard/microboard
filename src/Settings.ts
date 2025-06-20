@@ -8,6 +8,7 @@ import { MockPath2D } from "api/MockPath2D";
 import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
+import { BorderStyle } from "Items";
 
 export interface Connection {
   connectionId: number;
@@ -336,7 +337,7 @@ export const conf = {
   HIGHLIGHTER_MAX_STROKE_WIDTH: 24,
   ERASER_STROKE_WIDTH: 12,
   PEN_RENDER_POINTER_CIRCLE: true,
-  PEN_STROKE_STYLE: "solid",
+  PEN_STROKE_STYLE: "solid" as BorderStyle,
   PEN_POINTER_CIRCLE_COLOR: "rgb(227, 228, 230)",
   PEN_SETTINGS_KEY: "drawingSettings",
   HIGHLIGHTER_SETTINGS_KEY: "highlighterSettings",
