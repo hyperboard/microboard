@@ -43,7 +43,7 @@ export function getPlaceholderImage(
 
   const context = new DrawingContext(board.camera, placeholderContext);
 
-  const placeholder = new Placeholder();
+  const placeholder = new Placeholder(board);
 
   if (imageDimension) {
     placeholderCanvas.width = imageDimension.width;
