@@ -397,6 +397,7 @@ export class Board {
         .getLinkedConnectorsById(item.getId())
         .map((connector) => connector.getId());
     }
+    // todo remove
     const shouldClearStorageUsage =
       item.itemType === "Image" ||
       (item.itemType === "Video" && item.getIsStorageUrl()) ||

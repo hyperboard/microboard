@@ -1,7 +1,7 @@
-import { BoardSubscriptionCompletedMsg } from 'App/Connection';
 import { Board } from 'Board';
 import { BoardEventPack, SyncBoardEvent, SyncEvent } from '../Events';
 import { conf } from 'Settings';
+import { BoardSubscriptionCompletedMsg } from './boardMessageInterface';
 
 export function handleBoardSubscriptionCompletedMsg(
 	msg: BoardSubscriptionCompletedMsg,

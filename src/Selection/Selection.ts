@@ -1413,6 +1413,7 @@ export class BoardSelection {
     // 	}
     // });
 
+    // todo remove
     deleteMedia(this.getMediaStorageIds(), this.board.getBoardId());
 
     this.emit({

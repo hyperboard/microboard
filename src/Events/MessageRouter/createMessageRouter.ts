@@ -1,5 +1,5 @@
-import { EventsMsg } from "App/Connection";
 import { Board } from "Board";
+import { EventsMsg } from "./boardMessageInterface";
 
 type MessageHandler<T extends EventsMsg = EventsMsg> = (
 	message: T,

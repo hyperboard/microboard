@@ -1,4 +1,3 @@
-import { Command } from "Plugin";
 import { BoardEvent } from "../Events";
 import { mergeOperations } from "../Merge";
 import { mergeRecords } from "../mergeRecords";
@@ -6,6 +5,7 @@ import { SyncLog, SyncLogSubject, createSyncLog } from "../SyncLog";
 import { transformEvents } from "../transformEvents";
 import { HistoryRecord } from "./EventsLog";
 import { Operation } from "../EventsOperations";
+import { Command } from "../Command";
 
 export type FilterPredicate = (
   value: HistoryRecord,

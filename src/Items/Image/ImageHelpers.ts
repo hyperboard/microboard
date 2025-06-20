@@ -162,6 +162,7 @@ export const validateMediaFile = (file: File, account: Account): boolean => {
 	return true;
 };
 
+// todo remove
 export const deleteMedia = async (mediaIds: string[], boardId: string): Promise<void> => {
 	fetch(`${window?.location.origin}/api/v1/media/usage/${boardId}`, {
 		method: 'POST',

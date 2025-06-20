@@ -10,6 +10,7 @@ import { NestingHighlighter } from 'Tools/NestingHighlighter';
 import AlignmentHelper from 'Tools/RelativeAlignment';
 import { RELATIVE_ALIGNMENT_COLOR } from 'Tools/RelativeAlignment/RelativeAlignment';
 import { Tool } from 'Tools/Tool';
+import { isSafari } from 'isSafari';
 
 export class Select extends Tool {
 	line: null | Line = null;

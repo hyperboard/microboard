@@ -1,4 +1,4 @@
-import { HistoryRecord } from "./EventsLog";
+import type { HistoryRecord } from "./Log";
 import { mergeOperations } from "./Merge";
 
 export function mergeRecords(records: HistoryRecord[]): HistoryRecord[] {
