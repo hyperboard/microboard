@@ -23,4 +23,4 @@ export * from "./itemFactories";
 export * from "./parserHTML";
 export * from "./sha256";
 export * from "./lib";
-export { initI18N } from "api/initI18NBrowser";
+export { initI18N } from "api/initI18N";
