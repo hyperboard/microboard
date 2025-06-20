@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 
 // List of external dependencies
-const externals = ["canvas", "jsdom"];
+const externals = ["canvas", "jsdom", "slate", "slate-react"];
 const externalArgs = externals.map((ext) => `--external ${ext}`).join(" ");
 
 // Build commands
