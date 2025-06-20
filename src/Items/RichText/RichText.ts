@@ -48,7 +48,6 @@ import { getSelectedBlockNode } from "./editorHelpers/common/getSelectedBlockNod
 import { getSelectionStyles } from "./editorHelpers/common/getSelectionStyles";
 import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
-import { BaseItem } from "Items/BaseItem/BaseItem";
 
 let isEditInProcessValue = false;
 
@@ -66,7 +65,7 @@ let counter = 0;
  * A geometric item to render a rich text on a DrawingContext.
  *
  */
-export class RichText extends BaseItem {
+export class RichText extends Mbr implements Geometry {
   readonly itemType = "RichText";
   parent = "Board";
   readonly subject = new Subject<RichText>();
@@ -96,9 +95,9 @@ export class RichText extends BaseItem {
   rtCounter = 0;
 
   constructor(
-    board: Board,
+    private board: Board,
     public container: Mbr,
-    id = "",
+    private id = "",
     readonly transformation = new Transformation(id, board.events),
     linkTo?: LinkTo,
     public placeholderText = conf.i18n?.t("board.textPlaceholder"),
@@ -107,7 +106,7 @@ export class RichText extends BaseItem {
     public insideOf?: ItemType,
     private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES
   ) {
-    super(board, id);
+    super();
     counter = counter + 1;
     this.rtCounter = counter;
 
