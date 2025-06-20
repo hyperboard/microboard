@@ -6,7 +6,19 @@
 import { Path2DFactory } from './Path2DFactory';
 
 export class NodePath2D extends Path2DFactory {
-	nativePath = {};
+	nativePath = {
+		addPath: () => {},
+		arc: () => {},
+		arcTo: () => {},
+		bezierCurveTo: () => {},
+		closePath: () => {},
+		ellipse: () => {},
+		lineTo: () => {},
+		moveTo: () => {},
+		quadraticCurveTo: () => {},
+		rect: () => {},
+		roundRect: () => {},
+	};
 
 	constructor(d?: string) {
 		super();
