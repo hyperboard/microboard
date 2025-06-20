@@ -41,8 +41,8 @@ export class BaseItem extends Mbr implements Geometry {
 				this[key] = value;
 			});
 		}
-		this.linkTo = new LinkTo(this.id, this.board.events);
-		this.transformation = new Transformation(this.id, this.board.events);
+		this.linkTo = new LinkTo(this.id, board.events);
+		this.transformation = new Transformation(this.id, board.events);
 	}
 
 	getId(): string {

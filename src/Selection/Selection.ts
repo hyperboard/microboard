@@ -555,7 +555,7 @@ export class BoardSelection {
     }
 
     const textItem = item.getRichText()?.getTextString();
-    const copyText = i18n.t("frame.copy");
+    const copyText = conf.i18n.t("frame.copy");
     const isCopyTextExist = textItem?.includes(copyText);
     const isChangeCopiedFrameText =
       item.itemType === "Frame" &&
@@ -566,11 +566,11 @@ export class BoardSelection {
     if (isChangeCopiedFrameText) {
       const copiedFrameText =
         copyText + (textItem || serializedData.text?.placeholderText);
-      item.text.editor.clearText();
-      item.text.editor.addText(copiedFrameText);
-      serializedData.text = item.text.serialize();
-      item.text.editor.clearText();
-      item.text.editor.addText(textItem || "");
+      item.getRichText()?.editor.clearText();
+      item.getRichText()?.editor.addText(copiedFrameText);
+      serializedData.text = item.getRichText()?.serialize();
+      item.getRichText()?.editor.clearText();
+      item.getRichText()?.editor.addText(textItem || "");
     }
     copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
   }
