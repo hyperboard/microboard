@@ -1,6 +1,8 @@
 import { isMacos } from "isMacos";
 import { SelectionContext } from "Selection";
 import type { Hotkey, HotkeyCb, HotkeyConfig, HotkeyName } from "./types";
+import { conf } from "Settings";
+import hotkeys from "./hotkeys.json"
 
 type HotkeyStatus =
   | "triggered"
@@ -14,7 +16,6 @@ export function logHotkey(
   status: HotkeyStatus,
   context: SelectionContext
 ): void {
-  // @ts-expect-error import.meta object didn't exists in common-js modules
   if (!conf.LOG_HOTKEYS) {
     return;
   }
