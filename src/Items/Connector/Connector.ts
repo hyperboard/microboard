@@ -30,7 +30,6 @@ import { DocumentFactory } from 'api/DocumentFactory';
 import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
 import {BaseItem} from "../BaseItem";
-const { i18n } = conf;
 
 export const ConnectorLineStyles = ['straight', 'curved', 'orthogonal'] as const;
 
@@ -100,7 +99,7 @@ export class Connector extends BaseItem {
 			this.id,
 			new Transformation(),
 			this.linkTo,
-			i18n.t('connector.textPlaceholder', {
+			conf.i18n.t('connector.textPlaceholder', {
 				ns: 'default',
 			}),
 			true,

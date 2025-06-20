@@ -6,7 +6,7 @@ import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { MockDocumentFactory } from "./api/MockDocumentFactory";
 import { MockPath2D } from "api/MockPath2D";
 import { cursorsMap } from "Pointer/Pointer";
-import { initI18N } from "api/initI18N";
+import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
 
 export interface Connection {
@@ -515,4 +515,4 @@ export const conf = {
 
 export type Settings = typeof conf;
 
-initI18N();
+initDefaultI18N();

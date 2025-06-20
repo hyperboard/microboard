@@ -156,53 +156,23 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 			if (!item || item.itemType !== 'AINode') {
 				return;
 			}
-			item.text.editor.markdownProcessor.processMarkdown(chunk.content || '');
+			item.getRichText()?.editor.markdownProcessor.processMarkdown(chunk.content || '');
 			break;
 		case 'done':
 			if (!item || item.itemType !== 'AINode') {
 				board.aiGeneratingOnItem = undefined;
 				return;
 			}
-			item.getRichText().editor.markdownProcessor.processMarkdown('StopProcessingMarkdown');
+			item.getRichText()?.editor.markdownProcessor.processMarkdown('StopProcessingMarkdown');
 			break;
 		case 'end':
 			if (!item || item.itemType !== 'AINode') {
 				board.aiGeneratingOnItem = undefined;
 				return;
 			}
-			item.getRichText().editor.markdownProcessor.processMarkdown('StopProcessingMarkdown');
+			item.getRichText()?.editor.markdownProcessor.processMarkdown('StopProcessingMarkdown');
 			break;
 		case 'error':
-			board.camera.unsubscribeFromItem();
-			if (board.aiGeneratingOnItem) {
-				const item = board.items.getById(board.aiGeneratingOnItem);
-				if (item) {
-					board.selection.removeAll();
-					board.selection.add(item);
-					if (item.itemType === 'AINode') {
-						item.getRichText().editor.markdownProcessor.setStopProcessingMarkDownCb(
-							null
-						);
-						if (chunk.isExternalApiError) {
-							const editor = item.getRichText().editor;
-							editor.clearText();
-							editor.insertCopiedText(conf.i18n.t('AIInput.nodeErrorText'));
-						}
-					}
-					board.camera.zoomToFit(item.getMbr(), 20);
-				}
-			}
-			console.log('Error AI generate', chunk.error);
-			if (!chunk.isExternalApiError) {
-				conf.notify({
-					header: conf.i18n.t('AIInput.textGenerationError.header'),
-					body: conf.i18n.t('AIInput.textGenerationError.body'),
-					variant: 'error',
-					duration: 4000,
-				});
-			}
-			board.aiGeneratingOnItem = undefined;
-			break;
 		default:
 			board.camera.unsubscribeFromItem();
 			if (!chunk.isExternalApiError) {
@@ -213,25 +183,26 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 					duration: 4000,
 				});
 			}
-			if (board.aiGeneratingOnItem) {
-				const item = board.items.getById(board.aiGeneratingOnItem);
-				if (item) {
-					board.selection.removeAll();
-					board.selection.add(item);
-					if (item.itemType === 'AINode') {
-						item.getRichText().editor.markdownProcessor.setStopProcessingMarkDownCb(
-							null
-						);
-						if (chunk.isExternalApiError) {
-							const editor = item.getRichText().editor;
-							editor.clearText();
-							editor.insertCopiedText(conf.i18n.t('AIInput.nodeErrorText'));
-						}
+			const item = board.items.getById(board.aiGeneratingOnItem || "");
+			if (board.aiGeneratingOnItem && item) {
+				board.selection.removeAll();
+				board.selection.add(item);
+
+				const rt = item?.getRichText();
+				if (item.itemType === 'AINode' && rt) {
+					const editor = rt.editor;
+					editor.markdownProcessor.setStopProcessingMarkDownCb(
+						null
+					);
+					if (chunk.isExternalApiError) {
+						editor.clearText();
+						editor.insertCopiedText(conf.i18n.t('AIInput.nodeErrorText'));
 					}
-					board.camera.zoomToFit(item.getMbr(), 20);
 				}
+				board.camera.zoomToFit(item.getMbr(), 20);
 			}
 			board.aiGeneratingOnItem = undefined;
+			break;
 	}
 }
 

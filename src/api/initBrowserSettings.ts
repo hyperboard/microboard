@@ -5,7 +5,6 @@ import { getMeasureCtx } from './getMeasureCtx';
 import { getBrowserDOMParser } from './BrowserDOMParser';
 import { initPaths } from './initPaths';
 import { ReactEditor } from 'slate-react';
-import { initI18NReact } from './initI18NBrowser';
 
 export function initBrowserSettings(): Settings {
 	conf.documentFactory = new BrowserDocumentFactory();
@@ -15,7 +14,6 @@ export function initBrowserSettings(): Settings {
 	conf.getDocumentHeight = () => document.documentElement.clientHeight;
 	conf.getDPI = () => window.devicePixelRatio;
 	conf.getDOMParser = getBrowserDOMParser;
-	initI18NReact();
 	initPaths(BrowserPath2D);
 	conf.reactEditorFocus = editor => {
 		try {

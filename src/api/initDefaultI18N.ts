@@ -1,14 +1,18 @@
-import i18n, { createInstance } from "i18next";
+import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import { initReactI18next } from "react-i18next";
 import { conf } from "Settings";
-import { defaultNS, resources } from "./initI18N";
 
-export function initI18NReact(isNode = false): typeof i18n {
-  const i18nBrowser = createInstance();
-
-  i18nBrowser
-    .use(initReactI18next)
+export const defaultNS = "default";
+export const resources = {
+  en: {
+    default: {},
+  },
+  ru: {
+    default: {},
+  },
+};
+export function initDefaultI18N(): typeof i18n {
+  i18n
     .use(LanguageDetector)
     .init({
       debug: conf.debug,
@@ -24,7 +28,11 @@ export function initI18NReact(isNode = false): typeof i18n {
       },
     });
 
-  conf.i18n = i18nBrowser;
+  conf.i18n = i18n;
+  conf.planNames = {
+    basic: i18n.t("userPlan.plans.basic.name"),
+    plus: i18n.t("userPlan.plans.plus.name"),
+  };
 
-  return i18nBrowser;
+  return i18n;
 }

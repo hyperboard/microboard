@@ -43,8 +43,6 @@ import { setSelectionFontSize } from "Items/RichText/editorHelpers/selectionOps/
 import { setSelectionFontStyle } from "Items/RichText/editorHelpers/selectionOps/setSelectionFontStyle";
 import { setSelectionFontColor } from "Items/RichText/editorHelpers/selectionOps/setSelectionFontColor";
 
-const { i18n } = conf;
-
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
 export class EditorContainer {

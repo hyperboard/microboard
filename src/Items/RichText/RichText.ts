@@ -50,8 +50,6 @@ import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 
-const { i18n } = conf;
-
 let isEditInProcessValue = false;
 
 export function isEditInProcess(): boolean {
@@ -103,7 +101,7 @@ export class RichText extends BaseItem {
     id = "",
     readonly transformation = new Transformation(id, board.events),
     linkTo?: LinkTo,
-    public placeholderText = i18n?.t("board.textPlaceholder"),
+    public placeholderText = conf.i18n?.t("board.textPlaceholder"),
     public isInShape = false,
     private autoSize = false,
     public insideOf?: ItemType,

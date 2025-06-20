@@ -10,7 +10,6 @@ import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createP
 import { clearText } from 'Items/RichText/editorHelpers/common/clearText';
 import { isTextEmpty } from 'Items/RichText/editorHelpers/common/isTextEmpty';
 import { Subject } from 'Subject';
-const { i18n } = conf;
 
 export class MarkdownProcessor {
 	private chunksQueue: string[] = [];
@@ -49,7 +48,7 @@ export class MarkdownProcessor {
 			return true;
 		}
 
-		if (i18n.t && text.startsWith(i18n.t('AIInput.generatingResponse'))) {
+		if (text.startsWith(conf.i18n.t('AIInput.generatingResponse'))) {
 			return true;
 		}
 
@@ -123,7 +122,7 @@ export class MarkdownProcessor {
 		}
 
 		const prevText = this.getText()?.[this.getText().length - 1]?.children[0]?.text;
-		if (i18n.t && prevText?.startsWith(i18n.t('AIInput.generatingResponse'))) {
+		if (prevText?.startsWith(conf.i18n.t('AIInput.generatingResponse'))) {
 			clearText(this.editor);
 		}
 
