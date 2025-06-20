@@ -17,6 +17,7 @@ import { ToolContext } from "./ToolContext";
 import { Subject } from "Subject";
 import { CustomTool } from "Tools/CustomTool";
 import { Tool } from "./Tool";
+import { isIframe } from "api/isIfarme";
 
 export const registeredTools: Record<string, typeof CustomTool> = {};
 

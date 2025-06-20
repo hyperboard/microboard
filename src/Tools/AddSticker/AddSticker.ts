@@ -3,6 +3,7 @@ import { Line, Mbr } from 'Items';
 import { DrawingContext } from 'Items/DrawingContext';
 import { Sticker } from 'Items/Sticker';
 import { CursorName } from 'Pointer/Cursor';
+import { tempStorage } from 'SessionStorage';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
 

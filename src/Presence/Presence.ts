@@ -23,6 +23,7 @@ import {
 } from './Events';
 import { catmullRomInterpolate, rgbToRgba } from './helpers';
 import { throttleWithDebounce } from './throttle';
+import { conf } from 'Settings';
 
 // move to SETTINGS
 const SECOND = 1000;
@@ -888,7 +889,7 @@ export class Presence {
 			return;
 		}
 
-		const anonTranslate = i18n.t('presence.anonymous');
+		const anonTranslate = conf.i18n.t('presence.anonymous');
 		const label = cursor.nickname === 'Anonymous' ? anonTranslate : cursor.nickname;
 		const textWidth = ctx.measureText(label).width;
 		const labelHeight = 20 * scale;

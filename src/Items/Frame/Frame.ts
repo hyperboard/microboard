@@ -67,8 +67,8 @@ export class Frame extends BaseItem {
     super(board, id);
     this.textContainer = Frames[this.shapeType].textBounds.copy();
     this.path = Frames[this.shapeType].path.copy();
-    this.transformation = new Transformation(this.id, this.board.events);
-    this.linkTo = new LinkTo(this.id, this.board.events);
+    this.transformation = new Transformation(this.id, board.events);
+    this.linkTo = new LinkTo(this.id, board.events);
 
     this.text = new RichText(
       board,

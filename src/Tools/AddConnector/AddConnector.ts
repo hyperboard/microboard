@@ -6,6 +6,7 @@ import { ConnectorSnap } from 'Items/Connector/ConnectorSnap';
 import { ConnectorPointerStyle } from 'Items/Connector/Pointers/Pointers';
 import { DrawingContext } from 'Items/DrawingContext';
 import { BorderStyle } from 'Items/Path';
+import { SessionStorage } from 'SessionStorage';
 import { BoardTool } from 'Tools/BoardTool';
 
 export class AddConnector extends BoardTool {
