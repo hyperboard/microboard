@@ -19,7 +19,7 @@ import {
   FrameData,
   Connector,
   Matrix,
-  Mbr,
+  Mbr, Comment,
 } from "Items";
 import { AINode } from "Items/AINode";
 import { ControlPointData } from "Items/Connector/ControlPoint";
@@ -1039,7 +1039,9 @@ export class Board {
   removeVoidComments() {
     const voidComments = this.items
       .listAll()
-      .filter((item) => item instanceof Comment && !item.getThread().length);
+      .filter((item) => {
+        return item instanceof Comment && !item.getThread().length
+      });
     if (voidComments) {
       for (const comment of voidComments) {
         this.remove(comment);
@@ -1053,7 +1055,7 @@ export class Board {
       return [];
     }
     const parentItem = this.items.findById(parentId);
-    if (!parentItem || parentItem.itemType !== "AINode") {
+    if (!parentItem || !(parentItem instanceof AINode)) {
       return [];
     }
     return [parentItem, ...this.getParentAINodes(parentItem)];
@@ -1304,17 +1306,20 @@ export class Board {
 
     const sortedItemsMap = Object.entries(itemsMap).sort(
       ([, dataA], [, dataB]) => {
-        return dataA.zIndex - dataB.zIndex;
+        if ("zIndex" in dataA && "zIndex" in dataB) {
+          return dataA.zIndex - dataB.zIndex;
+        }
+        return 0;
       }
     );
 
-    const pasteItem = (itemId: string, data: unknown): void => {
+    const pasteItem = (itemId: string, data: ItemData): void => {
       if (!data) {
         throw new Error("Pasting itemId doesn't exist in itemsMap");
       }
-      // @ts-expect-error data unknown
+
       if (data.itemType === "Frame") {
-        // @ts-expect-error data unknown
+
         data.text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
       }
 
