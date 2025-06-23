@@ -11,6 +11,7 @@ import { conf } from 'Settings';
 import { Subject } from 'Subject';
 import { LayeredIndex } from './LayeredIndex';
 import {BaseItem} from "../Items/BaseItem";
+import {ItemDataWithId} from "../Items/Item";
 
 export type ItemWoFrames = Exclude<Item, Frame>;
 
@@ -107,7 +108,7 @@ export class SpatialIndex {
 		this.subject.publish(this.items);
 	}
 
-	copy(): (ItemData & { id: string })[] {
+	copy(): ItemDataWithId[] {
 		const itemsData = this.itemsArray.map(item => ({
 			...item.serialize(true),
 			id: item.getId(),

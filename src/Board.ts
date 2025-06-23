@@ -499,11 +499,11 @@ export class Board {
     });
   }
 
-  copy(): ItemData[] {
+  copy(): ItemDataWithId[] {
     return this.items.index.copy();
   }
 
-  serialize(): ItemData[] {
+  serialize(): ItemDataWithId[] {
     return this.copy();
   }
 
