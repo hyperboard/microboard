@@ -46,3 +46,5 @@ export type ItemData =
   | VideoItemData
   | AudioItemData
   | SerializedItemData;
+
+export type ItemDataWithId = ItemData  & { id: string }

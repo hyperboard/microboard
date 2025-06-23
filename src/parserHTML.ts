@@ -28,6 +28,7 @@ import { TransformationData } from "Items/Transformation";
 import { VideoItemData } from "Items/Video";
 import { conf } from "Settings";
 import { Descendant } from "slate";
+import {ItemDataWithId} from "./Items/Item";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -47,7 +48,7 @@ export const tagByType: MapTagByType = {
 };
 
 type TagFactories = {
-  [K in keyof MapTagByType as MapTagByType[K]]: (el: HTMLElement) => ItemData;
+  [K in keyof MapTagByType as MapTagByType[K]]: (el: HTMLElement) => ItemDataWithId;
 };
 export const parsersHTML: TagFactories = {
   "sticker-item": parseHTMLSticker,
@@ -250,7 +251,7 @@ function parseHTMLRichText(
 
 function parseHTMLFrame(el: HTMLElement): {
   data: FrameData & { id: string };
-  childrenMap: { [id: string]: ItemData & { id: string } };
+  childrenMap: { [id: string]: ItemDataWithId };
 } {
   const data: FrameData & { id: string } = {
     id: el.id,
@@ -290,7 +291,7 @@ function parseHTMLFrame(el: HTMLElement): {
         child.id !== `${el.id}_text` && !child.classList.contains("link-object")
     )
     .map((child) => positionAbsolutely(child as HTMLElement, el))
-    .reduce((acc: { [id: string]: ItemData }, child) => {
+    .reduce((acc: { [id: string]: ItemDataWithId }, child) => {
       acc[child.id] = parsersHTML[child.tagName.toLowerCase()](
         child as HTMLElement
       );

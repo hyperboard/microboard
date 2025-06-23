@@ -39,6 +39,7 @@ import { ItemsMap } from "Validators";
 import { BoardSelection } from "Selection";
 import { v4 as uuidv4 } from "uuid";
 import {BaseItem} from "./Items/BaseItem";
+import {ItemDataWithId} from "./Items/Item";
 export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {
@@ -351,7 +352,7 @@ export class Board {
 
   parseHTML(
     el: HTMLElement
-  ): ItemData | { data: FrameData; childrenMap: { [id: string]: ItemData } } {
+  ): ItemDataWithId | { data: FrameData; childrenMap: { [id: string]: ItemDataWithId } } {
     const parser = parsersHTML[el.tagName.toLowerCase()];
     if (!parser) {
       throw new Error(`Unknown element tag: ${el.tagName.toLowerCase()}`);
@@ -567,15 +568,15 @@ export class Board {
       for (const parsedData of data) {
         if ("childrenMap" in parsedData) {
           // Frame
-          const addedChildren = Object.values(parsedData.childrenMap).map(
-            (childData: ItemData & { id: string }) => {
+          const addedChildren = (Object.values(parsedData.childrenMap) as ItemDataWithId[]).map(
+            (childData) => {
               const created = this.createItem(this.getNewItemId(), childData);
               const added = this.add(created);
               idsMap[childData.id] = added.getId();
-              if (added.itemType === "Connector") {
+              if (added instanceof Connector) {
                 addedConnectors.push({
                   item: added,
-                  data: childData,
+                  data: childData as ConnectorData,
                 });
               }
               return added;
@@ -590,10 +591,10 @@ export class Board {
           const added = this.add(
             this.createItem(this.getNewItemId(), parsedData)
           );
-          if (added.itemType === "Connector") {
+          if (added instanceof Connector) {
             addedConnectors.push({
               item: added,
-              data: parsedData,
+              data: parsedData as ConnectorData,
             });
           }
           idsMap[parsedData.id] = added.getId();
@@ -643,11 +644,11 @@ export class Board {
 
     const addItem = (itemData: ItemData & { id: string }): Item => {
       const item = this.createItem(itemData.id, itemData);
-      if (item.itemType === "Connector") {
-        createdConnectors[itemData.id] = { item, itemData };
+      if (item instanceof Connector) {
+        createdConnectors[itemData.id] = { item, itemData: itemData as ConnectorData & { id: string } };
       }
-      if (item.itemType === "Frame") {
-        createdFrames[item.getId()] = { item, itemData };
+      if (item instanceof Frame) {
+        createdFrames[item.getId()] = { item, itemData: itemData as FrameData };
       }
       this.index.insert(item);
       return item;
@@ -656,8 +657,8 @@ export class Board {
     for (const itemData of items) {
       if ("childrenMap" in itemData) {
         // Frame
-        Object.values(itemData.childrenMap).map(
-          (childData: ItemData & { id: string }) => addItem(childData)
+        (Object.values(itemData.childrenMap) as ItemDataWithId[]).map(
+          (childData) => addItem(childData)
         );
         addItem(itemData.data);
       } else {
@@ -689,11 +690,11 @@ export class Board {
     if (Array.isArray(items)) {
       for (const itemData of items) {
         const item = this.createItem(itemData.id, itemData);
-        if (item.itemType === "Connector") {
-          createdConnectors[itemData.id] = { item, itemData };
+        if (item instanceof Connector) {
+          createdConnectors[itemData.id] = { item, itemData: itemData as ConnectorData & { id: string } };
         }
-        if (item.itemType === "Frame") {
-          createdFrames[item.getId()] = { item, itemData };
+        if (item instanceof Frame) {
+          createdFrames[item.getId()] = { item, itemData: itemData as FrameData };
         }
         this.index.insert(item);
       }
@@ -703,7 +704,7 @@ export class Board {
       for (const key in items) {
         const itemData = items[key];
         const item = this.createItem(key, itemData);
-        if (item.itemType === "Connector") {
+        if (item instanceof Connector) {
           createdConnectors[key] = { item, itemData };
         }
         this.index.insert(item);
