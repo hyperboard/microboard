@@ -2,7 +2,6 @@ import { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line";
-import { Mbr } from "../Mbr";
 import { Path, Paths } from "../Path";
 import { Point } from "../Point";
 import { Transformation } from "../Transformation";
@@ -10,14 +9,12 @@ import { TransformationData } from "../Transformation/TransformationData";
 import { Placeholder } from "../Placeholder";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-// import { storageURL } from "./ImageHelpers";
 import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
 import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
 import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import {deleteMedia} from "./ImageHelpers";
 
 export interface ImageItemData {
   itemType: "Image";
@@ -390,7 +387,7 @@ export class ImageItem extends BaseItem {
   onRemove() {
     const storageId = this.getStorageId();
     if (storageId) {
-      deleteMedia([storageId], this.board.getBoardId());
+      conf.hooks.beforeMediaRemove([storageId], this.board.getBoardId());
     }
     super.onRemove();
   }

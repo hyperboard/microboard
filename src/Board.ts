@@ -26,7 +26,6 @@ import { ControlPointData } from "Items/Connector/ControlPoint";
 import { DrawingContext } from "Items/DrawingContext";
 import { Group } from "Items/Group";
 import { ImageItem } from "Items/Image";
-import { deleteMedia, updateMediaUsage } from "Items/Image/ImageHelpers";
 import { Keyboard } from "Keyboard";
 import { parsersHTML } from "parserHTML";
 import { Pointer } from "Pointer";
@@ -38,7 +37,6 @@ import { Tools } from "Tools";
 import { ItemsMap } from "Validators";
 import { BoardSelection } from "Selection";
 import { v4 as uuidv4 } from "uuid";
-import {BaseItem} from "./Items/BaseItem";
 import {ItemDataWithId} from "./Items/Item";
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -1013,7 +1011,7 @@ export class Board {
 
     if (shouldUpdateMediaUsage) {
       const canDuplicate = mediaStorageIds.length
-        ? await updateMediaUsage(mediaStorageIds, this.getBoardId())
+        ? await conf.hooks.beforeMediaUpload(mediaStorageIds, this.getBoardId())
         : true;
       if (!canDuplicate) {
         return;

@@ -1,8 +1,9 @@
 import { Board } from 'Board';
 import { calculatePosition } from 'Items/Image/calculatePosition';
-import { catchErrorResponse, prepareImage } from 'Items/Image/ImageHelpers';
+import { prepareImage } from 'Items/Image/ImageHelpers';
 import { fileTosha256 } from 'sha256';
 import { VideoConstructorData, VideoItem } from './Video';
+import {conf} from "../../Settings";
 
 // todo remove unnecessary fns
 
@@ -24,7 +25,7 @@ export const uploadVideoToStorage = async (
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response, 'video');
+					return conf.hooks.onUploadMediaError(response, 'video');
 				}
 				return response.json();
 			})

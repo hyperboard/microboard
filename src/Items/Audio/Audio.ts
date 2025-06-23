@@ -1,7 +1,6 @@
 import { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
-import { Mbr } from "../Mbr";
 import { Transformation } from "../Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board";
@@ -13,7 +12,6 @@ import { Line } from "Items/Line/Line";
 import { conf } from "Settings";
 import { AudioCommand } from "Items/Audio/AudioCommand";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import {deleteMedia} from "../Image";
 
 export interface AudioItemData {
   itemType: "Audio";
@@ -359,7 +357,7 @@ export class AudioItem extends BaseItem {
   onRemove() {
     const storageId = this.getStorageId();
     if (storageId) {
-      deleteMedia([storageId], this.board.getBoardId());
+      conf.hooks.beforeMediaRemove([storageId], this.board.getBoardId());
     }
     super.onRemove();
   }

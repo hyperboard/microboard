@@ -2,7 +2,7 @@ import { fileTosha256 } from 'sha256';
 import { Board } from 'Board';
 import { AudioItem } from 'Items/Audio/Audio';
 import { Matrix } from 'Items/Transformation/Matrix';
-import { catchErrorResponse } from 'Items/Image/ImageHelpers';
+import {conf} from "../../Settings";
 
 export const uploadAudioToStorage = async (
 	hash: string,
@@ -22,7 +22,7 @@ export const uploadAudioToStorage = async (
 		})
 			.then(async response => {
 				if (response.status !== 200) {
-					return catchErrorResponse(response, 'audio');
+					return conf.hooks.onUploadMediaError(response, 'audio');
 				}
 				return response.json();
 			})

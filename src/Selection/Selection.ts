@@ -10,7 +10,6 @@ import { CONNECTOR_COLOR } from "Items/Connector/Connector";
 import { ConnectorPointerStyle } from "Items/Connector/Pointers/Pointers";
 import { DrawingContext } from "Items/DrawingContext";
 import { FrameType } from "Items/Frame/Basic";
-import { deleteMedia, updateMediaUsage } from "Items/Image/ImageHelpers";
 import { BorderStyle } from "Items/Path";
 import { TextStyle } from "Items/RichText";
 import { ItemOp } from "Items/RichText/RichTextOperations";
@@ -1413,8 +1412,7 @@ export class BoardSelection {
     // 	}
     // });
 
-    // todo remove
-    deleteMedia(this.getMediaStorageIds(), this.board.getBoardId());
+    conf.hooks.beforeMediaRemove(this.getMediaStorageIds(), this.board.getBoardId());
 
     this.emit({
       class: "Board",
@@ -1462,7 +1460,7 @@ export class BoardSelection {
   async duplicate(): Promise<void> {
     const mediaIds = this.getMediaStorageIds();
     const canDuplicate = mediaIds.length
-      ? await updateMediaUsage(mediaIds, this.board.getBoardId())
+      ? await conf.hooks.beforeMediaUpload(mediaIds, this.board.getBoardId())
       : true;
     if (!canDuplicate) {
       return;

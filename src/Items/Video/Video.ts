@@ -1,7 +1,7 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { Board } from "Board";
 import { Events, Operation } from "Events";
-import {deleteMedia, Point} from "Items";
+import { Point } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { Line } from "Items/Line";
 import { LinkTo } from "Items/LinkTo/LinkTo";
@@ -497,7 +497,7 @@ export class VideoItem extends BaseItem {
   onRemove() {
     const storageId = this.getStorageId();
     if (storageId) {
-      deleteMedia([storageId], this.board.getBoardId());
+      conf.hooks.beforeMediaRemove([storageId], this.board.getBoardId());
     }
     super.onRemove();
   }

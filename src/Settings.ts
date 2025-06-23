@@ -177,6 +177,12 @@ export const conf = {
   // Internationalization
   i18n,
 
+  hooks: {
+    beforeMediaUpload: async (...args: unknown[]) => false,
+    beforeMediaRemove: async (...args: unknown[]) => false,
+    onUploadMediaError: async (...args: unknown[]) => false,
+  },
+
   openModal: (() => {}) as OpenModalFunction,
   notify: (() => "") as NotifyWrapperFunction,
   disMissNotification: (() => {}) as DisMissNotificationFunction,
