@@ -5,7 +5,7 @@ import {
   CreateLockedGroupItem,
   RemoveItem,
   RemoveLockedGroup,
-  ItemsIndexRecord,
+  ItemsIndexRecord, DataMap,
 } from "BoardOperations";
 import { Camera } from "Camera";
 import { Events, Operation, ItemOperation } from "Events";
@@ -204,15 +204,16 @@ export class Board {
 
   private applyAddItems(op: CreateItem): void {
     if (Array.isArray(op.item)) {
+      const data = op.data as DataMap;
       const items = op.item.map((item) => {
-        const created = this.createItem(item, op.data[item]);
+        const created = this.createItem(item, data[item]);
         this.index.insert(created);
         return created;
       });
       // todo think if should be removed
       items.forEach((item) => {
-        if (item.itemType === "Connector" && op.data[item.getId()]) {
-          const connectorData = op.data[item.getId()] as ConnectorData;
+        if (item instanceof Connector && data[item.getId()]) {
+          const connectorData = data[item.getId()] as ConnectorData;
           item.applyStartPoint(connectorData.startPoint);
           item.applyEndPoint(connectorData.endPoint);
         }
@@ -220,7 +221,7 @@ export class Board {
       return;
     }
 
-    const item = this.createItem(op.item, op.data);
+    const item = this.createItem(op.item, op.data as ItemData);
     return this.index.insert(item);
   }
 
@@ -250,7 +251,7 @@ export class Board {
       this.index.remove(item);
       this.selection.remove(item);
 
-      if (item.itemType === "Connector") {
+      if (item instanceof Connector) {
         item.clearObservedItems();
       }
       removedItems.push(item);
@@ -260,7 +261,7 @@ export class Board {
   private applyRemoveLockedGroupOperation(op: RemoveLockedGroup): void {
     const item = this.index.getById(op.item[0]);
 
-    if (!item || item.itemType !== "Group") {
+    if (!item || !(item instanceof Group)) {
       return;
     }
 
@@ -279,9 +280,11 @@ export class Board {
   }
 
   private applyItemOperation(op: ItemOperation): void {
-    this.findItemAndApply(op.item, (item) => {
-      item.apply(op);
-    });
+    if ("item" in op) {
+      this.findItemAndApply(op.item, (item) => {
+        item.apply(op);
+      });
+    }
   }
 
   private findItemAndApply(

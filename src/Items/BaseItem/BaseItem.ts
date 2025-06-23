@@ -20,7 +20,7 @@ export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
 export class BaseItem extends Mbr implements Geometry {
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
-	readonly parent: string = "Board";
+	parent: string = "Board";
 	transformationRenderBlock?: boolean = undefined;
 	board: Board;
 	id: string;

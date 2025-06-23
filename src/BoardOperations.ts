@@ -15,7 +15,7 @@ interface MultiItemBoardOp extends BoardOp {
 	item: string[];
 }
 
-type DataMap = { [key: string]: ItemData };
+export type DataMap = { [key: string]: ItemData };
 interface ItemMapBoardOp extends BoardOp {
 	itemsMap: DataMap;
 }
