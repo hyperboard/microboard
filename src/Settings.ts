@@ -178,9 +178,9 @@ export const conf = {
   i18n,
 
   hooks: {
-    beforeMediaUpload: async (...args: unknown[]) => false,
-    beforeMediaRemove: async (...args: unknown[]) => false,
-    onUploadMediaError: async (...args: unknown[]) => false,
+    beforeMediaUpload: async (...args: any[]) => false,
+    beforeMediaRemove: async (...args: any[]) => false,
+    onUploadMediaError: async (...args: any[]) => false,
   },
 
   openModal: (() => {}) as OpenModalFunction,
