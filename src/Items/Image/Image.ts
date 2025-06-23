@@ -17,6 +17,7 @@ import { ImageCommand } from "./ImageCommand";
 import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import {deleteMedia} from "./ImageHelpers";
 
 export interface ImageItemData {
   itemType: "Image";
@@ -384,5 +385,13 @@ export class ImageItem extends BaseItem {
     linkElem.href = this.storageLink;
     linkElem.setAttribute("download", "");
     linkElem.click();
+  }
+
+  onRemove() {
+    const storageId = this.getStorageId();
+    if (storageId) {
+      deleteMedia([storageId], this.board.getBoardId());
+    }
+    super.onRemove();
   }
 }

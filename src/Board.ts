@@ -400,14 +400,11 @@ export class Board {
         .getLinkedConnectorsById(item.getId())
         .map((connector) => connector.getId());
     }
-    // todo remove
-    const shouldClearStorageUsage =
-      item.itemType === "Image" ||
-      (item.itemType === "Video" && item.getIsStorageUrl()) ||
-      (item.itemType === "Audio" && item.getIsStorageUrl());
-    if (shouldClearStorageUsage) {
-      deleteMedia([item.getStorageId()], this.boardId);
+
+    if ("onRemove" in item) {
+      item.onRemove();
     }
+
     this.emit({
       class: "Board",
       method: "remove",

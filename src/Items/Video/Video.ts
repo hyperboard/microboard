@@ -1,7 +1,7 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { Board } from "Board";
 import { Events, Operation } from "Events";
-import { Point } from "Items";
+import {deleteMedia, Point} from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { Line } from "Items/Line";
 import { LinkTo } from "Items/LinkTo/LinkTo";
@@ -142,6 +142,9 @@ export class VideoItem extends BaseItem {
   };
 
   getStorageId() {
+    if (!this.isStorageUrl) {
+      return;
+    }
     return this.url.split("/").pop();
   }
 
@@ -489,5 +492,13 @@ export class VideoItem extends BaseItem {
       );
       linkElem.click();
     }
+  }
+
+  onRemove() {
+    const storageId = this.getStorageId();
+    if (storageId) {
+      deleteMedia([storageId], this.board.getBoardId());
+    }
+    super.onRemove();
   }
 }

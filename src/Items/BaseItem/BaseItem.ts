@@ -24,6 +24,7 @@ export class BaseItem extends Mbr implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 	board: Board;
 	id: string;
+	onRemoveCallbacks: (() => void)[] = []
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
 	itemType = "";
@@ -115,6 +116,14 @@ export class BaseItem extends Mbr implements Geometry {
 				this.linkTo.apply(op);
 				break;
 		}
+	}
+
+	addOnRemoveCallback(cb: () => void): void {
+		this.onRemoveCallbacks.push(cb);
+	}
+
+	onRemove(): void {
+		this.onRemoveCallbacks.forEach((cb) => cb());
 	}
 
 	render(context: DrawingContext): void {}

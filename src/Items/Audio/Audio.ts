@@ -13,6 +13,7 @@ import { Line } from "Items/Line/Line";
 import { conf } from "Settings";
 import { AudioCommand } from "Items/Audio/AudioCommand";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import {deleteMedia} from "../Image";
 
 export interface AudioItemData {
   itemType: "Audio";
@@ -120,6 +121,9 @@ export class AudioItem extends BaseItem {
   }
 
   getStorageId() {
+    if (!this.isStorageUrl) {
+      return;
+    }
     return this.url.split("/").pop();
   }
 
@@ -350,5 +354,13 @@ export class AudioItem extends BaseItem {
       );
       linkElem.click();
     }
+  }
+
+  onRemove() {
+    const storageId = this.getStorageId();
+    if (storageId) {
+      deleteMedia([storageId], this.board.getBoardId());
+    }
+    super.onRemove();
   }
 }
