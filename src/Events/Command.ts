@@ -256,7 +256,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 							: [operation.item]
 						: "items" in operation
 							? Object.keys(operation.items)
-							: Object.values(operation.itemsOps);
+							: operation.itemsOps.map(itemOp => itemOp.item);
 
 				const items = itemIdList
 					.map(itemId => board.items.findById(itemId) ?? itemId)
@@ -334,7 +334,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 						return itemCommandFactories["Audio"](items, operation);
 					default:
 						const commandFactory =
-							itemCommandFactories[operation.class];
+							itemCommandFactories[(operation as Operation).class];
 						if (!commandFactory) {
 							return new NoOpCommand(`Unsupported command type`);
 						}

@@ -38,7 +38,7 @@ export function handleRemoveSnappedObject(
 	}
 
 	const connectors = board.items.listAll().filter(it => {
-		if (it.itemType !== 'Connector') {
+		if (!(it instanceof Connector)) {
 			return false;
 		}
 		const endPoint = it.getEndPoint();

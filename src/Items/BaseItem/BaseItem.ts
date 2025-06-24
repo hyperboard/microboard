@@ -10,6 +10,7 @@ import { Operation } from "Events";
 import { TransformationData } from "Items/Transformation/TransformationData";
 import { BaseOperation } from "Events/EventsOperations";
 import { BaseCommand } from "Events/Command";
+import {Subject} from "../../Subject";
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
@@ -24,6 +25,7 @@ export class BaseItem extends Mbr implements Geometry {
 	transformationRenderBlock?: boolean = undefined;
 	board: Board;
 	id: string;
+	subject = new Subject<any>
 	onRemoveCallbacks: (() => void)[] = []
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;

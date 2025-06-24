@@ -155,7 +155,10 @@ export class Camera {
 
 		const startTime = performance.now();
 
-		const animate = (currentTime: number): void => {
+		const animate = (currentTime?: number): void => {
+			if (!currentTime) {
+				currentTime = performance.now();
+			}
 			const progress = Math.min((currentTime - startTime) / duration, 1);
 			const easedProgress = this.easeOutQuad(progress);
 
@@ -545,7 +548,7 @@ export class Camera {
 			ArrowUp: [0, conf.NAVIGATION_STEP],
 		};
 
-		const activeArrowKeys: string[] = Array.from(activeKeys)
+		const activeArrowKeys: string[] = Array.from(activeKeys as Set<string>)
 			.filter(key => key in directions)
 			.sort();
 

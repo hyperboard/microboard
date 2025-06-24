@@ -263,6 +263,9 @@ export function createEventsList(
         itemIds: string[]
       ): boolean {
         if (operation.method === "add" && operation.class === "Board") {
+          if (Array.isArray(operation.item)) {
+            return operation.item.some((id) => itemIds.includes(id));
+          }
           return itemIds.includes(operation.item);
         }
 
