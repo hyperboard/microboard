@@ -1,4 +1,4 @@
-import { Line, Mbr } from 'Items';
+import {FixedConnectorPoint, FixedPoint, FloatingPoint, Line, Mbr} from 'Items';
 import { Point } from '../../Point';
 import { ControlPoint } from '../ControlPoint';
 import { ConnectedPointerDirection, getPointerDirection } from '../Pointers';
@@ -210,7 +210,7 @@ function createGrid(
 	let newStart: ControlPoint | undefined;
 	let newEnd: ControlPoint | undefined;
 
-	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): ControlPoint => {
+	const processPoint = (point: FloatingPoint | FixedPoint | FixedConnectorPoint, dir: ConnectedPointerDirection): ControlPoint => {
 		const itemMbr = point.item.getMbr();
 		const mbrFloored = new Mbr(
 			Math.floor(itemMbr.left),

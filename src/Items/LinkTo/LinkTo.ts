@@ -91,7 +91,7 @@ export class LinkTo {
 		div.style.backgroundColor = '#FFFFFF';
 		div.style.borderRadius = '2px';
 		div.style.zIndex = '1';
-		const link = documentFactory.createElement('a');
+		const link = documentFactory.createElement('a') as HTMLAnchorElement;
 		link.style.position = 'absolute';
 		link.style.width = `100%`;
 		link.style.height = `100%`;
@@ -102,7 +102,7 @@ export class LinkTo {
 		link.setAttribute('target', '_blank');
 		if (this.link) {
 			link.href = this.link;
-			const image = documentFactory.createElement('img');
+			const image = documentFactory.createElement('img') as HTMLImageElement;
 			image.id = this.id;
 			image.classList.add('link-image');
 			image.src = `${new URL(this.link).origin}/favicon.ico`;

@@ -29,7 +29,7 @@ const config = {
 export function getCurvedLine(
 	start: ControlPoint,
 	end: ControlPoint,
-	middle: BoardPoint | null,
+	middle: ControlPoint | null,
 ): Path {
 	const segments: Segment[] = [];
 

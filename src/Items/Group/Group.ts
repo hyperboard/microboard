@@ -198,7 +198,6 @@ export class Group extends BaseItem {
 
     if (mbrs.length) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
       mbr.combine(mbrs);
 
       mbr.left = left !== Number.MAX_SAFE_INTEGER ? left : 0;
@@ -221,7 +220,7 @@ export class Group extends BaseItem {
   getChildren(): Item[] {
     return this.children
       .map((itemId) => this.board.items.getById(itemId))
-      .filter((item): item is Item => item !== undefined);
+      .filter((item) => item !== undefined);
   }
 
   updateMbr(): void {

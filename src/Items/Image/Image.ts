@@ -34,7 +34,7 @@ export function getPlaceholderImage(
   board: Board,
   imageDimension?: Dimension
 ): HTMLImageElement {
-  const placeholderCanvas = conf.documentFactory.createElement("canvas");
+  const placeholderCanvas = conf.documentFactory.createElement("canvas") as HTMLCanvasElement;
   const placeholderContext = placeholderCanvas.getContext(
     "2d"
   ) as CanvasRenderingContext2D; // this does not fail

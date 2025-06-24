@@ -45,6 +45,11 @@ import { setSelectionFontColor } from "Items/RichText/editorHelpers/selectionOps
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
+type OperationFontSizeProperties = {
+  fontSize: number | "auto",
+  enableAuto: boolean
+}
+
 export class EditorContainer {
   readonly editor: BaseEditor & ReactEditor & HistoryEditor;
 
@@ -149,16 +154,18 @@ export class EditorContainer {
           "fontSize" in operation.newProperties &&
           "fontSize" in operation.properties;
         if (isSettingNodeFontSize) {
+          const newProperties = operation.newProperties as OperationFontSizeProperties;
+          const properties = operation.properties as OperationFontSizeProperties;
           const isSettingNodeFontSizeToAuto =
-            operation.newProperties.fontSize === "auto";
+            newProperties.fontSize === "auto";
           if (isSettingNodeFontSizeToAuto) {
-            operation.newProperties.fontSize = 14;
-            operation.newProperties.enableAuto = true;
-            operation.properties.enableAuto = false;
+            newProperties.fontSize = 14;
+            newProperties.enableAuto = true;
+            properties.enableAuto = false;
           } else {
-            operation.newProperties.enableAuto = false;
+            newProperties.enableAuto = false;
             if (this.getAutosize()) {
-              operation.properties.enableAuto = true;
+              properties.enableAuto = true;
             }
           }
         }
@@ -229,7 +236,7 @@ export class EditorContainer {
     this.recordedOps = op ? [op] : [];
   }
 
-  getTextFromNode(node: BlockNode): string {
+  getTextFromNode(node: BlockNode | TextNode): string {
     if ("text" in node) {
       return node.text || "";
     }
@@ -244,7 +251,7 @@ export class EditorContainer {
   }
 
   getEndNodePath(
-    node: BlockNode,
+    node: BlockNode | TextNode,
     nodePath: number[]
   ): { path: number[]; offset: number } | null {
     if ("text" in node) {
@@ -252,7 +259,7 @@ export class EditorContainer {
     }
     if ("children" in node && Array.isArray(node.children)) {
       const childIndex = node.children.length - 1;
-      return this.getEndNodePath(node.children[childIndex], [
+      return this.getEndNodePath(node.children[childIndex] as BlockNode | TextNode, [
         ...nodePath,
         childIndex,
       ]);
@@ -264,7 +271,7 @@ export class EditorContainer {
     const op = this.recordedOps;
     this.recordedOps = null;
 
-    const opsArr = (op?.ops ?? op ?? []) as Operation[];
+    const opsArr = (op ? ("ops" in op ? op.ops : op) : []) as Operation[];
 
     return opsArr.filter((op) => op.type !== "set_selection");
   }
@@ -289,7 +296,6 @@ export class EditorContainer {
         case "setSelectionHorizontalAlignment":
           this.applySelectionOp(op);
           break;
-        case "setBlockType":
         case "setFontStyle":
         case "setFontColor":
         case "setFontFamily":
@@ -308,9 +314,13 @@ export class EditorContainer {
         this.id,
         error
       );
+      const operations = [];
+      if ("ops" in op && Array.isArray(op.ops)) {
+        operations.push(...op.ops.map((op) => op.type));
+      }
       console.error(
         "Error applying this type operation: ",
-        op.ops?.map((op) => op.type)
+        operations
       );
     }
   }
@@ -383,7 +393,7 @@ export class EditorContainer {
         this.setSelectionFontColor(op.fontColor);
         break;
       case "setFontFamily":
-        this.setSelectionFontFamily(op.fontFamily);
+        // this.setSelectionFontFamily(op.fontFamily);
         break;
       case "setFontSize":
         this.textScale =

@@ -1,6 +1,6 @@
 import { Path } from "../../Path";
 import { ConnectorLineStyle } from "../Connector";
-import { ControlPoint } from "../ControlPoint";
+import {BoardPoint, ControlPoint} from "../ControlPoint";
 import { getCurvedLine } from "./getCurvedLine";
 import { getOrthogonalLine } from "./getOrthogonalLine";
 import { getStraightLine } from "./getStraightLine";

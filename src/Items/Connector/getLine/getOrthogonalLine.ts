@@ -5,7 +5,7 @@ import { findOrthogonalPath } from './findOrthogonalPath';
 export function getOrthogonalLine(
 	start: ControlPoint,
 	end: ControlPoint,
-	middle: BoardPoint | null,
+	middle: ControlPoint | null,
 	skipObstacles = false
 ): Path {
 	const obstacles: Mbr[] = [];
