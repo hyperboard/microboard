@@ -1,5 +1,6 @@
 import type { HistoryRecord } from "./Log";
 import { mergeOperations } from "./Merge";
+import {Command} from "./Command";
 
 export function mergeRecords(records: HistoryRecord[]): HistoryRecord[] {
 	if (records.length < 2) {
@@ -24,8 +25,8 @@ export function mergeRecords(records: HistoryRecord[]): HistoryRecord[] {
 			mergedRecords.push(previous);
 			previous = record;
 		} else {
-			const mergedCommand = record.command.merge
-				? previous.command.merge(mergedEventOperation)
+			const mergedCommand: Command = record.command.merge
+				? previous.command.merge!(mergedEventOperation)
 				: previous.command;
 
 			previous = {

@@ -112,8 +112,8 @@ export class Connector extends BaseItem {
 						? Number(localStorage.getItem('lastConnectorTextSize'))
 						: conf.DEFAULT_TEXT_STYLES.fontSize,
 				fontColor:
-					typeof window !== 'undefined' && localStorage.getItem('lastConnectorTextColor')
-						? localStorage.getItem('lastConnectorTextColor')
+					typeof window !== 'undefined'
+						? localStorage.getItem('lastConnectorTextColor') || conf.DEFAULT_TEXT_STYLES.fontColor
 						: conf.DEFAULT_TEXT_STYLES.fontColor,
 			}
 		);
@@ -369,8 +369,11 @@ export class Connector extends BaseItem {
 		}
 	}
 
-	applyMiddlePoint(pointData: ControlPointData, updatePath = true): void {
+	applyMiddlePoint(pointData: ControlPointData | null, updatePath = true): void {
 		// console.log("pointData", pointData);
+		if (!pointData) {
+			return;
+		}
 		const optionalFn = this.getOptionalFindFn();
 		this.middlePoint = getControlPoint(
 			pointData,
@@ -503,9 +506,11 @@ export class Connector extends BaseItem {
 		if (this.lineStyle === 'orthogonal') {
 			const segments = this.lines.getSegments();
 			const middle = segments[Math.floor(segments.length / 2)];
+			const start = middle.getStartPoint();
+			const end = "end" in middle ? middle.end : middle.getEndPoint();
 			return {
-				x: (middle.start.x + middle.end.x) / 2,
-				y: (middle.start.y + middle.end.y) / 2,
+				x: (start.x + end.x) / 2,
+				y: (start.y + end.y) / 2,
 			};
 		}
 
@@ -1115,29 +1120,33 @@ export class Connector extends BaseItem {
 	private offsetLines(): void {
 		const segments = this.lines.getSegments();
 		const line = segments[0];
+		const start = line.getStartPoint();
+		const end = "end" in line ? line.end : line.getEndPoint();
 		if (this.lineStyle === 'orthogonal') {
 			if (this.startPoint.pointType !== 'Board') {
 				this.lines = new Path([
-					new Line(this.startPointer.start, line.start),
+					new Line(this.startPointer.start, start),
 					...segments,
 				]).addConnectedItemType(this.itemType);
 			} else {
 				this.lines = new Path([
-					new Line(this.startPointer.start, line.end),
+					new Line(this.startPointer.start, end),
 					...segments.slice(1),
 				]).addConnectedItemType(this.itemType);
 			}
 			const updated = this.lines.getSegments();
 			const lastLine = updated[updated.length - 1];
+			const lastLineStart = lastLine.getStartPoint();
+			const lastLineEnd = "end" in lastLine ? lastLine.end : lastLine.getEndPoint();
 			if (this.endPoint.pointType !== 'Board') {
 				this.lines = new Path([
 					...updated,
-					new Line(lastLine.end, this.endPointer.start),
+					new Line(lastLineEnd, this.endPointer.start),
 				]).addConnectedItemType(this.itemType);
 			} else {
 				this.lines = new Path([
 					...updated.slice(0, updated.length - 1),
-					new Line(lastLine.start, this.endPointer.start),
+					new Line(lastLineStart, this.endPointer.start),
 				]).addConnectedItemType(this.itemType);
 			}
 		} else if (line instanceof Line) {

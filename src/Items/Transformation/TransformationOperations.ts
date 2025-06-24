@@ -50,11 +50,13 @@ interface DeserializeOperation extends TransformationBase {
 interface Locked extends TransformationBase {
 	method: "locked";
 	locked: boolean;
+	timeStamp?: number;
 }
 
 interface Unlocked extends TransformationBase {
 	method: "unlocked";
 	locked: boolean;
+	timeStamp?: number;
 }
 
 export interface TransformManyItems {

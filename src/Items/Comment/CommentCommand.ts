@@ -1,6 +1,6 @@
 import { Command } from "../../Events";
 import { Comment } from "./Comment";
-import { CommentOperation } from "./CommentOperation";
+import {CommentOperation, EditMessage} from "./CommentOperation";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class CommentCommand implements Command {
@@ -30,7 +30,7 @@ export class CommentCommand implements Command {
 		operation: CommentOperation;
 	}[] {
 		const op = this.operation;
-		switch (this.operation.method) {
+		switch (op.method) {
 			case "createMessage":
 				return mapItemsByOperation(this.comment, comment => {
 					return {
@@ -42,11 +42,11 @@ export class CommentCommand implements Command {
 			case "editMessage":
 				return mapItemsByOperation(this.comment, comment => {
 					return {
-						...this.operation,
+						...op,
 						message: comment
 							.getThread()
-							.find(mes => mes.id === op.messageId),
-					};
+							.find(mes => mes.id === op.message.id),
+					} as EditMessage;
 				});
 			case "removeMessage":
 				return mapItemsByOperation(this.comment, comment => {
@@ -59,7 +59,7 @@ export class CommentCommand implements Command {
 				return mapItemsByOperation(this.comment, comment => {
 					return {
 						...this.operation,
-						message: comment.getResolved(),
+						resolved: comment.getResolved(),
 					};
 				});
 			case "markMessagesAsRead":
@@ -68,7 +68,7 @@ export class CommentCommand implements Command {
 						...this.operation,
 						messageIds: comment
 							.getThread()
-							.filter(mes => op.messageIds.includes(mes.id)),
+							.filter(mes => op.messageIds.includes(mes.id)).map(mes => mes.id),
 						userId: op.userId,
 					};
 				});
@@ -78,6 +78,13 @@ export class CommentCommand implements Command {
 					return {
 						...this.operation,
 						userId: op.userId,
+					};
+				});
+			case "setItemToFollow":
+				return mapItemsByOperation(this.comment, comment => {
+					return {
+						...this.operation,
+						itemId: op.itemId,
 					};
 				});
 		}

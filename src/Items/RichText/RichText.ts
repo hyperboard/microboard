@@ -29,7 +29,6 @@ import {
 } from "..";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
-import { Geometry } from "../Geometry";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
@@ -48,6 +47,7 @@ import { getSelectedBlockNode } from "./editorHelpers/common/getSelectedBlockNod
 import { getSelectionStyles } from "./editorHelpers/common/getSelectionStyles";
 import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
+import {BaseItem} from "../BaseItem";
 
 let isEditInProcessValue = false;
 
@@ -65,7 +65,7 @@ let counter = 0;
  * A geometric item to render a rich text on a DrawingContext.
  *
  */
-export class RichText extends Mbr implements Geometry {
+export class RichText extends BaseItem {
   readonly itemType = "RichText";
   parent = "Board";
   readonly subject = new Subject<RichText>();
@@ -95,9 +95,9 @@ export class RichText extends Mbr implements Geometry {
   rtCounter = 0;
 
   constructor(
-    private board: Board,
+    board: Board,
     public container: Mbr,
-    private id = "",
+    id = "",
     readonly transformation = new Transformation(id, board.events),
     linkTo?: LinkTo,
     public placeholderText = conf.i18n?.t("board.textPlaceholder"),
@@ -106,7 +106,7 @@ export class RichText extends Mbr implements Geometry {
     public insideOf?: ItemType,
     private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES
   ) {
-    super();
+    super(board, id);
     counter = counter + 1;
     this.rtCounter = counter;
 

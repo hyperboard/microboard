@@ -139,6 +139,12 @@ export class Arc {
 		return new Point(x, y);
 	}
 
+	getEndPoint(): Point {
+		const x = this.center.x + this.radiusX * Math.cos(this.endAngle);
+		const y = this.center.y + this.radiusY * Math.sin(this.endAngle);
+		return new Point(x, y);
+	}
+
 	getPointByTangent(tangent: number): Point {
 		return this.getPoint(tangent);
 	}
@@ -165,6 +171,10 @@ export class Arc {
 		const nearest = this.getNearestPointOnArc(point);
 		const distance = nearest.getDistance(point);
 		return distance;
+	}
+
+	getParameter(point: Point): number {
+		return this.getTangentByPoint(point);
 	}
 
 	getNearestEdgePointTo(point: Point): Point {

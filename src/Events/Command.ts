@@ -44,6 +44,8 @@ export interface Command {
 	apply(): void;
 
 	revert(): void;
+
+	merge?: (op: any) => Command;
 }
 
 export class BaseCommand {

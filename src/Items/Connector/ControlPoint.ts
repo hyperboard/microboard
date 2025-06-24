@@ -235,7 +235,7 @@ export function getControlPoint(
 
 		switch (data.pointType) {
 			case "FixedConnector":
-				if (item.itemType === "Connector") {
+				if (item instanceof Connector) {
 					return new FixedConnectorPoint(
 						item,
 						data.tangent,

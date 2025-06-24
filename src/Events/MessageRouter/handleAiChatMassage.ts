@@ -139,9 +139,14 @@ export function handleAiChatMassage(message: AiChatMsg, board: Board): void {
 				handleChatChunk(event, board);
 				break;
 			case 'GenerateImage':
-				handleImageGenerate(event, board);
+				if ("imageUrl" in event) {
+					handleImageGenerate(event, board);
+				}
 				break;
 			case 'GenerateAudio':
+				if ("text" in event && "model" in event) {
+					return;
+				}
 				handleAudioGenerate(event, board);
 				break;
 		}
@@ -149,8 +154,7 @@ export function handleAiChatMassage(message: AiChatMsg, board: Board): void {
 }
 
 function handleChatChunk(chunk: ChatChunk, board: Board): void {
-	const itemId = chunk.itemId;
-	const item = board.items.getById(itemId);
+	const item = board.items.getById(chunk.itemId);
 	switch (chunk.type) {
 		case 'chunk':
 			if (!item || item.itemType !== 'AINode') {
@@ -183,13 +187,13 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 					duration: 4000,
 				});
 			}
-			const item = board.items.getById(board.aiGeneratingOnItem || "");
-			if (board.aiGeneratingOnItem && item) {
+			const generatingItem = board.items.getById(board.aiGeneratingOnItem || "");
+			if (board.aiGeneratingOnItem && generatingItem) {
 				board.selection.removeAll();
-				board.selection.add(item);
+				board.selection.add(generatingItem);
 
 				const rt = item?.getRichText();
-				if (item.itemType === 'AINode' && rt) {
+				if (generatingItem.itemType === 'AINode' && rt) {
 					const editor = rt.editor;
 					editor.markdownProcessor.setStopProcessingMarkDownCb(
 						null
@@ -199,7 +203,7 @@ function handleChatChunk(chunk: ChatChunk, board: Board): void {
 						editor.insertCopiedText(conf.i18n.t('AIInput.nodeErrorText'));
 					}
 				}
-				board.camera.zoomToFit(item.getMbr(), 20);
+				board.camera.zoomToFit(generatingItem.getMbr(), 20);
 			}
 			board.aiGeneratingOnItem = undefined;
 			break;
@@ -314,7 +318,7 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 						imageItem.transformation.translateTo(imageCenterX, imageTopY);
 						imageItem.setId(placeholderId);
 						let threadDirection = 3;
-						if (placeholderNode.itemType === 'AINode') {
+						if (placeholderNode instanceof AINode) {
 							threadDirection = placeholderNode.getThreadDirection();
 						}
 						board.remove(placeholderNode, false);

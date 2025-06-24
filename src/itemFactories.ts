@@ -23,6 +23,7 @@ import { Placeholder, PlaceholderData } from "Items/Placeholder";
 import { Sticker } from "Items/Sticker";
 import { StickerData } from "Items/Sticker/StickerOperation";
 import { VideoItem, VideoItemData } from "Items/Video";
+import {CommentData} from "./Items/Comment";
 
 interface ItemFactory {
   (id: string, data: ItemData, board: Board): Item;
@@ -57,9 +58,9 @@ function createComment(id: string, data: ItemData, board: Board): Comment {
   if (!isCommentData(data)) {
     throw new Error("Invalid data for Comment");
   }
-  const comment = new Comment(board, new Point(), board.events)
+  const comment = new Comment(new Point(), board.events)
       .setId(id)
-      .deserialize(data);
+      .deserialize(data as CommentData);
   return comment;
 }
 
@@ -75,7 +76,7 @@ function createAINode(id: string, data: ItemData, board: Board): AINode {
       nodeData.contextItems,
   )
       .setId(id)
-      .deserialize(data);
+      .deserialize(data as Partial<AINodeData>);
   return node;
 }
 

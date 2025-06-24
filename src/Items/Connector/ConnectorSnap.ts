@@ -21,7 +21,7 @@ function getFixedPoint(
 	item: Item,
 	point: Point,
 ): FixedPoint | FixedConnectorPoint {
-	if (item.itemType === "Connector") {
+	if (item instanceof Connector) {
 		// todo look here, segments after deserialize are not the same, index might be undefined
 		const nearestSegmentData = item
 			.getPaths()
@@ -167,7 +167,7 @@ export class ConnectorSnap {
 			}
 			const edgePoint = neighbor.getNearestEdgePointTo(pointer);
 			const distance = pointer.getDistance(edgePoint);
-			const isConnector = neighbor.itemType === "Connector";
+			const isConnector = neighbor instanceof Connector;
 
 			const isFloatingConnector =
 				isConnector &&
@@ -221,7 +221,7 @@ export class ConnectorSnap {
 
 	setSnap(): void {
 		const item = this.snap.item;
-		const path = item?.getPath();
+		const path = item && "getPath" in item ? item?.getPath() : null;
 		if (!item || !path) {
 			this.snap.path = null;
 			this.snap.anchors = [];

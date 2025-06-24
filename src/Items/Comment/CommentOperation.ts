@@ -5,43 +5,43 @@ interface CommentBase {
 	item: string[];
 }
 
-interface CreateMessage extends CommentBase {
+export interface CreateMessage extends CommentBase {
 	method: "createMessage";
 	message: Message;
 }
 
-interface EditMessage extends CommentBase {
+export interface EditMessage extends CommentBase {
 	method: "editMessage";
 	message: Message;
 }
 
-interface RemoveMessage extends CommentBase {
+export interface RemoveMessage extends CommentBase {
 	method: "removeMessage";
 	messageId: string;
 }
 
-interface SetResolved extends CommentBase {
+export interface SetResolved extends CommentBase {
 	method: "setResolved";
 	resolved: boolean;
 }
 
-interface SetItemToFollow extends CommentBase {
+export interface SetItemToFollow extends CommentBase {
 	method: "setItemToFollow";
 	itemId?: string;
 }
 
-interface MarkMessagesAsRead extends CommentBase {
+export interface MarkMessagesAsRead extends CommentBase {
 	method: "markMessagesAsRead";
 	messageIds: string[];
 	userId: number;
 }
 
-interface MarkThreadAsUnread extends CommentBase {
+export interface MarkThreadAsUnread extends CommentBase {
 	method: "markThreadAsUnread";
 	userId: number;
 }
 
-interface MarkThreadAsRead extends CommentBase {
+export interface MarkThreadAsRead extends CommentBase {
 	method: "markThreadAsRead";
 	userId: number;
 }
