@@ -83,7 +83,7 @@ export function getBlockNodes(
 	};
 }
 
-interface LayoutBlockNode {
+export interface LayoutBlockNode {
 	type:
 		| 'paragraph'
 		| 'heading_one'
@@ -230,10 +230,11 @@ function getBlockNode(
 				break;
 			default:
 				if ('text' in child && typeof child.text === 'string') {
-					const fontScale = (child.fontSize === 'auto' ? 14 : child.fontSize ?? 14) / 14;
+					const textNode = child as unknown as TextNode
+					const fontScale = (textNode.fontSize === 'auto' ? 14 : textNode.fontSize ?? 14) / 14;
 					handleTextNode({
 						isFrame,
-						child,
+						child: textNode,
 						node,
 						maxWidth,
 						paddingTop: i === 0 ? 16 * (data.paddingTop || 0) : 0,
@@ -242,7 +243,7 @@ function getBlockNode(
 							(listData?.level || 0) * fontScale * 24,
 						newLine: i === 0 ? newLine : false,
 						listMark: i === 0 ? listMark : undefined,
-						link: child.link,
+						link: textNode.link,
 					});
 				} else {
 					const blockNode = getBlockNode(
@@ -320,6 +321,7 @@ function getTextNode(data: TextNode): LayoutTextNode {
 		text,
 		style: getTextStyle(data),
 		blocks: [],
+		newLine: false,
 	};
 	return node;
 }
@@ -329,7 +331,7 @@ interface LeafStyle {
 	fontWeight: string;
 	color: string;
 	backgroundColor: string | undefined;
-	fontSize: number;
+	fontSize: number | "auto";
 	fontFamily: string;
 	textDecorationLine?: 'underline';
 	crossed?: 'line-through';
@@ -679,7 +681,7 @@ function setBlockNodeCoordinates(blockNode: LayoutBlockNode): void {
 
 		lineBottom += maxFontSize * lineHeight;
 		leading = maxFontSize * lineHeight - maxFontSize;
-		yOffset = lineBottom - leading / 2 - highestBlock.measure.descent;
+		yOffset = lineBottom - leading / 2 - (highestBlock?.measure.descent || 0);
 
 		for (const block of line) {
 			block.y = yOffset;
@@ -727,7 +729,7 @@ function getTextBlock({
 		x: 0,
 		y: 0,
 		measure,
-		fontSize: style.fontSize,
+		fontSize: style.fontSize === "auto" ? 14 : style.fontSize,
 		paddingTop,
 		marginLeft,
 		listMark,
@@ -843,7 +845,7 @@ function findLargestSubstring(
 			substrings.push({ text: firstStr, style: firstStyle });
 			substrings.push({
 				text: word.slice(firstStrLength, mid),
-				style: secondStyle,
+				style: secondStyle!,
 			});
 		}
 

@@ -22,10 +22,10 @@ export const setLink = (
 	Editor.addMark(editor, 'fontColor', format);
 
 	for (const [node, path] of Editor.nodes(editor, {
-		match: n => n.type === 'text',
+		match: n => !Editor.isEditor(n) && n.type === 'text',
 	})) {
 		const nodeRange = Editor.range(editor, path);
 		Transforms.select(editor, nodeRange);
-		Transforms.setNodes(editor, { link }, { split: false, match: n => n.type === 'text' });
+		Transforms.setNodes(editor, { link }, { split: false, match: n => !Editor.isEditor(n) && n.type === 'text' });
 	}
 };

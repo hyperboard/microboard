@@ -41,9 +41,9 @@ jobs:
         uses: phips28/gh-action-bump-version@master
         with:
           skip-tag: "true"
-          minor-wording: "add,Adds,added,feat,feature"
+          minor-wording: "feat,feature"
           major-wording: "MAJOR,BREAKING CHANGE"
-          patch-wording: "patch,fix,bug,docs,refactor,test,style,chore"
+          patch-wording: ""
           rc-wording: "RELEASE,alpha"
           # Используем токен с нужными правами
           github-token: ${{ secrets.GITHUB_TOKEN }}

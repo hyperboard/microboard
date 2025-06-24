@@ -1,5 +1,7 @@
+import {LayoutBlockNode} from "./Render";
+
 export interface LayoutBlockNodes {
-	nodes: [];
+	nodes: LayoutBlockNode[];
 	maxWidth: number;
 	width: number;
 	height: number;

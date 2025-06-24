@@ -11,14 +11,11 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 	}
 
 	Editor.withoutNormalizing(editor, () => {
-		const [start, end] = Range.edges(selection);
-		const commonAncestorPath = Path.common(start.path, end.path);
-
 		const nodes = Array.from(
 			Editor.nodes(editor, {
 				at: selection,
 				mode: 'lowest',
-				match: n => Editor.isBlock(editor, n),
+				match: n => !Editor.isEditor(n) && n.type !== "text" && Editor.isBlock(editor, n),
 			})
 		);
 
@@ -28,6 +25,7 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 
 		nodes.forEach(([node, path]) => {
 			const parentList = getBlockParentList(editor, path);
+			node = node as BlockNode;
 			if (parentList) {
 				unwrapCandidates.push(node);
 				if (!nodesWithLists[parentList[1].length]) {
@@ -105,7 +103,7 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 		const beforeSplitNodes: NodeEntry<BlockNode>[] = [];
 		const afterSplitNodes: NodeEntry<BlockNode>[] = [];
 		let splitFound = false;
-		const firstLevelNodes = nodesWithLists[Object.keys(nodesWithLists)[0]];
+		const firstLevelNodes = nodesWithLists[Object.keys(nodesWithLists)[0] as unknown as number];
 		const shouldUnwrapNodes =
 			firstLevelNodes.length === 1 && targetListType === firstLevelNodes[0][0].type;
 

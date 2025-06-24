@@ -1,4 +1,5 @@
 import { BaseSelection, Editor } from "slate";
+import {TextNode} from "../../Editor/TextNode";
 
 export function getFirstSelectionLink(
 	editor: Editor,
@@ -10,9 +11,9 @@ export function getFirstSelectionLink(
 
 	for (const [node] of Editor.nodes(editor, {
 		at: selection,
-		match: n => !!n.link,
+		match: n => "link" in n && !!n.link,
 	})) {
-		return node.link;
+		return (node as TextNode).link;
 	}
 
 	return;

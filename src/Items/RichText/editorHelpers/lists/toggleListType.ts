@@ -24,7 +24,7 @@ export function toggleListType(
 	Editor.withoutNormalizing(editor, () => {
 		const { anchor } = selection;
 		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-		if (!textNode || textNode.type !== 'text' || typeof textNode.text !== 'string') {
+		if (!textNode || Editor.isEditor(textNode) || textNode.type !== 'text' || !("text" in  textNode)) {
 			result = false;
 			return;
 		}
@@ -38,7 +38,7 @@ export function toggleListType(
 
 		const listItemPath = Path.parent(paragraphPath);
 		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || listItem.type !== 'list_item') {
+		if (!listItem || Editor.isEditor(listItem) || listItem.type !== 'list_item') {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -49,7 +49,7 @@ export function toggleListType(
 
 		const listPath = Path.parent(listItemPath);
 		const [list] = Editor.node(editor, listPath);
-		if (!list || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
+		if (!list  || Editor.isEditor(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;

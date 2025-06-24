@@ -13,8 +13,9 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 	const [textNode, textNodePath] = Editor.node(editor, anchor.path);
 	if (
 		!textNode ||
+		Editor.isEditor(textNode) ||
 		textNode.type !== 'text' ||
-		typeof textNode.text !== 'string' ||
+		!("text" in textNode) ||
 		!isCursorAtStartOfFirstChild(editor, textNodePath)
 	) {
 		return false;
@@ -28,13 +29,13 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 
 	const listItemPath = Path.parent(paragraphPath);
 	const [listItem] = Editor.node(editor, listItemPath);
-	if (!listItem || listItem.type !== 'list_item') {
+	if (!listItem || Editor.isEditor(listItem) || listItem.type !== 'list_item') {
 		return false;
 	}
 
 	const listPath = Path.parent(listItemPath);
 	const [list] = Editor.node(editor, listPath);
-	if (!list || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
+	if (!list || Editor.isEditor(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
 		return false;
 	}
 

@@ -2,6 +2,7 @@ import { Range, Editor, Path, Transforms } from 'slate';
 import { CustomEditor } from '../../Editor/Editor';
 import { isCursorAtStartOfFirstChild } from '../common/isCursorAtStartOfFirstChild';
 import { getAreAllChildrenEmpty } from '../common/getAreAllChildrenEmpty';
+import {ListItemNode} from "../../Editor/BlockNode";
 
 export function handleListMerge(editor: CustomEditor): boolean {
   if (!editor.selection) {
@@ -17,8 +18,9 @@ export function handleListMerge(editor: CustomEditor): boolean {
   const [textNode, textNodePath] = Editor.node(editor, anchor.path);
   if (
     !textNode ||
+    Editor.isEditor(textNode) ||
     textNode.type !== 'text' ||
-    typeof textNode.text !== 'string' ||
+    !("text" in textNode) ||
     !isCursorAtStartOfFirstChild(editor, textNodePath)
   ) {
     return false;
@@ -32,13 +34,13 @@ export function handleListMerge(editor: CustomEditor): boolean {
 
   const listItemPath = Path.parent(paragraphPath);
   const [listItem] = Editor.node(editor, listItemPath);
-  if (!listItem || listItem.type !== 'list_item') {
+  if (!listItem || Editor.isEditor(listItem) || listItem.type !== 'list_item') {
     return false;
   }
 
   const listPath = Path.parent(listItemPath);
   const [list] = Editor.node(editor, listPath);
-  if (!list || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
+  if (!list || Editor.isEditor(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
     return false;
   }
 
@@ -53,7 +55,7 @@ export function handleListMerge(editor: CustomEditor): boolean {
     Transforms.removeNodes(editor, { at: listItemPath });
 
     const [updatedList] = Editor.node(editor, listPath);
-    if (getAreAllChildrenEmpty(updatedList)) {
+    if (getAreAllChildrenEmpty(updatedList as ListItemNode)) {
       Transforms.removeNodes(editor, { at: listPath });
     }
     const listPosition = listPath[listPath.length - 1];
@@ -78,6 +80,9 @@ export function handleListMerge(editor: CustomEditor): boolean {
   } else {
     const previousItemPath = Path.previous(listItemPath);
     const [previousItem] = Editor.node(editor, previousItemPath);
+    if ("text" in previousItem) {
+      return false;
+    }
 
     currentListItemChildren.forEach((childNode, index) => {
       const copiedNode = structuredClone(childNode);

@@ -11,7 +11,16 @@ export function createParagraphNode(
 	const marks = Editor.marks(editor) || {};
 	const pargaraph: ParagraphNode = {
 		type: 'paragraph',
-		children: [{ type: 'text', text, ...marks }],
+		children: [{
+			type: 'text', text, ...marks,
+			bold: false,
+			italic: false,
+			underline: false,
+			overline: false,
+			'line-through': false,
+			subscript: false,
+			superscript: false
+		}],
 	};
 	if (horisontalAlignment) {
 		pargaraph.horisontalAlignment = horisontalAlignment;

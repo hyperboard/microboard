@@ -2,6 +2,8 @@ import { Descendant, Editor, Element, Node, Path, Range, Transforms } from 'slat
 import { getAreAllChildrenEmpty } from 'Items/RichText/editorHelpers/common/getAreAllChildrenEmpty';
 import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
 import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createParagraphNode';
+import {BlockNode} from "../../Editor/BlockNode";
+import {TextNode} from "../../Editor/TextNode";
 
 export function handleSplitListItem(editor: CustomEditor): boolean {
 	if (!editor.selection || !Range.isCollapsed(editor.selection)) {
@@ -58,6 +60,9 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 	if (isBlockEmpty && isOnlyChildParagraph) {
 		const listItemIndex = listItemPath[listItemPath.length - 1];
 		const [parentList, parentListPath] = Editor.parent(editor, listItemPath);
+		if (Editor.isEditor(parentList) || (parentList.type !== "ol_list" && parentList.type !== "ul_list")) {
+			return false;
+		}
 		const listType = parentList.type;
 
 		Editor.withoutNormalizing(editor, () => {
@@ -73,7 +78,7 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 
 			if (parentList.children.length > listItemIndex + 1) {
 				const newListPath = Path.next(nextPath);
-				const itemsAfter = parentList.children.slice(listItemIndex + 1) as Descendant[];
+				const itemsAfter = parentList.children.slice(listItemIndex + 1) as BlockNode[];
 
 				Transforms.insertNodes(
 					editor,
@@ -82,7 +87,7 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 						listLevel: listNode.listLevel || 0,
 						children: itemsAfter.map(item => ({
 							type: 'list_item',
-							children: item.children,
+							children: item.children as BlockNode[],
 						})),
 					},
 					{ at: newListPath }
@@ -95,6 +100,9 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 			});
 
 			const [updatedParentList] = Editor.node(editor, parentListPath);
+			if (Editor.isEditor(updatedParentList)) {
+				return false;
+			}
 			if (getAreAllChildrenEmpty(updatedParentList)) {
 				Transforms.removeNodes(editor, { at: parentListPath });
 			}
