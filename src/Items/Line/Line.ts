@@ -98,6 +98,10 @@ export class Line {
 		return this.start;
 	}
 
+	getEndPoint(): Point {
+		return this.end;
+	}
+
 	getLength(): number {
 		const { start, end } = this;
 		const deltaX = end.x - start.x;

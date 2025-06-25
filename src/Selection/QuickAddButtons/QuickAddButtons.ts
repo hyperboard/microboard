@@ -68,7 +68,7 @@ export function getQuickAddButtons(
     ) {
       const item =
         selectedItem.itemType === "AINode"
-          ? createAINode(board, selectedItem.getId(), index)
+          ? createAINode(board, index, selectedItem.getId())
           : createRichText(board);
       newWidth = item.getMbr().getWidth();
       newHeight = item.getMbr().getHeight();

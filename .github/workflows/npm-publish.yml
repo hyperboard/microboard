@@ -43,7 +43,7 @@ jobs:
           skip-tag: "true"
           minor-wording: "feat,feature"
           major-wording: "MAJOR,BREAKING CHANGE"
-          patch-wording: ""
+          patch-wording: "fix,refactor"
           rc-wording: "RELEASE,alpha"
           # Используем токен с нужными правами
           github-token: ${{ secrets.GITHUB_TOKEN }}

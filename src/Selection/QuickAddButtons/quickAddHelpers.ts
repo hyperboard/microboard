@@ -1,11 +1,22 @@
 import { Board } from 'Board';
-import { Item, Connector, Shape, ItemData, ShapeData, RichText, Mbr } from 'Items';
+import {
+	Item,
+	Connector,
+	Shape,
+	ItemData,
+	ShapeData,
+	RichText,
+	Mbr,
+	ThreadDirection,
+	DefaultTransformationData
+} from 'Items';
 import { AINode } from 'Items/AINode';
 import { ControlPointData, getControlPoint } from 'Items/Connector/ControlPoint';
 import { getDirection } from 'Items/Connector/getLine/findOrthogonalPath';
 import { ShapeType } from 'Items/Shape';
 import { BasicShapes } from 'Items/Shape/Basic';
 import { Sticker } from 'Items/Sticker';
+import {threadDirections} from "../../Items/AINode/AINode";
 
 /** index represents the number of connection - left, right, top, bottom */
 export function getControlPointData(
@@ -14,15 +25,9 @@ export function getControlPointData(
 	isRichText = false
 ): ControlPointData {
 	const itemScale = isRichText ? { x: 1, y: 1 } : item.transformation.getScale();
-	const width =
-		item.itemType === 'Shape' ? item.getPath().getMbr().getWidth() : item.getMbr().getWidth();
-	let height: number;
-	if (item.itemType === 'Shape' && index !== 2 && index !== 3) {
-		height = item.getPath().getMbr().getHeight();
-	} else {
-		height = item.getMbr().getHeight();
-	}
-	const adjMapScaled = {
+	const width = item.getPathMbr().getWidth();
+	let height = item.getPathMbr().getHeight();
+	const adjMapScaled: { [key: number]: { x: number; y: number } } = {
 		0: { x: 0, y: height / 2 / itemScale.y },
 		1: {
 			x: width / itemScale.x,
@@ -64,7 +69,7 @@ export function quickAddItem(
 			optionalItem = new Sticker(board);
 			break;
 		case 'AINode':
-			optionalItem = createAINode(board, startPoint?.item?.getId(), 3);
+			optionalItem = createAINode(board, 3, "item" in startPoint ? startPoint?.item?.getId() : undefined);
 			break;
 	}
 
@@ -93,21 +98,26 @@ export function quickAddItem(
 	if ('text' in guarded && guarded.itemType !== 'AINode' && guarded.itemType !== 'RichText') {
 		delete guarded.text;
 	}
+	if (!itemData.transformation) {
+		itemData.transformation = new DefaultTransformationData();
+	}
 	itemData.transformation.translateX = endPoint.x;
 	itemData.transformation.translateY = endPoint.y;
 	const lines = connector.lines.getSegments();
 	const lastLine = lines[lines.length - 1];
-	let dir = getDirection(lastLine.start, lastLine.end);
+	const lastLineStart = lastLine.getStartPoint();
+	const lastLineEnd = lastLine.getEndPoint();
+	let dir = getDirection(lastLineStart, lastLineEnd);
+	const firstLineStart = lines[0].getEndPoint();
 	if (!dir) {
-		const firstLine = lines[0];
-		const xDiff = Math.abs(firstLine.start.x - lastLine.end.x);
-		const yDiff = Math.abs(firstLine.start.y - lastLine.end.y);
+		const xDiff = Math.abs(firstLineStart.x - lastLineEnd.x);
+		const yDiff = Math.abs(firstLineStart.y - lastLineEnd.y);
 		dir = xDiff > yDiff ? 'horizontal' : 'vertical';
 	}
 
 	let dirIndex = -1;
 	if (dir === 'vertical') {
-		if (lines[0].start.y > lastLine.end.y) {
+		if (firstLineStart.y > lastLineEnd.y) {
 			// to bottom
 			itemData.transformation.translateX -= itemMbr.getWidth() / 2;
 			itemData.transformation.translateY -= itemMbr.getHeight();
@@ -118,7 +128,7 @@ export function quickAddItem(
 			dirIndex = 2;
 		}
 	} else if (dir === 'horizontal') {
-		if (lines[0].start.x > lastLine.end.x) {
+		if (firstLineStart.x > lastLineEnd.x) {
 			// to right
 			itemData.transformation.translateX -= itemMbr.getWidth();
 			itemData.transformation.translateY -= itemMbr.getHeight() / 2;
@@ -133,7 +143,7 @@ export function quickAddItem(
 	}
 
 	if (itemData.itemType === 'AINode') {
-		const reverseIndexMap = { 0: 1, 1: 0, 2: 3, 3: 2 };
+		const reverseIndexMap: { [key: number]: number } = { 0: 1, 1: 0, 2: 3, 3: 2 };
 		itemData.threadDirection = reverseIndexMap[dirIndex];
 	}
 
@@ -145,7 +155,7 @@ export function quickAddItem(
 	board.selection.removeAll();
 	board.selection.add(added);
 
-	if (added.itemType === 'RichText' || added.itemType === 'AINode') {
+	if (added instanceof RichText || added instanceof AINode) {
 		const text = added.getRichText();
 		text.editor.setMaxWidth(text.editor.maxWidth || 600);
 		board.selection.editText();
@@ -154,8 +164,8 @@ export function quickAddItem(
 	}
 }
 
-export function createAINode(board: Board, parentNodeId: string, directionIndex: number): AINode {
-	const node = new AINode(board, true, parentNodeId, undefined, directionIndex);
+export function createAINode(board: Board, directionIndex: number, parentNodeId?: string): AINode {
+	const node = new AINode(board, true, parentNodeId, undefined, directionIndex as ThreadDirection);
 	const nodeRichText = node.getRichText();
 	nodeRichText.applyMaxWidth(600);
 	nodeRichText.setSelectionHorisontalAlignment('left');

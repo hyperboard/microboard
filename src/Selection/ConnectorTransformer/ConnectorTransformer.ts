@@ -45,7 +45,7 @@ export class ConnectorTransformer extends Tool {
   private getConnector(items: SelectionItems): Connector | null {
     if (items.isSingle()) {
       const connector = items.getSingle();
-      if (connector?.itemType === "Connector") {
+      if (connector instanceof Connector) {
         return connector;
       }
     }

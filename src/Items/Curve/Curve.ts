@@ -127,6 +127,10 @@ export class QuadraticBezier extends BaseCurve {
 		return this.start;
 	}
 
+	getEndPoint(): Point {
+		return this.end;
+	}
+
 	moveToStart(ctx: Path2D | CanvasRenderingContext2D): void {
 		ctx.moveTo(this.start.x, this.start.y);
 	}
@@ -194,6 +198,10 @@ export class CubicBezier extends BaseCurve {
 
 	getStartPoint(): Point {
 		return this.start;
+	}
+
+	getEndPoint(): Point {
+		return this.end;
 	}
 
 	moveToStart(ctx: Path2D | CanvasRenderingContext2D): void {

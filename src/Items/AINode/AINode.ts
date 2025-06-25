@@ -27,7 +27,8 @@ import { BaseItem } from "Items/BaseItem/BaseItem";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
-export type ThreadDirection = 0 | 1 | 2 | 3;
+export const threadDirections = [0, 1, 2, 3] as const;
+export type ThreadDirection = typeof threadDirections[number];
 // TODO FIX node
 // const arrowIcon = new Image();
 const ICON_SRC =
