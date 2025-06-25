@@ -1,5 +1,5 @@
 import { BaseEditor, Editor } from 'slate';
-import { BlockNode } from 'Items/RichText/Editor/BlockNode';
+import {BlockNode, NoneListBlockNode} from 'Items/RichText/Editor/BlockNode';
 import { ReactEditor } from 'slate-react';
 import { HistoryEditor } from 'slate-history';
 import { LinkNode, TextNode } from 'Items/RichText/Editor/TextNode';
@@ -15,11 +15,13 @@ export function setNodeChildrenStyles({
 }: {
 	editor?: BaseEditor & ReactEditor & HistoryEditor;
 	horisontalAlignment?: HorisontalAlignment;
-	node: BlockNode;
+	node: NoneListBlockNode;
 }): void {
 	let fontStyles = conf.DEFAULT_TEXT_STYLES;
 	if (editor) {
-		fontStyles = Editor.marks(editor) || conf.DEFAULT_TEXT_STYLES;
+		const marks = Editor.marks(editor);
+		const fontSize = marks?.fontSize ? (marks.fontSize === "auto" ? conf.DEFAULT_TEXT_STYLES.fontSize : marks.fontSize) : conf.DEFAULT_TEXT_STYLES.fontSize;
+		fontStyles = marks ? {...conf.DEFAULT_TEXT_STYLES, ...marks, fontSize} : conf.DEFAULT_TEXT_STYLES;
 	}
 
 	switch (node.type) {
@@ -92,6 +94,9 @@ export function setNodeStyles({
 	editor?: BaseEditor & ReactEditor & HistoryEditor;
 	horisontalAlignment?: HorisontalAlignment;
 }) {
+	if (node.type === "list_item") {
+		return;
+	}
 	if (node.type === 'ol_list' || node.type === 'ul_list') {
 		node.listLevel = listLevel;
 		for (const listItem of node.children) {

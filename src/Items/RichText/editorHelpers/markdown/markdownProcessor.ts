@@ -10,6 +10,7 @@ import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createP
 import { clearText } from 'Items/RichText/editorHelpers/common/clearText';
 import { isTextEmpty } from 'Items/RichText/editorHelpers/common/isTextEmpty';
 import { Subject } from 'Subject';
+import {TextNode} from "../../Editor/TextNode";
 
 export class MarkdownProcessor {
 	private chunksQueue: string[] = [];
@@ -121,7 +122,7 @@ export class MarkdownProcessor {
 			return;
 		}
 
-		const prevText = this.getText()?.[this.getText().length - 1]?.children[0]?.text;
+		const prevText = (this.getText()?.[this.getText().length - 1]?.children[0] as TextNode)?.text;
 		if (prevText?.startsWith(conf.i18n.t('AIInput.generatingResponse'))) {
 			clearText(this.editor);
 		}
@@ -162,10 +163,11 @@ export class MarkdownProcessor {
 		} else {
 			const lastParagraphPath = this.getText().length - 1;
 			const lastParagraph = this.getText()[lastParagraphPath];
+			const lastParagraphText = lastParagraph.children[lastParagraph.children.length - 1] as TextNode;
 
 			const insertLocation = {
 				path: [lastParagraphPath, lastParagraph.children.length - 1],
-				offset: lastParagraph.children[lastParagraph.children.length - 1].text.length,
+				offset: lastParagraphText.text.length,
 			};
 
 			Transforms.insertText(this.editor, combinedText, {

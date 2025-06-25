@@ -69,17 +69,6 @@ export class RichTextCommand implements Command {
 					},
 				}));
 
-			case 'setBlockType':
-				return items.map(id => ({
-					item: id,
-					operation: {
-						...this.operation,
-						type:
-							this.board.items.getById(id)?.getRichText()?.getBlockType() ||
-							'paragraph',
-					},
-				}));
-
 			case 'setFontStyle':
 				return items.map(id => ({
 					item: id,
@@ -207,6 +196,7 @@ export class RichTextGroupCommand implements Command {
 					method: 'edit',
 					item: [richText.getId() ?? ''],
 					ops,
+					selection: null
 				},
 			});
 		}
@@ -225,6 +215,7 @@ export class RichTextGroupCommand implements Command {
 					method: 'edit',
 					item: [richText.getId() ?? ''],
 					ops: ops.map(op => Operation.inverse(op)).reverse(),
+					selection: null
 				},
 			});
 		}

@@ -132,3 +132,12 @@ export type BlockNode =
 	| BulletedListNode
 	| NumberedListNode
 	| ListItemNode;
+
+export type NoneListBlockNode =
+	| ParagraphNode
+	| CodeBlockNode
+	| HeadingOneNode
+	| HeadingTwoNode
+	| HeadingThreeNode
+	| HeadingFourNode
+	| HeadingFiveNode;

@@ -795,7 +795,10 @@ export class RichText extends BaseItem {
   // TODO exclude scale from font size calculation
   getFontSize(): number {
     const marks = this.editor.getSelectionMarks();
-    const fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
+    let fontSize = marks?.fontSize ?? this.initialTextStyles.fontSize;
+    if (fontSize === "auto") {
+      fontSize = this.initialTextStyles.fontSize;
+    }
     if (this.autoSize) {
       return fontSize * this.autoSizeScale;
     }
@@ -816,7 +819,7 @@ export class RichText extends BaseItem {
     for (const [node] of textNodes) {
       const fontSize = node.fontSize || (node && node.fontSize);
       if (fontSize) {
-        fontSizes.push(fontSize);
+        fontSizes.push(fontSize === "auto" ? this.initialTextStyles.fontSize : fontSize);
       }
     }
 
@@ -833,7 +836,7 @@ export class RichText extends BaseItem {
   }
 
   getBlockType(): BlockType {
-    const blockNode = getSelectedBlockNode(this.editor);
+    const blockNode = getSelectedBlockNode(this.editor.editor);
     return blockNode ? blockNode.type : "paragraph";
   }
 
@@ -886,28 +889,29 @@ export class RichText extends BaseItem {
         const domRange = conf.documentFactory.caretPositionFromPoint
           ? conf.documentFactory.caretPositionFromPoint(point.x, point.y)
           : conf.documentFactory.caretRangeFromPoint(point.x, point.y);
-        // @ts-expect-error: Suppress TS error for non-existent method
-        const textNode = conf.documentFactory.caretPositionFromPoint
-          ? domRange.offsetNode
-          : domRange.startContainer;
-        // @ts-expect-error: Suppress TS error for non-existent method
-        const offset = conf.documentFactory.caretPositionFromPoint
-          ? domRange.offset
-          : domRange.startOffset;
-        const slatePoint = conf.reactEditorToSlatePoint(
-          this.editor.editor,
-          textNode,
-          offset,
-          {
-            exactMatch: false,
-            suppressThrow: false,
+        if (domRange) {
+          // @ts-expect-error: Suppress TS error for non-existent method
+          const textNode = conf.documentFactory.caretPositionFromPoint
+            ? (domRange as CaretPosition).offsetNode
+            : (domRange as Range).startContainer;
+          // @ts-expect-error: Suppress TS error for non-existent method
+          const offset = conf.documentFactory.caretPositionFromPoint
+            ? (domRange as CaretPosition).offset
+            : (domRange as Range).startOffset;
+          const slatePoint = conf.reactEditorToSlatePoint(
+            this.editor.editor,
+            textNode,
+            offset,
+            {
+              exactMatch: false,
+              suppressThrow: false,
+            }
+          );
+          if (slatePoint) {
+            const nRange = { anchor: slatePoint, focus: slatePoint };
+            this.editorTransforms.select(this.editor.editor, nRange);
+            conf.reactEditorFocus(this.editor.editor);
           }
-        );
-
-        if (slatePoint) {
-          const nRange = { anchor: slatePoint, focus: slatePoint };
-          this.editorTransforms.select(this.editor.editor, nRange);
-          conf.reactEditorFocus(this.editor.editor);
         }
       } else {
         if (

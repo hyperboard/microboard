@@ -169,25 +169,33 @@ export class TransformationCommand implements Command {
 							x: 1 / op.x,
 							y: 1 / op.y,
 						};
+					} else {
+						reverseOp = {
+							...op,
+							x: 1,
+							y: 1,
+						};
 					}
 					return { item: currTrans, operation: reverseOp };
 				});
 			}
 			case "locked": {
+				const op = this.operation;
 				return mapItemsByOperation(this.transformation, () => {
 					return {
-						...this.operation,
-						item: [...op.item!],
+						...op,
+						item: [...op.item],
 						method: "unlocked",
 						locked: false,
 					};
 				});
 			}
 			case "unlocked": {
+				const op = this.operation;
 				return mapItemsByOperation(this.transformation, () => {
 					return {
-						...this.operation,
-						item: [...op.item!],
+						...op,
+						item: [...op.item],
 						method: "locked",
 						locked: true,
 					};
