@@ -24,6 +24,7 @@ import {
 import { catmullRomInterpolate, rgbToRgba } from './helpers';
 import { throttleWithDebounce } from './throttle';
 import { conf } from 'Settings';
+import {BoardSelection} from "../Selection";
 
 // move to SETTINGS
 const SECOND = 1000;
@@ -122,7 +123,7 @@ export class Presence {
 			}
 		});
 
-		const throttleSelectionEvent = throttleWithDebounce(
+		const throttleSelectionEvent: (selection: BoardSelection) => void = throttleWithDebounce(
 			this.sendSelectionEvent.bind(this),
 			400,
 			400
@@ -163,7 +164,7 @@ export class Presence {
 		}
 	}
 
-	private sendSelectionEvent(selection: Selection): void {
+	private sendSelectionEvent(selection: BoardSelection): void {
 		this.emit({
 			method: 'Selection',
 			selectedItems: selection.items.ids(),
@@ -861,7 +862,7 @@ export class Presence {
 
 			ctx.restore();
 
-			this.pointerAnimationId = safeRequestAnimationFrame(renderLoop);
+			this.pointerAnimationId = safeRequestAnimationFrame(renderLoop) || null;
 		};
 
 		renderLoop();

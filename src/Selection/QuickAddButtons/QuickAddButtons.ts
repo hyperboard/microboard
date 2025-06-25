@@ -53,16 +53,10 @@ export function getQuickAddButtons(
     connectorStartPoint: Point
   ): { newItem: Item; connectorData: ConnectorData } {
     const connectorStorage = new SessionStorage();
-    const currMbr = selectedItem.getMbr();
+    const currMbr = selectedItem.getPathMbr();
     const selectedItemData = selectedItem.serialize();
-    const width =
-      selectedItem.itemType === "Shape"
-        ? selectedItem.getPath().getMbr().getWidth()
-        : currMbr.getWidth();
-    const height =
-      selectedItem.itemType === "Shape"
-        ? selectedItem.getPath().getMbr().getHeight()
-        : currMbr.getHeight();
+    const width = currMbr.getWidth();
+    const height = currMbr.getHeight();
     let offsetX = width;
     let offsetY = height;
     let newWidth = width;
@@ -96,14 +90,14 @@ export function getQuickAddButtons(
       delete guarded.text;
     }
 
-    const iterAdjustment = {
+    const iterAdjustment: { [key: number]: { x: number; y: number } } = {
       0: { x: 0, y: -2 * offsetY },
       1: { x: 0, y: -2 * offsetY },
       2: { x: -2 * offsetX, y: 0 },
       3: { x: -2 * offsetX, y: 0 },
     };
 
-    const baseAdjustments = {
+    const baseAdjustments: { [key: number]: { translateX: number; translateY: number } } = {
       0: { translateX: -offsetX - width, translateY: 0 },
       1: { translateX: offsetX + width, translateY: 0 },
       2: { translateX: 0, translateY: -offsetY - height },
@@ -162,13 +156,13 @@ export function getQuickAddButtons(
     }
 
     const endPoints = getQuickButtonsPositions(newMbr);
-    const reverseIndexMap = { 0: 1, 1: 0, 2: 3, 3: 2 };
+    const reverseIndexMap: { [key: number]: number } = { 0: 1, 1: 0, 2: 3, 3: 2 };
     const connectorEndPoint =
       endPoints?.positions[reverseIndexMap[index]] || new Point();
     const fontSize =
-      selectedItem.itemType === "RichText" ? selectedItem.getFontSize() : 14;
+      selectedItem instanceof RichText ? selectedItem.getFontSize() : 14;
     const newItem = board.createItem(board.getNewItemId(), newItemData);
-    if (newItem.itemType === "RichText") {
+    if (newItem instanceof RichText) {
       const storage = new SessionStorage();
       storage.setFontSize("RichText", fontSize);
       newItem.editor.selectWholeText();
@@ -181,9 +175,13 @@ export function getQuickAddButtons(
       const scaleX = newItemMbr.getWidth() / 100;
       const scaleY = newItemMbr.getHeight() / 100;
       shapeData.transformation = {
+        isLocked: false,
+        rotate: 0,
+        translateX: 0,
+        translateY: 0,
         ...newItemData.transformation,
         scaleX: scaleX,
-        scaleY: scaleY,
+        scaleY: scaleY
       };
       newItemPlaceholder = board.createItem(newItem.getId(), shapeData);
     }
@@ -257,7 +255,7 @@ export function getQuickAddButtons(
 
     let pathCenter: Point | undefined;
     if (single.itemType === "Shape") {
-      pathCenter = single.getPath().getMbr().getCenter();
+      pathCenter = single.getPathMbr().getCenter();
     }
     const center = itemMbr.getCenter();
     const width = itemMbr.getWidth();
@@ -306,7 +304,7 @@ export function getQuickAddButtons(
 
     const cameraMatrix = board.camera.getMatrix();
     const cameraMbr = board.camera.getMbr();
-    const positionAdjustments = {
+    const positionAdjustments: { [key: number]: { left: number; top: number, rotate: string } } = {
       0: { left: -20, top: 0, rotate: "left" },
       1: { left: 20, top: 0, rotate: "right" },
       2: { left: 0, top: -20, rotate: "top" },
@@ -380,7 +378,7 @@ export function getQuickAddButtons(
             }
             calculateQuickAddPosition(index, selectedItem, positions[index]);
             selection.subject.publish(selection);
-          }, 200);
+          }, 200) as unknown as number;
         };
 
         button.onmousedown = () => {

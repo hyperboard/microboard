@@ -128,6 +128,10 @@ export class BaseItem extends Mbr implements Geometry {
 		this.onRemoveCallbacks.forEach((cb) => cb());
 	}
 
+	getPathMbr(): Mbr {
+		return this.getMbr().copy()
+	}
+
 	render(context: DrawingContext): void {}
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		return documentFactory.createElement("div");

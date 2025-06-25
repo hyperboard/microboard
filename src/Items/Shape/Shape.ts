@@ -408,6 +408,10 @@ export class Shape extends BaseItem {
     return this.mbr.copy();
   }
 
+  getPathMbr(): Mbr {
+    return this.getPath().getMbr();
+  }
+
   getNearestEdgePointTo(point: Point): Point {
     return this.path.getNearestEdgePointTo(point);
   }

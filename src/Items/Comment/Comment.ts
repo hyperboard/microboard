@@ -370,6 +370,10 @@ export class Comment implements Geometry {
     return new Mbr(anchor.x, anchor.y, anchor.x, anchor.y);
   }
 
+  getPathMbr(): Mbr {
+    return this.getMbr();
+  }
+
   getNearestEdgePointTo(point: Point): Point {
     return this.anchor;
   }

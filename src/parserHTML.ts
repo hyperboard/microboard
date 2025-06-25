@@ -1,5 +1,4 @@
 import { positionAbsolutely } from "HTMLRender";
-import type { RichTextData } from "./Items";
 import {
   ItemType,
   ItemData,
@@ -7,7 +6,7 @@ import {
   RichTextData,
   FrameData,
   ShapeData,
-  ConnectorData,
+  ConnectorData, BlockNode, TextNode,
 } from "Items";
 import { AINodeData } from "Items/AINode";
 import { HorisontalAlignment, VerticalAlignment } from "Items/Alignment";
@@ -29,6 +28,7 @@ import { VideoItemData } from "Items/Video";
 import { conf } from "Settings";
 import { Descendant } from "slate";
 import {ItemDataWithId} from "./Items/Item";
+import {ListItemNode} from "./Items/RichText/Editor/BlockNode";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -46,6 +46,14 @@ export const tagByType: MapTagByType = {
   Comment: "comment-item",
   Group: "",
 };
+
+const headingTagsMap = {
+  "h1": "heading_one",
+  "h2": "heading_two",
+  "h3": "heading_three",
+  "h4": "heading_four",
+  "h5": "heading_five",
+} as const
 
 type TagFactories = {
   [K in keyof MapTagByType as MapTagByType[K]]: (el: HTMLElement) => ItemDataWithId;
@@ -79,10 +87,10 @@ function getTransformationData(el: HTMLElement): TransformationData {
     const [, translateX, translateY, scaleX, scaleY] =
       transformMatch.map(Number);
     const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
-    return { ...matrix, rotate: 0 };
+    return { ...matrix, rotate: 0, isLocked: false };
   }
 
-  return { ...new Matrix(), rotate: 0 };
+  return { ...new Matrix(), rotate: 0, isLocked: false };
 }
 
 function parseHTMLRichText(
@@ -92,7 +100,7 @@ function parseHTMLRichText(
     realTransformation: TransformationData;
   }
 ): RichTextData & { id: string } {
-  const parseNode = (node: HTMLElement): Descendant => {
+  const parseNode = (node: HTMLElement, nestingLevel = 1): Descendant => {
     const isLinkNode = node.tagName.toLowerCase() === "a";
     if (
       node.tagName.toLowerCase() === "span" ||
@@ -126,7 +134,7 @@ function parseHTMLRichText(
     }
 
     const children = Array.from(node.children).map((child) =>
-      parseNode(child as HTMLElement)
+      parseNode(child as HTMLElement, nestingLevel + 1)
     );
     const tagName = node.tagName.toLowerCase();
 
@@ -140,32 +148,27 @@ function parseHTMLRichText(
 
     // Обработка специальных элементов
     switch (tagName) {
-      case "blockquote":
-        return {
-          type: "block-quote",
-          ...extractCommonProps(),
-          children,
-        };
-
       case "ul":
         return {
           type: "ul_list",
           ...extractCommonProps(),
-          children,
+          children: children as ListItemNode[],
+          listLevel: nestingLevel,
         };
 
       case "ol":
         return {
           type: "ol_list",
           ...extractCommonProps(),
-          children,
+          children: children as ListItemNode[],
+          listLevel: nestingLevel,
         };
 
       case "li":
         return {
           type: "list_item",
           ...extractCommonProps(),
-          children,
+          children: children as BlockNode[],
         };
 
       case "pre": {
@@ -179,7 +182,7 @@ function parseHTMLRichText(
           children: codeElement
             ? Array.from(codeElement.children).map((child) =>
                 parseNode(child as HTMLElement)
-              )
+              ) as TextNode[]
             : [],
         };
       }
@@ -188,17 +191,11 @@ function parseHTMLRichText(
       case "h2":
       case "h3":
       case "h4":
-      case "h5":
-      case "h6": {
-        const headingType = `heading_${
-          ["one", "two", "three", "four", "five", "six"][
-            parseInt(tagName[1]) - 1
-          ]
-        }` as const;
+      case "h5": {
         return {
-          type: headingType,
+          type: headingTagsMap[tagName],
           ...extractCommonProps(),
-          children,
+          children: children as TextNode[],
         };
       }
 
@@ -209,14 +206,14 @@ function parseHTMLRichText(
           lineHeight:
             parseFloat(node.style.lineHeight) ||
             conf.DEFAULT_TEXT_STYLES.lineHeight,
-          children,
+          children: children as TextNode[],
         };
 
       default:
         return {
           type: "paragraph",
           ...extractCommonProps(),
-          children,
+          children: children as TextNode[],
         };
     }
   };
@@ -407,7 +404,7 @@ function parseHTMLAudio(el: HTMLElement): AudioItemData & { id: string } {
 
 function parseHTMLComment(el: HTMLElement): CommentData & { id: string } {
   // const transformation = getTransformationData(el);
-  const data = JSON.parse(el.getAttribute("comment-data")) as CommentData;
+  const data = JSON.parse(el.getAttribute("comment-data")!) as CommentData;
 
   const commentItemData: CommentData & { id: string } = {
     id: el.id,
@@ -435,7 +432,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
   );
   const startPointType = el.getAttribute("data-start-point-type");
   const startPoint: ControlPointData = {
-    pointType: startPointType as ControlPointData["pointType"],
+    pointType: startPointType as any,
     x: parseFloat(el.getAttribute("data-start-point-x") || "0"),
     y: parseFloat(el.getAttribute("data-start-point-y") || "0"),
     ...(startRelativeX ? { relativeX: startRelativeX } : {}),
@@ -461,7 +458,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
   );
   const endPointType = el.getAttribute("data-end-point-type");
   const endPoint: ControlPointData = {
-    pointType: endPointType as ControlPointData["pointType"],
+    pointType: endPointType as any,
     x: parseFloat(el.getAttribute("data-end-point-x") || "0"),
     y: parseFloat(el.getAttribute("data-end-point-y") || "0"),
     ...(endItem ? { itemId: endItem } : {}),
@@ -473,6 +470,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
   };
 
   const connectorData: ConnectorData & { id: string } = {
+    middlePoint: null,
     id: el.id,
     itemType: "Connector",
     transformation,
@@ -492,7 +490,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
     ) as ConnectionLineWidth,
     borderStyle: (el.getAttribute("data-border-style") as BorderStyle) || "",
     text: new DefaultRichTextData(),
-    linkTo: el.getAttribute("data-link-to") || undefined,
+    linkTo: el.getAttribute("data-link-to") || undefined
   };
 
   const textElement = el.querySelector(`#${CSS.escape(el.id)}_text`);
@@ -549,6 +547,7 @@ function parseHTMLDrawing(el: HTMLElement): DrawingData & { id: string } {
 
 function parseHTMLAINode(el: HTMLElement): AINodeData & { id: string } {
   const aiNodeData: AINodeData & { id: string } = {
+    threadDirection: 3,
     id: el.id,
     itemType: "AINode",
     parentNodeId: el.getAttribute("parent-node-id") || undefined,
@@ -558,7 +557,7 @@ function parseHTMLAINode(el: HTMLElement): AINodeData & { id: string } {
       : [],
     transformation: getTransformationData(el),
     text: new DefaultRichTextData(),
-    linkTo: el.getAttribute("data-link-to") || undefined,
+    linkTo: el.getAttribute("data-link-to") || undefined
   };
 
   const textElement = el.querySelector(`#${CSS.escape(el.id)}_text`);
