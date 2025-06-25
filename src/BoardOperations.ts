@@ -40,6 +40,14 @@ export interface RemoveItem extends MultiItemBoardOp {
 	method: "remove";
 }
 
+export interface LockItem extends MultiItemBoardOp {
+	method: "lock";
+}
+
+export interface UnlockItem extends MultiItemBoardOp {
+	method: "unlock";
+}
+
 export interface RemoveLockedGroup extends MultiItemBoardOp {
 	method: "removeLockedGroup";
 }
@@ -95,4 +103,6 @@ export type BoardOps =
 	| BringToFront
 	| SendToBack
 	| Paste
-	| Duplicate;
+	| Duplicate
+	| LockItem
+	| UnlockItem;

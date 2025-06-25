@@ -1,0 +1,52 @@
+@import "https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap";
+
+/* ../src/index.css */
+:root {
+    --background-surface-default: rgb(255, 255, 255);
+    --background-button-secondary: rgb(255, 255, 255);
+    --background-button-secondary-hover: rgb(247, 247, 248);
+    --background-badge-purple-disabled: rgb(247, 241, 253);
+    --background-badge-gray: rgb(233, 234, 236);
+    --background-accent-purple: rgb(146, 79, 232);
+    --border-action-normal: rgb(222, 223, 227);
+    --border-action-focus: rgb(146, 79, 232);
+    --border-select-primary: rgb(146, 79, 232);
+    --text-base-primary: rgb(20, 21, 26);
+    --text-base-secondary: rgba(15, 19, 36, 0.6);
+    --text-base-quaternary: rgb(10, 15, 41, 0.25);
+    --text-accent-purple: rgb(152, 89, 233);
+    --icon-base-primary: rgb(20, 21, 26);
+    --icon-base-secondary: rgb(105, 107, 118);
+    --icon-accent-purple: rgb(146, 79, 232);
+    --absolute-position-panel-padding: 12px;
+}
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+}
+html {
+    font-size: 62.5%;
+}
+body {
+    color: var(--text-base-primary);
+    font-size: 1.6rem;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-family: "Manrope", sans-serif;
+}
+html,
+body {
+    overscroll-behavior-x: none;
+    -webkit-user-select: none;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+}

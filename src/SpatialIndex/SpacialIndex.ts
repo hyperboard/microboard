@@ -2,7 +2,7 @@ import { DocumentFactory } from 'api/DocumentFactory';
 import { ItemsIndexRecord } from 'BoardOperations';
 import { Camera } from 'Camera';
 import { translateElementBy, positionRelatively } from 'HTMLRender';
-import { Item, Frame, Mbr, ItemData, Point, Connector } from 'Items';
+import {Item, Frame, Mbr, ItemData, Point, Connector, Comment, Shape} from 'Items';
 import { Drawing } from 'Items/Drawing';
 import { DrawingContext } from 'Items/DrawingContext';
 import { Group } from 'Items/Group';
@@ -227,13 +227,13 @@ export class SpatialIndex {
 		this.subject.publish(this.items);
 	}
 
-	getById(id: string): Item | undefined {
+	getById(id: string): BaseItem | undefined {
 		const item = this.itemsArray.find(item => item.getId() === id);
 		if (item) {
-			return item;
+			return item as BaseItem;
 		}
 		const frame = this.framesArray.find(frame => frame.getId() === id);
-		return frame;
+		return frame as BaseItem;
 	}
 
 	findById(id: string): Item | undefined {
@@ -447,12 +447,12 @@ export class Items {
 			(acc, item) => {
 				const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
-				if (item.itemType === 'Drawing' && !item.isPointNearLine(this.pointer.point)) {
+				if (item instanceof Drawing && !item.isPointNearLine(this.pointer.point)) {
 					return acc;
 				}
 
 				const isItemTransparent =
-					item?.itemType === 'Shape' && item?.getBackgroundColor() === 'none';
+					item instanceof Shape && item?.getBackgroundColor() === 'none';
 				const itemZIndex = this.getZIndex(item);
 				const accZIndex = this.getZIndex(acc.nearest!);
 
@@ -506,7 +506,7 @@ export class Items {
 
 	getLinkedConnectorsById(id: string): Connector[] {
 		return this.listAll().filter(item => {
-			if (item.itemType !== 'Connector') {
+			if (!(item instanceof Connector)) {
 				return false;
 			}
 
@@ -516,7 +516,7 @@ export class Items {
 			}
 
 			return false;
-		});
+		}) as Connector[];
 	}
 
 	getConnectorsByItemIds(startPointerItemId?: string, endPointerItemId?: string): Connector[] {
@@ -524,7 +524,7 @@ export class Items {
 			return [];
 		}
 		return this.listAll().filter(item => {
-			if (item.itemType !== 'Connector' || !item.isConnected()) {
+			if (!(item instanceof Connector) || !item.isConnected()) {
 				return false;
 			}
 			const { startItem, endItem } = item.getConnectedItems();
@@ -575,7 +575,7 @@ export class Items {
 		frames.forEach(frame => frame.renderName(context)); // names of frames
 	}
 
-	renderHTML(documentFactory: DocumentFactory): HTMLElement {
+	renderHTML(documentFactory: DocumentFactory): string {
 		const frames = this.getFramesInView();
 		const rest = this.getItemsInView();
 		return this.getHTML(documentFactory, frames, rest);

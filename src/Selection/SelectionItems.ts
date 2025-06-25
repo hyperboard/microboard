@@ -103,7 +103,7 @@ export class SelectionItems {
 	}
 
 	getSingle(): Item | null {
-		return this.isSingle() ? this.items.values().next().value : null;
+		return this.isSingle() ? this.items.values().next().value || null : null;
 	}
 
 	listByIds(itemIdList: string[]): Item[] {

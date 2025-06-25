@@ -2,7 +2,7 @@ import { safeRequestAnimationFrame } from "api/safeRequestAnimationFrame";
 import { Board } from "Board";
 import { Events, Operation, Command } from "Events";
 import { createCommand } from "Events/Command";
-import { Item, RichText, Mbr, Frame, ItemData, Connector } from "Items";
+import {Item, RichText, Mbr, Frame, ItemData, Connector, ImageItem, ConnectionLineWidth} from "Items";
 import { AINode, CONTEXT_NODE_HIGHLIGHT_COLOR } from "Items/AINode";
 import { HorisontalAlignment, VerticalAlignment } from "Items/Alignment";
 import { BoardPoint, ConnectorLineStyle } from "Items/Connector";
@@ -574,7 +574,9 @@ export class BoardSelection {
     copiedItemsMap[item.getId()] = { ...serializedData, zIndex };
   }
 
-  copy(skipImageBlobCopy = false):
+  copy(skipImageBlobCopy: true): { [key: string]: ItemData };
+  copy(skipImageBlobCopy?: false): { imageElement: HTMLImageElement; imageData: { [key: string]: ItemData } };
+  copy(skipImageBlobCopy?: boolean):
     | { [key: string]: ItemData }
     | {
         imageElement: HTMLImageElement;
@@ -582,7 +584,7 @@ export class BoardSelection {
       } {
     const copiedItemsMap: { [key: string]: ItemData } = {};
     const single = this.items.getSingle();
-    if (!skipImageBlobCopy && single && single.itemType === "Image") {
+    if (!skipImageBlobCopy && single && single instanceof ImageItem) {
       this.handleItemCopy(single, copiedItemsMap);
       return { imageElement: single.image, imageData: copiedItemsMap };
     }
@@ -613,7 +615,7 @@ export class BoardSelection {
   }
 
   cut(): { [key: string]: ItemData } {
-    const items = this.copy();
+    const items = this.copy(true);
     this.removeFromBoard();
     return items;
   }
@@ -805,7 +807,7 @@ export class BoardSelection {
 
       Object.values(selectedMap).forEach((val) => {
         const parentFrame = this.board.items.getById(val.item.parent);
-        const isParentFrame = parentFrame?.itemType === "Frame";
+        const isParentFrame = parentFrame instanceof Frame;
         const parentFrameId = isParentFrame ? parentFrame.getId() : null;
 
         if (val.nested) {
@@ -826,7 +828,7 @@ export class BoardSelection {
           }
         }
 
-        if (val.item.itemType === "Frame" && checkFrames) {
+        if (val.item instanceof Frame && checkFrames) {
           const currFrame = val.item;
           const currMbr = currFrame.getMbr();
           const children = val.item
@@ -1052,7 +1054,7 @@ export class BoardSelection {
         class: "Connector",
         method: "setLineWidth",
         item: connectors,
-        lineWidth: width,
+        lineWidth: width as ConnectionLineWidth,
       });
     }
     const drawings = this.items.getIdsByItemTypes(["Drawing"]);
@@ -1352,19 +1354,6 @@ export class BoardSelection {
     }
   }
 
-  getMediaStorageIds(): string[] {
-    return this.items
-      .list()
-      .filter((item) => {
-        const shouldClearStorageUsage =
-          item.itemType === "Image" ||
-          (item.itemType === "Video" && item.getIsStorageUrl()) ||
-          (item.itemType === "Audio" && item.getIsStorageUrl());
-        return shouldClearStorageUsage;
-      })
-      .map((item) => item.getStorageId());
-  }
-
   removeFromBoard(): void {
     const isLocked = this.items
       .list()
@@ -1412,8 +1401,6 @@ export class BoardSelection {
     // 	}
     // });
 
-    conf.hooks.beforeMediaRemove(this.getMediaStorageIds(), this.board.getBoardId());
-
     this.emit({
       class: "Board",
       method: "remove",
@@ -1458,7 +1445,15 @@ export class BoardSelection {
   }
 
   async duplicate(): Promise<void> {
-    const mediaIds = this.getMediaStorageIds();
+    const mediaIds: string[] = []
+    this.items.list().forEach((item) => {
+      if ("getStorageId" in item) {
+        const storageId = item.getStorageId();
+        if (storageId) {
+          mediaIds.push(storageId);
+        }
+      }
+    });
     const canDuplicate = mediaIds.length
       ? await conf.hooks.beforeMediaUpload(mediaIds, this.board.getBoardId())
       : true;
@@ -1556,7 +1551,7 @@ export class BoardSelection {
     }
 
     const contextItems: Item[] = [];
-    if (single && single.itemType === "AINode") {
+    if (single && single instanceof AINode) {
       const contextItemsIds = single.getContextItems();
       if (contextItemsIds.length) {
         const newContextItems = this.board.items
@@ -1586,7 +1581,7 @@ export class BoardSelection {
     }
 
     contextItems.forEach((item) => {
-      if (item.itemType === "AINode") {
+      if (item instanceof AINode) {
         const path = item.getPath();
         path.setBorderColor(CONTEXT_NODE_HIGHLIGHT_COLOR);
         path.setBorderWidth(2);

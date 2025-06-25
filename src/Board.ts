@@ -38,6 +38,10 @@ import { ItemsMap } from "Validators";
 import { BoardSelection } from "Selection";
 import { v4 as uuidv4 } from "uuid";
 import {ItemDataWithId} from "./Items/Item";
+import CUSTOM_WEB_COMPONENTS_JS from "./public/customWebComponents.js" with { type: "text" };
+import LOAD_LINKS_IMAGES_JS from "./public/loadLinkImages.js" with { type: "text" };
+import INDEX_CSS from "./public/index.css" with { type: "text" };
+
 export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {
@@ -157,7 +161,6 @@ export class Board {
         if (!first || !second) {
           return;
         }
-        // @ts-expect-error incorrect type
         return this.index.moveSecondBeforeFirst(first, second);
       }
       case "moveSecondAfterFirst":
@@ -166,7 +169,6 @@ export class Board {
         if (!first || !second) {
           return;
         }
-        // @ts-expect-error incorrect type
         return this.index.moveSecondAfterFirst(first, second);
       case "bringToFront": {
         const items = op.item
