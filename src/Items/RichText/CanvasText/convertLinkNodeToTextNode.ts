@@ -4,8 +4,8 @@ import { conf } from 'Settings';
 import {node} from "slate";
 
 export const convertLinkNodeToTextNode = (node: LinkNode | TextNode): TextNode => {
-	if (node.type === 'text') {
-		return {...node, type: 'text' };
+	if (node.type === 'text' || "text" in node) {
+		return {...node, type: 'text' } as TextNode;
 	}
 	const link = node.link;
 	const text = node.children.map(child => child.text).join('');
