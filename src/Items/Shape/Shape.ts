@@ -150,12 +150,19 @@ export class Shape extends BaseItem {
       this.shapeType = data.shapeType;
       this.initPath();
     }
+    if (data.linkTo) {
+      this.linkTo.deserialize(data.linkTo);
+    }
     this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
     this.backgroundOpacity = data.backgroundOpacity ?? this.backgroundOpacity;
     this.borderColor = data.borderColor ?? this.borderColor;
     this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
     this.borderStyle = data.borderStyle ?? this.borderStyle;
     this.borderWidth = data.borderWidth ?? this.borderWidth;
+    if (data.transformation) {
+      this.transformation.deserialize(data.transformation);
+      this.transformPath();
+    }
     if (data.text) {
       this.text.deserialize(data.text);
     }
