@@ -25,7 +25,7 @@ export class AddConnector extends BoardTool {
   isDown = false;
   isQuickAdd = false;
 
-  constructor(private board: Board, itemToStart?: Item, position?: Point) {
+  constructor(board: Board, itemToStart?: Item, position?: Point) {
     super(board);
     this.snap = new ConnectorSnap(this.board);
     this.setCursor();
@@ -116,16 +116,16 @@ export class AddConnector extends BoardTool {
     return true;
   }
 
-  async leftButtonUp(): Promise<boolean> {
+  leftButtonUp(): boolean {
     this.isDown = false;
     if (!this.connector) {
       return true;
     }
     if (this.isDoneSecondPoint) {
-      await this.board.add(this.connector);
+      this.board.add(this.connector);
       this.board.tools.select();
     } else if (this.isDraggingFromFirstToSecond) {
-      const addedConnector = await this.board.add(this.connector);
+      const addedConnector = this.board.add(this.connector);
       const endPoint = this.connector.getEndPoint();
       this.board.tools.select();
       if (this.isQuickAdd && endPoint.pointType === 'Board') {

@@ -7,7 +7,7 @@ import { Sticker } from "Items/Sticker/Sticker";
 import { Shape } from "Items/Shape/Shape";
 import { Frame } from "Items/Frame/Frame";
 import { Comment } from "Items/Comment/Comment";
-import { transformShape } from "./ransformShape.ts";
+import { transformShape } from "./transformShape.ts";
 
 describe("transformShape", () => {
   let board: Board;

@@ -22,11 +22,11 @@ import { getProportionalResize } from "./TransformerHelpers/getResizeMatrix";
 import {
   getResizeType,
   ResizeType,
-} from "./TransformerHelpers/getResizeType.ts";
+} from "./TransformerHelpers/getResizeType";
 import { getTextResizeType } from "./TextTransformer/getTextResizeType";
 import { getFollowingComments } from "Selection/Transformer/TransformerHelpers/getFollowingComments";
 import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
-import { transformShape } from "Selection/Transformer/TransformerHelpers/ransformShape";
+import { transformShape } from "./TransformerHelpers/transformShape";
 import { transformRichText } from "Selection/Transformer/TransformerHelpers/transformRichText";
 import { transformAINode } from "Selection/Transformer/TransformerHelpers/transformAINode";
 import { transformItems } from "Selection/Transformer/TransformerHelpers/transformItems";
@@ -113,7 +113,7 @@ export class Transformer extends Tool {
   }
 
   updateAlignmentBySnapLines(single: Item | null): void {
-    if (single) {
+    if (single && this.resizeType) {
       this.snapLines = this.alignmentHelper.checkAlignment(single);
       const snapped = this.alignmentHelper.snapToSide(
         single,

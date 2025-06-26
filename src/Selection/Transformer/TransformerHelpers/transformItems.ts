@@ -14,6 +14,7 @@ import { Mbr } from "Items/Mbr/Mbr";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
 import { Item } from "Items/Item";
+import {Frame} from "../../../Items";
 
 export function transformItems({
   board,
@@ -63,7 +64,7 @@ export function transformItems({
   }
 
   const isIncludesFixedFrame = items.some(
-    (item) => item.itemType === "Frame" && !item.getCanChangeRatio()
+    (item) => item instanceof Frame && !item.getCanChangeRatio()
   );
 
   const shouldBeProportionalResize =

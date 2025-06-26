@@ -1,6 +1,6 @@
 import { Board } from 'Board';
 import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
-import { Line, Mbr, Item, Point, Frame } from 'Items';
+import {Line, Mbr, Item, Point, Frame, Connector, Comment, RichText} from 'Items';
 import { DrawingContext } from 'Items/DrawingContext';
 import { Group } from 'Items/Group';
 import { quickAddItem } from 'Selection/QuickAddButtons';
@@ -11,6 +11,7 @@ import AlignmentHelper from 'Tools/RelativeAlignment';
 import { RELATIVE_ALIGNMENT_COLOR } from 'Tools/RelativeAlignment/RelativeAlignment';
 import { Tool } from 'Tools/Tool';
 import { isSafari } from 'isSafari';
+import {BoardSelection} from "../../Selection";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -352,7 +353,7 @@ export class Select extends Tool {
 
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			if (
-				this.downOnItem.itemType === 'Connector' &&
+				this.downOnItem instanceof Connector &&
 				this.downOnItem.isConnectedOnePoint() &&
 				!this.board.keyboard.isCtrl
 			) {
@@ -410,7 +411,7 @@ export class Select extends Tool {
 		const isDrawingSelectionMbr = this.isDrawingRectangle && this.line && this.rect;
 		if (isDrawingSelectionMbr) {
 			const point = this.board.pointer.point.copy();
-			this.line = new Line(this.line.start, point);
+			this.line = new Line(this.line?.start, point);
 			this.rect = this.line.getMbr();
 			this.rect.borderColor = conf.SELECTION_COLOR;
 			this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
@@ -606,7 +607,7 @@ export class Select extends Tool {
 		}
 	}
 
-	private updateFramesNesting(selectionMbr: Mbr | undefined, selection: Selection): void {
+	private updateFramesNesting(selectionMbr: Mbr | undefined, selection: BoardSelection): void {
 		const frames = this.board.items
 			.getEnclosedOrCrossed(
 				selectionMbr!.left,
@@ -742,7 +743,7 @@ export class Select extends Tool {
 				const isNotInSelection = this.board.selection.items.findById(underPointer.getId()) === null;
 				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
-					if (underPointer.itemType === 'Frame') {
+					if (underPointer instanceof Frame) {
 						const { left, right, top, bottom } = underPointer.getMbr();
 						const itemsInFrame = this.board.items
 							.getEnclosedOrCrossed(left, top, right, bottom)
@@ -917,8 +918,8 @@ export class Select extends Tool {
 
 	onConfirm(): void {
 		const single = this.board.selection.items.getSingle();
-		if (this.board.selection.showQuickAddPanel && single && single.itemType === 'Connector') {
-			quickAddItem(this.board, 'copy', single);
+		if (this.board.selection.showQuickAddPanel && single && single instanceof Connector) {
+			quickAddItem(this.board, 'Rectangle', single);
 		} else if (
 			single &&
 			this.board.selection.getContext() !== 'EditTextUnderPointer' &&
@@ -930,8 +931,8 @@ export class Select extends Tool {
 			this.board.selection.getContext() === 'EditTextUnderPointer' &&
 			!this.board.selection.getIsLockedSelection()
 		) {
-			if ((single && 'text' in single) || single?.itemType === 'RichText') {
-				const text = single.itemType === 'RichText' ? single : single.text;
+			if ((single && 'text' in single) || single instanceof RichText) {
+				const text = single instanceof RichText ? single : single.text;
 				text.editor.splitNode();
 			}
 		}

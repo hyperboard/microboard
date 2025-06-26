@@ -11,6 +11,7 @@ import { RichText } from "Items/RichText/RichText";
 import { AINode } from "Items/AINode/AINode";
 import { Sticker } from "Items/Sticker/Sticker";
 import { Board } from "Board";
+import {Frame} from "../../../Items";
 
 export function handleMultipleItemsResize({
   board,
@@ -203,7 +204,7 @@ function getItemTranslation({
     };
   } else {
     if (
-      item.itemType === "Frame" &&
+      item instanceof Frame &&
       item.getCanChangeRatio() &&
       isShiftPressed &&
       item.getFrameType() !== "Custom"

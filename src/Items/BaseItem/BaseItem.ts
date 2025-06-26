@@ -11,6 +11,7 @@ import { TransformationData } from "Items/Transformation/TransformationData";
 import { BaseOperation } from "Events/EventsOperations";
 import { BaseCommand } from "Events/Command";
 import {Subject} from "../../Subject";
+import {Path, Paths} from "../Path";
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
@@ -130,6 +131,10 @@ export class BaseItem extends Mbr implements Geometry {
 
 	getPathMbr(): Mbr {
 		return this.getMbr().copy()
+	}
+
+	getPath(): Path | Paths {
+		return new Path(this.getMbr().getLines());
 	}
 
 	render(context: DrawingContext): void {}

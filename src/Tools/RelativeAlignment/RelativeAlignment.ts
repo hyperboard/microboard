@@ -1,10 +1,11 @@
 import { Board } from "Board";
 import { CanvasDrawer } from "drawMbrOnCanvas";
-import { Item, Mbr, Line, Frame, Point } from "Items";
+import {Item, Mbr, Line, Frame, Point, TranslateOperation} from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { SpatialIndex } from "SpatialIndex";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
+import {TransformManyItems} from "../../Items/Transformation/TransformationOperations";
 
 export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
 
@@ -43,8 +44,7 @@ export class AlignmentHelper {
       if (i === 0) {
         return acc;
       }
-      const itemMbr =
-        item.itemType === "Shape" ? item.getPath().getMbr() : item.getMbr();
+      const itemMbr = item.getPathMbr();
       return acc.combine(itemMbr);
     }, items[0].getMbr());
   }
@@ -601,9 +601,11 @@ export class AlignmentHelper {
       const translation = this.board.selection.getManyItemsTranslation(x, y);
       this.board.selection.transformMany(translation, timeStamp);
     } else {
-      const key = item.getId();
-      const transformMap = {};
-      transformMap[key] = {
+      const id = item.getId();
+      const transformMap: { [key: string]: TranslateOperation } = {};
+      transformMap[id] = {
+        class: "Transformation",
+        item: [id],
         method: "translateBy",
         x,
         y,

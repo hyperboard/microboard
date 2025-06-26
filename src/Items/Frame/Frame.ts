@@ -288,12 +288,7 @@ export class Frame extends BaseItem {
     opposite: Point,
     startMbr: Mbr,
     timeStamp: number
-  ): { matrix: Matrix; mbr: Mbr } | boolean {
-    if (this.transformation.isLocked) {
-      this.board?.pointer.setCursor("default");
-      return false;
-    }
-
+  ): { matrix: Matrix; mbr: Mbr } {
     const res = this.getCanChangeRatio()
       ? getResize(resizeType, pointer, mbr, opposite)
       : getProportionalResize(resizeType, pointer, mbr, opposite);
