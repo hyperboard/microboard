@@ -399,6 +399,7 @@ function mergeRichTextOperations(
 function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
   if (
     opA.method === "add" &&
+    opA.data.itemType === "RichText" &&
     opB.method === "edit" &&
     opA.item === opB.item[0] &&
     opB.ops[0].type === "insert_text"

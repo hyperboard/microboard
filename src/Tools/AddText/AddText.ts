@@ -10,7 +10,7 @@ export class AddText extends BoardTool {
 	line: Line | undefined;
 	bounds = new Mbr();
 
-	constructor(private board: Board) {
+	constructor(board: Board) {
 		super(board);
 		this.setCursor();
 	}
@@ -44,7 +44,7 @@ export class AddText extends BoardTool {
 		return false;
 	}
 
-	async leftButtonUp(): Promise<boolean> {
+	leftButtonUp(): boolean {
 		if (this.line) {
 			const board = this.board;
 
@@ -53,7 +53,7 @@ export class AddText extends BoardTool {
 			richText.transformation.applyScaleBy(1, 1);
 			richText.editor.maxWidth = 600;
 			richText.insideOf = richText.itemType;
-			const text = await board.add(richText);
+			const text = board.add(richText);
 			this.board.selection.removeAll();
 			this.board.selection.add(text);
 			this.board.selection.editText();

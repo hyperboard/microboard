@@ -6,7 +6,7 @@ export interface LayoutBlockNodes {
 	width: number;
 	height: number;
 	didBreakWords: boolean;
-	render: (ctx: CanvasRenderingContext2D, scale?: number) => void;
+	render: (ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, scale?: number) => void;
 	realign: (newMaxWidht: number) => void;
 	recoordinate: (newMaxWidth?: number) => void;
 	linkPositions: {

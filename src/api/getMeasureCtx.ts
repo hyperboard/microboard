@@ -2,7 +2,7 @@ import { conf } from 'Settings';
 
 export function getMeasureCtx() {
 	if (typeof document !== 'undefined') {
-		const measureCanvas = conf.documentFactory.createElement('canvas');
+		const measureCanvas = conf.documentFactory.createElement('canvas') as HTMLCanvasElement;
 		const measureCtx = measureCanvas.getContext('2d');
 		if (!measureCtx) {
 			throw new Error('Failde to create canvas and get 2d context');

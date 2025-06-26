@@ -3,7 +3,7 @@ import { BlockNode } from '../Editor/BlockNode';
 import { TextNode } from '../Editor/TextNode';
 import { LayoutBlockNodes } from './LayoutBlockNodes';
 
-type Ctx = CanvasRenderingContext2D;
+type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 export function getBlockNodes(
 	data: BlockNode[],

@@ -29,7 +29,7 @@ const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
 // global.document = dom.window.document; // documents are not the same
 // global.window = dom.window; // had to comment out, this does not work
 global.HTMLImageElement = dom.window.HTMLImageElement;
-global.Image = Image; // Use the canvas Image implementation
+global.Image = Image as any; // Use the canvas Image implementation
 
 // Override the Image implementation for Node.js
 Image.prototype.onload = function () {};
