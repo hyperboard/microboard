@@ -11,7 +11,7 @@ import { itemValidators } from "Validators";
 type RegisterItemArgs = {
   item: any;
   defaultData: BaseItemData;
-  toolData: { name: string; tool: typeof CustomTool };
+  toolData?: { name: string; tool: typeof CustomTool };
 };
 
 export function registerItem({
@@ -22,7 +22,9 @@ export function registerItem({
   const { itemType } = defaultData;
   itemFactories[itemType] = createItemFactory(item, defaultData);
   itemValidators[itemType] = createItemValidator(defaultData);
-  registeredTools[toolData.name] = toolData.tool;
+  if (toolData) {
+    registeredTools[toolData.name] = toolData.tool;
+  }
 
   itemCommandFactories[itemType] = createItemCommandFactory(itemType);
 }
