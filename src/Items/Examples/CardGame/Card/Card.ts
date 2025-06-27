@@ -24,7 +24,8 @@ export type DeckRenderData = {
 export const defaultCardData: BaseItemData = {
   itemType: "Card",
   isOpen: false,
-  name: "",
+  faceUrl: "",
+  backsideUrl: "",
   isInDeck: false,
 };
 
@@ -32,11 +33,12 @@ export const CARD_DIMENSIONS = {width: 250, height: 400};
 
 export class Card extends BaseItem {
   readonly subject = new Subject<Card>();
-  private name = "";
+  private faceUrl = "";
+  private backsideUrl = "";
   private isOpen = false;
   private isInDeck = false;
   private throttledBringToFront: () => void;
-  image: HTMLImageElement | null = null;
+  face: HTMLImageElement | null = null;
   backside: HTMLImageElement | null = null;
   private imageToRender: HTMLImageElement | null = null;
   shouldUseCustomRender = false;
@@ -44,13 +46,16 @@ export class Card extends BaseItem {
   constructor(
     board: Board,
     id = "",
-    defaultData: BaseItemData | undefined,
-    name: string,
+    urls?: {faceUrl: string, backsideUrl: string},
   ) {
     super(board, id, defaultCardData);
-    this.name = name;
 
-    this.createImages();
+    if (urls) {
+      this.faceUrl = urls.faceUrl;
+      this.backsideUrl = urls.backsideUrl;
+
+      this.createImages();
+    }
 
     this.throttledBringToFront = throttle(() => {
       this.board.bringToFront(this);
@@ -67,15 +72,15 @@ export class Card extends BaseItem {
   }
 
   createImages() {
-    this.image = conf.documentFactory.createElement(
+    this.face = conf.documentFactory.createElement(
       "img",
     ) as HTMLImageElement;
     this.backside = conf.documentFactory.createElement(
       "img",
     ) as HTMLImageElement;
-    this.image.src = `/Assets/Cards/${this.name}.png`;
-    this.backside.src = `/Assets/Cards/backside.png`;
-    this.image.onload = () => {
+    this.face.src = this.faceUrl;
+    this.backside.src = this.backsideUrl;
+    this.face.onload = () => {
       this.subject.publish(this);
     };
     this.backside.onload = () => {
@@ -107,7 +112,7 @@ export class Card extends BaseItem {
     // 	}
     // }
     if (this.isOpen) {
-      this.imageToRender = this.image;
+      this.imageToRender = this.face;
     }
   }
 
