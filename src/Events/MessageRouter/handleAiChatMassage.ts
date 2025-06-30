@@ -292,7 +292,7 @@ function handleAudioGenerate(response: GenerateAudioResponse, board: Board): voi
 
 function handleImageGenerate(response: GenerateImageResponse, board: Board): void {
 	if (response.status === 'completed' && response.base64) {
-		prepareImage(response.base64, null, board.getBoardId())
+		prepareImage(response.base64, conf.getAccessToken(), board.getBoardId())
 			.then(imageData => {
 				const placeholderId = board.aiImagePlaceholder?.getId();
 				if (placeholderId) {

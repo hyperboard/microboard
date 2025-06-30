@@ -135,6 +135,7 @@ export interface ExportSnapshotSelection {
   endY: number;
 }
 
+type GetAccessTokenFunction = () => string | null;
 type OpenModalFunction = (modalId: string) => void;
 type NotifyWrapperFunction = NotifyFunction;
 type DisMissNotificationFunction = (toastId?: string) => void;
@@ -183,6 +184,7 @@ export const conf = {
     onUploadMediaError: async (...args: any[]) => false,
   },
 
+  getAccessToken: (() => null) as GetAccessTokenFunction,
   openModal: (() => {}) as OpenModalFunction,
   notify: (() => "") as NotifyWrapperFunction,
   disMissNotification: (() => {}) as DisMissNotificationFunction,
