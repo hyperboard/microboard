@@ -64,7 +64,6 @@ export class Card extends BaseItem {
     this.transformation.subject.subscribe(() => {
       this.throttledBringToFront();
       this.updateMbr();
-      this.updateImageToRender();
       this.subject.publish(this);
     });
 
@@ -86,6 +85,7 @@ export class Card extends BaseItem {
     this.backside.onload = () => {
       this.subject.publish(this);
     };
+    this.updateImageToRender();
   }
 
   setIsInDeck(isInDeck: boolean) {
