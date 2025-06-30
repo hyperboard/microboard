@@ -8,6 +8,7 @@ import {DocumentFactory} from "../../../../api/DocumentFactory";
 import {DiceOperation} from "./DiceOperation";
 import {registerItem} from "../../../RegisterItem";
 import {ShapeTool} from "../../../../Tools/CustomTool";
+import {AddDice} from "./AddDice";
 
 const TIMEOUT = 3000;
 
@@ -248,5 +249,5 @@ export class Dice extends BaseItem {
 registerItem({
   item: Dice,
   defaultData: defaultDiceData,
-  toolData: {name: "AddDice", tool: ShapeTool},
+  toolData: {name: "AddDice", tool: AddDice},
 });
