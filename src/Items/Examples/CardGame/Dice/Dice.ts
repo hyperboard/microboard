@@ -7,14 +7,13 @@ import {DrawingContext} from "../../../DrawingContext";
 import {DocumentFactory} from "../../../../api/DocumentFactory";
 import {DiceOperation} from "./DiceOperation";
 import {registerItem} from "../../../RegisterItem";
-import {ShapeTool} from "../../../../Tools/CustomTool";
 import {AddDice} from "./AddDice";
 
 const TIMEOUT = 3000;
 
 export const defaultDiceData: BaseItemData = {
   itemType: "Dice",
-  backgroundColor: "#000207",
+  backgroundColor: "#FFFFFF",
   backgroundOpacity: 1,
   borderColor: "#000207",
   borderOpacity: 1,
@@ -29,9 +28,10 @@ export class Dice extends BaseItem {
   private path: Path;
   readonly subject = new Subject<Dice>();
   private borderWidth = 1;
-  isRotating = false;
   value = 1;
   range = {min: 1, max: 6};
+  private animationFrameId?: number;
+  drawingContext: DrawingContext | null = null;
 
   constructor(board: Board, id = "") {
     super(board, id, defaultDiceData);
@@ -56,13 +56,14 @@ export class Dice extends BaseItem {
   }
 
   render(context: DrawingContext): void {
+    this.drawingContext = context;
     if (this.transformationRenderBlock) {
       return;
     }
 
     context.ctx.save();
 
-    if (this.isRotating) {
+    if (this.animationFrameId) {
       const now = Date.now();
       const angle = ((now % 1000) / 1000) * 2 * Math.PI;
       const mbr = this.getMbr();
@@ -172,16 +173,6 @@ export class Dice extends BaseItem {
     });
   }
 
-  setIsRotating(isRotating: boolean): void {
-    this.emit({
-      class: "Dice",
-      method: "setIsRotating",
-      item: [this.getId()],
-      newData: {isRotating},
-      prevData: {isRotating: false}
-    });
-  }
-
   setValuesRange(range: {min: number, max: number}): void {
     this.emit({
       class: "Dice",
@@ -202,11 +193,20 @@ export class Dice extends BaseItem {
     });
   }
 
+  setIsRotating(isRotating: boolean): void {
+    this.emit({
+      class: "Dice",
+      method: "setIsRotating",
+      item: [this.getId()],
+      newData: {isRotating},
+      prevData: {isRotating: false}
+    });
+  }
+
   throwDice() {
     this.setIsRotating(true);
     setTimeout(() => {
       this.setValue(Math.ceil(Math.random() * (this.range.max - this.range.min)) + this.range.min);
-      this.isRotating = false;
     }, TIMEOUT)
   }
 
@@ -225,16 +225,15 @@ export class Dice extends BaseItem {
             this.applyBorderColor(op.newData.borderColor);
             break;
           case "setIsRotating":
-            this.isRotating = op.newData.isRotating;
             if (op.newData.isRotating) {
+              this.startRotation();
               setTimeout(() => {
-                this.isRotating = false;
+                this.stopRotation();
               }, TIMEOUT)
             }
             break;
           case "changeValue":
             this.value = op.newData.value;
-            this.isRotating = false;
             break;
           case "changeValuesRange":
             this.range = op.newData;
@@ -243,6 +242,26 @@ export class Dice extends BaseItem {
         break;
     }
     this.subject.publish(this);
+  }
+
+  startRotation() {
+    if (!this.animationFrameId) {
+      const animate = () => {
+        if (this.drawingContext) {
+          this.render(this.drawingContext);
+          this.animationFrameId = requestAnimationFrame(animate);
+        }
+      };
+      this.animationFrameId = requestAnimationFrame(animate);
+    }
+  }
+
+  stopRotation() {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+      this.drawingContext = null;
+    }
   }
 }
 
