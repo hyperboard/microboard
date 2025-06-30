@@ -1,0 +1,1 @@
+export {Dice} from './Dice';
