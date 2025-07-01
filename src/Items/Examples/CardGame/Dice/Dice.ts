@@ -164,6 +164,7 @@ export class Dice extends BaseItem {
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
 
+    this.createRenderValues();
     this.transformPath();
     this.subject.publish(this);
     return this;
