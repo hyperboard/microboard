@@ -9,7 +9,7 @@ import {DiceOperation} from "./DiceOperation";
 import {registerItem} from "../../../RegisterItem";
 import {AddDice} from "./AddDice";
 
-const TIMEOUT = 3000;
+const TIMEOUT = 2000;
 
 export const defaultDiceData: BaseItemData = {
   itemType: "Dice",
@@ -65,7 +65,7 @@ export class Dice extends BaseItem {
 
     if (this.animationFrameId) {
       const now = Date.now();
-      const angle = ((now % 1000) / 1000) * 2 * Math.PI;
+      const angle = ((now % 500) / 500) * 2 * Math.PI;
       const mbr = this.getMbr();
       const centerX = (mbr.left + mbr.right) / 2;
       const centerY = (mbr.top + mbr.bottom) / 2;
