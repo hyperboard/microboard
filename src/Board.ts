@@ -3,23 +3,25 @@ import {
   BoardOps,
   CreateItem,
   CreateLockedGroupItem,
+  DataMap,
+  ItemsIndexRecord,
   RemoveItem,
   RemoveLockedGroup,
-  ItemsIndexRecord, DataMap,
 } from "BoardOperations";
 import { Camera } from "Camera";
-import { Events, Operation, ItemOperation } from "Events";
+import { Events, ItemOperation, Operation } from "Events";
 import { SyncBoardEvent } from "Events/Events";
 import { itemFactories } from "itemFactories";
 import {
-  Item,
+  Comment,
+  Connector,
   ConnectorData,
   Frame,
-  ItemData,
   FrameData,
-  Connector,
+  Item,
+  ItemData,
   Matrix,
-  Mbr, Comment,
+  Mbr,
 } from "Items";
 import { AINode } from "Items/AINode";
 import { ControlPointData } from "Items/Connector/ControlPoint";
@@ -30,17 +32,17 @@ import { Keyboard } from "Keyboard";
 import { parsersHTML } from "parserHTML";
 import { Pointer } from "Pointer";
 import { Presence } from "Presence/Presence";
+import { BoardSelection } from "Selection";
 import { conf } from "Settings";
 import { SpatialIndex } from "SpatialIndex";
 import { Subject } from "Subject";
 import { Tools } from "Tools";
-import { ItemsMap } from "Validators";
-import { BoardSelection } from "Selection";
 import { v4 as uuidv4 } from "uuid";
-import {ItemDataWithId} from "./Items/Item";
+import { ItemsMap } from "Validators";
+import { ItemDataWithId } from "./Items/Item";
 import CUSTOM_WEB_COMPONENTS_JS from "./public/customWebComponents.js" with { type: "text" };
-import LOAD_LINKS_IMAGES_JS from "./public/loadLinkImages.js" with { type: "text" };
 import INDEX_CSS from "./public/index.css" with { type: "text" };
+import LOAD_LINKS_IMAGES_JS from "./public/loadLinkImages.js" with { type: "text" };
 
 export type InterfaceType = "edit" | "view" | "loading";
 

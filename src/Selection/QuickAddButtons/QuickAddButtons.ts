@@ -1,24 +1,24 @@
 import { Board } from "Board";
 import {
-  Item,
-  ConnectorData,
-  Point,
-  ItemData,
-  Mbr,
-  Matrix,
-  Shape,
   Connector,
+  ConnectorData,
+  Item,
+  ItemData,
+  Matrix,
+  Mbr,
+  Point,
   RichText,
+  Shape,
 } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
+import { BoardSelection } from "Selection";
+import { SessionStorage } from "SessionStorage";
+import "./QuickAddButtons.css";
 import {
   createAINode,
   createRichText,
   getControlPointData,
 } from "./quickAddHelpers";
-import { BoardSelection } from "Selection";
-import { SessionStorage } from "SessionStorage";
-import styles from "./QuickAddButtons.module.css";
 
 export interface QuickAddButtons {
   clear: () => void;
@@ -97,7 +97,9 @@ export function getQuickAddButtons(
       3: { x: -2 * offsetX, y: 0 },
     };
 
-    const baseAdjustments: { [key: number]: { translateX: number; translateY: number } } = {
+    const baseAdjustments: {
+      [key: number]: { translateX: number; translateY: number };
+    } = {
       0: { translateX: -offsetX - width, translateY: 0 },
       1: { translateX: offsetX + width, translateY: 0 },
       2: { translateX: 0, translateY: -offsetY - height },
@@ -156,7 +158,12 @@ export function getQuickAddButtons(
     }
 
     const endPoints = getQuickButtonsPositions(newMbr);
-    const reverseIndexMap: { [key: number]: number } = { 0: 1, 1: 0, 2: 3, 3: 2 };
+    const reverseIndexMap: { [key: number]: number } = {
+      0: 1,
+      1: 0,
+      2: 3,
+      3: 2,
+    };
     const connectorEndPoint =
       endPoints?.positions[reverseIndexMap[index]] || new Point();
     const fontSize =
@@ -181,7 +188,7 @@ export function getQuickAddButtons(
         translateY: 0,
         ...newItemData.transformation,
         scaleX: scaleX,
-        scaleY: scaleY
+        scaleY: scaleY,
       };
       newItemPlaceholder = board.createItem(newItem.getId(), shapeData);
     }
@@ -304,7 +311,9 @@ export function getQuickAddButtons(
 
     const cameraMatrix = board.camera.getMatrix();
     const cameraMbr = board.camera.getMbr();
-    const positionAdjustments: { [key: number]: { left: number; top: number, rotate: string } } = {
+    const positionAdjustments: {
+      [key: number]: { left: number; top: number; rotate: string };
+    } = {
       0: { left: -20, top: 0, rotate: "left" },
       1: { left: 20, top: 0, rotate: "right" },
       2: { left: 0, top: -20, rotate: "top" },
@@ -333,11 +342,11 @@ export function getQuickAddButtons(
           rotate: "right",
         };
         const button = document.createElement("button") as HTMLQuickAddButton;
-        button.classList.add(styles.quickAddButton);
+        button.classList.add("microboard-quickAddButton");
         if (item.itemType === "AINode" && index === 2) {
-          button.classList.add(styles.invisible);
+          button.classList.add("microboard-invisible");
         }
-        button.classList.add(styles[adjustment.rotate]);
+        button.classList.add(`microboard-${adjustment.rotate}`);
         button.style.left = `${
           (pos.x - cameraMbr.left) * cameraMatrix.scaleX + adjustment.left
         }px`;
@@ -351,7 +360,7 @@ export function getQuickAddButtons(
         button.resetState();
 
         button.onmouseleave = () => {
-          button.classList.remove(styles.quickAddButtonActive);
+          button.classList.remove("microboard-quickAddButtonActive");
           if (timeoutId) {
             clearTimeout(timeoutId);
           }
@@ -371,7 +380,7 @@ export function getQuickAddButtons(
 
         button.onmouseenter = () => {
           timeoutId = setTimeout(() => {
-            button.classList.add(styles.quickAddButtonActive);
+            button.classList.add("microboard-quickAddButtonActive");
             const selectedItem = selection.items.getSingle();
             if (!selectedItem) {
               return;
