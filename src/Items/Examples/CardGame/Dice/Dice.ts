@@ -188,7 +188,7 @@ export class Dice extends BaseItem {
   }
 
   throwDice() {
-    this.setValue(Math.ceil(Math.random() * (this.range.max - this.range.min)) + this.range.min);
+    this.setValue(Math.floor(Math.random() * (this.range.max - this.range.min + 1)) + this.range.min);
   }
 
   apply(op: DiceOperation): void {

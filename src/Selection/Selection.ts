@@ -1038,6 +1038,26 @@ export class BoardSelection {
 
   setStrokeWidth(width: number): void {
     // TODO make single operation to set strokeWidth on any item with stroke
+    // const operation = {
+    //   class: "Shape",
+    //   method: "setStrokeWidth",
+    //   item: [] as string[],
+    //   width,
+    // };
+    // const operations: {[itemType: string]: typeof operation} = {};
+    //
+    // this.items.list().forEach((item) => {
+    //   if (!operations[item.itemType]) {
+    //     operations[item.itemType] = {...operation, class: item.itemType, item: [item.getId()]};
+    //   } else {
+    //     operations[item.itemType].item.push(item.getId());
+    //   }
+    // })
+    //
+    // Object.values(operations).forEach((op) => {
+    //   this.emit(op);
+    // })
+
     const shapes = this.items.getIdsByItemTypes(["Shape"]);
     if (shapes.length > 0) {
       this.emit({
@@ -1071,6 +1091,25 @@ export class BoardSelection {
 
   setFillColor(backgroundColor: string): void {
     // TODO make single operation to set color on any item with fill
+    // const operation = {
+    //   class: "Shape",
+    //   method: "setBackgroundColor",
+    //   item: [] as string[],
+    //   backgroundColor,
+    // };
+    // const operations: {[itemType: string]: typeof operation} = {};
+    //
+    // this.items.list().forEach((item) => {
+    //   if (!operations[item.itemType]) {
+    //     operations[item.itemType] = {...operation, class: item.itemType, item: [item.getId()]};
+    //   } else {
+    //     operations[item.itemType].item.push(item.getId());
+    //   }
+    // })
+    //
+    // Object.values(operations).forEach((op) => {
+    //   this.emit(op);
+    // })
     const shapes = this.items.getIdsByItemTypes(["Shape"]);
     if (shapes.length) {
       this.emit({
