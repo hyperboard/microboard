@@ -2,7 +2,7 @@ import { BaseOperation } from "Events/EventsOperations";
 
 export type DiceOperation = ChangeValue | ChangeValuesRange | SetBackgroundColor | SetBorderColor | SetBorderWidth;
 
-interface ChangeValue extends BaseOperation<{ value: number, shouldRotate: boolean }> {
+interface ChangeValue extends BaseOperation<{ value: number, shouldRotate: boolean, timeStamp?: number }> {
   class: "Dice";
   method: "changeValue";
 }

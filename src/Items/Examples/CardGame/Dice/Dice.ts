@@ -85,16 +85,6 @@ export class Dice extends BaseItem {
     context.ctx.textBaseline = "middle";
     context.ctx.fillText(String(this.value), centerX, centerY);
 
-    if (this.getLinkTo()) {
-      const {top, right} = this.getMbr();
-      this.linkTo.render(
-        context,
-        top,
-        right,
-        this.board.camera.getScale(),
-      );
-    }
-
     context.ctx.restore();
   }
 
@@ -188,7 +178,7 @@ export class Dice extends BaseItem {
       class: "Dice",
       method: "changeValue",
       item: [this.getId()],
-      newData: {value, shouldRotate: true},
+      newData: {value, shouldRotate: true, timeStamp: Date.now()},
       prevData: {value: this.value, shouldRotate: false}
     });
   }
@@ -212,7 +202,7 @@ export class Dice extends BaseItem {
             this.applyBorderColor(op.newData.borderColor);
             break;
           case "changeValue":
-            if (op.newData.shouldRotate) {
+            if (op.newData.shouldRotate && op.newData.timeStamp && Date.now() - op.newData.timeStamp < 10000) {
               this.startRotation();
               setTimeout(() => {
                 this.stopRotation();
@@ -235,7 +225,8 @@ export class Dice extends BaseItem {
     if (!this.animationFrameId) {
       const animate = () => {
         if (this.drawingContext) {
-          this.render(this.drawingContext);
+          this.subject.publish(this);
+          // this.render(this.drawingContext);
           this.animationFrameId = requestAnimationFrame(animate);
         }
       };
