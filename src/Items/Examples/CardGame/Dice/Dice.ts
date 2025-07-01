@@ -118,6 +118,10 @@ export class Dice extends BaseItem {
     return !!this.animationFrameId;
   }
 
+  getRange(): {min: number, max: number} {
+    return this.range;
+  }
+
   private applyBackgroundColor(backgroundColor: string): void {
     this.backgroundColor = backgroundColor;
     this.path.setBackgroundColor(backgroundColor);
