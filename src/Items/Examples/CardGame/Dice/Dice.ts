@@ -173,6 +173,10 @@ export class Dice extends BaseItem {
     return !!this.animationFrameId;
   }
 
+  getType(): DiceType {
+    return this.type;
+  }
+
   getRange(): {min: number, max: number} {
     if (this.type === "custom") {
       return {min: 1, max: this.values.length};
