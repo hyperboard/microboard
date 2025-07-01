@@ -1,15 +1,15 @@
 import { BaseOperation } from "Events/EventsOperations";
 
-export type DiceOperation = ChangeValue | ChangeValuesRange | SetBackgroundColor | SetBorderColor | SetBorderWidth;
+export type DiceOperation = ChangeValueIndex | ChangeValues | SetBackgroundColor | SetBorderColor | SetBorderWidth;
 
-interface ChangeValue extends BaseOperation<{ value: number, shouldRotate: boolean, timeStamp?: number }> {
+interface ChangeValueIndex extends BaseOperation<{ valueIndex: number, shouldRotate: boolean, timeStamp?: number }> {
   class: "Dice";
-  method: "changeValue";
+  method: "changeValueIndex";
 }
 
-interface ChangeValuesRange extends BaseOperation<{ min: number, max: number }> {
+interface ChangeValues extends BaseOperation<{ values: number[] }> {
   class: "Dice";
-  method: "changeValuesRange";
+  method: "changeValues";
 }
 
 interface SetBackgroundColor extends BaseOperation<{ backgroundColor: string }> {

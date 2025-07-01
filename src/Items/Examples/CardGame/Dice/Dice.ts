@@ -8,33 +8,49 @@ import {DocumentFactory} from "../../../../api/DocumentFactory";
 import {DiceOperation} from "./DiceOperation";
 import {registerItem} from "../../../RegisterItem";
 import {AddDice} from "./AddDice";
+import {conf} from "../../../../Settings";
+
+export type DiceType = "common" | "custom";
 
 const TIMEOUT = 2000;
 
 export const defaultDiceData: BaseItemData = {
   itemType: "Dice",
+  type: "common",
   backgroundColor: "#FFFFFF",
   backgroundOpacity: 1,
   borderColor: "#000207",
   borderOpacity: 1,
   borderStyle: "solid",
   borderWidth: 1,
-  value: 1,
-  range: {min: 1, max: 6}
+  valueIndex: 0,
+  values: [1, 2, 3, 4, 5, 6],
 };
 
 export class Dice extends BaseItem {
   readonly itemType = "Dice";
+  private type: DiceType = "common";
   private path: Path;
   readonly subject = new Subject<Dice>();
   private borderWidth = 1;
-  value = 1;
-  range = {min: 1, max: 6};
+  valueIndex = 0;
+  values: number[] | string[] = [];
+  renderValues: Record<number, number | HTMLImageElement> = {};
   private animationFrameId?: number;
   drawingContext: DrawingContext | null = null;
 
-  constructor(board: Board, id = "") {
+  constructor(board: Board, id = "", type?: DiceType, values?: number[] | string[] ) {
     super(board, id, defaultDiceData);
+
+    if (type) {
+      this.type = type;
+    }
+    if (values) {
+      this.values = values;
+    }
+
+    this.createRenderValues();
+
     this.transformPath();
 
     this.transformation.subject.subscribe(() => {
@@ -53,6 +69,25 @@ export class Dice extends BaseItem {
     this.path.setBackgroundColor(this.backgroundColor);
     this.path.setBorderColor(this.borderColor);
     this.path.setBorderWidth(this.borderWidth);
+  }
+
+  createRenderValues(): void {
+    this.values.forEach((value, index) => {
+      if (typeof value === "number") {
+        this.renderValues[index] = value;
+      } else {
+        const image = conf.documentFactory.createElement("img") as HTMLImageElement;
+        image.src = value;
+        this.renderValues[index] = image;
+        image.onload = () => {
+          this.subject.publish(this);
+        };
+        image.onerror = () => {
+          this.renderValues[index] = 1;
+          this.subject.publish(this);
+        };
+      }
+    })
   }
 
   render(context: DrawingContext): void {
@@ -79,11 +114,31 @@ export class Dice extends BaseItem {
     const centerX = (mbr.left + mbr.right) / 2;
     const centerY = (mbr.top + mbr.bottom) / 2;
 
-    context.ctx.fillStyle = "black";
-    context.ctx.font = `bold ${this.getHeight() / 3}px sans-serif`;
-    context.ctx.textAlign = "center";
-    context.ctx.textBaseline = "middle";
-    context.ctx.fillText(String(this.value), centerX, centerY);
+    const valueToRender = this.renderValues[this.valueIndex];
+    if (typeof valueToRender === "number") {
+      context.ctx.fillStyle = "black";
+      context.ctx.font = `bold ${this.getHeight() / 3}px sans-serif`;
+      context.ctx.textAlign = "center";
+      context.ctx.textBaseline = "middle";
+      context.ctx.fillText(String(valueToRender), centerX, centerY);
+    } else if (valueToRender instanceof HTMLImageElement) {
+      const size = this.getHeight() / 3;
+      if (valueToRender.complete && valueToRender.naturalWidth > 0) {
+        context.ctx.drawImage(
+          valueToRender,
+          centerX - size / 2,
+          centerY - size / 2,
+          size,
+          size
+        );
+      } else {
+        context.ctx.fillStyle = "black";
+        context.ctx.font = `bold ${size}px sans-serif`;
+        context.ctx.textAlign = "center";
+        context.ctx.textBaseline = "middle";
+        context.ctx.fillText("?", centerX, centerY);
+      }
+    }
 
     context.ctx.restore();
   }
@@ -119,7 +174,10 @@ export class Dice extends BaseItem {
   }
 
   getRange(): {min: number, max: number} {
-    return this.range;
+    if (this.type === "custom") {
+      return {min: 1, max: this.values.length};
+    }
+    return {min: this.values[0] as number, max: this.values[this.values.length - 1] as number};
   }
 
   private applyBackgroundColor(backgroundColor: string): void {
@@ -167,28 +225,28 @@ export class Dice extends BaseItem {
     });
   }
 
-  setValuesRange(range: {min: number, max: number}): void {
+  setValues(values: number[]): void {
     this.emit({
       class: "Dice",
-      method: "changeValuesRange",
+      method: "changeValues",
       item: [this.getId()],
-      newData: range,
-      prevData: this.range
+      newData: {values},
+      prevData: {values: this.values},
     });
   }
 
-  setValue(value: number): void {
+  setValueIndex(valueIndex: number): void {
     this.emit({
       class: "Dice",
-      method: "changeValue",
+      method: "changeValueIndex",
       item: [this.getId()],
-      newData: {value, shouldRotate: true, timeStamp: Date.now()},
-      prevData: {value: this.value, shouldRotate: false}
+      newData: {valueIndex, shouldRotate: true, timeStamp: Date.now()},
+      prevData: {value: this.valueIndex, shouldRotate: false}
     });
   }
 
   throwDice() {
-    this.setValue(Math.floor(Math.random() * (this.range.max - this.range.min + 1)) + this.range.min);
+    this.setValueIndex(Math.floor(Math.random() * this.values.length));
   }
 
   apply(op: DiceOperation): void {
@@ -205,19 +263,22 @@ export class Dice extends BaseItem {
           case "setBorderColor":
             this.applyBorderColor(op.newData.borderColor);
             break;
-          case "changeValue":
+          case "changeValueIndex":
             if (op.newData.shouldRotate && op.newData.timeStamp && Date.now() - op.newData.timeStamp < 10000) {
               this.startRotation();
               setTimeout(() => {
                 this.stopRotation();
-                this.value = op.newData.value;
+                this.valueIndex = op.newData.valueIndex;
               }, TIMEOUT)
             } else {
-              this.value = op.newData.value;
+              this.valueIndex = op.newData.valueIndex;
             }
             break;
-          case "changeValuesRange":
-            this.range = op.newData;
+          case "changeValues":
+            if (!op.newData.values[this.valueIndex]) {
+              this.valueIndex = 0;
+            }
+            this.values = op.newData.values;
             break;
         }
         break;
