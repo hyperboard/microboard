@@ -1,8 +1,8 @@
 import { BaseOperation } from "Events/EventsOperations";
 
-export type DiceOperation = ChangeValue | ChangeValuesRange | SetIsRotating | SetBackgroundColor | SetBorderColor | SetBorderWidth;
+export type DiceOperation = ChangeValue | ChangeValuesRange | SetBackgroundColor | SetBorderColor | SetBorderWidth;
 
-interface ChangeValue extends BaseOperation<{ value: number }> {
+interface ChangeValue extends BaseOperation<{ value: number, shouldRotate: boolean }> {
   class: "Dice";
   method: "changeValue";
 }
@@ -10,11 +10,6 @@ interface ChangeValue extends BaseOperation<{ value: number }> {
 interface ChangeValuesRange extends BaseOperation<{ min: number, max: number }> {
   class: "Dice";
   method: "changeValuesRange";
-}
-
-interface SetIsRotating extends BaseOperation<{ isRotating: boolean }> {
-  class: "Dice";
-  method: "setIsRotating";
 }
 
 interface SetBackgroundColor extends BaseOperation<{ backgroundColor: string }> {

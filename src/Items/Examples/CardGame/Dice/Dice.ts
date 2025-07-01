@@ -124,8 +124,8 @@ export class Dice extends BaseItem {
     return this;
   }
 
-  isClosed(): boolean {
-    return true;
+  getIsRotating(): boolean {
+    return !!this.animationFrameId;
   }
 
   private applyBackgroundColor(backgroundColor: string): void {
@@ -188,26 +188,13 @@ export class Dice extends BaseItem {
       class: "Dice",
       method: "changeValue",
       item: [this.getId()],
-      newData: {value},
-      prevData: {value: this.value}
-    });
-  }
-
-  setIsRotating(isRotating: boolean): void {
-    this.emit({
-      class: "Dice",
-      method: "setIsRotating",
-      item: [this.getId()],
-      newData: {isRotating},
-      prevData: {isRotating: false}
+      newData: {value, shouldRotate: true},
+      prevData: {value: this.value, shouldRotate: false}
     });
   }
 
   throwDice() {
-    this.setIsRotating(true);
-    setTimeout(() => {
-      this.setValue(Math.ceil(Math.random() * (this.range.max - this.range.min)) + this.range.min);
-    }, TIMEOUT)
+    this.setValue(Math.ceil(Math.random() * (this.range.max - this.range.min)) + this.range.min);
   }
 
   apply(op: DiceOperation): void {
@@ -224,16 +211,16 @@ export class Dice extends BaseItem {
           case "setBorderColor":
             this.applyBorderColor(op.newData.borderColor);
             break;
-          case "setIsRotating":
-            if (op.newData.isRotating) {
+          case "changeValue":
+            if (op.newData.shouldRotate) {
               this.startRotation();
               setTimeout(() => {
                 this.stopRotation();
+                this.value = op.newData.value;
               }, TIMEOUT)
+            } else {
+              this.value = op.newData.value;
             }
-            break;
-          case "changeValue":
-            this.value = op.newData.value;
             break;
           case "changeValuesRange":
             this.range = op.newData;
