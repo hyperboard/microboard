@@ -33,7 +33,7 @@ export interface BaseOperation<T extends Record<string, unknown> = {}> {
     item: string[];
     method: string;
     newData: T;
-    prevData: T;
+    prevData?: T;
 }
 
 export type ItemOperation =

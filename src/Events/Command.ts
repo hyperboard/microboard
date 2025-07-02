@@ -80,9 +80,21 @@ export class BaseCommand {
 
 		return mapItemsByOperation(items, item => {
 			const op = this.operation;
+			let newData: Record<string, any> = {}
+			if (op.prevData) {
+				newData = op.prevData;
+			} else {
+				Object.keys(op.newData).forEach(key => {
+					// @ts-ignore
+					if (item[key]) {
+						// @ts-ignore
+						op.newData[key] = item[key];
+					}
+				})
+			}
 			return {
 				...op,
-				newData: op.prevData,
+				newData,
 			};
 		});
 	}

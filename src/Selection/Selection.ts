@@ -1007,136 +1007,180 @@ export class BoardSelection {
 
   setStrokeColor(borderColor: string): void {
     // TODO make single operation to set strokeColor on any item with stroke
-    const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    if (shapes.length > 0) {
-      this.emit({
-        class: "Shape",
-        method: "setBorderColor",
-        item: shapes,
-        borderColor,
-      });
-    }
-    const connectors = this.items.getIdsByItemTypes(["Connector"]);
-    if (connectors.length > 0) {
-      this.emit({
-        class: "Connector",
-        method: "setLineColor",
-        item: connectors,
-        lineColor: borderColor,
-      });
-    }
-    const drawings = this.items.getIdsByItemTypes(["Drawing"]);
-    if (drawings.length > 0) {
-      this.emit({
-        class: "Drawing",
-        method: "setStrokeColor",
-        item: drawings,
-        color: borderColor,
-      });
-    }
+    const operation: Record<string, any> = {
+      class: "Shape",
+      method: "setBorderColor",
+      item: [] as string[],
+      newData: {borderColor}
+    };
+    const operations: {[itemType: string]: typeof operation} = {};
+
+    this.items.list().forEach((item) => {
+      if (!operations[item.itemType]) {
+        const operationCopy = {...operation}
+        if (item.itemType === "Connector") {
+          operationCopy.method = "setLineColor"
+          operationCopy.lineColor = borderColor;
+        } else if (item.itemType === "Drawing") {
+          operationCopy.method = "setStrokeColor"
+          operationCopy.color = borderColor;
+        } else {
+          operationCopy.borderColor = borderColor;
+        }
+        operations[item.itemType] = {...operationCopy, class: item.itemType, item: [item.getId()]};
+      } else {
+        operations[item.itemType].item.push(item.getId());
+      }
+    })
+
+    Object.values(operations).forEach((op) => {
+      this.emit(op);
+    })
+
+    // const shapes = this.items.getIdsByItemTypes(["Shape"]);
+    // if (shapes.length > 0) {
+    //   this.emit({
+    //     class: "Shape",
+    //     method: "setBorderColor",
+    //     item: shapes,
+    //     borderColor,
+    //   });
+    // }
+    // const connectors = this.items.getIdsByItemTypes(["Connector"]);
+    // if (connectors.length > 0) {
+    //   this.emit({
+    //     class: "Connector",
+    //     method: "setLineColor",
+    //     item: connectors,
+    //     lineColor: borderColor,
+    //   });
+    // }
+    // const drawings = this.items.getIdsByItemTypes(["Drawing"]);
+    // if (drawings.length > 0) {
+    //   this.emit({
+    //     class: "Drawing",
+    //     method: "setStrokeColor",
+    //     item: drawings,
+    //     color: borderColor,
+    //   });
+    // }
   }
 
   setStrokeWidth(width: number): void {
     // TODO make single operation to set strokeWidth on any item with stroke
-    // const operation = {
-    //   class: "Shape",
-    //   method: "setStrokeWidth",
-    //   item: [] as string[],
-    //   width,
-    // };
-    // const operations: {[itemType: string]: typeof operation} = {};
-    //
-    // this.items.list().forEach((item) => {
-    //   if (!operations[item.itemType]) {
-    //     operations[item.itemType] = {...operation, class: item.itemType, item: [item.getId()]};
-    //   } else {
-    //     operations[item.itemType].item.push(item.getId());
-    //   }
-    // })
-    //
-    // Object.values(operations).forEach((op) => {
-    //   this.emit(op);
-    // })
+    const operation: Record<string, any> = {
+      class: "Shape",
+      method: "setStrokeWidth",
+      item: [] as string[],
+      width,
+      newData: {width}
+    };
+    const operations: {[itemType: string]: typeof operation} = {};
 
-    const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    if (shapes.length > 0) {
-      this.emit({
-        class: "Shape",
-        method: "setBorderWidth",
-        item: shapes,
-        borderWidth: width,
-        prevBorderWidth: this.getStrokeWidth(),
-      });
-    }
-    const connectors = this.items.getIdsByItemTypes(["Connector"]);
-    if (connectors.length > 0) {
-      this.emit({
-        class: "Connector",
-        method: "setLineWidth",
-        item: connectors,
-        lineWidth: width as ConnectionLineWidth,
-      });
-    }
-    const drawings = this.items.getIdsByItemTypes(["Drawing"]);
-    if (drawings.length > 0) {
-      this.emit({
-        class: "Drawing",
-        method: "setStrokeWidth",
-        item: drawings,
-        width: width,
-        prevWidth: this.getStrokeWidth(),
-      });
-    }
+    this.items.list().forEach((item) => {
+      if (!operations[item.itemType]) {
+        const operationCopy = {...operation}
+        if (item.itemType === "Connector") {
+          operationCopy.method = "setLineWidth";
+          operationCopy.lineWidth = width;
+        } else if (item.itemType === "Drawing") {
+          operationCopy.method = "setStrokeWidth";
+          operationCopy.width = width;
+          operationCopy.prevWidth = this.getStrokeWidth();
+        } else {
+          operationCopy.borderWidth = width;
+          operationCopy.prevBorderWidth = this.getStrokeWidth();
+        }
+        operations[item.itemType] = {...operationCopy, class: item.itemType, item: [item.getId()]};
+      } else {
+        operations[item.itemType].item.push(item.getId());
+      }
+    })
+
+    Object.values(operations).forEach((op) => {
+      this.emit(op);
+    })
+
+    // const shapes = this.items.getIdsByItemTypes(["Shape"]);
+    // if (shapes.length > 0) {
+    //   this.emit({
+    //     class: "Shape",
+    //     method: "setBorderWidth",
+    //     item: shapes,
+    //     borderWidth: width,
+    //     prevBorderWidth: this.getStrokeWidth(),
+    //   });
+    // }
+    // const connectors = this.items.getIdsByItemTypes(["Connector"]);
+    // if (connectors.length > 0) {
+    //   this.emit({
+    //     class: "Connector",
+    //     method: "setLineWidth",
+    //     item: connectors,
+    //     lineWidth: width as ConnectionLineWidth,
+    //   });
+    // }
+    // const drawings = this.items.getIdsByItemTypes(["Drawing"]);
+    // if (drawings.length > 0) {
+    //   this.emit({
+    //     class: "Drawing",
+    //     method: "setStrokeWidth",
+    //     item: drawings,
+    //     width: width,
+    //     prevWidth: this.getStrokeWidth(),
+    //   });
+    // }
   }
 
   setFillColor(backgroundColor: string): void {
     // TODO make single operation to set color on any item with fill
-    // const operation = {
-    //   class: "Shape",
-    //   method: "setBackgroundColor",
-    //   item: [] as string[],
-    //   backgroundColor,
-    // };
-    // const operations: {[itemType: string]: typeof operation} = {};
-    //
-    // this.items.list().forEach((item) => {
-    //   if (!operations[item.itemType]) {
-    //     operations[item.itemType] = {...operation, class: item.itemType, item: [item.getId()]};
-    //   } else {
-    //     operations[item.itemType].item.push(item.getId());
-    //   }
-    // })
-    //
-    // Object.values(operations).forEach((op) => {
-    //   this.emit(op);
-    // })
-    const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    if (shapes.length) {
-      this.emit({
-        class: "Shape",
-        method: "setBackgroundColor",
-        item: shapes,
-        backgroundColor,
-      });
-    }
-    const stickers = this.items.getIdsByItemTypes(["Sticker"]);
-    if (stickers.length) {
-      this.emit({
-        class: "Sticker",
-        method: "setBackgroundColor",
-        item: stickers,
-        backgroundColor,
-      });
-    }
-    const frames = this.items.getIdsByItemTypes(["Frame"]);
-    if (frames.length) {
-      this.emit({
-        class: "Frame",
-        method: "setBackgroundColor",
-        item: frames,
-        backgroundColor,
-      });
-    }
+    const operation = {
+      class: "Shape",
+      method: "setBackgroundColor",
+      item: [] as string[],
+      backgroundColor,
+      newData: {backgroundColor}
+    };
+    const operations: {[itemType: string]: typeof operation} = {};
+
+    this.items.list().forEach((item) => {
+      if (!operations[item.itemType]) {
+        operations[item.itemType] = {...operation, class: item.itemType, item: [item.getId()]};
+      } else {
+        operations[item.itemType].item.push(item.getId());
+      }
+    })
+
+    Object.values(operations).forEach((op) => {
+      this.emit(op);
+    })
+    // const shapes = this.items.getIdsByItemTypes(["Shape"]);
+    // if (shapes.length) {
+    //   this.emit({
+    //     class: "Shape",
+    //     method: "setBackgroundColor",
+    //     item: shapes,
+    //     backgroundColor,
+    //   });
+    // }
+    // const stickers = this.items.getIdsByItemTypes(["Sticker"]);
+    // if (stickers.length) {
+    //   this.emit({
+    //     class: "Sticker",
+    //     method: "setBackgroundColor",
+    //     item: stickers,
+    //     backgroundColor,
+    //   });
+    // }
+    // const frames = this.items.getIdsByItemTypes(["Frame"]);
+    // if (frames.length) {
+    //   this.emit({
+    //     class: "Frame",
+    //     method: "setBackgroundColor",
+    //     item: frames,
+    //     backgroundColor,
+    //   });
+    // }
   }
 
   setCanChangeRatio(canChangeRatio: boolean): void {
