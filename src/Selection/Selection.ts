@@ -676,31 +676,23 @@ export class BoardSelection {
   }
 
   getFillColor(): string {
-    const tmp = this.items.getItemsByItemTypes([
-      "Shape",
-      "Sticker",
-      "Frame",
-    ])[0];
-    return tmp?.getBackgroundColor() || defaultShapeData.backgroundColor;
+    const tmp = this.items.list()[0];
+    return "getBackgroundColor" in tmp ? tmp.getBackgroundColor() : defaultShapeData.backgroundColor;
   }
 
   getBorderStyle(): string {
-    const shape = this.items.getItemsByItemTypes([
-      "Shape",
-      "Drawing",
-      "Connector",
-    ])[0];
-    return shape?.getBorderStyle() || defaultShapeData.borderStyle;
+    const shape = this.items.list()[0];
+    return "getBorderStyle" in shape ? shape.getBorderStyle() : defaultShapeData.borderStyle;
   }
 
   getStrokeColor(): string {
-    const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
-    return shape?.getStrokeColor() || defaultShapeData.borderColor;
+    const shape = this.items.list()[0];
+    return "getStrokeColor" in shape ? shape.getStrokeColor() : defaultShapeData.borderColor;
   }
 
   getStrokeWidth(): number {
-    const shape = this.items.getItemsByItemTypes(["Shape", "Drawing"])[0];
-    return shape?.getStrokeWidth() || defaultShapeData.borderWidth;
+    const shape = this.items.list()[0];
+    return "getStrokeWidth" in shape ? shape.getStrokeWidth() : defaultShapeData.borderWidth;
   }
 
   getConnectorLineWidth(): number {

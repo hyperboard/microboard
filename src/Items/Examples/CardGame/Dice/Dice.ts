@@ -185,6 +185,22 @@ export class Dice extends BaseItem {
     return {min: this.values[0] as number, max: this.values[this.values.length - 1] as number};
   }
 
+  getBackgroundColor(): string {
+    return this.backgroundColor;
+  }
+
+  getBorderStyle(): string {
+    return this.borderStyle;
+  }
+
+  getStrokeColor(): string {
+    return this.borderColor;
+  }
+
+  getStrokeWidth(): number {
+    return this.borderWidth;
+  }
+
   private applyBackgroundColor(backgroundColor: string): void {
     this.backgroundColor = backgroundColor;
     this.path.setBackgroundColor(backgroundColor);
