@@ -88,7 +88,7 @@ export class BaseCommand {
 					// @ts-ignore
 					if (item[key]) {
 						// @ts-ignore
-						op.newData[key] = item[key];
+						newData[key] = item[key];
 					}
 				})
 			}
