@@ -34,12 +34,12 @@ export class Dice extends BaseItem {
   readonly subject = new Subject<Dice>();
   private borderWidth = 1;
   valueIndex = 0;
-  values: number[] | string[] = [];
+  values: (number | string)[] = [];
   renderValues: Record<number, number | HTMLImageElement> = {};
   private animationFrameId?: number;
   drawingContext: DrawingContext | null = null;
 
-  constructor(board: Board, id = "", type?: DiceType, values?: number[] | string[] ) {
+  constructor(board: Board, id = "", type?: DiceType, values?: (number | string)[] ) {
     super(board, id, defaultDiceData);
 
     if (type) {
@@ -49,7 +49,7 @@ export class Dice extends BaseItem {
       this.values = values;
     }
 
-    this.createRenderValues();
+    this.updateRenderValues();
 
     this.transformPath();
 
@@ -71,7 +71,7 @@ export class Dice extends BaseItem {
     this.path.setBorderWidth(this.borderWidth);
   }
 
-  createRenderValues(): void {
+  updateRenderValues(): void {
     this.values.forEach((value, index) => {
       if (typeof value === "number") {
         this.renderValues[index] = value;
@@ -164,7 +164,7 @@ export class Dice extends BaseItem {
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
 
-    this.createRenderValues();
+    this.updateRenderValues();
     this.transformPath();
     this.subject.publish(this);
     return this;
@@ -284,6 +284,7 @@ export class Dice extends BaseItem {
               this.valueIndex = 0;
             }
             this.values = op.newData.values;
+            this.updateRenderValues();
             break;
         }
         break;
