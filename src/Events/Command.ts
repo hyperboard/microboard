@@ -82,7 +82,7 @@ export class BaseCommand {
 			const op = this.operation;
 			let newData: Record<string, any> = {}
 			if (op.prevData) {
-				newData = op.prevData;
+				newData = {...op.prevData};
 			} else {
 				Object.keys(op.newData).forEach(key => {
 					// @ts-ignore
