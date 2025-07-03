@@ -1062,7 +1062,7 @@ export class BoardSelection {
     // TODO make single operation to set strokeWidth on any item with stroke
     const operation: Record<string, any> = {
       class: "Shape",
-      method: "setStrokeWidth",
+      method: "setBorderWidth",
       item: [] as string[],
       width,
       newData: {width}
