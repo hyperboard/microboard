@@ -91,7 +91,7 @@ export class SpatialIndex {
 		}
 		if (item.parent !== 'Board') {
 			const parentFrame = this.items.getById(item.parent) as Frame | Group | undefined;
-			parentFrame?.emitRemoveChild(item);
+			parentFrame?.removeChildItems(item);
 		}
 		if (item instanceof Frame) {
 			this.framesArray.splice(this.framesArray.indexOf(item), 1);

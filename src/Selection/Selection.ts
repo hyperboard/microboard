@@ -808,13 +808,13 @@ export class BoardSelection {
           );
 
           if (isParentFrame && isRemoveChildFromFrame) {
-            parentFrame.emitRemoveChild([val.item]);
+            parentFrame?.removeChildItems([val.item]);
           }
 
           val.nested.addChildItems([val.item]);
         } else if (val.item.parent !== "Board") {
           if (isParentFrame) {
-            parentFrame.emitRemoveChild([val.item]);
+            parentFrame?.removeChildItems([val.item]);
           } else {
             console.warn(`Didnt find frame with id ${val.item.parent}`);
           }
