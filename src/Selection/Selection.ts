@@ -1064,8 +1064,7 @@ export class BoardSelection {
       class: "Shape",
       method: "setBorderWidth",
       item: [] as string[],
-      width,
-      newData: {width}
+      newData: {borderWidth: width}
     };
     const operations: {[itemType: string]: typeof operation} = {};
 
