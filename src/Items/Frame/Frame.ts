@@ -466,6 +466,7 @@ export class Frame extends BaseItem {
   }
 
   apply(op: Operation): void {
+    super.apply(op)
     switch (op.class) {
       case "Frame":
         if (op.method === "setBackgroundColor") {
