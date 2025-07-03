@@ -12,6 +12,8 @@ import { BaseOperation } from "Events/EventsOperations";
 import { BaseCommand } from "Events/Command";
 import {Subject} from "../../Subject";
 import {Path, Paths} from "../Path";
+import {Item} from "../Item";
+import {BaseItemOperation} from "./BaseItemOperation";
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
@@ -23,6 +25,8 @@ export class BaseItem extends Mbr implements Geometry {
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	parent: string = "Board";
+	private children: string[] | null = null;
+	canBeNested = true;
 	transformationRenderBlock?: boolean = undefined;
 	board: Board;
 	id: string;
@@ -59,6 +63,105 @@ export class BaseItem extends Mbr implements Geometry {
 		this.linkTo.setId(id);
 		this.getRichText()?.setId(id);
 		return this;
+	}
+
+	addChildItems(children: BaseItem[]): void {
+		if (!this.children) {
+			return;
+		}
+		const childrenIds = children.map((child) => {
+			child.parent = this.getId();
+			return child.getId();
+		});
+		this.updateChildren([...this.children, ...childrenIds]);
+	}
+
+	removeChildItems(children: BaseItem[] | BaseItem): void {
+		if (!this.children) {
+			return;
+		}
+		const newChildren = Array.isArray(children) ? children : [children];
+		const childrenIds = newChildren.map((child) => {
+			child.parent = "Board";
+			return child.getId();
+		});
+		this.updateChildren(this.children.filter(child => !childrenIds.includes(child)));
+	}
+
+	emitNesting(children: BaseItem[]): void {
+		const itemsToAdd: BaseItem[] = [];
+		const itemsToRemove: BaseItem[] = [];
+
+		children.forEach((child) => {
+			if (this.handleNesting(child)) {
+				itemsToAdd.push(child);
+			} else {
+				itemsToRemove.push(child);
+			}
+		})
+		this.addChildItems(itemsToAdd);
+		this.removeChildItems(itemsToRemove);
+	}
+
+	private updateChildren(children: string[]): void {
+		this.emit({
+			class: this.itemType,
+			method: "updateChildren",
+			item: [this.getId()],
+			newData: {children},
+			prevData: {children: this.children}
+		});
+	}
+
+	handleNesting(
+		item: BaseItem | Mbr,
+		options?: {
+			onlyForOut?: boolean;
+			cancelIfChild?: boolean;
+		}
+	): boolean {
+		const isItem = "itemType" in item;
+		const itemMbr = isItem ? item.getMbr() : item;
+		if (item instanceof BaseItem && !item.canBeNested) {
+			return false;
+		}
+		if (options?.cancelIfChild && isItem && item.parent !== "Board") {
+			return false;
+		}
+
+		const mbr = this.getMbr().copy();
+		if (item.isEnclosedOrCrossedBy(mbr)) {
+			if (mbr.isInside(itemMbr.getCenter())) {
+				if (!options || !options.onlyForOut) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	applyUpdateChildren(children: string[]): void {
+		if (!this.children) {
+			return;
+		}
+		children.forEach((child) => {
+			if (
+				this.parent !== child &&
+				this.getId() !== child
+			) {
+				const foundItem = this.board.items.getById(child);
+				if (!this.children.includes(child) && foundItem) {
+					foundItem.parent = this.getId();
+				}
+			}
+		});
+		this.children = children;
+		this.updateMbr();
+		this.subject.publish(this);
+	}
+
+	updateMbr(): void {
+		return;
 	}
 
 	getLinkTo(): string | undefined {
@@ -118,6 +221,12 @@ export class BaseItem extends Mbr implements Geometry {
 			case "LinkTo":
 				this.linkTo.apply(op);
 				break;
+			case this.itemType:
+				op = op as unknown as BaseItemOperation
+				switch (op.method) {
+					case "updateChildren":
+						this.applyUpdateChildren(op.newData.children)
+				}
 		}
 	}
 

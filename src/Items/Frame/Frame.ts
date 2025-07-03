@@ -48,6 +48,7 @@ export class Frame extends BaseItem {
   readonly linkTo: LinkTo;
   readonly text: RichText;
   private canChangeRatio = true;
+  canBeNested = false;
   newShape: FrameType | null = null;
   transformationRenderBlock?: boolean = undefined;
 
@@ -106,51 +107,51 @@ export class Frame extends BaseItem {
   }
 
   /** Sets parent of child and emits add child message */
-  emitAddChild(children: Item[]): void {
-    const childrenIds = children.map((child) => {
-      child.parent = this.getId();
-      return child.getId();
-    });
-    this.addChild(childrenIds);
-  }
+  // emitAddChild(children: Item[]): void {
+  //   const childrenIds = children.map((child) => {
+  //     child.parent = this.getId();
+  //     return child.getId();
+  //   });
+  //   this.addChild(childrenIds);
+  // }
 
-  emitRemoveChild(children: Item[] | Item): void {
-    const newChildren = Array.isArray(children) ? children : [children];
-    const childrenIds = newChildren.map((child) => {
-      child.parent = "Board";
-      return child.getId();
-    });
-    this.removeChild(childrenIds);
-  }
+  // emitRemoveChild(children: Item[] | Item): void {
+  //   const newChildren = Array.isArray(children) ? children : [children];
+  //   const childrenIds = newChildren.map((child) => {
+  //     child.parent = "Board";
+  //     return child.getId();
+  //   });
+  //   this.removeChild(childrenIds);
+  // }
 
-  emitNesting(children: Item[]): void {
-    const itemsToAdd: Item[] = [];
-    const itemsToRemove: Item[] = [];
-
-    children.forEach((child) => {
-      if (this.handleNesting(child)) {
-        itemsToAdd.push(child);
-      } else {
-        itemsToRemove.push(child);
-      }
-    });
-    this.emitAddChild(itemsToAdd);
-    this.emitRemoveChild(itemsToRemove);
-  }
+  // emitNesting(children: Item[]): void {
+  //   const itemsToAdd: Item[] = [];
+  //   const itemsToRemove: Item[] = [];
+  //
+  //   children.forEach((child) => {
+  //     if (this.handleNesting(child)) {
+  //       itemsToAdd.push(child);
+  //     } else {
+  //       itemsToRemove.push(child);
+  //     }
+  //   });
+  //   this.emitAddChild(itemsToAdd);
+  //   this.emitRemoveChild(itemsToRemove);
+  // }
 
   /**
    * Parent cant be child,
    * Child cant be itself,
    * frame cant be child
    */
-  private addChild(childId: string[]): void {
-    this.emit({
-      class: "Frame",
-      method: "addChild",
-      item: [this.getId()],
-      childId,
-    });
-  }
+  // private addChild(childId: string[]): void {
+  //   this.emit({
+  //     class: "Frame",
+  //     method: "addChild",
+  //     item: [this.getId()],
+  //     childId,
+  //   });
+  // }
 
   applyAddChild(childId: string[] | string, noWarn = false): void {
     const children = Array.isArray(childId) ? childId : [childId];
@@ -180,14 +181,14 @@ export class Frame extends BaseItem {
     this.subject.publish(this);
   }
 
-  private removeChild(childId: string[]): void {
-    this.emit({
-      class: "Frame",
-      method: "removeChild",
-      item: [this.getId()],
-      childId,
-    });
-  }
+  // private removeChild(childId: string[]): void {
+  //   this.emit({
+  //     class: "Frame",
+  //     method: "removeChild",
+  //     item: [this.getId()],
+  //     childId,
+  //   });
+  // }
 
   getLinkTo(): string | undefined {
     return this.linkTo.link;
@@ -198,32 +199,32 @@ export class Frame extends BaseItem {
    * true - if can be child of the frame
    * false - if outside of the frame
    */
-  handleNesting(
-    item: Item | Mbr,
-    options?: {
-      onlyForOut?: boolean;
-      cancelIfChild?: boolean;
-    }
-  ): boolean {
-    const isItem = "itemType" in item;
-    const itemMbr = isItem ? item.getMbr() : item;
-    if (item instanceof Frame) {
-      return false;
-    }
-    if (options?.cancelIfChild && isItem && item.parent !== "Board") {
-      return false;
-    }
-
-    const frameMbr = this.getMbr().copy();
-    if (item.isEnclosedOrCrossedBy(frameMbr)) {
-      if (frameMbr.isInside(itemMbr.getCenter())) {
-        if (!options || !options.onlyForOut) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  // handleNesting(
+  //   item: Item | Mbr,
+  //   options?: {
+  //     onlyForOut?: boolean;
+  //     cancelIfChild?: boolean;
+  //   }
+  // ): boolean {
+  //   const isItem = "itemType" in item;
+  //   const itemMbr = isItem ? item.getMbr() : item;
+  //   if (item instanceof Frame) {
+  //     return false;
+  //   }
+  //   if (options?.cancelIfChild && isItem && item.parent !== "Board") {
+  //     return false;
+  //   }
+  //
+  //   const frameMbr = this.getMbr().copy();
+  //   if (item.isEnclosedOrCrossedBy(frameMbr)) {
+  //     if (frameMbr.isInside(itemMbr.getCenter())) {
+  //       if (!options || !options.onlyForOut) {
+  //         return true;
+  //       }
+  //     }
+  //   }
+  //   return false;
+  // }
 
   private initPath(): void {
     this.path = Frames[this.shapeType].path.copy();

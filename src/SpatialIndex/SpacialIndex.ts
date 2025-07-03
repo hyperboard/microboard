@@ -87,7 +87,7 @@ export class SpatialIndex {
 				.map(childId => this.getById(childId))
 				.filter(child => child !== undefined);
 
-			item.emitRemoveChild(newItems);
+			item.removeChildItems(newItems);
 		}
 		if (item.parent !== 'Board') {
 			const parentFrame = this.items.getById(item.parent) as Frame | Group | undefined;

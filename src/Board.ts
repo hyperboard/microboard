@@ -317,6 +317,7 @@ export class Board {
 
     arrayed.forEach((item) => {
       const itemCenter = item.getMbr().getCenter();
+      //TODO FRAMES
       const frame = this.items
         .getFramesInView()
         .filter((frame) => frame.handleNesting(item))
@@ -340,7 +341,7 @@ export class Board {
     });
 
     framesMap.forEach((items, frame) => {
-      frame.emitAddChild(items);
+      frame.addChildItems(items);
     });
   }
 
