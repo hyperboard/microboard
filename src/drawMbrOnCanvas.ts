@@ -408,26 +408,26 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		const realBottom = realTop + adjustedHeight;
 
 		const containerMbr = new Mbr(realLeft, realTop, realRight, realBottom);
-		const frames = board.items.getFramesEnclosedOrCrossed(
+		const groups = board.items.getGroupItemsEnclosedOrCrossed(
 			containerMbr.left,
 			containerMbr.top,
 			containerMbr.right,
 			containerMbr.bottom,
 		);
-		if (frames) {
+		if (groups) {
 			drawnItemsMap?.forEach(({ mbr }) => {
 				mbr.transform(currMatrix);
 			});
-			frames.forEach(frame => {
+			groups.forEach(group => {
 				drawnItemsMap?.forEach(({ mbr, item }, key) => {
-					if (item.itemType === "Frame") {
+					if ("canBeNested" in item && !item.canBeNested) {
 						return;
 					}
 					if (
 						lastCreatedCanvas &&
-						(!drawnItemsMap.get(frame.getId()) ||
-							item.parent !== frame.getId()) &&
-						frame.handleNesting(mbr)
+						(!drawnItemsMap.get(group.getId()) ||
+							item.parent !== group.getId()) &&
+						group.handleNesting(mbr)
 					) {
 						const div = createBorderDivForItem(
 							mbr,

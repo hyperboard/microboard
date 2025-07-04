@@ -75,7 +75,7 @@ describe("updateFrameChildren", () => {
     });
 
     // Verify that getFramesEnclosedOrCrossed was called with correct coordinates
-    expect(board.items.getFramesEnclosedOrCrossed).toHaveBeenCalledWith(
+    expect(board.items.getGroupItemsEnclosedOrCrossed).toHaveBeenCalledWith(
       mockMbr.left,
       mockMbr.top,
       mockMbr.right,
@@ -117,7 +117,7 @@ describe("updateFrameChildren", () => {
   });
 
   it("should handle no enclosed frames", () => {
-    board.items.getFramesEnclosedOrCrossed = jest.fn().mockReturnValue([]);
+    board.items.getGroupItemsEnclosedOrCrossed = jest.fn().mockReturnValue([]);
 
     updateFrameChildren({
       mbr: mockMbr,
@@ -126,7 +126,7 @@ describe("updateFrameChildren", () => {
     });
 
     // Verify that getFramesEnclosedOrCrossed was called
-    expect(board.items.getFramesEnclosedOrCrossed).toHaveBeenCalled();
+    expect(board.items.getGroupItemsEnclosedOrCrossed).toHaveBeenCalled();
 
     // Verify that no frame nesting operations were performed
     expect(mockEnclosedFrame.handleNesting).not.toHaveBeenCalled();

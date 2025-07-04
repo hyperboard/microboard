@@ -693,8 +693,10 @@ export class Frame extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
-    this.path.render(context);
-    this.text.render(context);
+    this.renderPath(context);
+    super.render(context);
+    this.renderBorders(context);
+    this.renderName(context);
   }
 
   renderName(context: DrawingContext): void {

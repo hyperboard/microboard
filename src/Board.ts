@@ -43,6 +43,7 @@ import { ItemDataWithId } from "./Items/Item";
 import CUSTOM_WEB_COMPONENTS_JS from "./public/customWebComponents.js" with { type: "text" };
 import INDEX_CSS from "./public/index.css" with { type: "text" };
 import LOAD_LINKS_IMAGES_JS from "./public/loadLinkImages.js" with { type: "text" };
+import {BaseItem} from "./Items/BaseItem";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -313,35 +314,35 @@ export class Board {
    */
   handleNesting(items: Item | Item[]): void {
     const arrayed = Array.isArray(items) ? items : [items];
-    const framesMap = new Map<Frame, Item[]>();
+    const groupsMap = new Map<BaseItem, Item[]>();
 
     arrayed.forEach((item) => {
       const itemCenter = item.getMbr().getCenter();
       //TODO FRAMES
-      const frame = this.items
-        .getFramesInView()
-        .filter((frame) => frame.handleNesting(item))
-        .reduce((acc: Frame | undefined, frame) => {
+      const groupItem = this.items
+        .getGroupItemsInView()
+        .filter((groupItem) => groupItem.handleNesting(item))
+        .reduce((acc: BaseItem | undefined, groupItem) => {
           if (
             !acc ||
-            frame.getDistanceToPoint(itemCenter) >
+            groupItem.getDistanceToPoint(itemCenter) >
               acc.getDistanceToPoint(itemCenter)
           ) {
-            acc = frame;
+            acc = groupItem;
           }
           return acc;
         }, undefined);
 
-      if (frame) {
-        if (!framesMap.has(frame)) {
-          framesMap.set(frame, []);
+      if (groupItem) {
+        if (!groupsMap.has(groupItem)) {
+          groupsMap.set(groupItem, []);
         }
-        framesMap.get(frame)?.push(item);
+        groupsMap.get(groupItem)?.push(item);
       }
     });
 
-    framesMap.forEach((items, frame) => {
-      frame.addChildItems(items);
+    groupsMap.forEach((items, group) => {
+      group.addChildItems(items);
     });
   }
 
@@ -1355,11 +1356,11 @@ export class Board {
 
   getMaxFrameSerial(): number {
     const existingNames = this.items
-      .listFrames()
+      .listGroupItems()
       .map((frame) =>
-        frame.text.getTextString().length === 0
-          ? frame.text.placeholderText
-          : frame.text.getTextString()
+        frame.getRichText()?.getTextString().length === 0
+          ? frame.getRichText()?.placeholderText || ""
+          : frame.getRichText()?.getTextString() || ""
       );
     return existingNames
       .map((name) => name.match(/^Frame (\d+)$/))

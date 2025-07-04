@@ -12,14 +12,14 @@ export function updateFrameChildren({
   board: Board;
   nestingHighlighter: NestingHighlighter;
 }) {
-  const frames = board.items.getFramesEnclosedOrCrossed(
+  const groups = board.items.getGroupItemsEnclosedOrCrossed(
     mbr.left,
     mbr.top,
     mbr.right,
     mbr.bottom
   );
   board.selection.items.list().forEach((item) => {
-    if (item instanceof Frame) {
+    if ("getChildrenIds" in item && item.getChildrenIds()) {
       const currMbr = item.getMbr();
       const itemsToCheck = board.items.getEnclosedOrCrossed(
         currMbr.left,
@@ -38,9 +38,9 @@ export function updateFrameChildren({
         }
       });
     } else {
-      frames.forEach((frame) => {
-        if (frame.handleNesting(item)) {
-          nestingHighlighter.add(frame, item);
+      groups.forEach((group) => {
+        if (group.handleNesting(item)) {
+          nestingHighlighter.add(group, item);
         } else {
           nestingHighlighter.remove(item);
         }

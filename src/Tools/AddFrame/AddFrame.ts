@@ -115,7 +115,7 @@ export class AddFrame extends BoardTool {
 	}
 
 	addNextTo(): void {
-		const framesInView = this.board.items.getFramesInView();
+		const framesInView = this.board.items.getItemsInView().filter(item => item instanceof Frame);
 		if (framesInView.length === 0) {
 			if (this.shape === 'Custom') {
 				const { x, y } = this.frame.getLastFrameScale();
@@ -127,7 +127,7 @@ export class AddFrame extends BoardTool {
 			}
 			this.transformToCenter();
 		} else {
-			const frames = this.board.items.listFrames().filter(frame => frame !== this.frame);
+			const frames = this.board.items.listAll().filter(frame => frame instanceof Frame && frame !== this.frame) as Frame[];
 			let nextTo = framesInView.reduce((rightest, frame) => {
 				if (frame.getMbr().right > rightest.getMbr().right) {
 					rightest = frame;

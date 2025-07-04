@@ -13,17 +13,11 @@ import { LayeredIndex } from './LayeredIndex';
 import {BaseItem} from "../Items/BaseItem";
 import {ItemDataWithId} from "../Items/Item";
 
-export type ItemWoFrames = Exclude<Item, Frame>;
-
 export class SpatialIndex {
 	subject = new Subject<Items>();
-	private itemsArray: ItemWoFrames[] = [];
-	private framesArray: Frame[] = [];
-	private itemsIndex = new LayeredIndex((item: ItemWoFrames): number => {
+	private itemsArray: Item[] = [];
+	private itemsIndex = new LayeredIndex((item: Item): number => {
 		return this.itemsArray.indexOf(item);
-	});
-	private framesIndex = new LayeredIndex((item: Frame): number => {
-		return this.framesArray.indexOf(item);
 	});
 	private Mbr = new Mbr();
 	readonly items: Items;
@@ -34,24 +28,15 @@ export class SpatialIndex {
 
 	clear(): void {
 		this.itemsArray = [];
-		this.framesArray = [];
-		this.itemsIndex = new LayeredIndex((item: ItemWoFrames): number => {
+		this.itemsIndex = new LayeredIndex((item: Item): number => {
 			return this.itemsArray.indexOf(item);
-		});
-		this.framesIndex = new LayeredIndex((item: Frame): number => {
-			return this.framesArray.indexOf(item);
 		});
 		this.Mbr = new Mbr();
 	}
 
 	insert(item: Item): void {
-		if (item instanceof Frame) {
-			this.framesArray.push(item);
-			this.framesIndex.insert(item);
-		} else {
-			this.itemsArray.push(item);
-			this.itemsIndex.insert(item);
-		}
+		this.itemsArray.push(item);
+		this.itemsIndex.insert(item);
 
 		if (conf.isNode()) {
 			return;
@@ -67,11 +52,7 @@ export class SpatialIndex {
 	}
 
 	change = (item: Item): void => {
-		if (item instanceof Frame) {
-			this.framesIndex.change(item);
-		} else {
-			this.itemsIndex.change(item);
-		}
+		this.itemsIndex.change(item);
 		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
 			this.Mbr = item.getMbr().copy();
 		} else {
@@ -93,43 +74,26 @@ export class SpatialIndex {
 			const parentFrame = this.items.getById(item.parent) as Frame | Group | undefined;
 			parentFrame?.removeChildItems(item);
 		}
-		if (item instanceof Frame) {
-			this.framesArray.splice(this.framesArray.indexOf(item), 1);
-			this.framesIndex.remove(item);
-		} else {
-			this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
-			this.itemsIndex.remove(item);
-		}
+		this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
+		this.itemsIndex.remove(item);
 
 		this.Mbr = new Mbr();
-		const allItems = [...this.itemsArray, ...this.framesArray];
-		allItems.forEach(item => this.Mbr.combine([item.getMbr()]));
+		this.itemsArray.forEach(item => this.Mbr.combine([item.getMbr()]));
 
 		this.subject.publish(this.items);
 	}
 
 	copy(): ItemDataWithId[] {
-		const itemsData = this.itemsArray.map(item => ({
+		return  this.itemsArray.map(item => ({
 			...item.serialize(true),
 			id: item.getId(),
 		}));
-		const framesData = this.framesArray.map(item => ({
-			...item.serialize(),
-			id: item.getId(),
-		}));
-		return [...framesData, ...itemsData];
 	}
 
 	moveToZIndex(item: Item, zIndex: number): void {
-		if (item instanceof Frame) {
-			const index = this.framesArray.indexOf(item);
-			this.framesArray.splice(index, 1);
-			this.framesArray.splice(zIndex, 0, item);
-		} else {
-			const index = this.itemsArray.indexOf(item);
-			this.itemsArray.splice(index, 1);
-			this.itemsArray.splice(zIndex, 0, item);
-		}
+		const index = this.itemsArray.indexOf(item);
+		this.itemsArray.splice(index, 1);
+		this.itemsArray.splice(zIndex, 0, item);
 		this.change(item);
 		this.subject.publish(this.items);
 	}
@@ -139,34 +103,27 @@ export class SpatialIndex {
 			.map(id => this.items.getById(id))
 			.filter(item => item !== undefined);
 		const zIndex = Object.values(itemsRecord);
-		// const newItems: Item[] = [];
+
 		for (let i = 0; i < zIndex.length; i++) {
 			const index = zIndex[i];
-			this.itemsArray[index] = items[i] as ItemWoFrames;
+			this.itemsArray[index] = items[i];
 		}
 
 		this.itemsArray.forEach(this.change.bind(this));
 	}
 
 	sendToBack(item: Item, shouldPublish = true): void {
-		if (item instanceof Frame) {
-			const index = this.framesArray.indexOf(item);
-			this.framesArray.splice(index, 1);
-			this.framesArray.unshift(item);
-			this.framesIndex.change(item);
-		} else {
-			const index = this.itemsArray.indexOf(item);
-			this.itemsArray.splice(index, 1);
-			this.itemsArray.unshift(item);
-			this.itemsIndex.change(item);
-		}
+		const index = this.itemsArray.indexOf(item);
+		this.itemsArray.splice(index, 1);
+		this.itemsArray.unshift(item);
+		this.itemsIndex.change(item);
 		if (shouldPublish) {
 			this.subject.publish(this.items);
 		}
 	}
 
-	sendManyToBack(items: ItemWoFrames[]): void {
-		const newItems: ItemWoFrames[] = [...items];
+	sendManyToBack(items: Item[]): void {
+		const newItems: Item[] = [...items];
 		this.itemsArray.forEach(item => {
 			if (!items.includes(item)) {
 				newItems.push(item);
@@ -177,24 +134,17 @@ export class SpatialIndex {
 	}
 
 	bringToFront(item: Item, shouldPublish = true): void {
-		if (item instanceof Frame) {
-			const index = this.framesArray.indexOf(item);
-			this.framesArray.splice(index, 1);
-			this.framesArray.push(item);
-			this.framesIndex.change(item);
-		} else {
-			const index = this.itemsArray.indexOf(item);
-			this.itemsArray.splice(index, 1);
-			this.itemsArray.push(item);
-			this.itemsIndex.change(item);
-		}
+		const index = this.itemsArray.indexOf(item);
+		this.itemsArray.splice(index, 1);
+		this.itemsArray.push(item);
+		this.itemsIndex.change(item);
 		if (shouldPublish) {
 			this.subject.publish(this.items);
 		}
 	}
 
-	bringManyToFront(items: ItemWoFrames[]): void {
-		const newItems: ItemWoFrames[] = [];
+	bringManyToFront(items: Item[]): void {
+		const newItems: Item[] = [];
 		this.itemsArray.forEach(item => {
 			if (!items.includes(item)) {
 				newItems.push(item);
@@ -206,7 +156,7 @@ export class SpatialIndex {
 	}
 
 	// TODO Item could be frame
-	moveSecondAfterFirst(first: ItemWoFrames, second: ItemWoFrames): void {
+	moveSecondAfterFirst(first: Item, second: Item): void {
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
 		const firstIndex = this.itemsArray.indexOf(first);
@@ -217,7 +167,7 @@ export class SpatialIndex {
 	}
 
 	// TODO Item could be frame
-	moveSecondBeforeFirst(first: ItemWoFrames, second: ItemWoFrames): void {
+	moveSecondBeforeFirst(first: Item, second: Item): void {
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
 		const firstIndex = this.itemsArray.indexOf(first);
@@ -232,8 +182,6 @@ export class SpatialIndex {
 		if (item) {
 			return item as BaseItem;
 		}
-		const frame = this.framesArray.find(frame => frame.getId() === id);
-		return frame as BaseItem;
 	}
 
 	findById(id: string): Item | undefined {
@@ -242,34 +190,21 @@ export class SpatialIndex {
 
 	getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		const enclosedItems = this.itemsIndex.getEnclosed(mbr);
-		const enclosedFrames = this.framesIndex.getEnclosed(mbr);
-		return enclosedFrames.concat(enclosedItems);
+		return  this.itemsIndex.getEnclosed(mbr);
 	}
 
 	getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		const enclosedOrCrossedItems = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
-		const enclosedOrCrossedFrames = this.framesIndex.getEnclosedOrCrossedBy(mbr);
-		return enclosedOrCrossedFrames.concat(enclosedOrCrossedItems);
+		return this.itemsIndex.getEnclosedOrCrossedBy(mbr);
 	}
 
 	getUnderPoint(point: Point, tolerace = 5): Item[] {
-		const itemsUnderPoint = this.itemsIndex.getUnderPoint(point, tolerace);
-		const framesUnderPoint = this.framesIndex.getUnderPoint(point, tolerace);
-		return [...framesUnderPoint, ...itemsUnderPoint];
+		return this.itemsIndex.getUnderPoint(point, tolerace);
 	}
 
 	getRectsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		const frames = this.framesIndex.getRectsEnclosedOrCrossedBy(mbr);
-		const woFrames = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
-
-		return [...woFrames, ...frames];
-	}
-
-	getFramesEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Frame[] {
-		return this.framesIndex.getRectsEnclosedOrCrossedBy(new Mbr(left, top, right, bottom));
+		return this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
 	}
 
 	getItemsEnclosedOrCrossed(
@@ -277,7 +212,7 @@ export class SpatialIndex {
 		top: number,
 		right: number,
 		bottom: number
-	): ItemWoFrames[] {
+	): Item[] {
 		return this.itemsIndex.getRectsEnclosedOrCrossedBy(new Mbr(left, top, right, bottom));
 	}
 
@@ -299,55 +234,33 @@ export class SpatialIndex {
 		filter: (item: Item) => boolean,
 		maxDistance: number
 	): Item[] {
-		// Requires combining results from both indexes and sorting by distance, limited by maxItems.
 		const nearestItems = this.itemsIndex.getNearestTo(point, maxItems, filter, maxDistance);
-		const nearestFrames = this.framesIndex.getNearestTo(point, maxItems, filter, maxDistance);
-		const combined = nearestItems.concat(nearestFrames);
-		combined.sort((aa, bb) => {
+		nearestItems.sort((aa, bb) => {
 			const distA = point.getDistance(aa.getMbr().getCenter());
 			const distB = point.getDistance(bb.getMbr().getCenter());
 			return distA - distB;
 		});
-		return combined.slice(0, maxItems);
+		return nearestItems.slice(0, maxItems);
 	}
 
-	list(): ItemWoFrames[] {
+	list(): Item[] {
 		return this.itemsArray.concat();
 	}
 
-	listFrames(): Frame[] {
-		return this.framesArray.concat();
-	}
-
 	getZIndex(item: Item): number {
-		if (item instanceof Frame) {
-			return this.framesArray.indexOf(item);
-		} else {
-			return this.itemsArray.indexOf(item);
-		}
+		return this.itemsArray.indexOf(item);
 	}
 
 	getLastZIndex(): number {
-		// Considering zIndex is across both items and frames
-		return this.itemsArray.length + this.framesArray.length - 1;
+		return this.itemsArray.length - 1;
 	}
 
 	getByZIndex(index: number): Item {
-		// Handles single unified zIndex across both frames and items
-		const totalItems = this.itemsArray.length + this.framesArray.length;
-
 		if (index < this.itemsArray.length) {
 			return this.itemsArray[index];
-		} else if (index < totalItems) {
-			return this.framesArray[index - this.itemsArray.length];
 		} else {
-			// If index is out of bounds, return the last item by adjusted index
 			const lastIndex = this.getLastZIndex();
-			if (index - this.itemsArray.length < this.framesArray.length) {
-				return this.framesArray[lastIndex];
-			} else {
-				return this.itemsArray[lastIndex];
-			}
+			return this.itemsArray[lastIndex];
 		}
 	}
 }
@@ -364,12 +277,16 @@ export class Items {
 		this.index.change(item);
 	}
 
-	listAll(): ItemWoFrames[] {
+	listAll(): Item[] {
 		return this.index.list();
 	}
 
-	listFrames(): Frame[] {
-		return this.index.listFrames();
+	listFrames(): BaseItem[] {
+		return this.index.list().filter(item => "getChildrenIds" in item && item.getChildrenIds());
+	}
+
+	listGroupItems(): BaseItem[] {
+		return this.index.list().filter(item => "getChildrenIds" in item && item.getChildrenIds());
 	}
 
 	getById(id: string): BaseItem | undefined {
@@ -388,8 +305,8 @@ export class Items {
 		return this.index.getEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getFramesEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Frame[] {
-		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
+	getGroupItemsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): BaseItem[] {
+		return this.index.getEnclosedOrCrossed(left, top, right, bottom).filter(item => item instanceof BaseItem && item.getChildrenIds()) as BaseItem[];
 	}
 
 	getUnderPoint(point: Point, tolerance = 5): Item[] {
@@ -405,14 +322,14 @@ export class Items {
 		return this.index.getRectsEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getItemsInView(): ItemWoFrames[] {
+	getItemsInView(): Item[] {
 		const { left, top, right, bottom } = this.view.getMbr();
 		return this.index.getItemsEnclosedOrCrossed(left, top, right, bottom);
 	}
 
-	getFramesInView(): Frame[] {
+	getGroupItemsInView(): BaseItem[] {
 		const { left, top, right, bottom } = this.view.getMbr();
-		return this.index.getFramesEnclosedOrCrossed(left, top, right, bottom);
+		return this.getGroupItemsEnclosedOrCrossed(left, top, right, bottom);
 	}
 
 	getComments(): Comment[] {
@@ -475,13 +392,7 @@ export class Items {
 			return [nearest];
 		}
 
-		const frames = this.index
-			.listFrames()
-			.filter(frame => frame.isTextUnderPoint(this.pointer.point));
-		if (frames.length === 0 && unmodifiedSize !== 16) {
-			return this.getUnderPointer(16);
-		}
-		return frames;
+		return [];
 	}
 
 	getNearPointer(
@@ -552,43 +463,44 @@ export class Items {
 	}
 
 	render(context: DrawingContext): void {
-		const frames = this.getFramesInView();
-		const rest = this.getItemsInView();
+		const items = this.getItemsInView();
 
-		const frameChildrenIds: string[] = [];
-		frames.forEach(frame => {
-			frame.renderPath(context);
-			frame
-				.getChildrenIds()
-				.map(id => this.getById(id))
-				.forEach(child => {
-					if (child) {
-						frameChildrenIds.push(child.getId());
-						child.render(context);
-					}
-				});
-		}); // background of frames
-		rest.filter(item => !frameChildrenIds.includes(item.getId())).forEach(item =>
-			item.render(context)
-		); // non-frame items
-		frames.forEach(frame => frame.renderBorders(context)); // borders of frames
-		frames.forEach(frame => frame.renderName(context)); // names of frames
+		items.forEach(item => {
+			if (item.parent !== "Board") {
+				item.render(context);
+			}
+		})
+		// frames.forEach(frame => {
+		// 	frame.renderPath(context);
+		// 	frame
+		// 		.getChildrenIds()
+		// 		.map(id => this.getById(id))
+		// 		.forEach(child => {
+		// 			if (child) {
+		// 				frameChildrenIds.push(child.getId());
+		// 				child.render(context);
+		// 			}
+		// 		});
+		// }); // background of frames
+		// rest.filter(item => !frameChildrenIds.includes(item.getId())).forEach(item =>
+		// 	item.render(context)
+		// ); // non-frame items
+		// frames.forEach(frame => frame.renderBorders(context)); // borders of frames
+		// frames.forEach(frame => frame.renderName(context)); // names of frames
 	}
 
 	renderHTML(documentFactory: DocumentFactory): string {
-		const frames = this.getFramesInView();
-		const rest = this.getItemsInView();
-		return this.getHTML(documentFactory, frames, rest);
+		const items = this.getItemsInView();
+		return this.getHTML(documentFactory, items);
 	}
 
 	getWholeHTML(documentFactory: DocumentFactory): string {
-		const frames = this.listFrames();
-		const rest = this.listAll();
-		return this.getHTML(documentFactory, frames, rest);
+		const items = this.listAll();
+		return this.getHTML(documentFactory, items);
 	}
 
-	getHTML(documentFactory: DocumentFactory, frames: Frame[], rest: ItemWoFrames[]): string {
-		const lowestCoordinates = [...frames, ...rest]
+	getHTML(documentFactory: DocumentFactory, items: Item[]): string {
+		const lowestCoordinates = items
 			.map(item => item.getMbr())
 			.reduce(
 				(acc, mbr) => ({
@@ -598,11 +510,22 @@ export class Items {
 				{ left: 0, top: 0 }
 			);
 
-		const childrenMap = new Map<string, string>();
-		const framesHTML = frames.map(frame => {
-			frame.getChildrenIds().forEach(childId => childrenMap.set(childId, frame.getId()));
+		const groups: BaseItem[] = []
+		const rest: Item[] = []
 
-			const html = frame.renderHTML(documentFactory);
+		items.forEach(item => {
+			if ("getChildrenIds" in item && item.getChildrenIds()) {
+				groups.push(item)
+			} else {
+				rest.push(item)
+			}
+		})
+
+		const childrenMap = new Map<string, string>();
+		const GroupsHTML = groups.map(group => {
+			group.getChildrenIds().forEach(childId => childrenMap.set(childId, group.getId()));
+
+			const html = group.renderHTML(documentFactory);
 			translateElementBy(html, -lowestCoordinates.left, -lowestCoordinates.top);
 
 			return html;
@@ -639,18 +562,18 @@ export class Items {
 
 		for (const item of restHTML) {
 			const parentFrameId = childrenMap.get(item.id);
-			const frame = framesHTML.find(
+			const group = GroupsHTML.find(
 				el => parentFrameId !== undefined && el.id === parentFrameId
 			);
-			if (frame) {
-				positionRelatively(item, frame);
-				frame.appendChild(item);
+			if (group) {
+				positionRelatively(item, group);
+				group.appendChild(item);
 			}
 		}
 
 		let result = '';
-		for (const frame of framesHTML) {
-			result += frame.outerHTML;
+		for (const group of GroupsHTML) {
+			result += group.outerHTML;
 		}
 		for (const item of restHTML) {
 			if (!childrenMap.get(item.id)) {

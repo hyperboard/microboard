@@ -26,6 +26,7 @@ import { SelectionTransformer } from "./SelectionTransformer";
 import { BaseSelection, BaseRange } from "slate";
 import { ReactEditor } from "slate-react";
 import { tempStorage } from "SessionStorage";
+import {BaseItem} from "../Items/BaseItem";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -212,11 +213,7 @@ export class BoardSelection {
     const items = this.board.items
       .listAll()
       .filter((item) => !item.transformation.isLocked);
-    const frames = this.board.items
-      .listFrames()
-      .filter((item) => !item.transformation.isLocked);
     this.add(items);
-    this.add(frames);
     this.setContext("SelectByRect");
   }
 
@@ -780,54 +777,53 @@ export class BoardSelection {
     if (selectedMbr) {
       const selectedMap = Object.fromEntries(
         selected.map((item) => [item.getId(), { item, nested: false }])
-      ) as { [k: string]: { item: Item; nested: false | Frame } };
+      ) as { [k: string]: { item: BaseItem; nested: false | BaseItem } };
 
-      const enclosedFrames = this.board.items.getFramesEnclosedOrCrossed(
+      const enclosedGroups = this.board.items.getGroupItemsEnclosedOrCrossed(
         selectedMbr?.left,
         selectedMbr?.top,
         selectedMbr?.right,
         selectedMbr?.bottom
       );
 
-      enclosedFrames.forEach((frame) => {
+      enclosedGroups.forEach((group) => {
         selected.forEach((item) => {
-          if (frame.handleNesting(item)) {
-            selectedMap[item.getId()].nested = frame;
+          if (group.handleNesting(item)) {
+            selectedMap[item.getId()].nested = group;
           }
         });
       });
 
       Object.values(selectedMap).forEach((val) => {
-        const parentFrame = this.board.items.getById(val.item.parent);
-        const isParentFrame = parentFrame instanceof Frame;
-        const parentFrameId = isParentFrame ? parentFrame.getId() : null;
+        const parentGroup = this.board.items.getById(val.item.parent);
+        const parentGroupId = parentGroup?.getId();
 
         if (val.nested) {
           const isRemoveChildFromFrame = Object.values(selectedMap).some(
-            (val) => val.nested && val.nested.getId() !== parentFrameId
+            (val) => val.nested && val.nested.getId() !== parentGroupId
           );
 
-          if (isParentFrame && isRemoveChildFromFrame) {
-            parentFrame?.removeChildItems([val.item]);
+          if (parentGroupId && isRemoveChildFromFrame) {
+            parentGroup?.removeChildItems([val.item]);
           }
 
           val.nested.addChildItems([val.item]);
         } else if (val.item.parent !== "Board") {
-          if (isParentFrame) {
-            parentFrame?.removeChildItems([val.item]);
+          if (parentGroupId) {
+            parentGroup?.removeChildItems([val.item]);
           } else {
             console.warn(`Didnt find frame with id ${val.item.parent}`);
           }
         }
 
-        if (val.item instanceof Frame && checkFrames) {
-          const currFrame = val.item;
-          const currMbr = currFrame.getMbr();
-          const children = val.item
-            .getChildrenIds()
+        const childrenIds = val.item.getChildrenIds();
+        if (childrenIds && checkFrames) {
+          const currGroup = val.item;
+          const currMbr = currGroup.getMbr();
+          const children = childrenIds
             .map((childId) => this.board.items.getById(childId))
             .filter((item) => !!item);
-          const underFrame = this.board.items
+          const underGroup = this.board.items
             .getEnclosedOrCrossed(
               currMbr.left,
               currMbr.top,
@@ -836,10 +832,10 @@ export class BoardSelection {
             )
             .filter(
               (item) =>
-                item.parent === "Board" || item.parent === currFrame.getId()
+                item.parent === "Board" || item.parent === currGroup.getId()
             );
           const uniqueItems = new Set();
-          const toCheck = [...children, ...underFrame].filter((item) => {
+          const toCheck = [...children, ...underGroup].filter((item) => {
             const id = item.getId();
             if (uniqueItems.has(id)) {
               return false;
@@ -848,7 +844,7 @@ export class BoardSelection {
             return true;
           });
           // toCheck.forEach(child => currFrame.emitNesting(child));
-          currFrame.emitNesting(toCheck);
+          currGroup.emitNesting(toCheck);
         }
       });
     }

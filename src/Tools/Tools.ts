@@ -320,7 +320,7 @@ export class Tools extends ToolContext {
   }
 
   sortFrames(): Frame[] {
-    const frames = this.board.items.listFrames();
+    const frames = this.board.items.listAll().filter(item => item instanceof Frame);
     const sortedFrames = frames.sort((fr1, fr2) => {
       const mbr1 = fr1.getMbr();
       const mbr2 = fr2.getMbr();

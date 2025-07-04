@@ -6,9 +6,10 @@ import {
 	FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR,
 } from 'Items/Frame/FrameData';
 import { Tool } from 'Tools/Tool';
+import {BaseItem} from "../../Items/BaseItem";
 
 interface HighlightGroup {
-	frame?: Frame;
+	groupItem?: BaseItem;
 	children: Item[];
 }
 
@@ -23,8 +24,8 @@ export class NestingHighlighter extends Tool {
 		return this.toHighlight;
 	}
 
-	add(frame: Frame, children: Item | Item[]): void {
-		const existing = this.toHighlight.find(group => group.frame === frame);
+	add(groupItem: BaseItem, children: Item | Item[]): void {
+		const existing = this.toHighlight.find(group => group.groupItem === groupItem);
 		const array = Array.isArray(children) ? children : [children];
 		if (existing) {
 			array.forEach(child => {
@@ -33,7 +34,7 @@ export class NestingHighlighter extends Tool {
 				}
 			});
 		} else {
-			this.toHighlight.push({ frame, children: array });
+			this.toHighlight.push({ groupItem, children: array });
 		}
 	}
 
@@ -53,8 +54,8 @@ export class NestingHighlighter extends Tool {
 		if (this.toHighlight.length > 0) {
 			this.toHighlight.forEach(group => {
 				// Render frame
-				if (group.frame) {
-					const frameRect = group.frame.getMbr();
+				if (group.groupItem) {
+					const frameRect = group.groupItem.getMbr();
 					frameRect.borderColor = FRAME_HIGHLIGHTER_BORDER_COLOR;
 					frameRect.strokeWidth = 0.3;
 					frameRect.render(context);

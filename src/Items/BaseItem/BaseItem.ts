@@ -28,6 +28,7 @@ export class BaseItem extends Mbr implements Geometry {
 	private children: string[] | null = null;
 	canBeNested = true;
 	transformationRenderBlock?: boolean = undefined;
+	childItems: Item[] | null = null;
 	board: Board;
 	id: string;
 	subject = new Subject<any>
@@ -63,6 +64,10 @@ export class BaseItem extends Mbr implements Geometry {
 		this.linkTo.setId(id);
 		this.getRichText()?.setId(id);
 		return this;
+	}
+
+	getChildrenIds(): string[] | null {
+		return this.children;
 	}
 
 	addChildItems(children: BaseItem[]): void {
@@ -144,18 +149,23 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.children) {
 			return;
 		}
-		children.forEach((child) => {
+		const updatedChildItems: BaseItem[] = [];
+		children.forEach((childId) => {
+			const foundItem = this.board.items.getById(childId);
+			if (foundItem) {
+				updatedChildItems.push(foundItem)
+			}
 			if (
-				this.parent !== child &&
-				this.getId() !== child
+				this.parent !== childId &&
+				this.getId() !== childId
 			) {
-				const foundItem = this.board.items.getById(child);
-				if (!this.children.includes(child) && foundItem) {
+				if (!this.children.includes(childId) && foundItem) {
 					foundItem.parent = this.getId();
 				}
 			}
 		});
 		this.children = children;
+		this.childItems = updatedChildItems;
 		this.updateMbr();
 		this.subject.publish(this);
 	}
@@ -246,7 +256,14 @@ export class BaseItem extends Mbr implements Geometry {
 		return new Path(this.getMbr().getLines());
 	}
 
-	render(context: DrawingContext): void {}
+	render(context: DrawingContext): void {
+		if (this.childItems) {
+			this.childItems.forEach((child) => {
+				child.render(context);
+			})
+		}
+	}
+
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		return documentFactory.createElement("div");
 	}
