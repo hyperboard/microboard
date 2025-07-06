@@ -466,7 +466,7 @@ export class Items {
 		const items = this.getItemsInView();
 
 		items.forEach(item => {
-			if (item.parent !== "Board") {
+			if (item.parent === "Board") {
 				item.render(context);
 			}
 		})
