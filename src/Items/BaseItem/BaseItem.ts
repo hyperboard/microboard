@@ -14,7 +14,7 @@ import {Subject} from "../../Subject";
 import {Path, Paths} from "../Path";
 import {Item} from "../Item";
 import {BaseItemOperation} from "./BaseItemOperation";
-import {SimpleSpatialIndex} from "../../SpatialIndex/SpacialIndex";
+import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
