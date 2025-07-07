@@ -62,16 +62,11 @@ export class SpatialIndex {
 	};
 
 	remove(item: Item): void {
-		if (item instanceof Frame) {
-			const newItems = item
-				.getChildrenIds()
-				.map(childId => this.getById(childId))
-				.filter(child => child !== undefined);
-
-			item.removeChildItems(newItems);
+		if ("index" in item && item.index) {
+			item.removeChildItems(item.index.list());
 		}
 		if (item.parent !== 'Board') {
-			const parentFrame = this.items.getById(item.parent) as Frame | Group | undefined;
+			const parentFrame = this.items.getById(item.parent) as BaseItem;
 			parentFrame?.removeChildItems(item);
 		}
 		this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
@@ -84,10 +79,33 @@ export class SpatialIndex {
 	}
 
 	copy(): ItemDataWithId[] {
-		return  this.itemsArray.map(item => ({
+		return this.getItemsWithIncludedChildren(this.itemsArray).map(item => ({
 			...item.serialize(true),
 			id: item.getId(),
 		}));
+	}
+
+	getItemsWithIncludedChildren(items: Item[]): Item[] {
+		return items.flatMap(item => {
+			if ("index" in item && item.index) {
+				return [item, ...item.index.list()];
+			}
+			return item;
+		});
+	}
+
+	getItemChildren(item: Item): Item[] {
+		if ("index" in item && item.index) {
+			return item.index.list();
+		}
+		return [];
+	}
+
+	getItemParent(item: Item): Item | undefined {
+		if (item.parent === "Board") {
+			return;
+		}
+		return this.getById(item.parent);
 	}
 
 	moveToZIndex(item: Item, zIndex: number): void {
@@ -178,7 +196,7 @@ export class SpatialIndex {
 	}
 
 	getById(id: string): BaseItem | undefined {
-		const item = this.itemsArray.find(item => item.getId() === id);
+		const item = this.getItemsWithIncludedChildren(this.itemsArray).find(item => item.getId() === id);
 		if (item) {
 			return item as BaseItem;
 		}
@@ -190,21 +208,61 @@ export class SpatialIndex {
 
 	getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		return  this.itemsIndex.getEnclosed(mbr);
+		const items = this.itemsIndex.getEnclosed(mbr);
+		const children: Item[] = [];
+		items.forEach((item: Item) => {
+			const children = this.getItemChildren(item);
+			children.forEach((child: Item) => {
+				if (child.isEnclosedBy(mbr)) {
+					children.push(child);
+				}
+			})
+		})
+		return [...items, ...children];
 	}
 
 	getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		return this.itemsIndex.getEnclosedOrCrossedBy(mbr);
+		const items = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
+		const children: Item[] = [];
+		items.forEach((item: Item) => {
+			const children = this.getItemChildren(item);
+			children.forEach((child: Item) => {
+				if (child.isEnclosedOrCrossedBy(mbr)) {
+					children.push(child);
+				}
+			})
+		})
+		return [...items, ...children];
 	}
 
-	getUnderPoint(point: Point, tolerace = 5): Item[] {
-		return this.itemsIndex.getUnderPoint(point, tolerace);
+	getUnderPoint(point: Point, tolerance = 5): Item[] {
+		const items = this.itemsIndex.getUnderPoint(point, tolerance);
+		const children: Item[] = [];
+		items.forEach((item: Item) => {
+			const children = this.getItemChildren(item);
+			children.forEach((child: Item) => {
+				if (child.isUnderPoint(point, tolerance)) {
+					children.push(child);
+				}
+			})
+		})
+		return [...items, ...children];
 	}
 
 	getRectsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
-		return this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
+		const items = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
+		const children: Item[] = [];
+		items.forEach((item: Item) => {
+			const children = this.getItemChildren(item);
+			children.forEach((child: Item) => {
+				if (child.isEnclosedOrCrossedBy(mbr)) {
+					children.push(child);
+				}
+			})
+		})
+		return [...items, ...children];
 	}
 
 	getItemsEnclosedOrCrossed(
@@ -213,7 +271,7 @@ export class SpatialIndex {
 		right: number,
 		bottom: number
 	): Item[] {
-		return this.itemsIndex.getRectsEnclosedOrCrossedBy(new Mbr(left, top, right, bottom));
+		return this.getRectsEnclosedOrCrossed(left, top, right, bottom);
 	}
 
 	getComments(): Comment[] {
@@ -234,21 +292,29 @@ export class SpatialIndex {
 		filter: (item: Item) => boolean,
 		maxDistance: number
 	): Item[] {
-		const nearestItems = this.itemsIndex.getNearestTo(point, maxItems, filter, maxDistance);
-		nearestItems.sort((aa, bb) => {
-			const distA = point.getDistance(aa.getMbr().getCenter());
-			const distB = point.getDistance(bb.getMbr().getCenter());
-			return distA - distB;
-		});
-		return nearestItems.slice(0, maxItems);
+		const allItems = this.getItemsWithIncludedChildren(this.itemsArray);
+		const filtered = allItems.filter(item => filter(item));
+		const withDistance = filtered
+			.map(item => ({
+				item,
+				distance: point.getDistance(item.getMbr().getCenter())
+			}))
+			.filter(({ distance }) => distance <= maxDistance);
+
+		withDistance.sort((a, b) => a.distance - b.distance);
+		return withDistance.slice(0, maxItems).map(({ item }) => item);
 	}
 
 	list(): Item[] {
-		return this.itemsArray.concat();
+		return this.getItemsWithIncludedChildren(this.itemsArray).concat();
 	}
 
 	getZIndex(item: Item): number {
-		return this.itemsArray.indexOf(item);
+		const index = this.itemsArray.indexOf(item);
+		if (index === -1) {
+			return this.getLastZIndex();
+		}
+		return index;
 	}
 
 	getLastZIndex(): number {
@@ -279,10 +345,6 @@ export class Items {
 
 	listAll(): Item[] {
 		return this.index.list();
-	}
-
-	listFrames(): BaseItem[] {
-		return this.index.list().filter(item => "getChildrenIds" in item && item.getChildrenIds());
 	}
 
 	listGroupItems(): BaseItem[] {
@@ -514,7 +576,7 @@ export class Items {
 		const rest: Item[] = []
 
 		items.forEach(item => {
-			if ("getChildrenIds" in item && item.getChildrenIds()) {
+			if ("index" in item && item.index) {
 				groups.push(item)
 			} else {
 				rest.push(item)
@@ -581,5 +643,222 @@ export class Items {
 			}
 		}
 		return result;
+	}
+}
+
+export class SimpleSpatialIndex {
+	subject = new Subject<Items>();
+	private itemsArray: Item[] = [];
+	private Mbr = new Mbr();
+	readonly items: Items;
+
+	constructor(view: Camera, pointer: Pointer) {
+		this.items = new Items(this as any, view, pointer, this.subject);
+	}
+
+	clear(): void {
+		this.itemsArray = [];
+		this.Mbr = new Mbr();
+	}
+
+	insert(item: Item): void {
+		this.itemsArray.push(item);
+
+		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
+			this.Mbr = item.getMbr().copy();
+		} else {
+			this.Mbr.combine([item.getMbr()]);
+		}
+		item.subject.subscribe(this.change);
+		this.subject.publish(this.items);
+	}
+
+	change = (item: Item): void => {
+		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
+			this.Mbr = item.getMbr().copy();
+		} else {
+			this.Mbr.combine([item.getMbr()]);
+		}
+		this.subject.publish(this.items);
+	};
+
+	remove(item: Item): void {
+		if ("index" in item && item.index) {
+			item.removeChildItems(item.index.list());
+		}
+		if (item.parent !== 'Board') {
+			const parentFrame = this.items.getById(item.parent) as BaseItem;
+			parentFrame?.removeChildItems(item);
+		}
+		this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
+
+		this.Mbr = new Mbr();
+		this.itemsArray.forEach(item => this.Mbr.combine([item.getMbr()]));
+
+		this.subject.publish(this.items);
+	}
+
+	copy(): ItemDataWithId[] {
+		return  this.itemsArray.map(item => ({
+			...item.serialize(true),
+			id: item.getId(),
+		}));
+	}
+
+	moveToZIndex(item: Item, zIndex: number): void {
+		const index = this.itemsArray.indexOf(item);
+		this.itemsArray.splice(index, 1);
+		this.itemsArray.splice(zIndex, 0, item);
+		this.change(item);
+		this.subject.publish(this.items);
+	}
+
+	moveManyToZIndex(itemsRecord: ItemsIndexRecord): void {
+		const items = Object.keys(itemsRecord)
+			.map(id => this.items.getById(id))
+			.filter(item => item !== undefined);
+		const zIndex = Object.values(itemsRecord);
+
+		for (let i = 0; i < zIndex.length; i++) {
+			const index = zIndex[i];
+			this.itemsArray[index] = items[i];
+		}
+
+		this.itemsArray.forEach(this.change.bind(this));
+	}
+
+	sendToBack(item: Item, shouldPublish = true): void {
+		const index = this.itemsArray.indexOf(item);
+		this.itemsArray.splice(index, 1);
+		this.itemsArray.unshift(item);
+		if (shouldPublish) {
+			this.subject.publish(this.items);
+		}
+	}
+
+	sendManyToBack(items: Item[]): void {
+		const newItems: Item[] = [...items];
+		this.itemsArray.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		this.itemsArray = newItems;
+		this.itemsArray.forEach(this.change.bind(this));
+	}
+
+	bringToFront(item: Item, shouldPublish = true): void {
+		const index = this.itemsArray.indexOf(item);
+		this.itemsArray.splice(index, 1);
+		this.itemsArray.push(item);
+		if (shouldPublish) {
+			this.subject.publish(this.items);
+		}
+	}
+
+	bringManyToFront(items: Item[]): void {
+		const newItems: Item[] = [];
+		this.itemsArray.forEach(item => {
+			if (!items.includes(item)) {
+				newItems.push(item);
+			}
+		});
+		newItems.push(...items);
+		this.itemsArray = newItems;
+		this.itemsArray.forEach(this.change.bind(this));
+	}
+
+	moveSecondAfterFirst(first: Item, second: Item): void {
+		const secondIndex = this.itemsArray.indexOf(second);
+		this.itemsArray.splice(secondIndex, 1);
+		const firstIndex = this.itemsArray.indexOf(first);
+		this.itemsArray.splice(firstIndex + 1, 0, second);
+		this.change(first);
+		this.change(second);
+		this.subject.publish(this.items);
+	}
+
+	moveSecondBeforeFirst(first: Item, second: Item): void {
+		const secondIndex = this.itemsArray.indexOf(second);
+		this.itemsArray.splice(secondIndex, 1);
+		const firstIndex = this.itemsArray.indexOf(first);
+		this.itemsArray.splice(firstIndex, 0, second);
+		this.change(first);
+		this.change(second);
+		this.subject.publish(this.items);
+	}
+
+	getById(id: string): BaseItem | undefined {
+		const item = this.itemsArray.find(item => item.getId() === id);
+		if (item) {
+			return item as BaseItem;
+		}
+	}
+
+	findById(id: string): Item | undefined {
+		return this.getById(id); // Reuse `getById` for consistency
+	}
+
+	getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
+		const mbr = new Mbr(left, top, right, bottom);
+		const items: Item[] = [];
+		this.itemsArray.forEach((item: Item) => {
+			if (item.isEnclosedBy(mbr)) {
+				items.push(item);
+			}
+		})
+		return items;
+	}
+
+	getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
+		const mbr = new Mbr(left, top, right, bottom);
+		const items: Item[] = [];
+		this.itemsArray.forEach((item: Item) => {
+			if (item.isEnclosedOrCrossedBy(mbr)) {
+				items.push(item);
+			}
+		})
+		return items;
+	}
+
+	getUnderPoint(point: Point, tolerace = 5): Item[] {
+		const items: Item[] = [];
+		this.itemsArray.forEach((item: Item) => {
+			if (item.isUnderPoint(point, tolerace)) {
+				items.push(item);
+			}
+		})
+		return items;
+	}
+
+	getMbr(): Mbr {
+		return this.Mbr;
+	}
+
+	list(): Item[] {
+		return this.itemsArray.concat();
+	}
+
+	getZIndex(item: Item): number {
+		return this.itemsArray.indexOf(item);
+	}
+
+	getLastZIndex(): number {
+		return this.itemsArray.length - 1;
+	}
+
+	getByZIndex(index: number): Item {
+		if (index < this.itemsArray.length) {
+			return this.itemsArray[index];
+		} else {
+			const lastIndex = this.getLastZIndex();
+			return this.itemsArray[lastIndex];
+		}
+	}
+
+	render(context: DrawingContext) {
+		this.itemsArray.forEach(item => {
+			item.render(context);
+		})
 	}
 }

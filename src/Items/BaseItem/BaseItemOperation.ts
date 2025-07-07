@@ -1,7 +1,11 @@
 import {BaseOperation} from "../../Events/EventsOperations";
 
-export type BaseItemOperation = UpdateChildren;
+export type BaseItemOperation = RemoveChildren | AddChildren;
 
-export interface UpdateChildren extends BaseOperation<{ children: string[] }> {
-  method: "updateChildren";
+export interface RemoveChildren extends BaseOperation<{ childIds: string[] }> {
+  method: "removeChildren";
+}
+
+export interface AddChildren extends BaseOperation<{ childIds: string }> {
+  method: "addChildren";
 }

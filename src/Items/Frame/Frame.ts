@@ -33,6 +33,7 @@ import {
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import {ResizeType} from "Selection/Transformer/TransformerHelpers/getResizeType";
 import {BaseItem} from "../BaseItem";
+import {SimpleSpatialIndex} from "../../SpatialIndex/SpacialIndex";
 
 const defaultFrameData = new DefaultFrameData();
 
@@ -65,7 +66,7 @@ export class Frame extends BaseItem {
     public borderStyle = defaultFrameData.borderStyle,
     public borderWidth = defaultFrameData.borderWidth
   ) {
-    super(board, id);
+    super(board, id, undefined, true);
     this.textContainer = Frames[this.shapeType].textBounds.copy();
     this.path = Frames[this.shapeType].path.copy();
     this.transformation = new Transformation(this.id, board.events);
@@ -383,7 +384,7 @@ export class Frame extends BaseItem {
       borderStyle: this.borderStyle,
       borderWidth: this.borderWidth,
       transformation: this.transformation.serialize(),
-      children: this.children,
+      children: this.index?.list().map((child) => child.getId()) || [],
       text: this.text.serialize(),
       canChangeRatio: this.canChangeRatio,
       linkTo: this.linkTo.serialize(),

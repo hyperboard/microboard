@@ -14,21 +14,22 @@ import {Subject} from "../../Subject";
 import {Path, Paths} from "../Path";
 import {Item} from "../Item";
 import {BaseItemOperation} from "./BaseItemOperation";
+import {SimpleSpatialIndex} from "../../SpatialIndex/SpacialIndex";
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
 	linkTo?: string;
 	transformation: TransformationData;
+	children?: string[]
 } & T;
 
 export class BaseItem extends Mbr implements Geometry {
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	parent: string = "Board";
-	private children: string[] | null = null;
 	canBeNested = true;
 	transformationRenderBlock?: boolean = undefined;
-	childItems: Item[] | null = null;
+	readonly index: SimpleSpatialIndex | null = null;
 	board: Board;
 	id: string;
 	subject = new Subject<any>
@@ -41,10 +42,14 @@ export class BaseItem extends Mbr implements Geometry {
 		board: Board,
 		id = "",
 		private defaultItemData?: BaseItemData,
+		isGroupItem?: boolean,
 	) {
 		super();
 		this.board = board;
 		this.id = id;
+		if (isGroupItem) {
+			this.index = new SimpleSpatialIndex(board.camera, board.pointer);
+		}
 		if (defaultItemData) {
 			Object.entries(defaultItemData).forEach(([key, value]) => {
 				this[key] = value;
@@ -67,30 +72,35 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	getChildrenIds(): string[] | null {
-		return this.children;
+		if (!this.index) {
+			return null;
+		}
+		return this.index.items.listAll().map(item => item.getId());
 	}
 
 	addChildItems(children: BaseItem[]): void {
-		if (!this.children) {
+		if (!this.index) {
 			return;
 		}
-		const childrenIds = children.map((child) => {
-			child.parent = this.getId();
-			return child.getId();
+		this.emit({
+			class: this.itemType,
+			method: "addChildren",
+			item: [this.getId()],
+			newData: {childIds: children.map(child => child.getId())},
 		});
-		this.updateChildren([...this.children, ...childrenIds]);
 	}
 
 	removeChildItems(children: BaseItem[] | BaseItem): void {
-		if (!this.children) {
+		if (!this.index) {
 			return;
 		}
-		const newChildren = Array.isArray(children) ? children : [children];
-		const childrenIds = newChildren.map((child) => {
-			child.parent = "Board";
-			return child.getId();
+		const childrenArr = Array.isArray(children) ? children : [children];
+		this.emit({
+			class: this.itemType,
+			method: "removeChildren",
+			item: [this.getId()],
+			newData: {childIds: childrenArr.map(child => child.getId())},
 		});
-		this.updateChildren(this.children.filter(child => !childrenIds.includes(child)));
 	}
 
 	emitNesting(children: BaseItem[]): void {
@@ -106,16 +116,6 @@ export class BaseItem extends Mbr implements Geometry {
 		})
 		this.addChildItems(itemsToAdd);
 		this.removeChildItems(itemsToRemove);
-	}
-
-	private updateChildren(children: string[]): void {
-		this.emit({
-			class: this.itemType,
-			method: "updateChildren",
-			item: [this.getId()],
-			newData: {children},
-			prevData: {children: this.children}
-		});
 	}
 
 	handleNesting(
@@ -145,27 +145,44 @@ export class BaseItem extends Mbr implements Geometry {
 		return false;
 	}
 
-	applyUpdateChildren(children: string[]): void {
-		if (!this.children) {
+	applyAddChildren(childIds: string[]): void {
+		if (!this.index) {
 			return;
 		}
-		const updatedChildItems: BaseItem[] = [];
-		children.forEach((childId) => {
+		childIds.forEach((childId) => {
 			const foundItem = this.board.items.getById(childId);
-			if (foundItem) {
-				updatedChildItems.push(foundItem)
-			}
 			if (
 				this.parent !== childId &&
 				this.getId() !== childId
 			) {
-				if (!this.children.includes(childId) && foundItem) {
+				if (!this.index?.getById(childId) && foundItem) {
 					foundItem.parent = this.getId();
+					this.board.items.index.remove(foundItem);
+					this.index?.insert(foundItem);
 				}
 			}
 		});
-		this.children = children;
-		this.childItems = updatedChildItems;
+		this.updateMbr();
+		this.subject.publish(this);
+	}
+
+	applyRemoveChildren(childIds: string[]): void {
+		if (!this.index) {
+			return;
+		}
+		childIds.forEach((childId) => {
+			const foundItem = this.index?.getById(childId);
+			if (
+				this.parent !== childId &&
+				this.getId() !== childId
+			) {
+				if (!this.index?.getById(childId) && foundItem) {
+					foundItem.parent = "Board";
+					this.index?.remove(foundItem);
+					this.board.items.index.insert(foundItem);
+				}
+			}
+		});
 		this.updateMbr();
 		this.subject.publish(this);
 	}
@@ -199,6 +216,7 @@ export class BaseItem extends Mbr implements Geometry {
 			linkTo: this.linkTo.serialize(),
 			transformation: this.transformation.serialize(),
 			itemType: this.defaultItemData?.itemType || this.itemType,
+			children: this.index?.list().map((child) => child.getId()),
 		};
 		Object.keys(this.defaultItemData || {}).forEach((key: string) => {
 			const value = this[key];
@@ -222,7 +240,7 @@ export class BaseItem extends Mbr implements Geometry {
 		}
 	}
 
-	apply(op: Operation | BaseOperation): void {
+	apply(op: Operation | BaseItemOperation | BaseOperation): void {
 		op = op as Operation;
 		switch (op.class) {
 			case "Transformation":
@@ -234,8 +252,12 @@ export class BaseItem extends Mbr implements Geometry {
 			case this.itemType:
 				op = op as unknown as BaseItemOperation
 				switch (op.method) {
-					case "updateChildren":
-						this.applyUpdateChildren(op.newData.children)
+					case "removeChildren":
+						this.applyRemoveChildren(op.newData.childIds)
+						break;
+					case "addChildren":
+						this.applyAddChildren(op.newData.childIds)
+						break;
 				}
 		}
 	}
@@ -257,10 +279,8 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	render(context: DrawingContext): void {
-		if (this.childItems) {
-			this.childItems.forEach((child) => {
-				child.render(context);
-			})
+		if (this.index) {
+			this.index.render(context);
 		}
 	}
 
