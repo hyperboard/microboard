@@ -3,9 +3,7 @@ import { ItemsIndexRecord } from 'BoardOperations';
 import { Camera } from 'Camera';
 import { translateElementBy, positionRelatively } from 'HTMLRender';
 import {Item, Frame, Mbr, ItemData, Point, Connector, Comment, Shape} from 'Items';
-import { Drawing } from 'Items/Drawing';
 import { DrawingContext } from 'Items/DrawingContext';
-import { Group } from 'Items/Group';
 import { Pointer } from 'Pointer';
 import { conf } from 'Settings';
 import { Subject } from 'Subject';
@@ -418,7 +416,7 @@ export class Items {
 			enclosed = underPointer;
 		}
 
-		if (underPointer.some(item => item instanceof Drawing)) {
+		if (underPointer.some(item => item.itemType === "Drawing")) {
 			enclosed = [...underPointer, ...enclosed];
 		}
 
@@ -426,7 +424,7 @@ export class Items {
 			(acc, item) => {
 				const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
-				if (item instanceof Drawing && !item.isPointNearLine(this.pointer.point)) {
+				if (item.itemType === "Drawing" && !item.isPointNearLine(this.pointer.point)) {
 					return acc;
 				}
 
