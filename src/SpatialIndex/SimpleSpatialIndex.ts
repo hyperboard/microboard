@@ -168,7 +168,6 @@ export class SimpleSpatialIndex {
         items.push(item);
       }
     })
-    console.log("simple", items)
     return items;
   }
 
@@ -180,7 +179,6 @@ export class SimpleSpatialIndex {
         items.push(item);
       }
     })
-    console.log("simple", items)
     return items;
   }
 
@@ -191,7 +189,6 @@ export class SimpleSpatialIndex {
         items.push(item);
       }
     })
-    console.log("simple", items)
     return items;
   }
 
@@ -200,7 +197,6 @@ export class SimpleSpatialIndex {
   }
 
   list(): Item[] {
-    console.log("simple list", this.itemsArray.concat())
     return this.itemsArray.concat();
   }
 
