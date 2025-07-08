@@ -336,7 +336,7 @@ export class Items {
 	}
 
 	listGroupItems(): BaseItem[] {
-		return this.index.list().filter(item => "getChildrenIds" in item && item.getChildrenIds());
+		return this.index.list().filter(item => "index" in item && item.index);
 	}
 
 	getById(id: string): BaseItem | undefined {
@@ -356,7 +356,7 @@ export class Items {
 	}
 
 	getGroupItemsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): BaseItem[] {
-		return this.index.getEnclosedOrCrossed(left, top, right, bottom).filter(item => item instanceof BaseItem && item.getChildrenIds()) as BaseItem[];
+		return this.index.getEnclosedOrCrossed(left, top, right, bottom).filter(item => item instanceof BaseItem && item.index) as BaseItem[];
 	}
 
 	getUnderPoint(point: Point, tolerance = 5): Item[] {
