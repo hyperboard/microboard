@@ -216,6 +216,7 @@ export class SpatialIndex {
 				}
 			})
 		})
+		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -231,6 +232,7 @@ export class SpatialIndex {
 				}
 			})
 		})
+		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -245,6 +247,7 @@ export class SpatialIndex {
 				}
 			})
 		})
+		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -260,6 +263,7 @@ export class SpatialIndex {
 				}
 			})
 		})
+		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -300,10 +304,12 @@ export class SpatialIndex {
 			.filter(({ distance }) => distance <= maxDistance);
 
 		withDistance.sort((a, b) => a.distance - b.distance);
+		console.log(withDistance.slice(0, maxItems).map(({ item }) => item))
 		return withDistance.slice(0, maxItems).map(({ item }) => item);
 	}
 
 	list(): Item[] {
+		console.log("list", this.getItemsWithIncludedChildren(this.itemsArray).concat())
 		return this.getItemsWithIncludedChildren(this.itemsArray).concat();
 	}
 
