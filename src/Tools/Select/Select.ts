@@ -743,7 +743,7 @@ export class Select extends Tool {
 				const isNotInSelection = this.board.selection.items.findById(underPointer.getId()) === null;
 				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
-					if (underPointer instanceof Frame) {
+					if ("index" in underPointer && underPointer.index) {
 						const { left, right, top, bottom } = underPointer.getMbr();
 						const itemsInFrame = this.board.items
 							.getEnclosedOrCrossed(left, top, right, bottom)

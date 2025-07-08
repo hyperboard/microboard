@@ -63,6 +63,7 @@ export class NestingHighlighter extends Tool {
 
 				// Render children
 				group.children.forEach(child => {
+					child.render(context);
 					const childRect = child.getMbr();
 					childRect.backgroundColor = FRAME_CHILDREN_HIGHLIGHTER_COLOR;
 					childRect.borderColor = FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR;

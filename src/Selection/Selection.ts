@@ -524,7 +524,7 @@ export class BoardSelection {
         endPoint.pointType !== "Board" ? endPoint.item.getId() : null;
       const single = this.items.getSingle();
       const frameChild =
-        single instanceof Frame ? single.getChildrenIds() : null;
+        single instanceof BaseItem && single.index ? single.getChildrenIds() : null;
 
       const hasStartItem =
         startItemId &&
@@ -921,7 +921,7 @@ export class BoardSelection {
     }
 
     function tryToAddFrameChildrenToTranslation(selectedItem: Item): void {
-      if (!("index" in selectedItem) && !selectedItem.index) {
+      if (!("index" in selectedItem) || !selectedItem.index) {
         return;
       }
       for (const childId of selectedItem.getChildrenIds()) {
