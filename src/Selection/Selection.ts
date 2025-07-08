@@ -921,7 +921,7 @@ export class BoardSelection {
     }
 
     function tryToAddFrameChildrenToTranslation(selectedItem: Item): void {
-      if (!(selectedItem instanceof Frame)) {
+      if (!("index" in selectedItem) && !selectedItem.index) {
         return;
       }
       for (const childId of selectedItem.getChildrenIds()) {

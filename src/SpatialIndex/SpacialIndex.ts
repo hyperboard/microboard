@@ -209,14 +209,10 @@ export class SpatialIndex {
 		const items = this.itemsIndex.getEnclosed(mbr);
 		const children: Item[] = [];
 		items.forEach((item: Item) => {
-			const children = this.getItemChildren(item);
-			children.forEach((child: Item) => {
-				if (child.isEnclosedBy(mbr)) {
-					children.push(child);
-				}
-			})
+			if ("index" in item && item.index) {
+				children.push(...item.index.getEnclosed(left, top, right, bottom))
+			}
 		})
-		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -225,14 +221,10 @@ export class SpatialIndex {
 		const items = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
 		const children: Item[] = [];
 		items.forEach((item: Item) => {
-			const children = this.getItemChildren(item);
-			children.forEach((child: Item) => {
-				if (child.isEnclosedOrCrossedBy(mbr)) {
-					children.push(child);
-				}
-			})
+			if ("index" in item && item.index) {
+				children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom))
+			}
 		})
-		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -240,14 +232,10 @@ export class SpatialIndex {
 		const items = this.itemsIndex.getUnderPoint(point, tolerance);
 		const children: Item[] = [];
 		items.forEach((item: Item) => {
-			const children = this.getItemChildren(item);
-			children.forEach((child: Item) => {
-				if (child.isUnderPoint(point, tolerance)) {
-					children.push(child);
-				}
-			})
+			if ("index" in item && item.index) {
+				children.push(...item.index.getUnderPoint(point, tolerance))
+			}
 		})
-		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -256,14 +244,12 @@ export class SpatialIndex {
 		const items = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
 		const children: Item[] = [];
 		items.forEach((item: Item) => {
-			const children = this.getItemChildren(item);
-			children.forEach((child: Item) => {
-				if (child.isEnclosedOrCrossedBy(mbr)) {
-					children.push(child);
+			items.forEach((item: Item) => {
+				if ("index" in item && item.index) {
+					children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom))
 				}
 			})
 		})
-		console.log([...items, ...children])
 		return [...items, ...children];
 	}
 
@@ -304,12 +290,10 @@ export class SpatialIndex {
 			.filter(({ distance }) => distance <= maxDistance);
 
 		withDistance.sort((a, b) => a.distance - b.distance);
-		console.log(withDistance.slice(0, maxItems).map(({ item }) => item))
 		return withDistance.slice(0, maxItems).map(({ item }) => item);
 	}
 
 	list(): Item[] {
-		console.log("list", this.getItemsWithIncludedChildren(this.itemsArray).concat())
 		return this.getItemsWithIncludedChildren(this.itemsArray).concat();
 	}
 

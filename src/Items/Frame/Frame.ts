@@ -271,7 +271,7 @@ export class Frame extends BaseItem {
   }
 
   getChildrenIds(): string[] {
-    return this.children;
+    return this.index?.list().map(item => item.getId()) || [];
   }
 
   updateMbr(): void {
