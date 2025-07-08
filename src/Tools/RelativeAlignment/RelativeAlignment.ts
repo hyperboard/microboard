@@ -71,7 +71,7 @@ export class AlignmentHelper {
     const scale = this.board.camera.getScale();
     const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 8);
     const childrenIds =
-      "index" in movingItem ? movingItem.getChildrenIds() : [];
+      "index" in movingItem && movingItem.index ? movingItem.getChildrenIds() : [];
 
     const nearbyItems = this.canvasDrawer.getLastCreatedCanvas()
       ? this.spatialIndex.getNearestTo(
