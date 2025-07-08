@@ -745,10 +745,13 @@ export class Select extends Tool {
 					this.board.selection.add(underPointer);
 					if ("index" in underPointer && underPointer.index) {
 						const { left, right, top, bottom } = underPointer.getMbr();
-						const itemsInFrame = this.board.items
-							.getEnclosedOrCrossed(left, top, right, bottom)
-							.filter(item => underPointer.getChildrenIds().includes(item.getId()));
-						this.board.selection.add(itemsInFrame);
+						const childrenIds = underPointer.getChildrenIds();
+						if (childrenIds) {
+							const itemsInFrame = this.board.items
+								.getEnclosedOrCrossed(left, top, right, bottom)
+								.filter(item => childrenIds.includes(item.getId()));
+							this.board.selection.add(itemsInFrame);
+						}
 					}
 					this.board.selection.setContext('EditUnderPointer');
 				} else {
