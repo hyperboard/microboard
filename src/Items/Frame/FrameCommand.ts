@@ -2,8 +2,9 @@ import { Frame } from "./Frame";
 import { FrameOperation } from "./FrameOperation";
 import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
+import {BaseCommand} from "../../Events/Command";
 
-export class FrameCommand implements Command {
+export class FrameCommand extends BaseCommand {
 	private reverse: { item: Frame; operation: FrameOperation }[];
 
 	constructor(
@@ -66,6 +67,8 @@ export class FrameCommand implements Command {
 						children: frame.getChildrenIds(),
 					};
 				});
+			default:
+				return super.getReverse();
 		}
 	}
 }
