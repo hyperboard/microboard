@@ -154,34 +154,6 @@ export class Frame extends BaseItem {
   //   });
   // }
 
-  applyAddChild(childId: string[] | string, noWarn = false): void {
-    const children = Array.isArray(childId) ? childId : [childId];
-    children.forEach((child) => {
-      if (
-        this.parent !== child &&
-        // && child.itemType !== "Frame"
-        this.getId() !== child
-      ) {
-        const foundItem = this.getItemById(child);
-        if (!this.children.includes(child) && foundItem) {
-          this.children.push(child);
-          foundItem.parent = this.getId();
-          this.updateMbr();
-          this.subject.publish(this);
-        } else if (!foundItem && !noWarn) {
-          console.warn(`Could not find child with id ${childId}`);
-        }
-      }
-    });
-  }
-
-  private applyRemoveChild(childId: string[]): void {
-    this.children = this.children.filter(
-      (currChild) => !childId.includes(currChild)
-    );
-    this.subject.publish(this);
-  }
-
   // private removeChild(childId: string[]): void {
   //   this.emit({
   //     class: "Frame",
@@ -408,7 +380,7 @@ export class Frame extends BaseItem {
       this.transformPath();
     }
     if (data.children) {
-      this.applyAddChild(data.children, true);
+      this.applyAddChildren(data.children);
     }
     if (data.text) {
       this.text.deserialize(data.text);
@@ -477,9 +449,9 @@ export class Frame extends BaseItem {
         } else if (op.method === "setFrameType") {
           this.applyFrameType(op.shapeType);
         } else if (op.method === "addChild") {
-          this.applyAddChild(op.childId);
+          this.applyAddChildren(op.childId);
         } else if (op.method === "removeChild") {
-          this.applyRemoveChild(op.childId);
+          this.applyRemoveChildren(op.childId);
         }
         break;
       case "RichText":
@@ -581,10 +553,10 @@ export class Frame extends BaseItem {
         const child = this.board?.items.getById(childId);
         if (child) {
           if (this.handleNesting(child)) {
-            this.applyAddChild([child.getId()]);
+            this.applyAddChildren([child.getId()]);
             child.parent = this.getId();
           } else {
-            this.applyRemoveChild([child.getId()]);
+            this.applyRemoveChildren([child.getId()]);
             child.parent = "Board";
           }
           // this.handleNesting(child);
@@ -601,7 +573,7 @@ export class Frame extends BaseItem {
         .forEach((item) => {
           if (item.parent === "Board") {
             if (this.handleNesting(item)) {
-              this.applyAddChild([item.getId()]);
+              this.applyAddChildren([item.getId()]);
               item.parent = this.getId();
             }
           }

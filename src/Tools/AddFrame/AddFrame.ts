@@ -255,7 +255,7 @@ export class AddFrame extends BoardTool {
 			child.parent = this.frame.getId();
 			return child.getId();
 		});
-		this.frame.applyAddChild(childrenIds);
+		this.frame.applyAddChildren(childrenIds);
 		this.frame.subject.publish(this.frame);
 	}
 

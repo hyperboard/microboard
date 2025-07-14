@@ -677,7 +677,7 @@ export class Board {
     }
     for (const key in createdFrames) {
       const { item, itemData } = createdFrames[key];
-      item.applyAddChild(itemData.children);
+      item.applyAddChildren(itemData.children);
     }
   }
 
@@ -722,7 +722,7 @@ export class Board {
     }
     for (const key in createdFrames) {
       const { item, itemData } = createdFrames[key];
-      item.applyAddChild(itemData.children);
+      item.applyAddChildren(itemData.children);
     }
 
     this.events?.log.deserialize(events);
