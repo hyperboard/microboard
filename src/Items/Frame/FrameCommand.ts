@@ -2,9 +2,8 @@ import { Frame } from "./Frame";
 import { FrameOperation } from "./FrameOperation";
 import { Command } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
-import {BaseCommand} from "../../Events/Command";
 
-export class FrameCommand extends BaseCommand {
+export class FrameCommand implements Command {
 	private reverse: { item: Frame; operation: FrameOperation }[];
 
 	constructor(
@@ -68,7 +67,23 @@ export class FrameCommand extends BaseCommand {
 					};
 				});
 			default:
-				return super.getReverse();
+				const op = this.operation;
+				let newData: Record<string, any> = {}
+				if (op.prevData) {
+					newData = {...op.prevData};
+				} else {
+					Object.keys(op.newData).forEach(key => {
+						// @ts-ignore
+						if (item[key]) {
+							// @ts-ignore
+							newData[key] = item[key];
+						}
+					})
+				}
+				return {
+					...op,
+					newData,
+				};
 		}
 	}
 }
