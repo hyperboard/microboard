@@ -513,21 +513,21 @@ export class Frame extends BaseItem {
     return point.getDistance(nearest);
   }
 
-  isUnderPoint(point: Point): boolean {
-    return this.path.isUnderPoint(point);
-  }
-
-  isNearPoint(point: Point, distance: number): boolean {
-    return distance > this.getDistanceToPoint(point);
-  }
-
-  isEnclosedOrCrossedBy(rect: Mbr): boolean {
-    return this.path.isEnclosedOrCrossedBy(rect);
-  }
-
-  isEnclosedBy(rect: Mbr): boolean {
-    return this.getMbr().isEnclosedBy(rect);
-  }
+  // isUnderPoint(point: Point): boolean {
+  //   return this.path.isUnderPoint(point);
+  // }
+  //
+  // isNearPoint(point: Point, distance: number): boolean {
+  //   return distance > this.getDistanceToPoint(point);
+  // }
+  //
+  // isEnclosedOrCrossedBy(rect: Mbr): boolean {
+  //   return this.path.isEnclosedOrCrossedBy(rect);
+  // }
+  //
+  // isEnclosedBy(rect: Mbr): boolean {
+  //   return this.getMbr().isEnclosedBy(rect);
+  // }
 
   isInView(rect: Mbr): boolean {
     return this.isEnclosedOrCrossedBy(rect);
