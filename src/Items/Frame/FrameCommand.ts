@@ -67,23 +67,25 @@ export class FrameCommand implements Command {
 					};
 				});
 			default:
-				const op = this.operation;
-				let newData: Record<string, any> = {}
-				if (op.prevData) {
-					newData = {...op.prevData};
-				} else {
-					Object.keys(op.newData).forEach(key => {
-						// @ts-ignore
-						if (item[key]) {
+				return mapItemsByOperation(frame, item => {
+					const op = this.operation;
+					let newData: Record<string, any> = {}
+					if (op.prevData) {
+						newData = {...op.prevData};
+					} else {
+						Object.keys(op.newData).forEach(key => {
 							// @ts-ignore
-							newData[key] = item[key];
-						}
-					})
-				}
-				return {
-					...op,
-					newData,
-				};
+							if (item[key]) {
+								// @ts-ignore
+								newData[key] = item[key];
+							}
+						})
+					}
+					return {
+						...op,
+						newData,
+					};
+				});
 		}
 	}
 }
