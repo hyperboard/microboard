@@ -44,6 +44,7 @@ import CUSTOM_WEB_COMPONENTS_JS from "./public/customWebComponents.js" with { ty
 import INDEX_CSS from "./public/index.css" with { type: "text" };
 import LOAD_LINKS_IMAGES_JS from "./public/loadLinkImages.js" with { type: "text" };
 import {BaseItem} from "./Items/BaseItem";
+import {BaseItemData} from "./Items/BaseItem/BaseItem";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -644,7 +645,7 @@ export class Board {
       string,
       { item: Connector; itemData: ConnectorData & { id: string } }
     > = {};
-    const createdFrames: Record<string, { item: Frame; itemData: FrameData }> =
+    const createdGroups: Record<string, { item: BaseItem; itemData: BaseItemData }> =
       {};
 
     const addItem = (itemData: ItemData & { id: string }): Item => {
@@ -652,8 +653,8 @@ export class Board {
       if (item instanceof Connector) {
         createdConnectors[itemData.id] = { item, itemData: itemData as ConnectorData & { id: string } };
       }
-      if (item instanceof Frame) {
-        createdFrames[item.getId()] = { item, itemData: itemData as FrameData };
+      if ("index" in item && item.index) {
+        createdGroups[item.getId()] = { item, itemData };
       }
       this.index.insert(item);
       return item;
@@ -676,8 +677,8 @@ export class Board {
       item.applyStartPoint(itemData.startPoint);
       item.applyEndPoint(itemData.endPoint);
     }
-    for (const key in createdFrames) {
-      const { item, itemData } = createdFrames[key];
+    for (const key in createdGroups) {
+      const { item, itemData } = createdGroups[key];
       item.applyAddChildren(itemData.children);
     }
   }
