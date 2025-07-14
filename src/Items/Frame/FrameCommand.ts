@@ -67,17 +67,10 @@ export class FrameCommand implements Command {
 					};
 				});
 			case "addChildren":
-				return mapItemsByOperation(frame, item => {
-					return {
-						...this.operation,
-						newData: { childIds: item.getChildrenIds()},
-					};
-				});
 			case "removeChildren":
 				return mapItemsByOperation(frame, item => {
 					return {
-						...this.operation,
-						newData: { childIds: item.getChildrenIds()},
+						...this.operation
 					};
 				});
 			default:
