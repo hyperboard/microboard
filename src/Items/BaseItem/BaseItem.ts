@@ -176,7 +176,7 @@ export class BaseItem extends Mbr implements Geometry {
 				this.parent !== childId &&
 				this.getId() !== childId
 			) {
-				if (!this.index?.getById(childId) && foundItem) {
+				if (!this.board.index.getById(childId) && foundItem) {
 					foundItem.parent = "Board";
 					this.index?.remove(foundItem);
 					this.board.items.index.insert(foundItem);
