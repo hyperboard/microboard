@@ -15,6 +15,7 @@ import {Path, Paths} from "../Path";
 import {Item} from "../Item";
 import {BaseItemOperation} from "./BaseItemOperation";
 import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
+import {Point} from "../Point";
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
@@ -272,6 +273,29 @@ export class BaseItem extends Mbr implements Geometry {
 
 	getPathMbr(): Mbr {
 		return this.getMbr().copy()
+	}
+
+	isEnclosedBy(rect: Mbr): boolean {
+		return this.getMbrWithChildren().isEnclosedBy(rect);
+	}
+
+	isUnderPoint(point: Point): boolean {
+		return this.getMbrWithChildren().isUnderPoint(point);
+	}
+
+	isNearPoint(point: Point, distance: number): boolean {
+		return distance > this.getMbrWithChildren().getDistanceToPoint(point);
+	}
+
+	isEnclosedOrCrossedBy(rect: Mbr): boolean {
+		return this.getMbrWithChildren().isEnclosedOrCrossedBy(rect);
+	}
+
+	getMbrWithChildren(): Mbr {
+		if (!this.index) {
+			return this.getMbr();
+		}
+		return this.getMbr().combine(this.index.list().map(item => item.getMbr()));
 	}
 
 	getPath(): Path | Paths {

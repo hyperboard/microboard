@@ -41,9 +41,9 @@ export class SpatialIndex {
 		}
 
 		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
-			this.Mbr = item.getMbr().copy();
+			this.Mbr = item.getMbrWithChildren().copy();
 		} else {
-			this.Mbr.combine([item.getMbr()]);
+			this.Mbr.combine([item.getMbrWithChildren()]);
 		}
 		item.subject.subscribe(this.change);
 		this.subject.publish(this.items);
@@ -52,9 +52,9 @@ export class SpatialIndex {
 	change = (item: Item): void => {
 		this.itemsIndex.change(item);
 		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
-			this.Mbr = item.getMbr().copy();
+			this.Mbr = item.getMbrWithChildren().copy();
 		} else {
-			this.Mbr.combine([item.getMbr()]);
+			this.Mbr.combine([item.getMbrWithChildren()]);
 		}
 		this.subject.publish(this.items);
 	};
@@ -71,7 +71,7 @@ export class SpatialIndex {
 		this.itemsIndex.remove(item);
 
 		this.Mbr = new Mbr();
-		this.itemsArray.forEach(item => this.Mbr.combine([item.getMbr()]));
+		this.itemsArray.forEach(item => this.Mbr.combine([item.getMbrWithChildren()]));
 
 		this.subject.publish(this.items);
 	}
@@ -208,49 +208,63 @@ export class SpatialIndex {
 		const mbr = new Mbr(left, top, right, bottom);
 		const items = this.itemsIndex.getEnclosed(mbr);
 		const children: Item[] = [];
-		items.forEach((item: Item) => {
+		const clearItems = items.filter((item: Item) => {
 			if ("index" in item && item.index) {
-				children.push(...item.index.getEnclosed(left, top, right, bottom))
+				children.push(...item.index.getEnclosed(left, top, right, bottom));
+				if (!item.getMbr().isEnclosedBy(mbr)) {
+					return false;
+				}
 			}
+			return true;
 		})
-		return [...items, ...children];
+		return [...clearItems, ...children];
 	}
 
 	getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
 		const items = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
 		const children: Item[] = [];
-		items.forEach((item: Item) => {
+		const clearItems = items.filter((item: Item) => {
 			if ("index" in item && item.index) {
-				children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom))
+				children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom));
+				if (!item.getMbr().isEnclosedOrCrossedBy(mbr)) {
+					return false;
+				}
 			}
+			return true;
 		})
-		return [...items, ...children];
+		return [...clearItems, ...children];
 	}
 
 	getUnderPoint(point: Point, tolerance = 5): Item[] {
 		const items = this.itemsIndex.getUnderPoint(point, tolerance);
 		const children: Item[] = [];
-		items.forEach((item: Item) => {
+		const clearItems = items.filter((item: Item) => {
 			if ("index" in item && item.index) {
-				children.push(...item.index.getUnderPoint(point, tolerance))
+				children.push(...item.index.getUnderPoint(point, tolerance));
+				if (!item.getMbr().isUnderPoint(point)) {
+					return false;
+				}
 			}
+			return true;
 		})
-		return [...items, ...children];
+		return [...clearItems, ...children];
 	}
 
 	getRectsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
 		const mbr = new Mbr(left, top, right, bottom);
 		const items = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
 		const children: Item[] = [];
-		items.forEach((item: Item) => {
-			items.forEach((item: Item) => {
-				if ("index" in item && item.index) {
-					children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom))
+		const clearItems = items.filter((item: Item) => {
+			if ("index" in item && item.index) {
+				children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom));
+				if (!item.getMbr().isEnclosedOrCrossedBy(mbr)) {
+					return false;
 				}
-			})
+			}
+			return true;
 		})
-		return [...items, ...children];
+		return [...clearItems, ...children];
 	}
 
 	getItemsEnclosedOrCrossed(

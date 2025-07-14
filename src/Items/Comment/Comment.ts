@@ -118,6 +118,10 @@ export class Comment implements Geometry {
     return this.itemToFollow;
   }
 
+  getMbrWithChildren(): Mbr {
+    return this.getMbr();
+  }
+
   setItemToFollow(itemId: string | undefined): void {
     this.emit({
       class: "Comment",
