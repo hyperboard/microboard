@@ -146,6 +146,7 @@ export class BaseItem extends Mbr implements Geometry {
 		return false;
 	}
 
+
 	applyAddChildren(childIds: string[]): void {
 		if (!this.index) {
 			return;

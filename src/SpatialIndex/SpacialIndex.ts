@@ -107,6 +107,11 @@ export class SpatialIndex {
 	}
 
 	moveToZIndex(item: Item, zIndex: number): void {
+		if (item.parent !== "Board") {
+			this.getById(item.parent)?.index?.moveToZIndex(item, zIndex);
+			this.subject.publish(this.items);
+			return;
+		}
 		const index = this.itemsArray.indexOf(item);
 		this.itemsArray.splice(index, 1);
 		this.itemsArray.splice(zIndex, 0, item);
@@ -129,6 +134,13 @@ export class SpatialIndex {
 	}
 
 	sendToBack(item: Item, shouldPublish = true): void {
+		if (item.parent !== "Board") {
+			this.getById(item.parent)?.index?.sendToBack(item);
+			if (shouldPublish) {
+				this.subject.publish(this.items);
+			}
+			return;
+		}
 		const index = this.itemsArray.indexOf(item);
 		this.itemsArray.splice(index, 1);
 		this.itemsArray.unshift(item);
@@ -139,17 +151,32 @@ export class SpatialIndex {
 	}
 
 	sendManyToBack(items: Item[]): void {
-		const newItems: Item[] = [...items];
-		this.itemsArray.forEach(item => {
-			if (!items.includes(item)) {
-				newItems.push(item);
+		const groups = this.splitItemsToGroups(items);
+		Object.entries(groups).forEach(([key, value]) => {
+			if (key !== "Board") {
+				this.getById(key)?.index?.sendManyToBack(value);
 			}
-		});
-		this.itemsArray = newItems;
-		this.itemsArray.forEach(this.change.bind(this));
+		})
+		if (groups["Board"]) {
+			const newItems: Item[] = [...groups["Board"]];
+			this.itemsArray.forEach(item => {
+				if (!groups["Board"].includes(item)) {
+					newItems.push(item);
+				}
+			});
+			this.itemsArray = newItems;
+			this.itemsArray.forEach(this.change.bind(this));
+		}
 	}
 
 	bringToFront(item: Item, shouldPublish = true): void {
+		if (item.parent !== "Board") {
+			this.getById(item.parent)?.index?.bringToFront(item);
+			if (shouldPublish) {
+				this.subject.publish(this.items);
+			}
+			return;
+		}
 		const index = this.itemsArray.indexOf(item);
 		this.itemsArray.splice(index, 1);
 		this.itemsArray.push(item);
@@ -160,19 +187,44 @@ export class SpatialIndex {
 	}
 
 	bringManyToFront(items: Item[]): void {
-		const newItems: Item[] = [];
-		this.itemsArray.forEach(item => {
-			if (!items.includes(item)) {
-				newItems.push(item);
+		const groups = this.splitItemsToGroups(items);
+		Object.entries(groups).forEach(([key, value]) => {
+			if (key !== "Board") {
+				this.getById(key)?.index?.bringManyToFront(value);
 			}
-		});
-		newItems.push(...items);
-		this.itemsArray = newItems;
-		this.itemsArray.forEach(this.change.bind(this));
+		})
+		if (groups["Board"]) {
+			const newItems: Item[] = [];
+			this.itemsArray.forEach(item => {
+				if (!groups["Board"].includes(item)) {
+					newItems.push(item);
+				}
+			});
+			newItems.push(...groups["Board"]);
+			this.itemsArray = newItems;
+			this.itemsArray.forEach(this.change.bind(this));
+		}
+	}
+
+	private splitItemsToGroups(items: Item[]): Record<string, Item[]> {
+		const groups: Record<string, Item[]> = {};
+		for (const item of items) {
+			if (!groups[item.parent]) {
+				groups[item.parent] = [item];
+			} else {
+				groups[item.parent].push(item);
+			}
+		}
+		return groups;
 	}
 
 	// TODO Item could be frame
 	moveSecondAfterFirst(first: Item, second: Item): void {
+		if (first.parent !== "Board" && second.parent === first.parent) {
+			this.getById(first.parent)?.index?.moveSecondAfterFirst(first, second);
+			this.subject.publish(this.items);
+			return;
+		}
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
 		const firstIndex = this.itemsArray.indexOf(first);
@@ -184,6 +236,11 @@ export class SpatialIndex {
 
 	// TODO Item could be frame
 	moveSecondBeforeFirst(first: Item, second: Item): void {
+		if (first.parent !== "Board" && second.parent === first.parent) {
+			this.getById(first.parent)?.index?.moveSecondBeforeFirst(first, second);
+			this.subject.publish(this.items);
+			return;
+		}
 		const secondIndex = this.itemsArray.indexOf(second);
 		this.itemsArray.splice(secondIndex, 1);
 		const firstIndex = this.itemsArray.indexOf(first);
