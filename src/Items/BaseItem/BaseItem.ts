@@ -295,7 +295,7 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.index) {
 			return this.getMbr();
 		}
-		return this.getMbr().combine(this.index.list().map(item => item.getMbr()));
+		return this.getMbr().combine(this.index.getMbr());
 	}
 
 	getPath(): Path | Paths {

@@ -41,9 +41,9 @@ export class SpatialIndex {
 		}
 
 		if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
-			this.Mbr = item.getMbrWithChildren().copy();
+			this.Mbr = item.getMbr().copy();
 		} else {
-			this.Mbr.combine([item.getMbrWithChildren()]);
+			this.Mbr.combine([item.getMbr()]);
 		}
 		item.subject.subscribe(this.change);
 		this.subject.publish(this.items);

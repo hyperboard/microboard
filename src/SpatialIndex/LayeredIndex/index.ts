@@ -5,7 +5,7 @@ import { getContainersSortedByZIndex } from './getContainersSortedByZIndex';
 import { RTreeIndex } from '../RTreeIndex';
 export class Container extends Mbr {
 	constructor(public id: string, public item: Item, public layer: number, public zIndex: number) {
-		const rect = item.getMbr();
+		const rect = item.getMbrWithChildren();
 		super(rect.left, rect.top, rect.right, rect.bottom);
 	}
 }
@@ -146,7 +146,7 @@ export class LayeredIndex<T extends Item> {
 		if (!this.isT(container.item)) {
 			return;
 		}
-		const bounds = container.item.getMbr();
+		const bounds = container.item.getMbrWithChildren();
 		this.remove(container.item);
 		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
@@ -175,7 +175,7 @@ export class LayeredIndex<T extends Item> {
 		if (!this.isT(container.item)) {
 			return;
 		}
-		const bounds = container.item.getMbr();
+		const bounds = container.item.getMbrWithChildren();
 		this.remove(container.item);
 		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
@@ -202,7 +202,7 @@ export class LayeredIndex<T extends Item> {
 
 	insert(item: T): void {
 		const toInsert = new Container(item.getId(), item, 0, this.getZIndex(item));
-		const bounds = item.getMbr();
+		const bounds = item.getMbrWithChildren();
 		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
 
 		if (inBounds.length === 0) {
