@@ -572,6 +572,9 @@ export class Board {
       for (const parsedData of data) {
         if ("childrenMap" in parsedData) {
           // Frame
+          const addedFrame: BaseItem = this.add(
+            this.createItem(this.getNewItemId(), parsedData.data)
+          );
           const addedChildren = (Object.values(parsedData.childrenMap) as ItemDataWithId[]).map(
             (childData) => {
               const created = this.createItem(this.getNewItemId(), childData);
@@ -586,10 +589,8 @@ export class Board {
               return added;
             }
           );
+          addedFrame.addChildItems(addedChildren);
           parsedData.data.children = addedChildren.map((item) => item.getId());
-          const addedFrame = this.add(
-            this.createItem(this.getNewItemId(), parsedData.data)
-          );
           idsMap[parsedData.data.id] = addedFrame.getId();
         } else {
           const added = this.add(
