@@ -77,26 +77,42 @@ export class BaseCommand {
 
 	getReverse(): { item: BaseItem; operation: BaseOperation }[] {
 		const items = this.items;
-
-		return mapItemsByOperation(items, item => {
-			const op = this.operation;
-			let newData: Record<string, any> = {}
-			if (op.prevData) {
-				newData = {...op.prevData};
-			} else {
-				Object.keys(op.newData).forEach(key => {
-					// @ts-ignore
-					if (item[key]) {
-						// @ts-ignore
-						newData[key] = item[key];
+		switch (this.operation.method) {
+			case "addChildren":
+				return mapItemsByOperation(items, item => {
+					return {
+						...this.operation,
+						newData: { childIds: item.getChildrenIds()},
+					};
+				});
+			case "removeChildren":
+				return mapItemsByOperation(items, item => {
+					return {
+						...this.operation,
+						newData: { childIds: item.getChildrenIds()},
+					};
+				});
+			default:
+				return mapItemsByOperation(items, item => {
+					const op = this.operation;
+					let newData: Record<string, any> = {}
+					if (op.prevData) {
+						newData = {...op.prevData};
+					} else {
+						Object.keys(op.newData).forEach(key => {
+							// @ts-ignore
+							if (item[key]) {
+								// @ts-ignore
+								newData[key] = item[key];
+							}
+						})
 					}
-				})
-			}
-			return {
-				...op,
-				newData,
-			};
-		});
+					return {
+						...op,
+						newData,
+					};
+				});
+		}
 	}
 }
 
