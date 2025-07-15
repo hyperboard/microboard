@@ -26,9 +26,12 @@ export class Deck extends BaseItem {
 	) {
 		super(board, id, defaultDeckData, true);
 
+		this.index!.getUnderPoint = () => []
+		this.index!.getEnclosed = () => []
+		this.index!.getEnclosedOrCrossed = () => []
+
 		if (cards) {
-			this.transformation.matrix =
-				cards[cards.length - 1].transformation.matrix;
+			this.transformation.matrix = cards[0].transformation.matrix;
 			this.applyAddChildren(cards.map(card => card.getId()));
 		}
 
@@ -49,7 +52,7 @@ export class Deck extends BaseItem {
 				this.parent !== childId &&
 				this.getId() !== childId
 			) {
-				if (!this.index?.getById(childId) && foundItem && foundItem.itemType === "Card") {
+				if (!this.index?.getById(childId) && foundItem?.itemType === "Card") {
 					foundItem.transformation.apply({
 						class: 'Transformation',
 						method: 'translateTo',
