@@ -50,6 +50,7 @@ export class BaseItem extends Mbr implements Geometry {
 		this.id = id;
 		if (isGroupItem) {
 			this.index = new SimpleSpatialIndex(board.camera, board.pointer);
+			this.canBeNested = false;
 		}
 		if (defaultItemData) {
 			Object.entries(defaultItemData).forEach(([key, value]) => {
@@ -202,6 +203,9 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	deserialize(data: SerializedItemData): this {
+		if (data.children) {
+			this.applyAddChildren(data.children);
+		}
 		Object.entries(data).forEach(([key, value]) => {
 			if (this[key]?.deserialize) {
 				this[key].deserialize(value);
