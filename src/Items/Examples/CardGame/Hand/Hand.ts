@@ -11,6 +11,7 @@ import { DeckOperation } from "Items/Examples/CardGame/Deck/DeckOperation";
 import {Path} from "../../../Path";
 import {Line} from "../../../Line";
 import {Point} from "../../../Point";
+import {AddHand} from "./AddHand";
 
 const handPath = new Path(
   [
@@ -92,4 +93,5 @@ export class Hand extends BaseItem {
 registerItem({
   item: Hand,
   defaultData: defaultHandData,
+  toolData: {name: "AddHand", tool: AddHand}
 });
