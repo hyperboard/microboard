@@ -8,10 +8,11 @@ import { Subject } from "Subject";
 import { registerItem } from "Items/RegisterItem";
 import { DrawingContext } from "Items/DrawingContext";
 import { DeckOperation } from "Items/Examples/CardGame/Deck/DeckOperation";
-import {Path} from "../../../Path";
+import {BorderWidth, Path} from "../../../Path";
 import {Line} from "../../../Line";
 import {Point} from "../../../Point";
 import {AddHand} from "./AddHand";
+import {HandOperation} from "./HandOperation";
 
 const handPath = new Path(
   [
@@ -33,6 +34,8 @@ export const defaultHandData: BaseItemData = {
 export class Hand extends BaseItem {
   readonly subject = new Subject<Hand>();
   private path: Path;
+  private borderWidth = 1;
+  backgroundColor = "#FFFFFF";
 
   constructor(
     board: Board,
@@ -50,9 +53,69 @@ export class Hand extends BaseItem {
     this.updateMbr();
   }
 
-  apply(op: DeckOperation): void {
+  apply(op: HandOperation): void {
     super.apply(op);
+    switch (op.class) {
+      case "Hand":
+        switch (op.method) {
+          case "setBorderWidth":
+            this.applyBorderWidth(op.newData.borderWidth);
+            break;
+          case "setBackgroundColor":
+            this.applyBackgroundColor(op.newData.backgroundColor);
+            break;
+          case "setBorderColor":
+            this.applyBorderColor(op.newData.borderColor);
+            break;
+        }
+        break;
+    }
     this.subject.publish(this);
+  }
+
+  private applyBackgroundColor(backgroundColor: string): void {
+    this.backgroundColor = backgroundColor;
+    this.path.setBackgroundColor(backgroundColor);
+  }
+
+  setBackgroundColor(backgroundColor: string): void {
+    this.emit({
+      class: "Dice",
+      method: "setBackgroundColor",
+      item: [this.getId()],
+      newData: {backgroundColor},
+      prevData: {backgroundColor: this.backgroundColor},
+    });
+  }
+
+  private applyBorderWidth(borderWidth: BorderWidth): void {
+    this.borderWidth = borderWidth;
+    this.path.setBorderWidth(borderWidth);
+  }
+
+  setBorderWidth(borderWidth: BorderWidth): void {
+    this.emit({
+      class: "Dice",
+      method: "setBorderWidth",
+      item: [this.getId()],
+      newData: {borderWidth},
+      prevData: {borderWidth: this.borderWidth},
+    });
+  }
+
+  private applyBorderColor(borderColor: string): void {
+    this.borderColor = borderColor;
+    this.path.setBorderColor(borderColor);
+  }
+
+  setBorderColor(borderColor: string): void {
+    this.emit({
+      class: "Dice",
+      method: "setBorderColor",
+      item: [this.getId()],
+      newData: {borderColor},
+      prevData: {borderColor: this.borderColor}
+    });
   }
 
   applyOwnerId(ownerId: string): void {
@@ -65,6 +128,7 @@ export class Hand extends BaseItem {
 
     this.path.setBackgroundColor(this.backgroundColor);
     this.path.setBorderColor(this.borderColor);
+    this.path.setBorderWidth(this.borderWidth);
   }
 
   updateMbr(): void {
