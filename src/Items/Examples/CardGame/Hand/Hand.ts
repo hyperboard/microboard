@@ -20,7 +20,9 @@ const handPath = new Path(
     new Line(new Point(100, 100), new Point(0, 100)),
     new Line(new Point(0, 100), new Point(0, 0)),
   ],
-  true
+  true,
+  "#FFFFFF",
+  "#000000"
 )
 
 export const defaultHandData: BaseItemData = {
@@ -84,6 +86,7 @@ export class Hand extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
+    this.path.render(context);
     if (localStorage.getItem("currentUser") === this.ownerId || !this.ownerId) {
       super.render(context);
     }
