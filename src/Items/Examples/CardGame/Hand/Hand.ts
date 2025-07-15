@@ -73,6 +73,22 @@ export class Hand extends BaseItem {
     this.subject.publish(this);
   }
 
+  getBackgroundColor(): string {
+    return this.backgroundColor;
+  }
+
+  getBorderStyle(): string {
+    return this.borderStyle;
+  }
+
+  getStrokeColor(): string {
+    return this.borderColor;
+  }
+
+  getStrokeWidth(): number {
+    return this.borderWidth;
+  }
+
   private applyBackgroundColor(backgroundColor: string): void {
     this.backgroundColor = backgroundColor;
     this.path.setBackgroundColor(backgroundColor);

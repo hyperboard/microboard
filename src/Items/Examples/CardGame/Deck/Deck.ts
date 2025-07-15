@@ -12,14 +12,11 @@ import { DeckOperation } from "Items/Examples/CardGame/Deck/DeckOperation";
 
 export const defaultDeckData: BaseItemData = {
 	itemType: "Deck",
-	cardIds: [],
 };
 
 export class Deck extends BaseItem {
 	readonly subject = new Subject<Deck>();
 	shouldUseCustomRender = false;
-	cardIds: string[] = [];
-	cards: Card[] = [];
 
 	constructor(
 		board: Board,
@@ -27,15 +24,12 @@ export class Deck extends BaseItem {
 		defaultData?: BaseItemData,
 		cards?: Card[],
 	) {
-		super(board, id, defaultDeckData);
+		super(board, id, defaultDeckData, true);
 
 		if (cards) {
-			this.cards = cards;
-			cards.forEach(card => card.setIsInDeck(true));
 			this.transformation.matrix =
 				cards[cards.length - 1].transformation.matrix;
-
-			this.cardIds = cards.map(card => card.getId());
+			this.applyAddChildren(cards.map(card => card.getId()));
 		}
 
 		this.transformation.subject.subscribe(() => {
@@ -45,136 +39,124 @@ export class Deck extends BaseItem {
 		this.updateMbr();
 	}
 
+	applyAddChildren(childIds: string[]): void {
+		if (!this.index) {
+			return;
+		}
+		childIds.forEach((childId) => {
+			const foundItem = this.board.items.getById(childId);
+			if (
+				this.parent !== childId &&
+				this.getId() !== childId
+			) {
+				if (!this.index?.getById(childId) && foundItem && foundItem.itemType === "Card") {
+					foundItem.transformation.apply({
+						class: 'Transformation',
+						method: 'translateTo',
+						item: [this.id],
+						x: this.left + (this.index?.list().length || 0) * 2,
+						y: this.top,
+					})
+					foundItem.parent = this.getId();
+					this.board.items.index.remove(foundItem);
+					this.index?.insert(foundItem);
+				}
+			}
+		});
+		this.updateMbr();
+		this.subject.publish(this);
+	}
+
+	applyRemoveChildren(childIds: string[]) {
+		if (!this.index) {
+			return;
+		}
+		childIds.forEach((childId) => {
+			const foundItem = this.index?.getById(childId);
+			if (
+				this.parent !== childId &&
+				this.getId() !== childId
+			) {
+				if (foundItem) {
+					foundItem.transformation.apply({
+						class: 'Transformation',
+						method: 'translateTo',
+						item: [this.id],
+						x: this.left,
+						y: this.top - this.getHeight() / 2,
+					})
+					foundItem.parent = "Board";
+					this.index?.remove(foundItem);
+					this.board.items.index.insert(foundItem);
+				}
+			}
+		});
+		this.updateMbr();
+		this.subject.publish(this);
+	}
+
 	getDeck(): Card[] {
-		return this.cards;
+		return (this.index?.list() || []) as Card[];
 	}
 
 	getTopCard(): Card | undefined {
-		const cardId = this.cardIds[this.cardIds.length - 1];
-		return this.getCards([cardId])[0];
+		const card = this.index?.list()[this.index?.list().length - 1] as Card | undefined;
+		if (card) {
+			this.removeChildItems(card);
+			return card;
+		}
 	}
 
 	getBottomCard(): Card | undefined {
-		const cardId = this.cardIds[0];
-		return this.getCards([cardId])[0];
+		const card = this.index?.list()[0] as Card | undefined;
+		if (card) {
+			this.removeChildItems(card);
+			return card;
+		}
 	}
 
 	getRandomCard(): Card | undefined {
-		const cardId =
-			this.cardIds[Math.ceil(Math.random() * this.cardIds.length) - 1];
-		return this.getCards([cardId])[0];
-	}
-
-	private getCards(cardIds: string[]): Card[] {
-		const cards = this.findCardsOnBoard(cardIds);
-		this.removeCards(cards);
-		return cards;
-	}
-
-	private findCardsOnBoard(cardIds: string[]): Card[] {
-		return cardIds
-			.map(cardId => {
-				return this.board.items.getById(cardId);
-			})
-			.filter(card => !!card) as unknown as Card[];
-	}
-
-	updateCards(): Card[] {
-		if (this.cardIds.length === this.cards.length) {
-			return this.cards;
+		const card = this.index?.list()[Math.floor(Math.random() * this.index?.list().length)] as Card | undefined;
+		if (card) {
+			this.removeChildItems(card);
+			return card;
 		}
-		this.cards = this.findCardsOnBoard(this.cardIds);
-		return this.cards;
 	}
 
 	shuffleDeck(): void {
-		const shuffled = [...this.cardIds];
+		//TODO refactor
+		if (!this.index) {
+			return;
+		}
+		const shuffled = [...this.index.list()];
 		for (let i = shuffled.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
 			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
 		}
 
-		const cards = this.findCardsOnBoard(shuffled);
-		this.addCards(cards, true);
-	}
-
-	addCards(cards: Card[], shouldReplaceExistingCards = false): void {
-		cards.forEach(card => {
-			card.setIsInDeck(true);
-		});
-		this.board.bringToFront(cards);
-		this.emit({
-			class: "Deck",
-			method: "addCards",
-			item: [this.getId()],
-			newData: {
-				cardIds: cards.map(card => card.getId()),
-				shouldReplaceExistingCards,
-			},
-			prevData: { cardIds: this.cardIds, shouldReplaceExistingCards },
-		});
-	}
-
-	removeCards(cards: Card[]): void {
-		cards.forEach(card => {
-			card.setIsInDeck(false);
-		});
-		this.emit({
-			class: "Deck",
-			method: "removeCards",
-			item: [this.getId()],
-			newData: { cardIds: cards.map(card => card.getId()) },
-			prevData: { cardIds: this.cardIds },
-		});
+		this.index.clear();
+		shuffled.forEach(card => this.index.insert(card));
 	}
 
 	apply(op: DeckOperation): void {
 		super.apply(op);
-		switch (op.class) {
-			case "Deck":
-				switch (op.method) {
-					case "addCards":
-						if (op.newData.shouldReplaceExistingCards) {
-							this.cardIds = op.newData.cardIds;
-							this.cards = this.findCardsOnBoard(this.cardIds);
-						} else {
-							this.cardIds = [
-								...op.newData.cardIds,
-								...this.cardIds,
-							];
-							this.updateCards();
-							this.updateMbr();
-						}
-						break;
-					case "removeCards":
-						this.cardIds = this.cardIds.filter(card => {
-							return !op.newData.cardIds.includes(card);
-						});
-						this.updateCards();
-						this.updateMbr();
-						break;
-				}
-				break;
-		}
-
 		this.subject.publish(this);
 	}
 
 	updateMbr(): void {
-		const { translateX, translateY, scaleX, scaleY } =
+		const { translateX, translateY } =
 			this.transformation.matrix;
+		const {right, bottom} = this.index!.getMbr();
 		this.left = translateX;
 		this.top = translateY;
-		this.right =
-			this.left +
-			CARD_DIMENSIONS.width * scaleX +
-			2 * this.cardIds.length;
-		this.bottom = this.top + CARD_DIMENSIONS.height * scaleY;
+		this.right = right;
+		this.bottom = bottom;
 	}
 
 	deserialize(data: SerializedItemData): this {
 		super.deserialize(data);
-		this.updateCards();
+		this.updateMbr();
+		this.subject.publish(this);
 		return this;
 	}
 
@@ -182,13 +164,7 @@ export class Deck extends BaseItem {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		this.cards.forEach((card, index) => {
-			card.render(context, {
-				top: this.top,
-				left: this.left,
-				cardPosition: index + 1,
-			});
-		});
+		super.render(context);
 	}
 }
 

@@ -12,21 +12,13 @@ import {Paths} from "Items/Path/Paths";
 import {registerItem} from "Items/RegisterItem";
 import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
-import {Mbr} from "Items/Mbr/Mbr";
 import {throttle} from "../../../../utils";
-
-export type DeckRenderData = {
-  left: number;
-  top: number;
-  cardPosition: number;
-};
 
 export const defaultCardData: BaseItemData = {
   itemType: "Card",
   isOpen: false,
   faceUrl: "",
   backsideUrl: "",
-  isInDeck: false,
 };
 
 export const CARD_DIMENSIONS = {width: 250, height: 400};
@@ -36,7 +28,6 @@ export class Card extends BaseItem {
   private faceUrl = "";
   private backsideUrl = "";
   private isOpen = false;
-  private isInDeck = false;
   private throttledBringToFront: () => void;
   face: HTMLImageElement | null = null;
   backside: HTMLImageElement | null = null;
@@ -88,39 +79,15 @@ export class Card extends BaseItem {
     this.updateImageToRender();
   }
 
-  setIsInDeck(isInDeck: boolean) {
-    this.emit({
-      class: "Card",
-      method: "setIsInDeck",
-      item: [this.getId()],
-      newData: {isInDeck},
-      prevData: {isInDeck: this.isInDeck},
-    });
-  }
-
   updateImageToRender() {
     this.imageToRender = this.backside;
-    // if (this.parent !== "Board") {
-    // 	const frame = this.board.items.getById(this.parent) as
-    // 		| Frame
-    // 		| undefined;
-    // 	if (
-    // 		frame &&
-    // 		frame.getName() !== localStorage.getItem("currentUser")
-    // 	) {
-    // 		return;
-    // 	}
-    // }
     if (this.isOpen) {
       this.imageToRender = this.face;
     }
   }
 
-  render(context: DrawingContext, deckRenderData?: DeckRenderData): void {
-    if (
-      this.transformationRenderBlock ||
-      (this.isInDeck && !deckRenderData)
-    ) {
+  render(context: DrawingContext): void {
+    if (this.transformationRenderBlock) {
       return;
     }
 
@@ -128,17 +95,10 @@ export class Card extends BaseItem {
     if (this.imageToRender && this.imageToRender.complete) {
       ctx.save();
 
-      let left = this.left;
-      let top = this.top;
-      if (deckRenderData) {
-        left = deckRenderData.left + 2 * deckRenderData.cardPosition;
-        top = deckRenderData.top;
-      }
-
       ctx.drawImage(
         this.imageToRender,
-        left,
-        top,
+        this.left,
+        this.top,
         CARD_DIMENSIONS.width,
         CARD_DIMENSIONS.height,
       );
@@ -154,13 +114,6 @@ export class Card extends BaseItem {
     this.top = translateY;
     this.right = this.left + CARD_DIMENSIONS.width * scaleX;
     this.bottom = this.top + CARD_DIMENSIONS.height * scaleY;
-  }
-
-  getMbr(): Mbr {
-    if (this.isInDeck) {
-      return new Mbr(10_000, 10_000, 10_000, 10_000);
-    }
-    return super.getMbr();
   }
 
   getPath(): Path | Paths {
@@ -200,9 +153,6 @@ export class Card extends BaseItem {
             this.isOpen = op.newData.isOpen;
             this.updateImageToRender();
             break;
-          case "setIsInDeck":
-            this.isInDeck = op.newData.isInDeck;
-            break;
         }
         break;
     }
@@ -213,5 +163,4 @@ export class Card extends BaseItem {
 registerItem({
   item: Card,
   defaultData: defaultCardData,
-  // toolData: { tool: AddHand, name: "AddHand" },
 });
