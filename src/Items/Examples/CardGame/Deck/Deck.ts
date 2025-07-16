@@ -38,6 +38,7 @@ export class Deck extends BaseItem {
 				x: cards[0].left,
 				y: cards[0].top,
 			})
+			this.updateMbr();
 			this.applyAddChildren(cards.map(card => card.getId()));
 		}
 
