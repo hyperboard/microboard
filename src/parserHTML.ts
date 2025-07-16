@@ -29,6 +29,7 @@ import { conf } from "Settings";
 import { Descendant } from "slate";
 import {ItemDataWithId} from "./Items/Item";
 import {ListItemNode} from "./Items/RichText/Editor/BlockNode";
+import {BaseItemData} from "./Items/BaseItem/BaseItem";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -70,6 +71,7 @@ export const parsersHTML: TagFactories = {
   "video-item": parseHTMLVideo,
   "audio-item": parseHTMLAudio,
   "comment-item": parseHTMLComment,
+  "base-item": parseHTMLBaseItem,
 };
 
 export const decodeHtml = (htmlString: string): string => {
@@ -412,6 +414,35 @@ function parseHTMLComment(el: HTMLElement): CommentData & { id: string } {
   };
 
   return commentItemData;
+}
+
+function parseHTMLBaseItem(el: HTMLElement): BaseItemData & { id: string } {
+  const data = JSON.parse(el.getAttribute("serialized-data")!) as BaseItemData;
+
+  const baseItemItemData: BaseItemData & { id: string } = {
+    id: el.id,
+    ...data,
+  };
+
+  const childrenMap = Array.from(el.children)
+    .filter(
+      (child) =>
+        child.id !== `${el.id}_text` && !child.classList.contains("link-object")
+    )
+    .map((child) => positionAbsolutely(child as HTMLElement, el))
+    .reduce((acc: { [id: string]: ItemDataWithId }, child) => {
+      acc[child.id] = parsersHTML[child.tagName.toLowerCase()](
+        child as HTMLElement
+      );
+      return acc;
+    }, {});
+  data.children = Object.values(childrenMap).map((child) => child.id);
+
+  if (Object.values(childrenMap).length) {
+    return { data: baseItemItemData, childrenMap };
+  }
+
+  return baseItemItemData;
 }
 
 function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {

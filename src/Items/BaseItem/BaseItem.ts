@@ -314,6 +314,9 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		return documentFactory.createElement("div");
+		const div = documentFactory.createElement("base-item");
+		div.id = this.id;
+		div.setAttribute("serialized-data", JSON.stringify(this.serialize()));
+		return div;
 	}
 }
