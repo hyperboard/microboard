@@ -1,6 +1,6 @@
 {
   "name": "microboard-temp",
-  "version": "0.4.80",
+  "version": "0.4.81",
   "description": "A flexible interactive whiteboard library",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
