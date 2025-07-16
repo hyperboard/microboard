@@ -21,25 +21,12 @@ export class Deck extends BaseItem {
 	constructor(
 		board: Board,
 		id = "",
-		defaultData?: BaseItemData,
-		cards?: Card[],
 	) {
 		super(board, id, defaultDeckData, true);
 
 		this.index!.getUnderPoint = () => []
 		this.index!.getEnclosed = () => []
 		this.index!.getEnclosedOrCrossed = () => []
-
-		if (cards) {
-			this.transformation.apply({
-				class: 'Transformation',
-				method: 'translateTo',
-				item: [this.id],
-				x: cards[0].left,
-				y: cards[0].top,
-			})
-			this.updateMbr();
-		}
 
 		this.transformation.subject.subscribe(() => {
 			this.updateMbr();
@@ -133,7 +120,6 @@ export class Deck extends BaseItem {
 	}
 
 	shuffleDeck(): void {
-		//TODO refactor
 		if (!this.index) {
 			return;
 		}
@@ -143,8 +129,8 @@ export class Deck extends BaseItem {
 			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
 		}
 
-		this.index.clear();
-		shuffled.forEach(card => this.index.insert(card));
+		this.removeChildItems(this.index.list());
+		this.addChildItems(shuffled);
 	}
 
 	apply(op: DeckOperation): void {
@@ -155,11 +141,12 @@ export class Deck extends BaseItem {
 	updateMbr(): void {
 		const { translateX, translateY } =
 			this.transformation.matrix;
-		const indexMbr = this.index!.getMbr();
+		const items = this.index!.list();
+		const itemsMbr = items[0].getMbr().combine(items.slice(1).map(item => item.getMbr()));
 		this.left = translateX;
 		this.top = translateY;
-		this.right = translateX + indexMbr.getWidth();
-		this.bottom = translateY + indexMbr.getHeight();
+		this.right = translateX + itemsMbr.getWidth();
+		this.bottom = translateY + itemsMbr.getHeight();
 	}
 
 	deserialize(data: SerializedItemData): this {
