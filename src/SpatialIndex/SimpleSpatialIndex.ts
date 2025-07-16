@@ -193,7 +193,7 @@ export class SimpleSpatialIndex {
   }
 
   getMbr(): Mbr {
-    return this.itemsArray[0].getMbr().combine(this.itemsArray.slice(1).map(item => item.getMbr()));
+    return this.Mbr;
   }
 
   list(): Item[] {
