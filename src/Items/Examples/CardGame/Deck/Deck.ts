@@ -155,11 +155,11 @@ export class Deck extends BaseItem {
 	updateMbr(): void {
 		const { translateX, translateY } =
 			this.transformation.matrix;
-		const {right, bottom} = this.index!.getMbr();
+		const indexMbr = this.index!.getMbr();
 		this.left = translateX;
 		this.top = translateY;
-		this.right = right;
-		this.bottom = bottom;
+		this.right = translateX + indexMbr.getWidth();
+		this.bottom = translateY + indexMbr.getHeight();
 	}
 
 	deserialize(data: SerializedItemData): this {
