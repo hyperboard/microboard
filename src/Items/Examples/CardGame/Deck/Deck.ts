@@ -31,7 +31,13 @@ export class Deck extends BaseItem {
 		this.index!.getEnclosedOrCrossed = () => []
 
 		if (cards) {
-			this.transformation.matrix = cards[0].transformation.matrix;
+			this.transformation.apply({
+				class: 'Transformation',
+				method: 'translateTo',
+				item: [this.id],
+				x: cards[0].left,
+				y: cards[0].top,
+			})
 			this.applyAddChildren(cards.map(card => card.getId()));
 		}
 
