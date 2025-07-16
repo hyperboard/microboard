@@ -155,12 +155,6 @@ export class Dice extends BaseItem {
     return this.path.copy();
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("dice-item");
-
-    return div;
-  }
-
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
 

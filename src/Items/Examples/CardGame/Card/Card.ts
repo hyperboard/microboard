@@ -120,11 +120,6 @@ export class Card extends BaseItem {
     return new Path(this.getMbr().getLines());
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("card-item");
-    return div;
-  }
-
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
 
