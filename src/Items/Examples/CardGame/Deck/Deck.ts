@@ -142,11 +142,11 @@ export class Deck extends BaseItem {
 		const { translateX, translateY } =
 			this.transformation.matrix;
 		const items = this.index!.list();
-		const itemsMbr = items[0].getMbr().combine(items.slice(1).map(item => item.getMbr()));
+		const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
 		this.left = translateX;
 		this.top = translateY;
-		this.right = translateX + itemsMbr.getWidth();
-		this.bottom = translateY + itemsMbr.getHeight();
+		this.right = translateX + (itemsMbr?.getWidth() || 0);
+		this.bottom = translateY + (itemsMbr?.getHeight() || 0);
 	}
 
 	deserialize(data: SerializedItemData): this {
