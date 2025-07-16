@@ -39,7 +39,6 @@ export class Deck extends BaseItem {
 				y: cards[0].top,
 			})
 			this.updateMbr();
-			this.applyAddChildren(cards.map(card => card.getId()));
 		}
 
 		this.transformation.subject.subscribe(() => {
