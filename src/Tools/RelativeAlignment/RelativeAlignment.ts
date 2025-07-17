@@ -597,7 +597,7 @@ export class AlignmentHelper {
       return;
     }
 
-    if (item.itemType === "Frame") {
+    if ("index" in item && item.index) {
       const translation = this.board.selection.getManyItemsTranslation(x, y);
       this.board.selection.transformMany(translation, timeStamp);
     } else {
