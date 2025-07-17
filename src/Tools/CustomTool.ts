@@ -8,6 +8,7 @@ import { DrawingContext } from "Items/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { CursorName } from "Pointer/Cursor";
 import { Item } from "Items/Item";
+import {ADD_TO_SELECTION} from "../Items";
 
 export interface ShapeToolSettings {
 	cursorName?: CursorName;
@@ -26,14 +27,14 @@ export class CustomTool extends BoardTool {
 	constructor(
 		board: Board,
 		public name: string,
-		private itemClass: typeof BaseItem, // Храним класс, а не экземпляр
+		private itemClass: typeof BaseItem,
 	) {
 		super(board);
-		this.item = new itemClass(board, ""); // Создаем экземпляр
+		this.item = new itemClass(board, "");
 	}
 
 	resetItem(): void {
-		this.item = new this.itemClass(this.board, ""); // Используем сохраненный класс
+		this.item = new this.itemClass(this.board, "");
 	}
 }
 
@@ -120,6 +121,7 @@ export class ShapeTool extends CustomTool {
 		this.isDown = false;
 		this.board.selection.removeAll();
 		this.board.selection.add(addedItem);
+		this.board.tools.select();
 		this.board.tools.publish();
 
 		return true;
