@@ -7,12 +7,11 @@ import { Board } from "Board";
 import { Subject } from "Subject";
 import { registerItem } from "Items/RegisterItem";
 import { DrawingContext } from "Items/DrawingContext";
-import { DeckOperation } from "Items/Examples/CardGame/Deck/DeckOperation";
 import {BorderWidth, Path} from "../../../Path";
 import {Line} from "../../../Line";
 import {Point} from "../../../Point";
-import {AddHand} from "./AddHand";
-import {HandOperation} from "./HandOperation";
+import {AddScreen} from "./AddScreen";
+import {ScreenOperation} from "./ScreenOperation";
 
 const handPath = new Path(
   [
@@ -26,13 +25,13 @@ const handPath = new Path(
   "#000000"
 )
 
-export const defaultHandData: BaseItemData = {
-  itemType: "Hand",
+export const defaultScreenData: BaseItemData = {
+  itemType: "Screen",
   ownerId: "",
 };
 
-export class Hand extends BaseItem {
-  readonly subject = new Subject<Hand>();
+export class Screen extends BaseItem {
+  readonly subject = new Subject<Screen>();
   private path: Path;
   private borderWidth = 1;
   backgroundColor = "#FFFFFF";
@@ -42,7 +41,7 @@ export class Hand extends BaseItem {
     id = "",
     private ownerId = "",
   ) {
-    super(board, id, defaultHandData, true);
+    super(board, id, defaultScreenData, true);
 
     this.transformation.subject.subscribe(() => {
       this.transformPath();
@@ -53,10 +52,10 @@ export class Hand extends BaseItem {
     this.updateMbr();
   }
 
-  apply(op: HandOperation): void {
+  apply(op: ScreenOperation): void {
     super.apply(op);
     switch (op.class) {
-      case "Hand":
+      case "Screen":
         switch (op.method) {
           case "setBorderWidth":
             this.applyBorderWidth(op.newData.borderWidth);
@@ -174,7 +173,7 @@ export class Hand extends BaseItem {
 }
 
 registerItem({
-  item: Hand,
-  defaultData: defaultHandData,
-  toolData: {name: "AddHand", tool: AddHand}
+  item: Screen,
+  defaultData: defaultScreenData,
+  toolData: {name: "AddScreen", tool: AddScreen}
 });
