@@ -47,10 +47,10 @@ export class SimpleSpatialIndex {
     if ("index" in item && item.index) {
       item.removeChildItems(item.index.list());
     }
-    if (item.parent !== 'Board') {
-      const parentFrame = this.items.getById(item.parent) as BaseItem;
-      parentFrame?.removeChildItems(item);
-    }
+    // if (item.parent !== 'Board') {
+    //   const parentFrame = this.items.getById(item.parent) as BaseItem;
+    //   parentFrame?.removeChildItems(item);
+    // }
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
 
     this.Mbr = new Mbr();

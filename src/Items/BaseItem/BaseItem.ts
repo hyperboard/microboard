@@ -159,8 +159,8 @@ export class BaseItem extends Mbr implements Geometry {
 				this.getId() !== childId
 			) {
 				if (!this.index?.getById(childId) && foundItem) {
-					foundItem.parent = this.getId();
 					this.board.items.index.remove(foundItem);
+					foundItem.parent = this.getId();
 					this.index?.insert(foundItem);
 				}
 			}
@@ -180,8 +180,8 @@ export class BaseItem extends Mbr implements Geometry {
 				this.getId() !== childId
 			) {
 				if (foundItem) {
-					foundItem.parent = "Board";
 					this.index?.remove(foundItem);
+					foundItem.parent = "Board";
 					this.board.items.index.insert(foundItem);
 				}
 			}

@@ -690,7 +690,7 @@ export class Board {
       string,
       { item: Connector; itemData: ConnectorData & { id: string } }
     > = {};
-    const createdFrames: Record<string, { item: Frame; itemData: FrameData }> =
+    const createdGroups: Record<string, { item: Frame; itemData: BaseItemData }> =
       {};
 
     if (Array.isArray(items)) {
@@ -699,8 +699,8 @@ export class Board {
         if (item instanceof Connector) {
           createdConnectors[itemData.id] = { item, itemData: itemData as ConnectorData & { id: string } };
         }
-        if (item instanceof Frame) {
-          createdFrames[item.getId()] = { item, itemData: itemData as FrameData };
+        if ("index" in item && item.index) {
+          createdGroups[item.getId()] = { item, itemData: itemData as BaseItemData };
         }
         this.index.insert(item);
       }
@@ -722,8 +722,8 @@ export class Board {
       item.applyStartPoint(itemData.startPoint);
       item.applyEndPoint(itemData.endPoint);
     }
-    for (const key in createdFrames) {
-      const { item, itemData } = createdFrames[key];
+    for (const key in createdGroups) {
+      const { item, itemData } = createdGroups[key];
       item.applyAddChildren(itemData.children);
     }
 

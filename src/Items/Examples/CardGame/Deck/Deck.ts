@@ -53,8 +53,8 @@ export class Deck extends BaseItem {
 						x: this.left + (this.index?.list().length || 0) * 2,
 						y: this.top,
 					})
-					foundItem.parent = this.getId();
 					this.board.items.index.remove(foundItem);
+					foundItem.parent = this.getId();
 					this.index?.insert(foundItem);
 				}
 			}
@@ -81,8 +81,8 @@ export class Deck extends BaseItem {
 						x: this.left,
 						y: this.top - this.getHeight() / 2,
 					})
-					foundItem.parent = "Board";
 					this.index?.remove(foundItem);
+					foundItem.parent = "Board";
 					this.board.items.index.insert(foundItem);
 				}
 			}
