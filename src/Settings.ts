@@ -9,6 +9,7 @@ import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
 import { BorderStyle } from "Items";
+import { string } from "slate";
 
 export interface Connection {
   connectionId: number;
@@ -520,6 +521,9 @@ export const conf = {
   debug: false,
   FALLBACK_LNG: "en",
   cursorsMap,
+
+  apiURL: undefined as string | undefined,
+  wsURL: undefined as string | undefined,
 };
 
 export type Settings = typeof conf;
