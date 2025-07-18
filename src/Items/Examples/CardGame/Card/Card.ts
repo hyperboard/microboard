@@ -52,8 +52,10 @@ export class Card extends BaseItem {
       this.board.bringToFront(this);
     }, 1000);
 
-    this.transformation.subject.subscribe(() => {
-      this.throttledBringToFront();
+    this.transformation.subject.subscribe((_, op) => {
+      if (this.parent === "Board" && op.method === "translateBy" || (op.method === "transformMany" && !Object.keys(op.items).length)) {
+        this.throttledBringToFront();
+      }
       this.updateMbr();
       this.subject.publish(this);
     });
