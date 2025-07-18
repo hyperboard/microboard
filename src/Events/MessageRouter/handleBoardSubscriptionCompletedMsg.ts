@@ -20,6 +20,7 @@ export function handleBoardSubscriptionCompletedMsg(
 
 export function handleSeqNumApplication(initialSequenceNumber: number, board: Board): void {
 	const { log } = board.events;
+	console.log(`upd seq number from ${log.currentSequenceNumber.toString()} to ${initialSequenceNumber}`)
 	log.currentSequenceNumber = initialSequenceNumber;
 	if (log.pendingEvent) {
 		log.pendingEvent.sequenceNumber = log.currentSequenceNumber;
