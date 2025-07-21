@@ -181,9 +181,14 @@ export class Deck extends BaseItem {
 	}
 
 	private updateCache(context: DrawingContext) {
+		const width = this.getWidth();
+		const height = this.getHeight();
+		if (!width || !height) {
+			return;
+		}
 		const tempCanvas = document.createElement('canvas');
-		tempCanvas.width = this.getWidth();
-		tempCanvas.height = this.getHeight();
+		tempCanvas.width = width;
+		tempCanvas.height = height;
 
 		const tempCtx = tempCanvas.getContext('2d');
 		if (!tempCtx) return;
