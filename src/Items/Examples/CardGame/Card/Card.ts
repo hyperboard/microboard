@@ -53,7 +53,7 @@ export class Card extends BaseItem {
     }, 1000);
 
     this.transformation.subject.subscribe((_, op) => {
-      if (this.parent === "Board" && op.method === "translateBy" || (op.method === "transformMany" && !Object.keys(op.items).length)) {
+      if (this.parent === "Board" && op.method === "translateBy") {
         this.throttledBringToFront();
       }
       this.updateMbr();
@@ -88,7 +88,7 @@ export class Card extends BaseItem {
     }
   }
 
-  render(context: DrawingContext): void {
+  render(context: DrawingContext, left?: number): void {
     if (this.transformationRenderBlock) {
       return;
     }
@@ -99,7 +99,7 @@ export class Card extends BaseItem {
 
       ctx.drawImage(
         this.imageToRender,
-        this.left,
+        left ? left : this.left,
         this.top,
         CARD_DIMENSIONS.width,
         CARD_DIMENSIONS.height,

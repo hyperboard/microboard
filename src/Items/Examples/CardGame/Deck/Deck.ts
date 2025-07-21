@@ -9,6 +9,7 @@ import { registerItem } from "Items/RegisterItem";
 import { Card, CARD_DIMENSIONS } from "Items/Examples/CardGame/Card/Card";
 import { DrawingContext } from "Items/DrawingContext";
 import { DeckOperation } from "Items/Examples/CardGame/Deck/DeckOperation";
+import {conf} from "../../../../Settings";
 
 export const defaultDeckData: BaseItemData = {
 	itemType: "Deck",
@@ -186,7 +187,7 @@ export class Deck extends BaseItem {
 		if (!width || !height) {
 			return;
 		}
-		const tempCanvas = document.createElement('canvas');
+		const tempCanvas = conf.documentFactory.createElement('canvas') as HTMLCanvasElement;
 		tempCanvas.width = width;
 		tempCanvas.height = height;
 
@@ -194,7 +195,9 @@ export class Deck extends BaseItem {
 		if (!tempCtx) return;
 
 		const tempContext = { ...context, ctx: tempCtx };
-		this.index?.render(tempContext);
+		this.index?.list().forEach((item, index) => {
+			(item as Card).render(tempContext, index * 2);
+		});
 
 		this.cachedCanvas = tempCanvas;
 	}
