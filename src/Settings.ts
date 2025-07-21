@@ -521,9 +521,6 @@ export const conf = {
   debug: false,
   FALLBACK_LNG: "en",
   cursorsMap,
-
-  apiURL: undefined as string | undefined,
-  wsURL: undefined as string | undefined,
 };
 
 export type Settings = typeof conf;
