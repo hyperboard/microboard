@@ -521,6 +521,9 @@ export const conf = {
   debug: false,
   FALLBACK_LNG: "en",
   cursorsMap,
+
+  DECK_HORIZONTAL_OFFSET: 2,
+  DECK_VERTICAL_OFFSET: 0,
 };
 
 export type Settings = typeof conf;

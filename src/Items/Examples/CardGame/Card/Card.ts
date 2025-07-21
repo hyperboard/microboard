@@ -88,6 +88,10 @@ export class Card extends BaseItem {
     }
   }
 
+  getImage(): HTMLImageElement | null {
+    return this.imageToRender;
+  }
+
   render(context: DrawingContext, left?: number, top?: number): void {
     if (this.transformationRenderBlock) {
       return;

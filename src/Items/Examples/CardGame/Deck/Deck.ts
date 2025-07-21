@@ -6,7 +6,7 @@ import {
 import { Board } from "Board";
 import { Subject } from "Subject";
 import { registerItem } from "Items/RegisterItem";
-import { Card, CARD_DIMENSIONS } from "Items/Examples/CardGame/Card/Card";
+import { Card } from "Items/Examples/CardGame/Card/Card";
 import { DrawingContext } from "Items/DrawingContext";
 import { DeckOperation } from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
@@ -53,8 +53,8 @@ export class Deck extends BaseItem {
 						class: 'Transformation',
 						method: 'translateTo',
 						item: [this.id],
-						x: this.left + (this.index?.list().length || 0) * 2,
-						y: this.top,
+						x: this.left + (this.index?.list().length || 0) * conf.DECK_HORIZONTAL_OFFSET,
+						y: this.top - (this.index?.list().length || 0) * conf.DECK_VERTICAL_OFFSET,
 					})
 					this.board.items.index.remove(foundItem);
 					foundItem.parent = this.getId();
@@ -173,7 +173,6 @@ export class Deck extends BaseItem {
 
 		if (this.isCacheDirty || !this.cachedCanvas) {
 			this.updateCache(context);
-			this.isCacheDirty = false;
 		}
 
 		if (this.cachedCanvas && this.cachedCanvas.width && this.cachedCanvas.height) {
@@ -184,9 +183,12 @@ export class Deck extends BaseItem {
 	}
 
 	private updateCache(context: DrawingContext) {
+		const cards = this.index?.list() as Card[];
+		const topCard = cards[cards.length - 1];
+		const topCardImage = topCard?.getImage();
 		const width = this.getWidth();
 		const height = this.getHeight();
-		if (!width || !height) {
+		if (!width || !height || !topCardImage || !topCardImage.complete) {
 			return;
 		}
 		const tempCanvas = conf.documentFactory.createElement('canvas') as HTMLCanvasElement;
@@ -197,11 +199,13 @@ export class Deck extends BaseItem {
 		if (!tempCtx) return;
 
 		const tempContext = { ...context, ctx: tempCtx };
-		this.index?.list().forEach((item, index) => {
-			(item as Card).render(tempContext, index * 2, 0);
+
+		cards.forEach((_, index) => {
+			topCard.render(tempContext, index * conf.DECK_HORIZONTAL_OFFSET, index * conf.DECK_VERTICAL_OFFSET);
 		});
 
 		this.cachedCanvas = tempCanvas;
+		this.isCacheDirty = false;
 	}
 }
 
