@@ -17,6 +17,8 @@ export const defaultDeckData: BaseItemData = {
 export class Deck extends BaseItem {
 	readonly subject = new Subject<Deck>();
 	shouldUseCustomRender = false;
+	private cachedCanvas: HTMLCanvasElement | null = null;
+	private isCacheDirty = true;
 
 	constructor(
 		board: Board,
@@ -135,6 +137,9 @@ export class Deck extends BaseItem {
 
 	apply(op: DeckOperation): void {
 		super.apply(op);
+		if (op.class === "Deck") {
+			this.isCacheDirty = true;
+		}
 		this.subject.publish(this);
 	}
 
@@ -160,7 +165,33 @@ export class Deck extends BaseItem {
 		if (this.transformationRenderBlock) {
 			return;
 		}
-		super.render(context);
+
+		const ctx = context.ctx;
+
+		if (this.isCacheDirty || !this.cachedCanvas) {
+			this.updateCache(context);
+			this.isCacheDirty = false;
+		}
+
+		if (this.cachedCanvas) {
+			ctx.save();
+			ctx.drawImage(this.cachedCanvas, this.left, this.top);
+			ctx.restore();
+		}
+	}
+
+	private updateCache(context: DrawingContext) {
+		const tempCanvas = document.createElement('canvas');
+		tempCanvas.width = this.getWidth();
+		tempCanvas.height = this.getHeight();
+
+		const tempCtx = tempCanvas.getContext('2d');
+		if (!tempCtx) return;
+
+		const tempContext = { ...context, ctx: tempCtx };
+		this.index?.render(tempContext);
+
+		this.cachedCanvas = tempCanvas;
 	}
 }
 
