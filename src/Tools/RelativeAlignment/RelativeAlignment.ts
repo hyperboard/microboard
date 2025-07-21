@@ -6,6 +6,7 @@ import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeTy
 import { SpatialIndex } from "SpatialIndex";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
 import {TransformManyItems} from "../../Items/Transformation/TransformationOperations";
+import {BaseItem} from "../../Items/BaseItem";
 
 export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
 
@@ -123,11 +124,10 @@ export class AlignmentHelper {
     };
 
     nearbyItems.forEach((item) => {
-      if (item === movingItem || item.itemType === "Comment") {
+      if (item === movingItem || item.itemType === "Comment" || (item instanceof BaseItem && !item.shouldUseRelativeAlignment)) {
         return;
       }
-      const itemMbr =
-        item.itemType === "Shape" ? item.getPath().getMbr() : item.getMbr();
+      const itemMbr = item.getPathMbr();
 
       const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
       const centerXItem = (itemMbr.left + itemMbr.right) / 2;

@@ -58,6 +58,7 @@ export class Deck extends BaseItem {
 					})
 					this.board.items.index.remove(foundItem);
 					foundItem.parent = this.getId();
+					foundItem.shouldUseRelativeAlignment = false;
 					this.index?.insert(foundItem);
 				}
 			}
@@ -86,6 +87,7 @@ export class Deck extends BaseItem {
 					})
 					this.index?.remove(foundItem);
 					foundItem.parent = "Board";
+					foundItem.shouldUseRelativeAlignment = true;
 					this.board.items.index.insert(foundItem);
 				}
 			}
@@ -188,8 +190,8 @@ export class Deck extends BaseItem {
 			return;
 		}
 		const tempCanvas = conf.documentFactory.createElement('canvas') as HTMLCanvasElement;
-		tempCanvas.width = width;
-		tempCanvas.height = height;
+		tempCanvas.width = 10000;
+		tempCanvas.height = 10000;
 
 		const tempCtx = tempCanvas.getContext('2d');
 		if (!tempCtx) return;

@@ -37,6 +37,7 @@ export class BaseItem extends Mbr implements Geometry {
 	onRemoveCallbacks: (() => void)[] = []
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
+	shouldUseRelativeAlignment = true;
 	itemType = "";
 
 	constructor(
