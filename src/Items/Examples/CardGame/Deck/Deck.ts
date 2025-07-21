@@ -190,15 +190,15 @@ export class Deck extends BaseItem {
 			return;
 		}
 		const tempCanvas = conf.documentFactory.createElement('canvas') as HTMLCanvasElement;
-		tempCanvas.width = 10000;
-		tempCanvas.height = 10000;
+		tempCanvas.width = width;
+		tempCanvas.height = height;
 
 		const tempCtx = tempCanvas.getContext('2d');
 		if (!tempCtx) return;
 
 		const tempContext = { ...context, ctx: tempCtx };
 		this.index?.list().forEach((item, index) => {
-			(item as Card).render(tempContext, index * 2);
+			(item as Card).render(tempContext, index * 2, 0);
 		});
 
 		this.cachedCanvas = tempCanvas;

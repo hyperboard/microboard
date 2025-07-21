@@ -88,7 +88,7 @@ export class Card extends BaseItem {
     }
   }
 
-  render(context: DrawingContext, left?: number): void {
+  render(context: DrawingContext, left?: number, top?: number): void {
     if (this.transformationRenderBlock) {
       return;
     }
@@ -99,8 +99,8 @@ export class Card extends BaseItem {
 
       ctx.drawImage(
         this.imageToRender,
-        left ? left : this.left,
-        this.top,
+        typeof left === "number" ? left : this.left,
+        typeof top === "number" ? top : this.top,
         CARD_DIMENSIONS.width,
         CARD_DIMENSIONS.height,
       );
