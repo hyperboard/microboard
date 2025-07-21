@@ -173,7 +173,7 @@ export class Deck extends BaseItem {
 			this.isCacheDirty = false;
 		}
 
-		if (this.cachedCanvas) {
+		if (this.cachedCanvas && this.cachedCanvas.width && this.cachedCanvas.height) {
 			ctx.save();
 			ctx.drawImage(this.cachedCanvas, this.left, this.top);
 			ctx.restore();
