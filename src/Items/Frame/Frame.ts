@@ -457,9 +457,9 @@ export class Frame extends BaseItem {
       case "RichText":
         this.text.apply(op);
         break;
-      case "LinkTo":
-        this.linkTo.apply(op);
-        break;
+      // case "LinkTo":
+      //   this.linkTo.apply(op);
+      //   break;
       default:
         return;
     }

@@ -79,18 +79,18 @@ export class BaseCommand {
 		const items = this.items;
 		switch (this.operation.method) {
 			case "addChildren":
-				return mapItemsByOperation(items, item => {
-					return {
-						...this.operation,
-						newData: { childIds: item.getChildrenIds()},
-					};
+				return items.map(item => {
+					return {item, operation: {
+							...this.operation,
+							method: "removeChildren",
+						}}
 				});
 			case "removeChildren":
-				return mapItemsByOperation(items, item => {
-					return {
-						...this.operation,
-						newData: { childIds: item.getChildrenIds()},
-					};
+				return items.map(item => {
+					return {item, operation: {
+							...this.operation,
+							method: "addChildren",
+						}}
 				});
 			default:
 				return mapItemsByOperation(items, item => {
