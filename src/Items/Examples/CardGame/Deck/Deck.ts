@@ -79,13 +79,6 @@ export class Deck extends BaseItem {
 				this.getId() !== childId
 			) {
 				if (foundItem) {
-					foundItem.transformation.apply({
-						class: 'Transformation',
-						method: 'translateTo',
-						item: [this.id],
-						x: this.left,
-						y: this.top - this.getHeight() / 2,
-					})
 					this.index?.remove(foundItem);
 					foundItem.parent = "Board";
 					foundItem.shouldUseRelativeAlignment = true;

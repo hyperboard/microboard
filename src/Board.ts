@@ -1008,7 +1008,7 @@ export class Board {
         itemData.transformation.translateX = translateX - minX + x;
         itemData.transformation.translateY = translateY - minY + y;
       }
-      if (itemData.itemType === "Frame") {
+      if ("children" in itemData && itemData.children) {
         // handle new id for children
         itemData.children = itemData.children.map(
           (childId) => newItemIdMap[childId]
