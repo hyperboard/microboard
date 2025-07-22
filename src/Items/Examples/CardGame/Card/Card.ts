@@ -33,6 +33,7 @@ export class Card extends BaseItem {
   backside: HTMLImageElement | null = null;
   private imageToRender: HTMLImageElement | null = null;
   shouldUseCustomRender = false;
+  enableResize = false;
 
   constructor(
     board: Board,

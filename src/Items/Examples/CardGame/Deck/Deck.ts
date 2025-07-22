@@ -20,6 +20,7 @@ export class Deck extends BaseItem {
 	shouldUseCustomRender = false;
 	private cachedCanvas: HTMLCanvasElement | null = null;
 	private isCacheDirty = true;
+	enableResize = false;
 
 	constructor(
 		board: Board,
@@ -206,6 +207,7 @@ export class Deck extends BaseItem {
 
 		this.cachedCanvas = tempCanvas;
 		this.isCacheDirty = false;
+		this.updateMbr();
 	}
 }
 

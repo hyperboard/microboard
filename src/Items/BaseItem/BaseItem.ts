@@ -38,6 +38,7 @@ export class BaseItem extends Mbr implements Geometry {
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
 	shouldUseRelativeAlignment = true;
+	enableResize = true;
 	itemType = "";
 
 	constructor(

@@ -1480,6 +1480,12 @@ export class BoardSelection {
     this.setContext("None");
   }
 
+  getIsResizeEnabled(): boolean {
+    const items = this.list();
+
+    return !items.some((item) => !item.enableResize);
+  }
+
   getIsLockedSelection(): boolean {
     const items = this.list();
 

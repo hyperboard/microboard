@@ -208,7 +208,8 @@ export class Transformer extends Tool {
       return false;
     }
     const isLockedItems = this.selection.getIsLockedSelection();
-    if (isLockedItems) {
+    const isResizeEnabled = this.selection.getIsResizeEnabled();
+    if (isLockedItems || !isResizeEnabled) {
       return false;
     }
 

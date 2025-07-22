@@ -53,6 +53,7 @@ export class Comment implements Geometry {
   readonly subject = new Subject<Comment>();
   readonly linkTo: LinkTo;
   transformationRenderBlock?: boolean = undefined;
+  enableResize = true;
 
   constructor(
     private anchor = new Point(),
