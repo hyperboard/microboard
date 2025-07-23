@@ -592,7 +592,7 @@ export class BoardSelection {
 
     this.list()
       .flatMap((item) => {
-        if (item instanceof Frame) {
+        if ("index" in item && item.index) {
           return item.getChildrenIds();
         }
         return [];
