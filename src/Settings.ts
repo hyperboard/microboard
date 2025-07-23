@@ -524,6 +524,7 @@ export const conf = {
 
   DECK_HORIZONTAL_OFFSET: 2,
   DECK_VERTICAL_OFFSET: 0,
+  CARD_DIMENSIONS: {width: 250, height: 400}
 };
 
 export type Settings = typeof conf;

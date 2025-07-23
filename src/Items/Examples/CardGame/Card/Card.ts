@@ -21,8 +21,6 @@ export const defaultCardData: BaseItemData = {
   backsideUrl: "",
 };
 
-export const CARD_DIMENSIONS = {width: 250, height: 400};
-
 export class Card extends BaseItem {
   readonly subject = new Subject<Card>();
   private faceUrl = "";
@@ -106,8 +104,8 @@ export class Card extends BaseItem {
         this.imageToRender,
         typeof left === "number" ? left : this.left,
         typeof top === "number" ? top : this.top,
-        CARD_DIMENSIONS.width,
-        CARD_DIMENSIONS.height,
+        conf.CARD_DIMENSIONS.width,
+        conf.CARD_DIMENSIONS.height,
       );
 
       ctx.restore();
@@ -119,8 +117,8 @@ export class Card extends BaseItem {
       this.transformation.matrix;
     this.left = translateX;
     this.top = translateY;
-    this.right = this.left + CARD_DIMENSIONS.width * scaleX;
-    this.bottom = this.top + CARD_DIMENSIONS.height * scaleY;
+    this.right = this.left + conf.CARD_DIMENSIONS.width * scaleX;
+    this.bottom = this.top + conf.CARD_DIMENSIONS.height * scaleY;
   }
 
   getPath(): Path | Paths {

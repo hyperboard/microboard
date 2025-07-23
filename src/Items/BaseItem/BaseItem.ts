@@ -40,6 +40,7 @@ export class BaseItem extends Mbr implements Geometry {
 	shouldUseRelativeAlignment = true;
 	enableResize = true;
 	itemType = "";
+	children: string[] = [];
 
 	constructor(
 		board: Board,
@@ -61,6 +62,10 @@ export class BaseItem extends Mbr implements Geometry {
 		}
 		this.linkTo = new LinkTo(this.id, board.events);
 		this.transformation = new Transformation(this.id, board.events);
+	}
+
+	updateChildrenIds(): void {
+		this.children = this.index?.items.listAll().map(item => item.getId()) || [];
 	}
 
 	getId(): string {
@@ -167,6 +172,7 @@ export class BaseItem extends Mbr implements Geometry {
 				}
 			}
 		});
+		this.updateChildrenIds();
 		this.updateMbr();
 		this.subject.publish(this);
 	}
@@ -188,6 +194,7 @@ export class BaseItem extends Mbr implements Geometry {
 				}
 			}
 		});
+		this.updateChildrenIds();
 		this.updateMbr();
 		this.subject.publish(this);
 	}
