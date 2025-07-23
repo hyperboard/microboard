@@ -240,7 +240,7 @@ export class BaseItem extends Mbr implements Geometry {
 
 	emit(operation: Operation | BaseOperation): void {
 		if (this.board.events) {
-			const command = new BaseCommand([this], operation as BaseOperation);
+			const command = new BaseCommand(this.board, [this.getId()], operation as BaseOperation);
 			command.apply();
 			this.board.events.emit(operation as Operation, command);
 		} else {
