@@ -1,39 +1,41 @@
-import { Board } from 'Board';
-import { ShapeCommand } from 'Items/Shape/ShapeCommand';
-import { BoardCommand } from '../BoardCommand';
-import { TransformationCommand } from '../Items/Transformation/TransformationCommand';
-import { RichTextCommand, RichTextGroupCommand } from '../Items/RichText/RichTextCommand';
-import { EventsCommand } from './EventsCommand';
-import { ConnectorCommand } from 'Items/Connector/ConnectorCommand';
+import {Board} from 'Board';
+import {ShapeCommand} from 'Items/Shape/ShapeCommand';
+import {BoardCommand} from '../BoardCommand';
+import {TransformationCommand} from '../Items/Transformation/TransformationCommand';
+import {RichTextCommand, RichTextGroupCommand} from '../Items/RichText/RichTextCommand';
+import {EventsCommand} from './EventsCommand';
+import {ConnectorCommand} from 'Items/Connector/ConnectorCommand';
 import {BaseOperation, ItemOperation, Operation} from './EventsOperations';
-import { DrawingCommand } from 'Items/Drawing/DrawingCommand';
-import { StickerCommand } from '../Items/Sticker/StickerCommand';
+import {DrawingCommand} from 'Items/Drawing/DrawingCommand';
+import {StickerCommand} from '../Items/Sticker/StickerCommand';
 import {
 	Connector,
 	ConnectorOperation,
-	Frame, FrameOperation,
+	Frame,
+	FrameOperation,
 	Item,
-	RichText, RichTextOperation,
+	RichText,
+	RichTextOperation,
 	Shape,
-	ShapeOperation, StickerOperation,
+	ShapeOperation,
+	StickerOperation,
 	TransformationOperation
 } from 'Items';
-import { Drawing } from 'Items/Drawing';
-import { Sticker } from 'Items/Sticker';
-import { FrameCommand } from 'Items/Frame/FrameCommand';
+import {Drawing} from 'Items/Drawing';
+import {Sticker} from 'Items/Sticker';
+import {FrameCommand} from 'Items/Frame/FrameCommand';
 import {Comment, CommentCommand, CommentOperation} from '../Items/Comment';
-import { LinkToCommand } from '../Items/LinkTo/LinkToCommand';
-import { GroupCommand } from 'Items/Group/GroupCommand';
-import { Group } from 'Items/Group';
-import { PlaceholderCommand } from 'Items/Placeholder/PlaceholderCommand';
-import { Placeholder } from 'Items/Placeholder';
-import { ImageCommand } from 'Items/Image/ImageCommand';
-import { ImageItem } from 'Items/Image';
-import { VideoCommand } from 'Items/Video/VideoCommand';
-import { VideoItem } from 'Items/Video/Video';
-import { AudioCommand } from 'Items/Audio/AudioCommand';
-import { AudioItem } from 'Items/Audio/Audio';
-import {BaseItem} from "../Items/BaseItem";
+import {LinkToCommand} from '../Items/LinkTo/LinkToCommand';
+import {GroupCommand} from 'Items/Group/GroupCommand';
+import {Group} from 'Items/Group';
+import {PlaceholderCommand} from 'Items/Placeholder/PlaceholderCommand';
+import {Placeholder} from 'Items/Placeholder';
+import {ImageCommand} from 'Items/Image/ImageCommand';
+import {ImageItem} from 'Items/Image';
+import {VideoCommand} from 'Items/Video/VideoCommand';
+import {VideoItem} from 'Items/Video/Video';
+import {AudioCommand} from 'Items/Audio/AudioCommand';
+import {AudioItem} from 'Items/Audio/Audio';
 import {mapItemsByOperation} from "../Items/ItemsCommandUtils";
 import {DrawingOperation} from "../Items/Drawing/DrawingOperation";
 import {PlaceholderOperation} from "../Items/Placeholder/PlaceholderOperation";
@@ -49,10 +51,11 @@ export interface Command {
 }
 
 export class BaseCommand {
-	private reverse: { item: BaseItem; operation: BaseOperation }[];
+	private reverse: { itemId: string; operation: BaseOperation }[];
 
 	constructor(
-		public items: BaseItem[],
+		private board: Board,
+		public itemIds: string[],
 		public operation: BaseOperation,
 	) {
 		this.reverse = this.getReverse();
@@ -64,41 +67,49 @@ export class BaseCommand {
 	}
 
 	apply(): void {
-		for (const item of this.items) {
+		for (const itemId of this.itemIds) {
+			const item = this.board.items.getById(itemId);
+			if (!item) {
+				continue;
+			}
 			item.apply(this.operation as Operation);
 		}
 	}
 
 	revert(): void {
-		for (const { item, operation } of this.reverse) {
-			item.apply(operation as Operation);
+		for (const { itemId, operation } of this.reverse) {
+			const item = this.board.items.getById(itemId);
+			if (!item) {
+				continue;
+			}
+			item.apply(operation);
 		}
 	}
 
-	getReverse(): { item: BaseItem; operation: BaseOperation }[] {
-		const items = this.items;
+	getReverse(): { itemId: string; operation: BaseOperation }[] {
 		switch (this.operation.method) {
 			case "addChildren":
-				return items.map(item => {
-					return {item, operation: {
+				return this.itemIds.map(itemId => {
+					return {itemId, operation: {
 							...this.operation,
 							method: "removeChildren",
 						}}
 				});
 			case "removeChildren":
-				return items.map(item => {
-					return {item, operation: {
+				return this.itemIds.map(itemId => {
+					return {itemId, operation: {
 							...this.operation,
 							method: "addChildren",
 						}}
 				});
 			default:
-				return mapItemsByOperation(items, item => {
+				return this.itemIds.map(itemId => {
 					const op = this.operation;
 					let newData: Record<string, any> = {}
 					if (op.prevData) {
 						newData = {...op.prevData};
 					} else {
+						const item = this.board.items.getById(itemId);
 						Object.keys(op.newData).forEach(key => {
 							// @ts-ignore
 							if (item[key]) {
@@ -107,10 +118,10 @@ export class BaseCommand {
 							}
 						})
 					}
-					return {
-						...op,
-						newData,
-					};
+					return {itemId, operation: {
+							...op,
+							newData,
+						}}
 				});
 		}
 	}

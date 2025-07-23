@@ -55,10 +55,12 @@ function createItemValidator(defaultData: BaseItemData) {
 function createItemCommandFactory(itemType: string) {
   return function itemCommandFactory(
     items: Item[],
-    operation: ItemOperation
+    operation: ItemOperation,
+    board: Board,
   ): Command {
     return new BaseCommand(
-      items.filter((item): boolean => item.itemType === itemType) as BaseItem[],
+      board,
+      items.filter((item): boolean => item.itemType === itemType).map(item => item.getId()),
       operation as BaseOperation
     );
   };
