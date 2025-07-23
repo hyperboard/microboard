@@ -148,7 +148,7 @@ export class Deck extends BaseItem {
     const {translateX, translateY} =
       this.transformation.matrix;
     const items = this.index!.list();
-    const itemsMbr = items[0].getMbr().combine(items.slice(1).map(item => item.getMbr()));
+    const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
     this.left = translateX;
     this.top = translateY;
     this.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + conf.DECK_HORIZONTAL_OFFSET * ((this.children.length || 1) - 1));
