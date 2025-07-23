@@ -22,7 +22,7 @@ export class Deck extends BaseItem {
   private cachedCanvas: HTMLCanvasElement | null = null;
   private isCacheDirty = true;
   enableResize = false;
-  path = new Path();
+  path: Path | null = null
 
   constructor(
     board: Board,
@@ -175,7 +175,7 @@ export class Deck extends BaseItem {
 
     if (this.isCacheDirty || !this.cachedCanvas) {
       this.updateCache(context);
-      this.path.render(context);
+      this.path?.render(context);
     }
 
     if (this.cachedCanvas && this.cachedCanvas.width && this.cachedCanvas.height) {
