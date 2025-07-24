@@ -13,6 +13,7 @@ import {registerItem} from "Items/RegisterItem";
 import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
 import {throttle} from "../../../../utils";
+import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
 
 export const defaultCardData: BaseItemData = {
   itemType: "Card",
@@ -36,7 +37,7 @@ export class Card extends BaseItem {
   constructor(
     board: Board,
     id = "",
-    urls?: {faceUrl: string, backsideUrl: string},
+    urls?: { faceUrl: string, backsideUrl: string },
   ) {
     super(board, id, defaultCardData);
 
@@ -164,3 +165,21 @@ registerItem({
   item: Card,
   defaultData: defaultCardData,
 });
+
+registerHotkey({
+  name: "flipCard",
+  hotkey: {key: {button: "KeyF"}, label: {windows: "F", mac: "F"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    allItemsType: ["Card"],
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const cards = board?.selection.items.list() as Card[] | undefined;
+      if (!cards) {
+        return;
+      }
+      cards.forEach((card: Card): void => {
+        card.toggleIsOpen();
+      });
+    }
+  }
+})

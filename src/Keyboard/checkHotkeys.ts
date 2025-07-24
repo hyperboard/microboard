@@ -2,16 +2,18 @@ import { Board } from 'Board';
 import { isHotkeyPushed } from './isHotkeyPushed';
 import { logHotkey } from './logHotkey';
 import { HotkeysMap, HotkeyName } from './types';
+import {editModeHotkeyRegistry, viewModeHotkeyRegistry} from "./HotkeyRegistry";
 
 export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent, board: Board) {
-	const entries = Object.entries(hotkeyMap);
+	const fullHotkeysMap = {...hotkeyMap, ...board.getInterfaceType() === "edit" ? editModeHotkeyRegistry : viewModeHotkeyRegistry}
+	const entries = Object.entries(fullHotkeysMap);
 	for (const [hotkey, configOrCb] of entries) {
 		if (isHotkeyPushed(hotkey as HotkeyName, event)) {
 			const context = board.selection.getContext();
 
 			if (typeof configOrCb === 'function') {
 				event.preventDefault();
-				configOrCb(event);
+				configOrCb(event, board);
 				logHotkey(configOrCb, hotkey as HotkeyName, 'triggered', context);
 				return true;
 			}
@@ -57,7 +59,7 @@ export function checkHotkeys(hotkeyMap: HotkeysMap, event: KeyboardEvent, board:
 			if (preventDefault) {
 				event.preventDefault();
 			}
-			cb(event);
+			cb(event, board);
 			logHotkey(configOrCb, hotkey as HotkeyName, 'triggered', context);
 			return true;
 		}

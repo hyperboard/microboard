@@ -1,7 +1,9 @@
 import type { Hotkey, HotkeyName } from './types';
-import hotkeys from 'hotkeys.json';
+import hotkeysJson from 'hotkeys.json';
+import {hotkeyNames} from "./HotkeyRegistry";
 
 export function isHotkeyPushed(hotkey: HotkeyName, event: KeyboardEvent): boolean {
+	const hotkeys = {...hotkeysJson, ...hotkeyNames}
 	if (!hotkeys[hotkey]) {
 		return false;
 	}
