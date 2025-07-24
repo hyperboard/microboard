@@ -40,11 +40,8 @@ import { Tools } from "Tools";
 import { v4 as uuidv4 } from "uuid";
 import { ItemsMap } from "Validators";
 import { ItemDataWithId } from "./Items/Item";
-import CUSTOM_WEB_COMPONENTS_JS from "./public/customWebComponents.js" with { type: "text" };
-import INDEX_CSS from "./public/index.css" with { type: "text" };
-import LOAD_LINKS_IMAGES_JS from "./public/loadLinkImages.js" with { type: "text" };
-import {BaseItem} from "./Items/BaseItem";
-import {BaseItemData} from "./Items/BaseItem/BaseItem";
+import { BaseItem } from "./Items/BaseItem";
+import { BaseItemData } from "./Items/BaseItem/BaseItem";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -357,7 +354,9 @@ export class Board {
 
   parseHTML(
     el: HTMLElement
-  ): ItemDataWithId | { data: FrameData; childrenMap: { [id: string]: ItemDataWithId } } {
+  ):
+    | ItemDataWithId
+    | { data: FrameData; childrenMap: { [id: string]: ItemDataWithId } } {
     const parser = parsersHTML[el.tagName.toLowerCase()];
     if (!parser) {
       throw new Error(`Unknown element tag: ${el.tagName.toLowerCase()}`);
@@ -513,49 +512,31 @@ export class Board {
   }
 
   serializeHTML(): string {
-    const customTagsScript = CUSTOM_WEB_COMPONENTS_JS;
-    const loadLinksImagesScript = LOAD_LINKS_IMAGES_JS;
-    const css = INDEX_CSS;
     const boardName = this.getName() || this.getBoardId();
 
     // div with id="items" and last-event-order are necessary for successfull uploading to storage
     const items = this.items.getWholeHTML(conf.documentFactory);
     const itemsDiv = `<div id="items">${items}</div>`;
     const scripts = `
-			<script type="module">${customTagsScript}</script>
-			<script defer>${loadLinksImagesScript}</script>
+			<script type="module" src="https://unpkg.com/microboard-ui-temp/dist/customWebComponents.js"></script>
+      <script type="module" src="https://unpkg.com/microboard-ui-temp/dist/controlsHandlers.js"></script>
+      <script type="module" src="https://unpkg.com/microboard-ui-temp/dist/titlePanel.js"></script>
+      <script defer src="https://unpkg.com/microboard-ui-temp/dist/loadLinksImages.js"></script>
 		`;
     const body = `<body style="overflow-x: hidden; overflow-y: hidden;">${itemsDiv}${scripts}</body>`;
     const head = `
-		<head>
-			<meta charset="utf-8" />
-			<meta name="last-event-order" content="${this.events?.log.getLastIndex()}" />
-			<title>Microboard ${this.getBoardId()}</title>
-			<link rel="preconnect" href="https://fonts.googleapis.com">
-			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-			<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
-				rel="stylesheet"
-			/>
-			<style>${css}</style>
-			<style>
-				::-webkit-scrollbar {
-					appearance: none;
-					width: 3px;
-					height: 3px
-				}
-				::-webkit-scrollbar-button {
-					display: none;
-				}
-				::-webkit-scrollbar-thumb {
-					display: block;
-					background-color: black;
-					border-radius: 2px;
-				}
-				body {
-					background-color: rgba(200, 200, 200, 0.2);
-				}
-			</style>
-		</head>`.replace(/\t|\n/g, "");
+      <head>
+        <meta charset="utf-8" />
+        <meta name="last-event-order" content="${this.events?.log.getLastIndex()}" />
+        <title>Microboard ${boardName}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+        <link rel="stylesheet" crossorigin href="https://unpkg.com/microboard-ui-temp/dist/board.css" />
+      </head>`.replace(/\t|\n/g, "");
     return `${head}${body}`;
   }
 
@@ -576,20 +557,20 @@ export class Board {
           const addedFrame: BaseItem = this.add(
             this.createItem(this.getNewItemId(), parsedData.data)
           );
-          const addedChildren = (Object.values(parsedData.childrenMap) as ItemDataWithId[]).map(
-            (childData) => {
-              const created = this.createItem(this.getNewItemId(), childData);
-              const added = this.add(created);
-              idsMap[childData.id] = added.getId();
-              if (added instanceof Connector) {
-                addedConnectors.push({
-                  item: added,
-                  data: childData as ConnectorData,
-                });
-              }
-              return added;
+          const addedChildren = (
+            Object.values(parsedData.childrenMap) as ItemDataWithId[]
+          ).map((childData) => {
+            const created = this.createItem(this.getNewItemId(), childData);
+            const added = this.add(created);
+            idsMap[childData.id] = added.getId();
+            if (added instanceof Connector) {
+              addedConnectors.push({
+                item: added,
+                data: childData as ConnectorData,
+              });
             }
-          );
+            return added;
+          });
           addedFrame.addChildItems(addedChildren);
           parsedData.data.children = addedChildren.map((item) => item.getId());
           idsMap[parsedData.data.id] = addedFrame.getId();
@@ -645,13 +626,18 @@ export class Board {
       string,
       { item: Connector; itemData: ConnectorData & { id: string } }
     > = {};
-    const createdGroups: Record<string, { item: BaseItem; itemData: BaseItemData }> =
-      {};
+    const createdGroups: Record<
+      string,
+      { item: BaseItem; itemData: BaseItemData }
+    > = {};
 
     const addItem = (itemData: ItemData & { id: string }): Item => {
       const item = this.createItem(itemData.id, itemData);
       if (item instanceof Connector) {
-        createdConnectors[itemData.id] = { item, itemData: itemData as ConnectorData & { id: string } };
+        createdConnectors[itemData.id] = {
+          item,
+          itemData: itemData as ConnectorData & { id: string },
+        };
       }
       if ("index" in item && item.index) {
         createdGroups[item.getId()] = { item, itemData };
@@ -690,17 +676,25 @@ export class Board {
       string,
       { item: Connector; itemData: ConnectorData & { id: string } }
     > = {};
-    const createdGroups: Record<string, { item: Frame; itemData: BaseItemData }> =
-      {};
+    const createdGroups: Record<
+      string,
+      { item: Frame; itemData: BaseItemData }
+    > = {};
 
     if (Array.isArray(items)) {
       for (const itemData of items) {
         const item = this.createItem(itemData.id, itemData);
         if (item instanceof Connector) {
-          createdConnectors[itemData.id] = { item, itemData: itemData as ConnectorData & { id: string } };
+          createdConnectors[itemData.id] = {
+            item,
+            itemData: itemData as ConnectorData & { id: string },
+          };
         }
         if ("index" in item && item.index) {
-          createdGroups[item.getId()] = { item, itemData: itemData as BaseItemData };
+          createdGroups[item.getId()] = {
+            item,
+            itemData: itemData as BaseItemData,
+          };
         }
         this.index.insert(item);
       }
@@ -1045,11 +1039,9 @@ export class Board {
   }
 
   removeVoidComments() {
-    const voidComments = this.items
-      .listAll()
-      .filter((item) => {
-        return item instanceof Comment && !item.getThread().length
-      });
+    const voidComments = this.items.listAll().filter((item) => {
+      return item instanceof Comment && !item.getThread().length;
+    });
     if (voidComments) {
       for (const comment of voidComments) {
         this.remove(comment);
@@ -1327,7 +1319,6 @@ export class Board {
       }
 
       if (data.itemType === "Frame") {
-
         data.text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
       }
 
