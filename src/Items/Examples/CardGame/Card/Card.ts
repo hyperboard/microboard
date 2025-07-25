@@ -149,7 +149,7 @@ export class Card extends BaseItem {
       this.emitForManyItems({
         class: "Card",
         method: "setIsOpen",
-        item: [this.getId()],
+        item: openedCardIds,
         newData: {isOpen: false},
         prevData: {isOpen: true},
       });
@@ -158,7 +158,7 @@ export class Card extends BaseItem {
       this.emitForManyItems({
         class: "Card",
         method: "setIsOpen",
-        item: [this.getId()],
+        item: closedCardIds,
         newData: {isOpen: true},
         prevData: {isOpen: false},
       });
