@@ -9,7 +9,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { Operation } from "Events";
 import { TransformationData } from "Items/Transformation/TransformationData";
 import { BaseOperation } from "Events/EventsOperations";
-import { BaseCommand } from "Events/Command";
+import {BaseCommand, createCommand} from "Events/Command";
 import {Subject} from "../../Subject";
 import {Path, Paths} from "../Path";
 import {Item} from "../Item";
@@ -253,6 +253,15 @@ export class BaseItem extends Mbr implements Geometry {
 		} else {
 			this.apply(operation);
 		}
+	}
+
+	emitForManyItems(operation: Operation | BaseOperation): void {
+		if (!this.board.events) {
+			return;
+		}
+		const command = createCommand(this.board, operation as Operation);
+		command.apply();
+		this.board.events.emit(operation as Operation, command);
 	}
 
 	apply(op: Operation | BaseItemOperation | BaseOperation): void {

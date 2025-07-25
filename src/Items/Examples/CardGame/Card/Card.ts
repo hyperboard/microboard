@@ -135,14 +135,34 @@ export class Card extends BaseItem {
     return this;
   }
 
-  toggleIsOpen(): void {
-    this.emit({
-      class: "Card",
-      method: "setIsOpen",
-      item: [this.getId()],
-      newData: {isOpen: !this.isOpen},
-      prevData: {isOpen: this.isOpen},
-    });
+  toggleIsOpen(cards: Card[]): void {
+    const openedCardIds: string[] = [];
+    const closedCardIds: string[] = [];
+    for (const card of cards) {
+      if (card.isOpen) {
+        openedCardIds.push(card.getId());
+      } else {
+        closedCardIds.push(card.getId());
+      }
+    }
+    if (openedCardIds.length) {
+      this.emitForManyItems({
+        class: "Card",
+        method: "setIsOpen",
+        item: [this.getId()],
+        newData: {isOpen: false},
+        prevData: {isOpen: true},
+      });
+    }
+    if (closedCardIds.length) {
+      this.emitForManyItems({
+        class: "Card",
+        method: "setIsOpen",
+        item: [this.getId()],
+        newData: {isOpen: true},
+        prevData: {isOpen: false},
+      });
+    }
   }
 
   apply(op: CardOperation): void {
