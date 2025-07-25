@@ -197,9 +197,7 @@ registerHotkey({
       if (!cards) {
         return;
       }
-      cards.forEach((card: Card): void => {
-        card.toggleIsOpen();
-      });
+      cards[0].toggleIsOpen(cards);
     }
   }
 })
