@@ -136,6 +136,17 @@ export class Deck extends BaseItem {
     this.addChildItems(shuffled);
   }
 
+  flipDeck(): void {
+    if (!this.index || !this.index.list().length) {
+      return;
+    }
+    const cards = this.index.list() as Card[];
+    cards[0].toggleIsOpen(cards);
+    const reversed = [...cards].reverse();
+    this.removeChildItems(cards);
+    this.addChildItems(reversed);
+  }
+
   apply(op: DeckOperation): void {
     super.apply(op);
     if (op.class === "Deck") {
