@@ -11,6 +11,7 @@ import {DrawingContext} from "Items/DrawingContext";
 import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
 import {Path} from "../../../Path";
+import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -228,3 +229,82 @@ registerItem({
   item: Deck,
   defaultData: defaultDeckData,
 });
+
+const getCard = (cardPosition: "top" | "bottom" | "random") => {
+  return (event?: KeyboardEvent, board?: Board) => {
+    const deck = board?.selection.items.getSingle();
+    if (!(deck instanceof Deck)) {
+      return;
+    }
+    let card: Card | undefined;
+    switch (cardPosition) {
+      case "top":
+        card = deck.getTopCard();
+        break;
+      case "bottom":
+        card = deck.getBottomCard();
+        break;
+      case "random":
+        card = deck.getRandomCard();
+        break;
+    }
+    const { left, top } = deck.getMbr();
+    if (!card) {
+      return;
+    }
+    card.transformation.translateTo(left, top - 280);
+    if (deck.getDeck().length === 0) {
+      board?.remove(deck);
+    }
+  }
+}
+
+registerHotkey({
+  name: "getTopCard",
+  hotkey: {key: {button: "KeyD"}, label: {windows: "Shift+D", mac: "⇧D"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    singleItemOnly: true,
+    allItemsType: ["Deck"],
+    cb: getCard("top"),
+  }
+})
+
+registerHotkey({
+  name: "getBottomCard",
+  hotkey: {key: {button: "KeyB"}, label: {windows: "Shift+B", mac: "⇧B"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    singleItemOnly: true,
+    allItemsType: ["Deck"],
+    cb: getCard("bottom"),
+  }
+})
+
+registerHotkey({
+  name: "getRandomCard",
+  hotkey: {key: {button: "KeyR"}, label: {windows: "Shift+R", mac: "⇧R"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    singleItemOnly: true,
+    allItemsType: ["Deck"],
+    cb: getCard("random"),
+  }
+})
+
+registerHotkey({
+  name: "flipDeck",
+  hotkey: {key: {button: "KeyF"}, label: {windows: "F", mac: "F"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    singleItemOnly: true,
+    allItemsType: ["Deck"],
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const deck = board?.selection.items.getSingle();
+      if (!(deck instanceof Deck)) {
+        return;
+      }
+      deck.flipDeck();
+    }
+  }
+})
