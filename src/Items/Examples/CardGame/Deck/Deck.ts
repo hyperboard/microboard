@@ -232,7 +232,7 @@ registerItem({
 
 registerHotkey({
   name: "getCard-top",
-  hotkey: {key: {button: "KeyD", shift: true}, label: {windows: "Shift+D", mac: "⇧D"}},
+  hotkey: {key: {button: "KeyT", shift: true}, label: {windows: "Shift+T", mac: "⇧T"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Deck"],
@@ -327,5 +327,61 @@ registerHotkey({
         deck.flipDeck();
       })
     }
+  }
+})
+
+export function createDeck(event?: KeyboardEvent, board?: Board): void {
+  if (!board) {
+    return;
+  }
+  const single = board.selection.items.getSingle();
+  if (single && single.itemType === "Deck") {
+    return;
+  }
+
+  const cardsOrDecks = board.selection.items.list();
+  const onlyCards = board.selection.items.isAllItemsType("Card");
+  if (onlyCards) {
+    const deck = new Deck(board, "");
+    deck.transformation.apply({
+      class: "Transformation",
+      method: "translateTo",
+      item: [deck.getId()],
+      x: cardsOrDecks[cardsOrDecks.length - 1].left,
+      y: cardsOrDecks[cardsOrDecks.length - 1].top,
+    });
+    const addedDeck = board.add(deck);
+    board.selection.items.removeAll();
+    addedDeck.addChildItems(cardsOrDecks);
+    board.selection.items.add(addedDeck);
+  } else {
+    let mainDeck: Deck | null = null;
+    const cards: Card[] = [];
+    cardsOrDecks.forEach((item) => {
+      if (item.itemType === "Card") {
+        cards.push(item);
+      } else if (item.itemType === "Deck") {
+        if (mainDeck) {
+          cards.push(...mainDeck.getDeck());
+          board.remove(mainDeck);
+          mainDeck = item;
+        } else {
+          mainDeck = item;
+        }
+      }
+    });
+    board.selection.items.removeAll();
+    mainDeck.addChildItems(cards);
+    board.selection.items.add(mainDeck);
+  }
+};
+
+registerHotkey({
+  name: "createDeck",
+  hotkey: {key: {button: "KeyD", shift: true}, label: {windows: "Shift+D", mac: "⇧D"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    allItemsType: ["Deck", "Card"],
+    cb: createDeck,
   }
 })
