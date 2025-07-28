@@ -232,7 +232,7 @@ registerItem({
 
 registerHotkey({
   name: "getCard-top",
-  hotkey: {key: {button: "KeyD"}, label: {windows: "Shift+D", mac: "⇧D"}},
+  hotkey: {key: {button: "KeyD", shift: true}, label: {windows: "Shift+D", mac: "⇧D"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Deck"],
@@ -256,7 +256,7 @@ registerHotkey({
 
 registerHotkey({
   name: "getCard-bottom",
-  hotkey: {key: {button: "KeyB"}, label: {windows: "Shift+B", mac: "⇧B"}},
+  hotkey: {key: {button: "KeyB", shift: true}, label: {windows: "Shift+B", mac: "⇧B"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Deck"],
@@ -280,7 +280,7 @@ registerHotkey({
 
 registerHotkey({
   name: "getCard-random",
-  hotkey: {key: {button: "KeyR"}, label: {windows: "Shift+R", mac: "⇧R"}},
+  hotkey: {key: {button: "KeyR", shift: true}, label: {windows: "Shift+R", mac: "⇧R"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Deck"],
