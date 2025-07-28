@@ -260,7 +260,7 @@ const getCard = (cardPosition: "top" | "bottom" | "random") => {
 }
 
 registerHotkey({
-  name: "getTopCard",
+  name: "getCard-top",
   hotkey: {key: {button: "KeyD"}, label: {windows: "Shift+D", mac: "⇧D"}},
   boardMode: "edit",
   hotkeyConfig: {
@@ -271,7 +271,7 @@ registerHotkey({
 })
 
 registerHotkey({
-  name: "getBottomCard",
+  name: "getCard-bottom",
   hotkey: {key: {button: "KeyB"}, label: {windows: "Shift+B", mac: "⇧B"}},
   boardMode: "edit",
   hotkeyConfig: {
@@ -282,7 +282,7 @@ registerHotkey({
 })
 
 registerHotkey({
-  name: "getRandomCard",
+  name: "getCard-random",
   hotkey: {key: {button: "KeyR"}, label: {windows: "Shift+R", mac: "⇧R"}},
   boardMode: "edit",
   hotkeyConfig: {
