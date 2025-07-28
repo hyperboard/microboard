@@ -186,18 +186,18 @@ registerItem({
   defaultData: defaultCardData,
 });
 
-registerHotkey({
-  name: "flipCard",
-  hotkey: {key: {button: "KeyF", shift: true}, label: {windows: "F", mac: "F"}},
-  boardMode: "edit",
-  hotkeyConfig: {
-    allItemsType: ["Card"],
-    cb: (event?: KeyboardEvent, board?: Board) => {
-      const cards = board?.selection.items.list() as Card[] | undefined;
-      if (!cards) {
-        return;
-      }
-      cards[0].toggleIsOpen(cards);
-    }
-  }
-})
+// registerHotkey({
+//   name: "flipCard",
+//   hotkey: {key: {button: "KeyF", shift: true}, label: {windows: "F", mac: "F"}},
+//   boardMode: "edit",
+//   hotkeyConfig: {
+//     allItemsType: ["Card"],
+//     cb: (event?: KeyboardEvent, board?: Board) => {
+//       const cards = board?.selection.items.list() as Card[] | undefined;
+//       if (!cards) {
+//         return;
+//       }
+//       cards[0].toggleIsOpen(cards);
+//     }
+//   }
+// })

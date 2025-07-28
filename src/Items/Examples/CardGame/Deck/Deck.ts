@@ -303,17 +303,29 @@ registerHotkey({
 })
 
 registerHotkey({
-  name: "flipDeck",
-  hotkey: {key: {button: "KeyF", shift: true}, label: {windows: "F", mac: "F"}},
+  name: "flipDeckOrCard",
+  hotkey: {key: {button: "KeyF", shift: true}, label: {windows: "Shift+F", mac: "⇧F"}},
   boardMode: "edit",
   hotkeyConfig: {
-    allItemsType: ["Deck"],
+    allItemsType: ["Deck", "Card"],
     cb: (event?: KeyboardEvent, board?: Board) => {
-      const deck = board?.selection.items.getSingle();
-      if (!(deck instanceof Deck)) {
+      const cardsOrDecks = board?.selection.items.list();
+      if (!cardsOrDecks) {
         return;
       }
-      deck.flipDeck();
+      let cards: Card[] = [];
+      let decks: Deck[] = [];
+      for (const item of cardsOrDecks) {
+        if (item instanceof Card) {
+          cards.push(item);
+        } else if (item instanceof Deck) {
+          decks.push(item);
+        }
+      }
+      cards[0]?.toggleIsOpen(cards);
+      decks.forEach(deck => {
+        deck.flipDeck();
+      })
     }
   }
 })
