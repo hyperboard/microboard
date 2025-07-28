@@ -304,7 +304,7 @@ registerHotkey({
 
 registerHotkey({
   name: "flipDeck",
-  hotkey: {key: {button: "KeyF"}, label: {windows: "F", mac: "F"}},
+  hotkey: {key: {button: "KeyF", shift: true}, label: {windows: "F", mac: "F"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Deck"],
