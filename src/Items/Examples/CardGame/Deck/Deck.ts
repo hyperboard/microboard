@@ -235,7 +235,6 @@ registerHotkey({
   hotkey: {key: {button: "KeyD"}, label: {windows: "Shift+D", mac: "⇧D"}},
   boardMode: "edit",
   hotkeyConfig: {
-    singleItemOnly: true,
     allItemsType: ["Deck"],
     cb: (event?: KeyboardEvent, board?: Board) => {
       const deck = board?.selection.items.getSingle();
@@ -260,7 +259,6 @@ registerHotkey({
   hotkey: {key: {button: "KeyB"}, label: {windows: "Shift+B", mac: "⇧B"}},
   boardMode: "edit",
   hotkeyConfig: {
-    singleItemOnly: true,
     allItemsType: ["Deck"],
     cb: (event?: KeyboardEvent, board?: Board) => {
       const deck = board?.selection.items.getSingle();
@@ -285,7 +283,6 @@ registerHotkey({
   hotkey: {key: {button: "KeyR"}, label: {windows: "Shift+R", mac: "⇧R"}},
   boardMode: "edit",
   hotkeyConfig: {
-    singleItemOnly: true,
     allItemsType: ["Deck"],
     cb: (event?: KeyboardEvent, board?: Board) => {
       const deck = board?.selection.items.getSingle();
@@ -310,7 +307,6 @@ registerHotkey({
   hotkey: {key: {button: "KeyF"}, label: {windows: "F", mac: "F"}},
   boardMode: "edit",
   hotkeyConfig: {
-    singleItemOnly: true,
     allItemsType: ["Deck"],
     cb: (event?: KeyboardEvent, board?: Board) => {
       const deck = board?.selection.items.getSingle();
