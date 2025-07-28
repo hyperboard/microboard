@@ -230,35 +230,6 @@ registerItem({
   defaultData: defaultDeckData,
 });
 
-const getCard = (cardPosition: "top" | "bottom" | "random") => {
-  return (event?: KeyboardEvent, board?: Board) => {
-    const deck = board?.selection.items.getSingle();
-    if (!(deck instanceof Deck)) {
-      return;
-    }
-    let card: Card | undefined;
-    switch (cardPosition) {
-      case "top":
-        card = deck.getTopCard();
-        break;
-      case "bottom":
-        card = deck.getBottomCard();
-        break;
-      case "random":
-        card = deck.getRandomCard();
-        break;
-    }
-    const { left, top } = deck.getMbr();
-    if (!card) {
-      return;
-    }
-    card.transformation.translateTo(left, top - 280);
-    if (deck.getDeck().length === 0) {
-      board?.remove(deck);
-    }
-  }
-}
-
 registerHotkey({
   name: "getCard-top",
   hotkey: {key: {button: "KeyD"}, label: {windows: "Shift+D", mac: "⇧D"}},
@@ -266,7 +237,21 @@ registerHotkey({
   hotkeyConfig: {
     singleItemOnly: true,
     allItemsType: ["Deck"],
-    cb: getCard("top"),
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const deck = board?.selection.items.getSingle();
+      if (!(deck instanceof Deck)) {
+        return;
+      }
+      const card = deck.getTopCard();
+      const { left, top } = deck.getMbr();
+      if (!card) {
+        return;
+      }
+      card.transformation.translateTo(left, top - 280);
+      if (deck.getDeck().length === 0) {
+        board?.remove(deck);
+      }
+    },
   }
 })
 
@@ -277,7 +262,21 @@ registerHotkey({
   hotkeyConfig: {
     singleItemOnly: true,
     allItemsType: ["Deck"],
-    cb: getCard("bottom"),
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const deck = board?.selection.items.getSingle();
+      if (!(deck instanceof Deck)) {
+        return;
+      }
+      const card = deck.getBottomCard();
+      const { left, top } = deck.getMbr();
+      if (!card) {
+        return;
+      }
+      card.transformation.translateTo(left, top - 280);
+      if (deck.getDeck().length === 0) {
+        board?.remove(deck);
+      }
+    },
   }
 })
 
@@ -288,7 +287,21 @@ registerHotkey({
   hotkeyConfig: {
     singleItemOnly: true,
     allItemsType: ["Deck"],
-    cb: getCard("random"),
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const deck = board?.selection.items.getSingle();
+      if (!(deck instanceof Deck)) {
+        return;
+      }
+      const card = deck.getRandomCard();
+      const { left, top } = deck.getMbr();
+      if (!card) {
+        return;
+      }
+      card.transformation.translateTo(left, top - 280);
+      if (deck.getDeck().length === 0) {
+        board?.remove(deck);
+      }
+    },
   }
 })
 
