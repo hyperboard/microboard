@@ -70,6 +70,7 @@
     "rimraf": "^6.0.1",
     "slate-history": "^0.113.1",
     "slate-react": "^0.114.2",
+    "tsc-alias": "^1.8.16",
     "typescript": "^5.8.3",
     "unified": "^11.0.5",
     "uuid": "^11.1.0"

@@ -147,7 +147,7 @@ async function build() {
     console.log("📝 Generating TypeScript declarations...");
     try {
       execSync(
-        "tsc --noEmit false --emitDeclarationOnly --declaration --declarationDir ./dist/types --skipLibCheck",
+        "bunx tsc -p tsconfig.json --noEmit false --emitDeclarationOnly; bunx tsc-alias -p tsconfig.json",
         { stdio: "inherit" }
       );
     } catch (error) {

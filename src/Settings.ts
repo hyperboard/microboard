@@ -1,4 +1,3 @@
-import { DocumentFactory } from "./api/DocumentFactory";
 import { Path2DFactory } from "./api/Path2DFactory";
 import { BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
@@ -9,7 +8,6 @@ import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
 import { BorderStyle } from "Items";
-import { string } from "slate";
 
 export interface Connection {
   connectionId: number;
