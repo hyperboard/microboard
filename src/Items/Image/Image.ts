@@ -111,14 +111,7 @@ export class ImageItem extends BaseItem {
   }
 
   setStorageLink(link: string) {
-    try {
-      const url = new URL(link);
-      // If the link is a valid URL, replace its domain with window.location.origin
-      this.storageLink = `${window?.location.origin}${url.pathname}`; // Window Smell: inject object to query this value
-    } catch (_) {
-      // If the link is not a valid URL, prepend it with storageUrl
-      // this.storageLink = `${storageURL}/${link}`;
-    }
+    this.storageLink = link;
   }
 
   getStorageId() {

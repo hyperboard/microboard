@@ -17,7 +17,6 @@ export interface AudioItemData {
   itemType: "Audio";
   url: string;
   transformation: TransformationData;
-  isStorageUrl: boolean;
   extension?: string;
 }
 
@@ -33,11 +32,9 @@ export class AudioItem extends BaseItem {
   private url = "";
   private isPlaying = false;
   private currentTime = 0;
-  private isStorageUrl = true;
 
   constructor(
     board: Board,
-    isStorageUrl: boolean,
     url?: string,
     private events?: Events,
     id = "",
@@ -46,9 +43,8 @@ export class AudioItem extends BaseItem {
     super(board, id);
     this.linkTo = new LinkTo(this.id, events);
     this.board = board;
-    this.isStorageUrl = isStorageUrl;
     if (url) {
-      this.applyUrl(url);
+      this.url = url;
     }
     this.transformation = new Transformation(id, events);
     this.linkTo.subject.subscribe(() => {
@@ -67,10 +63,6 @@ export class AudioItem extends BaseItem {
 
   getCurrentTime() {
     return this.currentTime;
-  }
-
-  getIsStorageUrl(): boolean {
-    return this.isStorageUrl;
   }
 
   onTransform = (): void => {
@@ -96,20 +88,10 @@ export class AudioItem extends BaseItem {
     return this.isPlaying;
   }
 
-  applyUrl(url: string): void {
-    if (this.isStorageUrl) {
-      try {
-        const newUrl = new URL(url);
-        this.url = `${window.location.origin}${newUrl.pathname}`;
-      } catch (_) {
-        // this.url = `${storageURL}/${url}`;
-      }
-    } else {
-      this.url = url;
-    }
-  }
+
 
   setUrl(url: string): void {
+    this.url = url;
     this.emit({
       class: "Audio",
       method: "setUrl",
@@ -119,9 +101,6 @@ export class AudioItem extends BaseItem {
   }
 
   getStorageId() {
-    if (!this.isStorageUrl) {
-      return;
-    }
     return this.url.split("/").pop();
   }
 
@@ -211,9 +190,6 @@ export class AudioItem extends BaseItem {
     if (this.extension) {
       div.setAttribute("extension", this.extension);
     }
-    if (this.isStorageUrl) {
-      div.setAttribute("is-storage-url", "true");
-    }
     div.setAttribute("data-link-to", "");
 
     return div;
@@ -224,15 +200,11 @@ export class AudioItem extends BaseItem {
       itemType: "Audio",
       url: this.url,
       transformation: this.transformation.serialize(),
-      isStorageUrl: this.isStorageUrl,
       extension: this.extension,
     };
   }
 
   deserialize(data: Partial<AudioItemData>): AudioItem {
-    if (data.isStorageUrl) {
-      this.isStorageUrl = data.isStorageUrl;
-    }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }
@@ -256,7 +228,7 @@ export class AudioItem extends BaseItem {
         break;
       case "Audio":
         if (op.method === "setUrl") {
-          this.applyUrl(op.url);
+          this.url = op.url;
         }
         this.subject.publish(this);
         break;
