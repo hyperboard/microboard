@@ -385,6 +385,7 @@ export class Dice extends BaseItem {
       innerDiv.innerHTML = valueToRender.toString();
     } else {
       innerDiv.style.backgroundImage = `url(${valueToRender.src})`;
+      innerDiv.style.backgroundSize = "cover";
     }
     div.appendChild(innerDiv);
     return div;
