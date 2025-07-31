@@ -1,14 +1,14 @@
 import {BaseItem, BaseItemData, SerializedItemData} from "../../../BaseItem/BaseItem";
-import {BorderWidth, Path} from "../../../Path";
-import {createRoundedRectanglePath} from "../../../Shape/Basic/RoundedRectangle";
-import {Subject} from "../../../../Subject";
-import {Board} from "../../../../Board";
-import {DrawingContext} from "../../../DrawingContext";
+import {BorderWidth, LinePatterns, Path, Shapes} from "Items";
+import {createRoundedRectanglePath} from "Items/Shape/Basic/RoundedRectangle";
+import {Subject} from "Subject";
+import {Board} from "Board";
+import {DrawingContext} from "Items";
 import {DocumentFactory} from "../../../../api/DocumentFactory";
 import {DiceOperation} from "./DiceOperation";
-import {registerItem} from "../../../RegisterItem";
+import {registerItem} from "Items";
 import {AddDice} from "./AddDice";
-import {conf} from "../../../../Settings";
+import {conf} from "Settings";
 
 export type DiceType = "common" | "custom";
 
@@ -321,6 +321,54 @@ export class Dice extends BaseItem {
       this.animationFrameId = undefined;
       this.drawingContext = null;
     }
+  }
+
+  renderHTML(documentFactory: DocumentFactory): HTMLElement {
+    const div = super.renderHTML(documentFactory);
+    const { translateX, translateY, scaleX, scaleY } =
+      this.transformation.matrix;
+    const mbr = this.getMbr();
+    const width = mbr.getWidth();
+    const height = mbr.getHeight();
+    const unscaledWidth = width / scaleX;
+    const unscaledHeight = height / scaleY;
+
+    const svg = documentFactory.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    );
+    svg.setAttribute("width", `${unscaledWidth}px`);
+    svg.setAttribute("height", `${unscaledHeight}px`);
+    svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
+    svg.setAttribute("transform-origin", "0 0");
+    svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
+    svg.setAttribute("style", "position: absolute; overflow: visible;");
+
+    const pathElement = Shapes["RoundedRectangle"].path
+      .copy()
+      .renderHTML(documentFactory);
+    const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
+    paths.forEach((element) => {
+      element.setAttribute("fill", this.backgroundColor);
+      element.setAttribute("stroke", this.borderColor);
+      element.setAttribute(
+        "stroke-dasharray",
+        LinePatterns[this.borderStyle].join(", ")
+      );
+      element.setAttribute("stroke-width", this.borderWidth.toString());
+      element.setAttribute("transform-origin", "0 0");
+      element.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
+    });
+    svg.append(...paths);
+    div.appendChild(svg);
+
+    div.id = this.getId();
+    div.style.width = unscaledWidth + "px";
+    div.style.height = unscaledHeight + "px";
+    div.style.transformOrigin = "left top";
+    div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    div.style.position = "absolute";
+    return div;
   }
 }
 
