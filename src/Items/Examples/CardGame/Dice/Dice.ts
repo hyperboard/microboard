@@ -368,6 +368,23 @@ export class Dice extends BaseItem {
     div.style.transformOrigin = "left top";
     div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
     div.style.position = "absolute";
+    div.style.display = "flex";
+    div.style.alignItems = "center";
+    div.style.textAlign = "center";
+    div.style.justifyContent = "center";
+
+    const innerDiv = document.createElement("div") as HTMLDivElement;
+    innerDiv.style.font = `bold ${this.getHeight() / 3}px sans-serif`;
+    innerDiv.style.width = `${this.getHeight() / 3}px`
+    innerDiv.style.height = `${this.getHeight() / 3}px`
+
+    const valueToRender = this.renderValues[this.valueIndex];
+    if (typeof valueToRender === "number") {
+      innerDiv.innerHTML = valueToRender.toString();
+    } else {
+      div.style.backgroundImage = `url(${valueToRender.src})`;
+    }
+    div.appendChild(innerDiv);
     return div;
   }
 }
