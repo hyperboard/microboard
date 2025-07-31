@@ -333,7 +333,18 @@ export class BaseItem extends Mbr implements Geometry {
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		const div = documentFactory.createElement("base-item");
-		div.id = this.id;
+		const { translateX, translateY, scaleX, scaleY } =
+			this.transformation.matrix;
+		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+
+		div.style.backgroundColor = "#b2b0c3";
+		div.id = this.getId();
+		div.style.width = `${this.getWidth()}px`;
+		div.style.height = `${this.getHeight()}px`;
+		div.style.transformOrigin = "top left";
+		div.style.transform = transform;
+		div.style.position = "absolute";
+
 		div.setAttribute("serialized-data", JSON.stringify(this.serialize()));
 		return div;
 	}

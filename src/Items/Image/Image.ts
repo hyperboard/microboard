@@ -296,13 +296,7 @@ export class ImageItem extends BaseItem {
       this.transformation.matrix;
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
-    // const canvas = documentFactory.createElement('canvas');
-    // canvas.width = this.image.width;
-    // canvas.height = this.image.height;
-    // const ctx = canvas.getContext('2d')!;
-    // ctx.drawImage(this.image, 0, 0);
-    // const dataURL = canvas.toDataURL();
-    // div.style.backgroundImage = `url(${dataURL})`;
+
     div.style.backgroundImage = `url(${this.storageLink})`;
 
     div.id = this.getId();

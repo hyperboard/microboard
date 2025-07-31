@@ -14,6 +14,7 @@ import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
 import {throttle} from "../../../../utils";
 import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
+import {scaleElementBy, translateElementBy} from "HTMLRender/";
 
 export const defaultCardData: BaseItemData = {
   itemType: "Card",
@@ -111,6 +112,26 @@ export class Card extends BaseItem {
 
       ctx.restore();
     }
+  }
+
+  renderHTML(documentFactory: DocumentFactory): HTMLElement {
+    const div = super.renderHTML(documentFactory);
+    const { translateX, translateY, scaleX, scaleY } =
+      this.transformation.matrix;
+    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+
+
+    div.style.backgroundImage = `url(${this.imageToRender?.src || this.backsideUrl})`;
+
+    div.id = this.getId();
+    div.style.width = `${conf.CARD_DIMENSIONS.width}px`;
+    div.style.height = `${conf.CARD_DIMENSIONS.height}px`;
+    div.style.transformOrigin = "top left";
+    div.style.transform = transform;
+    div.style.position = "absolute";
+    div.style.backgroundSize = "cover";
+
+    return div;
   }
 
   updateMbr(): void {

@@ -12,6 +12,7 @@ import {Line} from "../../../Line";
 import {Point} from "../../../Point";
 import {AddScreen} from "./AddScreen";
 import {ScreenOperation} from "./ScreenOperation";
+import {DocumentFactory} from "api/DocumentFactory";
 
 const handPath = new Path(
   [
@@ -169,6 +170,15 @@ export class Screen extends BaseItem {
     if (localStorage.getItem("currentUser") === this.ownerId || !this.ownerId) {
       super.render(context);
     }
+  }
+
+  renderHTML(documentFactory: DocumentFactory): HTMLElement {
+    const div = super.renderHTML(documentFactory);
+    div.style.backgroundColor = this.backgroundColor;
+    div.style.borderColor = this.borderColor;
+    div.style.borderWidth = `${this.borderWidth}px`;
+    div.style.borderStyle = this.borderStyle;
+    return div;
   }
 }
 

@@ -1,1 +1,1 @@
-export {Deck, createDeck} from "./Deck"
+export {Deck} from "./Deck"

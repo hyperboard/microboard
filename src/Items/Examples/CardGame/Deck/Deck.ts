@@ -12,6 +12,7 @@ import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
 import {Path} from "../../../Path";
 import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
+import {DocumentFactory} from "api/DocumentFactory";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -195,6 +196,28 @@ export class Deck extends BaseItem {
       ctx.drawImage(this.cachedCanvas, this.left, this.top);
       ctx.restore();
     }
+  }
+
+  renderHTML(documentFactory: DocumentFactory): HTMLElement {
+    const div = super.renderHTML(documentFactory);
+    if (!this.cachedCanvas || !this.cachedCanvas.width || !this.cachedCanvas.height) {
+      return div;
+    }
+    const { translateX, translateY, scaleX, scaleY } =
+      this.transformation.matrix;
+    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+
+    div.style.backgroundImage = `url(${this.cachedCanvas.toDataURL('image/png')})`;
+
+    div.id = this.getId();
+    div.style.width = `${this.getWidth()}px`;
+    div.style.height = `${this.getHeight()}px`;
+    div.style.transformOrigin = "top left";
+    div.style.transform = transform;
+    div.style.position = "absolute";
+    div.style.backgroundSize = "cover";
+
+    return div;
   }
 
   private updateCache(context: DrawingContext) {
