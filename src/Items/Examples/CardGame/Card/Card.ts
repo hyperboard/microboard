@@ -71,8 +71,6 @@ export class Card extends BaseItem {
     this.backside = conf.documentFactory.createElement(
       "img",
     ) as HTMLImageElement;
-    this.face.crossOrigin = "anonymous";
-    this.backside.crossOrigin = "anonymous";
     this.face.src = this.faceUrl;
     this.backside.src = this.backsideUrl;
     this.face.onload = () => {

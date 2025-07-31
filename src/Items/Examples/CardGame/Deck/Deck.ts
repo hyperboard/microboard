@@ -200,18 +200,24 @@ export class Deck extends BaseItem {
 
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = super.renderHTML(documentFactory);
-    if (!this.cachedCanvas || !this.cachedCanvas.width || !this.cachedCanvas.height) {
+    const cards = this.index?.list() as Card[];
+    const topCard = cards[cards.length - 1];
+    if (!topCard) {
       return div;
     }
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.matrix;
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    const transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
 
-    div.style.backgroundImage = `url(${this.cachedCanvas.toDataURL('image/png')})`;
+    const topCardElement = topCard.renderHTML(documentFactory);
+    div.appendChild(topCardElement);
+    const offset = ((this.index?.list().length || 0) - 1) * 2;
+    topCardElement.style.transform = `translate(${offset}px, ${0}px) scale(1, 1)`
 
     div.id = this.getId();
     div.style.width = `${this.getWidth()}px`;
     div.style.height = `${this.getHeight()}px`;
+    div.style.boxShadow = `${offset}px 0px 0px 0px rgba(34, 60, 80, 0.74) inset`
     div.style.transformOrigin = "top left";
     div.style.transform = transform;
     div.style.position = "absolute";
