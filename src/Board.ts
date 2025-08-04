@@ -1002,8 +1002,7 @@ export class Board {
         itemData.transformation.translateX = translateX - minX + x;
         itemData.transformation.translateY = translateY - minY + y;
       }
-      if ("children" in itemData && itemData.children?.length) {
-        // handle new id for children
+      if (itemData.itemType !== "RichText" && "children" in itemData && itemData.children?.length) {
         itemData.children = itemData.children.map(
           (childId) => newItemIdMap[childId]
         );
