@@ -116,8 +116,8 @@ export class Card extends BaseItem {
       if (width > height) {
         ctx.drawImage(
           this.imageToRender,
-          -width / 2,
           -height / 2,
+          -width / 2,
           height,
           width
         );
