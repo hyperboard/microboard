@@ -112,6 +112,10 @@ export class BaseItem extends Mbr implements Geometry {
 		});
 	}
 
+	rotate(clockwise = true): void {
+		this.transformation.rotateBy(clockwise ? 90 : -90);
+	}
+
 	emitNesting(children: BaseItem[]): void {
 		const itemsToAdd: BaseItem[] = [];
 		const itemsToRemove: BaseItem[] = [];
@@ -154,6 +158,9 @@ export class BaseItem extends Mbr implements Geometry {
 		return false;
 	}
 
+	getMbr(): Mbr {
+		return new Mbr(this.left, this.top, this.right, this.bottom);
+	}
 
 	applyAddChildren(childIds: string[]): void {
 		if (!this.index) {

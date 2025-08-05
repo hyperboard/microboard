@@ -13,8 +13,7 @@ import {registerItem} from "Items/RegisterItem";
 import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
 import {throttle} from "../../../../utils";
-import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
-import {scaleElementBy, translateElementBy} from "HTMLRender/";
+
 
 export const defaultCardData: BaseItemData = {
   itemType: "Card",
@@ -102,12 +101,24 @@ export class Card extends BaseItem {
     if (this.imageToRender && this.imageToRender.complete) {
       ctx.save();
 
+      let {x: centerX, y: centerY} = this.getMbr().getCenter();
+      const width = this.getWidth();
+      const height = this.getHeight();
+
+      if (typeof left === "number" && typeof top === "number") {
+        centerX = left + width / 2;
+        centerX = top + height / 2;
+      }
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate((this.transformation.getRotation() * Math.PI) / 180);
+
       ctx.drawImage(
         this.imageToRender,
-        typeof left === "number" ? left : this.left,
-        typeof top === "number" ? top : this.top,
-        conf.CARD_DIMENSIONS.width,
-        conf.CARD_DIMENSIONS.height,
+        -width / 2,
+        -height / 2,
+        width,
+        height
       );
 
       ctx.restore();
@@ -137,10 +148,22 @@ export class Card extends BaseItem {
   updateMbr(): void {
     const {translateX, translateY, scaleX, scaleY} =
       this.transformation.matrix;
-    this.left = translateX;
-    this.top = translateY;
-    this.right = this.left + conf.CARD_DIMENSIONS.width * scaleX;
-    this.bottom = this.top + conf.CARD_DIMENSIONS.height * scaleY;
+    const rotation = this.transformation.getRotation();
+    const height = conf.CARD_DIMENSIONS.height * scaleY;
+    const width = conf.CARD_DIMENSIONS.width * scaleX;
+    if (rotation % 180 === 0) {
+      this.left = translateX;
+      this.top = translateY;
+      this.right = this.left + width;
+      this.bottom = this.top + height;
+    } else {
+      const centerX = translateX + width / 2;
+      const centerY = translateY + height / 2;
+      this.left = centerX - height / 2;
+      this.top = centerY - width / 2;
+      this.right = this.left + height;
+      this.bottom = this.top + width;
+    }
   }
 
   getPath(): Path | Paths {
