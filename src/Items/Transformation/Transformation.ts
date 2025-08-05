@@ -222,7 +222,7 @@ export class Transformation {
 	}
 
 	applyRotateBy(degree: number): void {
-		this.rotateTo(this.rotate + degree);
+		this.applyRotateTo(this.rotate + degree);
 	}
 
 	applyLocked(locked: boolean): void {
