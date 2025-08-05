@@ -39,9 +39,9 @@ import { Subject } from "Subject";
 import { Tools } from "Tools";
 import { v4 as uuidv4 } from "uuid";
 import { ItemsMap } from "Validators";
-import { ItemDataWithId } from "./Items/Item";
 import { BaseItem } from "./Items/BaseItem";
 import { BaseItemData } from "./Items/BaseItem/BaseItem";
+import { ItemDataWithId } from "./Items/Item";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -1002,7 +1002,11 @@ export class Board {
         itemData.transformation.translateX = translateX - minX + x;
         itemData.transformation.translateY = translateY - minY + y;
       }
-      if (itemData.itemType !== "RichText" && "children" in itemData && itemData.children?.length) {
+      if (
+        itemData.itemType !== "RichText" &&
+        "children" in itemData &&
+        itemData.children?.length
+      ) {
         itemData.children = itemData.children.map(
           (childId) => newItemIdMap[childId]
         );
