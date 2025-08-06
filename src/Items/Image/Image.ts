@@ -149,10 +149,22 @@ export class ImageItem extends BaseItem {
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.matrix;
-    this.left = translateX;
-    this.top = translateY;
-    this.right = this.left + this.image.width * scaleX;
-    this.bottom = this.top + this.image.height * scaleY;
+    const rotation = this.transformation.getRotation();
+    const width = this.image.width * scaleX;
+    const height = this.image.height * scaleY;
+    if (rotation % 180 === 0) {
+      this.left = translateX;
+      this.top = translateY;
+      this.right = this.left + width;
+      this.bottom = this.top + height;
+    } else {
+      const centerX = translateX + width / 2;
+      const centerY = translateY + height / 2;
+      this.left = centerX - height / 2;
+      this.top = centerY - width / 2;
+      this.right = this.left + height;
+      this.bottom = this.top + width;
+    }
   }
 
   doOnceBeforeOnLoad = (callback: (image: ImageItem) => void): void => {
