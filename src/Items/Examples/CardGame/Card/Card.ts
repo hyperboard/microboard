@@ -248,7 +248,7 @@ registerItem({
 
 registerHotkey({
   name: "Rotate90deg",
-  hotkey: {key: {button: "KeyQ"}, label: {windows: "Q", mac: "Q"}},
+  hotkey: {key: {button: "KeyQ", shift: true}, label: {windows: "Shift+Q", mac: "⇧Q"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Image", "Card"],
@@ -266,7 +266,7 @@ registerHotkey({
 
 registerHotkey({
   name: "Rotate90deg-clockwise",
-  hotkey: {key: {button: "KeyE"}, label: {windows: "E", mac: "E"}},
+  hotkey: {key: {button: "KeyE", shift: true}, label: {windows: "Shift+E", mac: "⇧E"}},
   boardMode: "edit",
   hotkeyConfig: {
     allItemsType: ["Image", "Card"],
