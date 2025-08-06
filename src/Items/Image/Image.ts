@@ -315,7 +315,7 @@ export class ImageItem extends BaseItem {
     const div = documentFactory.createElement("image-item");
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.matrix;
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY}) rotate(${this.transformation.getRotation()}deg)`;
+    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 
     div.style.backgroundImage = `url(${this.storageLink})`;
@@ -327,6 +327,7 @@ export class ImageItem extends BaseItem {
     div.style.transform = transform;
     div.style.position = "absolute";
     div.style.backgroundSize = "cover";
+    div.setAttribute("rotation", this.transformation.getRotation().toString());
 
     div.setAttribute("data-link-to", this.linkTo.serialize() || "");
     if (this.getLinkTo()) {
