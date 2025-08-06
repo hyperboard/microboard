@@ -92,6 +92,10 @@ export class Card extends BaseItem {
     return this.imageToRender;
   }
 
+  getIsRotatedPerpendicular(): boolean {
+    return Boolean(this.transformation.getRotation() % 180);
+  }
+
   render(context: DrawingContext, left?: number, top?: number): void {
     if (this.transformationRenderBlock) {
       return;
@@ -107,7 +111,7 @@ export class Card extends BaseItem {
 
       if (typeof left === "number" && typeof top === "number") {
         centerX = left + width / 2;
-        centerX = top + height / 2;
+        centerY = top + height / 2;
       }
 
       ctx.translate(centerX, centerY);

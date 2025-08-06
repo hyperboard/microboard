@@ -25,6 +25,7 @@ export class Deck extends BaseItem {
   private isCacheDirty = true;
   enableResize = false;
   path: Path | null = null
+  private isPerpendicular: boolean | undefined = undefined;
 
   constructor(
     board: Board,
@@ -43,6 +44,10 @@ export class Deck extends BaseItem {
     this.updateMbr();
   }
 
+  getIsPerpendicular(): boolean | undefined {
+    return this.isPerpendicular;
+  }
+
   applyAddChildren(childIds: string[]): void {
     if (!this.index) {
       return;
@@ -53,13 +58,17 @@ export class Deck extends BaseItem {
         this.parent !== childId &&
         this.getId() !== childId
       ) {
-        if (!this.index?.getById(childId) && foundItem?.itemType === "Card") {
+        const canAddItem = !this.index?.getById(childId)
+          && foundItem instanceof Card
+          && (typeof this.isPerpendicular === "undefined" || this.isPerpendicular === foundItem.getIsRotatedPerpendicular())
+        if (canAddItem) {
+          this.isPerpendicular = foundItem.getIsRotatedPerpendicular()
           foundItem.transformation.apply({
             class: 'Transformation',
             method: 'translateTo',
             item: [this.id],
-            x: this.left + (this.index?.list().length || 0) * conf.DECK_HORIZONTAL_OFFSET,
-            y: this.top - (this.index?.list().length || 0) * conf.DECK_VERTICAL_OFFSET,
+            x: this.left + (this.index?.list().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
+            y: this.top + (this.index?.list().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0),
           })
           this.board.items.index.remove(foundItem);
           foundItem.parent = this.getId();

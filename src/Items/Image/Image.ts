@@ -282,6 +282,15 @@ export class ImageItem extends BaseItem {
     const ctx = context.ctx;
     ctx.save();
     this.transformation.matrix.applyToContext(ctx);
+    const rotation = this.transformation.getRotation();
+    if (rotation !== 0) {
+      const imgWidth = this.image.width || 0;
+      const imgHeight = this.image.height || 0;
+
+      ctx.translate(imgWidth / 2, imgHeight / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.translate(-imgWidth / 2, -imgHeight / 2);
+    }
     ctx.drawImage(this.image, 0, 0);
     ctx.restore();
     if (this.getLinkTo()) {
