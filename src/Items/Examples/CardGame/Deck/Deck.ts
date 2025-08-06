@@ -173,8 +173,8 @@ export class Deck extends BaseItem {
     const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
     this.left = translateX;
     this.top = translateY;
-    this.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + conf.DECK_HORIZONTAL_OFFSET * ((this.children.length || 1) - 1));
-    this.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height - conf.DECK_VERTICAL_OFFSET * ((this.children.length || 1) - 1));
+    this.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET * ((this.children.length || 1) - 1)));
+    this.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET * ((this.children.length || 1) - 1) : 0));
     this.path = new Path(this.getMbr().getLines(), true, "#FFFFFF");
   }
 
@@ -254,7 +254,7 @@ export class Deck extends BaseItem {
     const tempContext = {...context, ctx: tempCtx};
 
     cards.forEach((_, index) => {
-      topCard.render(tempContext, index * conf.DECK_HORIZONTAL_OFFSET, index * conf.DECK_VERTICAL_OFFSET);
+      topCard.render(tempContext, this.isPerpendicular ? 0 : index * conf.DECK_HORIZONTAL_OFFSET, this.isPerpendicular ? index * conf.DECK_VERTICAL_OFFSET : 0);
     });
 
     this.cachedCanvas = tempCanvas;
