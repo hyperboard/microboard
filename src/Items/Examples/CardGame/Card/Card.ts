@@ -13,6 +13,8 @@ import {registerItem} from "Items/RegisterItem";
 import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
 import {throttle} from "../../../../utils";
+import {registerHotkey} from "Keyboard/HotkeyRegistry";
+import {Deck} from "Items/";
 
 
 export const defaultCardData: BaseItemData = {
@@ -244,18 +246,38 @@ registerItem({
   defaultData: defaultCardData,
 });
 
-// registerHotkey({
-//   name: "flipCard",
-//   hotkey: {key: {button: "KeyF", shift: true}, label: {windows: "F", mac: "F"}},
-//   boardMode: "edit",
-//   hotkeyConfig: {
-//     allItemsType: ["Card"],
-//     cb: (event?: KeyboardEvent, board?: Board) => {
-//       const cards = board?.selection.items.list() as Card[] | undefined;
-//       if (!cards) {
-//         return;
-//       }
-//       cards[0].toggleIsOpen(cards);
-//     }
-//   }
-// })
+registerHotkey({
+  name: "Rotate90deg",
+  hotkey: {key: {button: "KeyQ"}, label: {windows: "Q", mac: "Q"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    allItemsType: ["Image", "Card"],
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const items = board?.selection.items.list() as BaseItem[];
+      if (!items) {
+        return;
+      }
+      items.forEach((item) => {
+        item.rotate(false);
+      })
+    }
+  }
+})
+
+registerHotkey({
+  name: "Rotate90deg-clockwise",
+  hotkey: {key: {button: "KeyE"}, label: {windows: "E", mac: "E"}},
+  boardMode: "edit",
+  hotkeyConfig: {
+    allItemsType: ["Image", "Card"],
+    cb: (event?: KeyboardEvent, board?: Board) => {
+      const items = board?.selection.items.list() as BaseItem[];
+      if (!items) {
+        return;
+      }
+      items.forEach((item) => {
+        item.rotate(true);
+      })
+    }
+  }
+})

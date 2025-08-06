@@ -70,6 +70,7 @@ export class Deck extends BaseItem {
             x: this.left + (this.index?.list().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
             y: this.top + (this.index?.list().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0),
           })
+          this.board.selection.remove(foundItem);
           this.board.items.index.remove(foundItem);
           foundItem.parent = this.getId();
           foundItem.shouldUseRelativeAlignment = false;
