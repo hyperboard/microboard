@@ -83,17 +83,18 @@ export const decodeHtml = (htmlString: string): string => {
 function getTransformationData(el: HTMLElement): TransformationData {
   const transformStyle = el.style.transform;
   const transformMatch = transformStyle.match(
-    /translate\(([^,]+)px,\s*([^)]+)px\)\s*scale\(([^,]+),\s*([^)]+)\)/
+    /(?:translate\(([^,]+)px,\s*([^)]+)px\))?\s*(?:scale\(([^,]+),\s*([^)]+)\))?\s*(?:rotate\(([^)]+)deg\))?/
   );
   if (transformMatch) {
-    const [, translateX, translateY, scaleX, scaleY] =
+    const [, translateX, translateY, scaleX, scaleY, rotate] =
       transformMatch.map(Number);
     const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
-    return { ...matrix, rotate: 0, isLocked: false };
+    return { ...matrix, rotate, isLocked: false };
   }
 
   return { ...new Matrix(), rotate: 0, isLocked: false };
 }
+
 
 function parseHTMLRichText(
   el: HTMLElement,

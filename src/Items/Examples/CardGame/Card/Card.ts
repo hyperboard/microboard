@@ -145,7 +145,7 @@ export class Card extends BaseItem {
     const div = super.renderHTML(documentFactory);
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.matrix;
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY}) rotate(${this.transformation.getRotation()}deg)`;
 
 
     div.style.backgroundImage = `url(${this.imageToRender?.src || this.backsideUrl})`;
