@@ -139,6 +139,8 @@ export class ConnectorTransformer extends Tool {
           break;
         case "middle":
           connector.setMiddlePoint(point, this.beginTimeStamp);
+          break;
+      }
       this.selection.subject.publish(this.selection);
     }
   }
