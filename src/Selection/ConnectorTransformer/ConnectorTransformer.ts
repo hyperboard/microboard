@@ -128,16 +128,17 @@ export class ConnectorTransformer extends Tool {
       this.snap.connector = connector;
       this.snap.pointerMove();
       const point = this.snap.getControlPoint();
-      const setterMap: Record<
-        PointersState,
-        (point: ControlPoint | ControlPointData, timestamp?: number) => void
-      > = {
-        start: connector.setStartPoint,
-        end: connector.setEndPoint,
-        middle: connector.setMiddlePoint,
-        none: () => {},
-      };
-      setterMap[this.statePointer](point, this.beginTimeStamp);
+      switch (this.statePointer) {
+        case "start":
+          connector.setStartPoint(point, this.beginTimeStamp);
+          this.selection.subject.publish(this.selection);
+          break;
+        case "end":
+          connector.setEndPoint(point, this.beginTimeStamp);
+          this.selection.subject.publish(this.selection);
+          break;
+        case "middle":
+          connector.setMiddlePoint(point, this.beginTimeStamp);
       this.selection.subject.publish(this.selection);
     }
   }
