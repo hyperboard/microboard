@@ -329,7 +329,7 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	getPath(): Path | Paths {
-		return new Path(this.getMbr().getLines());
+		return new Path(this.getMbr().getLines(), true);
 	}
 
 	render(context: DrawingContext): void {

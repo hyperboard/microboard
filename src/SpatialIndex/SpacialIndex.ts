@@ -351,25 +351,6 @@ export class SpatialIndex {
     filter: (item: Item) => boolean,
     maxDistance: number
   ): Item[] {
-    // const allItems = this.getItemsWithIncludedChildren(this.itemsArray);
-    // const filtered = allItems.filter(item => filter(item));
-    // const withDistance = filtered
-    // 	.map(item => ({
-    // 		item,
-    // 		distance: point.getDistance(item.getMbr().getCenter())
-    // 	}))
-    // 	.filter(({ distance }) => distance <= maxDistance);
-    //
-    // withDistance.sort((a, b) => a.distance - b.distance);
-    // return withDistance.slice(0, maxItems).map(({ item }) => item);
-    // const nearestItems = this.itemsIndex.getNearestTo(point, maxItems, filter, maxDistance);
-    // nearestItems.sort((aa, bb) => {
-    // 	const distA = point.getDistance(aa.getMbr().getCenter());
-    // 	const distB = point.getDistance(bb.getMbr().getCenter());
-    // 	return distA - distB;
-    // });
-    // return nearestItems.slice(0, maxItems);
-
     const items = this.getItemsWithIncludedChildren(this.itemsArray);
     const filteredItems = filter ? items.filter(filter) : items;
 
