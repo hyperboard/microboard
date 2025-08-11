@@ -14,7 +14,6 @@ import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
 import {throttle} from "../../../../utils";
 import {registerHotkey} from "Keyboard/HotkeyRegistry";
-import {Deck} from "Items/";
 
 
 export const defaultCardData: BaseItemData = {
@@ -22,6 +21,7 @@ export const defaultCardData: BaseItemData = {
   isOpen: false,
   faceUrl: "",
   backsideUrl: "",
+  dimensions: {width: conf.CARD_DIMENSIONS.width, height: conf.CARD_DIMENSIONS.height},
 };
 
 export class Card extends BaseItem {
@@ -34,14 +34,20 @@ export class Card extends BaseItem {
   backside: HTMLImageElement | null = null;
   private imageToRender: HTMLImageElement | null = null;
   shouldUseCustomRender = false;
-  enableResize = false;
+  onlyProportionalResize = true;
+  dimensions = {width: conf.CARD_DIMENSIONS.width, height: conf.CARD_DIMENSIONS.height};
 
   constructor(
     board: Board,
     id = "",
     urls?: { faceUrl: string, backsideUrl: string },
+    dimensions?: { width: number; height: number },
   ) {
     super(board, id, defaultCardData);
+
+    if (dimensions) {
+      this.dimensions = dimensions;
+    }
 
     if (urls) {
       this.faceUrl = urls.faceUrl;
@@ -151,8 +157,8 @@ export class Card extends BaseItem {
     div.style.backgroundImage = `url(${this.imageToRender?.src || this.backsideUrl})`;
 
     div.id = this.getId();
-    div.style.width = `${conf.CARD_DIMENSIONS.width}px`;
-    div.style.height = `${conf.CARD_DIMENSIONS.height}px`;
+    div.style.width = `${this.dimensions.width}px`;
+    div.style.height = `${this.dimensions.height}px`;
     div.style.transformOrigin = "top left";
     div.style.transform = transform;
     div.style.position = "absolute";
@@ -166,8 +172,8 @@ export class Card extends BaseItem {
     const {translateX, translateY, scaleX, scaleY} =
       this.transformation.matrix;
     const rotation = this.transformation.getRotation();
-    const height = conf.CARD_DIMENSIONS.height * scaleY;
-    const width = conf.CARD_DIMENSIONS.width * scaleX;
+    const height = this.dimensions.height * scaleY;
+    const width = this.dimensions.width * scaleX;
     if (rotation % 180 === 0) {
       this.left = translateX;
       this.top = translateY;

@@ -15,6 +15,7 @@ import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeTy
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
 import { Item } from "Items/Item";
 import {Frame} from "../../../Items";
+import {BaseItem} from "Items/BaseItem";
 
 export function transformItems({
   board,
@@ -56,7 +57,8 @@ export function transformItems({
       item.itemType === "RichText" ||
       item.itemType === "AINode" ||
       item.itemType === "Video" ||
-      item.itemType === "Audio"
+      item.itemType === "Audio" ||
+      (item instanceof BaseItem && item.onlyProportionalResize)
   );
 
   if (includesProportionalItem && (isWidth || isHeight)) {

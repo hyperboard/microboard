@@ -12,7 +12,6 @@ import { BaseOperation } from "Events/EventsOperations";
 import {BaseCommand, createCommand} from "Events/Command";
 import {Subject} from "../../Subject";
 import {Path, Paths} from "../Path";
-import {Item} from "../Item";
 import {BaseItemOperation} from "./BaseItemOperation";
 import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 import {Point} from "../Point";
@@ -39,6 +38,7 @@ export class BaseItem extends Mbr implements Geometry {
 	shouldRenderOutsideViewRect = true;
 	shouldUseRelativeAlignment = true;
 	enableResize = true;
+	onlyProportionalResize = false;
 	itemType = "";
 	children: string[] = [];
 
