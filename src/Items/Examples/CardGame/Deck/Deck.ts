@@ -58,9 +58,12 @@ export class Deck extends BaseItem {
         this.parent !== childId &&
         this.getId() !== childId
       ) {
+        const firstCard = this.getFirstCard();
+        const firstCardDimensions = firstCard?.getDimensions();
         const canAddItem = !this.index?.getById(childId)
           && foundItem instanceof Card
           && (typeof this.isPerpendicular === "undefined" || this.isPerpendicular === foundItem.getIsRotatedPerpendicular())
+          && (!firstCardDimensions || (firstCardDimensions.width === foundItem.getDimensions().width && firstCardDimensions.height === foundItem.getDimensions().height))
         if (canAddItem) {
           this.isPerpendicular = foundItem.getIsRotatedPerpendicular()
           foundItem.transformation.apply({
@@ -70,6 +73,19 @@ export class Deck extends BaseItem {
             x: this.left + (this.index?.list().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
             y: this.top + (this.index?.list().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0),
           })
+          if (firstCard) {
+            const {scaleX, scaleY} = foundItem.transformation.matrix;
+            const {scaleX: targetScaleX, scaleY: targetScaleY} = firstCard.transformation.matrix;
+            if (scaleX !== targetScaleX || scaleY !== targetScaleY) {
+              foundItem.transformation.apply({
+                class: 'Transformation',
+                method: 'scaleTo',
+                item: [this.id],
+                x: targetScaleX,
+                y: targetScaleY,
+              })
+            }
+          }
           this.board.selection.remove(foundItem);
           this.board.items.index.remove(foundItem);
           foundItem.parent = this.getId();
@@ -261,6 +277,10 @@ export class Deck extends BaseItem {
     this.cachedCanvas = tempCanvas;
     this.isCacheDirty = false;
     this.updateMbr();
+  }
+
+  getFirstCard() {
+    return this.index?.list()[0] as Card | undefined;
   }
 }
 

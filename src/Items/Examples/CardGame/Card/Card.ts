@@ -71,6 +71,10 @@ export class Card extends BaseItem {
     this.updateMbr();
   }
 
+  getDimensions() {
+    return this.dimensions;
+  }
+
   createImages() {
     this.face = conf.documentFactory.createElement(
       "img",
