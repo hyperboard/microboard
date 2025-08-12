@@ -37,7 +37,7 @@ export class BaseItem extends Mbr implements Geometry {
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
 	shouldUseRelativeAlignment = true;
-	enableResize = true;
+	resizeEnabled = true;
 	onlyProportionalResize = false;
 	itemType = "";
 	children: string[] = [];
@@ -271,6 +271,52 @@ export class BaseItem extends Mbr implements Geometry {
 		this.board.events.emit(operation as Operation, command);
 	}
 
+	disableResize(items: BaseItem[]): void {
+		const itemsMap: Record<string, string[]> = {}
+		items.forEach((item) => {
+			if (!item.resizeEnabled) {
+				return;
+			}
+			if (itemsMap[item.itemType]) {
+				itemsMap[item.itemType].push(item.getId());
+			} else {
+				itemsMap[item.itemType] = [item.getId()];
+			}
+		})
+		Object.entries(itemsMap).forEach(([itemType, itemIds]) => {
+			this.emitForManyItems({
+				class: itemType,
+				method: "toggleResizeEnabled",
+				item: itemIds,
+				newData: {resizeEnabled: false},
+				prevData: {resizeEnabled: true},
+			});
+		})
+	}
+
+	enableResize(items: BaseItem[]): void {
+		const itemsMap: Record<string, string[]> = {}
+		items.forEach((item) => {
+			if (item.resizeEnabled) {
+				return;
+			}
+			if (itemsMap[item.itemType]) {
+				itemsMap[item.itemType].push(item.getId());
+			} else {
+				itemsMap[item.itemType] = [item.getId()];
+			}
+		})
+		Object.entries(itemsMap).forEach(([itemType, itemIds]) => {
+			this.emitForManyItems({
+				class: itemType,
+				method: "toggleResizeEnabled",
+				item: itemIds,
+				newData: {resizeEnabled: true},
+				prevData: {resizeEnabled: false},
+			});
+		})
+	}
+
 	apply(op: Operation | BaseItemOperation | BaseOperation): void {
 		op = op as Operation;
 		switch (op.class) {
@@ -288,6 +334,9 @@ export class BaseItem extends Mbr implements Geometry {
 						break;
 					case "addChildren":
 						this.applyAddChildren(op.newData.childIds)
+						break;
+					case "toggleResizeEnabled":
+						this.resizeEnabled = op.newData.resizeEnabled;
 						break;
 				}
 		}

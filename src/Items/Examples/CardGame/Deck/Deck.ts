@@ -23,7 +23,7 @@ export class Deck extends BaseItem {
   shouldUseCustomRender = false;
   private cachedCanvas: HTMLCanvasElement | null = null;
   private isCacheDirty = true;
-  enableResize = false;
+  resizeEnabled = false;
   path: Path | null = null
   private isPerpendicular: boolean | undefined = undefined;
 
