@@ -316,7 +316,6 @@ export class Board {
 
     arrayed.forEach((item) => {
       const itemCenter = item.getMbr().getCenter();
-      //TODO FRAMES
       const groupItem = this.items
         .getGroupItemsInView()
         .filter((groupItem) => groupItem.handleNesting(item))
