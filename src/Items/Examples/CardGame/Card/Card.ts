@@ -128,6 +128,7 @@ export class Card extends BaseItem {
 
       ctx.translate(centerX, centerY);
       ctx.rotate((this.transformation.getRotation() * Math.PI) / 180);
+      ctx.translate(-width / 2, -height / 2);
       if (this.dimensions.width < this.dimensions.height) {
         if (width > height) {
           ctx.drawImage(
@@ -147,13 +148,23 @@ export class Card extends BaseItem {
           );
         }
       } else {
-        ctx.drawImage(
-          this.imageToRender,
-          -height / 2,
-          -width / 2,
-          height,
-          width
-        );
+        if (width > height) {
+          ctx.drawImage(
+            this.imageToRender,
+            -width / 2,
+            -height / 2,
+            width,
+            height
+          );
+        } else {
+          ctx.drawImage(
+            this.imageToRender,
+            -height / 2,
+            -width / 2,
+            height,
+            width
+          );
+        }
       }
       ctx.restore();
     }
