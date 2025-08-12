@@ -91,10 +91,16 @@ export class AddFrame extends BoardTool {
 			localStorage.setItem('lastFrameScale', JSON.stringify(this.frame.transformation.getScale()));
 		}
 
+		const currMbr = this.frame.getMbr();
+		const frameChildren = this.board.items
+			.getEnclosedOrCrossed(currMbr.left, currMbr.top, currMbr.right, currMbr.bottom)
+			.filter(item => item.parent === 'Board')
+			.filter(item => this.frame.handleNesting(item));
 		if (this.shape !== 'Custom') {
 			this.applyCanChangeRatio(false);
 		}
 		const frame = this.board.add(this.frame);
+		frame.emitNesting(frameChildren);
 
 		// frame.setNameSerial(this.board.items.listFrames());
 		frame.text.editor.moveCursorToEndOfTheText();
