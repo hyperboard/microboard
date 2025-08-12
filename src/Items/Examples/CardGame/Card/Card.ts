@@ -129,11 +129,23 @@ export class Card extends BaseItem {
       ctx.translate(centerX, centerY);
       ctx.rotate((this.transformation.getRotation() * Math.PI) / 180);
 
-      ctx.drawImage(
-        this.imageToRender,
-        -width / 2,
-        -height / 2,
-      );
+      if (width > height && this.dimensions.width < this.dimensions.height) {
+        ctx.drawImage(
+          this.imageToRender,
+          -height / 2,
+          -width / 2,
+          height,
+          width
+        );
+      } else {
+        ctx.drawImage(
+          this.imageToRender,
+          -width / 2,
+          -height / 2,
+          width,
+          height
+        );
+      }
 
       ctx.restore();
     }
