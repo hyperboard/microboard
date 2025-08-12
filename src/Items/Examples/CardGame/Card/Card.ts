@@ -133,8 +133,6 @@ export class Card extends BaseItem {
         this.imageToRender,
         -width / 2,
         -height / 2,
-        width,
-        height
       );
 
       ctx.restore();
