@@ -147,23 +147,13 @@ export class Card extends BaseItem {
           );
         }
       } else {
-        if (width > height) {
-          ctx.drawImage(
-            this.imageToRender,
-            -height / 2,
-            -width / 2,
-            height,
-            width
-          );
-        } else {
-          ctx.drawImage(
-            this.imageToRender,
-            -width / 2,
-            -height / 2,
-            height,
-            width
-          );
-        }
+        ctx.drawImage(
+          this.imageToRender,
+          -height / 2,
+          -width / 2,
+          height,
+          width
+        );
       }
       ctx.restore();
     }
