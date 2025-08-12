@@ -523,7 +523,8 @@ export const conf = {
   DECK_HORIZONTAL_OFFSET: 2,
   DECK_VERTICAL_OFFSET: 2,
   CARD_DIMENSIONS: {width: 250, height: 400},
-  DEFAULT_GAME_ITEM_DIMENSIONS: {width: 200, height: 200}
+  DEFAULT_GAME_ITEM_DIMENSIONS: {width: 200, height: 200},
+  MAX_CARD_SIZE: 500,
 };
 
 export type Settings = typeof conf;
