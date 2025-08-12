@@ -19,7 +19,7 @@ export function updateFrameChildren({
     mbr.bottom
   );
   board.selection.items.list().forEach((item) => {
-    if ("getChildrenIds" in item && item.getChildrenIds()) {
+    if ("index" in item && item.index) {
       const currMbr = item.getMbr();
       const itemsToCheck = board.items.getEnclosedOrCrossed(
         currMbr.left,

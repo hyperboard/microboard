@@ -12,6 +12,7 @@ import { RELATIVE_ALIGNMENT_COLOR } from 'Tools/RelativeAlignment/RelativeAlignm
 import { Tool } from 'Tools/Tool';
 import { isSafari } from 'isSafari';
 import {BoardSelection} from "../../Selection";
+import {BaseItem} from "Items/BaseItem";
 
 export class Select extends Tool {
 	line: null | Line = null;
@@ -530,17 +531,17 @@ export class Select extends Tool {
 			}
 
 			const draggingMbr = draggingItem.getMbr();
-			const frames = this.board.items
+			const groups: BaseItem[] = this.board.items
 				.getEnclosedOrCrossed(
 					draggingMbr.left,
 					draggingMbr.top,
 					draggingMbr.right,
 					draggingMbr.bottom
 				)
-				.filter((item): item is Frame => item instanceof Frame);
-			frames.forEach(frame => {
-				if (frame.handleNesting(draggingItem)) {
-					this.nestingHighlighter.add(frame, draggingItem);
+				.filter((item) => !!("index" in item && item.index));
+			groups.forEach(group => {
+				if (group.handleNesting(draggingItem)) {
+					this.nestingHighlighter.add(group, draggingItem);
 				} else {
 					this.nestingHighlighter.remove(draggingItem);
 				}
@@ -608,24 +609,24 @@ export class Select extends Tool {
 	}
 
 	private updateFramesNesting(selectionMbr: Mbr | undefined, selection: BoardSelection): void {
-		const frames = this.board.items
+		const groups: BaseItem[] = this.board.items
 			.getEnclosedOrCrossed(
 				selectionMbr!.left,
 				selectionMbr!.top,
 				selectionMbr!.right,
 				selectionMbr!.bottom
 			)
-			.filter((item): item is Frame => item instanceof Frame)
-			.filter(frame => !selection.items.list().includes(frame));
-		const draggingFramesIds = selection
+			.filter((item) => !!("index" in item && item.index))
+			.filter(group => !selection.items.list().includes(group));
+		const draggingGroupsIds = selection
 			.list()
-			.filter(item => item instanceof Frame)
-			.map(frame => frame.getId());
+			.filter(item => !!("index" in item && item.index))
+			.map(group => group.getId());
 		selection.list().forEach(item => {
-			if (!(item instanceof Frame) && !draggingFramesIds.includes(item.parent)) {
-				frames.forEach(frame => {
-					if (frame.handleNesting(item)) {
-						this.nestingHighlighter.add(frame, item);
+			if (!("index" in item && item.index) && !draggingGroupsIds.includes(item.parent)) {
+				groups.forEach(group => {
+					if (group.handleNesting(item)) {
+						this.nestingHighlighter.add(group, item);
 					} else {
 						this.nestingHighlighter.remove(item);
 					}
