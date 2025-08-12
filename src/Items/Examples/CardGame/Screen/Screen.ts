@@ -167,7 +167,11 @@ export class Screen extends BaseItem {
       return;
     }
     this.path.render(context);
-    if (localStorage.getItem("currentUser") === this.ownerId || !this.ownerId) {
+    if (
+      localStorage.getItem("currentUser") === this.ownerId
+      || localStorage.getItem("screenOwnerId") === this.ownerId
+      || !this.ownerId
+    ) {
       super.render(context);
     }
   }

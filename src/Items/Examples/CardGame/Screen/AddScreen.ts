@@ -1,6 +1,7 @@
 import { Board } from "Board";
 import { ShapeTool } from "Tools/CustomTool";
 import {Screen} from "./Screen";
+import {v4 as uuidv4} from "uuid";
 
 export class AddScreen extends ShapeTool {
   constructor(board: Board, name: string) {
@@ -8,7 +9,12 @@ export class AddScreen extends ShapeTool {
   }
 
   pointerUp(): boolean {
-    (this.item as Screen).applyOwnerId(localStorage.getItem("currentUser") || "");
+    let screenOwnerId = localStorage.getItem("currentUser") || localStorage.getItem("screenOwnerId");
+    if (!screenOwnerId) {
+      screenOwnerId = uuidv4();
+      localStorage.setItem("screenOwnerId", screenOwnerId);
+    }
+    (this.item as Screen).applyOwnerId(screenOwnerId);
     return super.pointerUp();
   }
 }
