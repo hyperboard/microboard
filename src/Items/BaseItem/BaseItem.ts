@@ -239,6 +239,7 @@ export class BaseItem extends Mbr implements Geometry {
 			transformation: this.transformation.serialize(),
 			itemType: this.defaultItemData?.itemType || this.itemType,
 			children: this.index?.list().map((child) => child.getId()),
+			resizeEnabled: this.resizeEnabled,
 		};
 		Object.keys(this.defaultItemData || {}).forEach((key: string) => {
 			const value = this[key];
