@@ -26,6 +26,8 @@ export class Deck extends BaseItem {
   resizeEnabled = false;
   path: Path | null = null
   private isPerpendicular: boolean | undefined = undefined;
+  private animationFrameId?: number;
+  drawingContext: DrawingContext | null = null;
 
   constructor(
     board: Board,
@@ -160,6 +162,7 @@ export class Deck extends BaseItem {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
+    this.emitAnimation();
     this.removeChildItems(this.index.list());
     this.addChildItems(shuffled);
   }
@@ -178,6 +181,12 @@ export class Deck extends BaseItem {
   apply(op: DeckOperation): void {
     super.apply(op);
     if (op.class === "Deck") {
+      if (op.method === "startAnimation" && op.newData.timeStamp && Date.now() - op.newData.timeStamp < 4000) {
+        this.startAnimation();
+        setTimeout(() => {
+          this.stopAnimation();
+        }, 2000)
+      }
       this.isCacheDirty = true;
     }
     this.subject.publish(this);
@@ -206,6 +215,7 @@ export class Deck extends BaseItem {
   }
 
   render(context: DrawingContext): void {
+    this.drawingContext = context;
     if (this.transformationRenderBlock) {
       return;
     }
@@ -220,7 +230,49 @@ export class Deck extends BaseItem {
     if (this.cachedCanvas && this.cachedCanvas.width && this.cachedCanvas.height) {
       ctx.save();
       ctx.drawImage(this.cachedCanvas, this.left, this.top);
+      if (this.animationFrameId) {
+        const now = Date.now();
+        const progress = (now % 2000) / 2000;
+        const yPos = this.top + (this.getHeight() * Math.abs(Math.sin(progress * Math.PI)));
+
+        ctx.fillStyle = conf.SELECTION_COLOR;
+        ctx.fillRect(
+          this.left + 5,
+          yPos - 2,
+          this.getWidth() - 10,
+          4
+        );
+      }
       ctx.restore();
+    }
+  }
+
+  emitAnimation() {
+    this.emit({
+      class: "Deck",
+      method: "startAnimation",
+      item: [this.getId()],
+      newData: {timeStamp: Date.now()},
+    });
+  }
+
+  startAnimation() {
+    if (!this.animationFrameId) {
+      const animate = () => {
+        if (this.drawingContext) {
+          this.subject.publish(this);
+          this.animationFrameId = requestAnimationFrame(animate);
+        }
+      };
+      this.animationFrameId = requestAnimationFrame(animate);
+    }
+  }
+
+  stopAnimation() {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+      this.drawingContext = null;
     }
   }
 
