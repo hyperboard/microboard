@@ -237,9 +237,9 @@ export class Deck extends BaseItem {
 
         ctx.fillStyle = conf.SELECTION_COLOR;
         ctx.fillRect(
-          this.left + 5,
+          this.left,
           yPos - 2,
-          this.getWidth() - 10,
+          this.getWidth(),
           4
         );
       }
