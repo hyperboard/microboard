@@ -136,6 +136,14 @@ export class Deck extends BaseItem {
     }
   }
 
+  getCards(count: number): Card[] | undefined {
+    const cards = this.index?.list().slice(0, count) as Card[] | undefined;
+    if (cards) {
+      this.removeChildItems(cards);
+      return cards;
+    }
+  }
+
   getBottomCard(): Card | undefined {
     const card = this.index?.list()[0] as Card | undefined;
     if (card) {
