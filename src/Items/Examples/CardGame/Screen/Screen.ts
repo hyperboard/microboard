@@ -13,7 +13,6 @@ import {Point} from "../../../Point";
 import {AddPouch, AddScreen} from "./AddScreen";
 import {ScreenOperation} from "./ScreenOperation";
 import {DocumentFactory} from "api/DocumentFactory";
-import {Card} from "Items/";
 
 const screenPath = new Path(
   [
@@ -78,6 +77,10 @@ export class Screen extends BaseItem {
         break;
     }
     this.subject.publish(this);
+  }
+
+  getOwnerId(): string {
+    return this.ownerId;
   }
 
   getBackgroundColor(): string {
