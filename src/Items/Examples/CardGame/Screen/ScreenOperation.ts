@@ -1,6 +1,6 @@
 import { BaseOperation } from "Events/EventsOperations";
 
-export type ScreenOperation = SetBackgroundColor | SetBorderColor | SetBorderWidth;
+export type ScreenOperation = SetBackgroundColor | SetBorderColor | SetBorderWidth | SetBackgroundUrl;
 
 interface SetBackgroundColor extends BaseOperation<{ backgroundColor: string }> {
   class: "Screen";
@@ -15,4 +15,9 @@ interface SetBorderColor extends BaseOperation<{ borderColor: string }> {
 export interface SetBorderWidth extends BaseOperation<{ borderWidth: number }> {
   class: "Screen";
   method: "setBorderWidth";
+}
+
+export interface SetBackgroundUrl extends BaseOperation<{ backgroundUrl?: string }> {
+  class: "Screen";
+  method: "setBackgroundUrl";
 }

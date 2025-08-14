@@ -14,7 +14,7 @@ import {AddScreen} from "./AddScreen";
 import {ScreenOperation} from "./ScreenOperation";
 import {DocumentFactory} from "api/DocumentFactory";
 
-const handPath = new Path(
+const screenPath = new Path(
   [
     new Line(new Point(0, 0), new Point(100, 0)),
     new Line(new Point(100, 0), new Point(100, 100)),
@@ -29,6 +29,7 @@ const handPath = new Path(
 export const defaultScreenData: BaseItemData = {
   itemType: "Screen",
   ownerId: "",
+  backgroundUrl: ""
 };
 
 export class Screen extends BaseItem {
@@ -36,6 +37,8 @@ export class Screen extends BaseItem {
   private path: Path;
   private borderWidth = 1;
   backgroundColor = "#FFFFFF";
+  backgroundUrl = "";
+  backgroundImage: HTMLImageElement | null = null;
 
   constructor(
     board: Board,
@@ -67,6 +70,9 @@ export class Screen extends BaseItem {
           case "setBorderColor":
             this.applyBorderColor(op.newData.borderColor);
             break;
+          case "setBackgroundUrl":
+            this.applyBackgroundUrl(op.newData.backgroundUrl);
+            break;
         }
         break;
     }
@@ -96,7 +102,7 @@ export class Screen extends BaseItem {
 
   setBackgroundColor(backgroundColor: string): void {
     this.emit({
-      class: "Dice",
+      class: "Screen",
       method: "setBackgroundColor",
       item: [this.getId()],
       newData: {backgroundColor},
@@ -111,7 +117,7 @@ export class Screen extends BaseItem {
 
   setBorderWidth(borderWidth: BorderWidth): void {
     this.emit({
-      class: "Dice",
+      class: "Screen",
       method: "setBorderWidth",
       item: [this.getId()],
       newData: {borderWidth},
@@ -126,11 +132,32 @@ export class Screen extends BaseItem {
 
   setBorderColor(borderColor: string): void {
     this.emit({
-      class: "Dice",
+      class: "Screen",
       method: "setBorderColor",
       item: [this.getId()],
       newData: {borderColor},
       prevData: {borderColor: this.borderColor}
+    });
+  }
+
+  private applyBackgroundUrl(url?: string): void {
+    this.backgroundUrl = url || "";
+    if (url) {
+      this.backgroundImage = new Image();
+      this.backgroundImage.src = url;
+      this.applyBackgroundColor("none");
+    } else {
+      this.backgroundImage = null;
+    }
+  }
+
+  setBackgroundUrl(url?: string): void {
+    this.emit({
+      class: "Screen",
+      method: "setBackgroundUrl",
+      item: [this.getId()],
+      newData: {backgroundUrl: url},
+      prevData: {backgroundUrl: this.backgroundUrl}
     });
   }
 
@@ -139,7 +166,7 @@ export class Screen extends BaseItem {
   }
 
   private transformPath(): void {
-    this.path = handPath.copy();
+    this.path = screenPath.copy();
     this.path.transform(this.transformation.matrix);
 
     this.path.setBackgroundColor(this.backgroundColor);
@@ -165,6 +192,13 @@ export class Screen extends BaseItem {
   render(context: DrawingContext): void {
     if (this.transformationRenderBlock) {
       return;
+    }
+    if (this.backgroundImage && this.backgroundImage.complete) {
+      const ctx = context.ctx;
+      ctx.save();
+      this.transformation.matrix.applyToContext(ctx);
+      ctx.drawImage(this.backgroundImage, 0, 0);
+      ctx.restore();
     }
     this.path.render(context);
     if (
