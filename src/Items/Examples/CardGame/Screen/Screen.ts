@@ -196,8 +196,7 @@ export class Screen extends BaseItem {
     if (this.backgroundImage && this.backgroundImage.complete) {
       const ctx = context.ctx;
       ctx.save();
-      this.transformation.matrix.applyToContext(ctx);
-      ctx.drawImage(this.backgroundImage, 0, 0, this.getWidth(), this.getHeight());
+      ctx.drawImage(this.backgroundImage, this.left, this.top, this.getWidth(), this.getHeight());
       ctx.restore();
     }
     this.path.render(context);
