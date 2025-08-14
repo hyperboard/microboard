@@ -197,7 +197,7 @@ export class Screen extends BaseItem {
       const ctx = context.ctx;
       ctx.save();
       this.transformation.matrix.applyToContext(ctx);
-      ctx.drawImage(this.backgroundImage, 0, 0);
+      ctx.drawImage(this.backgroundImage, 0, 0, this.getWidth(), this.getHeight());
       ctx.restore();
     }
     this.path.render(context);
