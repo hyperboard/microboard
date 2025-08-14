@@ -5,14 +5,15 @@ import {
 } from "Items/BaseItem/BaseItem";
 import { Board } from "Board";
 import { Subject } from "Subject";
-import { registerItem } from "Items/RegisterItem";
+import {registerItem, registerTool} from "Items/RegisterItem";
 import { DrawingContext } from "Items/DrawingContext";
 import {BorderWidth, Path} from "../../../Path";
 import {Line} from "../../../Line";
 import {Point} from "../../../Point";
-import {AddScreen} from "./AddScreen";
+import {AddPouch, AddScreen} from "./AddScreen";
 import {ScreenOperation} from "./ScreenOperation";
 import {DocumentFactory} from "api/DocumentFactory";
+import {Card} from "Items/";
 
 const screenPath = new Path(
   [
@@ -163,6 +164,11 @@ export class Screen extends BaseItem {
 
   applyOwnerId(ownerId: string): void {
     this.ownerId = ownerId;
+    if (!this.ownerId) {
+      this.index!.getUnderPoint = () => []
+      this.index!.getEnclosed = () => []
+      this.index!.getEnclosedOrCrossed = () => []
+    }
   }
 
   private transformPath(): void {
@@ -184,9 +190,25 @@ export class Screen extends BaseItem {
 
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
+    if (this.backgroundUrl) {
+      this.applyBackgroundUrl(this.backgroundUrl);
+    }
+    if (!this.ownerId) {
+      this.index!.getUnderPoint = () => []
+      this.index!.getEnclosed = () => []
+      this.index!.getEnclosedOrCrossed = () => []
+    }
     this.transformPath();
     this.subject.publish(this);
     return this;
+  }
+
+  getRandomItem(): BaseItem | undefined {
+    const item = this.index?.list()[Math.floor(Math.random() * this.index?.list().length)] as BaseItem | undefined;
+    if (item) {
+      this.removeChildItems(item);
+      return item;
+    }
   }
 
   render(context: DrawingContext): void {
@@ -228,3 +250,5 @@ registerItem({
   defaultData: defaultScreenData,
   toolData: {name: "AddScreen", tool: AddScreen}
 });
+
+registerTool({name: "AddPouch", tool: AddPouch})

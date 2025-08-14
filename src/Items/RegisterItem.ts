@@ -29,6 +29,10 @@ export function registerItem({
   itemCommandFactories[itemType] = createItemCommandFactory(itemType);
 }
 
+export function registerTool(toolData: { name: string; tool: typeof CustomTool }) {
+  registeredTools[toolData.name] = toolData.tool;
+}
+
 function createItemFactory(item: any, defaultData: BaseItemData) {
   return function itemFactory(id: string, data: ItemData, board: Board): Item {
     if (data.itemType !== defaultData.itemType) {
