@@ -216,6 +216,10 @@ export class Screen extends BaseItem {
     div.style.borderColor = this.borderColor;
     div.style.borderWidth = `${this.borderWidth}px`;
     div.style.borderStyle = this.borderStyle;
+    if (this.backgroundUrl) {
+      div.style.backgroundSize = "cover";
+      div.style.backgroundImage = `url(${this.backgroundUrl})`
+    }
     return div;
   }
 }
