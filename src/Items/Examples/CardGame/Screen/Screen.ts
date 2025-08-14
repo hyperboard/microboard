@@ -228,7 +228,6 @@ export class Screen extends BaseItem {
     if (
       localStorage.getItem("currentUser") === this.ownerId
       || localStorage.getItem("screenOwnerId") === this.ownerId
-      || !this.ownerId
     ) {
       super.render(context);
     }
