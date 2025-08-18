@@ -182,6 +182,8 @@ export class Transformation {
 			this.applyScaleBy(op.x, op.y);
 		} else if (op.method === 'translateBy') {
 			this.applyTranslateBy(op.x, op.y);
+		} else if (op.method === "translateTo") {
+			this.applyTranslateTo(op.x, op.y);
 		}
 	}
 
