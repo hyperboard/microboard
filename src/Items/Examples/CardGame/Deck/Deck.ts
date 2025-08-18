@@ -125,7 +125,7 @@ export class Deck extends BaseItem {
   }
 
   getDeck(): Card[] {
-    return (this.index?.list() || []) as Card[];
+    return (this.index?.list() || []).reverse() as Card[];
   }
 
   getTopCard(): Card | undefined {
