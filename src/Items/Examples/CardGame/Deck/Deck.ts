@@ -125,7 +125,7 @@ export class Deck extends BaseItem {
   }
 
   getDeck(): Card[] {
-    return (this.index?.list() || []).reverse() as Card[];
+    return (this.index?.list() || []) as Card[];
   }
 
   getTopCard(): Card | undefined {
@@ -137,7 +137,7 @@ export class Deck extends BaseItem {
   }
 
   getCards(count: number): Card[] | undefined {
-    const cards = this.index?.list().slice(0, count) as Card[] | undefined;
+    const cards = this.index?.list().reverse().slice(0, count) as Card[] | undefined;
     if (cards) {
       this.removeChildItems(cards);
       return cards;
