@@ -88,8 +88,6 @@ export class AudioItem extends BaseItem {
     return this.isPlaying;
   }
 
-
-
   setUrl(url: string): void {
     this.url = url;
     this.emit({
@@ -209,7 +207,7 @@ export class AudioItem extends BaseItem {
       this.transformation.deserialize(data.transformation);
     }
     if (data.url) {
-      this.setUrl(data.url);
+      this.url = data.url;
     }
     if (data.extension) {
       this.extension = data.extension;
