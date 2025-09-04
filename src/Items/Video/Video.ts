@@ -197,7 +197,6 @@ export class VideoItem extends BaseItem {
         const newUrl = new URL(url);
         this.url = `${window.location.origin}${newUrl.pathname}`;
       } catch (_) {
-        // this.url = `${storageURL}/${url}`;
       }
     } else {
       this.url = url;
@@ -210,7 +209,6 @@ export class VideoItem extends BaseItem {
         const newUrl = new URL(previewUrl);
         image.src = `${window.location.origin}${newUrl.pathname}`;
       } catch (_) {
-        // image.src = `${storageURL}/${previewUrl}`;
       }
     } else {
       image.src = previewUrl;

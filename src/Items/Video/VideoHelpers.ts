@@ -133,15 +133,15 @@ export const getYouTubeVideoPreview = (youtubeUrl: string): Promise<HTMLImageEle
 	});
 };
 
-export const getYouTubeThumbnail = (videoId: string, quality = 'maxres') => {
-	const qualities = {
-		maxres: 'maxresdefault', // 1280x720
-		sd: 'sddefault', // 640x480
-		hq: 'hqdefault', // 480x360
-		mq: 'mqdefault', // 320x180
-		default: 'default', // 120x90
-	};
+const qualities = {
+	maxres: 'maxresdefault', // 1280x720
+	sd: 'sddefault', // 640x480
+	hq: 'hqdefault', // 480x360
+	mq: 'mqdefault', // 320x180
+	default: 'default', // 120x90
+} as const;
 
+export const getYouTubeThumbnail = (videoId: string, quality: keyof typeof qualities = 'maxres') => {
 	return `https://img.youtube.com/vi/${videoId}/${qualities[quality]}.jpg`;
 };
 

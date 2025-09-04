@@ -132,7 +132,6 @@ function createAudio(id: string, data: ItemData, board: Board): AudioItem {
   }
   const audio = new AudioItem(
       board,
-      data.isStorageUrl,
       data.url,
       board.events,
       id,
