@@ -11,7 +11,6 @@ export const uploadToTheStorage = async (
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		const {blob, mimeType} = getBlobFromDataURL(dataURL);
-		// fetch(storageURL, {
 		fetch(`${window?.location.origin}/api/v1/media/image/${boardId}`, {
 			method: 'POST',
 			headers: {
@@ -152,7 +151,16 @@ export const prepareImage = (
 	boardId: string
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
-		const {blob} = getBlobFromDataURL(dataURL);
+		const {blob, mimeType} = getBlobFromDataURL(dataURL);
+		if (mimeType === "image/svg+xml") {
+			return uploadToTheStorage(hash, dataURL, accessToken, boardId).then(src => {
+				return {
+					imageDimension: { width, height },
+					base64: dataURL,
+					storageLink: src,
+				};
+			});
+		}
 		return uploadMediaToStorage(hash, blob, accessToken, boardId, "image").then(src => {
 			return {
 				imageDimension: { width, height },
