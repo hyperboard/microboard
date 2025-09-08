@@ -3,6 +3,7 @@ import { Board } from 'Board';
 import { AudioItem } from 'Items/Audio/Audio';
 import { Matrix } from 'Items/Transformation/Matrix';
 import {conf} from "../../Settings";
+import {uploadMediaToStorage} from "api/MediaHelpers";
 
 export const uploadAudioToStorage = async (
 	hash: string,
@@ -48,7 +49,7 @@ export const prepareAudio = (
 		audio.onloadedmetadata = () => {
 			fileTosha256(file)
 				.then(hash => {
-					uploadAudioToStorage(hash, file, accessToken, boardId)
+					uploadMediaToStorage(hash, file, accessToken, boardId, "audio")
 						.then(url => {
 							resolve(url);
 						})

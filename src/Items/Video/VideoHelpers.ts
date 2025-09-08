@@ -4,6 +4,7 @@ import { prepareImage } from 'Items/Image/ImageHelpers';
 import { fileTosha256 } from 'sha256';
 import { VideoConstructorData, VideoItem } from './Video';
 import {conf} from "../../Settings";
+import {uploadMediaToStorage} from "api/MediaHelpers";
 
 // todo remove unnecessary fns
 
@@ -97,7 +98,7 @@ export const prepareVideo = (
 					.then(imageData => {
 						fileTosha256(file)
 							.then(hash => {
-								uploadVideoToStorage(hash, file, accessToken, boardId)
+								uploadMediaToStorage(hash, file, accessToken, boardId, "video")
 									.then(url => {
 										resolve({
 											url,
