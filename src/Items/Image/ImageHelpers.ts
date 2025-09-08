@@ -1,6 +1,7 @@
 import { sha256 } from 'sha256';
 import { ImageConstructorData } from './Image';
 import { conf } from 'Settings';
+import {uploadMediaToStorage} from "api/MediaHelpers";
 
 export const uploadToTheStorage = async (
 	hash: string,
@@ -9,14 +10,7 @@ export const uploadToTheStorage = async (
 	boardId: string
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		const base64String = dataURL.split(',')[1];
-		const mimeType = dataURL.split(',')[0].split(':')[1].split(';')[0];
-		// const buffer = Buffer.from(base64String, "base64");
-		// const blob = new Blob([buffer], { type: mimeType });
-		// Window Smell: window
-		const binaryString = window.atob(base64String);
-		const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
-		const blob = new Blob([bytes], { type: mimeType });
+		const {blob, mimeType} = getBlobFromDataURL(dataURL);
 		// fetch(storageURL, {
 		fetch(`${window?.location.origin}/api/v1/media/image/${boardId}`, {
 			method: 'POST',
@@ -42,6 +36,18 @@ export const uploadToTheStorage = async (
 			});
 	});
 };
+
+export const getBlobFromDataURL = (dataURL: string) => {
+	const base64String = dataURL.split(',')[1];
+	const mimeType = dataURL.split(',')[0].split(':')[1].split(';')[0];
+	// const buffer = Buffer.from(base64String, "base64");
+	// const blob = new Blob([buffer], { type: mimeType });
+	// Window Smell: window
+	const binaryString = window.atob(base64String);
+	const bytes = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+	const blob = new Blob([bytes], { type: mimeType });
+	return {blob, base64String, mimeType};
+}
 
 export const resizeAndConvertToPng = async (
 	inp: string | ArrayBuffer | null | undefined
@@ -146,7 +152,8 @@ export const prepareImage = (
 	boardId: string
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
-		return uploadToTheStorage(hash, dataURL, accessToken, boardId).then(src => {
+		const {blob} = getBlobFromDataURL(dataURL);
+		return uploadMediaToStorage(hash, blob, accessToken, boardId, "image").then(src => {
 			return {
 				imageDimension: { width, height },
 				base64: dataURL,

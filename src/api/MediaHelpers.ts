@@ -2,7 +2,7 @@ import {conf} from "Settings";
 
 export const uploadMediaToStorage = async (
   hash: string,
-  videoBlob: Blob,
+  blob: Blob,
   accessToken: string | null,
   boardId: string,
   type: "video" | "audio" | "image",
@@ -15,7 +15,7 @@ export const uploadMediaToStorage = async (
         'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        fileSize: videoBlob.size,
+        fileSize: blob.size,
         boardId: boardId,
         hash: hash,
       }),
@@ -42,9 +42,9 @@ export const uploadMediaToStorage = async (
     const uploadResponse = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
-        'Content-Type': videoBlob.type,
+        'Content-Type': blob.type,
       },
-      body: videoBlob,
+      body: blob,
     });
 
     if (!uploadResponse.ok) {
