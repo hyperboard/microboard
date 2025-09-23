@@ -54,7 +54,7 @@ export class SessionStorage {
 	private get<T>(key: string): T | undefined {
 		const boardId = this.getBoardId() || '';
 		const item = _sessionStorage.getItem(boardId + '_' + key);
-		if (!item) {
+		if (!item || item === "undefined") {
 			return;
 		}
 		return JSON.parse(item) as T;
