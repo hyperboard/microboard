@@ -1416,7 +1416,7 @@ export class BoardSelection {
         return;
       }
 
-      tempStorage.setVerticalAlignment(item.itemType, verticalAlignment || "top");
+      tempStorage.setVerticalAlignment(item.itemType, verticalAlignment);
       if (item instanceof RichText) {
         item.setEditorFocus(this.context);
       }
