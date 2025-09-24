@@ -207,19 +207,60 @@ function createGrid(
 	const horizontalLines: number[] = [];
 	const verticalLines: number[] = [];
 
+	if (start.pointType !== 'Board') {
+		const itemMbr = start.item.getMbr();
+		verticalLines.push(
+			itemMbr.left - ITEM_OFFSET,
+			itemMbr.left,
+			itemMbr.right,
+			itemMbr.right + ITEM_OFFSET
+		);
+		horizontalLines.push(
+			itemMbr.top - ITEM_OFFSET,
+			itemMbr.top,
+			itemMbr.bottom,
+			itemMbr.bottom + ITEM_OFFSET
+		);
+	}
+
+	if (end.pointType !== 'Board') {
+		const itemMbr = end.item.getMbr();
+		verticalLines.push(
+			itemMbr.left - ITEM_OFFSET,
+			itemMbr.left,
+			itemMbr.right,
+			itemMbr.right + ITEM_OFFSET
+		);
+		horizontalLines.push(
+			itemMbr.top - ITEM_OFFSET,
+			itemMbr.top,
+			itemMbr.bottom,
+			itemMbr.bottom + ITEM_OFFSET
+		);
+	}
+
+	const tempStart = start as Point;
+	const tempEnd = end as Point;
+
+	const middle = new Point((tempStart.x + tempEnd.x) / 2, (tempStart.y + tempEnd.y) / 2);
+
+	horizontalLines.push(middle.y, tempStart.y, tempEnd.y);
+	verticalLines.push(middle.x, tempStart.x, tempEnd.x);
+
+	toVisitPoints.forEach(p => {
+		horizontalLines.push(p.y);
+		verticalLines.push(p.x);
+	});
+
+	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
+	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
+
 	let newStart: ControlPoint | undefined;
 	let newEnd: ControlPoint | undefined;
 
 	const processPoint = (point: FloatingPoint | FixedPoint | FixedConnectorPoint, dir: ConnectedPointerDirection): ControlPoint => {
 		const itemMbr = point.item.getMbr();
-		const mbrFloored = new Mbr(
-			Math.floor(itemMbr.left),
-			Math.floor(itemMbr.top),
-			Math.floor(itemMbr.right),
-			Math.floor(itemMbr.bottom)
-		);
-
-		const pointOnMbr = mbrFloored
+		const pointOnMbr = itemMbr
 			.getLines()
 			[revertMapDir[dir]].getNearestPointOnLineSegment(point);
 
@@ -228,34 +269,35 @@ function createGrid(
 			Object.getOwnPropertyDescriptors(point)
 		) as ControlPoint;
 
-		newPoint.x = pointOnMbr.x;
-		newPoint.y = pointOnMbr.y;
-
 		if (dir === 'top') {
-			newPoint.y -= ITEM_OFFSET;
+			const currentYIndex = uniqueHorizontalLines.findIndex(y => Math.abs(y - pointOnMbr.y) < 0.01);
+			const nextYIndex = currentYIndex - 1;
+			if (nextYIndex >= 0) {
+				newPoint.y = uniqueHorizontalLines[nextYIndex];
+				newPoint.x = pointOnMbr.x;
+			}
 		} else if (dir === 'bottom') {
-			newPoint.y += ITEM_OFFSET;
+			const currentYIndex = uniqueHorizontalLines.findIndex(y => Math.abs(y - pointOnMbr.y) < 0.01);
+			const nextYIndex = currentYIndex + 1;
+			if (nextYIndex < uniqueHorizontalLines.length) {
+				newPoint.y = uniqueHorizontalLines[nextYIndex];
+				newPoint.x = pointOnMbr.x;
+			}
 		} else if (dir === 'left') {
-			newPoint.x -= ITEM_OFFSET;
+			const currentXIndex = uniqueVerticalLines.findIndex(x => Math.abs(x - pointOnMbr.x) < 0.01);
+			const nextXIndex = currentXIndex - 1;
+			if (nextXIndex >= 0) {
+				newPoint.x = uniqueVerticalLines[nextXIndex];
+				newPoint.y = pointOnMbr.y;
+			}
 		} else if (dir === 'right') {
-			newPoint.x += ITEM_OFFSET;
+			const currentXIndex = uniqueVerticalLines.findIndex(x => Math.abs(x - pointOnMbr.x) < 0.01);
+			const nextXIndex = currentXIndex + 1;
+			if (nextXIndex < uniqueVerticalLines.length) {
+				newPoint.x = uniqueVerticalLines[nextXIndex];
+				newPoint.y = pointOnMbr.y;
+			}
 		}
-
-		verticalLines.push(
-			mbrFloored.left - ITEM_OFFSET,
-			mbrFloored.left,
-			pointOnMbr.x,
-			mbrFloored.right,
-			mbrFloored.right + ITEM_OFFSET
-		);
-
-		horizontalLines.push(
-			mbrFloored.top - ITEM_OFFSET,
-			mbrFloored.top,
-			pointOnMbr.y,
-			mbrFloored.bottom,
-			mbrFloored.bottom + ITEM_OFFSET
-		);
 
 		return newPoint;
 	};
@@ -267,22 +309,6 @@ function createGrid(
 	if (end.pointType !== 'Board' && endDir) {
 		newEnd = processPoint(end, endDir);
 	}
-
-	const finalStart = newStart || start;
-	const finalEnd = newEnd || end;
-
-	const middle = new Point((finalStart.x + finalEnd.x) / 2, (finalStart.y + finalEnd.y) / 2);
-
-	horizontalLines.push(middle.y, finalStart.y, finalEnd.y);
-	verticalLines.push(middle.x, finalStart.x, finalEnd.x);
-
-	toVisitPoints.forEach(p => {
-		horizontalLines.push(p.y);
-		verticalLines.push(p.x);
-	});
-
-	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
-	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
 
 	const grid: Point[][] = uniqueVerticalLines.map(x =>
 		uniqueHorizontalLines.map(y => new Point(x, y))
