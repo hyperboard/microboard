@@ -226,10 +226,20 @@ function createGrid(
 		const newPoint = Object.create(
 			Object.getPrototypeOf(point),
 			Object.getOwnPropertyDescriptors(point)
-		);
+		) as ControlPoint;
 
-		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
-		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
+		newPoint.x = pointOnMbr.x;
+		newPoint.y = pointOnMbr.y;
+
+		if (dir === 'top') {
+			newPoint.y -= ITEM_OFFSET;
+		} else if (dir === 'bottom') {
+			newPoint.y += ITEM_OFFSET;
+		} else if (dir === 'left') {
+			newPoint.x -= ITEM_OFFSET;
+		} else if (dir === 'right') {
+			newPoint.x += ITEM_OFFSET;
+		}
 
 		verticalLines.push(
 			mbrFloored.left - ITEM_OFFSET,
