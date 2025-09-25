@@ -576,13 +576,69 @@ function createHookWaypoints(
 }
 
 
-// ***ОСНОВНАЯ ИЗМЕНЕННАЯ ФУНКЦИЯ***
+function createStemWaypoints(
+	startPoint: Point,
+	endPoint: Point,
+	startDir: ConnectedPointerDirection | null,
+	endDir: ConnectedPointerDirection | null
+): Point[] {
+	const waypoints: Point[] = [];
+	const offset = conf.CONNECTOR_ITEM_OFFSET;
+
+	if (offset <= 0) {
+		return [];
+	}
+
+
+	if (startDir) {
+		let waypoint: Point;
+		switch (startDir) {
+			case 'right':
+				waypoint = new Point(startPoint.x + offset, startPoint.y);
+				break;
+			case 'left':
+				waypoint = new Point(startPoint.x - offset, startPoint.y);
+				break;
+			case 'bottom':
+				waypoint = new Point(startPoint.x, startPoint.y + offset);
+				break;
+			case 'top':
+				waypoint = new Point(startPoint.x, startPoint.y - offset);
+				break;
+		}
+		waypoints.push(waypoint);
+	}
+
+
+	if (endDir) {
+		let waypoint: Point;
+		switch (endDir) {
+			case 'right':
+				waypoint = new Point(endPoint.x + offset, endPoint.y);
+				break;
+			case 'left':
+				waypoint = new Point(endPoint.x - offset, endPoint.y);
+				break;
+			case 'bottom':
+				waypoint = new Point(endPoint.x, endPoint.y + offset);
+				break;
+			case 'top':
+				waypoint = new Point(endPoint.x, endPoint.y - offset);
+				break;
+		}
+		waypoints.push(waypoint);
+	}
+
+	return waypoints;
+}
+
 export function findOrthogonalPath(
 	start: ControlPoint,
 	end: ControlPoint,
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
+
 	const { grid, newStart, newEnd } = createGrid(start, end, toVisitPoints);
 
 	const startPoint = newStart || start;
@@ -590,11 +646,23 @@ export function findOrthogonalPath(
 
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-	const hookWaypoints = createHookWaypoints(startPoint, endPoint, start, end, startDir, endDir);
+	const stemWaypoints = createStemWaypoints(startPoint, endPoint, startDir, endDir);
 
-	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
+	let finalWaypoints: Point[] = [];
+	if (stemWaypoints.length > 0) {
+		const startStem = stemWaypoints[0];
+		const endStem = stemWaypoints[1] || startStem;
 
-	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
+		finalWaypoints = [startPoint, startStem, ...toVisitPoints, endStem, endPoint];
+	} else {
+		finalWaypoints = [startPoint, ...toVisitPoints, endPoint];
+	}
+
+	const uniqueWaypoints = finalWaypoints.filter((point, index, self) =>
+		index === self.findIndex(p => p.x === point.x && p.y === point.y)
+	);
+
+	const pathPoints = findPathPoints(uniqueWaypoints, grid, obstacles, newStart, newEnd);
 
 	return {
 		lines: getLines(pathPoints),
