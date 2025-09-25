@@ -504,18 +504,26 @@ function createHookWaypoints(
 ): Point[] {
 	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
+		console.log("111")
+		console.log([new Point(startPoint.x, midY), new Point(endPoint.x, midY)])
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
 	if (startDir === 'left' && endDir === 'right' && startPoint.x < endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
+		console.log("222")
+		console.log([new Point(startPoint.x, midY), new Point(endPoint.x, midY)])
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
 	if (startDir === 'bottom' && endDir === 'top' && startPoint.y > endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
+		console.log("333")
+		console.log([new Point(midX, startPoint.y), new Point(midX, endPoint.y)])
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
 	if (startDir === 'top' && endDir === 'bottom' && startPoint.y < endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
+		console.log("444")
+		console.log([new Point(midX, startPoint.y), new Point(midX, endPoint.y)])
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
 
@@ -525,14 +533,18 @@ function createHookWaypoints(
 	const startConflictX = (startDir === 'right' && dx < 0) || (startDir === 'left' && dx > 0);
 	const startConflictY = (startDir === 'bottom' && dy < 0) || (startDir === 'top' && dy > 0);
 
-	const endConflictX = (endDir === 'right' && dx < 0) || (endDir === 'left' && dx > 0);
+	const endConflictX = (endDir === 'right' && dx > 0) || (endDir === 'left' && dx < 0);
 	const endConflictY = (endDir === 'bottom' && dy < 0) || (endDir === 'top' && dy > 0);
 
 	if (startConflictX || endConflictY) {
+		console.log("555")
+		console.log([new Point(startPoint.x, endPoint.y)])
 		return [new Point(startPoint.x, endPoint.y)];
 	}
 
 	if (startConflictY || endConflictX) {
+		console.log("666")
+		console.log([new Point(endPoint.x, startPoint.y)])
 		return [new Point(endPoint.x, startPoint.y)];
 	}
 
@@ -557,6 +569,12 @@ export function findOrthogonalPath(
 	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
 
 	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
+
+	console.log("RESULT", {
+		lines: getLines(pathPoints),
+		newStart,
+		newEnd,
+	})
 
 	return {
 		lines: getLines(pathPoints),
