@@ -65,7 +65,7 @@ function isChangingDirection(
 
 function heuristic(start: Node, end: Node): number {
 	// Manhattan distance in grid
-	return Math.abs(start.xGrid - end.xGrid) + Math.abs(start.yGrid - end.yGrid);
+	return Math.abs(start.point.x - end.point.x) + Math.abs(start.point.y - end.point.y);
 }
 
 function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
@@ -334,10 +334,13 @@ function findPath(
 				continue;
 			}
 
-			const extraCost = isChangingDirection(current, neighbor, newStart, newEnd);
+			const TURN_PENALTY = 500;
+			const extraCost = isChangingDirection(current, neighbor, newStart, newEnd) ? TURN_PENALTY : 0;
+
+			const movementCost = Math.abs(current.point.x - neighbor.point.x) + Math.abs(current.point.y - neighbor.point.y);
 
 			const pathOverlapCost = existingPath.has(neighborKey) ? 1000 : 0;
-			const tentativeCost = current.costSoFar + 1 + pathOverlapCost;
+			const tentativeCost = current.costSoFar + movementCost + pathOverlapCost;
 
 			let existingNodeInOpenSet = openSet.find(node => node.point.barelyEqual(neighbor.point));
 
@@ -360,6 +363,7 @@ function findPath(
 	return undefined;
 }
 
+
 function findPathPoints(
 	points: Point[],
 	grid: Point[][],
@@ -367,7 +371,6 @@ function findPathPoints(
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint
 ): Point[] {
-	// Если точек для построения маршрута меньше двух, возвращаем то, что есть.
 	if (points.length < 2) {
 		return points;
 	}
