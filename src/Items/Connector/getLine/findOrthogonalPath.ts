@@ -557,24 +557,39 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	const { grid, newStart, newEnd } = createGrid(start, end, toVisitPoints);
-
-	const startPoint = newStart || start;
-	const endPoint = newEnd || end;
+	// Предварительно создаем временные newStart/newEnd, чтобы рассчитать хуки
+	// Это может быть не идеально, но даст нам правильные координаты для хуков
+	const tempGridInfo = createGrid(start, end);
+	const startPoint = tempGridInfo.newStart || start;
+	const endPoint = tempGridInfo.newEnd || end;
 
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-	const	hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
 
-	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
+	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
 
-	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
+	const allWaypoints = [...hookWaypoints, ...toVisitPoints];
+
+	const { grid, newStart, newEnd } = createGrid(start, end, allWaypoints);
+
+	const finalStart = newStart || start;
+	const finalEnd = newEnd || end;
+	const points = [finalStart, ...allWaypoints, finalEnd];
+
+	const uniquePoints = points.reduce((acc, p) => {
+		if (!acc.some(existing => existing.barelyEqual(p))) {
+			acc.push(p);
+		}
+		return acc;
+	}, [] as Point[]);
+
+	const pathPoints = findPathPoints(uniquePoints, grid, obstacles, newStart, newEnd);
 
 	console.log("RESULT", {
 		lines: getLines(pathPoints),
 		newStart,
 		newEnd,
-	})
+	});
 
 	return {
 		lines: getLines(pathPoints),
