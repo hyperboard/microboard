@@ -34,7 +34,7 @@ function isChangingDirection(
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint
 ): number {
-	const TURN_PENALTY = 50;
+	const TURN_PENALTY = 5000;
 
 	const dirMap: Record<ConnectedPointerDirection, Direction> = {
 		top: 'vertical',
@@ -300,14 +300,8 @@ function findPath(
 	const startNode: Node = {
 		point: start,
 		costSoFar: 0,
-		heuristic: heuristic(
-			{ point: start, xGrid: startRowIndex, yGrid: startPointIndex } as Node,
-			endNode
-		),
-		toFinish: heuristic(
-			{ point: start, xGrid: startRowIndex, yGrid: startPointIndex } as Node,
-			endNode
-		),
+		heuristic: heuristic({ point: start } as Node, endNode),
+		toFinish: heuristic({ point: start } as Node, endNode),
 		xGrid: startRowIndex,
 		yGrid: startPointIndex,
 	};
@@ -320,8 +314,7 @@ function findPath(
 		const currentKey = `${current.point.x},${current.point.y}`;
 
 		if (current.point.barelyEqual(end)) {
-			const path = reconstructPath(current);
-			return path;
+			return reconstructPath(current);
 		}
 
 		closedSet.add(currentKey);
@@ -334,24 +327,22 @@ function findPath(
 				continue;
 			}
 
-			const TURN_PENALTY = 500;
-			const extraCost = isChangingDirection(current, neighbor, newStart, newEnd) ? TURN_PENALTY : 0;
-
+			const extraCost = isChangingDirection(current, neighbor, newStart, newEnd);
 			const movementCost = Math.abs(current.point.x - neighbor.point.x) + Math.abs(current.point.y - neighbor.point.y);
-
 			const pathOverlapCost = existingPath.has(neighborKey) ? 1000 : 0;
-			const tentativeCost = current.costSoFar + movementCost + pathOverlapCost;
+
+			const tentativeCost = current.costSoFar + movementCost + pathOverlapCost + extraCost;
 
 			let existingNodeInOpenSet = openSet.find(node => node.point.barelyEqual(neighbor.point));
 
 			if (!existingNodeInOpenSet || tentativeCost < existingNodeInOpenSet.costSoFar) {
 				if (existingNodeInOpenSet) {
-					existingNodeInOpenSet.costSoFar = tentativeCost + extraCost;
+					existingNodeInOpenSet.costSoFar = tentativeCost;
 					existingNodeInOpenSet.heuristic = heuristic(neighbor, endNode);
 					existingNodeInOpenSet.toFinish = existingNodeInOpenSet.costSoFar + existingNodeInOpenSet.heuristic;
 					existingNodeInOpenSet.parent = current;
 				} else {
-					neighbor.costSoFar = tentativeCost + extraCost;
+					neighbor.costSoFar = tentativeCost;
 					neighbor.heuristic = heuristic(neighbor, endNode);
 					neighbor.toFinish = neighbor.costSoFar + neighbor.heuristic;
 					openSet.push(neighbor);
