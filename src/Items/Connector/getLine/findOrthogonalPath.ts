@@ -505,6 +505,46 @@ function reconstructPath(node: Node): Point[] {
 	return path.reverse();
 }
 
+function createHookWaypoints(
+	startPoint: Point,
+	endPoint: Point,
+	startDir?: ConnectedPointerDirection | null,
+	endDir?: ConnectedPointerDirection | null
+): Point[] {
+	const hookPoints: Point[] = [];
+
+	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x) {
+		const midY = (startPoint.y + endPoint.y) / 2;
+		hookPoints.push(new Point(startPoint.x, midY));
+		hookPoints.push(new Point(endPoint.x, midY));
+		return hookPoints;
+	}
+
+	if (startDir === 'left' && endDir === 'right' && startPoint.x < endPoint.x) {
+		const midY = (startPoint.y + endPoint.y) / 2;
+		hookPoints.push(new Point(startPoint.x, midY));
+		hookPoints.push(new Point(endPoint.x, midY));
+		return hookPoints;
+	}
+
+	if (startDir === 'bottom' && endDir === 'top' && startPoint.y > endPoint.y) {
+		const midX = (startPoint.x + endPoint.x) / 2;
+		hookPoints.push(new Point(midX, startPoint.y));
+		hookPoints.push(new Point(midX, endPoint.y));
+		return hookPoints;
+	}
+
+	if (startDir === 'top' && endDir === 'bottom' && startPoint.y < endPoint.y) {
+		const midX = (startPoint.x + endPoint.x) / 2;
+		hookPoints.push(new Point(midX, startPoint.y));
+		hookPoints.push(new Point(midX, endPoint.y));
+		return hookPoints;
+	}
+
+	return hookPoints;
+}
+
+// ***ОСНОВНАЯ ИЗМЕНЕННАЯ ФУНКЦИЯ***
 export function findOrthogonalPath(
 	start: ControlPoint,
 	end: ControlPoint,
@@ -516,7 +556,11 @@ export function findOrthogonalPath(
 	const startPoint = newStart || start;
 	const endPoint = newEnd || end;
 
-	const points = [startPoint, ...toVisitPoints, endPoint];
+	const startDir = getPointerDirection(start);
+	const endDir = getPointerDirection(end);
+	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
+
+	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
 
 	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
 
