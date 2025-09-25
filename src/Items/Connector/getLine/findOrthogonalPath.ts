@@ -2,6 +2,7 @@ import {FixedConnectorPoint, FixedPoint, FloatingPoint, Line, Mbr} from 'Items';
 import { Point } from '../../Point';
 import { ControlPoint } from '../ControlPoint';
 import { ConnectedPointerDirection, getPointerDirection } from '../Pointers';
+import {conf} from "Settings";
 
 interface Node {
 	point: Point;
@@ -14,8 +15,6 @@ interface Node {
 }
 
 type Direction = 'vertical' | 'horizontal';
-
-const ITEM_OFFSET = 1;
 
 export function getDirection(from: Point, to?: Point): Direction | null {
 	if (!to) {
@@ -77,7 +76,7 @@ function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
 			const newPoint = grid[pos.x][pos.y];
 			if (
 				newPoint &&
-				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, ITEM_OFFSET - 1))
+				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, conf.CONNECTOR_ITEM_OFFSET - 1))
 			) {
 				neighbors.push({
 					point: newPoint,
@@ -198,106 +197,54 @@ function createGrid(
 	const endDir = getPointerDirection(end);
 	const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
 	const offsetMap = {
-		top: { x: 0, y: -ITEM_OFFSET },
-		bottom: { x: 0, y: ITEM_OFFSET },
-		right: { x: ITEM_OFFSET, y: 0 },
-		left: { x: -ITEM_OFFSET, y: 0 },
+		top: { x: 0, y: -conf.CONNECTOR_ITEM_OFFSET },
+		bottom: { x: 0, y: conf.CONNECTOR_ITEM_OFFSET },
+		right: { x: conf.CONNECTOR_ITEM_OFFSET, y: 0 },
+		left: { x: -conf.CONNECTOR_ITEM_OFFSET, y: 0 },
 	};
 
 	const horizontalLines: number[] = [];
 	const verticalLines: number[] = [];
-
-	if (start.pointType !== 'Board') {
-		const itemMbr = start.item.getMbr();
-		verticalLines.push(
-			itemMbr.left - ITEM_OFFSET,
-			itemMbr.left,
-			itemMbr.right,
-			itemMbr.right + ITEM_OFFSET
-		);
-		horizontalLines.push(
-			itemMbr.top - ITEM_OFFSET,
-			itemMbr.top,
-			itemMbr.bottom,
-			itemMbr.bottom + ITEM_OFFSET
-		);
-	}
-
-	if (end.pointType !== 'Board') {
-		const itemMbr = end.item.getMbr();
-		verticalLines.push(
-			itemMbr.left - ITEM_OFFSET,
-			itemMbr.left,
-			itemMbr.right,
-			itemMbr.right + ITEM_OFFSET
-		);
-		horizontalLines.push(
-			itemMbr.top - ITEM_OFFSET,
-			itemMbr.top,
-			itemMbr.bottom,
-			itemMbr.bottom + ITEM_OFFSET
-		);
-	}
-
-	const tempStart = start as Point;
-	const tempEnd = end as Point;
-
-	const middle = new Point((tempStart.x + tempEnd.x) / 2, (tempStart.y + tempEnd.y) / 2);
-
-	horizontalLines.push(middle.y, tempStart.y, tempEnd.y);
-	verticalLines.push(middle.x, tempStart.x, tempEnd.x);
-
-	toVisitPoints.forEach(p => {
-		horizontalLines.push(p.y);
-		verticalLines.push(p.x);
-	});
-
-	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
-	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
 
 	let newStart: ControlPoint | undefined;
 	let newEnd: ControlPoint | undefined;
 
 	const processPoint = (point: FloatingPoint | FixedPoint | FixedConnectorPoint, dir: ConnectedPointerDirection): ControlPoint => {
 		const itemMbr = point.item.getMbr();
-		const pointOnMbr = itemMbr
+		const mbrFloored = new Mbr(
+			Math.floor(itemMbr.left),
+			Math.floor(itemMbr.top),
+			Math.floor(itemMbr.right),
+			Math.floor(itemMbr.bottom)
+		);
+
+		const pointOnMbr = mbrFloored
 			.getLines()
 			[revertMapDir[dir]].getNearestPointOnLineSegment(point);
 
 		const newPoint = Object.create(
 			Object.getPrototypeOf(point),
 			Object.getOwnPropertyDescriptors(point)
-		) as ControlPoint;
+		);
 
-		if (dir === 'top') {
-			const currentYIndex = uniqueHorizontalLines.findIndex(y => Math.abs(y - pointOnMbr.y) < 0.01);
-			const nextYIndex = currentYIndex - 1;
-			if (nextYIndex >= 0) {
-				newPoint.y = uniqueHorizontalLines[nextYIndex];
-				newPoint.x = pointOnMbr.x;
-			}
-		} else if (dir === 'bottom') {
-			const currentYIndex = uniqueHorizontalLines.findIndex(y => Math.abs(y - pointOnMbr.y) < 0.01);
-			const nextYIndex = currentYIndex + 1;
-			if (nextYIndex < uniqueHorizontalLines.length) {
-				newPoint.y = uniqueHorizontalLines[nextYIndex];
-				newPoint.x = pointOnMbr.x;
-			}
-		} else if (dir === 'left') {
-			const currentXIndex = uniqueVerticalLines.findIndex(x => Math.abs(x - pointOnMbr.x) < 0.01);
-			const nextXIndex = currentXIndex - 1;
-			if (nextXIndex >= 0) {
-				newPoint.x = uniqueVerticalLines[nextXIndex];
-				newPoint.y = pointOnMbr.y;
-			}
-		} else if (dir === 'right') {
-			const currentXIndex = uniqueVerticalLines.findIndex(x => Math.abs(x - pointOnMbr.x) < 0.01);
-			const nextXIndex = currentXIndex + 1;
-			if (nextXIndex < uniqueVerticalLines.length) {
-				newPoint.x = uniqueVerticalLines[nextXIndex];
-				newPoint.y = pointOnMbr.y;
-			}
-		}
+		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
+		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
+
+		verticalLines.push(
+			mbrFloored.left - conf.CONNECTOR_ITEM_OFFSET,
+			mbrFloored.left,
+			pointOnMbr.x,
+			mbrFloored.right,
+			mbrFloored.right + conf.CONNECTOR_ITEM_OFFSET
+		);
+
+		horizontalLines.push(
+			mbrFloored.top - conf.CONNECTOR_ITEM_OFFSET,
+			mbrFloored.top,
+			pointOnMbr.y,
+			mbrFloored.bottom,
+			mbrFloored.bottom + conf.CONNECTOR_ITEM_OFFSET
+		);
 
 		return newPoint;
 	};
@@ -309,6 +256,22 @@ function createGrid(
 	if (end.pointType !== 'Board' && endDir) {
 		newEnd = processPoint(end, endDir);
 	}
+
+	const finalStart = newStart || start;
+	const finalEnd = newEnd || end;
+
+	const middle = new Point((finalStart.x + finalEnd.x) / 2, (finalStart.y + finalEnd.y) / 2);
+
+	horizontalLines.push(middle.y, finalStart.y, finalEnd.y);
+	verticalLines.push(middle.x, finalStart.x, finalEnd.x);
+
+	toVisitPoints.forEach(p => {
+		horizontalLines.push(p.y);
+		verticalLines.push(p.x);
+	});
+
+	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
+	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
 
 	const grid: Point[][] = uniqueVerticalLines.map(x =>
 		uniqueHorizontalLines.map(y => new Point(x, y))
