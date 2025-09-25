@@ -459,7 +459,6 @@ function reducePoints(points: Point[]): Point[] {
 }
 
 function getLines(pathPoints: Point[]): Line[] {
-	const lines: Line[] = [];
 	if (pathPoints.length < 2) {
 		return [];
 	}
@@ -468,27 +467,19 @@ function getLines(pathPoints: Point[]): Line[] {
 	if (reducedPoints.length < 2) {
 		return [];
 	}
+
+	const lines: Line[] = [];
 	let startPoint = reducedPoints[0];
 
-	for (let i = 1; i < reducedPoints.length; i += 1) {
-		const prevPoint = reducedPoints[i - 1];
-		const currPoint = reducedPoints[i];
-		const nextPoint = (i + 1 < reducedPoints.length) ? reducedPoints[i + 1] : null;
+	for (let i = 1; i < reducedPoints.length; i++) {
+		const currentPoint = reducedPoints[i];
+		const nextPoint = i + 1 < reducedPoints.length ? reducedPoints[i + 1] : null;
 
-		if (!nextPoint || (prevPoint.x !== nextPoint.x && prevPoint.y !== nextPoint.y)) {
-			lines.push(new Line(startPoint, currPoint));
-			startPoint = currPoint;
-		}
-	}
+		const direction = getDirection(startPoint, currentPoint);
 
-	if (lines.length === 0 && reducedPoints.length > 1) {
-		lines.push(new Line(reducedPoints[0], reducedPoints[reducedPoints.length - 1]));
-	} else if (lines.length > 0) {
-		const lastLine = lines[lines.length - 1];
-		const lastPointInLines = lastLine.getEndPoint();
-		const lastPointInReduced = reducedPoints[reducedPoints.length - 1];
-		if (!lastPointInLines.barelyEqual(lastPointInReduced)) {
-			lines.push(new Line(lastPointInLines, lastPointInReduced));
+		if (!nextPoint || direction !== getDirection(currentPoint, nextPoint)) {
+			lines.push(new Line(startPoint, currentPoint));
+			startPoint = currentPoint;
 		}
 	}
 
@@ -505,35 +496,25 @@ function reconstructPath(node: Node): Point[] {
 	return path.reverse();
 }
 
-function haveVerticalIntersection(firstMbr: Mbr, secondMbr: Mbr, offset = 0): boolean {
-	return firstMbr.top <= secondMbr.bottom - offset && secondMbr.top <= firstMbr.bottom - offset;
-}
-
-function haveHorizontalIntersection(firstMbr: Mbr, secondMbr: Mbr, offset = 0): boolean {
-	return firstMbr.right <= secondMbr.left - offset && secondMbr.right <= firstMbr.left - offset;
-}
-
 function createHookWaypoints(
 	startPoint: Point,
 	endPoint: Point,
-	startItemMbr: Mbr,
-	endItemMbr: Mbr,
 	startDir?: ConnectedPointerDirection | null,
 	endDir?: ConnectedPointerDirection | null
 ): Point[] {
-	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x && !haveVerticalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2)) {
+	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
-	if (startDir === 'left' && endDir === 'right' && startPoint.x < endPoint.x && !haveVerticalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2)) {
+	if (startDir === 'left' && endDir === 'right' && startPoint.x < endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
-	if (startDir === 'bottom' && endDir === 'top' && startPoint.y > endPoint.y && !haveHorizontalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2)) {
+	if (startDir === 'bottom' && endDir === 'top' && startPoint.y > endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
-	if (startDir === 'top' && endDir === 'bottom' && startPoint.y < endPoint.y && !haveHorizontalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2)) {
+	if (startDir === 'top' && endDir === 'bottom' && startPoint.y < endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
@@ -541,11 +522,11 @@ function createHookWaypoints(
 	const dx = endPoint.x - startPoint.x;
 	const dy = endPoint.y - startPoint.y;
 
-	const startConflictX = ((startDir === 'right' && dx < 0) || (startDir === 'left' && dx > 0)) && !haveVerticalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2);
-	const startConflictY = ((startDir === 'bottom' && dy < 0) || (startDir === 'top' && dy > 0)) && !haveHorizontalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2);
+	const startConflictX = (startDir === 'right' && dx < 0) || (startDir === 'left' && dx > 0);
+	const startConflictY = (startDir === 'bottom' && dy < 0) || (startDir === 'top' && dy > 0);
 
-	const endConflictX = ((endDir === 'right' && dx < 0) || (endDir === 'left' && dx > 0)) && !haveVerticalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2);
-	const endConflictY = ((endDir === 'bottom' && dy < 0) || (endDir === 'top' && dy > 0)) && !haveHorizontalIntersection(startItemMbr, endItemMbr, conf.CONNECTOR_ITEM_OFFSET * 2);
+	const endConflictX = (endDir === 'right' && dx < 0) || (endDir === 'left' && dx > 0);
+	const endConflictY = (endDir === 'bottom' && dy < 0) || (endDir === 'top' && dy > 0);
 
 	if (startConflictX || endConflictY) {
 		return [new Point(startPoint.x, endPoint.y)];
@@ -571,10 +552,7 @@ export function findOrthogonalPath(
 
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-	let hookWaypoints: Point[] = [];
-	if (startPoint.pointType !== "Board" && endPoint.pointType !== "Board") {
-		hookWaypoints = createHookWaypoints(startPoint, endPoint, startPoint.item.getMbr(), endPoint.item.getMbr(), startDir, endDir);
-	}
+	const	hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
 
 	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
 
