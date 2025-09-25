@@ -496,6 +496,22 @@ function reconstructPath(node: Node): Point[] {
 	return path.reverse();
 }
 
+function findClosestPointInGrid(point: Point, grid: Point[][]): Point {
+	let closestPoint: Point = grid[0][0];
+	let minDistance = Infinity;
+
+	for (const row of grid) {
+		for (const gridPoint of row) {
+			const distance = Math.abs(point.x - gridPoint.x) + Math.abs(point.y - gridPoint.y);
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestPoint = gridPoint;
+			}
+		}
+	}
+	return closestPoint;
+}
+
 function createHookWaypoints(
 	startPoint: Point,
 	endPoint: Point,
@@ -557,8 +573,6 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	// Предварительно создаем временные newStart/newEnd, чтобы рассчитать хуки
-	// Это может быть не идеально, но даст нам правильные координаты для хуков
 	const tempGridInfo = createGrid(start, end);
 	const startPoint = tempGridInfo.newStart || start;
 	const endPoint = tempGridInfo.newEnd || end;
@@ -567,29 +581,24 @@ export function findOrthogonalPath(
 	const endDir = getPointerDirection(end);
 
 	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
-
 	const allWaypoints = [...hookWaypoints, ...toVisitPoints];
 
 	const { grid, newStart, newEnd } = createGrid(start, end, allWaypoints);
 
 	const finalStart = newStart || start;
 	const finalEnd = newEnd || end;
-	const points = [finalStart, ...allWaypoints, finalEnd];
+	const pointsToVisit = [finalStart, ...allWaypoints, finalEnd];
 
-	const uniquePoints = points.reduce((acc, p) => {
+	const uniquePoints = pointsToVisit.reduce((acc, p) => {
 		if (!acc.some(existing => existing.barelyEqual(p))) {
 			acc.push(p);
 		}
 		return acc;
 	}, [] as Point[]);
 
-	const pathPoints = findPathPoints(uniquePoints, grid, obstacles, newStart, newEnd);
+	const snappedPoints = uniquePoints.map(p => findClosestPointInGrid(p, grid));
 
-	console.log("RESULT", {
-		lines: getLines(pathPoints),
-		newStart,
-		newEnd,
-	});
+	const pathPoints = findPathPoints(snappedPoints, grid, obstacles, newStart, newEnd);
 
 	return {
 		lines: getLines(pathPoints),
