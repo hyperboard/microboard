@@ -575,62 +575,70 @@ function createHookWaypoints(
 	return [];
 }
 
-
-function createStemWaypoints(
-	startPoint: Point,
-	endPoint: Point,
-	startDir: ConnectedPointerDirection | null,
-	endDir: ConnectedPointerDirection | null
-): Point[] {
-	const waypoints: Point[] = [];
+function preCalculatePathPoints(start: ControlPoint, end: ControlPoint): {
+	startPoint: ControlPoint;
+	endPoint: ControlPoint;
+	stemWaypoints: Point[];
+	allWaypoints: Point[];
+} {
+	const startDir = getPointerDirection(start);
+	const endDir = getPointerDirection(end);
 	const offset = conf.CONNECTOR_ITEM_OFFSET;
 
-	if (offset <= 0) {
-		return [];
-	}
+	let startPoint = start;
+	let endPoint = end;
+	const stemWaypoints: Point[] = [];
+	const allWaypoints: Point[] = [];
 
+
+	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): ControlPoint => {
+		if (point.pointType === 'Board') {
+			return point;
+		}
+		const offsetMap = {
+			top: { x: 0, y: -offset }, bottom: { x: 0, y: offset },
+			right: { x: offset, y: 0 }, left: { x: -offset, y: 0 },
+		};
+		const itemMbr = point.item.getMbr();
+		const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
+		const pointOnMbr = itemMbr.getLines()[revertMapDir[dir]].getNearestPointOnLineSegment(point);
+
+		const newPoint = Object.create(Object.getPrototypeOf(point), Object.getOwnPropertyDescriptors(point)) as ControlPoint;
+		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
+		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
+		return newPoint;
+	};
+
+	if (start.pointType !== 'Board' && startDir) {
+		startPoint = processPoint(start, startDir);
+	}
+	if (end.pointType !== 'Board' && endDir) {
+		endPoint = processPoint(end, endDir);
+	}
 
 	if (startDir) {
-		let waypoint: Point;
-		switch (startDir) {
-			case 'right':
-				waypoint = new Point(startPoint.x + offset, startPoint.y);
-				break;
-			case 'left':
-				waypoint = new Point(startPoint.x - offset, startPoint.y);
-				break;
-			case 'bottom':
-				waypoint = new Point(startPoint.x, startPoint.y + offset);
-				break;
-			case 'top':
-				waypoint = new Point(startPoint.x, startPoint.y - offset);
-				break;
-		}
-		waypoints.push(waypoint);
+		let stem: Point;
+		if (startDir === 'right') stem = new Point(startPoint.x + offset, startPoint.y);
+		else if (startDir === 'left') stem = new Point(startPoint.x - offset, startPoint.y);
+		else if (startDir === 'bottom') stem = new Point(startPoint.x, startPoint.y + offset);
+		else stem = new Point(startPoint.x, startPoint.y - offset); // top
+		stemWaypoints.push(stem);
+		allWaypoints.push(stem);
 	}
-
 
 	if (endDir) {
-		let waypoint: Point;
-		switch (endDir) {
-			case 'right':
-				waypoint = new Point(endPoint.x + offset, endPoint.y);
-				break;
-			case 'left':
-				waypoint = new Point(endPoint.x - offset, endPoint.y);
-				break;
-			case 'bottom':
-				waypoint = new Point(endPoint.x, endPoint.y + offset);
-				break;
-			case 'top':
-				waypoint = new Point(endPoint.x, endPoint.y - offset);
-				break;
-		}
-		waypoints.push(waypoint);
+		let stem: Point;
+		if (endDir === 'right') stem = new Point(endPoint.x + offset, endPoint.y);
+		else if (endDir === 'left') stem = new Point(endPoint.x - offset, endPoint.y);
+		else if (endDir === 'bottom') stem = new Point(endPoint.x, endPoint.y + offset);
+		else stem = new Point(endPoint.x, endPoint.y - offset); // top
+		stemWaypoints.push(stem);
+		allWaypoints.push(stem);
 	}
 
-	return waypoints;
+	return { startPoint, endPoint, stemWaypoints, allWaypoints };
 }
+
 
 export function findOrthogonalPath(
 	start: ControlPoint,
@@ -638,35 +646,30 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
+	const { startPoint, endPoint, stemWaypoints, allWaypoints } = preCalculatePathPoints(start, end);
 
-	const { grid, newStart, newEnd } = createGrid(start, end, toVisitPoints);
+	const gridPoints = [...allWaypoints, ...toVisitPoints];
+	const { grid, newStart, newEnd } = createGrid(start, end, gridPoints);
 
-	const startPoint = newStart || start;
-	const endPoint = newEnd || end;
-
-	const startDir = getPointerDirection(start);
-	const endDir = getPointerDirection(end);
-	const stemWaypoints = createStemWaypoints(startPoint, endPoint, startDir, endDir);
-
-	let finalWaypoints: Point[] = [];
+	let finalWaypoints: Point[] = [startPoint];
 	if (stemWaypoints.length > 0) {
-		const startStem = stemWaypoints[0];
-		const endStem = stemWaypoints[1] || startStem;
-
-		finalWaypoints = [startPoint, startStem, ...toVisitPoints, endStem, endPoint];
-	} else {
-		finalWaypoints = [startPoint, ...toVisitPoints, endPoint];
+		finalWaypoints.push(stemWaypoints[0]);
 	}
+	finalWaypoints.push(...toVisitPoints);
+	if (stemWaypoints.length > 1) {
+		finalWaypoints.push(stemWaypoints[1]);
+	}
+	finalWaypoints.push(endPoint);
 
 	const uniqueWaypoints = finalWaypoints.filter((point, index, self) =>
-		index === self.findIndex(p => p.x === point.x && p.y === point.y)
+		index === 0 || !point.barelyEqual(self[index-1])
 	);
 
 	const pathPoints = findPathPoints(uniqueWaypoints, grid, obstacles, newStart, newEnd);
 
 	return {
 		lines: getLines(pathPoints),
-		newStart,
-		newEnd,
+		newStart: startPoint,
+		newEnd: endPoint,
 	};
 }
