@@ -511,27 +511,15 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	const { grid, newStart, newEnd, middlePoint } = createGrid(start, end, toVisitPoints);
+	const { grid, newStart, newEnd } = createGrid(start, end, toVisitPoints);
 
-	const startPoint = newStart ? newStart : start;
-	const endPoint = newEnd ? newEnd : end;
+	const startPoint = newStart || start;
+	const endPoint = newEnd || end;
 
-	const centerLine = findCenterLine(grid, startPoint, endPoint, middlePoint);
-	const adjustedCenterLine =
-		centerLine.length > 0
-			? startPoint.getDistance(centerLine[0]) <
-			startPoint.getDistance(centerLine[centerLine.length - 1])
-				? centerLine
-				: centerLine.reverse()
-			: centerLine;
-
-	const points = [
-		startPoint,
-		...(toVisitPoints.length > 0 ? toVisitPoints : adjustedCenterLine),
-		endPoint,
-	];
+	const points = [startPoint, ...toVisitPoints, endPoint];
 
 	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
+
 	return {
 		lines: getLines(pathPoints),
 		newStart,
