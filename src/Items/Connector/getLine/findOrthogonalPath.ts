@@ -72,7 +72,7 @@ function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
 
 	for (const pos of potentialNeighbors) {
 		// Check if the new position is within the grid bounds
-		if (pos.x >= 0 && pos.x < grid.length && pos.y >= 0) {
+		if (pos.x >= 0 && pos.x < grid.length && pos.y >= 0 && grid[pos.x] && grid[pos.x][pos.y]) {
 			const newPoint = grid[pos.x][pos.y];
 			if (
 				newPoint &&
@@ -112,70 +112,38 @@ function findCenterLine(
 		return isInGrid ? [middlePoint] : [];
 	}
 
-	// let forceVertical = false;
-	// let forceHorizontal = false;
-	// const startDir = getPointerDirection(start);
-	// const endDir = getPointerDirection(end);
-	// if (startDir && endDir) {
-	// 	const dirMap = {
-	// 		top: {
-	// 			// top: "vertical",
-	// 			top: {
-	// 				vertical: true,
-	// 				horizontal: false,
-	// 			},
-	// 			bottom: "vertical",
-	// 			right: "horizontal",
-	// 			left: "horizontal",
-	// 		},
-	// 		bottom: {
-	// 			top: "vertical",
-	// 			bottom: "vertical",
-	// 			right: "horizontal",
-	// 			left: "horizontal",
-	// 		},
-	// 		right: {
-	// 			top: "horizontal",
-	// 			bottom: "horizontal",
-	// 			right: "vertical",
-	// 			left: "vertical",
-	// 		},
-	// 		left: {
-	// 			top: "horizontal",
-	// 			bottom: "horizontal",
-	// 			right: "vertical",
-	// 			left: "vertical",
-	// 		},
-	// 	};
-	// }
-
 	if (width > height) {
 		const centerIdx = grid.findIndex(
 			row => row[0].x === middlePoint.x || Math.abs(row[0].x - middlePoint.x) < 0.01
 		);
-		for (let y = 0; y < grid[0].length && centerIdx !== -1; y++) {
-			if (
-				grid[centerIdx][y] &&
-				grid[centerIdx][y].x >= min.x - 0.01 &&
-				grid[centerIdx][y].x <= max.x + 0.01 &&
-				grid[centerIdx][y].y >= min.y - 0.01 &&
-				grid[centerIdx][y].y <= max.y + 0.01
-			) {
-				centerLine.push(grid[centerIdx][y]);
+		if (centerIdx !== -1) {
+			for (let y = 0; y < grid[0].length; y++) {
+				if (
+					grid[centerIdx][y] &&
+					grid[centerIdx][y].x >= min.x - 0.01 &&
+					grid[centerIdx][y].x <= max.x + 0.01 &&
+					grid[centerIdx][y].y >= min.y - 0.01 &&
+					grid[centerIdx][y].y <= max.y + 0.01
+				) {
+					centerLine.push(grid[centerIdx][y]);
+				}
 			}
 		}
 	} else {
 		const centerIdx = grid[0].findIndex(
 			point => point.y === middlePoint.y || Math.abs(point.y - middlePoint.y) < 0.01
 		);
-		for (let x = 0; x < grid.length && centerIdx !== -1; x++) {
-			if (
-				grid[x][centerIdx].x >= min.x - 0.01 &&
-				grid[x][centerIdx].x <= max.x + 0.01 &&
-				grid[x][centerIdx].y >= min.y - 0.01 &&
-				grid[x][centerIdx].y <= max.y + 0.01
-			) {
-				centerLine.push(grid[x][centerIdx]);
+		if (centerIdx !== -1) {
+			for (let x = 0; x < grid.length; x++) {
+				if (
+					grid[x][centerIdx] &&
+					grid[x][centerIdx].x >= min.x - 0.01 &&
+					grid[x][centerIdx].x <= max.x + 0.01 &&
+					grid[x][centerIdx].y >= min.y - 0.01 &&
+					grid[x][centerIdx].y <= max.y + 0.01
+				) {
+					centerLine.push(grid[x][centerIdx]);
+				}
 			}
 		}
 	}
@@ -225,7 +193,7 @@ function createGrid(
 		const newPoint = Object.create(
 			Object.getPrototypeOf(point),
 			Object.getOwnPropertyDescriptors(point)
-		);
+		) as ControlPoint;
 
 		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
 		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
@@ -285,220 +253,38 @@ function createGrid(
 	};
 }
 
-// function jump(
-// 	grid: Point[][],
-// 	node: Node,
-// 	direction: { x: number; y: number },
-// 	end: Point,
-// 	obstacles: Mbr[],
-// ): Node | null {
-// 	let x = node.xGrid;
-// 	let y = node.yGrid;
-
-// 	while (true) {
-// 		x += direction.x;
-// 		y += direction.y;
-
-// 		// Check if the new position is within the grid bounds
-// 		if (x < 0 || x >= grid.length || y < 0 || y >= grid[0].length) {
-// 			return null;
-// 		}
-
-// 		const newPoint = grid[x][y];
-// 		if (newPoint.barelyEqual(end)) {
-// 			return {
-// 				point: newPoint,
-// 				costSoFar: 0,
-// 				heuristic: 0,
-// 				toFinish: 0,
-// 				parent: node,
-// 				xGrid: x,
-// 				yGrid: y,
-// 			};
-// 		}
-
-// 		if (obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, 10))) {
-// 			return null;
-// 		}
-
-// 		// Check for forced neighbors
-// 		if (direction.x !== 0) {
-// 			// Horizontal
-// 			if (
-// 				(y + 1 < grid[0].length &&
-// 					!obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(grid[x][y + 1], 10),
-// 					) &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x - direction.x][y + 1],
-// 							10,
-// 						),
-// 					)) ||
-// 				(y - 1 >= 0 &&
-// 					!obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(grid[x][y - 1], 10),
-// 					) &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x - direction.x][y - 1],
-// 							10,
-// 						),
-// 					))
-// 			) {
-// 				return {
-// 					point: newPoint,
-// 					costSoFar: 0,
-// 					heuristic: 0,
-// 					toFinish: 0,
-// 					parent: node,
-// 					xGrid: x,
-// 					yGrid: y,
-// 				};
-// 			}
-// 		} else if (direction.y !== 0) {
-// 			// Vertical
-// 			if (
-// 				(x + 1 < grid.length &&
-// 					!obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(grid[x + 1][y], 10),
-// 					) &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x + 1][y - direction.y],
-// 							10,
-// 						),
-// 					)) ||
-// 				(x - 1 >= 0 &&
-// 					!obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(grid[x - 1][y], 10),
-// 					) &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x - 1][y - direction.y],
-// 							10,
-// 						),
-// 					))
-// 			) {
-// 				return {
-// 					point: newPoint,
-// 					costSoFar: 0,
-// 					heuristic: 0,
-// 					toFinish: 0,
-// 					parent: node,
-// 					xGrid: x,
-// 					yGrid: y,
-// 				};
-// 			}
-// 		}
-
-// 		// Check for forced neighbors based on the condition from the screenshot
-// 		if (direction.x !== 0) {
-// 			// Horizontal
-// 			if (
-// 				(y + 1 < grid[0].length &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x - direction.x][y + 1],
-// 							10,
-// 						),
-// 					)) ||
-// 				(y - 1 >= 0 &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x - direction.x][y - 1],
-// 							10,
-// 						),
-// 					))
-// 			) {
-// 				return {
-// 					point: newPoint,
-// 					costSoFar: 0,
-// 					heuristic: 0,
-// 					toFinish: 0,
-// 					parent: node,
-// 					xGrid: x,
-// 					yGrid: y,
-// 				};
-// 			}
-// 		} else if (direction.y !== 0) {
-// 			// Vertical
-// 			if (
-// 				(x + 1 < grid.length &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x + 1][y - direction.y],
-// 							10,
-// 						),
-// 					)) ||
-// 				(x - 1 >= 0 &&
-// 					obstacles.some(obstacle =>
-// 						obstacle.isAlmostInside(
-// 							grid[x - 1][y - direction.y],
-// 							10,
-// 						),
-// 					))
-// 			) {
-// 				return {
-// 					point: newPoint,
-// 					costSoFar: 0,
-// 					heuristic: 0,
-// 					toFinish: 0,
-// 					parent: node,
-// 					xGrid: x,
-// 					yGrid: y,
-// 				};
-// 			}
-// 		}
-// 	}
-// }
-
-// function getNeighborsJPS(
-// 	node: Node,
-// 	grid: Point[][],
-// 	end: Point,
-// 	obstacles: Mbr[],
-// ): Node[] {
-// 	const neighbors: Node[] = [];
-// 	const directions = [
-// 		{ x: -1, y: 0 }, // left
-// 		{ x: 1, y: 0 }, // right
-// 		{ x: 0, y: -1 }, // up
-// 		{ x: 0, y: 1 }, // down
-// 	];
-
-// 	for (const direction of directions) {
-// 		const jumpNode = jump(grid, node, direction, end, obstacles);
-// 		if (jumpNode) {
-// 			neighbors.push(jumpNode);
-// 		}
-// 	}
-
-// 	return neighbors;
-// }
-
 function findPath(
 	start: Point,
 	end: Point,
 	grid: Point[][],
 	obstacles: Mbr[],
+	existingPath: Set<string>,
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint
 ): Point[] | undefined {
-	const startIdx = grid.findIndex(row => row.some(point => point.barelyEqual(start)));
-	const endIdx = grid.findIndex(row => row.some(point => point.barelyEqual(end)));
-
-	if (startIdx === -1 || endIdx === -1) {
-		throw new Error('Start or end point not found in the grid');
+	const startRowIndex = grid.findIndex(row => row.some(point => point.barelyEqual(start)));
+	if (startRowIndex === -1) {
+		throw new Error('Start point not found in the grid row');
+	}
+	const startPointIndex = grid[startRowIndex].findIndex(point => point.barelyEqual(start));
+	if (startPointIndex === -1) {
+		throw new Error('Start point not found in the grid column');
 	}
 
-	const startPointIdx = grid[startIdx].findIndex(point => point.barelyEqual(start));
-	const endPointIdx = grid[endIdx].findIndex(point => point.barelyEqual(end));
+	const endRowIndex = grid.findIndex(row => row.some(point => point.barelyEqual(end)));
+	if (endRowIndex === -1) {
+		throw new Error('End point not found in the grid row');
+	}
+	const endPointIndex = grid[endRowIndex].findIndex(point => point.barelyEqual(end));
+	if (endPointIndex === -1) {
+		throw new Error('End point not found in the grid column');
+	}
+
 
 	const endNode: Node = {
 		point: end,
-		xGrid: endIdx,
-		yGrid: endPointIdx,
+		xGrid: endRowIndex,
+		yGrid: endPointIndex,
 		costSoFar: 0,
 		heuristic: 0,
 		toFinish: 0,
@@ -508,50 +294,58 @@ function findPath(
 		point: start,
 		costSoFar: 0,
 		heuristic: heuristic(
-			{ point: start, xGrid: startIdx, yGrid: startPointIdx } as Node,
+			{ point: start, xGrid: startRowIndex, yGrid: startPointIndex } as Node,
 			endNode
 		),
 		toFinish: heuristic(
-			{ point: start, xGrid: startIdx, yGrid: startPointIdx } as Node,
+			{ point: start, xGrid: startRowIndex, yGrid: startPointIndex } as Node,
 			endNode
 		),
-		xGrid: startIdx,
-		yGrid: startPointIdx,
+		xGrid: startRowIndex,
+		yGrid: startPointIndex,
 	};
 	const openSet: Node[] = [startNode];
-	const closedSet: Set<Point> = new Set();
+	const closedSet: Set<string> = new Set();
 
 	while (openSet.length > 0) {
 		openSet.sort((aa, bb) => aa.toFinish - bb.toFinish);
 		const current = openSet.shift()!;
+		const currentKey = `${current.point.x},${current.point.y}`;
+
 		if (current.point.barelyEqual(end)) {
 			const path = reconstructPath(current);
 			return path;
 		}
 
-		closedSet.add(current.point);
+		closedSet.add(currentKey);
 		const neighbors = getNeighbors(current, grid, obstacles);
-		// TODO replace with JumpPointSearch
-		// const neighbors = getNeighborsJPS(current, grid, end, obstacles);
 
 		for (const neighbor of neighbors) {
-			if (closedSet.has(neighbor.point)) {
+			const neighborKey = `${neighbor.point.x},${neighbor.point.y}`;
+
+			if (closedSet.has(neighborKey) || (existingPath.has(neighborKey) && !neighbor.point.barelyEqual(end))) {
 				continue;
 			}
 
 			const extraCost = isChangingDirection(current, neighbor, newStart, newEnd);
-			const tentativeCost = current.costSoFar + 1;
 
-			if (
-				!openSet.some(
-					node =>
-						node.point.barelyEqual(neighbor.point) && node.costSoFar <= tentativeCost
-				)
-			) {
-				neighbor.costSoFar = tentativeCost + extraCost;
-				neighbor.heuristic = heuristic(neighbor, endNode);
-				neighbor.toFinish = neighbor.costSoFar + neighbor.heuristic;
-				openSet.push(neighbor);
+			const pathOverlapCost = existingPath.has(neighborKey) ? 1000 : 0;
+			const tentativeCost = current.costSoFar + 1 + pathOverlapCost;
+
+			let existingNodeInOpenSet = openSet.find(node => node.point.barelyEqual(neighbor.point));
+
+			if (!existingNodeInOpenSet || tentativeCost < existingNodeInOpenSet.costSoFar) {
+				if (existingNodeInOpenSet) {
+					existingNodeInOpenSet.costSoFar = tentativeCost + extraCost;
+					existingNodeInOpenSet.heuristic = heuristic(neighbor, endNode);
+					existingNodeInOpenSet.toFinish = existingNodeInOpenSet.costSoFar + existingNodeInOpenSet.heuristic;
+					existingNodeInOpenSet.parent = current;
+				} else {
+					neighbor.costSoFar = tentativeCost + extraCost;
+					neighbor.heuristic = heuristic(neighbor, endNode);
+					neighbor.toFinish = neighbor.costSoFar + neighbor.heuristic;
+					openSet.push(neighbor);
+				}
 			}
 		}
 	}
@@ -566,25 +360,32 @@ function findPathPoints(
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint
 ): Point[] {
-	const pathPoints: Point[] = [];
+	const finalPath: Point[] = [];
+	const existingPathSegments = new Set<string>();
+
+	if (points.length > 0) {
+		finalPath.push(points[0]);
+		const startKey = `${points[0].x},${points[0].y}`;
+		existingPathSegments.add(startKey);
+	}
 
 	for (let i = 0; i < points.length - 1; i += 1) {
-		const segmentPath = findPath(points[i], points[i + 1], grid, obstacles, newStart, newEnd);
+		const segmentPath = findPath(points[i], points[i + 1], grid, obstacles, existingPathSegments, newStart, newEnd);
 
-		if (segmentPath) {
-			pathPoints.push(...segmentPath.slice(0, -1));
+		if (segmentPath && segmentPath.length > 0) {
+			for (let j = 1; j < segmentPath.length; j++) {
+				const point = segmentPath[j];
+				const key = `${point.x},${point.y}`;
+				finalPath.push(point);
+				existingPathSegments.add(key);
+			}
 		} else {
-			// If the segmentPath is invalid, remove the current point from the points array
 			points.splice(i + 1, 1);
 			i--;
 		}
 	}
 
-	if (pathPoints.length !== 0) {
-		pathPoints.push(points[points.length - 1]);
-	}
-
-	return pathPoints;
+	return finalPath;
 }
 
 /**
@@ -639,9 +440,15 @@ function reducePoints(points: Point[]): Point[] {
 		const key = `${point.x},${point.y}`;
 
 		if (uniquePoints.has(key)) {
-			// Remove the loop by slicing the result array
 			const loopStartIndex = uniquePoints.get(key)!;
 			result.splice(loopStartIndex + 1);
+			const removedPoints = points.slice(loopStartIndex + 1, i + 1);
+			removedPoints.forEach(p => {
+				uniquePoints.delete(`${p.x},${p.y}`);
+			});
+			uniquePoints.set(key, result.length);
+			result.push(point);
+
 		} else {
 			uniquePoints.set(key, result.length);
 			result.push(point);
@@ -653,23 +460,36 @@ function reducePoints(points: Point[]): Point[] {
 
 function getLines(pathPoints: Point[]): Line[] {
 	const lines: Line[] = [];
+	if (pathPoints.length < 2) {
+		return [];
+	}
+
 	const reducedPoints = reducePoints(pathPoints);
+	if (reducedPoints.length < 2) {
+		return [];
+	}
 	let startPoint = reducedPoints[0];
 
-	for (let i = 1; i < reducedPoints.length - 1; i += 1) {
+	for (let i = 1; i < reducedPoints.length; i += 1) {
 		const prevPoint = reducedPoints[i - 1];
 		const currPoint = reducedPoints[i];
-		const nextPoint = reducedPoints[i + 1];
+		const nextPoint = (i + 1 < reducedPoints.length) ? reducedPoints[i + 1] : null;
 
-		// Check if the direction changes
-		if (prevPoint.x !== nextPoint.x && prevPoint.y !== nextPoint.y) {
+		if (!nextPoint || (prevPoint.x !== nextPoint.x && prevPoint.y !== nextPoint.y)) {
 			lines.push(new Line(startPoint, currPoint));
 			startPoint = currPoint;
 		}
 	}
 
-	if (lines.length > 0) {
-		lines.push(new Line(startPoint, pathPoints[pathPoints.length - 1]));
+	if (lines.length === 0 && reducedPoints.length > 1) {
+		lines.push(new Line(reducedPoints[0], reducedPoints[reducedPoints.length - 1]));
+	} else if (lines.length > 0) {
+		const lastLine = lines[lines.length - 1];
+		const lastPointInLines = lastLine.getEndPoint();
+		const lastPointInReduced = reducedPoints[reducedPoints.length - 1];
+		if (!lastPointInLines.barelyEqual(lastPointInReduced)) {
+			lines.push(new Line(lastPointInLines, lastPointInReduced));
+		}
 	}
 
 	return lines;
@@ -700,7 +520,7 @@ export function findOrthogonalPath(
 	const adjustedCenterLine =
 		centerLine.length > 0
 			? startPoint.getDistance(centerLine[0]) <
-			  startPoint.getDistance(centerLine[centerLine.length - 1])
+			startPoint.getDistance(centerLine[centerLine.length - 1])
 				? centerLine
 				: centerLine.reverse()
 			: centerLine;
