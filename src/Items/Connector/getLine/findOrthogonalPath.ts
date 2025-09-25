@@ -496,22 +496,6 @@ function reconstructPath(node: Node): Point[] {
 	return path.reverse();
 }
 
-function findClosestPointInGrid(point: Point, grid: Point[][]): Point {
-	let closestPoint: Point = grid[0][0];
-	let minDistance = Infinity;
-
-	for (const row of grid) {
-		for (const gridPoint of row) {
-			const distance = Math.abs(point.x - gridPoint.x) + Math.abs(point.y - gridPoint.y);
-			if (distance < minDistance) {
-				minDistance = distance;
-				closestPoint = gridPoint;
-			}
-		}
-	}
-	return closestPoint;
-}
-
 function createHookWaypoints(
 	startPoint: Point,
 	endPoint: Point,
@@ -567,6 +551,42 @@ function createHookWaypoints(
 	return [];
 }
 
+function findClosestPointInGrid(point: Point, grid: Point[][]): Point {
+	let closestPoint: Point = grid[0][0];
+	let minDistance = Infinity;
+
+	for (const row of grid) {
+		for (const gridPoint of row) {
+			const distance = Math.abs(point.x - gridPoint.x) + Math.abs(point.y - gridPoint.y);
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestPoint = gridPoint;
+			}
+		}
+	}
+	return closestPoint;
+}
+
+function findClosestValidPointInGrid(point: Point, grid: Point[][], obstacles: Mbr[]): Point | null {
+	let closestPoint: Point | null = null;
+	let minDistance = Infinity;
+
+	for (const row of grid) {
+		for (const gridPoint of row) {
+			const isPointValid = !obstacles.some(obstacle => obstacle.isAlmostInside(gridPoint, conf.CONNECTOR_ITEM_OFFSET - 1));
+
+			if (isPointValid) {
+				const distance = Math.abs(point.x - gridPoint.x) + Math.abs(point.y - gridPoint.y);
+				if (distance < minDistance) {
+					minDistance = distance;
+					closestPoint = gridPoint;
+				}
+			}
+		}
+	}
+	return closestPoint;
+}
+
 export function findOrthogonalPath(
 	start: ControlPoint,
 	end: ControlPoint,
@@ -576,7 +596,6 @@ export function findOrthogonalPath(
 	const tempGridInfo = createGrid(start, end);
 	const startPoint = tempGridInfo.newStart || start;
 	const endPoint = tempGridInfo.newEnd || end;
-
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
 
@@ -584,21 +603,26 @@ export function findOrthogonalPath(
 	const allWaypoints = [...hookWaypoints, ...toVisitPoints];
 
 	const { grid, newStart, newEnd } = createGrid(start, end, allWaypoints);
-
 	const finalStart = newStart || start;
 	const finalEnd = newEnd || end;
-	const pointsToVisit = [finalStart, ...allWaypoints, finalEnd];
 
-	const uniquePoints = pointsToVisit.reduce((acc, p) => {
+	const snappedStart = findClosestPointInGrid(finalStart, grid);
+	const snappedEnd = findClosestPointInGrid(finalEnd, grid);
+
+	const snappedWaypoints = allWaypoints
+		.map(p => findClosestValidPointInGrid(p, grid, obstacles))
+		.filter((p): p is Point => p !== null);
+
+	const points = [snappedStart, ...snappedWaypoints, snappedEnd];
+
+	const uniquePoints = points.reduce((acc, p) => {
 		if (!acc.some(existing => existing.barelyEqual(p))) {
 			acc.push(p);
 		}
 		return acc;
 	}, [] as Point[]);
 
-	const snappedPoints = uniquePoints.map(p => findClosestPointInGrid(p, grid));
-
-	const pathPoints = findPathPoints(snappedPoints, grid, obstacles, newStart, newEnd);
+	const pathPoints = findPathPoints(uniquePoints, grid, obstacles, newStart, newEnd);
 
 	return {
 		lines: getLines(pathPoints),
