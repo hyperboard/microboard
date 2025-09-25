@@ -506,11 +506,11 @@ function reconstructPath(node: Node): Point[] {
 }
 
 function haveVerticalIntersection(firstMbr: Mbr, secondMbr: Mbr, offset = 0): boolean {
-	return firstMbr.top >= secondMbr.bottom - offset && secondMbr.top >= firstMbr.bottom - offset;
+	return firstMbr.top <= secondMbr.bottom - offset && secondMbr.top <= firstMbr.bottom - offset;
 }
 
 function haveHorizontalIntersection(firstMbr: Mbr, secondMbr: Mbr, offset = 0): boolean {
-	return firstMbr.right >= secondMbr.left - offset && secondMbr.right >= firstMbr.left - offset;
+	return firstMbr.right <= secondMbr.left - offset && secondMbr.right <= firstMbr.left - offset;
 }
 
 function createHookWaypoints(
