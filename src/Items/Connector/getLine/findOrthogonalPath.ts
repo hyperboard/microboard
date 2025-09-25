@@ -534,8 +534,8 @@ function createHookWaypoints(
 	const startConflictX = (startDir === 'right' && dx < 0) || (startDir === 'left' && dx > 0);
 	const startConflictY = (startDir === 'bottom' && dy < 0) || (startDir === 'top' && dy > 0);
 
-	const endConflictX = (endDir === 'right' && dx > 0) || (endDir === 'left' && dx < 0);
-	const endConflictY = (endDir === 'bottom' && dy > 0) || (endDir === 'top' && dy < 0);
+	const endConflictX = (endDir === 'right' && dx < 0) || (endDir === 'left' && dx > 0);
+	const endConflictY = (endDir === 'bottom' && dy < 0) || (endDir === 'top' && dy > 0);
 
 	if (startConflictX || endConflictY) {
 		return [new Point(startPoint.x, endPoint.y)];
