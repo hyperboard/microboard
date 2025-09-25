@@ -360,17 +360,19 @@ function findPathPoints(
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint
 ): Point[] {
-	const finalPath: Point[] = [];
-	const existingPathSegments = new Set<string>();
-
-	if (points.length > 0) {
-		finalPath.push(points[0]);
-		const startKey = `${points[0].x},${points[0].y}`;
-		existingPathSegments.add(startKey);
+	// Если точек для построения маршрута меньше двух, возвращаем то, что есть.
+	if (points.length < 2) {
+		return points;
 	}
 
+	const finalPath: Point[] = [points[0]];
+	const existingPathSegments = new Set<string>([`${points[0].x},${points[0].y}`]);
+
 	for (let i = 0; i < points.length - 1; i += 1) {
-		const segmentPath = findPath(points[i], points[i + 1], grid, obstacles, existingPathSegments, newStart, newEnd);
+		const startSegment = points[i];
+		const endSegment = points[i + 1];
+
+		const segmentPath = findPath(startSegment, endSegment, grid, obstacles, existingPathSegments, newStart, newEnd);
 
 		if (segmentPath && segmentPath.length > 0) {
 			for (let j = 1; j < segmentPath.length; j++) {
@@ -380,8 +382,8 @@ function findPathPoints(
 				existingPathSegments.add(key);
 			}
 		} else {
-			points.splice(i + 1, 1);
-			i--;
+			console.error(`Could not find path from ${startSegment.x},${startSegment.y} to ${endSegment.x},${endSegment.y}`);
+			return [];
 		}
 	}
 
