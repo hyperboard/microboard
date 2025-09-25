@@ -34,6 +34,8 @@ function isChangingDirection(
 	newStart?: ControlPoint,
 	newEnd?: ControlPoint
 ): number {
+	const TURN_PENALTY = 50;
+
 	const dirMap: Record<ConnectedPointerDirection, Direction> = {
 		top: 'vertical',
 		bottom: 'vertical',
@@ -46,14 +48,19 @@ function isChangingDirection(
 			? dirMap[getPointerDirection(newStart)!]
 			: getDirection(current.point, current.parent?.point);
 	const goingDirection = getDirection(current.point, neighbor.point);
+
 	if (newEnd && neighbor.point.barelyEqual(newEnd)) {
 		const endDir = dirMap[getPointerDirection(newEnd)!];
 		if (goingDirection && endDir !== goingDirection) {
-			return 1 + isChangingDirection(current, neighbor, newStart);
+			return TURN_PENALTY;
 		}
 	}
 
-	return comingDirection && goingDirection && comingDirection !== goingDirection ? 1 : 0;
+	if (comingDirection && goingDirection && comingDirection !== goingDirection) {
+		return TURN_PENALTY;
+	}
+
+	return 0;
 }
 
 function heuristic(start: Node, end: Node): number {
@@ -568,7 +575,6 @@ export function findOrthogonalPath(
 	const endPoint = tempGridInfo.newEnd || end;
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-
 	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
 
 	const allGuidingPoints = [...hookWaypoints, ...toVisitPoints];
