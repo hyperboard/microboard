@@ -593,7 +593,7 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	const tempGridInfo = createGrid(start, end);
+	const tempGridInfo = createGrid(start, end, toVisitPoints);
 	const startPoint = tempGridInfo.newStart || start;
 	const endPoint = tempGridInfo.newEnd || end;
 	const startDir = getPointerDirection(start);
@@ -606,16 +606,16 @@ export function findOrthogonalPath(
 	const finalStart = newStart || start;
 	const finalEnd = newEnd || end;
 
-	const snappedStart = findClosestPointInGrid(finalStart, grid);
-	const snappedEnd = findClosestPointInGrid(finalEnd, grid);
-
-	const snappedWaypoints = allWaypoints
+	const pointsToSnap = [finalStart, ...allWaypoints, finalEnd];
+	const snappedAndValidatedPoints = pointsToSnap
 		.map(p => findClosestValidPointInGrid(p, grid, obstacles))
 		.filter((p): p is Point => p !== null);
 
-	const points = [snappedStart, ...snappedWaypoints, snappedEnd];
+	if (snappedAndValidatedPoints.length < 2) {
+		return { lines: [], newStart, newEnd };
+	}
 
-	const uniquePoints = points.reduce((acc, p) => {
+	const uniquePoints = snappedAndValidatedPoints.reduce((acc, p) => {
 		if (!acc.some(existing => existing.barelyEqual(p))) {
 			acc.push(p);
 		}
