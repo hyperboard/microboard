@@ -506,26 +506,18 @@ function createHookWaypoints(
 ): Point[] {
 	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
-		console.log("111")
-		console.log([new Point(startPoint.x, midY), new Point(endPoint.x, midY)])
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
 	if (startDir === 'left' && endDir === 'right' && startPoint.x < endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
-		console.log("222")
-		console.log([new Point(startPoint.x, midY), new Point(endPoint.x, midY)])
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
 	if (startDir === 'bottom' && endDir === 'top' && startPoint.y > endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
-		console.log("333")
-		console.log([new Point(midX, startPoint.y), new Point(midX, endPoint.y)])
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
 	if (startDir === 'top' && endDir === 'bottom' && startPoint.y < endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
-		console.log("444")
-		console.log([new Point(midX, startPoint.y), new Point(midX, endPoint.y)])
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
 
@@ -539,14 +531,10 @@ function createHookWaypoints(
 	const endConflictY = (endDir === 'bottom' && dy < 0) || (endDir === 'top' && dy > 0);
 
 	if (startConflictX || endConflictY) {
-		console.log("555")
-		console.log([new Point(startPoint.x, endPoint.y)])
 		return [new Point(startPoint.x, endPoint.y)];
 	}
 
 	if (startConflictY || endConflictX) {
-		console.log("666")
-		console.log([new Point(endPoint.x, startPoint.y)])
 		return [new Point(endPoint.x, startPoint.y)];
 	}
 
@@ -569,15 +557,22 @@ function findClosestPointInGrid(point: Point, grid: Point[][]): Point {
 	return closestPoint;
 }
 
-
 export function findOrthogonalPath(
 	start: ControlPoint,
 	end: ControlPoint,
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
+	const tempGridInfo = createGrid(start, end);
+	const startPoint = tempGridInfo.newStart || start;
+	const endPoint = tempGridInfo.newEnd || end;
+	const startDir = getPointerDirection(start);
+	const endDir = getPointerDirection(end);
 
-	const { grid, newStart, newEnd } = createGrid(start, end, toVisitPoints);
+	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
+
+	const allGuidingPoints = [...hookWaypoints, ...toVisitPoints];
+	const { grid, newStart, newEnd } = createGrid(start, end, allGuidingPoints);
 
 	if (grid.length === 0 || grid[0].length === 0) {
 		return { lines: [], newStart, newEnd };
@@ -586,31 +581,10 @@ export function findOrthogonalPath(
 	const searchStart = findClosestPointInGrid(newStart || start, grid);
 	const searchEnd = findClosestPointInGrid(newEnd || end, grid);
 
-	const snappedWaypoints = toVisitPoints.map(p => findClosestPointInGrid(p, grid));
+	const pathPoints = findPath(searchStart, searchEnd, grid, obstacles, new Set(), newStart, newEnd);
 
-	const pointsToConnect = [searchStart, ...snappedWaypoints, searchEnd];
-	const finalPath: Point[] = [pointsToConnect[0]];
-	const existingPathSegments = new Set<string>([`${pointsToConnect[0].x},${pointsToConnect[0].y}`]);
-
-	for (let i = 0; i < pointsToConnect.length - 1; i++) {
-		const segmentStart = pointsToConnect[i];
-		const segmentEnd = pointsToConnect[i + 1];
-
-		const segmentPath = findPath(segmentStart, segmentEnd, grid, obstacles, existingPathSegments, newStart, newEnd);
-
-		if (segmentPath && segmentPath.length > 1) {
-			for(let j = 1; j < segmentPath.length; j++) {
-				const point = segmentPath[j];
-				finalPath.push(point);
-				existingPathSegments.add(`${point.x},${point.y}`);
-			}
-		} else {
-			console.error(`Could not route segment from ${segmentStart.x},${segmentStart.y} to ${segmentEnd.x},${segmentEnd.y}`);
-			return { lines: [], newStart, newEnd };
-		}
-	}
 	return {
-		lines: getLines(finalPath),
+		lines: pathPoints ? getLines(pathPoints) : [],
 		newStart,
 		newEnd,
 	};
