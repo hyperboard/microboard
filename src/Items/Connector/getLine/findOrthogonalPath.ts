@@ -508,41 +508,73 @@ function reconstructPath(node: Node): Point[] {
 function createHookWaypoints(
 	startPoint: Point,
 	endPoint: Point,
+	start: ControlPoint,
+	end: ControlPoint,
 	startDir?: ConnectedPointerDirection | null,
 	endDir?: ConnectedPointerDirection | null
 ): Point[] {
-	const hookPoints: Point[] = [];
+	if (!startDir || !endDir || start.pointType === 'Board' || end.pointType === 'Board') {
+		return [];
+	}
+
+	const startMbr = start.item.getMbr();
+	const endMbr = end.item.getMbr();
 
 	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
-		hookPoints.push(new Point(startPoint.x, midY));
-		hookPoints.push(new Point(endPoint.x, midY));
-		return hookPoints;
+		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
-
 	if (startDir === 'left' && endDir === 'right' && startPoint.x < endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
-		hookPoints.push(new Point(startPoint.x, midY));
-		hookPoints.push(new Point(endPoint.x, midY));
-		return hookPoints;
+		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
 	}
-
 	if (startDir === 'bottom' && endDir === 'top' && startPoint.y > endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
-		hookPoints.push(new Point(midX, startPoint.y));
-		hookPoints.push(new Point(midX, endPoint.y));
-		return hookPoints;
+		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
-
 	if (startDir === 'top' && endDir === 'bottom' && startPoint.y < endPoint.y) {
 		const midX = (startPoint.x + endPoint.x) / 2;
-		hookPoints.push(new Point(midX, startPoint.y));
-		hookPoints.push(new Point(midX, endPoint.y));
-		return hookPoints;
+		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
 
-	return hookPoints;
+	if ((startDir === 'right' || startDir === 'left') && (endDir === 'top' || endDir === 'bottom')) {
+		let needsHook = false;
+		if (startDir === 'right' && startPoint.x > endMbr.right) {
+			if (endDir === 'top' && endPoint.y < startMbr.top) needsHook = true;
+			if (endDir === 'bottom' && endPoint.y > startMbr.bottom) needsHook = true;
+		}
+
+		if (startDir === 'left' && startPoint.x < endMbr.left) {
+			if (endDir === 'top' && endPoint.y < startMbr.top) needsHook = true;
+			if (endDir === 'bottom' && endPoint.y > startMbr.bottom) needsHook = true;
+		}
+		if (needsHook) {
+			return [new Point(endPoint.x, startPoint.y)];
+		}
+	}
+
+	if ((startDir === 'top' || startDir === 'bottom') && (endDir === 'right' || endDir === 'left')) {
+		let needsHook = false;
+
+		if (startDir === 'top' && startPoint.y < endMbr.top) {
+
+			if (endDir === 'right' && endPoint.x > startMbr.right) needsHook = true;
+			if (endDir === 'left' && endPoint.x < startMbr.left) needsHook = true;
+		}
+
+		if (startDir === 'bottom' && startPoint.y > endMbr.bottom) {
+			if (endDir === 'right' && endPoint.x > startMbr.right) needsHook = true;
+			if (endDir === 'left' && endPoint.x < startMbr.left) needsHook = true;
+		}
+		if (needsHook) {
+
+			return [new Point(startPoint.x, endPoint.y)];
+		}
+	}
+
+	return [];
 }
+
 
 // ***ОСНОВНАЯ ИЗМЕНЕННАЯ ФУНКЦИЯ***
 export function findOrthogonalPath(
@@ -558,7 +590,7 @@ export function findOrthogonalPath(
 
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
+	const hookWaypoints = createHookWaypoints(startPoint, endPoint, start, end, startDir, endDir);
 
 	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
 
