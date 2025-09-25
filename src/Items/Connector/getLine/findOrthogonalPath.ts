@@ -159,60 +159,84 @@ function createGrid(
 	grid: Point[][];
 	newStart?: ControlPoint;
 	newEnd?: ControlPoint;
+	middlePoint?: Point;
 } {
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
 	const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
-	const offset = conf.CONNECTOR_ITEM_OFFSET;
 	const offsetMap = {
-		top: { x: 0, y: -offset },
-		bottom: { x: 0, y: offset },
-		right: { x: offset, y: 0 },
-		left: { x: -offset, y: 0 },
+		top: { x: 0, y: -conf.CONNECTOR_ITEM_OFFSET },
+		bottom: { x: 0, y: conf.CONNECTOR_ITEM_OFFSET },
+		right: { x: conf.CONNECTOR_ITEM_OFFSET, y: 0 },
+		left: { x: -conf.CONNECTOR_ITEM_OFFSET, y: 0 },
 	};
 
 	const horizontalLines: number[] = [];
 	const verticalLines: number[] = [];
 
-	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): void => {
-		if (point.pointType === 'Board') return;
+	let newStart: ControlPoint | undefined;
+	let newEnd: ControlPoint | undefined;
+
+	const processPoint = (point: FloatingPoint | FixedPoint | FixedConnectorPoint, dir: ConnectedPointerDirection): ControlPoint => {
 		const itemMbr = point.item.getMbr();
-		const pointOnMbrX = point.x - offsetMap[dir].x;
-		const pointOnMbrY = point.y - offsetMap[dir].y;
+		const mbrFloored = new Mbr(
+			Math.floor(itemMbr.left),
+			Math.floor(itemMbr.top),
+			Math.floor(itemMbr.right),
+			Math.floor(itemMbr.bottom)
+		);
+
+		const pointOnMbr = mbrFloored
+			.getLines()
+			[revertMapDir[dir]].getNearestPointOnLineSegment(point);
+
+		const newPoint = Object.create(
+			Object.getPrototypeOf(point),
+			Object.getOwnPropertyDescriptors(point)
+		) as ControlPoint;
+
+		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
+		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
 
 		verticalLines.push(
-			itemMbr.left - offset,
-			itemMbr.left,
-			pointOnMbrX,
-			itemMbr.right,
-			itemMbr.right + offset
+			mbrFloored.left - conf.CONNECTOR_ITEM_OFFSET,
+			mbrFloored.left,
+			pointOnMbr.x,
+			mbrFloored.right,
+			mbrFloored.right + conf.CONNECTOR_ITEM_OFFSET
 		);
 
 		horizontalLines.push(
-			itemMbr.top - offset,
-			itemMbr.top,
-			pointOnMbrY,
-			itemMbr.bottom,
-			itemMbr.bottom + offset
+			mbrFloored.top - conf.CONNECTOR_ITEM_OFFSET,
+			mbrFloored.top,
+			pointOnMbr.y,
+			mbrFloored.bottom,
+			mbrFloored.bottom + conf.CONNECTOR_ITEM_OFFSET
 		);
+
+		return newPoint;
 	};
 
 	if (start.pointType !== 'Board' && startDir) {
-		processPoint(start, startDir);
-	}
-	if (end.pointType !== 'Board' && endDir) {
-		processPoint(end, endDir);
+		newStart = processPoint(start, startDir);
 	}
 
-	const allPoints = [start, end, ...toVisitPoints];
-	allPoints.forEach(p => {
+	if (end.pointType !== 'Board' && endDir) {
+		newEnd = processPoint(end, endDir);
+	}
+
+	const finalStart = newStart || start;
+	const finalEnd = newEnd || end;
+
+	const middle = new Point((finalStart.x + finalEnd.x) / 2, (finalStart.y + finalEnd.y) / 2);
+
+	horizontalLines.push(middle.y, finalStart.y, finalEnd.y);
+	verticalLines.push(middle.x, finalStart.x, finalEnd.x);
+
+	toVisitPoints.forEach(p => {
 		horizontalLines.push(p.y);
 		verticalLines.push(p.x);
 	});
-
-	const middle = new Point((start.x + end.x) / 2, (start.y + end.y) / 2);
-	horizontalLines.push(middle.y);
-	verticalLines.push(middle.x);
 
 	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
 	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
@@ -223,8 +247,9 @@ function createGrid(
 
 	return {
 		grid,
-		newStart: start,
-		newEnd: end,
+		newStart,
+		newEnd,
+		middlePoint: middle,
 	};
 }
 
@@ -483,18 +508,9 @@ function reconstructPath(node: Node): Point[] {
 function createHookWaypoints(
 	startPoint: Point,
 	endPoint: Point,
-	start: ControlPoint,
-	end: ControlPoint,
 	startDir?: ConnectedPointerDirection | null,
 	endDir?: ConnectedPointerDirection | null
 ): Point[] {
-	if (!startDir || !endDir || start.pointType === 'Board' || end.pointType === 'Board') {
-		return [];
-	}
-
-	const startMbr = start.item.getMbr();
-	const endMbr = end.item.getMbr();
-
 	if (startDir === 'right' && endDir === 'left' && startPoint.x > endPoint.x) {
 		const midY = (startPoint.y + endPoint.y) / 2;
 		return [new Point(startPoint.x, midY), new Point(endPoint.x, midY)];
@@ -512,108 +528,27 @@ function createHookWaypoints(
 		return [new Point(midX, startPoint.y), new Point(midX, endPoint.y)];
 	}
 
-	if ((startDir === 'right' || startDir === 'left') && (endDir === 'top' || endDir === 'bottom')) {
-		let needsHook = false;
-		if (startDir === 'right' && startPoint.x > endMbr.right) {
-			if (endDir === 'top' && endPoint.y < startMbr.top) needsHook = true;
-			if (endDir === 'bottom' && endPoint.y > startMbr.bottom) needsHook = true;
-		}
+	const dx = endPoint.x - startPoint.x;
+	const dy = endPoint.y - startPoint.y;
 
-		if (startDir === 'left' && startPoint.x < endMbr.left) {
-			if (endDir === 'top' && endPoint.y < startMbr.top) needsHook = true;
-			if (endDir === 'bottom' && endPoint.y > startMbr.bottom) needsHook = true;
-		}
-		if (needsHook) {
-			return [new Point(endPoint.x, startPoint.y)];
-		}
+	if (startDir === 'right' && dx < 0) {
+		return [new Point(startPoint.x, endPoint.y)];
 	}
 
-	if ((startDir === 'top' || startDir === 'bottom') && (endDir === 'right' || endDir === 'left')) {
-		let needsHook = false;
+	if (startDir === 'left' && dx > 0) {
+		return [new Point(startPoint.x, endPoint.y)];
+	}
 
-		if (startDir === 'top' && startPoint.y < endMbr.top) {
+	if (startDir === 'bottom' && dy < 0) {
+		return [new Point(endPoint.x, startPoint.y)];
+	}
 
-			if (endDir === 'right' && endPoint.x > startMbr.right) needsHook = true;
-			if (endDir === 'left' && endPoint.x < startMbr.left) needsHook = true;
-		}
-
-		if (startDir === 'bottom' && startPoint.y > endMbr.bottom) {
-			if (endDir === 'right' && endPoint.x > startMbr.right) needsHook = true;
-			if (endDir === 'left' && endPoint.x < startMbr.left) needsHook = true;
-		}
-		if (needsHook) {
-
-			return [new Point(startPoint.x, endPoint.y)];
-		}
+	if (startDir === 'top' && dy > 0) {
+		return [new Point(endPoint.x, startPoint.y)];
 	}
 
 	return [];
 }
-
-function preCalculatePathPoints(start: ControlPoint, end: ControlPoint): {
-	startPoint: ControlPoint;
-	endPoint: ControlPoint;
-	stemWaypoints: Point[];
-	allWaypoints: Point[];
-} {
-	const startDir = getPointerDirection(start);
-	const endDir = getPointerDirection(end);
-	const offset = conf.CONNECTOR_ITEM_OFFSET;
-
-	let startPoint = start;
-	let endPoint = end;
-	const stemWaypoints: Point[] = [];
-	const allWaypoints: Point[] = [];
-
-
-	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): ControlPoint => {
-		if (point.pointType === 'Board') {
-			return point;
-		}
-		const offsetMap = {
-			top: { x: 0, y: -offset }, bottom: { x: 0, y: offset },
-			right: { x: offset, y: 0 }, left: { x: -offset, y: 0 },
-		};
-		const itemMbr = point.item.getMbr();
-		const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
-		const pointOnMbr = itemMbr.getLines()[revertMapDir[dir]].getNearestPointOnLineSegment(point);
-
-		const newPoint = Object.create(Object.getPrototypeOf(point), Object.getOwnPropertyDescriptors(point)) as ControlPoint;
-		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
-		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
-		return newPoint;
-	};
-
-	if (start.pointType !== 'Board' && startDir) {
-		startPoint = processPoint(start, startDir);
-	}
-	if (end.pointType !== 'Board' && endDir) {
-		endPoint = processPoint(end, endDir);
-	}
-
-	if (startDir) {
-		let stem: Point;
-		if (startDir === 'right') stem = new Point(startPoint.x + offset, startPoint.y);
-		else if (startDir === 'left') stem = new Point(startPoint.x - offset, startPoint.y);
-		else if (startDir === 'bottom') stem = new Point(startPoint.x, startPoint.y + offset);
-		else stem = new Point(startPoint.x, startPoint.y - offset); // top
-		stemWaypoints.push(stem);
-		allWaypoints.push(stem);
-	}
-
-	if (endDir) {
-		let stem: Point;
-		if (endDir === 'right') stem = new Point(endPoint.x + offset, endPoint.y);
-		else if (endDir === 'left') stem = new Point(endPoint.x - offset, endPoint.y);
-		else if (endDir === 'bottom') stem = new Point(endPoint.x, endPoint.y + offset);
-		else stem = new Point(endPoint.x, endPoint.y - offset); // top
-		stemWaypoints.push(stem);
-		allWaypoints.push(stem);
-	}
-
-	return { startPoint, endPoint, stemWaypoints, allWaypoints };
-}
-
 
 export function findOrthogonalPath(
 	start: ControlPoint,
@@ -621,76 +556,22 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
+	const { grid, newStart, newEnd } = createGrid(start, end, toVisitPoints);
+
+	const startPoint = newStart || start;
+	const endPoint = newEnd || end;
+
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
-	const offset = conf.CONNECTOR_ITEM_OFFSET;
+	const hookWaypoints = createHookWaypoints(startPoint, endPoint, startDir, endDir);
 
-	let startPoint = start;
-	let endPoint = end;
+	const points = [startPoint, ...hookWaypoints, ...toVisitPoints, endPoint];
 
-	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): ControlPoint => {
-		if (point.pointType === 'Board') return point;
-		const offsetMap = {
-			top: { x: 0, y: -offset }, bottom: { x: 0, y: offset },
-			right: { x: offset, y: 0 }, left: { x: -offset, y: 0 },
-		};
-		const itemMbr = point.item.getMbr();
-		const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
-		const pointOnMbr = itemMbr.getLines()[revertMapDir[dir]].getNearestPointOnLineSegment(point);
-
-		const newPoint = Object.create(Object.getPrototypeOf(point), Object.getOwnPropertyDescriptors(point)) as ControlPoint;
-		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
-		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
-		return newPoint;
-	};
-
-	if (start.pointType !== 'Board' && startDir) {
-		startPoint = processPoint(start, startDir);
-	}
-	if (end.pointType !== 'Board' && endDir) {
-		endPoint = processPoint(end, endDir);
-	}
-
-	const stemWaypoints: Point[] = [];
-	if (startDir) {
-		let stem: Point;
-		if (startDir === 'right') stem = new Point(startPoint.x + offset, startPoint.y);
-		else if (startDir === 'left') stem = new Point(startPoint.x - offset, startPoint.y);
-		else if (startDir === 'bottom') stem = new Point(startPoint.x, startPoint.y + offset);
-		else stem = new Point(startPoint.x, startPoint.y - offset); // top
-		stemWaypoints.push(stem);
-	}
-	if (endDir) {
-		let stem: Point;
-		if (endDir === 'right') stem = new Point(endPoint.x + offset, endPoint.y);
-		else if (endDir === 'left') stem = new Point(endPoint.x - offset, endPoint.y);
-		else if (endDir === 'bottom') stem = new Point(endPoint.x, endPoint.y + offset);
-		else stem = new Point(endPoint.x, endPoint.y - offset);
-		stemWaypoints.push(stem);
-	}
-
-	const allGridPoints = [startPoint, endPoint, ...stemWaypoints, ...toVisitPoints];
-	const { grid } = createGrid(startPoint, endPoint, allGridPoints);
-
-	let finalWaypoints: Point[] = [startPoint];
-	if (stemWaypoints.length > 0) {
-		finalWaypoints.push(stemWaypoints[0]);
-	}
-	finalWaypoints.push(...toVisitPoints);
-	if (stemWaypoints.length > 1) {
-		finalWaypoints.push(stemWaypoints[1]);
-	}
-	finalWaypoints.push(endPoint);
-
-	const uniqueWaypoints = finalWaypoints.filter((point, index, self) =>
-		index === 0 || !point.barelyEqual(self[index - 1])
-	);
-
-	const pathPoints = findPathPoints(uniqueWaypoints, grid, obstacles, startPoint, endPoint);
+	const pathPoints = findPathPoints(points, grid, obstacles, newStart, newEnd);
 
 	return {
 		lines: getLines(pathPoints),
-		newStart: startPoint,
-		newEnd: endPoint,
+		newStart,
+		newEnd,
 	};
 }
