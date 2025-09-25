@@ -159,84 +159,60 @@ function createGrid(
 	grid: Point[][];
 	newStart?: ControlPoint;
 	newEnd?: ControlPoint;
-	middlePoint?: Point;
 } {
 	const startDir = getPointerDirection(start);
 	const endDir = getPointerDirection(end);
 	const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
+	const offset = conf.CONNECTOR_ITEM_OFFSET;
 	const offsetMap = {
-		top: { x: 0, y: -conf.CONNECTOR_ITEM_OFFSET },
-		bottom: { x: 0, y: conf.CONNECTOR_ITEM_OFFSET },
-		right: { x: conf.CONNECTOR_ITEM_OFFSET, y: 0 },
-		left: { x: -conf.CONNECTOR_ITEM_OFFSET, y: 0 },
+		top: { x: 0, y: -offset },
+		bottom: { x: 0, y: offset },
+		right: { x: offset, y: 0 },
+		left: { x: -offset, y: 0 },
 	};
 
 	const horizontalLines: number[] = [];
 	const verticalLines: number[] = [];
 
-	let newStart: ControlPoint | undefined;
-	let newEnd: ControlPoint | undefined;
-
-	const processPoint = (point: FloatingPoint | FixedPoint | FixedConnectorPoint, dir: ConnectedPointerDirection): ControlPoint => {
+	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): void => {
+		if (point.pointType === 'Board') return;
 		const itemMbr = point.item.getMbr();
-		const mbrFloored = new Mbr(
-			Math.floor(itemMbr.left),
-			Math.floor(itemMbr.top),
-			Math.floor(itemMbr.right),
-			Math.floor(itemMbr.bottom)
-		);
-
-		const pointOnMbr = mbrFloored
-			.getLines()
-			[revertMapDir[dir]].getNearestPointOnLineSegment(point);
-
-		const newPoint = Object.create(
-			Object.getPrototypeOf(point),
-			Object.getOwnPropertyDescriptors(point)
-		) as ControlPoint;
-
-		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
-		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
+		const pointOnMbrX = point.x - offsetMap[dir].x;
+		const pointOnMbrY = point.y - offsetMap[dir].y;
 
 		verticalLines.push(
-			mbrFloored.left - conf.CONNECTOR_ITEM_OFFSET,
-			mbrFloored.left,
-			pointOnMbr.x,
-			mbrFloored.right,
-			mbrFloored.right + conf.CONNECTOR_ITEM_OFFSET
+			itemMbr.left - offset,
+			itemMbr.left,
+			pointOnMbrX,
+			itemMbr.right,
+			itemMbr.right + offset
 		);
 
 		horizontalLines.push(
-			mbrFloored.top - conf.CONNECTOR_ITEM_OFFSET,
-			mbrFloored.top,
-			pointOnMbr.y,
-			mbrFloored.bottom,
-			mbrFloored.bottom + conf.CONNECTOR_ITEM_OFFSET
+			itemMbr.top - offset,
+			itemMbr.top,
+			pointOnMbrY,
+			itemMbr.bottom,
+			itemMbr.bottom + offset
 		);
-
-		return newPoint;
 	};
 
 	if (start.pointType !== 'Board' && startDir) {
-		newStart = processPoint(start, startDir);
+		processPoint(start, startDir);
 	}
-
 	if (end.pointType !== 'Board' && endDir) {
-		newEnd = processPoint(end, endDir);
+		processPoint(end, endDir);
 	}
 
-	const finalStart = newStart || start;
-	const finalEnd = newEnd || end;
-
-	const middle = new Point((finalStart.x + finalEnd.x) / 2, (finalStart.y + finalEnd.y) / 2);
-
-	horizontalLines.push(middle.y, finalStart.y, finalEnd.y);
-	verticalLines.push(middle.x, finalStart.x, finalEnd.x);
-
-	toVisitPoints.forEach(p => {
+	const allPoints = [start, end, ...toVisitPoints];
+	allPoints.forEach(p => {
 		horizontalLines.push(p.y);
 		verticalLines.push(p.x);
 	});
+
+	const middle = new Point((start.x + end.x) / 2, (start.y + end.y) / 2);
+	horizontalLines.push(middle.y);
+	verticalLines.push(middle.x);
 
 	const uniqueHorizontalLines = Array.from(new Set(horizontalLines)).sort((a, b) => a - b);
 	const uniqueVerticalLines = Array.from(new Set(verticalLines)).sort((a, b) => a - b);
@@ -247,9 +223,8 @@ function createGrid(
 
 	return {
 		grid,
-		newStart,
-		newEnd,
-		middlePoint: middle,
+		newStart: start,
+		newEnd: end,
 	};
 }
 
@@ -646,10 +621,56 @@ export function findOrthogonalPath(
 	obstacles: Mbr[],
 	toVisitPoints: Point[] = []
 ): { lines: Line[]; newStart?: ControlPoint; newEnd?: ControlPoint } {
-	const { startPoint, endPoint, stemWaypoints, allWaypoints } = preCalculatePathPoints(start, end);
+	const startDir = getPointerDirection(start);
+	const endDir = getPointerDirection(end);
+	const offset = conf.CONNECTOR_ITEM_OFFSET;
 
-	const gridPoints = [...allWaypoints, ...toVisitPoints];
-	const { grid, newStart, newEnd } = createGrid(start, end, gridPoints);
+	let startPoint = start;
+	let endPoint = end;
+
+	const processPoint = (point: ControlPoint, dir: ConnectedPointerDirection): ControlPoint => {
+		if (point.pointType === 'Board') return point;
+		const offsetMap = {
+			top: { x: 0, y: -offset }, bottom: { x: 0, y: offset },
+			right: { x: offset, y: 0 }, left: { x: -offset, y: 0 },
+		};
+		const itemMbr = point.item.getMbr();
+		const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
+		const pointOnMbr = itemMbr.getLines()[revertMapDir[dir]].getNearestPointOnLineSegment(point);
+
+		const newPoint = Object.create(Object.getPrototypeOf(point), Object.getOwnPropertyDescriptors(point)) as ControlPoint;
+		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
+		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
+		return newPoint;
+	};
+
+	if (start.pointType !== 'Board' && startDir) {
+		startPoint = processPoint(start, startDir);
+	}
+	if (end.pointType !== 'Board' && endDir) {
+		endPoint = processPoint(end, endDir);
+	}
+
+	const stemWaypoints: Point[] = [];
+	if (startDir) {
+		let stem: Point;
+		if (startDir === 'right') stem = new Point(startPoint.x + offset, startPoint.y);
+		else if (startDir === 'left') stem = new Point(startPoint.x - offset, startPoint.y);
+		else if (startDir === 'bottom') stem = new Point(startPoint.x, startPoint.y + offset);
+		else stem = new Point(startPoint.x, startPoint.y - offset); // top
+		stemWaypoints.push(stem);
+	}
+	if (endDir) {
+		let stem: Point;
+		if (endDir === 'right') stem = new Point(endPoint.x + offset, endPoint.y);
+		else if (endDir === 'left') stem = new Point(endPoint.x - offset, endPoint.y);
+		else if (endDir === 'bottom') stem = new Point(endPoint.x, endPoint.y + offset);
+		else stem = new Point(endPoint.x, endPoint.y - offset);
+		stemWaypoints.push(stem);
+	}
+
+	const allGridPoints = [startPoint, endPoint, ...stemWaypoints, ...toVisitPoints];
+	const { grid } = createGrid(startPoint, endPoint, allGridPoints);
 
 	let finalWaypoints: Point[] = [startPoint];
 	if (stemWaypoints.length > 0) {
@@ -662,10 +683,10 @@ export function findOrthogonalPath(
 	finalWaypoints.push(endPoint);
 
 	const uniqueWaypoints = finalWaypoints.filter((point, index, self) =>
-		index === 0 || !point.barelyEqual(self[index-1])
+		index === 0 || !point.barelyEqual(self[index - 1])
 	);
 
-	const pathPoints = findPathPoints(uniqueWaypoints, grid, obstacles, newStart, newEnd);
+	const pathPoints = findPathPoints(uniqueWaypoints, grid, obstacles, startPoint, endPoint);
 
 	return {
 		lines: getLines(pathPoints),
