@@ -2,6 +2,7 @@ import {FixedConnectorPoint, FixedPoint, FloatingPoint, Line, Mbr} from 'Items';
 import { Point } from '../../Point';
 import { ControlPoint } from '../ControlPoint';
 import { ConnectedPointerDirection, getPointerDirection } from '../Pointers';
+import {conf} from "Settings";
 
 interface Node {
 	point: Point;
@@ -14,8 +15,6 @@ interface Node {
 }
 
 type Direction = 'vertical' | 'horizontal';
-
-const ITEM_OFFSET = 1;
 
 export function getDirection(from: Point, to?: Point): Direction | null {
 	if (!to) {
@@ -84,7 +83,7 @@ function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
 			const newPoint = grid[pos.x][pos.y];
 			if (
 				newPoint &&
-				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, ITEM_OFFSET - 1))
+				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, conf.CONNECTOR_ITEM_OFFSET - 1))
 			) {
 				neighbors.push({
 					point: newPoint,
@@ -173,10 +172,10 @@ function createGrid(
 	const endDir = getPointerDirection(end);
 	const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
 	const offsetMap = {
-		top: { x: 0, y: -ITEM_OFFSET },
-		bottom: { x: 0, y: ITEM_OFFSET },
-		right: { x: ITEM_OFFSET, y: 0 },
-		left: { x: -ITEM_OFFSET, y: 0 },
+		top: { x: 0, y: -conf.CONNECTOR_ITEM_OFFSET },
+		bottom: { x: 0, y: conf.CONNECTOR_ITEM_OFFSET },
+		right: { x: conf.CONNECTOR_ITEM_OFFSET, y: 0 },
+		left: { x: -conf.CONNECTOR_ITEM_OFFSET, y: 0 },
 	};
 
 	const horizontalLines: number[] = [];
@@ -185,32 +184,32 @@ function createGrid(
 	if (start.pointType !== 'Board') {
 		const itemMbr = start.item.getMbr();
 		verticalLines.push(
-			itemMbr.left - ITEM_OFFSET,
+			itemMbr.left - conf.CONNECTOR_ITEM_OFFSET,
 			itemMbr.left,
 			itemMbr.right,
-			itemMbr.right + ITEM_OFFSET
+			itemMbr.right + conf.CONNECTOR_ITEM_OFFSET
 		);
 		horizontalLines.push(
-			itemMbr.top - ITEM_OFFSET,
+			itemMbr.top - conf.CONNECTOR_ITEM_OFFSET,
 			itemMbr.top,
 			itemMbr.bottom,
-			itemMbr.bottom + ITEM_OFFSET
+			itemMbr.bottom + conf.CONNECTOR_ITEM_OFFSET
 		);
 	}
 
 	if (end.pointType !== 'Board') {
 		const itemMbr = end.item.getMbr();
 		verticalLines.push(
-			itemMbr.left - ITEM_OFFSET,
+			itemMbr.left - conf.CONNECTOR_ITEM_OFFSET,
 			itemMbr.left,
 			itemMbr.right,
-			itemMbr.right + ITEM_OFFSET
+			itemMbr.right + conf.CONNECTOR_ITEM_OFFSET
 		);
 		horizontalLines.push(
-			itemMbr.top - ITEM_OFFSET,
+			itemMbr.top - conf.CONNECTOR_ITEM_OFFSET,
 			itemMbr.top,
 			itemMbr.bottom,
-			itemMbr.bottom + ITEM_OFFSET
+			itemMbr.bottom + conf.CONNECTOR_ITEM_OFFSET
 		);
 	}
 

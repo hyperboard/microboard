@@ -525,6 +525,8 @@ export const conf = {
   CARD_DIMENSIONS: {width: 250, height: 400},
   DEFAULT_GAME_ITEM_DIMENSIONS: {width: 200, height: 200},
   MAX_CARD_SIZE: 500,
+
+  CONNECTOR_ITEM_OFFSET: 20,
 };
 
 export type Settings = typeof conf;
