@@ -2,6 +2,7 @@ import {FixedConnectorPoint, FixedPoint, FloatingPoint, Line, Mbr} from 'Items';
 import { Point } from '../../Point';
 import { ControlPoint } from '../ControlPoint';
 import { ConnectedPointerDirection, getPointerDirection } from '../Pointers';
+import {conf} from "Settings";
 
 interface Node {
 	point: Point;
@@ -14,8 +15,6 @@ interface Node {
 }
 
 type Direction = 'vertical' | 'horizontal';
-
-const ITEM_OFFSET = 1;
 
 export function getDirection(from: Point, to?: Point): Direction | null {
 	if (!to) {
@@ -77,7 +76,7 @@ function getNeighbors(node: Node, grid: Point[][], obstacles: Mbr[]): Node[] {
 			const newPoint = grid[pos.x][pos.y];
 			if (
 				newPoint &&
-				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, ITEM_OFFSET - 1))
+				!obstacles.some(obstacle => obstacle.isAlmostInside(newPoint, conf.CONNECTOR_ITEM_OFFSET - 1))
 			) {
 				neighbors.push({
 					point: newPoint,
@@ -198,10 +197,10 @@ function createGrid(
 	const endDir = getPointerDirection(end);
 	const revertMapDir = { top: 0, bottom: 1, right: 2, left: 3 };
 	const offsetMap = {
-		top: { x: 0, y: -ITEM_OFFSET },
-		bottom: { x: 0, y: ITEM_OFFSET },
-		right: { x: ITEM_OFFSET, y: 0 },
-		left: { x: -ITEM_OFFSET, y: 0 },
+		top: { x: 0, y: -conf.CONNECTOR_ITEM_OFFSET },
+		bottom: { x: 0, y: conf.CONNECTOR_ITEM_OFFSET },
+		right: { x: conf.CONNECTOR_ITEM_OFFSET, y: 0 },
+		left: { x: -conf.CONNECTOR_ITEM_OFFSET, y: 0 },
 	};
 
 	const horizontalLines: number[] = [];
@@ -228,33 +227,23 @@ function createGrid(
 			Object.getOwnPropertyDescriptors(point)
 		);
 
-		newPoint.x = pointOnMbr.x;
-		newPoint.y = pointOnMbr.y;
-
-		if (dir === 'top') {
-			newPoint.y -= ITEM_OFFSET;
-		} else if (dir === 'bottom') {
-			newPoint.y += ITEM_OFFSET;
-		} else if (dir === 'left') {
-			newPoint.x -= ITEM_OFFSET;
-		} else if (dir === 'right') {
-			newPoint.x += ITEM_OFFSET;
-		}
+		newPoint.x = pointOnMbr.x + offsetMap[dir].x;
+		newPoint.y = pointOnMbr.y + offsetMap[dir].y;
 
 		verticalLines.push(
-			mbrFloored.left - ITEM_OFFSET,
+			mbrFloored.left - conf.CONNECTOR_ITEM_OFFSET,
 			mbrFloored.left,
 			pointOnMbr.x,
 			mbrFloored.right,
-			mbrFloored.right + ITEM_OFFSET
+			mbrFloored.right + conf.CONNECTOR_ITEM_OFFSET
 		);
 
 		horizontalLines.push(
-			mbrFloored.top - ITEM_OFFSET,
+			mbrFloored.top - conf.CONNECTOR_ITEM_OFFSET,
 			mbrFloored.top,
 			pointOnMbr.y,
 			mbrFloored.bottom,
-			mbrFloored.bottom + ITEM_OFFSET
+			mbrFloored.bottom + conf.CONNECTOR_ITEM_OFFSET
 		);
 
 		return newPoint;
