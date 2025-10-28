@@ -997,6 +997,10 @@ export class Board {
           itemData.endPoint.x += -minX + x;
           itemData.endPoint.y += -minY + y;
         }
+        if (itemData.middlePoint?.pointType === "Board") {
+          itemData.endPoint.x += -minX + x;
+          itemData.endPoint.y += -minY + y;
+        }
       } else if (itemData.transformation) {
         itemData.transformation.translateX = translateX - minX + x;
         itemData.transformation.translateY = translateY - minY + y;
