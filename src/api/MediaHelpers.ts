@@ -20,11 +20,11 @@ const uploadSvgDirectly = async (
   }
 
   const data = await response.json();
-  if (!data.key) {
+  if (!data.url) {
     throw new Error("Server did not provide a key for the uploaded SVG.");
   }
 
-  return data.key;
+  return data.url;
 };
 
 const uploadWithPresignedUrl = async (
@@ -52,9 +52,9 @@ const uploadWithPresignedUrl = async (
   }
 
   const data = await generateUrlResponse.json();
-  const { uploadUrl, key } = data;
+  const { uploadUrl, url } = data;
 
-  if (!uploadUrl || !key) {
+  if (!uploadUrl || !url) {
     throw new Error("Server did not provide an uploadUrl or key in the response.");
   }
 
@@ -71,7 +71,7 @@ const uploadWithPresignedUrl = async (
     throw new Error(`Direct upload to storage failed. Status: ${uploadResponse.status}`);
   }
 
-  return key;
+  return url;
 };
 
 export const uploadMediaToStorage = async (
