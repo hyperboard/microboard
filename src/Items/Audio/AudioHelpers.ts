@@ -47,17 +47,11 @@ export const prepareAudio = (
 		const audio = document.createElement('audio');
 		audio.src = URL.createObjectURL(file);
 		audio.onloadedmetadata = () => {
-			fileTosha256(file)
-				.then(hash => {
-					uploadMediaToStorage(hash, file, accessToken, boardId, "audio")
-						.then(url => {
-							resolve(url);
-						})
-						.catch(reject);
+			uploadMediaToStorage(file, accessToken, boardId, "audio")
+				.then(url => {
+					resolve(url);
 				})
-				.catch(() => {
-					reject(new Error('Failed to generate hash'));
-				});
+				.catch(reject);
 		};
 		audio.onerror = () => {
 			reject(new Error('Failed to load audio'));

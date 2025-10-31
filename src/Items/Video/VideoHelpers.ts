@@ -96,20 +96,14 @@ export const prepareVideo = (
 				video.onseeked = null;
 				prepareImage(captureFrame(0.1, video)?.src, accessToken, boardId)
 					.then(imageData => {
-						fileTosha256(file)
-							.then(hash => {
-								uploadMediaToStorage(hash, file, accessToken, boardId, "video")
-									.then(url => {
-										resolve({
-											url,
-											previewUrl: imageData.storageLink,
-										});
-									})
-									.catch(reject);
+						uploadMediaToStorage(file, accessToken, boardId, "video")
+							.then(url => {
+								resolve({
+									url,
+									previewUrl: imageData.storageLink,
+								});
 							})
-							.catch(() => {
-								reject(new Error('Failed to generate hash'));
-							});
+							.catch(reject);
 					})
 					.catch(() => reject(new Error('Failed to load video preview')));
 			};

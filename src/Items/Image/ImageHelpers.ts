@@ -152,16 +152,16 @@ export const prepareImage = (
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
 		const {blob, mimeType} = getBlobFromDataURL(dataURL);
-		if (mimeType === "image/svg+xml") {
-			return uploadToTheStorage(hash, dataURL, accessToken, boardId).then(src => {
-				return {
-					imageDimension: { width, height },
-					base64: dataURL,
-					storageLink: src,
-				};
-			});
-		}
-		return uploadMediaToStorage(hash, blob, accessToken, boardId, "image").then(src => {
+		// if (mimeType === "image/svg+xml") {
+		// 	return uploadToTheStorage(hash, dataURL, accessToken, boardId).then(src => {
+		// 		return {
+		// 			imageDimension: { width, height },
+		// 			base64: dataURL,
+		// 			storageLink: src,
+		// 		};
+		// 	});
+		// }
+		return uploadMediaToStorage(blob, accessToken, boardId, "image").then(src => {
 			return {
 				imageDimension: { width, height },
 				base64: dataURL,

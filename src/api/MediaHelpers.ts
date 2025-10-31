@@ -1,59 +1,91 @@
 import {conf} from "Settings";
 
+const uploadSvgDirectly = async (
+  blob: Blob,
+  accessToken: string | null,
+  boardId: string,
+): Promise<string> => {
+  const response = await fetch(`/api/v1/media/svg/${boardId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'image/svg+xml',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: blob,
+  });
+
+  if (!response.ok) {
+    conf.hooks.onUploadMediaError(response, 'image');
+    throw new Error(`Failed to upload SVG. Status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data.key) {
+    throw new Error("Server did not provide a key for the uploaded SVG.");
+  }
+
+  return data.key;
+};
+
+const uploadWithPresignedUrl = async (
+  blob: Blob,
+  accessToken: string | null,
+  boardId: string,
+  type: "video" | "audio" | "image",
+): Promise<string> => {
+  const generateUrlResponse = await fetch(`/api/v1/media/upload`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      fileSize: blob.size,
+      fileType: blob.type,
+      boardId: boardId,
+    }),
+  });
+
+  if (!generateUrlResponse.ok) {
+    conf.hooks.onUploadMediaError(generateUrlResponse, type);
+    throw new Error(`Failed to get presigned URL. Status: ${generateUrlResponse.status}`);
+  }
+
+  const data = await generateUrlResponse.json();
+  const { uploadUrl, key } = data;
+
+  if (!uploadUrl || !key) {
+    throw new Error("Server did not provide an uploadUrl or key in the response.");
+  }
+
+  const uploadResponse = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': blob.type,
+    },
+    body: blob,
+  });
+
+  if (!uploadResponse.ok) {
+    console.error('Direct upload to storage failed:', uploadResponse.status, uploadResponse.statusText);
+    throw new Error(`Direct upload to storage failed. Status: ${uploadResponse.status}`);
+  }
+
+  return key;
+};
+
 export const uploadMediaToStorage = async (
-  hash: string,
   blob: Blob,
   accessToken: string | null,
   boardId: string,
   type: "video" | "audio" | "image",
 ): Promise<string> => {
   try {
-    const generateUrlResponse = await fetch(`${window.location.origin}/api/v1/media/generate-upload-url`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', // Отправляем JSON, а не файл
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        fileSize: blob.size,
-        boardId: boardId,
-        hash: hash,
-      }),
-    });
-
-    if (!generateUrlResponse.ok) {
-      conf.hooks.onUploadMediaError(generateUrlResponse, type);
-      throw new Error(`Failed to get presigned URL. Status: ${generateUrlResponse.status}`);
+    if (blob.type === 'image/svg+xml') {
+      return await uploadSvgDirectly(blob, accessToken, boardId);
+    } else {
+      return await uploadWithPresignedUrl(blob, accessToken, boardId, type);
     }
-
-    const data = await generateUrlResponse.json();
-
-    if (data.mediaUrl) {
-      console.log("Media already exists, skipping upload.");
-      return data.mediaUrl;
-    }
-
-    const { uploadUrl, promisedMediaUrl } = data;
-
-    if (!uploadUrl || !promisedMediaUrl) {
-      throw new Error("Server did not provide an uploadUrl or promisedMediaUrl in the response.");
-    }
-
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': blob.type,
-      },
-      body: blob,
-    });
-
-    if (!uploadResponse.ok) {
-      console.error('Direct upload to storage failed:', uploadResponse.status, uploadResponse.statusText);
-      throw new Error(`Direct upload to storage failed. Status: ${uploadResponse.status}`);
-    }
-
-    return promisedMediaUrl;
-
   } catch (error) {
     console.error('Media upload process error:', error);
     throw error;
