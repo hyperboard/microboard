@@ -99,9 +99,7 @@ export class ImageItem extends BaseItem {
     this.imageDimension = imageDimension;
     this.transformation = new Transformation(id, events);
     this.image = new Image();
-    this.image.crossOrigin = "anonymous";
-    this.image.onload = this.onLoad;
-    this.image.onerror = this.onError;
+    this.setImage(new Image());
     if (typeof base64 === "string") {
       this.image.src = base64;
     }
@@ -112,11 +110,16 @@ export class ImageItem extends BaseItem {
     this.transformation.subject.subscribe(this.onTransform);
   }
 
+  private setImage(image: HTMLImageElement): void {
+    this.image = image;
+    this.image.crossOrigin = "anonymous";
+    this.image.onload = this.onLoad;
+    this.image.onerror = this.onError;
+    this.updateMbr();
+  }
+
   async setStorageLink(link: string) {
-    console.log("setStorageLink", link);
     this.storageLink = link;
-    console.log("board", this.board);
-    console.log("accessToken", this.board.getAccount()?.accessToken);
     this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken || null) || "";
     this.image.src = this.signedUrl;
   }
@@ -128,7 +131,7 @@ export class ImageItem extends BaseItem {
   handleError = (): void => {
     // Provide handling logic for errors
     console.error("Invalid dataUrl or image failed to load.");
-    this.image = getPlaceholderImage(this.board);
+    this.setImage(getPlaceholderImage(this.board, this.imageDimension));
     this.updateMbr();
     this.subject.publish(this);
     this.shootLoadCallbacks();
@@ -142,10 +145,11 @@ export class ImageItem extends BaseItem {
   };
 
   onError = (): void => {
-    this.image = getPlaceholderImage(this.board, this.imageDimension);
+    this.setImage(getPlaceholderImage(this.board, this.imageDimension));
     this.updateMbr();
     this.subject.publish(this);
     this.shootLoadCallbacks();
+    this.image.onload = this.onLoad;
   };
 
   onTransform = (): void => {
@@ -232,7 +236,7 @@ export class ImageItem extends BaseItem {
     this.linkTo.deserialize(data.linkTo);
     this.image.onload = () => {
       this.setCoordinates();
-      this.shootLoadCallbacks();
+      this.onLoad();
     };
     if (data.storageLink) {
       this.setStorageLink(data.storageLink);
@@ -284,7 +288,6 @@ export class ImageItem extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
-    console.log(this)
     const ctx = context.ctx;
     ctx.save();
     this.transformation.matrix.applyToContext(ctx);
