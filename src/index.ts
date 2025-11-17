@@ -24,3 +24,4 @@ export * from "./parserHTML";
 export * from "./sha256";
 export * from "./lib";
 export { initI18N } from "api/initI18N";
+export {getMediaSignedUrl} from "api/MediaHelpers"
