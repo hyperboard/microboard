@@ -112,7 +112,7 @@ function getAccessTypeFromUrl(url: string) {
   return null;
 }
 
-export const getMediaSignedUrl = async (url: string, accessToken: string): Promise<string | null> => {
+export const getMediaSignedUrl = async (url: string, accessToken: string | null): Promise<string | null> => {
   const accessType = getAccessTypeFromUrl(url);
   if (!accessType) {
     //TODO support old urls
@@ -121,6 +121,10 @@ export const getMediaSignedUrl = async (url: string, accessToken: string): Promi
 
   if (accessType === "anonymous") {
     return url;
+  }
+
+  if (!accessToken) {
+    return null;
   }
 
   try {
