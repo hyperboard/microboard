@@ -11,7 +11,7 @@ type AccountInfo = {
 };
 
 export interface Account {
-  accessToken: () => string | null;
+  readonly accessToken: string | null;
   subject: Subject<AccountInfo | null>;
   info: null | AccountInfo;
 }

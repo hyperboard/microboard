@@ -116,8 +116,8 @@ export class ImageItem extends BaseItem {
     console.log("setStorageLink", link);
     this.storageLink = link;
     console.log("board", this.board);
-    console.log("accessToken", this.board.getAccount()?.accessToken());
-    this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken() || null) || "";
+    console.log("accessToken", this.board.getAccount()?.accessToken);
+    this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken || null) || "";
     this.image.src = this.signedUrl;
   }
 
@@ -141,8 +141,8 @@ export class ImageItem extends BaseItem {
     this.shootLoadCallbacks();
   };
 
-  onError = (_error): void => {
-    this.image = getPlaceholderImage(this.board);
+  onError = (): void => {
+    this.image = getPlaceholderImage(this.board, this.imageDimension);
     this.updateMbr();
     this.subject.publish(this);
     this.shootLoadCallbacks();
@@ -242,20 +242,7 @@ export class ImageItem extends BaseItem {
       return this;
     }
 
-    this.image = getPlaceholderImage(
-      this.board,
-      data.imageDimension
-      // "The image is loading from the storage",
-    );
-
-    const storageImage = new Image();
-
-    storageImage.onload = () => {
-      this.image = storageImage;
-      this.onLoad();
-    };
-
-    storageImage.onerror = this.onError;
+    this.onError()
     return this;
   }
 
