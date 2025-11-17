@@ -113,7 +113,10 @@ export class ImageItem extends BaseItem {
   }
 
   async setStorageLink(link: string) {
+    console.log("setStorageLink", link);
     this.storageLink = link;
+    console.log("board", this.board);
+    console.log("accessToken", this.board.getAccount()?.accessToken());
     this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken() || null) || "";
     this.image.src = this.signedUrl;
   }
@@ -294,6 +297,7 @@ export class ImageItem extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
+    console.log(this)
     const ctx = context.ctx;
     ctx.save();
     this.transformation.matrix.applyToContext(ctx);
