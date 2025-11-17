@@ -91,3 +91,54 @@ export const uploadMediaToStorage = async (
     throw error;
   }
 };
+
+function getAccessTypeFromUrl(url: string) {
+  try {
+    const urlObject = new URL(url);
+    const pathname = urlObject.pathname;
+
+    const parts = pathname.split('/').filter(part => part.length > 0);
+
+    if (parts.length > 2) {
+      return parts[2];
+    }
+  } catch (error) {
+    const parts = url.split('/');
+    if (parts.length > 2 && parts[0] === 'v1') {
+      return parts[2];
+    }
+  }
+
+  return null;
+}
+
+export const getMediaSignedUrl = async (url: string, accessToken: string): Promise<string | null> => {
+  const accessType = getAccessTypeFromUrl(url);
+  if (!accessType) {
+    //TODO support old urls
+    return null;
+  }
+
+  if (accessType === "anonymous") {
+    return url;
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to get media signed url:', response.status, response.statusText);
+      return null;
+    }
+
+    return response.url;
+  } catch (error) {
+    console.error("Error resolving redirect URL:", error);
+    return null;
+  }
+}
