@@ -42,6 +42,7 @@ import { ItemsMap } from "Validators";
 import { BaseItem } from "./Items/BaseItem";
 import { BaseItemData } from "./Items/BaseItem/BaseItem";
 import { ItemDataWithId } from "./Items/Item";
+import {Account} from "types/Account";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -73,7 +74,8 @@ export class Board {
   constructor(
     private boardId = "",
     private accessKey?: string,
-    public saveEditingFile?: () => Promise<void>
+    public saveEditingFile?: () => Promise<void>,
+    private account?: Account,
   ) {
     this.selection = new BoardSelection(this);
     this.presence = new Presence(this);
@@ -89,6 +91,10 @@ export class Board {
     this.index = new SpatialIndex(this.camera, this.pointer);
     this.items = this.index.items;
     this.presence.events = this.events;
+  }
+
+  getAccount(): Account | null {
+    return this.account || null;
   }
 
   getNewItemId(): string {

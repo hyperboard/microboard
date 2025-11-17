@@ -15,6 +15,7 @@ import { ImageCommand } from "./ImageCommand";
 import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import {getMediaSignedUrl} from "api/MediaHelpers";
 
 export interface ImageItemData {
   itemType: "Image";
@@ -81,6 +82,7 @@ export class ImageItem extends BaseItem {
   beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
   transformationRenderBlock?: boolean = undefined;
   private storageLink: string;
+  private signedUrl = "";
   imageDimension: Dimension;
   board: Board;
 
@@ -88,7 +90,7 @@ export class ImageItem extends BaseItem {
     { base64, storageLink, imageDimension }: ImageConstructorData,
     board: Board,
     private events?: Events,
-    id = ""
+    id = "",
   ) {
     super(board, id);
     this.linkTo = new LinkTo(this.id, events);
@@ -110,8 +112,10 @@ export class ImageItem extends BaseItem {
     this.transformation.subject.subscribe(this.onTransform);
   }
 
-  setStorageLink(link: string) {
+  async setStorageLink(link: string) {
     this.storageLink = link;
+    this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken() || null) || "";
+    this.image.src = this.signedUrl;
   }
 
   getStorageId() {
@@ -249,7 +253,6 @@ export class ImageItem extends BaseItem {
     };
 
     storageImage.onerror = this.onError;
-    storageImage.src = this.storageLink;
     return this;
   }
 
@@ -388,7 +391,7 @@ export class ImageItem extends BaseItem {
   download() {
     const linkElem = document.createElement("a");
 
-    linkElem.href = this.storageLink;
+    linkElem.href = this.signedUrl;
     linkElem.setAttribute("download", "");
     linkElem.click();
   }
