@@ -12,6 +12,7 @@ import { conf } from "Settings";
 import { Subject } from "Subject";
 import { VideoCommand } from "./VideoCommand";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import {getMediaSignedUrl} from "api/MediaHelpers";
 
 export interface VideoItemData {
   itemType: "Video";
@@ -95,19 +96,17 @@ export class VideoItem extends BaseItem {
   ) {
     super(board, id);
     this.isStorageUrl = !conf.getYouTubeId(url);
-    this.preview = createPlaceholderImage(
+    this.setPreview(createPlaceholderImage(
       videoDimension.width,
       videoDimension.height
-    );
+    ));
     this.linkTo = new LinkTo(this.id, events);
     this.board = board;
     // img storage link or youtube preview url
     if (previewUrl) {
       this.previewUrl = previewUrl;
-      this.setPreview(this.preview, previewUrl);
+      this.setPreviewUrl(previewUrl);
     }
-    this.preview.onload = this.onLoad;
-    this.preview.onerror = this.onError;
     if (url) {
       this.setUrl(url);
     }
@@ -169,7 +168,7 @@ export class VideoItem extends BaseItem {
     url?: string;
   }): void {
     this.previewUrl = previewUrl;
-    this.setPreview(this.preview, previewUrl);
+    this.setPreviewUrl(previewUrl);
     this.setUrl(url);
   }
 
@@ -203,20 +202,26 @@ export class VideoItem extends BaseItem {
     }
   }
 
-  private setPreview(image: HTMLImageElement, previewUrl: string): void {
+  private setPreview(image: HTMLImageElement): void {
+    this.preview = image;
+
+    image.onload = this.onLoad;
+    image.onerror = this.onError;
+
+    this.subject.publish(this);
+  }
+
+  async setPreviewUrl(url: string): Promise<void> {
     if (this.isStorageUrl) {
       try {
-        const newUrl = new URL(previewUrl);
-        image.src = `${window.location.origin}${newUrl.pathname}`;
-      } catch (_) {
+        this.preview.src = await getMediaSignedUrl(url, this.board.getAccount()?.accessToken || null) || "";
+      } catch (err) {
+        console.error(err);
+        this.onError();
       }
     } else {
-      image.src = previewUrl;
+      this.preview.src = url;
     }
-
-    image.onload = () => {
-      this.preview = image;
-    };
   }
 
   setPreviewImage(image: HTMLImageElement): void {
@@ -248,11 +253,11 @@ export class VideoItem extends BaseItem {
     this.shootLoadCallbacks();
   };
 
-  onError = (_error: any) => {
-    this.preview = createPlaceholderImage(
+  onError = () => {
+    this.setPreview(createPlaceholderImage(
       this.videoDimension.width,
       this.videoDimension.height
-    );
+    ));
     this.updateMbr();
     this.subject.publish(this);
     this.shootLoadCallbacks();
@@ -369,20 +374,13 @@ export class VideoItem extends BaseItem {
       this.extension = data.extension;
     }
 
-    this.preview = createPlaceholderImage(
+    this.setPreview(createPlaceholderImage(
       data.videoDimension?.width || 100,
       data.videoDimension?.height || 100
-    );
+    ));
 
-    const storageImage = new Image();
-
-    storageImage.onload = () => {
-      this.onLoad();
-    };
-
-    storageImage.onerror = this.onError;
     if (data.previewUrl) {
-      this.setPreview(storageImage, data.previewUrl);
+      this.setPreviewUrl(data.previewUrl);
     }
     return this;
   }
