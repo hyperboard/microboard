@@ -135,7 +135,7 @@ export const getMediaSignedUrl = async (url: string, accessToken: string | null)
       },
     });
 
-    if (!response.ok) {
+    if (!response.url) {
       console.error('Failed to get media signed url:', response.status, response.statusText);
       return null;
     }
