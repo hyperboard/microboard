@@ -9,6 +9,7 @@ import {DiceOperation} from "./DiceOperation";
 import {registerItem} from "Items";
 import {AddDice} from "./AddDice";
 import {conf} from "Settings";
+import {getMediaSignedUrl} from "api/MediaHelpers";
 
 export type DiceType = "common" | "custom";
 
@@ -71,19 +72,19 @@ export class Dice extends BaseItem {
     this.path.setBorderWidth(this.borderWidth);
   }
 
-  updateRenderValues(): void {
-    this.values.forEach((value, index) => {
+  async updateRenderValues(): Promise<void> {
+    this.values.forEach(async (value, index) => {
       if (typeof value === "number") {
         this.renderValues[index] = value;
       } else {
         const image = conf.documentFactory.createElement("img") as HTMLImageElement;
-        image.src = value;
+        image.src = await getMediaSignedUrl(value, this.board.getAccount()?.accessToken || null) || "";
         this.renderValues[index] = image;
         image.onload = () => {
           this.subject.publish(this);
         };
         image.onerror = () => {
-          this.renderValues[index] = 1;
+          this.renderValues[index] = index + 1;
           this.subject.publish(this);
         };
       }

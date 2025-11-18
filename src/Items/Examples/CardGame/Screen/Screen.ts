@@ -13,6 +13,8 @@ import {Point} from "../../../Point";
 import {AddPouch, AddScreen} from "./AddScreen";
 import {ScreenOperation} from "./ScreenOperation";
 import {DocumentFactory} from "api/DocumentFactory";
+import {conf} from "Settings";
+import {getMediaSignedUrl} from "api/MediaHelpers";
 
 const screenPath = new Path(
   [
@@ -144,12 +146,19 @@ export class Screen extends BaseItem {
     });
   }
 
-  private applyBackgroundUrl(url?: string): void {
+  private async applyBackgroundUrl(url?: string): Promise<void> {
     this.backgroundUrl = url || "";
     if (url) {
-      this.backgroundImage = new Image();
-      this.backgroundImage.src = url;
+      this.backgroundImage = conf.documentFactory.createElement("img") as HTMLImageElement;
+      this.backgroundImage.src = await getMediaSignedUrl(url, this.board.getAccount()?.accessToken || null) || "";
       this.applyBackgroundColor("none");
+      this.backgroundImage.onload = () => {
+        this.subject.publish(this);
+      };
+      this.backgroundImage.onerror = () => {
+        this.backgroundImage = null;
+        this.subject.publish(this);
+      };
     } else {
       this.backgroundImage = null;
     }
@@ -218,7 +227,7 @@ export class Screen extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
-    if (this.backgroundImage && this.backgroundImage.complete) {
+    if (this.backgroundImage && this.backgroundImage.complete && this.backgroundImage.naturalWidth > 0) {
       const ctx = context.ctx;
       ctx.save();
       ctx.drawImage(this.backgroundImage, this.left, this.top, this.getWidth(), this.getHeight());

@@ -281,7 +281,7 @@ export class VideoItem extends BaseItem {
   }
 
   render(context: DrawingContext): void {
-    if (this.transformationRenderBlock || !this.preview.complete) {
+    if (this.transformationRenderBlock || !this.preview.complete || this.preview.naturalWidth === 0) {
       return;
     }
     const ctx = context.ctx;

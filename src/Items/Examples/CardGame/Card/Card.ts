@@ -116,7 +116,7 @@ export class Card extends BaseItem {
     }
 
     const ctx = context.ctx;
-    if (this.imageToRender && this.imageToRender.complete) {
+    if (this.imageToRender && this.imageToRender.complete && this.imageToRender.naturalWidth > 0) {
       ctx.save();
 
       let {x: centerX, y: centerY} = this.getMbr().getCenter();
