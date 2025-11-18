@@ -129,20 +129,22 @@ export const getMediaSignedUrl = async (url: string, accessToken: string | null)
 
   try {
     const response = await fetch(url, {
-      method: "HEAD",
+      method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
 
-    if (!response.url) {
+    if (!response.ok) {
       console.error('Failed to get media signed url:', response.status, response.statusText);
       return null;
     }
 
-    return response.url;
+    const data = await response.json();
+    return data.signedUrl;
+
   } catch (error) {
-    console.error("Error resolving redirect URL:", error);
+    console.error("Error fetching signed URL:", error);
     return null;
   }
 }
