@@ -14,6 +14,7 @@ import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";
 import {throttle} from "../../../../utils";
 import {registerHotkey} from "Keyboard/HotkeyRegistry";
+import {getMediaSignedUrl} from "api/MediaHelpers";
 
 
 export const defaultCardData: BaseItemData = {
@@ -75,15 +76,15 @@ export class Card extends BaseItem {
     return this.dimensions;
   }
 
-  createImages() {
+  async createImages() {
     this.face = conf.documentFactory.createElement(
       "img",
     ) as HTMLImageElement;
     this.backside = conf.documentFactory.createElement(
       "img",
     ) as HTMLImageElement;
-    this.face.src = this.faceUrl;
-    this.backside.src = this.backsideUrl;
+    this.face.src = await getMediaSignedUrl(this.faceUrl, this.board.getAccount()?.accessToken || null) || "";
+    this.backside.src = await getMediaSignedUrl(this.backsideUrl, this.board.getAccount()?.accessToken || null) || "";
     this.face.onload = () => {
       this.subject.publish(this);
     };
@@ -94,9 +95,10 @@ export class Card extends BaseItem {
   }
 
   updateImageToRender() {
-    this.imageToRender = this.backside;
     if (this.isOpen) {
       this.imageToRender = this.face;
+    } else {
+      this.imageToRender = this.backside;
     }
   }
 
