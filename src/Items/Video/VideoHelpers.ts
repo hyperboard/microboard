@@ -12,7 +12,8 @@ export const uploadVideoToStorage = async (
 	hash: string,
 	videoBlob: Blob,
 	accessToken: string | null,
-	boardId: string
+	boardId: string,
+	baseUrl?: string,
 ): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fetch(`${window.location.origin}/api/v1/media/video/${boardId}`, {
