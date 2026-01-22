@@ -6,6 +6,7 @@ on:
       - trunk
 
 permissions:
+  id-token: write  # This is required for OIDC authentication
   contents: write
 
 jobs:
