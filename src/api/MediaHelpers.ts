@@ -6,7 +6,7 @@ const uploadSvgDirectly = async (
   boardId: string,
   baseUrl?: string,
 ): Promise<string> => {
-  const response = await fetch(`${baseUrl || ""}/api/v1/media/svg/${boardId}`, {
+  const response = await fetch(`${baseUrl || ""}/svg/${boardId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'image/svg+xml',
@@ -35,7 +35,7 @@ const uploadWithPresignedUrl = async (
   type: "video" | "audio" | "image",
   baseUrl?: string
 ): Promise<string> => {
-  const generateUrlResponse = await fetch(`${baseUrl || ""}/api/v1/media/upload`, {
+  const generateUrlResponse = await fetch(`${baseUrl || ""}/media/upload`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
