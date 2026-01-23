@@ -81,12 +81,13 @@ export const uploadMediaToStorage = async (
   accessToken: string | null,
   boardId: string,
   type: "video" | "audio" | "image",
+  baseUrl?: string,
 ): Promise<string> => {
   try {
     if (blob.type === 'image/svg+xml') {
-      return await uploadSvgDirectly(blob, accessToken, boardId);
+      return await uploadSvgDirectly(blob, accessToken, boardId, baseUrl);
     } else {
-      return await uploadWithPresignedUrl(blob, accessToken, boardId, type);
+      return await uploadWithPresignedUrl(blob, accessToken, boardId, type, baseUrl);
     }
   } catch (error) {
     console.error('Media upload process error:', error);

@@ -1,46 +1,8 @@
 import { Board } from 'Board';
 import { calculatePosition } from 'Items/Image/calculatePosition';
 import { prepareImage } from 'Items/Image/ImageHelpers';
-import { fileTosha256 } from 'sha256';
 import { VideoConstructorData, VideoItem } from './Video';
-import {conf} from "../../Settings";
 import {uploadMediaToStorage} from "api/MediaHelpers";
-
-// todo remove unnecessary fns
-
-export const uploadVideoToStorage = async (
-	hash: string,
-	videoBlob: Blob,
-	accessToken: string | null,
-	boardId: string,
-	baseUrl?: string,
-): Promise<string> => {
-	return new Promise((resolve, reject) => {
-		fetch(`${window.location.origin}/api/v1/media/video/${boardId}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': videoBlob.type,
-				'x-video-id': hash,
-				Authorization: `Bearer ${accessToken}`,
-			},
-			body: videoBlob,
-		})
-			.then(async response => {
-				if (response.status !== 200) {
-					return conf.hooks.onUploadMediaError(response, 'video');
-				}
-				return response.json();
-			})
-			.then(data => {
-				resolve(data.src);
-			})
-			.catch(error => {
-				console.error('Media storage error:', error);
-				// openModal(USER_PLAN_MODAL_ID);
-				reject(error);
-			});
-	});
-};
 
 export const getVideoMetadata = (file: File): Promise<{ width: number; height: number }> => {
 	return new Promise((resolve, reject) => {
@@ -84,7 +46,8 @@ export const createVideoItem = (
 export const prepareVideo = (
 	file: File,
 	accessToken: string | null,
-	boardId: string
+	boardId: string,
+	baseUrl?: string
 ): Promise<{
 	url: string;
 	previewUrl: string;
@@ -97,7 +60,7 @@ export const prepareVideo = (
 				video.onseeked = null;
 				prepareImage(captureFrame(0.1, video)?.src, accessToken, boardId)
 					.then(imageData => {
-						uploadMediaToStorage(file, accessToken, boardId, "video")
+						uploadMediaToStorage(file, accessToken, boardId, "video", baseUrl)
 							.then(url => {
 								resolve({
 									url,

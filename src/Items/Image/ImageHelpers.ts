@@ -3,39 +3,6 @@ import { ImageConstructorData } from './Image';
 import { conf } from 'Settings';
 import {uploadMediaToStorage} from "api/MediaHelpers";
 
-export const uploadToTheStorage = async (
-	hash: string,
-	dataURL: string,
-	accessToken: string | null,
-	boardId: string
-): Promise<string> => {
-	return new Promise((resolve, reject) => {
-		const {blob, mimeType} = getBlobFromDataURL(dataURL);
-		fetch(`${window?.location.origin}/api/v1/media/image/${boardId}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': mimeType,
-				'X-Image-Id': hash,
-				Authorization: `Bearer ${accessToken}`,
-			},
-			body: blob,
-		})
-			.then(async response => {
-				if (response.status !== 200) {
-					return conf.hooks.onUploadMediaError(response, 'image');
-				}
-				return response.json();
-			})
-			.then(data => {
-				resolve(data.src);
-			})
-			.catch(error => {
-				console.error('Media storage error:', error);
-				reject(error);
-			});
-	});
-};
-
 export const getBlobFromDataURL = (dataURL: string) => {
 	const base64String = dataURL.split(',')[1];
 	const mimeType = dataURL.split(',')[0].split(':')[1].split(';')[0];
@@ -148,20 +115,12 @@ export const resizeAndConvertToPng = async (
 export const prepareImage = (
 	inp: string | ArrayBuffer | null | undefined,
 	accessToken: string | null,
-	boardId: string
+	boardId: string,
+	baseUrl?: string
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
 		const {blob, mimeType} = getBlobFromDataURL(dataURL);
-		// if (mimeType === "image/svg+xml") {
-		// 	return uploadToTheStorage(hash, dataURL, accessToken, boardId).then(src => {
-		// 		return {
-		// 			imageDimension: { width, height },
-		// 			base64: dataURL,
-		// 			storageLink: src,
-		// 		};
-		// 	});
-		// }
-		return uploadMediaToStorage(blob, accessToken, boardId, "image").then(src => {
+		return uploadMediaToStorage(blob, accessToken, boardId, "image", baseUrl).then(src => {
 			return {
 				imageDimension: { width, height },
 				base64: dataURL,
