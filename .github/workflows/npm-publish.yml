@@ -6,6 +6,7 @@ on:
       - trunk
 
 permissions:
+  id-token: write  # This is required for OIDC authentication
   contents: write
 
 jobs:
@@ -56,7 +57,7 @@ jobs:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Publish to NPM
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to NPP
+        run: |
+          npm install -g npm@latest
+          npm publish --provenance
