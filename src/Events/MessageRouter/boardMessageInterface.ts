@@ -1,4 +1,15 @@
-import { AiChatMsg, Board, BoardEventMsg, ConfirmationMsg, ModeMsg, PresenceEventMsg, PresenceEventType, SnapshotRequestMsg, UserJoinMsg } from "index";
+import {
+	AiChatMsg,
+	Board,
+	BoardEventMsg,
+	BoardSnapshot,
+	ConfirmationMsg,
+	ModeMsg,
+	PresenceEventMsg,
+	PresenceEventType,
+	SnapshotRequestMsg,
+	UserJoinMsg
+} from "index";
 import { SyncBoardEventPack } from "Events/Events";
 
 export interface AuthMsg {
@@ -64,7 +75,8 @@ export interface BoardSubscriptionCompletedMsg {
 	type: "BoardSubscriptionCompleted";
 	boardId: string;
 	mode: "view" | "edit";
-	snapshot: string | null;
+	snapshot?: string | null;
+	JSONSnapshot?: BoardSnapshot | null;
 	eventsSinceLastSnapshot: SyncBoardEventPack[];
 	initialSequenceNumber: number;
 }

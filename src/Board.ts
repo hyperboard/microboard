@@ -726,7 +726,9 @@ export class Board {
       item.applyAddChildren(itemData.children);
     }
 
-    this.events?.log.deserialize(events);
+    if (events.length) {
+      this.events?.log.deserialize(events);
+    }
   }
 
   getCameraSnapshot(): Matrix | undefined {

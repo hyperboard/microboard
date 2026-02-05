@@ -1,4 +1,4 @@
-import { Board } from "Board";
+import {Board, BoardSnapshot} from "Board";
 import { conf } from "Settings";
 import { BoardEventPack, SyncBoardEvent, SyncEvent } from "../Events";
 import { BoardSubscriptionCompletedMsg } from "./boardMessageInterface";
@@ -11,6 +11,9 @@ export function handleBoardSubscriptionCompletedMsg(
   handleSeqNumApplication(msg.initialSequenceNumber, board);
   if (msg.snapshot) {
     handleSnapshotApplication(msg.snapshot, board);
+    log.list.clearConfirmedRecords();
+  } else if (msg.JSONSnapshot) {
+    handleHTMLSnapshotApplication(msg.JSONSnapshot, board);
     log.list.clearConfirmedRecords();
   }
   handleBoardEventListApplication(msg.eventsSinceLastSnapshot, board);
@@ -108,6 +111,12 @@ function handleSnapshotApplication(snapshot: string, board: Board): void {
   if (match && match[1]) {
     log.list.setSnapshotLastIndex(Number(match[1]));
   }
+}
+
+function handleHTMLSnapshotApplication(snapshot: BoardSnapshot, board: Board): void {
+  const { log } = board.events;
+  board.deserialize(snapshot);
+  log.list.setSnapshotLastIndex(Number(snapshot.lastIndex));
 }
 
 function handleBoardEventListApplication(
