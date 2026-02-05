@@ -7,30 +7,26 @@ import { EventsList, FilterPredicate } from "./createEventsList";
 import { expandEvents } from "./expandEvents";
 // import { handleRemoveSnappedObject } from "../handleRemoveSnappedObject";
 
-/**
- * Inserts events from other connections into the events list. This function is
- * a core part of the Operational Transformation (OT) conflict resolution system
- * and it handles synchronization of events across multiple connections.
- *
- * @param value - A single SyncEvent or an array of SyncEvents to be inserted
- * @param list - The EventsList to insert the events into
- * @param board - The Board instance that the events will be applied to
- */
 export function insertEventsFromOtherConnectionsIntoList(
 	value: SyncEvent | SyncEvent[],
 	list: EventsList,
 	board: Board,
 ): void {
-	// Normalize the input to an array of events
+	// 1. Логгируем входные данные
+	console.log("[Debug-OT] Start insertEvents. Events count:", Array.isArray(value) ? value.length : 1);
+
+	// Проверка на существование board, так как часто ошибка возникает из-за контекста
+	if (!board) console.error("[Debug-OT] CRITICAL: Board is undefined!");
+
 	const eventArray = Array.isArray(value) ? value : [value];
 	if (eventArray.length === 0) {
 		return;
 	}
-	// Expand the events to their full form
-	const events = expandEvents(eventArray);
 
-	// Previous implementation for handling snapped objects was removed
-	// handleRemoveSnappedObject(board, events, list); // should do it in other ways
+	const events = expandEvents(eventArray);
+	// console.log("[Debug-OT] Expanded events:", events.length);
+
+	// handleRemoveSnappedObject(board, events, list);
 
 	board.selection.memoize();
 	const createdItems: string[] = [];
@@ -42,30 +38,50 @@ export function insertEventsFromOtherConnectionsIntoList(
 			createdItems.push(...creating);
 			return false;
 		}
-
-		// if (op.class === "RichText" && op.method === "edit") {
-		// 	updatedText.push(...op.item);
-		// }
-
 		return true;
 	};
-	// Revert any unconfirmed changes to ensure a clean state
+
 	list.revertUnconfirmed(filter);
 
-	// Transform events that might conflict with existing events
+	// 2. Логгируем перед трансформацией
+	// console.log("[Debug-OT] Reverted unconfirmed. Transforming...");
 	const transformed: BoardEvent[] = transformConflictingEvents(events, list);
 
-	// Merge similar events to reduce redundancy
 	const mergedEvents = mergeEvents(transformed);
+	console.log(`[Debug-OT] Merged events to apply: ${mergedEvents.length}`);
+
 	for (const event of mergedEvents) {
-		// Create and apply commands for each event
-		const command = createCommand(board, event.body.operation);
-		const record = { event, command };
-		command.apply();
-		list.addConfirmedRecords([record]);
-		list.justConfirmed.push(record);
+		// 3. Самое важное место: логгируем каждый ивент перед применением
+		console.log("[Debug-OT] Processing Event:", JSON.stringify(event.body.operation).substring(0, 200));
+
+		try {
+			// Пробуем создать команду
+			const command = createCommand(board, event.body.operation);
+
+			if (!command) {
+				console.warn("[Debug-OT] createCommand returned undefined/null for event:", event.body.operation);
+			}
+
+			const record = { event, command };
+
+			// 4. Лог перед выполнением команды (часто падает здесь)
+			// console.log("[Debug-OT] Executing command.apply()...");
+
+			command.apply();
+
+			// console.log("[Debug-OT] Command applied successfully.");
+
+			list.addConfirmedRecords([record]);
+			list.justConfirmed.push(record);
+		} catch (e) {
+			// 5. Ловим ошибку и выводим полный контекст
+			console.error("[Debug-OT] !!! CRASH inside loop !!!");
+			console.error("[Debug-OT] Failed Event Operation:", JSON.stringify(event.body.operation));
+			console.error("[Debug-OT] Error details:", e);
+			throw e; // Пробрасываем ошибку дальше, чтобы логика DO узнала о сбое
+		}
 	}
-	// Re-apply any unconfirmed changes that were reverted earlier
+
 	list.applyUnconfirmed(filter);
 
 	const hasAnyOverlap = <T>(arr1: T[], arr2: T[]): boolean => {
@@ -77,9 +93,10 @@ export function insertEventsFromOtherConnectionsIntoList(
 		hasAnyOverlap(currSelection, createdItems) ||
 		hasAnyOverlap(currSelection, updatedText)
 	) {
-		// todo transform selection by new events
 		board.selection.applyMemoizedCaretOrRange();
 	}
+
+	console.log("[Debug-OT] insertEvents finished successfully.");
 }
 
 /**
