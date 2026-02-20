@@ -12,19 +12,12 @@ export function insertEventsFromOtherConnectionsIntoList(
 	list: EventsList,
 	board: Board,
 ): void {
-	// 1. Логгируем входные данные
-	console.log("[Debug-OT] Start insertEvents. Events count:", Array.isArray(value) ? value.length : 1);
-
-	// Проверка на существование board, так как часто ошибка возникает из-за контекста
-	if (!board) console.error("[Debug-OT] CRITICAL: Board is undefined!");
-
 	const eventArray = Array.isArray(value) ? value : [value];
 	if (eventArray.length === 0) {
 		return;
 	}
 
 	const events = expandEvents(eventArray);
-	// console.log("[Debug-OT] Expanded events:", events.length);
 
 	// handleRemoveSnappedObject(board, events, list);
 
@@ -43,43 +36,16 @@ export function insertEventsFromOtherConnectionsIntoList(
 
 	list.revertUnconfirmed(filter);
 
-	// 2. Логгируем перед трансформацией
-	// console.log("[Debug-OT] Reverted unconfirmed. Transforming...");
 	const transformed: BoardEvent[] = transformConflictingEvents(events, list);
 
 	const mergedEvents = mergeEvents(transformed);
-	console.log(`[Debug-OT] Merged events to apply: ${mergedEvents.length}`);
 
 	for (const event of mergedEvents) {
-		// 3. Самое важное место: логгируем каждый ивент перед применением
-		console.log("[Debug-OT] Processing Event:", JSON.stringify(event.body.operation).substring(0, 200));
-
-		try {
-			// Пробуем создать команду
-			const command = createCommand(board, event.body.operation);
-
-			if (!command) {
-				console.warn("[Debug-OT] createCommand returned undefined/null for event:", event.body.operation);
-			}
-
-			const record = { event, command };
-
-			// 4. Лог перед выполнением команды (часто падает здесь)
-			// console.log("[Debug-OT] Executing command.apply()...");
-
-			command.apply();
-
-			// console.log("[Debug-OT] Command applied successfully.");
-
-			list.addConfirmedRecords([record]);
-			list.justConfirmed.push(record);
-		} catch (e) {
-			// 5. Ловим ошибку и выводим полный контекст
-			console.error("[Debug-OT] !!! CRASH inside loop !!!");
-			console.error("[Debug-OT] Failed Event Operation:", JSON.stringify(event.body.operation));
-			console.error("[Debug-OT] Error details:", e);
-			throw e; // Пробрасываем ошибку дальше, чтобы логика DO узнала о сбое
-		}
+		const command = createCommand(board, event.body.operation);
+		const record = { event, command };
+		command.apply();
+		list.addConfirmedRecords([record]);
+		list.justConfirmed.push(record);
 	}
 
 	list.applyUnconfirmed(filter);
@@ -95,8 +61,6 @@ export function insertEventsFromOtherConnectionsIntoList(
 	) {
 		board.selection.applyMemoizedCaretOrRange();
 	}
-
-	console.log("[Debug-OT] insertEvents finished successfully.");
 }
 
 /**
