@@ -191,15 +191,7 @@ export class VideoItem extends BaseItem {
   }
 
   setUrl(url: string): void {
-    if (this.isStorageUrl) {
-      try {
-        const newUrl = new URL(url);
-        this.url = `${window.location.origin}${newUrl.pathname}`;
-      } catch (_) {
-      }
-    } else {
-      this.url = url;
-    }
+    this.url = url;
   }
 
   private setPreview(image: HTMLImageElement): void {
