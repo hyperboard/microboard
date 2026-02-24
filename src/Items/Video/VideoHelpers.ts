@@ -58,7 +58,7 @@ export const prepareVideo = (
 		video.onloadedmetadata = () => {
 			video.onseeked = () => {
 				video.onseeked = null;
-				prepareImage(captureFrame(0.1, video)?.src, accessToken, boardId)
+				prepareImage(captureFrame(0.1, video)?.src, accessToken, boardId, baseUrl)
 					.then(imageData => {
 						uploadMediaToStorage(file, accessToken, boardId, "video", baseUrl)
 							.then(url => {
