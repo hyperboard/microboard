@@ -816,8 +816,9 @@ export class BoardSelection {
           }
         }
 
-        const childrenIds = val.item.getChildrenIds();
-        if (childrenIds && checkFrames) {
+        if (checkFrames) {
+          const childrenIds = val.item.getChildrenIds();
+          if (childrenIds) {
           const currGroup = val.item;
           const currMbr = currGroup.getMbr();
           const children = childrenIds
@@ -845,6 +846,7 @@ export class BoardSelection {
           });
           // toCheck.forEach(child => currFrame.emitNesting(child));
           currGroup.emitNesting(toCheck);
+          }
         }
       });
     }

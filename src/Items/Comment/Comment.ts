@@ -55,6 +55,13 @@ export class Comment implements Geometry {
   transformationRenderBlock?: boolean = undefined;
   resizeEnabled = true;
 
+  // Stubs matching BaseItem interface — Comment is passed to Select tool's
+  // drag logic which calls these methods. Without them runtime errors occur.
+  readonly index = null;
+  canBeNested = false;
+  children: string[] = [];
+  onRemoveCallbacks: (() => void)[] = [];
+
   constructor(
     private anchor = new Point(),
     private events?: Events,
@@ -422,6 +429,27 @@ export class Comment implements Geometry {
   getSnapAnchorPoints(): Point[] | null {
     return null;
   }
+
+  // BaseItem stubs — called by Select tool drag/drop and nesting logic.
+  // Comment is not a real board item so all these are no-ops or return null.
+
+  getChildrenIds(): string[] | null {
+    return null;
+  }
+
+  addChildItems(_children: unknown[]): void {}
+
+  removeChildItems(_children: unknown | unknown[]): void {}
+
+  emitNesting(_children: unknown[]): void {}
+
+  handleNesting(_item: unknown): boolean {
+    return false;
+  }
+
+  addOnRemoveCallback(_cb: () => void): void {}
+
+  onRemove(): void {}
 
   render(context: DrawingContext): void {}
 
