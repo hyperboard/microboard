@@ -261,9 +261,9 @@ export class Camera {
 		this.isTrackingAnimation = true;
 		this.lastTrackingTime = null;
 
-		const SMOOTHING = 14;
-		const SNAP_PX = 0.5;
-		const SNAP_SCALE = 0.0001;
+		const SMOOTHING = 7;
+		const SNAP_PX = 2;
+		const SNAP_SCALE = 0.0005;
 
 		const loop = (): void => {
 			const t = this.trackingTarget;
