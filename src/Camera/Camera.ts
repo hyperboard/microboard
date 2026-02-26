@@ -36,6 +36,8 @@ export class Camera {
 	private isAnimating = false;
 	isTrackingAnimation = false;
 	private trackingAnimationId: number | null = null;
+	private trackingTarget: Matrix | null = null;
+	private lastTrackingTime: number | null = null;
 
 	constructor(private boardPointer = new Pointer()) {
 		this.subject.subscribe((_camera: Camera) => {
@@ -233,44 +235,88 @@ export class Camera {
 		this.subject.publish(this);
 	}
 
-	animateToMatrix(target: Matrix, duration = 130): void {
-		if (this.trackingAnimationId !== null) {
-			cancelAnimationFrame(this.trackingAnimationId);
-			this.trackingAnimationId = null;
+	animateToMatrix(target: Matrix): void {
+		if (this.trackingTarget) {
+			this.trackingTarget.translateX = target.translateX;
+			this.trackingTarget.translateY = target.translateY;
+			this.trackingTarget.scaleX = target.scaleX;
+			this.trackingTarget.scaleY = target.scaleY;
+			this.trackingTarget.shearX = target.shearX;
+			this.trackingTarget.shearY = target.shearY;
+		} else {
+			this.trackingTarget = new Matrix(
+				target.translateX,
+				target.translateY,
+				target.scaleX,
+				target.scaleY,
+				target.shearX,
+				target.shearY
+			);
 		}
 
-		const startTranslateX = this.matrix.translateX;
-		const startTranslateY = this.matrix.translateY;
-		const startScaleX = this.matrix.scaleX;
-		const startScaleY = this.matrix.scaleY;
-		const startShearX = this.matrix.shearX;
-		const startShearY = this.matrix.shearY;
+		if (this.trackingAnimationId !== null) {
+			return;
+		}
 
 		this.isTrackingAnimation = true;
-		const startTime = performance.now();
+		this.lastTrackingTime = null;
 
-		const animate = (): void => {
-			const progress = Math.min((performance.now() - startTime) / duration, 1);
-			const t = this.easeOutQuad(progress);
+		const SMOOTHING = 14;
+		const SNAP_PX = 0.5;
+		const SNAP_SCALE = 0.0001;
 
-			this.matrix.translateX = this.lerp(startTranslateX, target.translateX, t);
-			this.matrix.translateY = this.lerp(startTranslateY, target.translateY, t);
-			this.matrix.scaleX = this.lerp(startScaleX, target.scaleX, t);
-			this.matrix.scaleY = this.lerp(startScaleY, target.scaleY, t);
-			this.matrix.shearX = this.lerp(startShearX, target.shearX, t);
-			this.matrix.shearY = this.lerp(startShearY, target.shearY, t);
-
-			this.subject.publish(this);
-
-			if (progress < 1) {
-				this.trackingAnimationId = safeRequestAnimationFrame(animate) || null;
-			} else {
+		const loop = (): void => {
+			const t = this.trackingTarget;
+			if (!t) {
 				this.trackingAnimationId = null;
 				this.isTrackingAnimation = false;
+				return;
 			}
+
+			const now = performance.now();
+			const dt = this.lastTrackingTime !== null ? Math.min(now - this.lastTrackingTime, 50) : 16;
+			this.lastTrackingTime = now;
+
+			const factor = 1 - Math.exp(-SMOOTHING * dt / 1000);
+
+			const dTx = t.translateX - this.matrix.translateX;
+			const dTy = t.translateY - this.matrix.translateY;
+			const dSx = t.scaleX - this.matrix.scaleX;
+			const dSy = t.scaleY - this.matrix.scaleY;
+			const dHx = t.shearX - this.matrix.shearX;
+			const dHy = t.shearY - this.matrix.shearY;
+
+			if (
+				Math.abs(dTx) < SNAP_PX &&
+				Math.abs(dTy) < SNAP_PX &&
+				Math.abs(dSx) < SNAP_SCALE &&
+				Math.abs(dSy) < SNAP_SCALE
+			) {
+				this.matrix.translateX = t.translateX;
+				this.matrix.translateY = t.translateY;
+				this.matrix.scaleX = t.scaleX;
+				this.matrix.scaleY = t.scaleY;
+				this.matrix.shearX = t.shearX;
+				this.matrix.shearY = t.shearY;
+				this.subject.publish(this);
+				this.trackingTarget = null;
+				this.trackingAnimationId = null;
+				this.isTrackingAnimation = false;
+				return;
+			}
+
+			this.matrix.translateX += dTx * factor;
+			this.matrix.translateY += dTy * factor;
+			this.matrix.scaleX += dSx * factor;
+			this.matrix.scaleY += dSy * factor;
+			this.matrix.shearX += dHx * factor;
+			this.matrix.shearY += dHy * factor;
+
+			this.subject.publish(this);
+			this.trackingAnimationId = safeRequestAnimationFrame(loop) || null;
 		};
 
-		this.trackingAnimationId = safeRequestAnimationFrame(animate) || null;
+		this.trackingAnimationId = safeRequestAnimationFrame(loop) || null;
 	}
 
 	cancelTrackingAnimation(): void {
@@ -278,6 +324,8 @@ export class Camera {
 			cancelAnimationFrame(this.trackingAnimationId);
 			this.trackingAnimationId = null;
 		}
+		this.trackingTarget = null;
+		this.lastTrackingTime = null;
 		this.isTrackingAnimation = false;
 	}
 
