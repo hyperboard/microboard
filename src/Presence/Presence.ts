@@ -116,7 +116,9 @@ export class Presence {
 		const checkIsDisableTrackingNeeded = this.getIsDisableTrackingNeeded.bind(this);
 
 		this.board.camera.subject.subscribe(_camera => {
-			throttleCameraEvent(this.board.camera);
+			if (!this.board.camera.isTrackingAnimation) {
+				throttleCameraEvent(this.board.camera);
+			}
 
 			if (!this.board.camera.isTrackingAnimation && checkIsDisableTrackingNeeded()) {
 				this.disableTracking();
@@ -448,7 +450,7 @@ export class Presence {
 		userCopy.camera = eventData;
 		this.updateUserMetaInfo(msg, userCopy);
 		this.users.set(msg.userId.toString(), userCopy);
-		if (this.trackedUser) {
+		if (this.trackedUser && this.trackedUser.userId === msg.userId.toString()) {
 			this.trackedUser.camera = eventData;
 			this.board.camera.animateToMatrix(
 				new Matrix(
