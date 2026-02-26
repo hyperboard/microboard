@@ -34,6 +34,8 @@ export class Camera {
 	private observableItem: Item | null = null;
 	private throttledZoom: () => void;
 	private isAnimating = false;
+	isTrackingAnimation = false;
+	private trackingAnimationId: number | null = null;
 
 	constructor(private boardPointer = new Pointer()) {
 		this.subject.subscribe((_camera: Camera) => {
@@ -229,6 +231,54 @@ export class Camera {
 			matrix.shearY
 		);
 		this.subject.publish(this);
+	}
+
+	animateToMatrix(target: Matrix, duration = 130): void {
+		if (this.trackingAnimationId !== null) {
+			cancelAnimationFrame(this.trackingAnimationId);
+			this.trackingAnimationId = null;
+		}
+
+		const startTranslateX = this.matrix.translateX;
+		const startTranslateY = this.matrix.translateY;
+		const startScaleX = this.matrix.scaleX;
+		const startScaleY = this.matrix.scaleY;
+		const startShearX = this.matrix.shearX;
+		const startShearY = this.matrix.shearY;
+
+		this.isTrackingAnimation = true;
+		const startTime = performance.now();
+
+		const animate = (): void => {
+			const progress = Math.min((performance.now() - startTime) / duration, 1);
+			const t = this.easeOutQuad(progress);
+
+			this.matrix.translateX = this.lerp(startTranslateX, target.translateX, t);
+			this.matrix.translateY = this.lerp(startTranslateY, target.translateY, t);
+			this.matrix.scaleX = this.lerp(startScaleX, target.scaleX, t);
+			this.matrix.scaleY = this.lerp(startScaleY, target.scaleY, t);
+			this.matrix.shearX = this.lerp(startShearX, target.shearX, t);
+			this.matrix.shearY = this.lerp(startShearY, target.shearY, t);
+
+			this.subject.publish(this);
+
+			if (progress < 1) {
+				this.trackingAnimationId = safeRequestAnimationFrame(animate) || null;
+			} else {
+				this.trackingAnimationId = null;
+				this.isTrackingAnimation = false;
+			}
+		};
+
+		this.trackingAnimationId = safeRequestAnimationFrame(animate) || null;
+	}
+
+	cancelTrackingAnimation(): void {
+		if (this.trackingAnimationId !== null) {
+			cancelAnimationFrame(this.trackingAnimationId);
+			this.trackingAnimationId = null;
+		}
+		this.isTrackingAnimation = false;
 	}
 
 	/** Returns true if found and used saved snapshot, false otherwise */

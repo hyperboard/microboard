@@ -118,7 +118,7 @@ export class Presence {
 		this.board.camera.subject.subscribe(_camera => {
 			throttleCameraEvent(this.board.camera);
 
-			if (checkIsDisableTrackingNeeded()) {
+			if (!this.board.camera.isTrackingAnimation && checkIsDisableTrackingNeeded()) {
 				this.disableTracking();
 			}
 		});
@@ -450,7 +450,7 @@ export class Presence {
 		this.users.set(msg.userId.toString(), userCopy);
 		if (this.trackedUser) {
 			this.trackedUser.camera = eventData;
-			this.board.camera.applyMatrix(
+			this.board.camera.animateToMatrix(
 				new Matrix(
 					eventData.translateX,
 					eventData.translateY,
@@ -539,6 +539,7 @@ export class Presence {
 		if (!this.trackedUser) {
 			return;
 		}
+		this.board.camera.cancelTrackingAnimation();
 		this.emit({
 			method: 'StopFollowing',
 			timestamp: Date.now(),
