@@ -77,13 +77,12 @@ export interface TemplateLanguage {
 }
 
 export interface Template {
-  uniqId: string;
+  id: string;
   preview: string;
-  description: string;
-  lan: string;
+  languages: string[];
   tags: string[];
-  snapshot: BoardSnapshot;
   name: string;
+  created: string;
 }
 
 export enum ExportQuality {

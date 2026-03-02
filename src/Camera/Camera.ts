@@ -38,6 +38,7 @@ export class Camera {
 	private trackingAnimationId: number | null = null;
 	private trackingTarget: Matrix | null = null;
 	private lastTrackingTime: number | null = null;
+	private springVelocity = { translateX: 0, translateY: 0, scaleX: 0, scaleY: 0, shearX: 0, shearY: 0 };
 
 	constructor(private boardPointer = new Pointer()) {
 		this.subject.subscribe((_camera: Camera) => {
@@ -261,58 +262,73 @@ export class Camera {
 		this.isTrackingAnimation = true;
 		this.lastTrackingTime = null;
 
-		const SMOOTHING = 7;
-		const SNAP_PX = 2;
+		// Critically-damped spring: smooth acceleration and deceleration, no bounce.
+		// critical damping = 2 * sqrt(stiffness), so 28 > 2*sqrt(150)≈24.5 → slightly overdamped
+		const STIFFNESS = 150;
+		const DAMPING = 28;
+		const SNAP_PX = 0.5;
 		const SNAP_SCALE = 0.0005;
+		const SNAP_VEL = 1; // px/s below which we consider settled
+
+		const springStep = (pos: number, tgt: number, vel: number, dt: number): [pos: number, vel: number] => {
+			const acc = STIFFNESS * (tgt - pos) - DAMPING * vel;
+			const newVel = vel + acc * dt;
+			return [pos + newVel * dt, newVel];
+		};
 
 		const loop = (): void => {
-			const t = this.trackingTarget;
-			if (!t) {
+			const tgt = this.trackingTarget;
+			if (!tgt) {
 				this.trackingAnimationId = null;
 				this.isTrackingAnimation = false;
 				return;
 			}
 
 			const now = performance.now();
-			const dt = this.lastTrackingTime !== null ? Math.min(now - this.lastTrackingTime, 50) : 16;
+			const dt = Math.min(this.lastTrackingTime !== null ? now - this.lastTrackingTime : 16, 50) / 1000;
 			this.lastTrackingTime = now;
 
-			const factor = 1 - Math.exp(-SMOOTHING * dt / 1000);
+			const v = this.springVelocity;
+			const [tx, vtx] = springStep(this.matrix.translateX, tgt.translateX, v.translateX, dt);
+			const [ty, vty] = springStep(this.matrix.translateY, tgt.translateY, v.translateY, dt);
+			const [sx, vsx] = springStep(this.matrix.scaleX, tgt.scaleX, v.scaleX, dt);
+			const [sy, vsy] = springStep(this.matrix.scaleY, tgt.scaleY, v.scaleY, dt);
+			const [hx, vhx] = springStep(this.matrix.shearX, tgt.shearX, v.shearX, dt);
+			const [hy, vhy] = springStep(this.matrix.shearY, tgt.shearY, v.shearY, dt);
 
-			const dTx = t.translateX - this.matrix.translateX;
-			const dTy = t.translateY - this.matrix.translateY;
-			const dSx = t.scaleX - this.matrix.scaleX;
-			const dSy = t.scaleY - this.matrix.scaleY;
-			const dHx = t.shearX - this.matrix.shearX;
-			const dHy = t.shearY - this.matrix.shearY;
+			this.matrix.translateX = tx;
+			this.matrix.translateY = ty;
+			this.matrix.scaleX = sx;
+			this.matrix.scaleY = sy;
+			this.matrix.shearX = hx;
+			this.matrix.shearY = hy;
 
-			if (
-				Math.abs(dTx) < SNAP_PX &&
-				Math.abs(dTy) < SNAP_PX &&
-				Math.abs(dSx) < SNAP_SCALE &&
-				Math.abs(dSy) < SNAP_SCALE
-			) {
-				this.matrix.translateX = t.translateX;
-				this.matrix.translateY = t.translateY;
-				this.matrix.scaleX = t.scaleX;
-				this.matrix.scaleY = t.scaleY;
-				this.matrix.shearX = t.shearX;
-				this.matrix.shearY = t.shearY;
+			this.springVelocity = { translateX: vtx, translateY: vty, scaleX: vsx, scaleY: vsy, shearX: vhx, shearY: vhy };
+
+			this.subject.publish(this);
+
+			const settled =
+				Math.abs(tgt.translateX - tx) < SNAP_PX &&
+				Math.abs(tgt.translateY - ty) < SNAP_PX &&
+				Math.abs(tgt.scaleX - sx) < SNAP_SCALE &&
+				Math.abs(vtx) < SNAP_VEL &&
+				Math.abs(vty) < SNAP_VEL;
+
+			if (settled) {
+				this.matrix.translateX = tgt.translateX;
+				this.matrix.translateY = tgt.translateY;
+				this.matrix.scaleX = tgt.scaleX;
+				this.matrix.scaleY = tgt.scaleY;
+				this.matrix.shearX = tgt.shearX;
+				this.matrix.shearY = tgt.shearY;
 				this.subject.publish(this);
+				this.springVelocity = { translateX: 0, translateY: 0, scaleX: 0, scaleY: 0, shearX: 0, shearY: 0 };
 				this.trackingTarget = null;
 				this.trackingAnimationId = null;
 				this.isTrackingAnimation = false;
 				return;
 			}
 
-			this.matrix.translateX += dTx * factor;
-			this.matrix.translateY += dTy * factor;
-			this.matrix.scaleX += dSx * factor;
-			this.matrix.scaleY += dSy * factor;
-			this.matrix.shearX += dHx * factor;
-			this.matrix.shearY += dHy * factor;
-
-			this.subject.publish(this);
 			this.trackingAnimationId = safeRequestAnimationFrame(loop) || null;
 		};
 
@@ -326,6 +342,7 @@ export class Camera {
 		}
 		this.trackingTarget = null;
 		this.lastTrackingTime = null;
+		this.springVelocity = { translateX: 0, translateY: 0, scaleX: 0, scaleY: 0, shearX: 0, shearY: 0 };
 		this.isTrackingAnimation = false;
 	}
 
