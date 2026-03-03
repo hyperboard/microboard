@@ -286,31 +286,37 @@ function mergeItems(
             opA.items[itemId].translate,
             opB.items[itemId]
           );
-          items[itemId] = {
-            class: "Transformation",
-            method: "scaleByTranslateBy",
-            item: [itemId],
-            scale: newTransformation?.scale ?? { x: 0, y: 0 },
-            translate: newTransformation?.translate ?? {
-              x: 0,
-              y: 0,
-            },
-          };
+          // if resolve returned undefined (e.g. opB is applyMatrix), fall back to opB
+          if (!newTransformation) {
+            items[itemId] = opB.items[itemId];
+          } else {
+            items[itemId] = {
+              class: "Transformation",
+              method: "scaleByTranslateBy",
+              item: [itemId],
+              scale: newTransformation.scale,
+              translate: newTransformation.translate,
+            };
+          }
         } else if (opA.items[itemId].method === "scaleBy") {
           const newTransformation = resolve(
             { x: opA.items[itemId].x, y: opA.items[itemId].y },
             undefined,
             opB.items[itemId]
           );
-          items[itemId] = {
-            class: "Transformation",
-            method: "scaleByTranslateBy",
-            item: [itemId],
-            // @ts-expect-error wrong type
-            scale: newTransformation.scale,
-            // @ts-expect-error wrong type
-            translate: newTransformation.translate,
-          };
+          if (!newTransformation) {
+            items[itemId] = opB.items[itemId];
+          } else {
+            items[itemId] = {
+              class: "Transformation",
+              method: "scaleByTranslateBy",
+              item: [itemId],
+              // @ts-expect-error wrong type
+              scale: newTransformation.scale,
+              // @ts-expect-error wrong type
+              translate: newTransformation.translate,
+            };
+          }
         } else if (opA.items[itemId].method === "translateBy") {
           const newTransformation = resolve(
             // @ts-expect-error wrong type
@@ -318,15 +324,22 @@ function mergeItems(
             { x: opA.items[itemId].x, y: opA.items[itemId].y },
             opB.items[itemId]
           );
-          items[itemId] = {
-            class: "Transformation",
-            method: "scaleByTranslateBy",
-            item: [itemId],
-            // @ts-expect-error wrong type
-            scale: newTransformation.scale,
-            // @ts-expect-error wrong type
-            translate: newTransformation.translate,
-          };
+          if (!newTransformation) {
+            items[itemId] = opB.items[itemId];
+          } else {
+            items[itemId] = {
+              class: "Transformation",
+              method: "scaleByTranslateBy",
+              item: [itemId],
+              // @ts-expect-error wrong type
+              scale: newTransformation.scale,
+              // @ts-expect-error wrong type
+              translate: newTransformation.translate,
+            };
+          }
+        } else {
+          // cross-type or unknown combination: take the newer operation
+          items[itemId] = opB.items[itemId];
         }
       } else {
         items[itemId] = opB.items[itemId];
