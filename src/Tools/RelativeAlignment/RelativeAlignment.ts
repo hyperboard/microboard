@@ -1,6 +1,6 @@
 import { Board } from "Board";
 import { CanvasDrawer } from "drawMbrOnCanvas";
-import {Item, Mbr, Line, Frame, Point, TranslateOperation} from "Items";
+import {Item, Mbr, Line, Frame, Point} from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { SpatialIndex } from "SpatialIndex";
@@ -602,14 +602,12 @@ export class AlignmentHelper {
       this.board.selection.transformMany(translation, timeStamp);
     } else {
       const id = item.getId();
-      const transformMap: { [key: string]: TranslateOperation } = {};
+      const transformMap: TransformManyItems = {};
       transformMap[id] = {
         class: "Transformation",
         item: [id],
-        method: "translateBy",
-        x,
-        y,
-        timeStamp,
+        method: "applyMatrix",
+        matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
       };
       this.board.selection.transformMany(transformMap, timeStamp);
     }
