@@ -62,7 +62,12 @@ export class Card extends BaseItem {
     }, 1000);
 
     this.transformation.subject.subscribe((_, op) => {
-      if (this.parent === "Board" && op.method === "translateBy") {
+      if (
+        this.parent === "Board" &&
+        op.method === "applyMatrix" &&
+        op.matrix.scaleX === 1 &&
+        op.matrix.scaleY === 1
+      ) {
         this.throttledBringToFront();
       }
       this.updateMbr();

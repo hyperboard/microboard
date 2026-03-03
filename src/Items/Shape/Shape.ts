@@ -87,7 +87,7 @@ export class Shape extends BaseItem {
       (_subject: Transformation, op: TransformationOperation) => {
         this.transformPath();
         this.updateMbr();
-        if (op.method === "translateTo" || op.method === "translateBy") {
+        if (op.method === "applyMatrix" && op.matrix.scaleX === 1 && op.matrix.scaleY === 1) {
           this.text.transformCanvas();
         } else {
           this.text.updateElement();

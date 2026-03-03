@@ -159,24 +159,19 @@ export class RichText extends BaseItem {
     this.transformation.subject.subscribe(
       (tr: Transformation, op: TransformationOperation) => {
         this.prevMbr = this.getMbr();
-        if (
-          op.method === "translateTo" ||
-          op.method === "translateBy" ||
-          op.method === "transformMany"
-        ) {
-          this.transformCanvas();
-        } else if (
-          op.method === "scaleTo" ||
-          op.method === "scaleBy" ||
-          op.method === "scaleByTranslateBy"
-        ) {
-          this.setAINodeShirkWidth();
-
-          if (!this.isInShape) {
-            this.transformCanvas();
+        if (op.method === "applyMatrix") {
+          if (op.matrix.scaleX !== 1 || op.matrix.scaleY !== 1) {
+            this.setAINodeShirkWidth();
+            if (!this.isInShape) {
+              this.transformCanvas();
+            } else {
+              this.updateElement();
+            }
           } else {
-            this.updateElement();
+            this.transformCanvas();
           }
+        } else if (op.method === "transformMany") {
+          this.transformCanvas();
         } else if (op.method === "deserialize") {
           this.setAINodeShirkWidth();
           this.updateElement();

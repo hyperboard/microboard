@@ -90,17 +90,20 @@ export class AINode extends BaseItem {
 
     this.transformation.subject.subscribe(
       (_subject: Transformation, op: TransformationOperation) => {
-        if (op.method === "translateTo" || op.method === "translateBy") {
-          this.text.transformCanvas();
+        if (op.method === "applyMatrix") {
+          if (op.matrix.scaleX !== 1 || op.matrix.scaleY !== 1) {
+            this.prevMbr = this.path?.getMbr();
+            this.text.handleInshapeScale();
+          } else {
+            this.text.transformCanvas();
+          }
         } else if (op.method === "transformMany") {
           const currItemOp = op.items[this.getId()];
           this.prevMbr = this.path?.getMbr();
           if (
-            currItemOp.method === "translateBy" ||
-            currItemOp.method === "translateTo" ||
-            (currItemOp.method === "scaleByTranslateBy" &&
-              currItemOp.scale.x === 1 &&
-              currItemOp.scale.y === 1)
+            currItemOp.method === "applyMatrix" &&
+            currItemOp.matrix.scaleX === 1 &&
+            currItemOp.matrix.scaleY === 1
           ) {
             // translating
             this.text.transformCanvas();
@@ -110,11 +113,7 @@ export class AINode extends BaseItem {
           }
         } else {
           this.prevMbr = this.path?.getMbr();
-          if (op.method === "scaleByTranslateBy") {
-            this.text.handleInshapeScale();
-          } else {
-            this.text.updateElement();
-          }
+          this.text.updateElement();
         }
         this.transformPath();
         this.subject.publish(this);
