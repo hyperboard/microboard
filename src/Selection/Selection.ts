@@ -915,10 +915,9 @@ export class BoardSelection {
     function addItemToTranslation(itemId: string): void {
       translation[itemId] = {
         class: "Transformation",
-        method: "scaleByTranslateBy",
+        method: "applyMatrix",
         item: [itemId],
-        scale: { x: 1, y: 1 },
-        translate: { x, y },
+        matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
       };
     }
 
@@ -938,10 +937,9 @@ export class BoardSelection {
       for (const comment of followedComments) {
         translation[comment.getId()] = {
           class: "Transformation",
-          method: "scaleByTranslateBy",
+          method: "applyMatrix",
           item: [comment.getId()],
-          scale: { x: 1, y: 1 },
-          translate: { x, y },
+          matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
         };
       }
     };
