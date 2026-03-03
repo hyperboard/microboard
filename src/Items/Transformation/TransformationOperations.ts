@@ -59,8 +59,24 @@ interface Unlocked extends TransformationBase {
 	timeStamp?: number;
 }
 
+export interface MatrixData {
+	translateX: number;
+	translateY: number;
+	scaleX: number;
+	scaleY: number;
+	shearX: number;
+	shearY: number;
+}
+
+export interface ApplyMatrixOperation extends TransformationBase {
+	method: "applyMatrix";
+	matrix: MatrixData;
+	timeStamp?: number;
+}
+
 export interface TransformManyItems {
 	[key: string]:
+		| ApplyMatrixOperation
 		| ScaleByTranslateByOperation
 		| ScaleOperation
 		| TranslateOperation;
@@ -74,6 +90,7 @@ export interface TransformMany {
 }
 
 export type TransformationOperation =
+	| ApplyMatrixOperation
 	| TranslateOperation
 	| ScaleOperation
 	| RotateOperation

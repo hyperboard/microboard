@@ -2,10 +2,8 @@ import { Matrix } from "Items/Transformation/Matrix";
 import { Mbr } from "Items/Mbr/Mbr";
 import { Item } from "Items/Item";
 import {
-  ScaleByTranslateByOperation,
-  ScaleOperation,
+  ApplyMatrixOperation,
   TransformManyItems,
-  TranslateOperation,
 } from "Items/Transformation/TransformationOperations";
 import { RichText } from "Items/RichText/RichText";
 import { AINode } from "Items/AINode/AINode";
@@ -101,33 +99,30 @@ function getRichTextTranslation({
   matrix: Matrix;
   translateX: number;
   translateY: number;
-}): ScaleByTranslateByOperation | ScaleOperation | TranslateOperation {
+}): ApplyMatrixOperation {
   if (isWidth) {
     item.editor.setMaxWidth(
       (item.getWidth() / item.transformation.getScale().x) * matrix.scaleX
     );
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: matrix.translateX, y: 0 },
-      scale: { x: matrix.scaleX, y: matrix.scaleX },
+      matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
     };
   } else if (isHeight) {
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: translateX, y: translateY },
-      scale: { x: 1, y: 1 },
+      matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
     };
   } else {
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: translateX, y: translateY },
-      scale: { x: matrix.scaleX, y: matrix.scaleX },
+      matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
     };
   }
 }
@@ -146,33 +141,30 @@ function getAINodeTranslation({
   matrix: Matrix;
   translateX: number;
   translateY: number;
-}): ScaleByTranslateByOperation | ScaleOperation | TranslateOperation {
+}): ApplyMatrixOperation {
   if (isWidth) {
     item.text.editor.setMaxWidth(
       (item.text.getWidth() / item.transformation.getScale().x) * matrix.scaleX
     );
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: matrix.translateX, y: 0 },
-      scale: { x: matrix.scaleX, y: matrix.scaleX },
+      matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
     };
   } else if (isHeight) {
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: translateX, y: translateY },
-      scale: { x: 1, y: 1 },
+      matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
     };
   } else {
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: translateX, y: translateY },
-      scale: { x: matrix.scaleX, y: matrix.scaleX },
+      matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
     };
   }
 }
@@ -193,14 +185,13 @@ function getItemTranslation({
   translateX: number;
   translateY: number;
   isShiftPressed: boolean;
-}): ScaleByTranslateByOperation | ScaleOperation | TranslateOperation {
+}): ApplyMatrixOperation {
   if (item instanceof Sticker && (isWidth || isHeight)) {
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: translateX, y: translateY },
-      scale: { x: 1, y: 1 },
+      matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
     };
   } else {
     if (
@@ -213,10 +204,9 @@ function getItemTranslation({
     }
     return {
       class: "Transformation",
-      method: "scaleByTranslateBy",
+      method: "applyMatrix",
       item: [item.getId()],
-      translate: { x: translateX, y: translateY },
-      scale: { x: matrix.scaleX, y: matrix.scaleY },
+      matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleY, shearX: 0, shearY: 0 },
     };
   }
 }

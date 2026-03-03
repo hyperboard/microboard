@@ -136,7 +136,11 @@ export class Connector extends BaseItem {
 		this.transformation.subject.subscribe((_sub, op) => {
 			if (op.method === 'transformMany') {
 				const operation = op.items[this.getId()];
-				if (
+				if (operation.method === 'applyMatrix') {
+					if (operation.matrix.scaleX !== 1 || operation.matrix.scaleY !== 1) {
+						this.scalePoints();
+					}
+				} else if (
 					operation.method === 'scaleByTranslateBy' &&
 					(operation.scale.x !== 1 || operation.scale.y !== 1)
 				) {

@@ -43,6 +43,20 @@ export class TransformationCommand implements Command {
 		const op = this.operation;
 
 		switch (this.operation.method) {
+			case "applyMatrix": {
+				const op = this.operation;
+				return mapItemsByOperation(this.transformation, () => ({
+					...op,
+					matrix: {
+						translateX: -op.matrix.translateX,
+						translateY: -op.matrix.translateY,
+						scaleX: 1 / op.matrix.scaleX,
+						scaleY: 1 / op.matrix.scaleY,
+						shearX: 0,
+						shearY: 0,
+					},
+				}));
+			}
 			case "translateTo":
 				return mapItemsByOperation(
 					this.transformation,
@@ -136,7 +150,19 @@ export class TransformationCommand implements Command {
 				return transformation.map(currTrans => {
 					const op = operation.items[currTrans.getId()];
 					let reverseOp;
-					if (op.method === "scaleByTranslateBy") {
+					if (op.method === "applyMatrix") {
+						reverseOp = {
+							...op,
+							matrix: {
+								translateX: -op.matrix.translateX,
+								translateY: -op.matrix.translateY,
+								scaleX: 1 / op.matrix.scaleX,
+								scaleY: 1 / op.matrix.scaleY,
+								shearX: 0,
+								shearY: 0,
+							},
+						};
+					} else if (op.method === "scaleByTranslateBy") {
 						reverseOp = {
 							...op,
 							scale: { x: 1 / op.scale.x, y: 1 / op.scale.y },

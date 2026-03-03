@@ -4,7 +4,7 @@ import { Point } from '../Point';
 import { Matrix } from './Matrix';
 import { TransformationCommand } from './TransformationCommand';
 import { DefaultTransformationData, TransformationData } from './TransformationData';
-import { TransformationOperation } from './TransformationOperations';
+import { MatrixData, TransformationOperation } from './TransformationOperations';
 
 const defaultData = new DefaultTransformationData();
 
@@ -107,6 +107,10 @@ export class Transformation {
 	apply(op: Operation): void {
 		this.previous = this.matrix.copy();
 		switch (op.method) {
+			case 'applyMatrix':
+				this.matrix.scale(op.matrix.scaleX, op.matrix.scaleY);
+				this.matrix.translate(op.matrix.translateX, op.matrix.translateY);
+				break;
 			case 'translateTo':
 				this.applyTranslateTo(op.x, op.y);
 				break;
@@ -176,7 +180,10 @@ export class Transformation {
 	}
 
 	applyTransformMany(op: TransformationOperation): void {
-		if (op.method === 'scaleByTranslateBy') {
+		if (op.method === 'applyMatrix') {
+			this.matrix.scale(op.matrix.scaleX, op.matrix.scaleY);
+			this.matrix.translate(op.matrix.translateX, op.matrix.translateY);
+		} else if (op.method === 'scaleByTranslateBy') {
 			this.applyScaleByTranslateBy(op.scale, op.translate);
 		} else if (op.method === 'scaleBy') {
 			this.applyScaleBy(op.x, op.y);
@@ -257,18 +264,28 @@ export class Transformation {
 		return this.id;
 	}
 
+	private emitMatrix(matrix: MatrixData, timeStamp?: number): void {
+		this.emit({
+			class: 'Transformation',
+			method: 'applyMatrix',
+			item: [this.id],
+			matrix,
+			timeStamp,
+		});
+	}
+
 	translateTo(x: number, y: number, timeStamp?: number): void {
 		if (!this.id) {
 			// TODO console.warn("Transformation.translateTo() has no itemId");
 		}
-		this.emit({
-			class: 'Transformation',
-			method: 'translateTo',
-			item: [this.id],
-			x,
-			y,
-			timeStamp,
-		});
+		this.emitMatrix({
+			translateX: x - this.matrix.translateX,
+			translateY: y - this.matrix.translateY,
+			scaleX: 1,
+			scaleY: 1,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	translateBy(x: number, y: number, timeStamp?: number): void {
@@ -278,39 +295,39 @@ export class Transformation {
 		if (x === 0 && y === 0) {
 			return;
 		}
-		this.emit({
-			class: 'Transformation',
-			method: 'translateBy',
-			item: [this.id],
-			x,
-			y,
-			timeStamp,
-		});
+		this.emitMatrix({
+			translateX: x,
+			translateY: y,
+			scaleX: 1,
+			scaleY: 1,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	scaleTo(x: number, y: number, timeStamp?: number): void {
-		this.emit({
-			class: 'Transformation',
-			method: 'scaleTo',
-			item: [this.id],
-			x,
-			y,
-			timeStamp,
-		});
+		this.emitMatrix({
+			translateX: 0,
+			translateY: 0,
+			scaleX: x / this.matrix.scaleX,
+			scaleY: y / this.matrix.scaleY,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	scaleBy(x: number, y: number, timeStamp?: number): void {
 		if (x === 0 && y === 0) {
 			return;
 		}
-		this.emit({
-			class: 'Transformation',
-			method: 'scaleBy',
-			item: [this.id],
-			x,
-			y,
-			timeStamp,
-		});
+		this.emitMatrix({
+			translateX: 0,
+			translateY: 0,
+			scaleX: x,
+			scaleY: y,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	scaleByTranslateBy(
@@ -321,14 +338,14 @@ export class Transformation {
 		if (scale.x === 0 && scale.y === 0 && translate.x === 0 && translate.y === 0) {
 			return;
 		}
-		this.emit({
-			class: 'Transformation',
-			method: 'scaleByTranslateBy',
-			item: [this.id],
-			scale,
-			translate,
-			timeStamp,
-		});
+		this.emitMatrix({
+			translateX: translate.x,
+			translateY: translate.y,
+			scaleX: scale.x,
+			scaleY: scale.y,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	rotateTo(degree: number, timeStamp?: number): void {
@@ -351,28 +368,36 @@ export class Transformation {
 		});
 	}
 
-	scaleToRelativeTo(x: number, y: number, point: Point, timeStamp?: number): void {
-		this.emit({
-			class: 'Transformation',
-			method: 'scaleToRelativeTo',
-			item: [this.id],
-			x,
-			y,
-			point,
-			timeStamp,
-		});
+	scaleToRelativeTo(x: number, y: number, _point: Point, timeStamp?: number): void {
+		// applyScaleToRelativeTo translates cancel out; net effect is scaleTo
+		this.emitMatrix({
+			translateX: 0,
+			translateY: 0,
+			scaleX: x / this.matrix.scaleX,
+			scaleY: y / this.matrix.scaleY,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	scaleByRelativeTo(x: number, y: number, point: Point, timeStamp?: number): void {
-		this.emit({
-			class: 'Transformation',
-			method: 'scaleByRelativeTo',
-			item: [this.id],
-			x,
-			y,
-			point,
-			timeStamp,
-		});
+		const { scaleX: sx0, scaleY: sy0, translateX: tx0, translateY: ty0 } = this.matrix;
+		const newSx = sx0 * x;
+		const newSy = sy0 * y;
+		// target absolute state after applyScaleByRelativeTo:
+		//   tx = -point.x * newSx + point.x
+		//   ty = -point.y * newSy + point.y
+		// delta (applied as scale then translate):
+		//   after scale: sx = newSx, tx = tx0
+		//   after translate(dtx): tx = tx0 + dtx = target_tx
+		this.emitMatrix({
+			translateX: -point.x * newSx + point.x - tx0,
+			translateY: -point.y * newSy + point.y - ty0,
+			scaleX: x,
+			scaleY: y,
+			shearX: 0,
+			shearY: 0,
+		}, timeStamp);
 	}
 
 	setIsLocked(isLocked: boolean, timestamp?: number): void {

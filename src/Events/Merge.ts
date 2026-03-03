@@ -115,6 +115,24 @@ function mergeTransformationOperations(
   }
   const method = opA.method;
   switch (method) {
+    case "applyMatrix":
+      if (opB.method !== method) {
+        return;
+      }
+      return {
+        class: "Transformation",
+        method: "applyMatrix",
+        item: opA.item,
+        matrix: {
+          translateX: opA.matrix.translateX + opB.matrix.translateX,
+          translateY: opA.matrix.translateY + opB.matrix.translateY,
+          scaleX: opA.matrix.scaleX * opB.matrix.scaleX,
+          scaleY: opA.matrix.scaleY * opB.matrix.scaleY,
+          shearX: 0,
+          shearY: 0,
+        },
+        timeStamp: opB.timeStamp,
+      };
     case "translateBy":
       if (opB.method !== method) {
         return;
@@ -243,7 +261,26 @@ function mergeItems(
     const items: { [key: string]: TransformationOperation } = {};
     Object.keys(opB.items).forEach((itemId) => {
       if (opA.items[itemId] !== undefined) {
-        if (opA.items[itemId].method === "scaleByTranslateBy") {
+        if (
+          opA.items[itemId].method === "applyMatrix" &&
+          opB.items[itemId].method === "applyMatrix"
+        ) {
+          const a = opA.items[itemId].matrix;
+          const b = opB.items[itemId].matrix;
+          items[itemId] = {
+            class: "Transformation",
+            method: "applyMatrix",
+            item: [itemId],
+            matrix: {
+              translateX: a.translateX + b.translateX,
+              translateY: a.translateY + b.translateY,
+              scaleX: a.scaleX * b.scaleX,
+              scaleY: a.scaleY * b.scaleY,
+              shearX: 0,
+              shearY: 0,
+            },
+          };
+        } else if (opA.items[itemId].method === "scaleByTranslateBy") {
           const newTransformation = resolve(
             opA.items[itemId].scale,
             opA.items[itemId].translate,
