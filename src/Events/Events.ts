@@ -71,6 +71,10 @@ export class Events {
 	 * @param command Optional command associated with the operation
 	 */
 	emit(operation: Operation, command?: Command): void {
+		if ((operation as any).method === "transformMany") {
+			console.error("[DEBUG] transformMany emitted from Events.emit!", JSON.stringify(operation));
+			console.trace("[DEBUG] transformMany stack trace");
+		}
 		const userId = this.getUserId();
 		const body = {
 			eventId: this.getNextEventId(),

@@ -145,6 +145,10 @@ export class BoardSelection {
     if (!this.board.events) {
       return;
     }
+    if ((operation as any).method === "transformMany") {
+      console.error("[DEBUG] transformMany emitted!", JSON.stringify(operation));
+      console.trace("[DEBUG] transformMany stack trace");
+    }
     const command = createCommand(this.board, operation);
     command.apply();
     this.board.events.emit(operation, command);
