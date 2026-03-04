@@ -64,6 +64,7 @@ export class BoardSelection {
   memorySnapshot: SelectionSnapshot | null = null;
 
   constructor(private board: Board) {
+    console.log("[DEBUG] BoardSelection initialized - version check OK");
     safeRequestAnimationFrame(this.updateScheduledObservers);
     this.tool = new SelectionTransformer(board, this);
     this.quickAddButtons = getQuickAddButtons(this, board);
