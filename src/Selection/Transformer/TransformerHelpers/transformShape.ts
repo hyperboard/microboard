@@ -1,4 +1,4 @@
-import { TransformManyItems } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem } from "Items/Transformation/TransformationOperations";
 import {
   getProportionalResize,
   getResize,
@@ -35,8 +35,8 @@ export function transformShape({
   isHeight: boolean;
   followingComments?: Comment[];
   startMbr?: Mbr;
-}): { resizedMbr: Mbr; translation: TransformManyItems | null } {
-  let translation: TransformManyItems | null = null;
+}): { resizedMbr: Mbr; translation: ApplyMatrixItem[] | null } {
+  let translation: ApplyMatrixItem[] | null = null;
   if (isShiftPressed && single.itemType !== "Sticker") {
     const { matrix, mbr: resizedMbr } = getProportionalResize(
       resizeType,

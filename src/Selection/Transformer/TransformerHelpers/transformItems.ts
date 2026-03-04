@@ -159,7 +159,7 @@ export function transformItems({
   });
   selection.transformMany(translation, beginTimeStamp);
 
-  if (Object.keys(translation).length > 10) {
+  if (translation.length > 10) {
     canvasDrawer.updateCanvasAndKeys(resize.mbr, translation, resize.matrix);
     debounceUpd.setFalse();
     debounceUpd.setTimeoutUpdate(1000);

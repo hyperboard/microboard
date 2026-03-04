@@ -2,7 +2,7 @@ import { Board } from "./Board";
 import { Camera } from "./Camera";
 import { Item, Matrix, Mbr } from "./Items";
 import { DrawingContext } from "./Items/DrawingContext";
-import { TransformManyItems } from "./Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem } from "./Items/Transformation/TransformationOperations";
 import { conf } from "./Settings";
 
 export interface CanvasDrawer {
@@ -16,11 +16,11 @@ export interface CanvasDrawer {
 	clearCanvasAndKeys: () => void;
 	updateCanvasAndKeys: (
 		sumMbr: Mbr,
-		translation: TransformManyItems,
+		translation: ApplyMatrixItem[],
 		resizingMatrix?: Matrix,
 		actualMbr?: Mbr,
 	) => void;
-	countSumMbr: (translation: TransformManyItems) => Mbr | undefined;
+	countSumMbr: (translation: ApplyMatrixItem[]) => Mbr | undefined;
 	highlightNesting: () => void;
 	getMbr: () => Mbr;
 }
@@ -41,7 +41,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 	function drawMbrOnCanvas(
 		board: Board,
 		mbr: Mbr,
-		translation: TransformManyItems,
+		translation: ApplyMatrixItem[],
 		actualMbr?: Mbr,
 	): { canvas: HTMLDivElement; items: Item[] } | undefined {
 		const canvas = document.createElement("canvas");
@@ -151,7 +151,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		);
 		context.matrix.applyToContext(context.ctx);
 
-		const items = Object.keys(translation)
+		const items = translation.map(i => i.id)
 			.map(id => {
 				const item = board.items.getById(id);
 				if (item) {
@@ -270,11 +270,11 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 
 	function updateCanvasAndKeys(
 		sumMbr: Mbr,
-		translation: TransformManyItems,
+		translation: ApplyMatrixItem[],
 		resizingMatrix?: Matrix,
 		actualMbr?: Mbr,
 	): void {
-		const translationKeys = Object.keys(translation);
+		const translationKeys = translation.map(i => i.id);
 		if (
 			lastCreatedCanvas &&
 			lastTranslationKeys?.length === translationKeys.length &&
@@ -307,7 +307,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 				cnvs.style.pointerEvents = "none";
 				document.body.appendChild(cnvs);
 				lastCreatedCanvas = cnvs;
-				lastTranslationKeys = Object.keys(translation);
+				lastTranslationKeys = translation.map(i => i.id);
 				lastTranslationKeys.forEach(id => {
 					const item = board.items.getById(id);
 					if (item) {
@@ -320,8 +320,8 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		}
 	}
 
-	function countSumMbr(translation: TransformManyItems): Mbr | undefined {
-		return Object.keys(translation).reduce((mbr: Mbr | undefined, id) => {
+	function countSumMbr(translation: ApplyMatrixItem[]): Mbr | undefined {
+		return translation.map(i => i.id).reduce((mbr: Mbr | undefined, id) => {
 			const item = board.items.getById(id);
 			if (item) {
 				if (!mbr) {

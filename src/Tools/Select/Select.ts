@@ -495,7 +495,7 @@ export class Select extends Tool {
 				}
 				const translation = selection.getManyItemsTranslation(x, y);
 
-				const translationKeys = Object.keys(translation);
+				const translationKeys = translation.map(i => i.id);
 				const commentsSet = new Set(this.board.items.getComments().map(comment => comment.getId()));
 
 				if (translationKeys.filter(item => !commentsSet.has(item)).length > 10) {
