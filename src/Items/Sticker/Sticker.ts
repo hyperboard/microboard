@@ -112,7 +112,11 @@ export class Sticker extends BaseItem {
         if (op.method === "applyMatrix") {
           if (op.matrix.scaleX !== 1 || op.matrix.scaleY !== 1) {
             if (this.text.isAutosize()) {
-              this.text.scaleAutoSizeScale(Math.min(op.matrix.scaleX, op.matrix.scaleY));
+              if (op.matrix.scaleX !== op.matrix.scaleY) {
+                this.text.applyAutoSizeScale(this.text.calcAutoSize());
+              } else {
+                this.text.scaleAutoSizeScale(op.matrix.scaleX);
+              }
               this.text.recoordinate();
               this.text.transformCanvas();
             } else {
@@ -126,9 +130,11 @@ export class Sticker extends BaseItem {
             (transformOp.matrix.scaleX !== 1 || transformOp.matrix.scaleY !== 1)
           ) {
             if (this.text.isAutosize()) {
-              this.text.scaleAutoSizeScale(
-                Math.min(transformOp.matrix.scaleX, transformOp.matrix.scaleY)
-              );
+              if (transformOp.matrix.scaleX !== transformOp.matrix.scaleY) {
+                this.text.applyAutoSizeScale(this.text.calcAutoSize());
+              } else {
+                this.text.scaleAutoSizeScale(transformOp.matrix.scaleX);
+              }
               this.text.recoordinate();
               this.text.transformCanvas();
             } else {
