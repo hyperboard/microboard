@@ -65,8 +65,8 @@ export class Card extends BaseItem {
       if (
         this.parent === "Board" &&
         op.method === "applyMatrix" &&
-        op.matrix.scaleX === 1 &&
-        op.matrix.scaleY === 1
+        op.items.find(i => i.id === this.id)?.matrix.scaleX === 1 &&
+        op.items.find(i => i.id === this.id)?.matrix.scaleY === 1
       ) {
         this.throttledBringToFront();
       }

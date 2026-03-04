@@ -5,7 +5,7 @@ import { DrawingContext } from "Items/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { SpatialIndex } from "SpatialIndex";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
-import {TransformManyItems} from "../../Items/Transformation/TransformationOperations";
+import {ApplyMatrixItem} from "../../Items/Transformation/TransformationOperations";
 import {BaseItem} from "../../Items/BaseItem";
 
 export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
@@ -602,14 +602,7 @@ export class AlignmentHelper {
       this.board.selection.transformMany(translation, timeStamp);
     } else {
       const id = item.getId();
-      const transformMap: TransformManyItems = {};
-      transformMap[id] = {
-        class: "Transformation",
-        item: [id],
-        method: "applyMatrix",
-        matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
-      };
-      this.board.selection.transformMany(transformMap, timeStamp);
+      this.board.selection.transformMany([{ id, matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } }], timeStamp);
     }
   }
 

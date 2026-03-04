@@ -160,7 +160,8 @@ export class RichText extends BaseItem {
       (tr: Transformation, op: TransformationOperation) => {
         this.prevMbr = this.getMbr();
         if (op.method === "applyMatrix") {
-          if (op.matrix.scaleX !== 1 || op.matrix.scaleY !== 1) {
+          const itemOp = op.items.find(i => i.id === this.id);
+          if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
             this.setAINodeShirkWidth();
             if (!this.isInShape) {
               this.transformCanvas();
@@ -170,8 +171,6 @@ export class RichText extends BaseItem {
           } else {
             this.transformCanvas();
           }
-        } else if (op.method === "transformMany") {
-          this.transformCanvas();
         } else if (op.method === "deserialize") {
           this.setAINodeShirkWidth();
           this.updateElement();

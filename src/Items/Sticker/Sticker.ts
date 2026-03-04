@@ -110,30 +110,13 @@ export class Sticker extends BaseItem {
       (_subject: Transformation, op: TransformationOperation) => {
         this.transformPath();
         if (op.method === "applyMatrix") {
-          if (op.matrix.scaleX !== 1 || op.matrix.scaleY !== 1) {
+          const itemOp = op.items.find(i => i.id === this.id);
+          if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
             if (this.text.isAutosize()) {
-              if (op.matrix.scaleX !== op.matrix.scaleY) {
+              if (itemOp.matrix.scaleX !== itemOp.matrix.scaleY) {
                 this.text.applyAutoSizeScale(this.text.calcAutoSize());
               } else {
-                this.text.scaleAutoSizeScale(op.matrix.scaleX);
-              }
-              this.text.recoordinate();
-              this.text.transformCanvas();
-            } else {
-              this.text.handleInshapeScale();
-            }
-          }
-        } else if (op.method === "transformMany") {
-          const transformOp = op.items[this.id];
-          if (
-            transformOp.method === "applyMatrix" &&
-            (transformOp.matrix.scaleX !== 1 || transformOp.matrix.scaleY !== 1)
-          ) {
-            if (this.text.isAutosize()) {
-              if (transformOp.matrix.scaleX !== transformOp.matrix.scaleY) {
-                this.text.applyAutoSizeScale(this.text.calcAutoSize());
-              } else {
-                this.text.scaleAutoSizeScale(transformOp.matrix.scaleX);
+                this.text.scaleAutoSizeScale(itemOp.matrix.scaleX);
               }
               this.text.recoordinate();
               this.text.transformCanvas();

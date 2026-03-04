@@ -91,25 +91,15 @@ export class AINode extends BaseItem {
     this.transformation.subject.subscribe(
       (_subject: Transformation, op: TransformationOperation) => {
         if (op.method === "applyMatrix") {
-          if (op.matrix.scaleX !== 1 || op.matrix.scaleY !== 1) {
+          const itemOp = op.items.find(i => i.id === this.getId());
+          if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
             this.prevMbr = this.path?.getMbr();
             this.text.handleInshapeScale();
-          } else {
-            this.text.transformCanvas();
-          }
-        } else if (op.method === "transformMany") {
-          const currItemOp = op.items[this.getId()];
-          this.prevMbr = this.path?.getMbr();
-          if (
-            currItemOp.method === "applyMatrix" &&
-            currItemOp.matrix.scaleX === 1 &&
-            currItemOp.matrix.scaleY === 1
-          ) {
-            // translating
+          } else if (itemOp) {
             this.text.transformCanvas();
           } else {
-            // scaling
-            this.text.handleInshapeScale();
+            this.prevMbr = this.path?.getMbr();
+            this.text.updateElement();
           }
         } else {
           this.prevMbr = this.path?.getMbr();

@@ -87,8 +87,13 @@ export class Shape extends BaseItem {
       (_subject: Transformation, op: TransformationOperation) => {
         this.transformPath();
         this.updateMbr();
-        if (op.method === "applyMatrix" && op.matrix.scaleX === 1 && op.matrix.scaleY === 1) {
-          this.text.transformCanvas();
+        if (op.method === "applyMatrix") {
+          const itemOp = op.items.find(i => i.id === this.id);
+          if (itemOp && itemOp.matrix.scaleX === 1 && itemOp.matrix.scaleY === 1) {
+            this.text.transformCanvas();
+          } else {
+            this.text.updateElement();
+          }
         } else {
           this.text.updateElement();
         }

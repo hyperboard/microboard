@@ -68,9 +68,15 @@ export interface MatrixData {
 	shearY: number;
 }
 
-export interface ApplyMatrixOperation extends TransformationBase {
-	method: "applyMatrix";
+export interface ApplyMatrixItem {
+	id: string;
 	matrix: MatrixData;
+}
+
+export interface ApplyMatrixOperation {
+	class: "Transformation";
+	method: "applyMatrix";
+	items: ApplyMatrixItem[];
 	timeStamp?: number;
 }
 

@@ -2,8 +2,7 @@ import { Matrix } from "Items/Transformation/Matrix";
 import { Mbr } from "Items/Mbr/Mbr";
 import { Item } from "Items/Item";
 import {
-  ApplyMatrixOperation,
-  TransformManyItems,
+  ApplyMatrixItem,
 } from "Items/Transformation/TransformationOperations";
 import { RichText } from "Items/RichText/RichText";
 import { AINode } from "Items/AINode/AINode";
@@ -27,9 +26,9 @@ export function handleMultipleItemsResize({
   isHeight: boolean;
   isShiftPressed: boolean;
   itemsToResize?: Item[];
-}): TransformManyItems {
+}): ApplyMatrixItem[] {
   const { matrix } = resize;
-  const translation: TransformManyItems = {};
+  const result: ApplyMatrixItem[] = [];
   const items = itemsToResize ? itemsToResize : board.selection.items.list();
   board.items.getComments().forEach((comment) => {
     if (items.some((item) => item.getId() === comment.getItemToFollow())) {
@@ -52,25 +51,25 @@ export function handleMultipleItemsResize({
     const translateY = deltaY * matrix.scaleY - deltaY + matrix.translateY;
 
     if (item instanceof RichText) {
-      translation[item.getId()] = getRichTextTranslation({
+      result.push(getRichTextTranslation({
         item,
         isWidth,
         isHeight,
         matrix,
         translateX,
         translateY,
-      });
+      }));
     } else if (item instanceof AINode) {
-      translation[item.getId()] = getAINodeTranslation({
+      result.push(getAINodeTranslation({
         item,
         isWidth,
         isHeight,
         matrix,
         translateX,
         translateY,
-      });
+      }));
     } else {
-      translation[item.getId()] = getItemTranslation({
+      result.push(getItemTranslation({
         item,
         isWidth,
         isHeight,
@@ -78,11 +77,11 @@ export function handleMultipleItemsResize({
         translateX,
         translateY,
         isShiftPressed,
-      });
+      }));
     }
   }
 
-  return translation;
+  return result;
 }
 
 function getRichTextTranslation({
@@ -99,31 +98,16 @@ function getRichTextTranslation({
   matrix: Matrix;
   translateX: number;
   translateY: number;
-}): ApplyMatrixOperation {
+}): ApplyMatrixItem {
   if (isWidth) {
     item.editor.setMaxWidth(
       (item.getWidth() / item.transformation.getScale().x) * matrix.scaleX
     );
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
   } else if (isHeight) {
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
   } else {
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
   }
 }
 
@@ -141,31 +125,16 @@ function getAINodeTranslation({
   matrix: Matrix;
   translateX: number;
   translateY: number;
-}): ApplyMatrixOperation {
+}): ApplyMatrixItem {
   if (isWidth) {
     item.text.editor.setMaxWidth(
       (item.text.getWidth() / item.transformation.getScale().x) * matrix.scaleX
     );
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
   } else if (isHeight) {
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
   } else {
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
   }
 }
 
@@ -185,14 +154,9 @@ function getItemTranslation({
   translateX: number;
   translateY: number;
   isShiftPressed: boolean;
-}): ApplyMatrixOperation {
+}): ApplyMatrixItem {
   if (item instanceof Sticker && (isWidth || isHeight)) {
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
   } else {
     if (
       item instanceof Frame &&
@@ -202,11 +166,6 @@ function getItemTranslation({
     ) {
       item.setFrameType("Custom");
     }
-    return {
-      class: "Transformation",
-      method: "applyMatrix",
-      item: [item.getId()],
-      matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleY, shearX: 0, shearY: 0 },
-    };
+    return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleY, shearX: 0, shearY: 0 } };
   }
 }

@@ -296,7 +296,9 @@ export function createCommand(board: Board, operation: Operation): Command {
 							? operation.item
 							: [operation.item]
 						: "items" in operation
-							? Object.keys(operation.items)
+							? Array.isArray(operation.items)
+								? (operation.items as Array<{id: string}>).map(i => i.id)
+								: Object.keys(operation.items)
 							: operation.itemsOps.map(itemOp => itemOp.item);
 
 				const items = itemIdList

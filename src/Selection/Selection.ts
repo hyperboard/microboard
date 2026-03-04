@@ -15,7 +15,7 @@ import { TextStyle } from "Items/RichText";
 import { ItemOp } from "Items/RichText/RichTextOperations";
 import { DefaultShapeData, ShapeType } from "Items/Shape";
 import { Sticker } from "Items/Sticker";
-import { TransformManyItems } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem } from "Items/Transformation/TransformationOperations";
 import { toFiniteNumber } from "lib";
 import { conf } from "Settings";
 import { Subject } from "Subject";
@@ -890,14 +890,12 @@ export class BoardSelection {
   // 	});
   // }
 
-  // TODO all the other transformations are redundant, use this one for everything
-  // Instead of TransformationOperation just put matrix in it
-  /** Emits transformManyItems */
-  transformMany(items: TransformManyItems, timeStamp?: number): void {
+  /** Emits applyMatrix with multiple items */
+  transformMany(items: ApplyMatrixItem[], timeStamp?: number): void {
     this.shouldPublish = false;
     this.emit({
       class: "Transformation",
-      method: "transformMany",
+      method: "applyMatrix",
       items,
       timeStamp,
     });
@@ -909,57 +907,43 @@ export class BoardSelection {
     x: number,
     y: number,
     unselectedItem?: Item
-  ): TransformManyItems {
-    const translation: TransformManyItems = {};
+  ): ApplyMatrixItem[] {
+    const items: ApplyMatrixItem[] = [];
 
-    function addItemToTranslation(itemId: string): void {
-      translation[itemId] = {
-        class: "Transformation",
-        method: "applyMatrix",
-        item: [itemId],
-        matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
-      };
-    }
+    const addItem = (itemId: string): void => {
+      items.push({ id: itemId, matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } });
+    };
 
-    function tryToAddFrameChildrenToTranslation(selectedItem: Item): void {
+    const tryToAddFrameChildren = (selectedItem: Item): void => {
       if (!("index" in selectedItem) || !selectedItem.index) {
         return;
       }
       for (const childId of selectedItem.getChildrenIds()) {
-        addItemToTranslation(childId);
+        addItem(childId);
       }
-    }
+    };
 
-    const createTranslationWithComments = (item: Item): void => {
+    const addWithComments = (item: Item): void => {
+      addItem(item.getId());
+      tryToAddFrameChildren(item);
       const followedComments = this.board.items
         .getComments()
         .filter((comment) => comment.getItemToFollow() === item.getId());
       for (const comment of followedComments) {
-        translation[comment.getId()] = {
-          class: "Transformation",
-          method: "applyMatrix",
-          item: [comment.getId()],
-          matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
-        };
+        addItem(comment.getId());
       }
     };
 
     if (unselectedItem) {
-      addItemToTranslation(unselectedItem.getId());
-      tryToAddFrameChildrenToTranslation(unselectedItem);
-      createTranslationWithComments(unselectedItem);
-      return translation;
+      addWithComments(unselectedItem);
+      return items;
     }
 
     for (const selectedItem of this.board.selection.list()) {
-      addItemToTranslation(selectedItem.getId());
-
-      tryToAddFrameChildrenToTranslation(selectedItem);
-
-      createTranslationWithComments(selectedItem);
+      addWithComments(selectedItem);
     }
 
-    return translation;
+    return items;
   }
 
   setStrokeStyle(borderStyle: BorderStyle): void {

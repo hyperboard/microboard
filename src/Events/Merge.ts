@@ -107,32 +107,41 @@ function mergeTransformationOperations(
   opA: TransformationOperation,
   opB: TransformationOperation
 ): TransformationOperation | undefined {
-  if (!areItemsTheSame(opA, opB)) {
-    return;
-  }
   if (opA.timeStamp && opB.timeStamp && opA.timeStamp !== opB.timeStamp) {
     return;
   }
+
+  if (opA.method === "applyMatrix" && opB.method === "applyMatrix") {
+    if (opA.items.length !== opB.items.length) return;
+    const idsA = new Set(opA.items.map(i => i.id));
+    if (!opB.items.every(b => idsA.has(b.id))) return;
+    return {
+      class: "Transformation",
+      method: "applyMatrix",
+      items: opB.items.map(b => {
+        const a = opA.items.find(i => i.id === b.id)!;
+        return {
+          id: b.id,
+          matrix: {
+            translateX: a.matrix.translateX + b.matrix.translateX,
+            translateY: a.matrix.translateY + b.matrix.translateY,
+            scaleX: a.matrix.scaleX * b.matrix.scaleX,
+            scaleY: a.matrix.scaleY * b.matrix.scaleY,
+            shearX: 0,
+            shearY: 0,
+          },
+        };
+      }),
+      timeStamp: opB.timeStamp,
+    };
+  }
+
+  if (!areItemsTheSame(opA, opB)) {
+    return;
+  }
+
   const method = opA.method;
   switch (method) {
-    case "applyMatrix":
-      if (opB.method !== method) {
-        return;
-      }
-      return {
-        class: "Transformation",
-        method: "applyMatrix",
-        item: opA.item,
-        matrix: {
-          translateX: opA.matrix.translateX + opB.matrix.translateX,
-          translateY: opA.matrix.translateY + opB.matrix.translateY,
-          scaleX: opA.matrix.scaleX * opB.matrix.scaleX,
-          scaleY: opA.matrix.scaleY * opB.matrix.scaleY,
-          shearX: 0,
-          shearY: 0,
-        },
-        timeStamp: opB.timeStamp,
-      };
     case "translateBy":
       if (opB.method !== method) {
         return;
@@ -186,168 +195,9 @@ function mergeTransformationOperations(
         },
         timeStamp: opB.timeStamp,
       };
-    case "transformMany":
-      const items = mergeItems(opA, opB);
-      if (opB.method !== method) {
-        return;
-      }
-      return {
-        class: "Transformation",
-        method: "transformMany",
-        // @ts-expect-error wrong items type
-        items,
-        timeStamp: opB.timeStamp,
-      };
     default:
       return;
   }
-}
-
-function mergeItems(
-  opA: TransformationOperation,
-  opB: TransformationOperation
-): { [key: string]: TransformationOperation } | undefined {
-  if (opA.method === "transformMany" && opB.method === "transformMany") {
-    interface Transformer {
-      x: number;
-      y: number;
-    }
-    const resolve = (
-      currScale: Transformer,
-      currTranslate: Transformer | undefined,
-      opB: TransformationOperation
-    ): { scale: Transformer; translate: Transformer } | undefined => {
-      switch (opB.method) {
-        case "scaleByTranslateBy":
-          return {
-            scale: {
-              x: currScale ? currScale.x * opB.scale.x : opB.scale.x,
-              y: currScale ? currScale.y * opB.scale.y : opB.scale.y,
-            },
-            translate: {
-              x: currTranslate
-                ? currTranslate.x + opB.translate.x
-                : opB.translate.x,
-              y: currTranslate
-                ? currTranslate.y + opB.translate.y
-                : opB.translate.y,
-            },
-          };
-        case "scaleBy":
-          return {
-            scale: {
-              x: currScale ? currScale.x * opB.x : opB.x,
-              y: currScale ? currScale.y * opB.y : opB.y,
-            },
-            translate: {
-              x: currTranslate ? currTranslate.x : 0,
-              y: currTranslate ? currTranslate.y : 0,
-            },
-          };
-        case "translateBy":
-          return {
-            scale: {
-              x: currScale ? currScale.x : 1,
-              y: currScale ? currScale.y : 1,
-            },
-            translate: {
-              x: currTranslate ? currTranslate.x + opB.x : opB.x,
-              y: currTranslate ? currTranslate.y + opB.y : opB.y,
-            },
-          };
-      }
-      return;
-    };
-    const items: { [key: string]: TransformationOperation } = {};
-    Object.keys(opB.items).forEach((itemId) => {
-      if (opA.items[itemId] !== undefined) {
-        if (
-          opA.items[itemId].method === "applyMatrix" &&
-          opB.items[itemId].method === "applyMatrix"
-        ) {
-          const a = opA.items[itemId].matrix;
-          const b = opB.items[itemId].matrix;
-          items[itemId] = {
-            class: "Transformation",
-            method: "applyMatrix",
-            item: [itemId],
-            matrix: {
-              translateX: a.translateX + b.translateX,
-              translateY: a.translateY + b.translateY,
-              scaleX: a.scaleX * b.scaleX,
-              scaleY: a.scaleY * b.scaleY,
-              shearX: 0,
-              shearY: 0,
-            },
-          };
-        } else if (opA.items[itemId].method === "scaleByTranslateBy") {
-          const newTransformation = resolve(
-            opA.items[itemId].scale,
-            opA.items[itemId].translate,
-            opB.items[itemId]
-          );
-          // if resolve returned undefined (e.g. opB is applyMatrix), fall back to opB
-          if (!newTransformation) {
-            items[itemId] = opB.items[itemId];
-          } else {
-            items[itemId] = {
-              class: "Transformation",
-              method: "scaleByTranslateBy",
-              item: [itemId],
-              scale: newTransformation.scale,
-              translate: newTransformation.translate,
-            };
-          }
-        } else if (opA.items[itemId].method === "scaleBy") {
-          const newTransformation = resolve(
-            { x: opA.items[itemId].x, y: opA.items[itemId].y },
-            undefined,
-            opB.items[itemId]
-          );
-          if (!newTransformation) {
-            items[itemId] = opB.items[itemId];
-          } else {
-            items[itemId] = {
-              class: "Transformation",
-              method: "scaleByTranslateBy",
-              item: [itemId],
-              // @ts-expect-error wrong type
-              scale: newTransformation.scale,
-              // @ts-expect-error wrong type
-              translate: newTransformation.translate,
-            };
-          }
-        } else if (opA.items[itemId].method === "translateBy") {
-          const newTransformation = resolve(
-            // @ts-expect-error wrong type
-            undefined,
-            { x: opA.items[itemId].x, y: opA.items[itemId].y },
-            opB.items[itemId]
-          );
-          if (!newTransformation) {
-            items[itemId] = opB.items[itemId];
-          } else {
-            items[itemId] = {
-              class: "Transformation",
-              method: "scaleByTranslateBy",
-              item: [itemId],
-              // @ts-expect-error wrong type
-              scale: newTransformation.scale,
-              // @ts-expect-error wrong type
-              translate: newTransformation.translate,
-            };
-          }
-        } else {
-          // cross-type or unknown combination: take the newer operation
-          items[itemId] = opB.items[itemId];
-        }
-      } else {
-        items[itemId] = opB.items[itemId];
-      }
-    });
-    return items;
-  }
-  return;
 }
 
 function mergeRichTextOperations(

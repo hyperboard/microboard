@@ -107,10 +107,14 @@ export class Transformation {
 	apply(op: Operation): void {
 		this.previous = this.matrix.copy();
 		switch (op.method) {
-			case 'applyMatrix':
-				this.matrix.scale(op.matrix.scaleX, op.matrix.scaleY);
-				this.matrix.translate(op.matrix.translateX, op.matrix.translateY);
+			case 'applyMatrix': {
+				const itemOp = op.items.find(i => i.id === this.id);
+				if (itemOp) {
+					this.matrix.scale(itemOp.matrix.scaleX, itemOp.matrix.scaleY);
+					this.matrix.translate(itemOp.matrix.translateX, itemOp.matrix.translateY);
+				}
 				break;
+			}
 			case 'translateTo':
 				this.applyTranslateTo(op.x, op.y);
 				break;
@@ -268,8 +272,7 @@ export class Transformation {
 		this.emit({
 			class: 'Transformation',
 			method: 'applyMatrix',
-			item: [this.id],
-			matrix,
+			items: [{ id: this.id, matrix }],
 			timeStamp,
 		});
 	}

@@ -45,17 +45,28 @@ export class TransformationCommand implements Command {
 		switch (this.operation.method) {
 			case "applyMatrix": {
 				const op = this.operation;
-				return mapItemsByOperation(this.transformation, () => ({
-					...op,
-					matrix: {
-						translateX: -op.matrix.translateX,
-						translateY: -op.matrix.translateY,
-						scaleX: 1 / op.matrix.scaleX,
-						scaleY: 1 / op.matrix.scaleY,
-						shearX: 0,
-						shearY: 0,
-					},
-				}));
+				return this.transformation.map(t => {
+					const itemOp = op.items.find(i => i.id === t.getId());
+					if (!itemOp) return { item: t, operation: op };
+					return {
+						item: t,
+						operation: {
+							class: "Transformation" as const,
+							method: "applyMatrix" as const,
+							items: [{
+								id: t.getId(),
+								matrix: {
+									translateX: -itemOp.matrix.translateX,
+									translateY: -itemOp.matrix.translateY,
+									scaleX: 1 / itemOp.matrix.scaleX,
+									scaleY: 1 / itemOp.matrix.scaleY,
+									shearX: 0,
+									shearY: 0,
+								},
+							}],
+						},
+					};
+				});
 			}
 			case "translateTo":
 				return mapItemsByOperation(
@@ -149,60 +160,27 @@ export class TransformationCommand implements Command {
 				const { operation, transformation } = this;
 				return transformation.map(currTrans => {
 					const op = operation.items[currTrans.getId()];
-					let reverseOp;
-					if (op.method === "applyMatrix") {
-						reverseOp = {
-							...op,
-							matrix: {
-								translateX: -op.matrix.translateX,
-								translateY: -op.matrix.translateY,
-								scaleX: 1 / op.matrix.scaleX,
-								scaleY: 1 / op.matrix.scaleY,
-								shearX: 0,
-								shearY: 0,
-							},
-						};
-					} else if (op.method === "scaleByTranslateBy") {
-						reverseOp = {
-							...op,
-							scale: { x: 1 / op.scale.x, y: 1 / op.scale.y },
-							translate: {
-								x: -op.translate.x,
-								y: -op.translate.y,
-							},
-						};
-					} else if (op.method === "translateTo") {
-						reverseOp = {
-							...op,
-							x: currTrans.getTranslation().x,
-							y: currTrans.getTranslation().y,
-						};
-					} else if (op.method === "translateBy") {
-						reverseOp = {
-							...op,
-							x: -op.x,
-							y: -op.y,
-						};
-					} else if (op.method === "scaleTo") {
-						reverseOp = {
-							...op,
-							x: currTrans.getScale().x,
-							y: currTrans.getScale().y,
-						};
-					} else if (op.method === "scaleBy") {
-						reverseOp = {
-							...op,
-							x: 1 / op.x,
-							y: 1 / op.y,
-						};
-					} else {
-						reverseOp = {
-							...op,
-							x: 1,
-							y: 1,
-						};
-					}
-					return { item: currTrans, operation: reverseOp };
+					const m = op.method === "applyMatrix" ? op.matrix
+						: op.method === "scaleByTranslateBy" ? { translateX: -op.translate.x, translateY: -op.translate.y, scaleX: 1 / op.scale.x, scaleY: 1 / op.scale.y, shearX: 0, shearY: 0 }
+						: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 };
+					return {
+						item: currTrans,
+						operation: {
+							class: "Transformation" as const,
+							method: "applyMatrix" as const,
+							items: [{
+								id: currTrans.getId(),
+								matrix: {
+									translateX: op.method === "applyMatrix" ? -m.translateX : m.translateX,
+									translateY: op.method === "applyMatrix" ? -m.translateY : m.translateY,
+									scaleX: op.method === "applyMatrix" ? 1 / m.scaleX : m.scaleX,
+									scaleY: op.method === "applyMatrix" ? 1 / m.scaleY : m.scaleY,
+									shearX: 0,
+									shearY: 0,
+								},
+							}],
+						},
+					};
 				});
 			}
 			case "locked": {
