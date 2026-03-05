@@ -122,7 +122,43 @@ export class ImageItem extends BaseItem {
     this.storageLink = link;
     this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken || null) || "";
     if (!this.signedUrl) {
-      this.setImage(getPlaceholderImage(this.board, this.imageDimension));
+      const canvas = conf.documentFactory.createElement("canvas") as HTMLCanvasElement;
+      canvas.width = 100;
+      canvas.height = 100;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        // background
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillRect(0, 0, 100, 100);
+        ctx.strokeStyle = "#bdbdbd";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, 98, 98);
+        // broken image icon (centered, 40x32)
+        const x = 30, y = 34;
+        ctx.strokeStyle = "#9e9e9e";
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        ctx.strokeRect(x, y, 40, 32);
+        // mountain left
+        ctx.beginPath();
+        ctx.moveTo(x, y + 32);
+        ctx.lineTo(x + 14, y + 14);
+        ctx.lineTo(x + 24, y + 24);
+        ctx.stroke();
+        // mountain right
+        ctx.beginPath();
+        ctx.moveTo(x + 24, y + 24);
+        ctx.lineTo(x + 32, y + 16);
+        ctx.lineTo(x + 40, y + 32);
+        ctx.stroke();
+        // sun circle
+        ctx.beginPath();
+        ctx.arc(x + 31, y + 10, 5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      const placeholderImg = new Image();
+      placeholderImg.src = canvas.toDataURL();
+      this.setImage(placeholderImg);
       this.updateMbr();
       this.subject.publish(this);
       this.shootLoadCallbacks();
