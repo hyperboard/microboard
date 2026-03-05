@@ -51,8 +51,14 @@ export class SpatialIndex {
 
   change = (item: Item): void => {
     this.itemsIndex.change(item);
-    this.Mbr = new Mbr();
-    this.itemsArray.forEach(i => this.Mbr.combine([i.getMbrWithChildren()]));
+    if (this.itemsArray.length === 0) {
+      this.Mbr = new Mbr();
+    } else {
+      this.Mbr = this.itemsArray[0].getMbrWithChildren().copy();
+      for (let i = 1; i < this.itemsArray.length; i++) {
+        this.Mbr.combine([this.itemsArray[i].getMbrWithChildren()]);
+      }
+    }
     this.subject.publish(this.items);
   };
 
@@ -67,8 +73,14 @@ export class SpatialIndex {
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
     this.itemsIndex.remove(item);
 
-    this.Mbr = new Mbr();
-    this.itemsArray.forEach(item => this.Mbr.combine([item.getMbrWithChildren()]));
+    if (this.itemsArray.length === 0) {
+      this.Mbr = new Mbr();
+    } else {
+      this.Mbr = this.itemsArray[0].getMbrWithChildren().copy();
+      for (let i = 1; i < this.itemsArray.length; i++) {
+        this.Mbr.combine([this.itemsArray[i].getMbrWithChildren()]);
+      }
+    }
 
     this.subject.publish(this.items);
   }
@@ -437,6 +449,23 @@ export class Items {
 
   getMbr(): Mbr {
     return this.index.getMbr();
+  }
+
+  getFilteredMbr(): Mbr {
+    const MAX_ITEM_SIZE = 1_000_000;
+    const items = this.listAll();
+    let mbr: Mbr | null = null;
+    for (const item of items) {
+      const itemMbr = item.getMbr();
+      if (itemMbr.getWidth() < MAX_ITEM_SIZE && itemMbr.getHeight() < MAX_ITEM_SIZE) {
+        if (mbr === null) {
+          mbr = itemMbr.copy();
+        } else {
+          mbr.combine([itemMbr]);
+        }
+      }
+    }
+    return mbr ?? this.getMbr();
   }
 
   getInView(): Item[] {

@@ -191,7 +191,7 @@ export function onBoardLoad(board: Board): void {
     board.items.getItemsInView().length === 0 || !cameraSnapshot;
 
   if (isItemsOutOfView && hasItemsInBoard) {
-    board.camera.zoomToFit(board.items.getMbr());
+    board.camera.zoomToFit(board.items.getFilteredMbr());
   }
 
   if (!hasItemsInBoard) {
