@@ -51,11 +51,8 @@ export class SpatialIndex {
 
   change = (item: Item): void => {
     this.itemsIndex.change(item);
-    if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {
-      this.Mbr = item.getMbrWithChildren().copy();
-    } else {
-      this.Mbr.combine([item.getMbrWithChildren()]);
-    }
+    this.Mbr = new Mbr();
+    this.itemsArray.forEach(i => this.Mbr.combine([i.getMbrWithChildren()]));
     this.subject.publish(this.items);
   };
 
