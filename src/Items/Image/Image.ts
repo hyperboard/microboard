@@ -121,6 +121,13 @@ export class ImageItem extends BaseItem {
   async setStorageLink(link: string) {
     this.storageLink = link;
     this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken || null) || "";
+    if (!this.signedUrl) {
+      this.setImage(getPlaceholderImage(this.board, this.imageDimension));
+      this.updateMbr();
+      this.subject.publish(this);
+      this.shootLoadCallbacks();
+      return;
+    }
     this.image.src = this.signedUrl;
   }
 
