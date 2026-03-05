@@ -253,6 +253,7 @@ export class Transformer extends Tool {
         oppositePoint: this.oppositePoint,
         followingComments,
         startMbr: this.startMbr,
+        beginTimeStamp: this.beginTimeStamp,
       });
       this.mbr = resizedMbr;
       if (translation) {

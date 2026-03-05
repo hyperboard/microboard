@@ -24,6 +24,7 @@ export function transformShape({
   isWidth,
   startMbr,
   followingComments,
+  beginTimeStamp,
 }: {
   single: Sticker | Shape | Frame;
   board: Board;
@@ -35,6 +36,7 @@ export function transformShape({
   isHeight: boolean;
   followingComments?: Comment[];
   startMbr?: Mbr;
+  beginTimeStamp?: number;
 }): { resizedMbr: Mbr; translation: ApplyMatrixItem[] | null } {
   let translation: ApplyMatrixItem[] | null = null;
   if (isShiftPressed && single.itemType !== "Sticker") {
@@ -60,7 +62,7 @@ export function transformShape({
       mbr,
       oppositePoint,
       startMbr || new Mbr(),
-      Date.now()
+      beginTimeStamp ?? Date.now()
     ).mbr;
 
     if (followingComments) {
