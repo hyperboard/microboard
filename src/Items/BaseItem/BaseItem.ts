@@ -395,15 +395,19 @@ export class BaseItem extends Mbr implements Geometry {
 		this.subject.publish(this);
 	}
 
+	renderHoverHighlight(context: DrawingContext): void {
+		if (!this.isHoverHighlighted) {
+			return;
+		}
+		const mbr = this.getMbr();
+		mbr.strokeWidth = 2 / context.matrix.scaleX;
+		mbr.borderColor = BaseItem.HOVER_HIGHLIGHT_COLOR;
+		mbr.render(context);
+	}
+
 	render(context: DrawingContext): void {
 		if (this.index) {
 			this.index.render(context);
-		}
-		if (this.isHoverHighlighted) {
-			const mbr = this.getMbr();
-			mbr.strokeWidth = 2 / context.matrix.scaleX;
-			mbr.borderColor = BaseItem.HOVER_HIGHLIGHT_COLOR;
-			mbr.render(context);
 		}
 	}
 

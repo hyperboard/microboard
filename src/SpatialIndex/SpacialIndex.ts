@@ -621,6 +621,10 @@ export class Items {
         item.render(context);
       }
     })
+
+    items.forEach(item => {
+      item.renderHoverHighlight(context);
+    });
     // frames.forEach(frame => {
     // 	frame.renderPath(context);
     // 	frame
