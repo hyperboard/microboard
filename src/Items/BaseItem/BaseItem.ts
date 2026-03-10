@@ -41,6 +41,9 @@ export class BaseItem extends Mbr implements Geometry {
 	onlyProportionalResize = false;
 	itemType = "";
 	children: string[] = [];
+	isHoverHighlighted = false;
+
+	static readonly HOVER_HIGHLIGHT_COLOR = "rgba(71, 120, 245, 0.7)";
 
 	constructor(
 		board: Board,
@@ -382,9 +385,25 @@ export class BaseItem extends Mbr implements Geometry {
 		return new Path(this.getMbr().getLines(), true);
 	}
 
+	highlightMbr(): void {
+		this.isHoverHighlighted = true;
+		this.subject.publish(this);
+	}
+
+	clearHighlightMbr(): void {
+		this.isHoverHighlighted = false;
+		this.subject.publish(this);
+	}
+
 	render(context: DrawingContext): void {
 		if (this.index) {
 			this.index.render(context);
+		}
+		if (this.isHoverHighlighted) {
+			const mbr = this.getMbr();
+			mbr.strokeWidth = 2 / context.matrix.scaleX;
+			mbr.borderColor = BaseItem.HOVER_HIGHLIGHT_COLOR;
+			mbr.render(context);
 		}
 	}
 
