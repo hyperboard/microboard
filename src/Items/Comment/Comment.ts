@@ -294,12 +294,11 @@ export class Comment implements Geometry {
   }
 
   private transform(): void {
-    const matrix = this.transformation.matrix;
-    if (matrix.translateX && matrix.translateY) {
-      this.anchor = new Point(matrix.translateX, matrix.translateY);
+    const { translateX, translateY } = this.transformation.getMatrixData();
+    if (translateX && translateY) {
+      this.anchor = new Point(translateX, translateY);
     } else {
-      matrix.translateX = this.anchor.x;
-      matrix.translateY = this.anchor.y;
+      this.transformation.setLocal(this.anchor.x, this.anchor.y);
     }
   }
 
@@ -456,7 +455,7 @@ export class Comment implements Geometry {
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = documentFactory.createElement("comment-item");
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
     div.style.transformOrigin = "top left";
     div.style.transform = transform;

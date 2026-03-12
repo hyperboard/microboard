@@ -754,7 +754,7 @@ export class Connector extends BaseItem {
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		const div = documentFactory.createElement('connector-item');
 
-		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.getMatrixData();
 		const mbr = this.getMbr();
 		const width = mbr.getWidth();
 		const height = mbr.getHeight();
@@ -890,7 +890,7 @@ export class Connector extends BaseItem {
 	}
 
 	private renderPathHTML(documentFactory: DocumentFactory, path: Path | Paths): SVGPathElement[] {
-		const { translateX, translateY, scaleX, scaleY } = this.transformation.matrix;
+		const { translateX, translateY, scaleX, scaleY } = this.transformation.getMatrixData();
 		const pathElement = path.renderHTML(documentFactory);
 		const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
 
@@ -922,8 +922,7 @@ export class Connector extends BaseItem {
 		text.transformation = undefined;
 		const mbr = this.getMbr();
 		const transformation = new Transformation();
-		transformation.matrix.translateX = mbr.left;
-		transformation.matrix.translateY = mbr.top;
+		transformation.setLocal(mbr.left, mbr.top);
 		return {
 			itemType: 'Connector',
 			transformation: transformation.serialize(),
@@ -1012,7 +1011,7 @@ export class Connector extends BaseItem {
 		previous.translateX = 0;
 		previous.translateY = 0;
 		previous.invert();
-		const currUnscaled = this.transformation.matrix.copy();
+		const currUnscaled = this.transformation.toMatrix();
 		currUnscaled.translateX = 0;
 		currUnscaled.translateY = 0;
 		const delta = previous.multiplyByMatrix(currUnscaled);
@@ -1048,7 +1047,7 @@ export class Connector extends BaseItem {
 		previous.scaleX = 1;
 		previous.scaleY = 1;
 		previous.invert();
-		const currUnscaled = this.transformation.matrix.copy();
+		const currUnscaled = this.transformation.toMatrix();
 		currUnscaled.scaleX = 1;
 		currUnscaled.scaleY = 1;
 		const delta = previous.multiplyByMatrix(currUnscaled);

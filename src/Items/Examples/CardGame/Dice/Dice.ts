@@ -65,7 +65,7 @@ export class Dice extends BaseItem {
 
   private transformPath(): void {
     this.path = createRoundedRectanglePath(this).copy();
-    this.path.transform(this.transformation.matrix);
+    this.path.transform(this.transformation.toMatrix());
 
     this.path.setBackgroundColor(this.backgroundColor);
     this.path.setBorderColor(this.borderColor);
@@ -327,7 +327,7 @@ export class Dice extends BaseItem {
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = super.renderHTML(documentFactory);
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const mbr = this.getMbr();
     const width = mbr.getWidth();
     const height = mbr.getHeight();

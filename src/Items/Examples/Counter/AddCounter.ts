@@ -28,13 +28,7 @@ export class AddCounter extends StickerTool {
 		const x = (left + right) / 2 - COUNTER_DIMENSIONS.width / 2;
 		const y = (top + bottom) / 2 - COUNTER_DIMENSIONS.height / 2;
 		const counter = new Counter(this.board, "") as unknown as Item;
-		counter.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
-			item: [counter.getId()],
-			x,
-			y,
-		});
+		counter.transformation.setLocal(x, y);
 		const addedCounter = this.board.add(counter);
 		this.board.selection.add(addedCounter);
 	}

@@ -492,7 +492,7 @@ export class Shape extends BaseItem {
     const div = documentFactory.createElement("shape-item");
 
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const mbr = this.getMbr();
     const width = mbr.getWidth();
     const height = mbr.getHeight();
@@ -610,20 +610,20 @@ export class Shape extends BaseItem {
     this.path = Shapes[this.shapeType].createPath(this.mbr);
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
     this.text.setContainer(this.textContainer.copy());
-    this.textContainer.transform(this.transformation.matrix);
+    this.textContainer.transform(this.transformation.toMatrix());
     /*
 		const previous = this.transformation.previous.copy();
 		console.log("previous", previous);
 		previous.invert();
 		console.log("inverted", previous);
 		const delta = previous.multiplyByMatrix(
-			this.transformation.matrix.copy(),
+			this.transformation.toMatrix(),
 		);
-		console.log("matrix", this.transformation.matrix);
+		console.log("matrix", this.transformation.getMatrixData());
 		console.log("delta", delta);
 		this.path.transform(delta);
 		*/
-    this.path.transform(this.transformation.matrix);
+    this.path.transform(this.transformation.toMatrix());
 
     this.path.setBackgroundColor(this.backgroundColor);
     this.path.setBackgroundOpacity(this.backgroundOpacity);
@@ -641,7 +641,7 @@ export class Shape extends BaseItem {
     const anchorPoints = Shapes[this.shapeType].anchorPoints;
     const points: Point[] = [];
     for (const anchorPoint of anchorPoints) {
-      points.push(anchorPoint.getTransformed(this.transformation.matrix));
+      points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
     }
     return points;
   }

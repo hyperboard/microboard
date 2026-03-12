@@ -97,12 +97,9 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockRichText],
     });
 
-    expect(result[mockRichText.getId()]).toEqual({
-      class: "Transformation",
-      method: "scaleByTranslateBy",
-      item: [mockRichText.getId()],
-      translate: { x: 20, y: 20 },
-      scale: { x: mockMatrix.scaleX, y: mockMatrix.scaleX },
+    expect(result.find(r => r.id === mockRichText.getId())).toEqual({
+      id: mockRichText.getId(),
+      matrix: { translateX: mockMatrix.translateX, translateY: 0, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleX, shearX: 0, shearY: 0 },
     });
   });
 
@@ -117,12 +114,9 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockRichText],
     });
 
-    expect(result[mockRichText.getId()]).toEqual({
-      class: "Transformation",
-      method: "scaleByTranslateBy",
-      item: [mockRichText.getId()],
-      translate: { x: 20, y: 20 }, // Calculated from deltas
-      scale: { x: 2, y: 2 },
+    expect(result.find(r => r.id === mockRichText.getId())).toEqual({
+      id: mockRichText.getId(),
+      matrix: { translateX: 20, translateY: 20, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
     });
   });
 
@@ -137,12 +131,9 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockAINode],
     });
 
-    expect(result[mockAINode.getId()]).toEqual({
-      class: "Transformation",
-      method: "scaleByTranslateBy",
-      item: [mockAINode.getId()],
-      translate: { x: 30, y: 30 },
-      scale: { x: 2, y: 2 },
+    expect(result.find(r => r.id === mockAINode.getId())).toEqual({
+      id: mockAINode.getId(),
+      matrix: { translateX: mockMatrix.translateX, translateY: 0, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleX, shearX: 0, shearY: 0 },
     });
   });
 
@@ -157,12 +148,9 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockSticker],
     });
 
-    expect(result[mockSticker.getId()]).toEqual({
-      class: "Transformation",
-      method: "scaleByTranslateBy",
-      item: [mockSticker.getId()],
-      translate: { x: 40, y: 40 }, // Calculated from deltas
-      scale: { x: 2, y: 2 },
+    expect(result.find(r => r.id === mockSticker.getId())).toEqual({
+      id: mockSticker.getId(),
+      matrix: { translateX: 40, translateY: 40, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
     });
   });
 
@@ -177,12 +165,9 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockFrame],
     });
 
-    expect(result[mockFrame.getId()]).toEqual({
-      class: "Transformation",
-      method: "scaleByTranslateBy",
-      item: [mockFrame.getId()],
-      translate: { x: 50, y: 50 }, // Calculated from deltas
-      scale: { x: mockMatrix.scaleX, y: mockMatrix.scaleY },
+    expect(result.find(r => r.id === mockFrame.getId())).toEqual({
+      id: mockFrame.getId(),
+      matrix: { translateX: 50, translateY: 50, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleY, shearX: 0, shearY: 0 },
     });
   });
 
@@ -197,11 +182,11 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockRichText, mockAINode, mockSticker, mockFrame],
     });
 
-    expect(Object.keys(result)).toHaveLength(4);
-    expect(result[mockRichText.getId()]).toBeDefined();
-    expect(result[mockAINode.getId()]).toBeDefined();
-    expect(result[mockSticker.getId()]).toBeDefined();
-    expect(result[mockFrame.getId()]).toBeDefined();
+    expect(result).toHaveLength(4);
+    expect(result.find(r => r.id === mockRichText.getId())).toBeDefined();
+    expect(result.find(r => r.id === mockAINode.getId())).toBeDefined();
+    expect(result.find(r => r.id === mockSticker.getId())).toBeDefined();
+    expect(result.find(r => r.id === mockFrame.getId())).toBeDefined();
   });
 
   it("should handle Drawing item type", () => {
@@ -227,12 +212,9 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockDrawing],
     });
 
-    expect(result[mockDrawing.getId()]).toEqual({
-      class: "Transformation",
-      method: "scaleByTranslateBy",
-      item: [mockDrawing.getId()],
-      translate: { x: 60, y: 60 }, // Calculated using matrix.translateX/Y
-      scale: { x: mockMatrix.scaleX, y: mockMatrix.scaleY },
+    expect(result.find(r => r.id === mockDrawing.getId())).toEqual({
+      id: mockDrawing.getId(),
+      matrix: { translateX: 60, translateY: 60, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleY, shearX: 0, shearY: 0 },
     });
   });
 
@@ -255,8 +237,8 @@ describe("handleMultipleItemsResize", () => {
       itemsToResize: [mockRichText],
     });
 
-    expect(Object.keys(result)).toHaveLength(2);
-    expect(result[mockRichText.getId()]).toBeDefined();
-    expect(result[mockComment.getId()]).toBeDefined();
+    expect(result).toHaveLength(2);
+    expect(result.find(r => r.id === mockRichText.getId())).toBeDefined();
+    expect(result.find(r => r.id === mockComment.getId())).toBeDefined();
   });
 });

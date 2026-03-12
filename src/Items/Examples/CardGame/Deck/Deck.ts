@@ -68,24 +68,15 @@ export class Deck extends BaseItem {
           && (!firstCardDimensions || (firstCardDimensions.width === foundItem.getDimensions().width && firstCardDimensions.height === foundItem.getDimensions().height))
         if (canAddItem) {
           this.isPerpendicular = foundItem.getIsRotatedPerpendicular()
-          foundItem.transformation.apply({
-            class: 'Transformation',
-            method: 'translateTo',
-            item: [this.id],
-            x: this.left + (this.index?.list().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
-            y: this.top + (this.index?.list().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0),
-          })
+          foundItem.transformation.setLocal(
+            this.left + (this.index?.list().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
+            this.top + (this.index?.list().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
+          );
           if (firstCard) {
-            const {scaleX, scaleY} = foundItem.transformation.matrix;
-            const {scaleX: targetScaleX, scaleY: targetScaleY} = firstCard.transformation.matrix;
+            const {scaleX, scaleY} = foundItem.transformation.getMatrixData();
+            const {scaleX: targetScaleX, scaleY: targetScaleY} = firstCard.transformation.getMatrixData();
             if (scaleX !== targetScaleX || scaleY !== targetScaleY) {
-              foundItem.transformation.apply({
-                class: 'Transformation',
-                method: 'scaleTo',
-                item: [this.id],
-                x: targetScaleX,
-                y: targetScaleY,
-              })
+              foundItem.transformation.setLocal({ scaleX: targetScaleX, scaleY: targetScaleY });
             }
           }
           this.board.selection.remove(foundItem);
@@ -202,7 +193,7 @@ export class Deck extends BaseItem {
 
   updateMbr(): void {
     const {translateX, translateY} =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const items = this.index!.list();
     const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
     this.left = translateX;
@@ -292,7 +283,7 @@ export class Deck extends BaseItem {
       return div;
     }
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
 
     const topCardElement = topCard.renderHTML(documentFactory);
@@ -462,13 +453,7 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
   const onlyCards = board.selection.items.isAllItemsType("Card");
   if (onlyCards) {
     const deck = new Deck(board, "");
-    deck.transformation.apply({
-      class: "Transformation",
-      method: "translateTo",
-      item: [deck.getId()],
-      x: cardsOrDecks[cardsOrDecks.length - 1].left,
-      y: cardsOrDecks[cardsOrDecks.length - 1].top,
-    });
+    deck.transformation.setLocal(cardsOrDecks[cardsOrDecks.length - 1].left, cardsOrDecks[cardsOrDecks.length - 1].top);
     const addedDeck = board.add(deck);
     board.selection.items.removeAll();
     addedDeck.addChildItems(cardsOrDecks);

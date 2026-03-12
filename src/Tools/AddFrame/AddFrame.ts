@@ -211,43 +211,19 @@ export class AddFrame extends BoardTool {
 	}
 
 	applyScaleTo(x: number, y: number): void {
-		this.frame.transformation.apply({
-			class: 'Transformation',
-			method: 'scaleTo',
-			item: [this.frame.getId()],
-			x,
-			y,
-		});
+		this.frame.transformation.setLocal({ scaleX: x, scaleY: y });
 	}
 
 	applyScaleBy(x: number, y: number): void {
-		this.frame.transformation.apply({
-			class: 'Transformation',
-			method: 'scaleBy',
-			item: [this.frame.getId()],
-			x,
-			y,
-		});
+		this.frame.transformation.scaleBy(x, y);
 	}
 
 	applyTranslateTo(x: number, y: number): void {
-		this.frame.transformation.apply({
-			class: 'Transformation',
-			method: 'translateTo',
-			item: [this.frame.getId()],
-			x,
-			y,
-		});
+		this.frame.transformation.setLocal(x, y);
 	}
 
 	applyTranslateBy(x: number, y: number): void {
-		this.frame.transformation.apply({
-			class: 'Transformation',
-			method: 'translateBy',
-			item: [this.frame.getId()],
-			x,
-			y,
-		});
+		this.frame.transformation.translateBy(x, y);
 	}
 
 	applyAddChildren(children: Item[]): void {

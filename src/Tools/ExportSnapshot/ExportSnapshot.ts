@@ -44,7 +44,7 @@ export class ExportSnapshot extends Tool {
 
   rectMoveTo(x: number, y: number): void {
     this.transformation.translateTo(x, y);
-    this.mbr.transform(this.transformation.matrix);
+    this.mbr.transform(this.transformation.toMatrix());
     this.board.tools.publish();
   }
 

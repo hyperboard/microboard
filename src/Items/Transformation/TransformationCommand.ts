@@ -68,6 +68,7 @@ export class TransformationCommand implements Command {
 					};
 				});
 			}
+			// @deprecated — legacy events only
 			case "translateTo":
 				return mapItemsByOperation(
 					this.transformation,
@@ -89,6 +90,7 @@ export class TransformationCommand implements Command {
 					};
 				});
 			}
+			// @deprecated — legacy events only
 			case "scaleTo":
 			case "scaleToRelativeTo": {
 				return mapItemsByOperation(
@@ -113,16 +115,6 @@ export class TransformationCommand implements Command {
 					};
 				});
 			}
-			case "rotateTo":
-				return mapItemsByOperation(
-					this.transformation,
-					transformation => {
-						return {
-							...this.operation,
-							degree: transformation.getRotation(),
-						};
-					},
-				);
 			case "scaleByTranslateBy": {
 				const op = this.operation;
 				const scaleTransformation = mapItemsByOperation(
@@ -147,6 +139,17 @@ export class TransformationCommand implements Command {
 				);
 				return scaleTransformation;
 			}
+			// end @deprecated
+			case "rotateTo":
+				return mapItemsByOperation(
+					this.transformation,
+					transformation => {
+						return {
+							...this.operation,
+							degree: transformation.getRotation(),
+						};
+					},
+				);
 			case "rotateBy": {
 				const op = this.operation;
 				return mapItemsByOperation(this.transformation, () => {

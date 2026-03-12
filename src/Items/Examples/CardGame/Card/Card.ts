@@ -179,7 +179,7 @@ export class Card extends BaseItem {
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = super.renderHTML(documentFactory);
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 
@@ -199,7 +199,7 @@ export class Card extends BaseItem {
 
   updateMbr(): void {
     const {translateX, translateY, scaleX, scaleY} =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const rotation = this.transformation.getRotation();
     const height = this.dimensions.height * scaleY;
     const width = this.dimensions.width * scaleX;

@@ -77,7 +77,7 @@ export class Star extends BaseItem {
 
 	private transformPath(): void {
 		this.path = starPath.copy();
-		this.path.transform(this.transformation.matrix);
+		this.path.transform(this.transformation.toMatrix());
 
 		this.path.setBackgroundColor(this.backgroundColor);
 		this.path.setBorderColor(this.borderColor);
@@ -116,7 +116,7 @@ export class Star extends BaseItem {
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		const div = documentFactory.createElement("star-item");
 		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+			this.transformation.getMatrixData();
 		const mbr = this.getMbr();
 		const unscaledWidth = mbr.getWidth() / scaleX;
 		const unscaledHeight = mbr.getHeight() / scaleY;

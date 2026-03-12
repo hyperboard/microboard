@@ -60,7 +60,7 @@ export class Counter extends BaseItem {
 
 	updateMbr(): void {
 		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.matrix;
+			this.transformation.getMatrixData();
 		this.left = translateX;
 		this.top = translateY;
 		this.right = this.left + COUNTER_DIMENSIONS.width * scaleX;

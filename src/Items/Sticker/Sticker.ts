@@ -189,10 +189,9 @@ export class Sticker extends BaseItem {
     }
     this.stickerPath = StickerShape.stickerPath.copy();
     this.textContainer = StickerShape.textBounds.copy();
-    const matrix = this.transformation.matrix;
-    this.stickerPath.transform(matrix);
+    this.stickerPath.transform(this.transformation.toMatrix());
     this.text.setContainer(this.textContainer.copy());
-    this.textContainer.transform(this.transformation.matrix);
+    this.textContainer.transform(this.transformation.toMatrix());
     // this.text.setContainer(this.textContainer);
     this.stickerPath.setBackgroundColor(this.backgroundColor);
     this.saveStickerData();
@@ -321,7 +320,7 @@ export class Sticker extends BaseItem {
     const div = documentFactory.createElement("sticker-item");
 
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${Math.round(translateX)}px, ${Math.round(
       translateY
     )}px) scale(${scaleX}, ${scaleY})`;
@@ -432,7 +431,7 @@ export class Sticker extends BaseItem {
     const anchorPoints = StickerShape.anchorPoints;
     const points: Point[] = [];
     for (const anchorPoint of anchorPoints) {
-      points.push(anchorPoint.getTransformed(this.transformation.matrix));
+      points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
     }
     return points;
   }
@@ -448,20 +447,7 @@ export class Sticker extends BaseItem {
       y -= l * height;
     }
 
-    this.transformation.apply({
-      class: "Transformation",
-      method: "translateTo",
-      item: [this.id],
-      x,
-      y,
-    });
-    this.transformation.apply({
-      class: "Transformation",
-      method: "scaleTo",
-      item: [this.id],
-      x: l,
-      y: l,
-    });
+    this.transformation.setLocal(x, y, l, l);
     this.saveStickerData();
   }
   applyTransformToCenter(pt: Point, newWidth?: number) {
@@ -471,35 +457,9 @@ export class Sticker extends BaseItem {
       const w = width * scale;
       const h = height * scale;
 
-      this.transformation.apply({
-        class: "Transformation",
-        method: "translateTo",
-        item: [this.id],
-        x: pt.x - w / 2,
-        y: pt.y - h / 2,
-      });
-      this.transformation.apply({
-        class: "Transformation",
-        method: "scaleTo",
-        item: [this.id],
-        x: scale,
-        y: scale,
-      });
+      this.transformation.setLocal(pt.x - w / 2, pt.y - h / 2, scale, scale);
     } else {
-      this.transformation.apply({
-        class: "Transformation",
-        method: "translateTo",
-        item: [this.id],
-        x: pt.x - width / 2,
-        y: pt.y - height / 2,
-      });
-      this.transformation.apply({
-        class: "Transformation",
-        method: "scaleTo",
-        item: [this.id],
-        x: 1,
-        y: 1,
-      });
+      this.transformation.setLocal(pt.x - width / 2, pt.y - height / 2, 1, 1);
     }
   }
   doResize(

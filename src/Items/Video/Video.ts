@@ -257,13 +257,13 @@ export class VideoItem extends BaseItem {
 
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     this.left = translateX;
     this.top = translateY;
     this.right = this.left + this.videoDimension.width * scaleX;
     this.bottom = this.top + this.videoDimension.height * scaleY;
     const playBtnSize = 50;
-    const scaledPlayBtn = playBtnSize * this.transformation.matrix.scaleX;
+    const scaledPlayBtn = playBtnSize * this.transformation.getMatrixData().scaleX;
     this.playBtnMbr = new Mbr(
       this.left + this.getWidth() / 2 - scaledPlayBtn / 2,
       this.top + this.getHeight() / 2 - scaledPlayBtn / 2,
@@ -285,7 +285,7 @@ export class VideoItem extends BaseItem {
       return;
     }
     ctx.save();
-    this.transformation.matrix.applyToContext(ctx);
+    this.transformation.applyToContext(ctx);
     ctx.drawImage(this.preview, 0, 0);
 
     if (this.shouldShowControls && this.previewUrl) {
@@ -312,7 +312,7 @@ export class VideoItem extends BaseItem {
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = documentFactory.createElement("video-item");
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
     div.style.backgroundImage = this.previewUrl

@@ -41,8 +41,8 @@ export function handleMultipleItemsResize({
     let itemY = item.getMbr().top;
 
     if (item.itemType === "Drawing") {
-      itemX = item.transformation.matrix.translateX;
-      itemY = item.transformation.matrix.translateY;
+      itemX = item.transformation.getMatrixData().translateX;
+      itemY = item.transformation.getMatrixData().translateY;
     }
 
     const deltaX = itemX - initMbr.left;

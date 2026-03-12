@@ -255,7 +255,7 @@ export class Placeholder extends BaseItem {
         const anchorPoints = Shapes[this.shapeType].anchorPoints;
         const points: Point[] = [];
         for (const anchorPoint of anchorPoints) {
-            points.push(anchorPoint.getTransformed(this.transformation.matrix));
+            points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
         }
         return points;
     }
@@ -287,7 +287,7 @@ export class Placeholder extends BaseItem {
 
     private transformPath(): void {
         this.path = Shapes[this.shapeType].createPath(this.mbr);
-        this.path.transform(this.transformation.matrix);
+        this.path.transform(this.transformation.toMatrix());
         this.path.setBackgroundColor(this.backgroundColor);
         this.path.setBorderColor("transparent");
     }

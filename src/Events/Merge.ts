@@ -140,6 +140,7 @@ function mergeTransformationOperations(
     return;
   }
 
+  // @deprecated — legacy event merging only, new events use applyMatrix
   const method = opA.method;
   switch (method) {
     case "translateBy":
@@ -195,6 +196,7 @@ function mergeTransformationOperations(
         },
         timeStamp: opB.timeStamp,
       };
+    // end @deprecated
     default:
       return;
   }

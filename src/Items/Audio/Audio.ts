@@ -121,7 +121,7 @@ export class AudioItem extends BaseItem {
 
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     this.left = translateX;
     this.top = translateY;
     this.right = this.left + conf.AUDIO_DIMENSIONS.width * scaleX;
@@ -175,7 +175,7 @@ export class AudioItem extends BaseItem {
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = documentFactory.createElement("audio-item");
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
     div.id = this.getId();

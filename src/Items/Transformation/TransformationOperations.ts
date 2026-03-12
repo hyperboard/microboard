@@ -6,6 +6,7 @@ interface TransformationBase {
 	timestamp?: number;
 }
 
+/** @deprecated Use ApplyMatrixOperation instead. Kept for reading legacy events. */
 export interface TranslateOperation extends TransformationBase {
 	method: "translateTo" | "translateBy";
 	x: number;
@@ -13,6 +14,7 @@ export interface TranslateOperation extends TransformationBase {
 	timeStamp?: number;
 }
 
+/** @deprecated Use ApplyMatrixOperation instead. Kept for reading legacy events. */
 export interface ScaleOperation extends TransformationBase {
 	method: "scaleTo" | "scaleBy";
 	x: number;
@@ -26,6 +28,7 @@ interface RotateOperation extends TransformationBase {
 	timeStamp?: number;
 }
 
+/** @deprecated Use ApplyMatrixOperation instead. Kept for reading legacy events. */
 interface ScaleRelativeToOperation extends TransformationBase {
 	method: "scaleToRelativeTo" | "scaleByRelativeTo";
 	x: number;
@@ -34,6 +37,7 @@ interface ScaleRelativeToOperation extends TransformationBase {
 	timeStamp?: number;
 }
 
+/** @deprecated Use ApplyMatrixOperation instead. Kept for reading legacy events. */
 export interface ScaleByTranslateByOperation extends TransformationBase {
 	method: "scaleByTranslateBy";
 	translate: { x: number; y: number };

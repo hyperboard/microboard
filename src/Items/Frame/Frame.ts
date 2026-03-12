@@ -269,7 +269,7 @@ export class Frame extends BaseItem {
 
     if (!res) {
       return {
-        matrix: this.transformation.matrix,
+        matrix: this.transformation.toMatrix(),
         mbr: this.getMbr(),
       };
     }
@@ -391,11 +391,9 @@ export class Frame extends BaseItem {
   }
 
   getSavedProportionsMatrix(): Matrix {
-    const newScale = Math.min(
-      this.transformation.matrix.scaleX,
-      this.transformation.matrix.scaleY
-    );
-    const newMatrix = this.transformation.matrix.copy();
+    const { scaleX, scaleY } = this.transformation.getMatrixData();
+    const newScale = Math.min(scaleX, scaleY);
+    const newMatrix = this.transformation.toMatrix();
     newMatrix.scaleX = newScale;
     newMatrix.scaleY = newScale;
     return newMatrix;
@@ -410,8 +408,8 @@ export class Frame extends BaseItem {
       this.textContainer.transform(newMatrix);
       this.transformation.applyScaleTo(newMatrix.scaleX, newMatrix.scaleY);
     } else {
-      this.path.transform(this.transformation.matrix);
-      this.textContainer.transform(this.transformation.matrix);
+      this.path.transform(this.transformation.toMatrix());
+      this.textContainer.transform(this.transformation.toMatrix());
     }
 
     // TODO fix text container Y translation
@@ -509,7 +507,7 @@ export class Frame extends BaseItem {
     const anchorPoints = Frames[this.shapeType].anchorPoints;
     const points: Point[] = [];
     for (const anchorPoint of anchorPoints) {
-      points.push(anchorPoint.getTransformed(this.transformation.matrix));
+      points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
     }
     return points;
   }
@@ -728,7 +726,7 @@ export class Frame extends BaseItem {
     div.style.borderStyle = this.borderStyle;
 
     const {translateX, translateY, scaleX, scaleY} =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
 
     // const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
     const transform = `translate(${Math.round(translateX)}px, ${Math.round(

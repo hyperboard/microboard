@@ -118,7 +118,7 @@ export class Drawing extends BaseItem {
     untransformedMbr.right += offset;
     untransformedMbr.bottom += offset;
 
-    const mbr = untransformedMbr.getTransformed(this.transformation.matrix);
+    const mbr = untransformedMbr.getTransformed(this.transformation.toMatrix());
 
     this.left = mbr.left;
     this.top = mbr.top;
@@ -181,7 +181,7 @@ export class Drawing extends BaseItem {
 
   updateLines(): void {
     this.lines = [];
-    const matrix = this.transformation.matrix;
+    const matrix = this.transformation.toMatrix();
     if (this.points.length < 2) {
       return;
     }
@@ -236,7 +236,7 @@ export class Drawing extends BaseItem {
     ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = "round";
     ctx.setLineDash(this.linePattern);
-    this.transformation.matrix.applyToContext(ctx);
+    this.transformation.applyToContext(ctx);
     ctx.stroke(this.path2d.nativePath);
     ctx.restore();
     if (this.getLinkTo()) {
@@ -249,7 +249,7 @@ export class Drawing extends BaseItem {
     const div = documentFactory.createElement("drawing-item");
 
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const mbr = this.getMbr();
     const width = mbr.getWidth();
     const height = mbr.getHeight();
@@ -497,12 +497,13 @@ export class Drawing extends BaseItem {
   }
 
   isPointNearLine(point: Point, threshold: number | undefined = 10): boolean {
+    const { translateX: drawingTranslateX, translateY: drawingTranslateY, scaleX: drawingScaleX, scaleY: drawingScaleY } = this.transformation.getMatrixData();
     const transformedMouseX =
-      (point.x - this.transformation.matrix.translateX) /
-      this.transformation.matrix.scaleX;
+      (point.x - drawingTranslateX) /
+      drawingScaleX;
     const transformedMouseY =
-      (point.y - this.transformation.matrix.translateY) /
-      this.transformation.matrix.scaleY;
+      (point.y - drawingTranslateY) /
+      drawingScaleY;
     const transformedMouse = new Point(transformedMouseX, transformedMouseY);
     for (let i = 0; i < this.points.length - 1; i++) {
       const p1 = this.points[i];

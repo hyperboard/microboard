@@ -130,7 +130,7 @@ export class AINode extends BaseItem {
 
   transformPath(): void {
     const { left, right, top, bottom } = this.text.getTransformedContainer();
-    const { scaleX, scaleY } = this.transformation.matrix;
+    const { scaleX, scaleY, translateX: nodeTranslateX, translateY: nodeTranslateY } = this.transformation.getMatrixData();
     const minScale = Math.min(scaleX, scaleY);
     const leftOffset = 20 * minScale;
     const topOffset = 20 * minScale;
@@ -141,13 +141,13 @@ export class AINode extends BaseItem {
       (this.text.left < this.path.getMbr().left + leftOffset &&
         this.text.top < this.path.getMbr().top + topOffset)
     ) {
-      this.text.left = this.transformation.matrix.translateX + leftOffset;
-      this.text.top = this.transformation.matrix.translateY + topOffset;
+      this.text.left = nodeTranslateX + leftOffset;
+      this.text.top = nodeTranslateY + topOffset;
     }
 
     this.path = createNodePath(
       new Mbr(left, top, nodeRight, nodeBottom),
-      this.transformation.matrix
+      this.transformation.toMatrix()
     );
     const scaledSize = BUTTON_SIZE * minScale;
 
@@ -356,7 +356,7 @@ export class AINode extends BaseItem {
     const div = documentFactory.createElement("ainode-item");
 
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const mbr = this.getMbr();
     const width = mbr.getWidth();
     const height = mbr.getHeight();

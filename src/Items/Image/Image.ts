@@ -202,7 +202,7 @@ export class ImageItem extends BaseItem {
 
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const rotation = this.transformation.getRotation();
     const width = this.image.width * scaleX;
     const height = this.image.height * scaleY;
@@ -251,12 +251,11 @@ export class ImageItem extends BaseItem {
   }
 
   private setCoordinates(): void {
-    this.left = this.transformation.matrix.translateX;
-    this.top = this.transformation.matrix.translateY;
-    this.right =
-      this.left + this.image.width * this.transformation.matrix.scaleX;
-    this.bottom =
-      this.top + this.image.height * this.transformation.matrix.scaleY;
+    const { translateX: coordX, translateY: coordY, scaleX: coordScaleX, scaleY: coordScaleY } = this.transformation.getMatrixData();
+    this.left = coordX;
+    this.top = coordY;
+    this.right = this.left + this.image.width * coordScaleX;
+    this.bottom = this.top + this.image.height * coordScaleY;
     this.subject.publish(this);
   }
 
@@ -333,7 +332,7 @@ export class ImageItem extends BaseItem {
     }
     const ctx = context.ctx;
     ctx.save();
-    this.transformation.matrix.applyToContext(ctx);
+    this.transformation.applyToContext(ctx);
     const rotation = this.transformation.getRotation();
     if (rotation !== 0) {
       const imgWidth = this.image.width || 0;
@@ -354,7 +353,7 @@ export class ImageItem extends BaseItem {
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = documentFactory.createElement("image-item");
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 

@@ -185,7 +185,7 @@ export class Screen extends BaseItem {
 
   private transformPath(): void {
     this.path = screenPath.copy();
-    this.path.transform(this.transformation.matrix);
+    this.path.transform(this.transformation.toMatrix());
 
     this.path.setBackgroundColor(this.backgroundColor);
     this.path.setBorderColor(this.borderColor);

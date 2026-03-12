@@ -247,7 +247,7 @@ export class RichText extends BaseItem {
         mbr.right += 20;
         mbr.bottom += 20;
       }
-      const linkMbr = mbr.getTransformed(this.transformation.matrix);
+      const linkMbr = mbr.getTransformed(this.transformation.toMatrix());
       if (linkMbr.isUnderPoint(point)) {
         return { hyperLink, linkMbr };
       }
@@ -522,17 +522,13 @@ export class RichText extends BaseItem {
    * Get the container that would be used to align the CanvasDocument.
    */
   getTransformedContainer(): Mbr {
-    let matrix = this.transformation.matrix;
     if (this.insideOf === "Frame") {
+      const { translateX, translateY, scaleX } = this.transformation.getMatrixData();
       const scaleY = (this.getMbr().getHeight() * 2) / 10;
-      matrix = new Matrix(
-        matrix.translateX,
-        matrix.translateY,
-        matrix.scaleX,
-        scaleY
-      );
+      const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
+      return this.container.getTransformed(matrix);
     }
-    return this.container.getTransformed(matrix);
+    return this.container.getTransformed(this.transformation.toMatrix());
   }
 
   emitWithoutApplying = (op: RichTextOperation): void => {
@@ -1022,7 +1018,7 @@ export class RichText extends BaseItem {
 
     const shouldScale = !this.isInShape && !this.autoSize;
     if (shouldScale) {
-      const { scaleX, scaleY } = this.transformation.matrix;
+      const { scaleX, scaleY } = this.transformation.getMatrixData();
       ctx.scale(scaleX, scaleY);
     }
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
@@ -1200,7 +1196,7 @@ export class RichText extends BaseItem {
     const elements = this.editor.editor.children.map(renderNode);
 
     const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.matrix;
+      this.transformation.getMatrixData();
 
     const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 

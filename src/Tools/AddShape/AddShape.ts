@@ -58,20 +58,7 @@ export class AddShape extends BoardTool {
   initTransformation(sx?: number, sy?: number): void {
     sx = sx || this.bounds.getWidth() / 100;
     sy = sy || this.bounds.getHeight() / 100;
-    this.shape.transformation.apply({
-      class: "Transformation",
-      method: "translateTo",
-      item: [this.shape.getId()],
-      x: this.bounds.left,
-      y: this.bounds.top,
-    });
-    this.shape.transformation.apply({
-      class: "Transformation",
-      method: "scaleTo",
-      item: [this.shape.getId()],
-      x: sx,
-      y: sy,
-    });
+    this.shape.transformation.setLocal(this.bounds.left, this.bounds.top, sx, sy);
   }
 
   leftButtonDown(): boolean {

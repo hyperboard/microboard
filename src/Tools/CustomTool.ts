@@ -61,20 +61,7 @@ export class ShapeTool extends CustomTool {
 	initTransformation(sx?: number, sy?: number): void {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100;
-		this.item.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
-			item: [this.item.getId()],
-			x: this.bounds.left,
-			y: this.bounds.top,
-		});
-		this.item.transformation.apply({
-			class: "Transformation",
-			method: "scaleTo",
-			item: [this.item.getId()],
-			x: sx,
-			y: sy,
-		});
+		this.item.transformation.setLocal(this.bounds.left, this.bounds.top, sx, sy);
 	}
 
 	pointerDown(): boolean {
@@ -160,22 +147,10 @@ export class StickerTool extends CustomTool {
 
 	pointerDown(): boolean {
 		const point = this.board.pointer.point;
-		this.item.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
-			item: [this.item.getId()],
-			x: point.x - this.settings.width / 2,
-			y: point.y - this.settings.height / 2,
-		});
+		this.item.transformation.setLocal(point.x - this.settings.width / 2, point.y - this.settings.height / 2);
 		const width = this.item.getWidth();
 		const height = this.item.getHeight();
-		this.item.transformation.apply({
-			class: "Transformation",
-			method: "scaleBy",
-			item: [this.item.getId()],
-			x: width / this.settings.width,
-			y: height / this.settings.height,
-		});
+		this.item.transformation.scaleBy(width / this.settings.width, height / this.settings.height);
 		const addedItem = this.board.add(this.item as Item);
 		this.board.selection.removeAll();
 		this.board.selection.add(addedItem);
