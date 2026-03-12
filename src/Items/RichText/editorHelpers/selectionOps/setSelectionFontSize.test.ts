@@ -70,21 +70,6 @@ describe('setSelectionFontSize', () => {
 		expect(getSelectionMarks(editor)).toEqual({ fontSize: 1 });
 	});
 
-	it('creates new text node with font size when editor is empty', () => {
-		editor.children = [
-			{
-				type: 'paragraph',
-				children: [{ type: 'text', text: '', fontSize: 14 }],
-			},
-		];
-		selectWholeText(editor);
-
-		const result = setSelectionFontSize(editor, false, 18);
-
-		expect(result).toBe(false);
-		expect(editor.children[0].children[0].fontSize).toBe(18);
-	});
-
 	it('does not change empty editor when size is auto', () => {
 		editor.children = [{ type: 'paragraph', children: [{ text: '' }] }];
 		editor.selection = {

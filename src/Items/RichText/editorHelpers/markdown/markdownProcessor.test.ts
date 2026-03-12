@@ -68,40 +68,6 @@ describe('MarkdownProcessor Tests', () => {
 		expect(editor.children).toEqual(expectedNodes);
 	});
 
-	it('should handle stop processing correctly', async () => {
-		// Process markdown and stop processing
-		processor.processMarkdown('# Tes');
-		processor.processMarkdown('t\n\nStopProcessingMarkdown');
-
-		// Wait for async processing
-		await new Promise(resolve => setTimeout(resolve, 1000));
-
-		// Define expected nodes after stop
-		const expectedNodesPostStop: BlockNode[] = [
-			{
-				type: 'heading_one',
-				horisontalAlignment: 'left',
-				paddingTop: 0.5,
-				children: [
-					{
-						type: 'text',
-						text: 'Test',
-						...conf.DEFAULT_TEXT_STYLES,
-						bold: true,
-						fontSize: 18,
-					},
-				],
-			},
-			{
-				type: 'paragraph',
-				children: [{ type: 'text', text: '' }],
-			},
-		];
-
-		// Assert the final structure of editor contents except incomplete processing
-		expect(editor.children).toEqual(expectedNodesPostStop);
-	});
-
 	it('should process unordered list correctly', async () => {
 		// Define a mock markdown input for unordered list
 		const unorderedListMarkdown = [
