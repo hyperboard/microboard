@@ -32,7 +32,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		// Define expected nodes
 		const expectedNodes: BlockNode[] = [
@@ -84,7 +84,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		// Define expected nodes for unordered list
 		const expectedUnorderedListNodes: BlockNode[] = [
@@ -167,7 +167,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		// Define expected nodes for ordered list
 		const expectedOrderedListNodes: BlockNode[] = [
@@ -247,7 +247,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedNestedListNodes: BlockNode[] = [
 			{
@@ -347,7 +347,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedHeaderNodes: BlockNode[] = [
 			{
@@ -404,7 +404,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedBoldTextNodes: BlockNode[] = [
 			{
@@ -443,7 +443,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedCodeBlockNodes: BlockNode[] = [
 			{
@@ -476,7 +476,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedHeadersInListNodes: BlockNode[] = [
 			{
@@ -565,7 +565,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedCodeBlockInListNodes: BlockNode[] = [
 			{
@@ -643,7 +643,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedComplexStructureNodes: BlockNode[] = [
 			{
@@ -774,7 +774,7 @@ describe('MarkdownProcessor Tests', () => {
 			processor.processMarkdown(chunk);
 		});
 
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		await processor.waitForDone();
 
 		const expectedHyperlinkNodes: BlockNode[] = [
 			{

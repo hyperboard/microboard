@@ -17,6 +17,7 @@ export class MarkdownProcessor {
 	private isProcessingChunk = false;
 	private stopProcessingMarkDownCb: (() => void) | null = null;
 	private currentNode = '';
+	private doneResolvers: Array<() => void> = [];
 	editor: Editor;
 	readonly subject = new Subject<MarkdownProcessor>();
 
@@ -30,6 +31,21 @@ export class MarkdownProcessor {
 
 	getStopProcessingMarkDownCb() {
 		return this.stopProcessingMarkDownCb;
+	}
+
+	waitForDone(): Promise<void> {
+		if (!this.isProcessingChunk && this.chunksQueue.length === 0) {
+			return Promise.resolve();
+		}
+		return new Promise<void>(resolve => {
+			this.doneResolvers.push(resolve);
+		});
+	}
+
+	private notifyDone() {
+		const resolvers = this.doneResolvers;
+		this.doneResolvers = [];
+		resolvers.forEach(r => r());
 	}
 
 	deserializeMarkdown(isNewParagraphNeeded: boolean) {
@@ -104,6 +120,7 @@ export class MarkdownProcessor {
 	private async processNextChunk() {
 		if (this.chunksQueue.length === 0) {
 			this.isProcessingChunk = false;
+			this.notifyDone();
 			return;
 		}
 
@@ -113,6 +130,7 @@ export class MarkdownProcessor {
 		if (chunk === 'StopProcessingMarkdown') {
 			await this.deserializeMarkdownAsync(false);
 			this.isProcessingChunk = false;
+			this.notifyDone();
 			this.currentNode = '';
 			if (this.stopProcessingMarkDownCb) {
 				selectWholeText(this.editor);
