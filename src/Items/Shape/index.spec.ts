@@ -46,7 +46,7 @@ describe('to diagram user of shapes', () => {
 		const board = new Board();
 		it('in view', () => {
 			const shape = new Shape(board);
-			expect(shape.isInView(new Mbr())).toBe(true);
+			expect(shape.isInView(new Mbr(0, 0, 100, 100))).toBe(true);
 		});
 		it('under pointer', () => {
 			const shape = new Shape(board);
