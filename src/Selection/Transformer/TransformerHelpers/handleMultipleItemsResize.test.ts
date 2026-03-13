@@ -43,8 +43,8 @@ describe("handleMultipleItemsResize", () => {
     mockMbr = new Mbr(0, 0, 100, 100);
     mockInitMbr = new Mbr(0, 0, 100, 100);
 
-    // Mock Items
-    mockRichText = {
+    // Mock Items — use Object.create so instanceof checks pass
+    mockRichText = Object.assign(Object.create(RichText.prototype), {
       getId: () => "richText1",
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWidth: () => 40,
@@ -54,9 +54,9 @@ describe("handleMultipleItemsResize", () => {
       editor: {
         setMaxWidth: jest.fn(),
       },
-    } as unknown as RichText;
+    }) as unknown as RichText;
 
-    mockAINode = {
+    mockAINode = Object.assign(Object.create(AINode.prototype), {
       getId: () => "aiNode1",
       getMbr: () => new Mbr(20, 20, 60, 60),
       text: {
@@ -68,13 +68,13 @@ describe("handleMultipleItemsResize", () => {
       transformation: {
         getScale: () => ({ x: 1, y: 1 }),
       },
-    } as unknown as AINode;
+    }) as unknown as AINode;
 
-    mockSticker = {
+    mockSticker = Object.assign(Object.create(Sticker.prototype), {
       getId: () => "sticker1",
       getMbr: () => new Mbr(30, 30, 70, 70),
       itemType: "Sticker",
-    } as unknown as Sticker;
+    }) as unknown as Sticker;
 
     mockFrame = {
       getId: () => "frame1",
@@ -195,10 +195,7 @@ describe("handleMultipleItemsResize", () => {
       itemType: "Drawing",
       getMbr: () => new Mbr(50, 50, 90, 90),
       transformation: {
-        matrix: {
-          translateX: 50,
-          translateY: 50,
-        },
+        getMatrixData: () => ({ translateX: 50, translateY: 50 }),
       },
     } as unknown as Item;
 

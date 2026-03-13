@@ -48,7 +48,7 @@ describe("updateFrameChildren", () => {
     // Mock Board
     board = {
       items: {
-        getFramesEnclosedOrCrossed: jest
+        getGroupItemsEnclosedOrCrossed: jest
           .fn()
           .mockReturnValue([mockEnclosedFrame]),
         getEnclosedOrCrossed: jest.fn().mockReturnValue([mockItem]),

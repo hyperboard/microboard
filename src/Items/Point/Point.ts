@@ -1,5 +1,5 @@
 import { toFiniteNumber } from 'lib';
-import { Matrix } from '..';
+import { Matrix } from '../Transformation/Matrix';
 
 export class Point {
 	constructor(public x = 0, public y = 0) {

@@ -1,12 +1,20 @@
-import { Mbr, Point } from 'Items';
-import { Item } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import type { Point } from 'Items/Point/Point';
+import type { Item } from 'Items/Item';
 import { Layers } from './Layers';
 import { getContainersSortedByZIndex } from './getContainersSortedByZIndex';
 import { RTreeIndex } from '../RTreeIndex';
-export class Container extends Mbr {
+export class Container {
+	left: number;
+	top: number;
+	right: number;
+	bottom: number;
 	constructor(public id: string, public item: Item, public layer: number, public zIndex: number) {
 		const rect = item.getMbrWithChildren();
-		super(rect.left, rect.top, rect.right, rect.bottom);
+		this.left = rect.left;
+		this.top = rect.top;
+		this.right = rect.right;
+		this.bottom = rect.bottom;
 	}
 }
 

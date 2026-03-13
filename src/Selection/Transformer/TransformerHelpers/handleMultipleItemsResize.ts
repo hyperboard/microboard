@@ -8,7 +8,7 @@ import { RichText } from "Items/RichText/RichText";
 import { AINode } from "Items/AINode/AINode";
 import { Sticker } from "Items/Sticker/Sticker";
 import { Board } from "Board";
-import {Frame} from "../../../Items";
+import { Frame } from "Items/Frame/Frame";
 
 export function handleMultipleItemsResize({
   board,

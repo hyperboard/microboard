@@ -1,15 +1,12 @@
 import { Operation } from "Events";
 import { Subject } from "Subject";
-import {
-  Line,
-  Matrix,
-  Mbr,
-  Path,
-  Paths,
-  Point,
-  Transformation,
-  TransformationOperation,
-} from "..";
+import { Line } from "../Line";
+import { Matrix } from "../Transformation/Matrix";
+import { Mbr } from "../Mbr/Mbr";
+import { Path, Paths } from "../Path";
+import { Point } from "../Point/Point";
+import { Transformation } from "../Transformation/Transformation";
+import type { TransformationOperation } from "../Transformation/TransformationOperations";
 import { getProportionalResize } from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { ResizeType } from "../../Selection/Transformer/TransformerHelpers/getResizeType";
 import { DrawingContext } from "../DrawingContext";
