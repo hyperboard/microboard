@@ -1,5 +1,4 @@
 import { createEditor, Editor, Transforms } from "slate";
-import { withReact } from "slate-react";
 import { setLink } from "./setLink";
 import { CustomEditor } from "../../Editor/Editor";
 type TestEditor = CustomEditor;
@@ -8,7 +7,7 @@ describe("setLink", () => {
 	let editor: TestEditor;
 
 	beforeEach(() => {
-		editor = withReact(createEditor()) as TestEditor;
+		editor = createEditor() as TestEditor;
 		editor.children = [
 			{
 				type: "paragraph",

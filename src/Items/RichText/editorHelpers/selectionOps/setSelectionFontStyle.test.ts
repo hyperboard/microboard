@@ -1,6 +1,5 @@
 import { Editor, createEditor } from 'slate';
 import { setSelectionFontStyle } from './setSelectionFontStyle';
-import { withReact } from 'slate-react';
 import { TextStyle } from 'Items/RichText/Editor/TextNode';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 import { selectWholeText } from 'Items/RichText/editorHelpers/common/selectWholeText';
@@ -9,7 +8,7 @@ describe('setSelectionFontStyle', () => {
 	let editor: Editor;
 
 	beforeEach(() => {
-		editor = withReact(createEditor());
+		editor = createEditor();
 	});
 
 	it('applies style when no text has it', () => {
