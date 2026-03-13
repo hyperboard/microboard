@@ -261,14 +261,13 @@ export function getControlPoint(
 }
 
 export function toRelativePoint(point: Point, item: Item): Point {
-	const matrix = item.transformation?.matrix || new Matrix();
 	// const mbr = item.getMbr();
 	// const scaleX = (mbr.right - mbr.left) / 100;
 	// const scaleY = (mbr.bottom - mbr.top) / 100;
 	// const translateX = mbr.left;
 	// const translateY = mbr.top;
 	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
-	const inverse = matrix.getInverse();
+	const inverse = item.transformation ? item.transformation.getInverse().toMatrix() : new Matrix();
 	point = point.copy();
 	point.transform(inverse);
 	return point;
@@ -279,7 +278,7 @@ function fromRelativePoint(
 	item: Item,
 	edge?: Edge,
 ): Point {
-	const matrix = item.transformation?.matrix.copy() || new Matrix();
+	const matrix = item.transformation?.toMatrix() ?? new Matrix();
 	// const mbr = item.getMbr();
 	// const scaleX = item.transformation?.getScale().x || 1;
 	// const scaleY = item.transformation?.getScale().y || 1;
@@ -319,7 +318,7 @@ function fromRelativePoint(
 // 	item: Item,
 // 	edge?: Edge,
 // ): Point {
-// 	const matrix = item.transformation?.matrix.copy() || new Matrix();
+// 	const matrix = item.transformation?.matrix?.copy() || new Matrix();
 // 	const point = relativePoint.copy();
 // 	point.transform(matrix);
 //
