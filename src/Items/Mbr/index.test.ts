@@ -1,4 +1,4 @@
-import { assert } from "chai";
+import { describe, it, expect } from "bun:test";
 import { Mbr } from ".";
 import { Matrix } from "..";
 
@@ -6,12 +6,10 @@ describe("Mbr", () => {
 	it("increases bounds from center", () => {
 		const rect = new Mbr(-10, -10, 100, 100);
 		rect.scaleFromCenter(new Matrix(0, 0, 2, 3));
-		assert.isTrue(
-			rect.left === -20 &&
-				rect.top === -30 &&
-				rect.right === 200 &&
-				rect.bottom === 300,
-		);
+		expect(rect.left).toBe(-20);
+		expect(rect.top).toBe(-30);
+		expect(rect.right).toBe(200);
+		expect(rect.bottom).toBe(300);
 	});
 	/*
 
