@@ -33,8 +33,11 @@ export class Camera {
 	boardId = '';
 	private observableItem: Item | null = null;
 	private throttledZoom: () => void;
-	private isAnimating = false;
 	isTrackingAnimation = false;
+	private localAnimationTarget: { translateX: number; translateY: number; scaleX: number; scaleY: number } | null = null;
+	private localAnimationId: number | null = null;
+	private localLastTime: number | null = null;
+	private localSpringVelocity = { translateX: 0, translateY: 0, scaleX: 0, scaleY: 0 };
 	private trackingAnimationId: number | null = null;
 	private trackingTarget: Matrix | null = null;
 	private lastTrackingTime: number | null = null;
@@ -126,7 +129,7 @@ export class Camera {
 	view(_left: number, _top: number, _scale: number): void {}
 
 	zoomRelativeToPointerBy(scale: number): void {
-		this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y, 0);
+		this.zoomRelativeToPointBy(scale, this.pointer.x, this.pointer.y);
 	}
 
 	zoomRelativeToPointBy(scale: number, x: number, y: number, duration = 400): void {
@@ -149,7 +152,6 @@ export class Camera {
 			return;
 		}
 
-		// If duration is 0, apply changes instantly without animation
 		if (duration === 0) {
 			this.matrix.translateX = targetTranslateX;
 			this.matrix.translateY = targetTranslateY;
@@ -159,28 +161,12 @@ export class Camera {
 			return;
 		}
 
-		const startTime = performance.now();
-
-		const animate = (currentTime?: number): void => {
-			if (!currentTime) {
-				currentTime = performance.now();
-			}
-			const progress = Math.min((currentTime - startTime) / duration, 1);
-			const easedProgress = this.easeOutQuad(progress);
-
-			this.matrix.translateX = this.lerp(startTranslateX, targetTranslateX, easedProgress);
-			this.matrix.translateY = this.lerp(startTranslateY, targetTranslateY, easedProgress);
-			this.matrix.scaleX = this.lerp(startScaleX, finalScaleX, easedProgress);
-			this.matrix.scaleY = this.lerp(startScaleY, finalScaleY, easedProgress);
-
-			this.subject.publish(this);
-
-			if (progress < 1) {
-				safeRequestAnimationFrame(animate);
-			}
-		};
-
-		safeRequestAnimationFrame(animate);
+		this.animateLocalToTarget({
+			translateX: targetTranslateX,
+			translateY: targetTranslateY,
+			scaleX: finalScaleX,
+			scaleY: finalScaleY,
+		});
 	}
 
 	saveDownEvent(event: PointerEvent): void {
@@ -507,15 +493,6 @@ export class Camera {
 	}
 
 	viewRectangle(mbr: Mbr, offsetInPercent = 10, duration = 500): void {
-		if (duration <= 0) {
-			duration = 1;
-		}
-
-		if (this.isAnimating) {
-			return; // Если анимация уже выполняется, выходим
-		}
-		this.isAnimating = true;
-
 		if (mbr.left === mbr.right && mbr.bottom === mbr.top) {
 			mbr.left -= 100;
 			mbr.right += 100;
@@ -550,10 +527,6 @@ export class Camera {
 		const translationY =
 			this.window.height / 2 - (mbrWithOffset.top + mbrHeight / 2) * targetScale;
 
-		const startTranslationX = this.matrix.translateX;
-		const startTranslationY = this.matrix.translateY;
-		const startScale = this.matrix.scaleX;
-
 		if (duration === 0) {
 			this.matrix.translateX = translationX;
 			this.matrix.translateY = translationY;
@@ -563,36 +536,95 @@ export class Camera {
 			return;
 		}
 
-		const startTime = performance.now();
+		this.animateLocalToTarget({
+			translateX: translationX,
+			translateY: translationY,
+			scaleX: targetScale,
+			scaleY: targetScale,
+		});
+	}
 
-		const animate = (): void => {
-			const currentTime = performance.now();
-			const progress = Math.min((currentTime - startTime) / duration, 1);
-			const easedProgress = this.easeOutQuad(progress);
+	cancelLocalAnimation(): void {
+		if (this.localAnimationId !== null) {
+			cancelAnimationFrame(this.localAnimationId);
+			this.localAnimationId = null;
+		}
+		this.localAnimationTarget = null;
+		this.localLastTime = null;
+		this.localSpringVelocity = { translateX: 0, translateY: 0, scaleX: 0, scaleY: 0 };
+	}
 
-			this.matrix.translateX = this.lerp(startTranslationX, translationX, easedProgress);
-			this.matrix.translateY = this.lerp(startTranslationY, translationY, easedProgress);
-			this.matrix.scaleX = this.lerp(startScale, targetScale, easedProgress);
-			this.matrix.scaleY = this.matrix.scaleX;
+	private animateLocalToTarget(target: { translateX: number; translateY: number; scaleX: number; scaleY: number }): void {
+		this.localAnimationTarget = target;
+		if (this.localAnimationId !== null) {
+			return; // loop already running, target updated above
+		}
 
-			this.subject.publish(this);
+		this.localLastTime = null;
 
-			if (progress < 1) {
-				safeRequestAnimationFrame(animate);
-			} else {
-				this.isAnimating = false;
-			}
+		// Same critically-damped spring as animateToMatrix
+		const STIFFNESS = 150;
+		const DAMPING = 28;
+		const SNAP_PX = 0.5;
+		const SNAP_SCALE = 0.0005;
+		const SNAP_VEL = 1;
+
+		const springStep = (pos: number, tgt: number, vel: number, dt: number): [number, number] => {
+			const acc = STIFFNESS * (tgt - pos) - DAMPING * vel;
+			const newVel = vel + acc * dt;
+			return [pos + newVel * dt, newVel];
 		};
 
-		safeRequestAnimationFrame(animate);
-	}
+		const loop = (): void => {
+			const tgt = this.localAnimationTarget;
+			if (!tgt) {
+				this.localAnimationId = null;
+				return;
+			}
 
-	private lerp(a: number, b: number, time: number): number {
-		return a + (b - a) * time;
-	}
+			const now = performance.now();
+			const dt = Math.min(this.localLastTime !== null ? now - this.localLastTime : 16, 50) / 1000;
+			this.localLastTime = now;
 
-	private easeOutQuad(time: number): number {
-		return time * (2 - time);
+			const v = this.localSpringVelocity;
+			const [tx, vtx] = springStep(this.matrix.translateX, tgt.translateX, v.translateX, dt);
+			const [ty, vty] = springStep(this.matrix.translateY, tgt.translateY, v.translateY, dt);
+			const [sx, vsx] = springStep(this.matrix.scaleX, tgt.scaleX, v.scaleX, dt);
+			const [sy, vsy] = springStep(this.matrix.scaleY, tgt.scaleY, v.scaleY, dt);
+
+			this.matrix.translateX = tx;
+			this.matrix.translateY = ty;
+			this.matrix.scaleX = sx;
+			this.matrix.scaleY = sy;
+			this.localSpringVelocity = { translateX: vtx, translateY: vty, scaleX: vsx, scaleY: vsy };
+			this.updateBoardPointer();
+			this.subject.publish(this);
+
+			const settled =
+				Math.abs(tgt.translateX - tx) < SNAP_PX &&
+				Math.abs(tgt.translateY - ty) < SNAP_PX &&
+				Math.abs(tgt.scaleX - sx) < SNAP_SCALE &&
+				Math.abs(vtx) < SNAP_VEL &&
+				Math.abs(vty) < SNAP_VEL;
+
+			if (settled) {
+				this.matrix.translateX = tgt.translateX;
+				this.matrix.translateY = tgt.translateY;
+				this.matrix.scaleX = tgt.scaleX;
+				this.matrix.scaleY = tgt.scaleY;
+				this.localSpringVelocity = { translateX: 0, translateY: 0, scaleX: 0, scaleY: 0 };
+				this.localAnimationTarget = null;
+				this.localAnimationId = null;
+				this.localLastTime = null;
+				this.updateBoardPointer();
+				this.subject.publish(this);
+				return;
+			}
+
+			this.localAnimationId = safeRequestAnimationFrame(loop) || null;
+		};
+
+		this.localAnimationId = safeRequestAnimationFrame(loop) || null;
 	}
 
 	zoomToFit(rect: Mbr, offsetInPercent = 10, duration = 480): void {
@@ -604,12 +636,14 @@ export class Camera {
 	}
 
 	translateTo(x: number, y: number): void {
+		this.cancelLocalAnimation();
 		this.matrix.translate(x, y);
 		this.updateBoardPointer();
 		this.subject.publish(this);
 	}
 
 	translateBy(x: number, y: number): void {
+		this.cancelLocalAnimation();
 		this.matrix.translate(x * this.matrix.scaleX, y * this.matrix.scaleY);
 		this.updateBoardPointer();
 		this.subject.publish(this);
