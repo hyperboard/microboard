@@ -1,5 +1,5 @@
 import { TextStyle } from 'Items/RichText/Editor/TextNode';
-import { Editor } from 'slate';
+import { Editor, Range, Transforms } from 'slate';
 import { getEachNodeInSelectionStyles } from 'Items/RichText/editorHelpers/common/getEachNodeInSelectionStyles';
 
 export function setSelectionFontStyle(editor: Editor, style: TextStyle | TextStyle[]): void {
@@ -14,10 +14,28 @@ export function setSelectionFontStyle(editor: Editor, style: TextStyle | TextSty
 			styleArr => !styleArr.includes(style)
 		);
 
+		let value: boolean;
 		if (isAllNodesContainStyle) {
-			Editor.addMark(editor, style, false);
+			value = false;
 		} else if (isSomeNodeContainStyle || isAllNodesNotContainStyle) {
-			Editor.addMark(editor, style, true);
+			value = true;
+		} else {
+			continue;
+		}
+
+		const { selection } = editor;
+		if (selection && Range.isExpanded(selection)) {
+			Transforms.setNodes(
+				editor,
+				{ [style]: value } as Parameters<typeof Transforms.setNodes>[1],
+				{
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					match: n => !Editor.isEditor(n) && (n as any).type === 'text',
+					split: true,
+				}
+			);
+		} else {
+			Editor.addMark(editor, style, value);
 		}
 	}
 }

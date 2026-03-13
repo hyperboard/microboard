@@ -19,7 +19,15 @@ export const setLink = (
 
 	const format = link ? 'rgba(71, 120, 245, 1)' : 'rgb(20, 21, 26)';
 
-	Editor.addMark(editor, 'fontColor', format);
+	Transforms.setNodes(
+		editor,
+		{ fontColor: format } as Parameters<typeof Transforms.setNodes>[1],
+		{
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			match: n => !Editor.isEditor(n) && (n as any).type === 'text',
+			split: true,
+		}
+	);
 
 	for (const [node, path] of Editor.nodes(editor, {
 		match: n => !Editor.isEditor(n) && n.type === 'text',

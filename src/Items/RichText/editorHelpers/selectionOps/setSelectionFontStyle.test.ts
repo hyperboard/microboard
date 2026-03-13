@@ -22,7 +22,7 @@ describe('setSelectionFontStyle', () => {
 
 		setSelectionFontStyle(editor, 'bold');
 
-		expect(getSelectionMarks(editor)?.bold).toEqual(true);
+		expect((editor.children[0] as any).children[0].bold).toBe(true);
 	});
 
 	it('removes style when all text has it', () => {
@@ -39,7 +39,7 @@ describe('setSelectionFontStyle', () => {
 
 		setSelectionFontStyle(editor, 'bold');
 
-		expect(getSelectionMarks(editor)?.bold).toEqual(false);
+		expect((editor.children[0] as any).children[0].bold).toBe(false);
 	});
 
 	it('applies style when some text has it', () => {
@@ -76,11 +76,9 @@ describe('setSelectionFontStyle', () => {
 
 		setSelectionFontStyle(editor, ['bold', 'italic']);
 
-		expect(getSelectionMarks(editor)).toEqual({
-			type: 'text',
-			bold: true,
-			italic: false,
-		});
+		const node = (editor.children[0] as any).children[0];
+		expect(node.bold).toBe(true);
+		expect(node.italic).toBe(false);
 	});
 
 	it('handles empty selection gracefully', () => {
@@ -132,18 +130,19 @@ describe('setSelectionFontStyle', () => {
 
 		// First call should apply both styles since they're mixed
 		setSelectionFontStyle(editor, ['bold', 'italic']);
-		expect(getSelectionMarks(editor)).toEqual({
-			type: 'text',
-			bold: true,
-			italic: true,
+		// Slate may merge adjacent nodes with identical marks after normalization
+		const children1 = (editor.children[0] as any).children;
+		children1.forEach((child: any) => {
+			expect(child.bold).toBe(true);
+			expect(child.italic).toBe(true);
 		});
 
 		// Second call should remove both styles since they're now all applied
 		setSelectionFontStyle(editor, ['bold', 'italic']);
-		expect(getSelectionMarks(editor)).toEqual({
-			type: 'text',
-			bold: false,
-			italic: false,
+		const children2 = (editor.children[0] as any).children;
+		children2.forEach((child: any) => {
+			expect(child.bold).toBe(false);
+			expect(child.italic).toBe(false);
 		});
 	});
 
@@ -167,7 +166,7 @@ describe('setSelectionFontStyle', () => {
 		allStyles.forEach(style => {
 			// Apply style
 			setSelectionFontStyle(editor, style);
-			expect(getSelectionMarks(editor)[style]).toEqual(true);
+			expect((editor.children[0] as any).children[0][style]).toBe(true);
 		});
 	});
 });
