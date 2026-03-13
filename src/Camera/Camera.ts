@@ -133,28 +133,33 @@ export class Camera {
 	}
 
 	zoomRelativeToPointBy(scale: number, x: number, y: number, duration = 400): void {
-		const startScaleX = this.matrix.scaleX;
-		const startScaleY = this.matrix.scaleY;
-		const startTranslateX = this.matrix.translateX;
-		const startTranslateY = this.matrix.translateY;
+		// When a spring animation is in progress, base the new target on the existing
+		// target position (not the mid-animation matrix) so that rapid events accumulate
+		// correctly (e.g. three quick scroll ticks each add ×1.1, not each restart from
+		// wherever the spring currently happens to be).
+		const base = this.localAnimationTarget ?? this.matrix;
+		const startScaleX = base.scaleX;
+		const startScaleY = base.scaleY;
+		const startTranslateX = base.translateX;
+		const startTranslateY = base.translateY;
 
 		const boardPointX = (x - startTranslateX) / startScaleX;
 		const boardPointY = (y - startTranslateY) / startScaleY;
-		const targetScaleX = startScaleX * scale;
-		const targetScaleY = startScaleY * scale;
-		const targetTranslateX = x - boardPointX * targetScaleX;
-		const targetTranslateY = y - boardPointY * targetScaleY;
-
-		const finalScaleX = this.limitScale(targetScaleX);
-		const finalScaleY = this.limitScale(targetScaleY);
+		const finalScaleX = this.limitScale(startScaleX * scale);
+		const finalScaleY = this.limitScale(startScaleY * scale);
 
 		if (finalScaleX === startScaleX && finalScaleY === startScaleY) {
 			return;
 		}
 
+		// Derive translation from the clamped scale so that hitting the scale
+		// limit never produces a spurious pan offset.
+		const finalTranslateX = x - boardPointX * finalScaleX;
+		const finalTranslateY = y - boardPointY * finalScaleY;
+
 		if (duration === 0) {
-			this.matrix.translateX = targetTranslateX;
-			this.matrix.translateY = targetTranslateY;
+			this.matrix.translateX = finalTranslateX;
+			this.matrix.translateY = finalTranslateY;
 			this.matrix.scaleX = finalScaleX;
 			this.matrix.scaleY = finalScaleY;
 			this.subject.publish(this);
@@ -162,8 +167,8 @@ export class Camera {
 		}
 
 		this.animateLocalToTarget({
-			translateX: targetTranslateX,
-			translateY: targetTranslateY,
+			translateX: finalTranslateX,
+			translateY: finalTranslateY,
 			scaleX: finalScaleX,
 			scaleY: finalScaleY,
 		});
