@@ -1,5 +1,5 @@
 import { Path2DFactory } from "./api/Path2DFactory";
-import { BoardSnapshot } from "./Board";
+import type { BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { MockDocumentFactory } from "./api/MockDocumentFactory";
@@ -7,7 +7,7 @@ import { MockPath2D } from "api/MockPath2D";
 import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
-import { BorderStyle } from "Items";
+import type { BorderStyle } from "Items/Path/Path";
 
 export interface Connection {
   connectionId: number;

@@ -1,3 +1,4 @@
+import type { BaseSelection } from "slate";
 import { Board } from "Board";
 import { createCommand } from "../Command";
 import { SyncEvent, BoardEvent, SyncBoardEvent } from "../Events";
@@ -22,6 +23,25 @@ export function insertEventsFromOtherConnectionsIntoList(
 	// handleRemoveSnappedObject(board, events, list);
 
 	board.selection.memoize();
+
+	// Capture the local RichText edit op selection for the focused text item
+	// so we can OT-adjust the memoized user cursor after re-applying unconfirmed ops.
+	const focusedTextId = board.selection.memorySnapshot?.focus?.textToEdit;
+	let localOpOriginalSelection: BaseSelection = null;
+	if (focusedTextId) {
+		const allUnconfirmed = [...list.getRecordsToSend(), ...list.getNewRecords()];
+		for (const rec of allUnconfirmed) {
+			const op = rec.event.body.operation;
+			if (op.class === "RichText" && op.method === "edit") {
+				const items = Array.isArray(op.item) ? op.item : [op.item];
+				if (items.includes(focusedTextId)) {
+					localOpOriginalSelection = (op as { selection: BaseSelection }).selection;
+					break;
+				}
+			}
+		}
+	}
+
 	const createdItems: string[] = [];
 	const updatedText: string[] = [];
 	const filter: FilterPredicate = rec => {
@@ -30,6 +50,10 @@ export function insertEventsFromOtherConnectionsIntoList(
 			const creating = Array.isArray(op.item) ? op.item : [op.item];
 			createdItems.push(...creating);
 			return false;
+		}
+		if (op.class === "RichText" && op.method === "edit") {
+			const items = Array.isArray(op.item) ? op.item : [op.item];
+			updatedText.push(...items);
 		}
 		return true;
 	};
@@ -55,7 +79,43 @@ export function insertEventsFromOtherConnectionsIntoList(
 		return arr2.some(item => lookup.has(item));
 	};
 	const currSelection = board.selection.list().map(item => item.getId());
+
+	// If the focused text item had a local edit op, apply OT-adjusted memoized cursor.
+	// We compute the OT delta as: (cursor after re-apply) - (original local op selection),
+	// then apply that delta to the memoized user cursor.
+	const memoizedCursor = board.selection.memorySnapshot?.focus?.selection;
 	if (
+		focusedTextId &&
+		localOpOriginalSelection &&
+		memoizedCursor &&
+		hasAnyOverlap(currSelection, updatedText)
+	) {
+		const rt = board.items.getById(focusedTextId)?.getRichText();
+		if (rt) {
+			const otAdjustedCursor = rt.editor.getSelection();
+			if (
+				otAdjustedCursor &&
+				memoizedCursor.anchor.path.length > 0 &&
+				memoizedCursor.focus.path.length > 0
+			) {
+				const deltaAnchor =
+					otAdjustedCursor.anchor.offset - (localOpOriginalSelection?.anchor?.offset ?? 0);
+				const deltaFocus =
+					otAdjustedCursor.focus.offset - (localOpOriginalSelection?.focus?.offset ?? 0);
+				const adjustedSelection = {
+					anchor: {
+						path: memoizedCursor.anchor.path,
+						offset: memoizedCursor.anchor.offset + deltaAnchor,
+					},
+					focus: {
+						path: memoizedCursor.focus.path,
+						offset: memoizedCursor.focus.offset + deltaFocus,
+					},
+				};
+				rt.editorTransforms.select(rt.editor.editor, adjustedSelection);
+			}
+		}
+	} else if (
 		hasAnyOverlap(currSelection, createdItems) ||
 		hasAnyOverlap(currSelection, updatedText)
 	) {

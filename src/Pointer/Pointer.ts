@@ -1,4 +1,5 @@
-import { Point, Matrix } from 'Items';
+import { Point } from 'Items/Point';
+import { Matrix } from 'Items/Transformation/Matrix';
 import { Subject } from 'Subject';
 import { CursorsMap, CursorName, Cursor } from './Cursor';
 
