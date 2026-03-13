@@ -1,4 +1,3 @@
-import { describe, test, expect } from "@jest/globals";
 import { getLinesRelationType, Line } from ".";
 import { Mbr } from "../Mbr";
 import { Point } from "../Point";

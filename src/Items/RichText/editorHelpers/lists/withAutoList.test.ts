@@ -2,7 +2,6 @@ import { createEditor, Descendant } from "slate";
 import { withReact } from "slate-react";
 import { withAutoList } from "./withAutoList";
 import { CustomEditor } from "../../Editor/Editor";
-import { describe, it, expect, beforeEach } from "@jest/globals";
 import { TextNode } from "../../Editor/TextNode";
 
 // Define the extended editor type for tests

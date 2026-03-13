@@ -2,8 +2,6 @@ import { createEditor, Editor, Transforms } from "slate";
 import { withReact } from "slate-react";
 import { setLink } from "./setLink";
 import { CustomEditor } from "../../Editor/Editor";
-import { describe, it, expect, beforeEach } from "@jest/globals";
-
 type TestEditor = CustomEditor;
 
 describe("setLink", () => {

@@ -1,7 +1,6 @@
 import { createEditor, Editor } from "slate";
 import { withReact } from "slate-react";
 import { applySelectionFontColor } from "./applySelectionFontColor";
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 
 // Define a mock function manually
 const addMarkMock = jest.fn();

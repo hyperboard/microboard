@@ -1,4 +1,3 @@
-import { describe, expect, test } from "@jest/globals";
 import { CubicBezier } from ".";
 import { Mbr } from "../Mbr";
 import { Line } from "../Line";

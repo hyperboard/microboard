@@ -2,7 +2,6 @@ import { createEditor, Descendant, Node } from "slate";
 import { withReact } from "slate-react";
 import { handleSplitListItem } from "./handleSplitListItem";
 import { CustomEditor } from "../../Editor/Editor";
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { TextNode } from "../../Editor/TextNode";
 import { BulletedListNode, NumberedListNode } from "../../Editor/BlockNode";
 

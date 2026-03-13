@@ -2,7 +2,6 @@ import { createEditor, Descendant } from "slate";
 import { withReact } from "slate-react";
 import { toggleListType } from "./toggleListType";
 import { CustomEditor } from "../../Editor/Editor";
-import { describe, it, expect, beforeEach } from "@jest/globals";
 import { TextNode } from "../../Editor/TextNode";
 import {
 	BulletedListNode,
