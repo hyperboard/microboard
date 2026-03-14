@@ -193,7 +193,6 @@ export class Sticker extends BaseItem {
     this.text.setContainer(this.textContainer.copy());
     this.textContainer.transform(this.transformation.toMatrix());
     // this.text.setContainer(this.textContainer);
-    this.stickerPath.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
     this.saveStickerData();
   }
 
@@ -243,7 +242,6 @@ export class Sticker extends BaseItem {
 
   private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
-    this.stickerPath.setBackgroundColor(resolveColor(backgroundColor, conf.theme, 'background'));
   }
 
   setBackgroundColor(backgroundColor: ColorValue): void {
@@ -308,6 +306,7 @@ export class Sticker extends BaseItem {
       return;
     }
     this.renderShadow(context);
+    this.stickerPath.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
     this.stickerPath.render(context);
     this.text.render(context);
     if (this.getLinkTo()) {

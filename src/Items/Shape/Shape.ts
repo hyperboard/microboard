@@ -298,7 +298,6 @@ export class Shape extends BaseItem {
 
   private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
-    this.path.setBackgroundColor(resolveColor(backgroundColor, conf.theme, 'background'));
   }
 
   setBackgroundColor(backgroundColor: ColorValue): void {
@@ -342,7 +341,6 @@ export class Shape extends BaseItem {
 
   private applyBorderColor(borderColor: ColorValue): void {
     this.borderColor = borderColor;
-    this.path.setBorderColor(resolveColor(borderColor, conf.theme, 'foreground'));
   }
 
   setBorderColor(borderColor: ColorValue): void {
@@ -485,6 +483,8 @@ export class Shape extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
+    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
+    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, 'foreground'));
     this.path.render(context);
     this.text.render(context);
     if (this.getLinkTo()) {
@@ -630,9 +630,7 @@ export class Shape extends BaseItem {
 		*/
     this.path.transform(this.transformation.toMatrix());
 
-    this.path.setBackgroundColor(this.backgroundColor);
     this.path.setBackgroundOpacity(this.backgroundOpacity);
-    this.path.setBorderColor(this.borderColor);
     this.path.setBorderWidth(this.borderWidth);
     this.path.setBorderStyle(this.borderStyle);
     this.path.setBorderOpacity(this.borderOpacity);

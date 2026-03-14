@@ -429,9 +429,7 @@ export class Frame extends BaseItem {
     // console.log(this.transformation.getScale().y);
     // this.text.setContainer(Frames[this.shapeType].textBounds.copy().getTransformed(textMatrix));
 
-    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
     this.path.setBackgroundOpacity(this.backgroundOpacity);
-    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, 'foreground'));
     this.path.setBorderWidth(this.borderWidth);
     this.path.setBorderStyle(this.borderStyle);
     this.path.setBorderOpacity(this.borderOpacity);
@@ -633,7 +631,6 @@ export class Frame extends BaseItem {
 
   private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
-    this.path.setBackgroundColor(resolveColor(backgroundColor, conf.theme, 'background'));
   }
 
   setBackgroundColor(backgroundColor: ColorValue): void {
@@ -695,6 +692,8 @@ export class Frame extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
+    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
+    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, 'foreground'));
     this.path.render(context);
     this.renderNewShape(context);
     if (this.getLinkTo()) {

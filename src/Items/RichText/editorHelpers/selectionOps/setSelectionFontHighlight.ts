@@ -1,10 +1,11 @@
 import { Editor } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
+import type { ColorValue } from 'Color';
 
 export function setSelectionFontHighlight(
 	editor: Editor,
-	format: string,
+	format: string | ColorValue,
 	selectionContext?: string
 ): void {
 	if (!editor) {
@@ -17,7 +18,7 @@ export function setSelectionFontHighlight(
 
 	if (format === 'none') {
 		Editor.removeMark(editor, 'fontHighlight');
-	} else if (marks.fontHighlight === format) {
+	} else if (typeof format === 'string' && marks.fontHighlight === format) {
 		Editor.removeMark(editor, 'fontHighlight');
 	} else {
 		Editor.addMark(editor, 'fontHighlight', format);

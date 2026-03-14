@@ -650,6 +650,12 @@ export class Connector extends BaseItem {
 		mbr.borderStyle = 'solid';
 		// mbr.render(context)
 		this.clipText(context);
+		const resolvedLineColor = resolveColor(this.lineColor, conf.theme, 'foreground');
+		this.lines.setBorderColor(resolvedLineColor);
+		this.startPointer.path.setBorderColor(resolvedLineColor);
+		this.startPointer.path.setBackgroundColor(resolvedLineColor);
+		this.endPointer.path.setBorderColor(resolvedLineColor);
+		this.endPointer.path.setBackgroundColor(resolvedLineColor);
 		if (
 			!this.text.isRenderEnabled &&
 			this.board.selection.getContext() !== 'EditTextUnderPointer'
@@ -1093,10 +1099,7 @@ export class Connector extends BaseItem {
 			this.lines,
 			this.lineWidth * 0.1 + 0.2
 		);
-		const resolvedLineColor = resolveColor(this.lineColor, conf.theme, 'foreground');
-		this.startPointer.path.setBorderColor(resolvedLineColor);
 		this.startPointer.path.setBorderWidth(this.lineWidth);
-		this.startPointer.path.setBackgroundColor(resolvedLineColor);
 		this.endPointer = getEndPointer(
 			endPoint,
 			this.endPointerStyle,
@@ -1104,14 +1107,11 @@ export class Connector extends BaseItem {
 			this.lines,
 			this.lineWidth * 0.1 + 0.2
 		);
-		this.endPointer.path.setBorderColor(resolvedLineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
-		this.endPointer.path.setBackgroundColor(resolvedLineColor);
 
 		this.offsetLines();
 
 		this.lines.setBorderWidth(this.lineWidth);
-		this.lines.setBorderColor(resolvedLineColor);
 		this.lines.setBorderStyle(this.borderStyle);
 
 		this.updateTitle();

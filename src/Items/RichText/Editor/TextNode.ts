@@ -1,4 +1,5 @@
 import { HorisontalAlignment } from "../../Alignment";
+import type { ColorValue } from "Color";
 
 export const TextStyles = [
 	"bold",
@@ -26,9 +27,9 @@ export type TextNode = {
 	subscript: boolean;
 	superscript: boolean;
 	fontFamily?: string;
-	fontColor?: string;
+	fontColor?: string | ColorValue;
 	fontSize?: number | "auto";
-	fontHighlight?: string;
+	fontHighlight?: string | ColorValue;
 	enableAuto?: boolean;
 	paddingTop?: number;
 	paddingBottom?: number;

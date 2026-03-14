@@ -1,4 +1,5 @@
 import { conf } from 'Settings';
+import { resolveColor } from 'Color';
 import { BlockNode } from '../Editor/BlockNode';
 import { TextNode } from '../Editor/TextNode';
 import { LayoutBlockNodes } from './LayoutBlockNodes';
@@ -329,8 +330,8 @@ function getTextNode(data: TextNode): LayoutTextNode {
 interface LeafStyle {
 	fontStyle: string;
 	fontWeight: string;
-	color: string;
-	backgroundColor: string | undefined;
+	color: string | import("Color").ColorValue;
+	backgroundColor: string | import("Color").ColorValue | undefined;
 	fontSize: number | "auto";
 	fontFamily: string;
 	textDecorationLine?: 'underline';
@@ -979,7 +980,7 @@ function fillHighlight(ctx: Ctx, textBlock: LayoutTextBlock): void {
 		return;
 	}
 	const measure = textBlock.measure;
-	ctx.fillStyle = textBlock.style.backgroundColor;
+	ctx.fillStyle = resolveColor(textBlock.style.backgroundColor, conf.theme, 'background');
 	ctx.fillRect(textBlock.x, textBlock.y - measure.ascent, measure.width, measure.height);
 }
 
@@ -995,14 +996,15 @@ function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const style = textBlock.style;
 	const measure = textBlock.measure;
 	const width = measure.width - (textBlock.marginLeft || 0);
-	const color = style.color;
-	ctx.strokeStyle = color;
+	ctx.strokeStyle = resolveColor(style.color, conf.theme, 'foreground');
 	ctx.lineWidth = textBlock.fontSize / 14;
 	ctx.beginPath();
 	ctx.moveTo(x, y + (2 * textBlock.fontSize) / 14); // 14 - default fontSize
 	ctx.lineTo(x + width, y + (2 * textBlock.fontSize) / 14);
 	ctx.stroke();
-	ctx.strokeStyle = style.backgroundColor ?? 'black';
+	ctx.strokeStyle = style.backgroundColor
+		? resolveColor(style.backgroundColor, conf.theme, 'background')
+		: 'black';
 	ctx.lineWidth = 2;
 	// ctx.strokeText(textBlock.text, x, y);
 }
@@ -1017,20 +1019,21 @@ function cross(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const measure = textBlock.measure;
 	const width = measure.width;
 	const height = measure.height;
-	const color = style.color;
-	ctx.strokeStyle = color;
+	ctx.strokeStyle = resolveColor(style.color, conf.theme, 'foreground');
 	ctx.lineWidth = textBlock.fontSize / 14;
 	ctx.beginPath();
 	ctx.moveTo(x, y - height / 4);
 	ctx.lineTo(x + width, y - height / 4);
 	ctx.stroke();
-	ctx.strokeStyle = style.backgroundColor ?? 'black';
+	ctx.strokeStyle = style.backgroundColor
+		? resolveColor(style.backgroundColor, conf.theme, 'background')
+		: 'black';
 	ctx.lineWidth = 2;
 }
 
 function fillText(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const { text, style, x, y } = textBlock;
-	ctx.fillStyle = style.color;
+	ctx.fillStyle = resolveColor(style.color, conf.theme, 'foreground');
 	ctx.fillText(text, x, y);
 	if (textBlock.listMark) {
 		ctx.fillText(textBlock.listMark, x - measureText(textBlock.listMark, style).width - 4, y);

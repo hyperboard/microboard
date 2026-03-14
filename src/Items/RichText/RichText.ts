@@ -7,6 +7,7 @@ import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
 import { decodeHtml } from "parserHTML";
 import { SelectionContext } from "Selection";
 import { conf, DefaultTextStyles } from "Settings";
+import { resolveColor } from "Color";
 import { Subject } from "Subject";
 import {
   BaseRange,
@@ -86,7 +87,7 @@ export class RichText extends BaseItem {
   private selection?: BaseSelection;
   transformationRenderBlock?: boolean = undefined;
   lastClickPoint?: Point;
-  initialFontColor?: string;
+  initialFontColor?: string | import("Color").ColorValue;
   frameMbr?: Mbr;
   private _onLimitReached: () => void = () => {};
   private shrinkWidth = false;
@@ -660,7 +661,7 @@ export class RichText extends BaseItem {
     return ops;
   }
 
-  applySelectionFontColor(fontColor: string): void {
+  applySelectionFontColor(fontColor: string | import("Color").ColorValue): void {
     this.editor.shouldEmit = false;
     applySelectionFontColor(this.editor.editor, fontColor);
     this.editor.shouldEmit = true;
@@ -767,7 +768,7 @@ export class RichText extends BaseItem {
     return styles ?? [];
   }
 
-  getFontColor(): string {
+  getFontColor(): string | import("Color").ColorValue {
     const marks = this.editor.getSelectionMarks();
     if (this.initialFontColor) {
       const color = this.initialFontColor;
@@ -820,7 +821,7 @@ export class RichText extends BaseItem {
     return this.initialTextStyles.fontSize;
   }
 
-  getFontHighlight(): string {
+  getFontHighlight(): string | import("Color").ColorValue {
     const marks = this.editor.getSelectionMarks();
     return marks?.fontHighlight ?? this.initialTextStyles.fontHighlight;
   }
@@ -1063,9 +1064,12 @@ export class RichText extends BaseItem {
           ]
             .filter(Boolean)
             .join(" "),
-          color: node.fontColor || conf.DEFAULT_TEXT_STYLES.fontColor,
-          backgroundColor:
-            node.fontHighlight || conf.DEFAULT_TEXT_STYLES.fontHighlight,
+          color: node.fontColor
+            ? resolveColor(node.fontColor, conf.theme, 'foreground')
+            : conf.DEFAULT_TEXT_STYLES.fontColor,
+          backgroundColor: node.fontHighlight
+            ? resolveColor(node.fontHighlight, conf.theme, 'background')
+            : conf.DEFAULT_TEXT_STYLES.fontHighlight,
           fontSize: node.fontSize
             ? `${node.fontSize}px`
             : `${conf.DEFAULT_TEXT_STYLES.fontSize}px`,
