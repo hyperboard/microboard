@@ -25,6 +25,7 @@ import {
 } from "Items";
 import { AINode } from "Items/AINode";
 import { ControlPointData } from "Items/Connector/ControlPoint";
+import { drawBackground } from "Background";
 import { DrawingContext } from "Items/DrawingContext";
 import { Group } from "Items/Group";
 import { ImageItem } from "Items/Image";
@@ -130,6 +131,15 @@ export class Board {
 
   setDrawingContext(context: DrawingContext): void {
     this.drawingContext = context;
+  }
+
+  render(context: DrawingContext): void {
+    context.clear();
+    drawBackground(context);
+    this.index.items.render(context);
+    this.selection.render(context);
+    this.tools.render(context);
+    this.presence.render(context);
   }
 
   apply(op: Operation): void {
