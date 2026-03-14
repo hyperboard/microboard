@@ -1,11 +1,13 @@
 import { Board } from 'Board';
+import { Drawing } from 'Items/Drawing';
 import { BorderStyle } from 'Items/Path';
 import { conf } from 'Settings';
+import { ColorValue, semanticColor } from 'Color';
 import { AddDrawing } from './AddDrawing';
 
 export class AddHighlighter extends AddDrawing {
 	strokeWidth = conf.HIGHLIGHTER_INITIAL_STROKE_WIDTH;
-	strokeColor = conf.HIGHLIGHTER_DEFAULT_COLOR;
+	strokeColor: ColorValue | string = semanticColor('contrastGreen');
 	strokeStyle: BorderStyle = conf.PEN_STROKE_STYLE;
 
 	constructor(board: Board) {
@@ -25,6 +27,11 @@ export class AddHighlighter extends AddDrawing {
 
 	isHighlighter(): boolean {
 		return true;
+	}
+
+	protected applyDrawingRole(drawing: Drawing): void {
+		drawing.setColorRole('background');
+		drawing.setStrokeOpacity(0.5);
 	}
 
 	private updateSettings() {

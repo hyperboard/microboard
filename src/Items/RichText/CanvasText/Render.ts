@@ -1,5 +1,5 @@
 import { conf } from 'Settings';
-import { resolveColor } from 'Color';
+import { resolveColor, semanticColor } from 'Color';
 import { BlockNode } from '../Editor/BlockNode';
 import { TextNode } from '../Editor/TextNode';
 import { LayoutBlockNodes } from './LayoutBlockNodes';
@@ -344,7 +344,7 @@ function getTextStyle(data: TextNode): LeafStyle {
 	const leafStyle: LeafStyle = {
 		fontStyle: 'normal',
 		fontWeight: 'normal',
-		color: data.fontColor ?? 'black',
+		color: data.fontColor ?? semanticColor('contrastNeutral'),
 		backgroundColor: data.fontHighlight,
 		fontSize: data.fontSize ?? 14,
 		fontFamily: data.fontFamily ?? 'Arial',

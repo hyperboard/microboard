@@ -17,7 +17,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { Board } from "Board";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import { ColorValue, coerceColorValue, fixedColor, resolveColor } from "Color";
+import { ColorValue, ColorRole, coerceColorValue, resolveColor, semanticColor } from "Color";
 
 export interface DrawingData {
   itemType: "Drawing";
@@ -25,6 +25,7 @@ export interface DrawingData {
   transformation: TransformationData;
   strokeStyle: ColorValue | string; // string for legacy deserialization
   strokeWidth: number;
+  colorRole?: ColorRole; // 'foreground' for pen (default), 'background' for highlighter
   linkTo?: string;
 }
 
@@ -38,8 +39,9 @@ export class Drawing extends BaseItem {
   private lines: Line[] = [];
   readonly linkTo: LinkTo;
   strokeWidth: BorderWidth = 1;
-  borderColor: ColorValue = fixedColor(conf.PEN_DEFAULT_COLOR);
+  borderColor: ColorValue = semanticColor('contrastNeutral');
   borderStyle: BorderStyle = "solid";
+  colorRole: ColorRole = 'foreground';
   private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
   private borderOpacity = 1;
   transformationRenderBlock?: boolean = undefined;
@@ -78,6 +80,7 @@ export class Drawing extends BaseItem {
       transformation: this.transformation.serialize(),
       strokeStyle: this.borderColor as ColorValue,
       strokeWidth: this.strokeWidth,
+      colorRole: this.colorRole,
       linkTo: this.linkTo.serialize(),
     };
   }
@@ -92,6 +95,9 @@ export class Drawing extends BaseItem {
     this.transformation.deserialize(data.transformation);
     this.borderColor = coerceColorValue(data.strokeStyle as string | ColorValue);
     this.strokeWidth = data.strokeWidth;
+    if (data.colorRole) {
+      this.colorRole = data.colorRole;
+    }
     this.updateGeometry();
     return this;
   }
@@ -234,7 +240,8 @@ export class Drawing extends BaseItem {
     }
     const ctx = context.ctx;
     ctx.save();
-    ctx.strokeStyle = resolveColor(this.borderColor, conf.theme, 'foreground');
+    ctx.strokeStyle = resolveColor(this.borderColor, conf.theme, this.colorRole);
+    ctx.globalAlpha = this.borderOpacity;
     ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = "round";
     ctx.setLineDash(this.linePattern);
@@ -274,7 +281,8 @@ export class Drawing extends BaseItem {
       "path"
     );
     pathElement.setAttribute("d", this.getPathData());
-    pathElement.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, 'foreground'));
+    pathElement.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, this.colorRole));
+    pathElement.setAttribute("stroke-opacity", `${this.borderOpacity}`);
     pathElement.setAttribute("stroke-width", `${this.strokeWidth}`);
     pathElement.setAttribute("fill", "none");
     // pathElement.setAttribute("transform-origin", "0 0");
@@ -473,6 +481,15 @@ export class Drawing extends BaseItem {
 
   getStrokeColor(): ColorValue {
     return this.borderColor;
+  }
+
+  setColorRole(role: ColorRole): this {
+    this.colorRole = role;
+    return this;
+  }
+
+  getColorRole(): ColorRole {
+    return this.colorRole;
   }
 
   setStrokeWidth(width: number): this {

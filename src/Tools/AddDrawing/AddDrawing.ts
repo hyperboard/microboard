@@ -5,12 +5,13 @@ import { DrawingContext } from 'Items/DrawingContext';
 import { BorderStyle } from 'Items/Path';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
+import { ColorValue, coerceColorValue, semanticColor } from 'Color';
 
 export class AddDrawing extends BoardTool {
   drawing: Drawing | null = null;
   isDown = false;
   strokeWidth = conf.PEN_INITIAL_STROKE_WIDTH;
-  strokeColor = conf.PEN_DEFAULT_COLOR;
+  strokeColor: ColorValue | string = semanticColor('contrastNeutral');
   strokeStyle: BorderStyle = conf.PEN_STROKE_STYLE;
 
   constructor(board: Board) {
@@ -45,7 +46,7 @@ export class AddDrawing extends BoardTool {
     this.board.tools.publish();
   }
 
-  setStrokeColor(strokeColor: string): void {
+  setStrokeColor(strokeColor: ColorValue | string): void {
     this.strokeColor = strokeColor;
     this.updateSettings();
     this.board.tools.publish();
@@ -55,7 +56,7 @@ export class AddDrawing extends BoardTool {
     return this.strokeWidth;
   }
 
-  getStrokeColor(): string {
+  getStrokeColor(): ColorValue | string {
     return this.strokeColor;
   }
 
@@ -77,6 +78,11 @@ export class AddDrawing extends BoardTool {
 
   isHighlighter(): boolean {
     return false;
+  }
+
+  /** Apply the correct color role and opacity to a drawing based on tool type. */
+  protected applyDrawingRole(drawing: Drawing): void {
+    drawing.setColorRole('foreground');
   }
 
   leftButtonDown(): boolean {
@@ -122,9 +128,10 @@ export class AddDrawing extends BoardTool {
     }
     const drawing = new Drawing(this.board, points);
     drawing.transformation.translateTo(x, y);
-    drawing.setStrokeColor(this.strokeColor);
+    drawing.setStrokeColor(coerceColorValue(this.strokeColor));
     drawing.setStrokeWidth(this.strokeWidth);
     drawing.setBorderStyle(this.strokeStyle);
+    this.applyDrawingRole(drawing);
     this.board.add(drawing).updateMbr();
     this.board.selection.removeAll();
     this.drawing = null;
@@ -169,9 +176,10 @@ export class AddDrawing extends BoardTool {
     }
 
     const drawing = this.drawing;
-    drawing.setStrokeColor(this.strokeColor);
+    drawing.setStrokeColor(coerceColorValue(this.strokeColor));
     drawing.setStrokeWidth(this.strokeWidth);
     drawing.setBorderStyle(this.strokeStyle);
+    this.applyDrawingRole(drawing);
     drawing.render(context);
   }
 }

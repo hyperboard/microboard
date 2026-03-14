@@ -8,7 +8,8 @@ import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
 import type { BorderStyle } from "Items/Path/Path";
-import type { Theme } from "./Color/ColorValue";
+import type { Theme, ColorValue } from "./Color/ColorValue";
+import { semanticColor } from "./Color/ColorValue";
 
 export interface Connection {
   connectionId: number;
@@ -115,8 +116,8 @@ type ExportFrameDecorationRecord = Record<
 export type DefaultTextStyles = {
   fontFamily: string;
   fontSize: number;
-  fontColor: string;
-  fontHighlight: string;
+  fontColor: string | ColorValue;
+  fontHighlight: string | ColorValue;
   lineHeight: number;
   bold: boolean;
   italic: boolean;
@@ -292,7 +293,7 @@ export const conf = {
     "rgb(231, 232, 238)",
     "rgb(156, 156, 156)",
   ],
-  DEFAULT_STICKER_COLOR: "rgb(233, 208, 255)",
+  DEFAULT_STICKER_COLOR: semanticColor('contrastBlue'),
   STICKER_COLOR_NAMES: [
     "purple",
     "pink",
@@ -510,7 +511,7 @@ export const conf = {
   DEFAULT_TEXT_STYLES: {
     fontFamily: "Manrope",
     fontSize: 14,
-    fontColor: "rgb(20, 21, 26)",
+    fontColor: semanticColor('contrastNeutral'),
     fontHighlight: "",
     lineHeight: 1.4,
     bold: false,

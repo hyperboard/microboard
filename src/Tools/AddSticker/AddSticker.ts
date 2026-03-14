@@ -5,6 +5,7 @@ import { Sticker } from 'Items/Sticker';
 import { CursorName } from 'Pointer/Cursor';
 import { tempStorage } from 'SessionStorage';
 import { conf } from 'Settings';
+import { ColorValue, coerceColorValue, resolveColor } from 'Color';
 import { BoardTool } from 'Tools/BoardTool';
 
 export class AddSticker extends BoardTool {
@@ -23,10 +24,12 @@ export class AddSticker extends BoardTool {
 		this.setCursor(this.sticker.getBackgroundColor());
 	}
 
-	setCursor(color?: string) {
+	setCursor(color?: ColorValue | string) {
 		if (conf.STICKER_COLOR_NAMES) {
-			const colorName = color
-				? conf.STICKER_COLOR_NAMES[conf.STICKER_COLORS.indexOf(color)]
+			// Resolve semantic colors to CSS strings for palette lookup
+			const cssColor = color ? resolveColor(color, conf.theme, 'background') : undefined;
+			const colorName = cssColor
+				? conf.STICKER_COLOR_NAMES[conf.STICKER_COLORS.indexOf(cssColor)]
 				: undefined;
 			this.board.pointer.setCursor(
 				colorName ? (`sticker-${colorName}` as CursorName) : 'crosshair'
@@ -36,18 +39,18 @@ export class AddSticker extends BoardTool {
 		}
 	}
 
-	setBackgroundColor(color: string): void {
+	setBackgroundColor(color: ColorValue | string): void {
 		this.sticker.apply({
 			class: 'Sticker',
 			method: 'setBackgroundColor',
 			item: [this.sticker.getId()],
-			backgroundColor: color,
+			backgroundColor: coerceColorValue(color),
 		});
 		this.setCursor(color);
 		this.board.tools.publish();
 	}
 
-	getBackgroundColor(): string {
+	getBackgroundColor(): ColorValue {
 		return this.sticker.getBackgroundColor();
 	}
 
