@@ -1,3 +1,4 @@
+export * from "./Color";
 export * from "./Board";
 export * from "./Items";
 export * from "./BoardCommand";

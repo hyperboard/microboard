@@ -23,6 +23,8 @@
       "*": ["*", "*.js", "*.ts", "*.tsx"],
       "*/": ["./*"],
       "api/*": ["./api/*"],
+      "Color": ["./Color/index.ts"],
+      "Color/*": ["./Color/*"],
       "Camera/*": ["./Camera/*"],
       "Events/*": ["./Events/*"],
       "Items/*": ["./Items/*"],

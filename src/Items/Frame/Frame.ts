@@ -34,6 +34,7 @@ import {
 import {ResizeType} from "Selection/Transformer/TransformerHelpers/getResizeType";
 import {BaseItem} from "../BaseItem";
 import {SimpleSpatialIndex} from "../../SpatialIndex/SpacialIndex";
+import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 const defaultFrameData = new DefaultFrameData();
 
@@ -369,9 +370,13 @@ export class Frame extends BaseItem {
       this.initPath();
     }
     this.linkTo.deserialize(data.linkTo);
-    this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
+    if (data.backgroundColor != null) {
+      this.backgroundColor = coerceColorValue(data.backgroundColor);
+    }
     this.backgroundOpacity = data.backgroundOpacity ?? this.backgroundOpacity;
-    this.borderColor = data.borderColor ?? this.borderColor;
+    if (data.borderColor != null) {
+      this.borderColor = coerceColorValue(data.borderColor);
+    }
     this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
     this.borderStyle = data.borderStyle ?? this.borderStyle;
     this.borderWidth = data.borderWidth ?? this.borderWidth;
@@ -424,9 +429,9 @@ export class Frame extends BaseItem {
     // console.log(this.transformation.getScale().y);
     // this.text.setContainer(Frames[this.shapeType].textBounds.copy().getTransformed(textMatrix));
 
-    this.path.setBackgroundColor(this.backgroundColor);
+    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
     this.path.setBackgroundOpacity(this.backgroundOpacity);
-    this.path.setBorderColor(this.borderColor);
+    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, 'foreground'));
     this.path.setBorderWidth(this.borderWidth);
     this.path.setBorderStyle(this.borderStyle);
     this.path.setBorderOpacity(this.borderOpacity);
@@ -609,7 +614,7 @@ export class Frame extends BaseItem {
     });
   }
 
-  getBorderColor(): string {
+  getBorderColor(): ColorValue {
     return this.borderColor;
   }
 
@@ -617,7 +622,7 @@ export class Frame extends BaseItem {
     return this.borderWidth;
   }
 
-  getBackgroundColor(): string {
+  getBackgroundColor(): ColorValue {
     return this.backgroundColor;
   }
 
@@ -626,12 +631,12 @@ export class Frame extends BaseItem {
     this.subject.publish(this);
   }
 
-  private applyBackgroundColor(backgroundColor: string): void {
+  private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
-    this.path.setBackgroundColor(backgroundColor);
+    this.path.setBackgroundColor(resolveColor(backgroundColor, conf.theme, 'background'));
   }
 
-  setBackgroundColor(backgroundColor: string): void {
+  setBackgroundColor(backgroundColor: ColorValue): void {
     this.emit({
       class: "Frame",
       method: "setBackgroundColor",
@@ -718,10 +723,10 @@ export class Frame extends BaseItem {
     const div = documentFactory.createElement("frame-item");
     div.id = this.getId();
 
-    div.style.backgroundColor = this.backgroundColor;
+    div.style.backgroundColor = resolveColor(this.backgroundColor, conf.theme, 'background');
     div.style.opacity = this.backgroundOpacity.toString();
 
-    div.style.borderColor = this.borderColor;
+    div.style.borderColor = resolveColor(this.borderColor, conf.theme, 'foreground');
     div.style.borderWidth = `${this.borderWidth}px`;
     div.style.borderStyle = this.borderStyle;
 

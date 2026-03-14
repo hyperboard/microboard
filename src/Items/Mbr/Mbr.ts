@@ -1,4 +1,5 @@
 import { forceNumberIntoInterval, toFiniteNumber } from "lib";
+import { resolveColor } from "Color/resolveColor";
 import { Point } from "../Point";
 import { Line } from "../Line";
 import { Matrix } from "../Transformation";
@@ -27,8 +28,8 @@ export class Mbr implements Geometry {
     public top = 0,
     public right = 0,
     public bottom = 0,
-    public borderColor = "black",
-    public backgroundColor = "none",
+    public borderColor: string | import("Color/ColorValue").ColorValue = "black",
+    public backgroundColor: string | import("Color/ColorValue").ColorValue = "none",
     public strokeWidth = 1,
     public borderStyle: BorderStyle = "solid"
   ) {
@@ -383,13 +384,20 @@ export class Mbr implements Geometry {
 
   render(context: DrawingContext): void {
     const { ctx } = context;
-    if (this.backgroundColor !== "none") {
-      ctx.fillStyle = this.backgroundColor;
+    const resolvedBg = typeof this.backgroundColor === 'string'
+      ? this.backgroundColor
+      : resolveColor(this.backgroundColor, 'light', 'background');
+    const resolvedBorder = typeof this.borderColor === 'string'
+      ? this.borderColor
+      : resolveColor(this.borderColor, 'light', 'foreground');
+
+    if (resolvedBg !== "none") {
+      ctx.fillStyle = resolvedBg;
       ctx.fillRect(this.left, this.top, this.getWidth(), this.getHeight());
     }
 
     if (this.strokeWidth) {
-      ctx.strokeStyle = this.borderColor;
+      ctx.strokeStyle = resolvedBorder;
       ctx.lineWidth = this.strokeWidth;
       ctx.setLineDash([]);
       ctx.strokeRect(this.left, this.top, this.getWidth(), this.getHeight());

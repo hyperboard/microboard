@@ -8,6 +8,7 @@ import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
 import type { BorderStyle } from "Items/Path/Path";
+import type { Theme } from "./Color/ColorValue";
 
 export interface Connection {
   connectionId: number;
@@ -199,6 +200,13 @@ export const conf = {
     plus: "Plus",
     plusAI: "PlusAI",
   },
+  /**
+   * Active display theme. Set this before mounting the board, or call
+   * `setTheme()` at runtime to trigger a full re-render of all semantic
+   * colours across the canvas.
+   */
+  theme: 'light' as Theme,
+
   EVENTS_PUBLISH_INTERVAL: 100, // 100 ms (10 times per second)
   EVENTS_RESEND_INTERVAL: 1000, // 1 second
 

@@ -1,10 +1,11 @@
 import { FrameType } from "./Basic";
+import { ColorValue } from "Color";
 
 interface SetBackgroundColor {
 	class: "Frame";
 	method: "setBackgroundColor";
 	item: string[];
-	backgroundColor: string;
+	backgroundColor: ColorValue;
 }
 
 interface SetCanChangeRatio {

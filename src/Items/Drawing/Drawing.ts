@@ -17,12 +17,13 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { Board } from "Board";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import { ColorValue, coerceColorValue, fixedColor, resolveColor } from "Color";
 
 export interface DrawingData {
   itemType: "Drawing";
   points: { x: number; y: number }[];
   transformation: TransformationData;
-  strokeStyle: string;
+  strokeStyle: ColorValue | string; // string for legacy deserialization
   strokeWidth: number;
   linkTo?: string;
 }
@@ -37,6 +38,7 @@ export class Drawing extends BaseItem {
   private lines: Line[] = [];
   readonly linkTo: LinkTo;
   strokeWidth: BorderWidth = 1;
+  borderColor: ColorValue = fixedColor(conf.PEN_DEFAULT_COLOR);
   borderStyle: BorderStyle = "solid";
   private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
   private borderOpacity = 1;
@@ -74,7 +76,7 @@ export class Drawing extends BaseItem {
       itemType: "Drawing",
       points,
       transformation: this.transformation.serialize(),
-      strokeStyle: this.borderColor,
+      strokeStyle: this.borderColor as ColorValue,
       strokeWidth: this.strokeWidth,
       linkTo: this.linkTo.serialize(),
     };
@@ -88,7 +90,7 @@ export class Drawing extends BaseItem {
     this.linkTo.deserialize(data.linkTo);
     this.optimizePoints();
     this.transformation.deserialize(data.transformation);
-    this.borderColor = data.strokeStyle;
+    this.borderColor = coerceColorValue(data.strokeStyle as string | ColorValue);
     this.strokeWidth = data.strokeWidth;
     this.updateGeometry();
     return this;
@@ -232,7 +234,7 @@ export class Drawing extends BaseItem {
     }
     const ctx = context.ctx;
     ctx.save();
-    ctx.strokeStyle = this.borderColor;
+    ctx.strokeStyle = resolveColor(this.borderColor, conf.theme, 'foreground');
     ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = "round";
     ctx.setLineDash(this.linePattern);
@@ -272,7 +274,7 @@ export class Drawing extends BaseItem {
       "path"
     );
     pathElement.setAttribute("d", this.getPathData());
-    pathElement.setAttribute("stroke", this.borderColor);
+    pathElement.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, 'foreground'));
     pathElement.setAttribute("stroke-width", `${this.strokeWidth}`);
     pathElement.setAttribute("fill", "none");
     // pathElement.setAttribute("transform-origin", "0 0");
@@ -399,7 +401,7 @@ export class Drawing extends BaseItem {
       case "Drawing":
         switch (op.method) {
           case "setStrokeColor":
-            this.borderColor = op.color;
+            this.borderColor = coerceColorValue(op.color as string | ColorValue);
             break;
           case "setStrokeWidth":
             this.strokeWidth = op.width;
@@ -459,7 +461,7 @@ export class Drawing extends BaseItem {
     return this.borderStyle;
   }
 
-  setStrokeColor(color: string): this {
+  setStrokeColor(color: ColorValue): this {
     this.emit({
       class: "Drawing",
       method: "setStrokeColor",
@@ -469,7 +471,7 @@ export class Drawing extends BaseItem {
     return this;
   }
 
-  getStrokeColor(): string {
+  getStrokeColor(): ColorValue {
     return this.borderColor;
   }
 

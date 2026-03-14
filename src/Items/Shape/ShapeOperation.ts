@@ -1,5 +1,6 @@
 import { BorderStyle } from "../Path";
 import { ShapeType } from "./index";
+import { ColorValue } from "Color";
 
 export type ShapeOperation =
 	| SetBackgroundColor
@@ -17,7 +18,7 @@ interface BaseShapeOperation {
 
 interface SetBackgroundColor extends BaseShapeOperation {
 	method: "setBackgroundColor";
-	backgroundColor: string;
+	backgroundColor: ColorValue;
 }
 
 interface SetBackgroundOpacity extends BaseShapeOperation {
@@ -27,7 +28,7 @@ interface SetBackgroundOpacity extends BaseShapeOperation {
 
 interface SetBorderColor extends BaseShapeOperation {
 	method: "setBorderColor";
-	borderColor: string;
+	borderColor: ColorValue;
 }
 
 interface SetBorderOpacity extends BaseShapeOperation {

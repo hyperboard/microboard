@@ -7,13 +7,14 @@ import {
   DefaultTransformationData,
 } from "../Transformation";
 import { ShapeType } from "./index";
+import { ColorValue, fixedColor } from "Color";
 
 export interface ShapeData {
   readonly itemType: "Shape";
   shapeType: ShapeType;
-  backgroundColor: string;
+  backgroundColor: ColorValue;
   backgroundOpacity: number;
-  borderColor: string;
+  borderColor: ColorValue;
   borderOpacity: number;
   borderStyle: BorderStyle;
   borderWidth: BorderWidth;
@@ -26,9 +27,9 @@ export class DefaultShapeData implements ShapeData {
   readonly itemType = "Shape";
   constructor(
     public shapeType: ShapeType = "Rectangle",
-    public backgroundColor = "none",
+    public backgroundColor: ColorValue = fixedColor("none"),
     public backgroundOpacity = 1,
-    public borderColor = conf.SHAPE_DEFAULT_STROKE_COLOR,
+    public borderColor: ColorValue = fixedColor(conf.SHAPE_DEFAULT_STROKE_COLOR),
     public borderOpacity = 1,
     public borderStyle: BorderStyle = "solid",
     public borderWidth: BorderWidth = 1,

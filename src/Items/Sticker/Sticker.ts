@@ -27,6 +27,7 @@ import {
 } from "HTMLRender";
 import { conf } from "Settings";
 import {BaseItem} from "../BaseItem";
+import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 export const stickerColors = {
   Purple: "rgb(233, 208, 255)",
@@ -161,7 +162,9 @@ export class Sticker extends BaseItem {
   }
 
   deserialize(data: Partial<StickerData>): this {
-    this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
+    if (data.backgroundColor != null) {
+      this.backgroundColor = coerceColorValue(data.backgroundColor);
+    }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }
@@ -190,7 +193,7 @@ export class Sticker extends BaseItem {
     this.text.setContainer(this.textContainer.copy());
     this.textContainer.transform(this.transformation.toMatrix());
     // this.text.setContainer(this.textContainer);
-    this.stickerPath.setBackgroundColor(this.backgroundColor);
+    this.stickerPath.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
     this.saveStickerData();
   }
 
@@ -230,7 +233,7 @@ export class Sticker extends BaseItem {
     this.subject.publish(this);
   }
 
-  getBackgroundColor(): string {
+  getBackgroundColor(): ColorValue {
     return this.backgroundColor;
   }
 
@@ -238,12 +241,12 @@ export class Sticker extends BaseItem {
     return this.stickerPath.getWidth();
   }
 
-  private applyBackgroundColor(backgroundColor: string): void {
+  private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
-    this.stickerPath.setBackgroundColor(backgroundColor);
+    this.stickerPath.setBackgroundColor(resolveColor(backgroundColor, conf.theme, 'background'));
   }
 
-  setBackgroundColor(backgroundColor: string): void {
+  setBackgroundColor(backgroundColor: ColorValue): void {
     this.emit({
       class: "Sticker",
       method: "setBackgroundColor",
@@ -327,7 +330,7 @@ export class Sticker extends BaseItem {
     const unscaledHeight = height / scaleY;
 
     div.id = this.getId();
-    div.style.backgroundColor = this.backgroundColor;
+    div.style.backgroundColor = resolveColor(this.backgroundColor, conf.theme, 'background');
     div.style.width = `${unscaledWidth}px`;
     div.style.height = `${unscaledHeight}px`;
     div.style.transformOrigin = "top left";

@@ -30,6 +30,7 @@ import { DocumentFactory } from 'api/DocumentFactory';
 import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
 import {BaseItem} from "../BaseItem";
+import { ColorValue, coerceColorValue, resolveColor, fixedColor } from 'Color';
 
 export const ConnectorLineStyles = ['straight', 'curved', 'orthogonal'] as const;
 
@@ -63,7 +64,7 @@ export class Connector extends BaseItem {
 	parent = 'Board';
 	readonly transformation: Transformation;
 	private middlePoint: ControlPoint | null = new BoardPoint();
-	private lineColor: string;
+	private lineColor: ColorValue;
 	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth;
 	borderStyle: BorderStyle;
@@ -82,7 +83,7 @@ export class Connector extends BaseItem {
 		private lineStyle: ConnectorLineStyle = 'straight',
 		private startPointerStyle: ConnectorPointerStyle = 'None',
 		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
-		lineColor?: string,
+		lineColor?: ColorValue,
 		lineWidth?: ConnectionLineWidth,
 		strokeStyle?: BorderStyle,
 		id = "",
@@ -90,7 +91,7 @@ export class Connector extends BaseItem {
 		super(board, id);
 		this.transformation = new Transformation(this.id, this.board.events);
 		this.linkTo = new LinkTo(this.id, this.board.events);
-		this.lineColor = lineColor ?? CONNECTOR_COLOR;
+		this.lineColor = lineColor ?? fixedColor(CONNECTOR_COLOR);
 		this.lineWidth = lineWidth ?? CONNECTOR_LINE_WIDTH;
 		this.borderStyle = strokeStyle ?? CONNECTOR_BORDER_STYLE;
 		this.text = new RichText(
@@ -431,7 +432,7 @@ export class Connector extends BaseItem {
 		this.updatePaths();
 	}
 
-	setLineColor(color: string): void {
+	setLineColor(color: ColorValue): void {
 		this.emit({
 			class: 'Connector',
 			method: 'setLineColor',
@@ -440,7 +441,7 @@ export class Connector extends BaseItem {
 		});
 	}
 
-	private applyLineColor(color: string): void {
+	private applyLineColor(color: ColorValue): void {
 		this.lineColor = color;
 		this.updatePaths();
 	}
@@ -540,7 +541,7 @@ export class Connector extends BaseItem {
 		return this.endPointerStyle;
 	}
 
-	getLineColor(): string {
+	getLineColor(): ColorValue {
 		return this.lineColor;
 	}
 
@@ -837,7 +838,7 @@ export class Connector extends BaseItem {
 		div.style.transformOrigin = 'left top';
 		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 		div.style.position = 'absolute';
-		div.setAttribute('data-line-color', this.lineColor);
+		div.setAttribute('data-line-color', resolveColor(this.lineColor, conf.theme, 'foreground'));
 		div.setAttribute('data-line-width', this.lineWidth.toString());
 		div.setAttribute('data-line-style', this.lineStyle);
 		div.setAttribute('data-border-style', this.borderStyle);
@@ -966,7 +967,9 @@ export class Connector extends BaseItem {
 		this.startPointerStyle = data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;
 		this.lineStyle = data.lineStyle ?? this.lineStyle;
-		this.lineColor = data.lineColor ?? this.lineColor;
+		if (data.lineColor != null) {
+			this.lineColor = coerceColorValue(data.lineColor);
+		}
 		this.lineWidth = data.lineWidth ?? this.lineWidth;
 		this.borderStyle = data.borderStyle ?? this.borderStyle;
 		if (data.transformation) {
@@ -1090,9 +1093,10 @@ export class Connector extends BaseItem {
 			this.lines,
 			this.lineWidth * 0.1 + 0.2
 		);
-		this.startPointer.path.setBorderColor(this.lineColor);
+		const resolvedLineColor = resolveColor(this.lineColor, conf.theme, 'foreground');
+		this.startPointer.path.setBorderColor(resolvedLineColor);
 		this.startPointer.path.setBorderWidth(this.lineWidth);
-		this.startPointer.path.setBackgroundColor(this.lineColor);
+		this.startPointer.path.setBackgroundColor(resolvedLineColor);
 		this.endPointer = getEndPointer(
 			endPoint,
 			this.endPointerStyle,
@@ -1100,14 +1104,14 @@ export class Connector extends BaseItem {
 			this.lines,
 			this.lineWidth * 0.1 + 0.2
 		);
-		this.endPointer.path.setBorderColor(this.lineColor);
+		this.endPointer.path.setBorderColor(resolvedLineColor);
 		this.endPointer.path.setBorderWidth(this.lineWidth);
-		this.endPointer.path.setBackgroundColor(this.lineColor);
+		this.endPointer.path.setBackgroundColor(resolvedLineColor);
 
 		this.offsetLines();
 
 		this.lines.setBorderWidth(this.lineWidth);
-		this.lines.setBorderColor(this.lineColor);
+		this.lines.setBorderColor(resolvedLineColor);
 		this.lines.setBorderStyle(this.borderStyle);
 
 		this.updateTitle();

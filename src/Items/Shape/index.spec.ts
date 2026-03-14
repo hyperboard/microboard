@@ -4,6 +4,7 @@ import { Shape } from './Shape';
 import { Point } from '../Point';
 import { Mbr } from '../Mbr';
 import { initNodeSettings } from 'api/initNodeSettings';
+import { fixedColor, semanticColor } from 'Color';
 
 beforeAll(() => {
 	initNodeSettings();
@@ -19,15 +20,21 @@ describe('to diagram user of shapes', () => {
 	});
 	it('changes shapes background color', () => {
 		const shape = new Shape(board);
-		const color = '';
+		const color = fixedColor('rgb(255, 0, 0)');
 		shape.setBackgroundColor(color);
-		expect(shape.getBackgroundColor()).toBe(color);
+		expect(shape.getBackgroundColor()).toEqual(color);
+	});
+	it('changes shapes background color with semantic color', () => {
+		const shape = new Shape(board);
+		const color = semanticColor('contrastBlue');
+		shape.setBackgroundColor(color);
+		expect(shape.getBackgroundColor()).toEqual(color);
 	});
 	it('changes shapes border color', () => {
 		const shape = new Shape(board);
-		const color = '';
+		const color = fixedColor('rgb(0, 0, 0)');
 		shape.setBorderColor(color);
-		expect(shape.getStrokeColor()).toBe(color);
+		expect(shape.getStrokeColor()).toEqual(color);
 	});
 	it('changes shapes border style', () => {
 		const shape = new Shape(board);

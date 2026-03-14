@@ -7,6 +7,7 @@ import { BorderStyle, BorderWidth } from '../Path';
 import { DefaultRichTextData } from '../RichText/RichTextData';
 import { FrameType } from './Basic';
 import { conf } from 'Settings';
+import { ColorValue, fixedColor } from 'Color';
 
 export const FRAME_BORDER_COLOR = 'rgba(10, 15, 41, 0.08)';
 
@@ -51,9 +52,9 @@ export const FRAME_FILL_COLOR = FRAME_FILL_COLORS[0];
 export interface FrameData {
 	readonly itemType: 'Frame';
 	shapeType: FrameType;
-	backgroundColor: string;
+	backgroundColor: ColorValue;
 	backgroundOpacity: number;
-	borderColor: string;
+	borderColor: ColorValue;
 	borderOpacity: number;
 	borderStyle: BorderStyle;
 	borderWidth: BorderWidth;
@@ -68,9 +69,9 @@ export class DefaultFrameData implements FrameData {
 	readonly itemType = 'Frame';
 	constructor(
 		public shapeType: FrameType = 'Custom',
-		public backgroundColor = FRAME_FILL_COLOR,
+		public backgroundColor: ColorValue = fixedColor(FRAME_FILL_COLOR),
 		public backgroundOpacity = 1,
-		public borderColor = FRAME_BORDER_COLOR,
+		public borderColor: ColorValue = fixedColor(FRAME_BORDER_COLOR),
 		public borderOpacity = 0.08,
 		public borderStyle: BorderStyle = 'solid',
 		public borderWidth: BorderWidth = 0.2,

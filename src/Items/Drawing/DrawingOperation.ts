@@ -1,10 +1,11 @@
 import { BorderStyle } from "../Path";
+import { ColorValue } from "Color";
 
 interface DrawingSetStrokeColorOp {
 	class: "Drawing";
 	method: "setStrokeColor";
 	item: string[];
-	color: string;
+	color: ColorValue;
 }
 interface DrawingSetStrokeWidthOp {
 	class: "Drawing";

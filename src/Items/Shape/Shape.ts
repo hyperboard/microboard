@@ -38,6 +38,7 @@ import { FixedPoint } from "Items/Connector";
 import { toRelativePoint } from "Items/Connector/ControlPoint";
 import { conf } from "Settings";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -158,9 +159,13 @@ export class Shape extends BaseItem {
     if (data.linkTo) {
       this.linkTo.deserialize(data.linkTo);
     }
-    this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
+    if (data.backgroundColor != null) {
+      this.backgroundColor = coerceColorValue(data.backgroundColor);
+    }
     this.backgroundOpacity = data.backgroundOpacity ?? this.backgroundOpacity;
-    this.borderColor = data.borderColor ?? this.borderColor;
+    if (data.borderColor != null) {
+      this.borderColor = coerceColorValue(data.borderColor);
+    }
     this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
     this.borderStyle = data.borderStyle ?? this.borderStyle;
     this.borderWidth = data.borderWidth ?? this.borderWidth;
@@ -287,16 +292,16 @@ export class Shape extends BaseItem {
     });
   }
 
-  getBackgroundColor(): string {
+  getBackgroundColor(): ColorValue {
     return this.backgroundColor;
   }
 
-  private applyBackgroundColor(backgroundColor: string): void {
+  private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
-    this.path.setBackgroundColor(backgroundColor);
+    this.path.setBackgroundColor(resolveColor(backgroundColor, conf.theme, 'background'));
   }
 
-  setBackgroundColor(backgroundColor: string): void {
+  setBackgroundColor(backgroundColor: ColorValue): void {
     this.emit({
       class: "Shape",
       method: "setBackgroundColor",
@@ -331,16 +336,16 @@ export class Shape extends BaseItem {
     });
   }
 
-  getStrokeColor(): string {
+  getStrokeColor(): ColorValue {
     return this.borderColor;
   }
 
-  private applyBorderColor(borderColor: string): void {
+  private applyBorderColor(borderColor: ColorValue): void {
     this.borderColor = borderColor;
-    this.path.setBorderColor(borderColor);
+    this.path.setBorderColor(resolveColor(borderColor, conf.theme, 'foreground'));
   }
 
-  setBorderColor(borderColor: string): void {
+  setBorderColor(borderColor: ColorValue): void {
     this.emit({
       class: "Shape",
       method: "setBorderColor",
