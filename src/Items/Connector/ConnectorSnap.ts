@@ -93,8 +93,11 @@ export class ConnectorSnap {
 	pointerMove(): void {
 		this.setHover();
 		const nearest = this.getNearest();
+		const underPointer = this.hover.item;
 		if (this.isNearBorder(nearest)) {
 			this.snap.item = nearest;
+		} else if (underPointer && underPointer !== this.connector) {
+			this.snap.item = underPointer;
 		} else {
 			this.snap.item = null;
 		}
