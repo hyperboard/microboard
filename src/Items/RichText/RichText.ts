@@ -351,33 +351,17 @@ export class RichText extends BaseItem {
     const containerWidth = container.getWidth();
     const containerHeight = container.getHeight();
 
-    const worldMatrix = this.worldMatrixGetter?.();
-    let effectiveWidth = containerWidth;
-    let effectiveHeight = containerHeight;
-    if (worldMatrix) {
-      const localScaleX = this.transformation.getScale().x || 1;
-      const localScaleY = this.transformation.getScale().y || 1;
-      effectiveWidth = containerWidth * (worldMatrix.scaleX / localScaleX);
-      effectiveHeight = containerHeight * (worldMatrix.scaleY / localScaleY);
-    }
-
     const optimal = findOptimalMaxWidthForTextAutoSize(
       nodes,
-      effectiveWidth,
-      effectiveHeight,
-      effectiveWidth
+      containerWidth,
+      containerHeight,
+      containerWidth
     );
 
-    const worldTextScale = Math.min(
-      effectiveWidth / optimal.bestMaxWidth,
-      effectiveHeight / optimal.bestMaxHeight
+    return Math.min(
+      containerWidth / optimal.bestMaxWidth,
+      containerHeight / optimal.bestMaxHeight
     );
-
-    if (worldMatrix) {
-      const localScaleX = this.transformation.getScale().x || 1;
-      return worldTextScale * localScaleX / worldMatrix.scaleX;
-    }
-    return worldTextScale;
   }
 
   applyAutoSizeScale(textScale: number, blockNodes?: BlockNode[]): void {
