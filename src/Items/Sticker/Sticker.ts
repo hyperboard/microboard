@@ -110,17 +110,27 @@ export class Sticker extends BaseItem {
         this.transformPath();
         if (op.method === "applyMatrix") {
           const itemOp = op.items.find(i => i.id === this.id);
-          if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
-            if (this.text.isAutosize()) {
-              if (itemOp.matrix.scaleX !== itemOp.matrix.scaleY) {
-                this.text.applyAutoSizeScale(this.text.calcAutoSize());
+          if (itemOp) {
+            const prevScaleX = this.transformation.previous.scaleX;
+            const prevScaleY = this.transformation.previous.scaleY;
+            const currentScaleX = this.transformation.getScale().x;
+            const currentScaleY = this.transformation.getScale().y;
+            
+            // Only apply scale if actual scale changed (ignore translation/re-parenting pseudo-scales)
+            const scaleChanged = Math.abs(currentScaleX - prevScaleX) > 0.0001 || Math.abs(currentScaleY - prevScaleY) > 0.0001;
+
+            if (scaleChanged) {
+              if (this.text.isAutosize()) {
+                if (Math.abs(currentScaleX - currentScaleY) > 0.0001) {
+                  this.text.applyAutoSizeScale(this.text.calcAutoSize());
+                } else {
+                  this.text.scaleAutoSizeScale(currentScaleX / prevScaleX);
+                }
+                this.text.recoordinate();
+                this.text.transformCanvas();
               } else {
-                this.text.scaleAutoSizeScale(itemOp.matrix.scaleX);
+                this.text.handleInshapeScale();
               }
-              this.text.recoordinate();
-              this.text.transformCanvas();
-            } else {
-              this.text.handleInshapeScale();
             }
           }
         }
