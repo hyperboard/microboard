@@ -41,7 +41,7 @@ describe("Frame: nested item drag uses local-space conversion", () => {
   let board: Board;
   beforeEach(() => { board = makeBoard(); });
 
-  test("world-space translateX=100 in a 2× frame moves sticker by local 50", () => {
+  test("world-space translateX=100 in a 2× frame moves sticker by local 100", () => {
     const frame = addFrame(board, 2);
     const sticker = addSticker(board, 100, 50);
 
@@ -49,10 +49,10 @@ describe("Frame: nested item drag uses local-space conversion", () => {
     // and sticker.transformation stores local coords relative to the frame.
     frame.applyAddChildren([sticker.getId()]);
 
-    // World (100,50) in a frame at scale 2 ⟹ local (50, 25)
+    // Frame scale is ignored for nesting ⟹ local (100, 50)
     const localBefore = sticker.transformation.getTranslation();
-    expect(localBefore.x).toBeCloseTo(50, 0);
-    expect(localBefore.y).toBeCloseTo(25, 0);
+    expect(localBefore.x).toBeCloseTo(100, 0);
+    expect(localBefore.y).toBeCloseTo(50, 0);
 
     // Emit a world-space applyMatrix op (as the drag system does)
     board.events.applyAndEmit({
@@ -64,21 +64,21 @@ describe("Frame: nested item drag uses local-space conversion", () => {
       }],
     });
 
-    // Local delta should be 100 / frameScale(2) = 50  →  localX: 50 + 50 = 100
+    // Local delta should be 100 (ignores frame scale)  →  localX: 100 + 100 = 200
     const localAfter = sticker.transformation.getTranslation();
-    expect(localAfter.x).toBeCloseTo(100, 0);
-    expect(localAfter.y).toBeCloseTo(25, 0); // Y unchanged
+    expect(localAfter.x).toBeCloseTo(200, 0);
+    expect(localAfter.y).toBeCloseTo(50, 0); // Y unchanged
   });
 
-  test("world-space translateX=100 in a 4× frame moves sticker by local 25", () => {
+  test("world-space translateX=100 in a 4× frame moves sticker by local 100", () => {
     const frame = addFrame(board, 4);
     const sticker = addSticker(board, 400, 200);
 
     frame.applyAddChildren([sticker.getId()]);
 
     const localBefore = sticker.transformation.getTranslation();
-    expect(localBefore.x).toBeCloseTo(100, 0); // 400/4
-    expect(localBefore.y).toBeCloseTo(50, 0);  // 200/4
+    expect(localBefore.x).toBeCloseTo(400, 0);
+    expect(localBefore.y).toBeCloseTo(200, 0);
 
     board.events.applyAndEmit({
       class: "Transformation",
@@ -89,10 +89,10 @@ describe("Frame: nested item drag uses local-space conversion", () => {
       }],
     });
 
-    // local delta = 100 / 4 = 25  →  localX: 100 + 25 = 125
+    // local delta = 100  →  localX: 400 + 100 = 500
     const localAfter = sticker.transformation.getTranslation();
-    expect(localAfter.x).toBeCloseTo(125, 0);
-    expect(localAfter.y).toBeCloseTo(50, 0);
+    expect(localAfter.x).toBeCloseTo(500, 0);
+    expect(localAfter.y).toBeCloseTo(200, 0);
   });
 
   test("board-level sticker (no frame) applies world delta directly", () => {
@@ -115,13 +115,13 @@ describe("Frame: nested item drag uses local-space conversion", () => {
 });
 
 // ---------------------------------------------------------------------------
-// getWorldMbr: nested item world bounds should reflect frame scale
+// getWorldMbr: nested item world bounds should ignore frame scale
 // ---------------------------------------------------------------------------
 describe("BaseItem.getWorldMbr: nested item world bounds", () => {
   let board: Board;
   beforeEach(() => { board = makeBoard(); });
 
-  test("sticker nested in 2× frame has world mbr twice as large as local mbr", () => {
+  test("sticker nested in 2× frame has world mbr same as local mbr (ignores frame scale)", () => {
     const frame = addFrame(board, 2);
     const sticker = addSticker(board, 100, 50);
     frame.applyAddChildren([sticker.getId()]);
@@ -129,11 +129,11 @@ describe("BaseItem.getWorldMbr: nested item world bounds", () => {
     const localMbr = sticker.getMbr();
     const worldMbr = (sticker as unknown as BaseItem).getWorldMbr();
 
-    // World MBR should be localMbr corners scaled by 2 (frame scale)
-    expect(worldMbr.left).toBeCloseTo(localMbr.left * 2, 0);
-    expect(worldMbr.top).toBeCloseTo(localMbr.top * 2, 0);
-    expect(worldMbr.right).toBeCloseTo(localMbr.right * 2, 0);
-    expect(worldMbr.bottom).toBeCloseTo(localMbr.bottom * 2, 0);
+    // World MBR should be localMbr (ignores frame scale)
+    expect(worldMbr.left).toBeCloseTo(localMbr.left, 0);
+    expect(worldMbr.top).toBeCloseTo(localMbr.top, 0);
+    expect(worldMbr.right).toBeCloseTo(localMbr.right, 0);
+    expect(worldMbr.bottom).toBeCloseTo(localMbr.bottom, 0);
   });
 
   test("board-level sticker getWorldMbr() === getMbr()", () => {

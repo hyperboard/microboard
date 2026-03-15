@@ -476,7 +476,7 @@ export class BaseItem extends Mbr implements Geometry {
 					if (container?.transformation) {
 						transformOp = toLocalTransformOp(
 							transformOp,
-							container.getWorldMatrix(),
+							container.getNestingMatrix(),
 							this.id,
 						);
 					}
