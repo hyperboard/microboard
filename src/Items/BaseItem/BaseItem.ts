@@ -250,7 +250,14 @@ export class BaseItem extends Mbr implements Geometry {
 		if (this.parent === "Board" || !this.parent || !this.board?.items) {
 			return this.getMbr();
 		}
-		const worldMatrix = this.getWorldMatrix();
+		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
+		if (!container) {
+			return this.getMbr();
+		}
+		// getMbr() already returns bounds in parent-local space (the path has
+		// already been transformed by the item's own local matrix via transformPath).
+		// We only need the container's world matrix to lift those bounds into world space.
+		const containerWorldMatrix = container.getWorldMatrix();
 		const local = this.getMbr();
 		const corners = [
 			new Point(local.left,  local.top),
@@ -258,7 +265,7 @@ export class BaseItem extends Mbr implements Geometry {
 			new Point(local.right, local.bottom),
 			new Point(local.left,  local.bottom),
 		];
-		for (const c of corners) worldMatrix.apply(c);
+		for (const c of corners) containerWorldMatrix.apply(c);
 		return new Mbr(
 			Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
 			Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
