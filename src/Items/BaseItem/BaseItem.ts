@@ -135,19 +135,47 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	/**
+	 * Returns the parent's world matrix. For Frames, only the translation component
+	 * is returned to ensure children are not affected by frame scaling.
+	 */
+	getParentWorldMatrix(): Matrix {
+		if (this.parent === "Board") {
+			return new Matrix();
+		}
+		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
+		if (!container) {
+			return new Matrix();
+		}
+		const matrix = container.getWorldMatrix();
+		if (container.itemType === "Frame") {
+			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
+		}
+		return matrix;
+	}
+
+	/**
 	 * Returns the full world-space matrix by walking up the parent chain.
 	 * For top-level items (parent === "Board") this is identical to the item's
-	 * own transformation matrix. For nested items it is parentWorld × localMatrix.
+	 * own transformation matrix. For nested items it is parentTransform × localMatrix.
+	 * Note: Frames act as non-scaling containers.
 	 */
 	getWorldMatrix(): Matrix {
 		if (this.parent === "Board") {
 			return this.transformation.toMatrix();
 		}
-		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
-		if (!container) {
-			return this.transformation.toMatrix();
+		return this.transformation.toMatrix().composeWith(this.getParentWorldMatrix());
+	}
+
+	/**
+	 * Returns the matrix used for nesting children. For Frames, this is only
+	 * the translation part. For other items it is the full world matrix.
+	 */
+	getNestingMatrix(): Matrix {
+		const matrix = this.getWorldMatrix();
+		if (this.itemType === "Frame") {
+			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
 		}
-		return this.transformation.toMatrix().composeWith(container.getWorldMatrix());
+		return matrix;
 	}
 
 	setId(id: string): this {
@@ -252,7 +280,7 @@ export class BaseItem extends Mbr implements Geometry {
 		}
 		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
 		if (!container) return this.getMbr();
-		const worldMatrix = container.getWorldMatrix();
+		const parentMatrix = this.getParentWorldMatrix();
 		const local = this.getMbr();
 		const corners = [
 			new Point(local.left,  local.top),
@@ -260,7 +288,7 @@ export class BaseItem extends Mbr implements Geometry {
 			new Point(local.right, local.bottom),
 			new Point(local.left,  local.bottom),
 		];
-		for (const c of corners) worldMatrix.apply(c);
+		for (const c of corners) parentMatrix.apply(c);
 		return new Mbr(
 			Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
 			Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
@@ -273,7 +301,7 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.index) {
 			return;
 		}
-		const containerWorldMatrix = this.getWorldMatrix();
+		const containerNestingMatrix = this.getNestingMatrix();
 		childIds.forEach((childId) => {
 			const foundItem = this.board.items.getById(childId) as BaseItem | undefined;
 			if (
@@ -284,7 +312,7 @@ export class BaseItem extends Mbr implements Geometry {
 					// Convert the child's current world transform to local (relative to this container).
 					// All operations in the log are world-space, so this conversion is always correct
 					// whether we are processing a live user action or replaying an old event.
-					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerWorldMatrix);
+					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerNestingMatrix);
 					this.board.items.index.remove(foundItem);
 					foundItem.parent = this.getId();
 					foundItem.transformation.setLocalMatrix(localMatrix);
@@ -301,7 +329,7 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.index) {
 			return;
 		}
-		const containerWorldMatrix = this.getWorldMatrix();
+		const containerNestingMatrix = this.getNestingMatrix();
 		childIds.forEach((childId) => {
 			const foundItem = this.index?.getById(childId) as BaseItem | undefined;
 			if (
@@ -310,7 +338,7 @@ export class BaseItem extends Mbr implements Geometry {
 			) {
 				if (foundItem) {
 					// Convert local transform back to world before returning the item to the board index.
-					const worldMatrix = foundItem.transformation.toMatrix().composeWith(containerWorldMatrix);
+					const worldMatrix = foundItem.transformation.toMatrix().composeWith(containerNestingMatrix);
 					this.index?.remove(foundItem);
 					foundItem.parent = "Board";
 					foundItem.transformation.setLocalMatrix(worldMatrix);

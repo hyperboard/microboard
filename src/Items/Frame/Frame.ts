@@ -299,6 +299,7 @@ export class Frame extends BaseItem {
       translateY = 0;
     }
 
+    const oldMatrix = this.transformation.toMatrix();
     this.transformation.scaleByTranslateBy(
       {
         x: scaleX,
@@ -310,6 +311,18 @@ export class Frame extends BaseItem {
       },
       timeStamp
     );
+    const newMatrix = this.transformation.toMatrix();
+
+    // Compensate children if frame origin moved (top/left)
+    if (newMatrix.translateX !== oldMatrix.translateX || newMatrix.translateY !== oldMatrix.translateY) {
+      const dx = newMatrix.translateX - oldMatrix.translateX;
+      const dy = newMatrix.translateY - oldMatrix.translateY;
+      this.index?.list().forEach(child => {
+        if (child instanceof BaseItem) {
+          child.transformation.translateBy(-dx, -dy, timeStamp);
+        }
+      });
+    }
 
     this.setLastFrameScale();
     res.mbr = this.getMbr();
@@ -667,12 +680,13 @@ export class Frame extends BaseItem {
       return;
     }
     this.renderPath(context);
-    // Apply frame's world transform so children can render using their local transforms.
-    // ctx.save/restore ensures the camera transform is restored for subsequent items.
+    // Apply frame's world translation so children can render using their local transforms.
+    // Frames act as non-scaling containers.
     const ctx = context.ctx;
     ctx.save();
-    this.transformation.applyToContext(ctx);
-    for (const child of this.index!.list()) {
+    const { translateX, translateY } = this.getWorldMatrix();
+    ctx.translate(translateX, translateY);
+    for (const child of this.index!.items.listAll()) {
       child.render(context);
     }
     ctx.restore();
