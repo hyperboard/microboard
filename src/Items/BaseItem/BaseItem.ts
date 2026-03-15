@@ -250,7 +250,9 @@ export class BaseItem extends Mbr implements Geometry {
 		if (this.parent === "Board" || !this.parent || !this.board?.items) {
 			return this.getMbr();
 		}
-		const worldMatrix = this.getWorldMatrix();
+		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
+		if (!container) return this.getMbr();
+		const worldMatrix = container.getWorldMatrix();
 		const local = this.getMbr();
 		const corners = [
 			new Point(local.left,  local.top),

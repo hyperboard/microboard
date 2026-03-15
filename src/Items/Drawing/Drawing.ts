@@ -430,7 +430,7 @@ export class Drawing extends BaseItem {
         this.updateMbr();
         break;
       case "Transformation":
-        this.transformation.apply(op);
+        super.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);

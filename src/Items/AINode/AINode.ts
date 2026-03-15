@@ -248,7 +248,7 @@ export class AINode extends BaseItem {
         this.text.apply(op);
         break;
       case "Transformation":
-        this.text.transformation.apply(op);
+        super.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);

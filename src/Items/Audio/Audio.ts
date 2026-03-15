@@ -219,7 +219,7 @@ export class AudioItem extends BaseItem {
   apply(op: Operation): void {
     switch (op.class) {
       case "Transformation":
-        this.transformation.apply(op);
+        super.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);

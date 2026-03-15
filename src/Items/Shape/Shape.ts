@@ -203,8 +203,7 @@ export class Shape extends BaseItem {
         this.text.apply(op);
         break;
       case "Transformation":
-        this.transformation.apply(op);
-        // this.text.setContainer(this.text.container);
+        super.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);

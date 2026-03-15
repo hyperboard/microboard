@@ -108,8 +108,7 @@ export class Placeholder extends BaseItem {
                 this.updateMbr();
                 break;
             case "Transformation":
-                this.transformation.apply(op);
-                // this.text.setContainer(this.text.container);
+                super.apply(op);
                 break;
             default:
                 return;

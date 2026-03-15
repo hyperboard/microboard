@@ -70,7 +70,7 @@ export class Group extends BaseItem {
         }
         break;
       case "Transformation":
-        this.transformation.apply(op);
+        super.apply(op);
         break;
       default:
         return;

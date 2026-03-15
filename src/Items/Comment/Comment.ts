@@ -160,7 +160,7 @@ export class Comment implements Geometry {
         this.transform();
         break;
       case "Transformation":
-        this.transformation.apply(op);
+        super.apply(op);
         break;
       default:
         return;

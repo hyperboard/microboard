@@ -92,6 +92,7 @@ export class RichText extends BaseItem {
   private _onLimitReached: () => void = () => {};
   private shrinkWidth = false;
   prevMbr: Mbr | null = null;
+  worldMatrixGetter?: () => Matrix;
 
   rtCounter = 0;
 
@@ -350,17 +351,33 @@ export class RichText extends BaseItem {
     const containerWidth = container.getWidth();
     const containerHeight = container.getHeight();
 
+    const worldMatrix = this.worldMatrixGetter?.();
+    let effectiveWidth = containerWidth;
+    let effectiveHeight = containerHeight;
+    if (worldMatrix) {
+      const localScaleX = this.transformation.getScale().x || 1;
+      const localScaleY = this.transformation.getScale().y || 1;
+      effectiveWidth = containerWidth * (worldMatrix.scaleX / localScaleX);
+      effectiveHeight = containerHeight * (worldMatrix.scaleY / localScaleY);
+    }
+
     const optimal = findOptimalMaxWidthForTextAutoSize(
       nodes,
-      containerWidth,
-      containerHeight,
-      containerWidth
+      effectiveWidth,
+      effectiveHeight,
+      effectiveWidth
     );
 
-    return Math.min(
-      containerWidth / optimal.bestMaxWidth,
-      containerHeight / optimal.bestMaxHeight
+    const worldTextScale = Math.min(
+      effectiveWidth / optimal.bestMaxWidth,
+      effectiveHeight / optimal.bestMaxHeight
     );
+
+    if (worldMatrix) {
+      const localScaleX = this.transformation.getScale().x || 1;
+      return worldTextScale * localScaleX / worldMatrix.scaleX;
+    }
+    return worldTextScale;
   }
 
   applyAutoSizeScale(textScale: number, blockNodes?: BlockNode[]): void {
@@ -550,7 +567,7 @@ export class RichText extends BaseItem {
   apply(op: Operation): void {
     switch (op.class) {
       case "Transformation":
-        this.transformation.apply(op);
+        super.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);
