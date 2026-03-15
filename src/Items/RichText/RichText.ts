@@ -1034,8 +1034,11 @@ export class RichText extends BaseItem {
     ctx.save();
     ctx.translate(this.left, this.top);
 
-    const { scaleX, scaleY } = this.transformation.getMatrixData();
-    ctx.scale(scaleX, scaleY);
+    const shouldScale = !this.isInShape && !this.autoSize;
+    if (shouldScale) {
+      const { scaleX, scaleY } = this.transformation.getMatrixData();
+      ctx.scale(scaleX, scaleY);
+    }
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
     if (shouldClip) {
       ctx.clip(this.clipPath.nativePath);

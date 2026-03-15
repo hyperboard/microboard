@@ -20,7 +20,7 @@ function worldBoundsToLocal(
   container: BaseItem,
   left: number, top: number, right: number, bottom: number,
 ): { left: number; top: number; right: number; bottom: number } {
-  const inv = container.getWorldMatrix().getInverse();
+  const inv = container.getNestingMatrix().getInverse();
   const corners = [
     new Point(left,  top),
     new Point(right, top),
@@ -351,9 +351,9 @@ export class SpatialIndex {
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        // Transform the world-space point into the container's local coordinate space.
+        // Transform the world-space point into the container's nested coordinate space.
         const localPt = new Point(point.x, point.y);
-        (item as BaseItem).getWorldMatrix().getInverse().apply(localPt);
+        (item as BaseItem).getNestingMatrix().getInverse().apply(localPt);
         children.push(...item.index.getUnderPoint(localPt, tolerance));
         if (!item.getMbr().isUnderPoint(point)) {
           return false;
