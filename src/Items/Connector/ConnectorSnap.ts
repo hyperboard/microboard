@@ -155,7 +155,7 @@ export class ConnectorSnap {
 
 	getNearest(): Item | null {
 		const neighbors = this.board.items.getNearPointer(
-			this.distance.neighbor / this.board.camera.getScale(),
+			this.distance.border / this.board.camera.getScale(),
 			this.maxNeighbors,
 		);
 		const pointer = this.board.pointer.point;
