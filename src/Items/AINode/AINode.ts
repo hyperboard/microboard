@@ -124,7 +124,6 @@ export class AINode extends BaseItem {
       this.subject.publish(this);
     });
     this.text.insideOf = "AINode";
-    this.text.worldMatrixGetter = () => this.getWorldMatrix();
 
     this.transformPath();
   }
@@ -249,7 +248,7 @@ export class AINode extends BaseItem {
         this.text.apply(op);
         break;
       case "Transformation":
-        super.apply(op);
+        this.text.transformation.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);

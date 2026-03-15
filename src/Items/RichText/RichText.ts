@@ -92,8 +92,6 @@ export class RichText extends BaseItem {
   private _onLimitReached: () => void = () => {};
   private shrinkWidth = false;
   prevMbr: Mbr | null = null;
-  /** When set, used by calcAutoSize/applyAutoSizeScale to get world-space container dimensions. */
-  worldMatrixGetter?: () => Matrix;
 
   rtCounter = 0;
 
@@ -348,7 +346,7 @@ export class RichText extends BaseItem {
 
   calcAutoSize(blockNodes?: BlockNode[]): number {
     const nodes = blockNodes ? blockNodes : this.getBlockNodes();
-    const container = this.getLayoutContainer();
+    const container = this.getTransformedContainer();
     const containerWidth = container.getWidth();
     const containerHeight = container.getHeight();
 
@@ -367,7 +365,7 @@ export class RichText extends BaseItem {
 
   applyAutoSizeScale(textScale: number, blockNodes?: BlockNode[]): void {
     const nodes = blockNodes ? blockNodes : this.getBlockNodes();
-    const container = this.getLayoutContainer();
+    const container = this.getTransformedContainer();
     const containerWidth = container.getWidth();
     const containerHeight = container.getHeight();
     this.layoutNodes = getBlockNodes(nodes, containerWidth / textScale);
@@ -532,20 +530,6 @@ export class RichText extends BaseItem {
       return this.container.getTransformed(matrix);
     }
     return this.container.getTransformed(this.transformation.toMatrix());
-  }
-
-  /**
-   * Like getTransformedContainer() but uses the world-space matrix when this
-   * RichText belongs to a nested item (e.g. Sticker inside a Frame). This
-   * ensures calcAutoSize and applyAutoSizeScale measure the correct pixel
-   * dimensions instead of the compressed local-space dimensions.
-   */
-  private getLayoutContainer(): Mbr {
-    if (this.insideOf === "Frame") {
-      return this.getTransformedContainer();
-    }
-    const matrix = this.worldMatrixGetter ? this.worldMatrixGetter() : this.transformation.toMatrix();
-    return this.container.getTransformed(matrix);
   }
 
   emitWithoutApplying = (op: RichTextOperation): void => {

@@ -104,8 +104,6 @@ export class Sticker extends BaseItem {
       this.itemType
     );
 
-    this.text.worldMatrixGetter = () => this.getWorldMatrix();
-
     this.transformation.subject.subscribe(
       (_subject: Transformation, op: TransformationOperation) => {
         this.transformPath();
@@ -223,7 +221,7 @@ export class Sticker extends BaseItem {
         this.text.apply(op);
         break;
       case "Transformation":
-        super.apply(op);
+        this.transformation.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op);
