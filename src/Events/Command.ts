@@ -264,6 +264,7 @@ function createTransformationCommand(items: Item[], operation: ItemOperation) {
 	return new TransformationCommand(
 		items.map(item => item.transformation),
 		operation as TransformationOperation,
+		items,
 	);
 }
 

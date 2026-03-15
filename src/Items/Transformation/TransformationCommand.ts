@@ -1,7 +1,13 @@
 import { Transformation } from "./Transformation";
 import { TransformationOperation } from "./TransformationOperations";
-import { Command } from "../../Events";
+import { Command, Operation } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
+
+/** Minimal interface to avoid circular import with BaseItem/Item */
+interface TransformableItem {
+	apply(op: Operation): void;
+	transformation: Transformation;
+}
 
 export class TransformationCommand implements Command {
 	reverse: {
@@ -9,12 +15,21 @@ export class TransformationCommand implements Command {
 		operation: TransformationOperation;
 	}[];
 
+	/** Map from Transformation → Item, populated when items are passed to the constructor. */
+	private itemsMap: Map<Transformation, TransformableItem> = new Map();
+
 	// TODO HANDLE MULTIPLE OPERATIONS
 
 	constructor(
 		private transformation: Transformation[],
 		private operation: TransformationOperation,
+		items?: TransformableItem[],
 	) {
+		if (items) {
+			for (const item of items) {
+				this.itemsMap.set(item.transformation, item);
+			}
+		}
 		this.reverse = this.getReverse();
 	}
 
@@ -26,13 +41,23 @@ export class TransformationCommand implements Command {
 
 	apply(): void {
 		for (const transformation of this.transformation) {
-			transformation.apply(this.operation);
+			const item = this.itemsMap.get(transformation);
+			if (item) {
+				item.apply(this.operation);
+			} else {
+				transformation.apply(this.operation);
+			}
 		}
 	}
 
 	revert(): void {
-		this.reverse.forEach(({ item, operation }) => {
-			item.apply(operation);
+		this.reverse.forEach(({ item: transformation, operation }) => {
+			const item = this.itemsMap.get(transformation);
+			if (item) {
+				item.apply(operation);
+			} else {
+				transformation.apply(operation);
+			}
 		});
 	}
 
