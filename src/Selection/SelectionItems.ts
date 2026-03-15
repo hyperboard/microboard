@@ -1,4 +1,5 @@
 import { Item, ItemType, Mbr } from 'Items';
+import { BaseItem } from 'Items/BaseItem';
 
 export class SelectionItems {
 	private items: Map<string, Item> = new Map<string, Item>();
@@ -119,8 +120,10 @@ export class SelectionItems {
 		if (items.length === 0) {
 			return;
 		}
-		const mbr = items[0].getMbr();
-		items.slice(1).forEach(item => mbr.combine(item.getMbr()));
+		const worldMbr = (item: Item): Mbr =>
+			item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+		const mbr = worldMbr(items[0]);
+		items.slice(1).forEach(item => mbr.combine(worldMbr(item)));
 		return mbr;
 	}
 }

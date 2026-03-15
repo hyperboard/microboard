@@ -33,7 +33,7 @@ import {
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import {ResizeType} from "Selection/Transformer/TransformerHelpers/getResizeType";
 import {BaseItem} from "../BaseItem";
-import {SimpleSpatialIndex} from "../../SpatialIndex/SpacialIndex";
+import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 const defaultFrameData = new DefaultFrameData();
@@ -667,7 +667,15 @@ export class Frame extends BaseItem {
       return;
     }
     this.renderPath(context);
-    super.render(context);
+    // Apply frame's world transform so children can render using their local transforms.
+    // ctx.save/restore ensures the camera transform is restored for subsequent items.
+    const ctx = context.ctx;
+    ctx.save();
+    this.transformation.applyToContext(ctx);
+    for (const child of this.index!.list()) {
+      child.render(context);
+    }
+    ctx.restore();
     this.renderBorders(context);
     this.renderName(context);
   }

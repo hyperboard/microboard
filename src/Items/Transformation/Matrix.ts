@@ -208,4 +208,40 @@ export class Matrix {
 			this.shearY === shearY
 		);
 	}
+
+	// ─── Coordinate-space helpers ─────────────────────────────────────────────
+
+	/**
+	 * Returns parent × this (local → world).
+	 * Use when `this` is a local matrix and you need the world matrix.
+	 */
+	composeWith(parent: Matrix): Matrix {
+		const result = parent.copy();
+		result.multiplyByMatrix(this);
+		return result;
+	}
+
+	/**
+	 * Returns parent⁻¹ × this (world → local).
+	 * Use when `this` is a world matrix and you need the local matrix relative to `parent`.
+	 */
+	toLocalOf(parent: Matrix): Matrix {
+		const result = parent.getInverse();
+		result.multiplyByMatrix(this);
+		return result;
+	}
+
+	/**
+	 * Applies the inverse of the linear (rotation/scale) part of this matrix to a 2D delta vector.
+	 * Used to convert a world-space translation delta to the equivalent local-space delta.
+	 * Does not involve the translation component of the matrix.
+	 */
+	applyInverseLinear(dx: number, dy: number): { x: number; y: number } {
+		const { scaleX, scaleY, shearX, shearY } = this;
+		const denom = scaleX * scaleY - shearX * shearY;
+		return {
+			x: (scaleY * dx - shearX * dy) / denom,
+			y: (-shearY * dx + scaleX * dy) / denom,
+		};
+	}
 }

@@ -4,6 +4,7 @@ import { Connector } from "./Connector";
 import { Matrix } from "../Transformation";
 import { RichText } from "../RichText";
 import { AINode } from "../AINode";
+import { BaseItem } from "../BaseItem";
 
 type Edge = "top" | "bottom" | "left" | "right";
 
@@ -260,14 +261,16 @@ export function getControlPoint(
 	}
 }
 
+/** Returns the world-space matrix for an item (handles nested items in containers). */
+function getItemWorldMatrix(item: Item): Matrix {
+	if (item instanceof BaseItem && item.parent !== "Board") {
+		return item.getWorldMatrix();
+	}
+	return item.transformation?.toMatrix() ?? new Matrix();
+}
+
 export function toRelativePoint(point: Point, item: Item): Point {
-	// const mbr = item.getMbr();
-	// const scaleX = (mbr.right - mbr.left) / 100;
-	// const scaleY = (mbr.bottom - mbr.top) / 100;
-	// const translateX = mbr.left;
-	// const translateY = mbr.top;
-	// const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
-	const inverse = item.transformation ? item.transformation.getInverse().toMatrix() : new Matrix();
+	const inverse = getItemWorldMatrix(item).getInverse();
 	point = point.copy();
 	point.transform(inverse);
 	return point;
@@ -278,7 +281,7 @@ function fromRelativePoint(
 	item: Item,
 	edge?: Edge,
 ): Point {
-	const matrix = item.transformation?.toMatrix() ?? new Matrix();
+	const matrix = getItemWorldMatrix(item);
 	// const mbr = item.getMbr();
 	// const scaleX = item.transformation?.getScale().x || 1;
 	// const scaleY = item.transformation?.getScale().y || 1;

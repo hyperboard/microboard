@@ -9,6 +9,7 @@ import { AINode } from "Items/AINode/AINode";
 import { Sticker } from "Items/Sticker/Sticker";
 import { Board } from "Board";
 import { Frame } from "Items/Frame/Frame";
+import { BaseItem } from "Items/BaseItem";
 
 export function handleMultipleItemsResize({
   board,
@@ -29,20 +30,38 @@ export function handleMultipleItemsResize({
 }): ApplyMatrixItem[] {
   const { matrix } = resize;
   const result: ApplyMatrixItem[] = [];
-  const items = itemsToResize ? itemsToResize : board.selection.items.list();
+  const rawItems = itemsToResize ? itemsToResize : board.selection.items.list();
   board.items.getComments().forEach((comment) => {
-    if (items.some((item) => item.getId() === comment.getItemToFollow())) {
-      items.push(comment);
+    if (rawItems.some((item) => item.getId() === comment.getItemToFollow())) {
+      rawItems.push(comment);
     }
   });
 
+  // Build set of selected IDs so we can skip children whose container is also
+  // being resized (they follow the container via the transform hierarchy).
+  const selectedIds = new Set(rawItems.map((i) => i.getId()));
+  const items = rawItems.filter(
+    (item) => item.parent === "Board" || !selectedIds.has(item.parent)
+  );
+
   for (const item of items) {
-    let itemX = item.getMbr().left;
-    let itemY = item.getMbr().top;
+    // Use world-space position for the resize delta calculation so that nested
+    // items (which store local transforms) are placed correctly relative to
+    // the world-space initMbr.
+    const worldMbr = item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+    let itemX = worldMbr.left;
+    let itemY = worldMbr.top;
 
     if (item.itemType === "Drawing") {
-      itemX = item.transformation.getMatrixData().translateX;
-      itemY = item.transformation.getMatrixData().translateY;
+      // Drawing items use transform origin directly; for nested Drawings use world position.
+      if (item instanceof BaseItem && item.parent !== "Board") {
+        const worldMatrix = item.getWorldMatrix();
+        itemX = worldMatrix.translateX;
+        itemY = worldMatrix.translateY;
+      } else {
+        itemX = item.transformation.getMatrixData().translateX;
+        itemY = item.transformation.getMatrixData().translateY;
+      }
     }
 
     const deltaX = itemX - initMbr.left;

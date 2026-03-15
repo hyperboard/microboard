@@ -11,6 +11,31 @@ import {LayeredIndex} from './LayeredIndex';
 import {BaseItem} from "../Items/BaseItem";
 import {ItemDataWithId} from "../Items/Item";
 
+/**
+ * Transforms a world-space axis-aligned bounding box into the local coordinate space
+ * of a container item.  Handles rotation/shear by projecting all four corners through
+ * the inverse of the container's world matrix and returning their AABB.
+ */
+function worldBoundsToLocal(
+  container: BaseItem,
+  left: number, top: number, right: number, bottom: number,
+): { left: number; top: number; right: number; bottom: number } {
+  const inv = container.getWorldMatrix().getInverse();
+  const corners = [
+    new Point(left,  top),
+    new Point(right, top),
+    new Point(right, bottom),
+    new Point(left,  bottom),
+  ];
+  for (const c of corners) inv.apply(c);
+  return {
+    left:   Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+    top:    Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+    right:  Math.max(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+    bottom: Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+  };
+}
+
 export class SpatialIndex {
   subject = new Subject<Items>();
   private itemsArray: Item[] = [];
@@ -67,8 +92,12 @@ export class SpatialIndex {
       item.removeChildItems(item.index.list());
     }
     if (item.parent !== 'Board') {
+      // Item is inside a container — remove it from the container's index,
+      // not from this (board-level) itemsArray.
       const parentFrame = this.items.getById(item.parent) as BaseItem;
       parentFrame?.removeChildItems(item);
+      this.subject.publish(this.items);
+      return;
     }
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
     this.itemsIndex.remove(item);
@@ -86,10 +115,23 @@ export class SpatialIndex {
   }
 
   copy(): ItemDataWithId[] {
-    return this.getItemsWithIncludedChildren(this.itemsArray).map(item => ({
-      ...item.serialize(true),
-      id: item.getId(),
-    }));
+    return this.getItemsWithIncludedChildren(this.itemsArray).map(item => {
+      const serialized = { ...item.serialize(true), id: item.getId() };
+      // Nested items store local transforms internally. For serialization we always
+      // write world transforms so that old and new clients can load the data correctly.
+      // applyAddChildren will convert back to local on load.
+      if (item.parent !== "Board" && (item as BaseItem).getWorldMatrix) {
+        const worldMatrix = (item as BaseItem).getWorldMatrix();
+        serialized.transformation = {
+          ...serialized.transformation,
+          translateX: worldMatrix.translateX,
+          translateY: worldMatrix.translateY,
+          scaleX: worldMatrix.scaleX,
+          scaleY: worldMatrix.scaleY,
+        };
+      }
+      return serialized;
+    });
   }
 
   getItemsWithIncludedChildren(items: Item[]): Item[] {
@@ -276,7 +318,8 @@ export class SpatialIndex {
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        children.push(...item.index.getEnclosed(left, top, right, bottom));
+        const local = worldBoundsToLocal(item as BaseItem, left, top, right, bottom);
+        children.push(...item.index.getEnclosed(local.left, local.top, local.right, local.bottom));
         if (!item.getMbr().isEnclosedBy(mbr)) {
           return false;
         }
@@ -292,7 +335,8 @@ export class SpatialIndex {
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom));
+        const local = worldBoundsToLocal(item as BaseItem, left, top, right, bottom);
+        children.push(...item.index.getEnclosedOrCrossed(local.left, local.top, local.right, local.bottom));
         if (!item.getMbr().isEnclosedOrCrossedBy(mbr)) {
           return false;
         }
@@ -307,7 +351,10 @@ export class SpatialIndex {
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        children.push(...item.index.getUnderPoint(point, tolerance));
+        // Transform the world-space point into the container's local coordinate space.
+        const localPt = new Point(point.x, point.y);
+        (item as BaseItem).getWorldMatrix().getInverse().apply(localPt);
+        children.push(...item.index.getUnderPoint(localPt, tolerance));
         if (!item.getMbr().isUnderPoint(point)) {
           return false;
         }
@@ -323,7 +370,8 @@ export class SpatialIndex {
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        children.push(...item.index.getEnclosedOrCrossed(left, top, right, bottom));
+        const local = worldBoundsToLocal(item as BaseItem, left, top, right, bottom);
+        children.push(...item.index.getEnclosedOrCrossed(local.left, local.top, local.right, local.bottom));
         if (!item.getMbr().isEnclosedOrCrossedBy(mbr)) {
           return false;
         }

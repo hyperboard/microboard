@@ -47,6 +47,20 @@ export class Transformation {
 
 	// ─── Local state setter (no event emitted, subscribers notified) ──────────
 
+	/**
+	 * Replaces the internal matrix entirely with `matrix` without emitting an operation.
+	 * Used by the nesting system to convert between world and local coordinate spaces.
+	 */
+	setLocalMatrix(matrix: Matrix): void {
+		this.previous = this._matrix.copy();
+		this._matrix = matrix.copy();
+		this.subject.publish(this, {
+			class: 'Transformation',
+			method: 'applyMatrix',
+			items: [{ id: this.id, matrix: this.getMatrixData() }],
+		});
+	}
+
 	setLocal(x: number, y: number, scaleX?: number, scaleY?: number): void
 	setLocal(data: Partial<MatrixData>): void
 	setLocal(xOrData: number | Partial<MatrixData>, y?: number, scaleX?: number, scaleY?: number): void {

@@ -22,24 +22,28 @@ export class Group extends BaseItem {
   parent = "Board";
   readonly transformation: Transformation;
   readonly subject = new Subject<Group>();
-  private mbr: Mbr = new Mbr();
   transformationRenderBlock?: boolean = undefined;
 
   constructor(
     board: Board,
     private events?: Events,
-    private children: string[] = [],
+    children: string[] = [],
     id = ""
   ) {
-    super(board, id);
+    // isGroupItem=true creates this.index (SimpleSpatialIndex) and sets canBeNested=false
+    super(board, id, undefined, true);
     this.linkTo = new LinkTo(this.id, this.events);
     this.transformation = new Transformation(this.id, this.events);
-    this.children = children;
 
     this.transformation.subject.subscribe(() => {
       this.updateMbr();
       this.subject.publish(this);
     });
+
+    // Restore children passed via constructor (used when creating Group from existing data)
+    if (children.length > 0) {
+      this.applyAddChildren(children);
+    }
   }
 
   isClosed(): boolean {
@@ -50,50 +54,19 @@ export class Group extends BaseItem {
     return null;
   }
 
-  addChild(childId: string): void {
-    this.emit({
-      class: "Group",
-      method: "addChild",
-      item: [this.getId()],
-      childId,
-    });
-  }
-
-  private applyAddChild(childId: string): void {
-    if (!this.children.includes(childId)) {
-      this.children.push(childId);
-      this.updateMbr();
-      this.subject.publish(this);
-    }
-  }
-
-  private applyRemoveChild(childId: string): void {
-    this.children = this.children.filter((currChild) => currChild !== childId);
-    this.updateMbr();
-    this.subject.publish(this);
-  }
-
-  removeChild(childId: string): void {
-    this.emit({
-      class: "Group",
-      method: "removeChild",
-      item: [this.getId()],
-      childId,
-    });
-  }
-
-  emitRemoveChild(child: Item): void {
-    this.removeChild(child.getId());
-    child.parent = "Board";
-  }
-
   apply(op: Operation): void {
     switch (op.class) {
       case "Group":
+        // Old log events use singular addChild/removeChild — route them through
+        // the BaseItem index-based path for forward compatibility.
         if (op.method === "addChild") {
-          this.applyAddChild(op.childId);
+          this.applyAddChildren([op.childId]);
         } else if (op.method === "removeChild") {
-          this.applyRemoveChild(op.childId);
+          this.applyRemoveChildren([op.childId]);
+        } else if (op.method === "addChildren") {
+          this.applyAddChildren(op.newData.childIds);
+        } else if (op.method === "removeChildren") {
+          this.applyRemoveChildren(op.newData.childIds);
         }
         break;
       case "Transformation":
@@ -121,27 +94,76 @@ export class Group extends BaseItem {
     return this;
   }
 
+  getMbr(): Mbr {
+    // World Mbr = union of each child's local Mbr transformed by group's world matrix
+    const children = this.index!.list();
+    if (children.length === 0) {
+      return new Mbr(this.left, this.top, this.right, this.bottom);
+    }
+    const groupWorldMatrix = this.getWorldMatrix();
+    let left = Number.MAX_SAFE_INTEGER;
+    let top = Number.MAX_SAFE_INTEGER;
+    let right = Number.MIN_SAFE_INTEGER;
+    let bottom = Number.MIN_SAFE_INTEGER;
+
+    for (const child of children) {
+      const childLocalMbr = (child as BaseItem).getMbr();
+      // Transform the four corners of the child's local Mbr through the group's world matrix
+      const corners = [
+        { x: childLocalMbr.left,  y: childLocalMbr.top    },
+        { x: childLocalMbr.right, y: childLocalMbr.top    },
+        { x: childLocalMbr.right, y: childLocalMbr.bottom },
+        { x: childLocalMbr.left,  y: childLocalMbr.bottom },
+      ];
+      for (const corner of corners) {
+        groupWorldMatrix.apply(corner);
+        if (corner.x < left)   left   = corner.x;
+        if (corner.y < top)    top    = corner.y;
+        if (corner.x > right)  right  = corner.x;
+        if (corner.y > bottom) bottom = corner.y;
+      }
+    }
+
+    const mbr = new Mbr(left, top, right, bottom);
+    this.left   = left;
+    this.top    = top;
+    this.right  = right;
+    this.bottom = bottom;
+    return mbr;
+  }
+
+  updateMbr(): void {
+    this.getMbr();
+  }
+
+  getChildrenIds(): string[] {
+    return this.index!.list().map(item => item.getId());
+  }
+
+  getChildren(): Item[] {
+    return this.index!.list() as Item[];
+  }
+
+  getLinkTo(): string | undefined {
+    return this.linkTo.link;
+  }
+
   serialize(): GroupData {
     return {
       itemType: "Group",
-      children: this.children,
+      // Children IDs only — transforms are serialized as world transforms by SpatialIndex.copy()
+      children: this.getChildrenIds(),
       transformation: this.transformation.serialize(),
     };
   }
 
   deserialize(data: GroupData): this {
-    if (data.children) {
-      data.children.forEach((childId) => {
-        this.applyAddChild(childId);
-        const item = this.board.items.getById(childId);
-
-        if (item) {
-          item.parent = this.getId();
-        }
-      });
+    if (data.transformation) {
+      this.transformation.deserialize(data.transformation);
     }
-
-    this.transformation.deserialize(data.transformation);
+    if (data.children && data.children.length > 0) {
+      this.applyAddChildren(data.children);
+    }
     this.subject.publish(this);
     return this;
   }
@@ -153,122 +175,27 @@ export class Group extends BaseItem {
   getIntersectionPoints(segment: Line): Point[] {
     const lines = this.getMbr().getLines();
     const initPoints: Point[] = [];
-    const points = lines.reduce((acc, line) => {
+    return lines.reduce((acc, line) => {
       const intersections = line.getIntersectionPoints(segment);
       if (intersections.length > 0) {
         acc.push(...intersections);
       }
       return acc;
     }, initPoints);
-    return points;
-  }
-
-  getMbr(): Mbr {
-    const mbr = new Mbr();
-    let left = Number.MAX_SAFE_INTEGER;
-    let top = Number.MAX_SAFE_INTEGER;
-    let right = Number.MIN_SAFE_INTEGER;
-    let bottom = Number.MIN_SAFE_INTEGER;
-
-    const mbrs = this.children.flatMap((childId: string) => {
-      const item = this.board.items.getById(childId);
-      if (!item) {
-        return [];
-      }
-
-      const mbr = item.getMbr();
-      if (!mbr) {
-        return [];
-      }
-
-      if (left > mbr.left) {
-        left = mbr.left;
-      }
-      if (top > mbr.top) {
-        top = mbr.top;
-      }
-      if (right < mbr.right) {
-        right = mbr.right;
-      }
-      if (bottom < mbr.bottom) {
-        bottom = mbr.bottom;
-      }
-      return [mbr];
-    });
-
-    if (mbrs.length) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      mbr.combine(mbrs);
-
-      mbr.left = left !== Number.MAX_SAFE_INTEGER ? left : 0;
-      mbr.top = top !== Number.MAX_SAFE_INTEGER ? top : 0;
-      mbr.right = right !== Number.MIN_SAFE_INTEGER ? right : 0;
-      mbr.bottom = bottom !== Number.MIN_SAFE_INTEGER ? bottom : 0;
-      this.left = mbr.left;
-      this.bottom = mbr.bottom;
-      this.right = mbr.right;
-      this.top = mbr.top;
-    }
-
-    return mbr;
-  }
-
-  getChildrenIds(): string[] {
-    return this.children;
-  }
-
-  getChildren(): Item[] {
-    return this.children
-      .map((itemId) => this.board.items.getById(itemId))
-      .filter((item) => item !== undefined);
-  }
-
-  updateMbr(): void {
-    const rect = this.getMbr();
-    this.mbr = rect;
-    this.mbr.borderColor = "transparent";
-  }
-
-  setBoard(board: Board): void {
-    this.board = board;
-  }
-
-  setChildren(items: string[]): void {
-    items.forEach((itemId) => {
-      this.addChild(itemId);
-
-      const item = this.board.items.getById(itemId);
-      if (item) {
-        item.parent = this.getId();
-      }
-    });
-
-    this.updateMbr();
-  }
-
-  removeChildren(): void {
-    this.children.forEach((itemId) => {
-      this.removeChild(itemId);
-
-      const item = this.board.items.getById(itemId);
-      if (item) {
-        item.parent = this.parent;
-      }
-    });
-
-    this.updateMbr();
-  }
-
-  getLinkTo(): string | undefined {
-    return this.linkTo.link;
   }
 
   render(context: DrawingContext): void {
     if (this.transformationRenderBlock) {
       return;
     }
-
-    this.mbr.render(context);
+    // Apply group's world transform so children render using their local transforms.
+    const ctx = context.ctx;
+    ctx.save();
+    this.transformation.applyToContext(ctx);
+    for (const child of this.index!.list()) {
+      child.render(context);
+    }
+    ctx.restore();
   }
 
   renderHTML(documentFactory: DocumentFactory): HTMLElement {

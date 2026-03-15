@@ -41,13 +41,14 @@ export class AlignmentHelper {
   }
 
   combineMBRs(items: Item[]): Mbr {
+    const worldMbr = (item: Item): Mbr =>
+      item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
     return items.reduce((acc, item, i) => {
       if (i === 0) {
         return acc;
       }
-      const itemMbr = item.getPathMbr();
-      return acc.combine(itemMbr);
-    }, items[0].getMbr());
+      return acc.combine(worldMbr(item));
+    }, worldMbr(items[0]));
   }
 
   checkAlignment(

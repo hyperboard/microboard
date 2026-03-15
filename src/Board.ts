@@ -27,7 +27,7 @@ import { AINode } from "Items/AINode";
 import { ControlPointData } from "Items/Connector/ControlPoint";
 import { drawBackground } from "Background";
 import { DrawingContext } from "Items/DrawingContext";
-import { Group } from "Items/Group";
+import { Group, GroupData } from "Items/Group";
 import { ImageItem } from "Items/Image";
 import { Keyboard } from "Keyboard";
 import { parsersHTML } from "parserHTML";
@@ -437,6 +437,38 @@ export class Board {
       class: "Board",
       method: "removeLockedGroup",
       item: [item.getId()],
+    });
+  }
+
+  /**
+   * Creates a Group containing the given items.
+   * Items are moved from the board into the group's local coordinate space.
+   * Returns the newly created Group.
+   */
+  group(items: BaseItem[]): Group {
+    const id = this.getNewItemId();
+    const groupData: GroupData = {
+      itemType: "Group",
+      children: items.map((i) => i.getId()),
+      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
+    };
+    this.emit({
+      class: "Board",
+      method: "addLockedGroup",
+      item: id,
+      data: groupData,
+    });
+    return this.items.getById(id) as Group;
+  }
+
+  /**
+   * Dissolves a Group, returning its children to the board with world-space transforms.
+   */
+  ungroup(group: Group): void {
+    this.emit({
+      class: "Board",
+      method: "removeLockedGroup",
+      item: [group.getId()],
     });
   }
 

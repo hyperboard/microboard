@@ -146,10 +146,6 @@ export class BoardSelection {
     if (!this.board.events) {
       return;
     }
-    if ((operation as any).method === "transformMany") {
-      console.error("[DEBUG] transformMany emitted!", JSON.stringify(operation));
-      console.trace("[DEBUG] transformMany stack trace");
-    }
     const command = createCommand(this.board, operation);
     command.apply();
     this.board.events.emit(operation, command);
@@ -907,7 +903,7 @@ export class BoardSelection {
     this.shouldPublish = true;
   }
 
-  /** transforms selected items with frames' children */
+  /** transforms selected items (container children follow via local transform hierarchy) */
   getManyItemsTranslation(
     x: number,
     y: number,
@@ -919,18 +915,23 @@ export class BoardSelection {
       items.push({ id: itemId, matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } });
     };
 
-    const tryToAddFrameChildren = (selectedItem: Item): void => {
-      if (!("index" in selectedItem) || !selectedItem.index) {
-        return;
-      }
-      for (const childId of selectedItem.getChildrenIds()) {
-        addItem(childId);
-      }
-    };
+    // Build a set of selected IDs so we can detect when a child's container is
+    // also selected. In that case the child follows the container via the local
+    // transform hierarchy and must NOT receive its own explicit translate op
+    // (doing so would move it twice).
+    const selectedIds = new Set(
+      unselectedItem
+        ? [unselectedItem.getId()]
+        : this.board.selection.list().map((i) => i.getId())
+    );
 
     const addWithComments = (item: Item): void => {
+      // If this item lives inside a container that is also being moved, skip it —
+      // it will follow its container automatically.
+      if (item.parent !== "Board" && selectedIds.has(item.parent)) {
+        return;
+      }
       addItem(item.getId());
-      tryToAddFrameChildren(item);
       const followedComments = this.board.items
         .getComments()
         .filter((comment) => comment.getItemToFollow() === item.getId());

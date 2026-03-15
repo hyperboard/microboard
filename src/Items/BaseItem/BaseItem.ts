@@ -15,6 +15,65 @@ import {Path, Paths} from "../Path";
 import {BaseItemOperation} from "./BaseItemOperation";
 import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 import {Point} from "../Point";
+import {Matrix} from "../Transformation/Matrix";
+import {ApplyMatrixOperation, TransformMany, TransformationOperation} from "../Transformation/TransformationOperations";
+
+/**
+ * Converts a world-space Transformation operation into an equivalent local-space
+ * operation relative to `containerMatrix`. Used when replaying ops (including old
+ * log events) against items that now store local transforms.
+ *
+ * Scale ratios in `applyMatrix` are coordinate-space invariant — only translation
+ * deltas need to be rotated/scaled by the inverse of the container's linear transform.
+ */
+function toLocalTransformOp(
+	op: TransformationOperation,
+	containerMatrix: Matrix,
+	itemId?: string,
+): TransformationOperation {
+	switch (op.method) {
+		case 'applyMatrix': {
+			const converted = op.items.map(item => {
+				const local = containerMatrix.applyInverseLinear(item.matrix.translateX, item.matrix.translateY);
+				return { ...item, matrix: { ...item.matrix, translateX: local.x, translateY: local.y } };
+			});
+			return { ...op, items: converted } as ApplyMatrixOperation;
+		}
+		case 'translateBy': {
+			const local = containerMatrix.applyInverseLinear(op.x, op.y);
+			return { ...op, x: local.x, y: local.y };
+		}
+		case 'translateTo': {
+			// Absolute world position → local position via full inverse
+			const pt = new Point(op.x, op.y);
+			containerMatrix.getInverse().apply(pt);
+			return { ...op, x: pt.x, y: pt.y };
+		}
+		case 'scaleTo': {
+			// Legacy absolute scale: convert to local scale
+			return { ...op, x: op.x / containerMatrix.scaleX, y: op.y / containerMatrix.scaleY };
+		}
+		case 'scaleByTranslateBy': {
+			const local = containerMatrix.applyInverseLinear(op.translate.x, op.translate.y);
+			return { ...op, translate: { x: local.x, y: local.y } };
+		}
+		case 'scaleByRelativeTo':
+		case 'scaleToRelativeTo': {
+			const pt = new Point(op.point.x, op.point.y);
+			containerMatrix.getInverse().apply(pt);
+			return { ...op, point: pt };
+		}
+		case 'transformMany': {
+			if (!itemId || !op.items[itemId]) return op;
+			const subOp = op.items[itemId] as TransformationOperation;
+			const localSubOp = toLocalTransformOp(subOp, containerMatrix);
+			return { ...op, items: { ...op.items, [itemId]: localSubOp } } as TransformMany;
+		}
+		default:
+			// scaleBy, rotateTo, rotateBy, locked, unlocked, deserialize — no translation
+			return op;
+	}
+}
 
 export type BaseItemData = { itemType: string } & Record<string, any>;
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
@@ -73,6 +132,22 @@ export class BaseItem extends Mbr implements Geometry {
 
 	getId(): string {
 		return this.id;
+	}
+
+	/**
+	 * Returns the full world-space matrix by walking up the parent chain.
+	 * For top-level items (parent === "Board") this is identical to the item's
+	 * own transformation matrix. For nested items it is parentWorld × localMatrix.
+	 */
+	getWorldMatrix(): Matrix {
+		if (this.parent === "Board") {
+			return this.transformation.toMatrix();
+		}
+		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
+		if (!container) {
+			return this.transformation.toMatrix();
+		}
+		return this.transformation.toMatrix().composeWith(container.getWorldMatrix());
 	}
 
 	setId(id: string): this {
@@ -165,19 +240,52 @@ export class BaseItem extends Mbr implements Geometry {
 		return new Mbr(this.left, this.top, this.right, this.bottom);
 	}
 
+	/**
+	 * Returns the world-space axis-aligned bounding box.
+	 * For top-level items this is identical to getMbr().
+	 * For nested items (parent !== "Board") it transforms the local Mbr corners
+	 * through the world matrix to produce the correct world-space bounds.
+	 */
+	getWorldMbr(): Mbr {
+		if (this.parent === "Board" || !this.parent || !this.board?.items) {
+			return this.getMbr();
+		}
+		const worldMatrix = this.getWorldMatrix();
+		const local = this.getMbr();
+		const corners = [
+			new Point(local.left,  local.top),
+			new Point(local.right, local.top),
+			new Point(local.right, local.bottom),
+			new Point(local.left,  local.bottom),
+		];
+		for (const c of corners) worldMatrix.apply(c);
+		return new Mbr(
+			Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+			Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+			Math.max(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
+			Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+		);
+	}
+
 	applyAddChildren(childIds: string[]): void {
 		if (!this.index) {
 			return;
 		}
+		const containerWorldMatrix = this.getWorldMatrix();
 		childIds.forEach((childId) => {
-			const foundItem = this.board.items.getById(childId);
+			const foundItem = this.board.items.getById(childId) as BaseItem | undefined;
 			if (
 				this.parent !== childId &&
 				this.getId() !== childId
 			) {
 				if (!this.index?.getById(childId) && foundItem) {
+					// Convert the child's current world transform to local (relative to this container).
+					// All operations in the log are world-space, so this conversion is always correct
+					// whether we are processing a live user action or replaying an old event.
+					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerWorldMatrix);
 					this.board.items.index.remove(foundItem);
 					foundItem.parent = this.getId();
+					foundItem.transformation.setLocalMatrix(localMatrix);
 					this.index?.insert(foundItem);
 				}
 			}
@@ -191,15 +299,19 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.index) {
 			return;
 		}
+		const containerWorldMatrix = this.getWorldMatrix();
 		childIds.forEach((childId) => {
-			const foundItem = this.index?.getById(childId);
+			const foundItem = this.index?.getById(childId) as BaseItem | undefined;
 			if (
 				this.parent !== childId &&
 				this.getId() !== childId
 			) {
 				if (foundItem) {
+					// Convert local transform back to world before returning the item to the board index.
+					const worldMatrix = foundItem.transformation.toMatrix().composeWith(containerWorldMatrix);
 					this.index?.remove(foundItem);
 					foundItem.parent = "Board";
+					foundItem.transformation.setLocalMatrix(worldMatrix);
 					this.board.items.index.insert(foundItem);
 				}
 			}
@@ -324,9 +436,24 @@ export class BaseItem extends Mbr implements Geometry {
 	apply(op: Operation | BaseItemOperation | BaseOperation): void {
 		op = op as Operation;
 		switch (op.class) {
-			case "Transformation":
-				this.transformation.apply(op);
+			case "Transformation": {
+				let transformOp = op as TransformationOperation;
+				// Items inside a container store local transforms. All operations in the log
+				// are world-space, so we convert the translation deltas to local-space here.
+				// This handles both live events and old log replay transparently.
+				if (this.parent !== "Board") {
+					const container = this.board.items.getById(this.parent) as BaseItem | undefined;
+					if (container?.transformation) {
+						transformOp = toLocalTransformOp(
+							transformOp,
+							container.getWorldMatrix(),
+							this.id,
+						);
+					}
+				}
+				this.transformation.apply(transformOp);
 				break;
+			}
 			case "LinkTo":
 				this.linkTo.apply(op);
 				break;
