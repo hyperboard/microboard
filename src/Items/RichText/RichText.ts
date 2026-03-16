@@ -402,7 +402,6 @@ export class RichText extends BaseItem {
     }
   }
 
-  /** Get text dimensions for text editor */
   getDimensions(): {
     point: Point;
     width: number;
@@ -426,8 +425,16 @@ export class RichText extends BaseItem {
       top = container.top;
     }
 
+    const point = new Point(left, top);
+
+    if (this.worldMatrixGetter) {
+      this.worldMatrixGetter().apply(point);
+    } else {
+      this.getParentWorldMatrix().apply(point);
+    }
+
     return {
-      point: new Point(left, top),
+      point,
       width,
       height,
       maxWidth: maxWidth ? maxWidth + 1 : undefined,

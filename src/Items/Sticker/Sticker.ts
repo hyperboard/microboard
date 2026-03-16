@@ -103,7 +103,7 @@ export class Sticker extends BaseItem {
       true,
       this.itemType
     );
-    this.text.worldMatrixGetter = () => this.getWorldMatrix();
+    this.text.worldMatrixGetter = () => this.getParentWorldMatrix();
 
     this.transformation.subject.subscribe(
       (_subject: Transformation, op: TransformationOperation) => {

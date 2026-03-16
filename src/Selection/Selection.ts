@@ -380,18 +380,24 @@ export class BoardSelection {
   }
 
   setTextToEdit(item: Item | undefined): void {
-    if (this.textToEdit) {
+    const text = item?.getRichText();
+
+    if (this.textToEdit && this.textToEdit !== text) {
       this.textToEdit.updateElement();
       this.textToEdit.enableRender();
     }
-    if (!(item && item.getRichText())) {
+
+    if (!text) {
       this.textToEdit = undefined;
       return;
     }
-    const text = item.getRichText();
-    if (!text) {
-      return;
+
+    if (this.textToEdit === text) {
+      return; // Already editing this item. Avoid flickering.
     }
+
+    this.textToEdit = text;
+
     if (text.isEmpty()) {
       const textColor = tempStorage.getFontColor(item.itemType);
       const textSize = tempStorage.getFontSize(item.itemType);
@@ -431,7 +437,6 @@ export class BoardSelection {
         this.setVerticalAlignment(verticalAlignment);
       }
     }
-    this.textToEdit = text;
     text.editor.selectWholeText();
     this.textToEdit.disableRender();
     this.board.items.subject.publish(this.board.items);
