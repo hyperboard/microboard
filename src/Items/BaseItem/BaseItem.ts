@@ -565,7 +565,7 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.isHoverHighlighted) {
 			return;
 		}
-		const mbr = this.getMbr();
+		const mbr = this.getWorldMbr();
 		mbr.strokeWidth = 2 / context.matrix.scaleX;
 		mbr.borderColor = BaseItem.HOVER_HIGHLIGHT_COLOR;
 		mbr.render(context);

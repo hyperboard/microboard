@@ -775,9 +775,9 @@ export class BoardSelection {
     }
     const selectedMbr = selected.reduce((acc: Mbr | undefined, item) => {
       if (!acc) {
-        return item.getMbr();
+        return item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
       }
-      return acc.combine(item.getMbr());
+      return acc.combine(item instanceof BaseItem ? item.getWorldMbr() : item.getMbr());
     }, undefined);
 
     if (selectedMbr) {
@@ -826,7 +826,7 @@ export class BoardSelection {
           const childrenIds = val.item.getChildrenIds();
           if (childrenIds) {
           const currGroup = val.item;
-          const currMbr = currGroup.getMbr();
+          const currMbr = currGroup.getWorldMbr();
           const children = childrenIds
             .map((childId) => this.board.items.getById(childId))
             .filter((item) => !!item);
@@ -1585,7 +1585,7 @@ export class BoardSelection {
     item: Item,
     customScale?: number
   ): void {
-    const mbr = item.getMbr();
+    const mbr = item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
     mbr.strokeWidth = !customScale
       ? 1 / context.matrix.scaleX
       : 1 / customScale;
@@ -1659,7 +1659,7 @@ export class BoardSelection {
         path.setBackgroundColor("none");
         path.render(context);
       } else {
-        const itemRect = item.getMbr();
+        const itemRect = item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
         itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
         itemRect.strokeWidth = 2;
         itemRect.render(context);
