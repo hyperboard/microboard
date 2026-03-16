@@ -382,7 +382,7 @@ export class RichText extends BaseItem {
 
   getMaxWidth(): number | undefined {
     if (this.autoSize) {
-      return this.editor.maxWidth;
+      return this.editor.maxWidth || this.getTransformedContainer().getWidth();
     }
     if (this.isContainerSet) {
       return this.getTransformedContainer().getWidth();
@@ -429,6 +429,14 @@ export class RichText extends BaseItem {
 
     if (this.worldMatrixGetter) {
       this.worldMatrixGetter().apply(point);
+    } else if (this.isInShape) {
+      // If manually not set, try to find the item in board index to get its world transform
+      const item = this.board.items.getById(this.id);
+      if (item) {
+        item.getParentWorldMatrix().apply(point);
+      } else {
+        this.getParentWorldMatrix().apply(point);
+      }
     } else {
       this.getParentWorldMatrix().apply(point);
     }
@@ -439,7 +447,7 @@ export class RichText extends BaseItem {
       height,
       maxWidth: maxWidth ? maxWidth + 1 : undefined,
       maxHeight,
-      textScale: this.isInShape ? 1 : this.getScale(),
+      textScale: this.getScale(),
     };
   }
 
