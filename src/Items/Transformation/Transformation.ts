@@ -313,9 +313,9 @@ export class Transformation {
 	}
 
 	applyMatrixSilent(matrixData: MatrixData): void {
-		this.previous = this.matrix.copy();
-		this.matrix.scale(matrixData.scaleX, matrixData.scaleY);
-		this.matrix.translate(matrixData.translateX, matrixData.translateY);
+		this.previous = this._matrix.copy();
+		this._matrix.scale(matrixData.scaleX, matrixData.scaleY);
+		this._matrix.translate(matrixData.translateX, matrixData.translateY);
 		this.subject.publish(this, {
 			class: 'Transformation',
 			method: 'applyMatrix',
