@@ -88,9 +88,10 @@ export class Frame extends BaseItem {
     this.text.setSelectionHorisontalAlignment("left");
 
     this.text.customTransformationMatrix = () => {
-      const { translateX, translateY, scaleX } = this.transformation.getMatrixData();
-      const scaleY = (this.text.layoutNodes.height * scaleX) / 10;
-      return new Matrix(translateX, translateY, scaleX, scaleY);
+      // Use the frame's translation but ignore its own scaling for the title?
+      // Actually, Frames don't scale their titles by default, they just translate them.
+      const matrix = this.transformation.toMatrix();
+      return new Matrix(matrix.translateX, matrix.translateY, 1, 1);
     };
 
     this.text.renderingScale = (cameraScale) => {

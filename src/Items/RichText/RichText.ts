@@ -543,8 +543,8 @@ export class RichText extends BaseItem {
     const scaledMatrix = new Matrix(
       translateX,
       translateY,
-      scaleX * extraScale,
-      scaleY * extraScale
+      scaleX,
+      scaleY
     );
 
     return this.container.getTransformed(scaledMatrix);
@@ -1048,11 +1048,24 @@ export class RichText extends BaseItem {
     const cameraScale = context.getCameraScale();
     const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
 
-    // Use this.left and this.top which are already world coordinates from alignInRectangle
-    ctx.translate(this.left, this.top);
+    let matrix: Matrix;
+    if (this.customTransformationMatrix) {
+      matrix = this.customTransformationMatrix();
+    } else {
+      matrix = this.transformation.toMatrix();
+    }
 
-    const { scaleX, scaleY } = this.transformation.getMatrixData();
-    ctx.scale(scaleX * extraScale, scaleY * extraScale);
+    const { translateX, translateY, scaleX, scaleY } = matrix;
+    const scaledMatrix = new Matrix(
+      translateX,
+      translateY,
+      scaleX * extraScale,
+      scaleY * extraScale
+    );
+
+    context.matrix = scaledMatrix;
+    context.applyChanges();
+    ctx.translate(this.container.left, this.container.top);
 
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
     if (shouldClip) {
@@ -1235,9 +1248,22 @@ export class RichText extends BaseItem {
     const cameraScale = this.board.camera.getScale();
     const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
 
-    // Use total world scale but keep world position from alignInRectangle
-    const { scaleX, scaleY } = this.transformation.getMatrixData();
-    const transform = `translate(${this.left}px, ${this.top}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
+    let matrix: Matrix;
+    if (this.customTransformationMatrix) {
+      matrix = this.customTransformationMatrix();
+    } else {
+      matrix = this.transformation.toMatrix();
+    }
+
+    const { translateX, translateY, scaleX, scaleY } = matrix;
+    const scaledMatrix = new Matrix(
+      translateX,
+      translateY,
+      scaleX * extraScale,
+      scaleY * extraScale
+    );
+
+    const transform = `translate(${scaledMatrix.translateX + this.container.left * scaledMatrix.scaleX}px, ${scaledMatrix.translateY + this.container.top * scaledMatrix.scaleY}px) scale(${scaledMatrix.scaleX}, ${scaledMatrix.scaleY})`;
 
     const transformedWidth = this.getMbr().getWidth();
     const transformedHeight = this.getMbr().getHeight();
