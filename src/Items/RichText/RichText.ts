@@ -433,7 +433,9 @@ export class RichText extends BaseItem {
       height,
       maxWidth: maxWidth ? maxWidth + 1 : undefined,
       maxHeight,
-      textScale: this.getScale(),
+      // isInShape items (Shape, Sticker fixed-font) render at raw font sizes on canvas
+      // with no ctx.scale applied, so the HTML editor must also use scale=1.
+      textScale: (this.isInShape && !this.autoSize) ? 1 : this.getScale(),
     };
   }
 

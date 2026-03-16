@@ -131,6 +131,12 @@ export class BaseItem extends Mbr implements Geometry {
 		this.children = this.index?.items.listAll().map(item => item.getId()) || [];
 	}
 
+	/**
+	 * Called when this item's parent changes. Subclasses override this to
+	 * propagate the new parent to child objects (e.g. text.parent in Sticker/Shape).
+	 */
+	protected onParentChanged(_newParent: string): void {}
+
 	getId(): string {
 		return this.id;
 	}
@@ -316,6 +322,7 @@ export class BaseItem extends Mbr implements Geometry {
 					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerNestingMatrix);
 					this.board.items.index.remove(foundItem);
 					foundItem.parent = this.getId();
+					foundItem.onParentChanged(this.getId());
 					foundItem.transformation.setLocalMatrix(localMatrix);
 					this.index?.insert(foundItem);
 				}
@@ -342,6 +349,7 @@ export class BaseItem extends Mbr implements Geometry {
 					const worldMatrix = foundItem.transformation.toMatrix().composeWith(containerNestingMatrix);
 					this.index?.remove(foundItem);
 					foundItem.parent = "Board";
+					foundItem.onParentChanged("Board");
 					foundItem.transformation.setLocalMatrix(worldMatrix);
 					this.board.items.index.insert(foundItem);
 				}
