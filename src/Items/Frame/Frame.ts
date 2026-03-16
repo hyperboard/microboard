@@ -83,19 +83,23 @@ export class Frame extends BaseItem {
       true,
       false,
       "Frame",
-      {...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR}
+      {...conf.DEFAULT_TEXT_STYLES, fontSize: 18, fontColor: FRAME_TITLE_COLOR}
     );
+    this.text.editor.verticalAlignment = "bottom";
     this.text.setSelectionHorisontalAlignment("left");
 
+    // Adjust container to be taller and further above the border
+    this.textContainer.top = -25;
+    this.textContainer.bottom = -2;
+
     this.text.customTransformationMatrix = () => {
-      // Use the frame's translation but ignore its own scaling for the title?
-      // Actually, Frames don't scale their titles by default, they just translate them.
       const matrix = this.transformation.toMatrix();
       return new Matrix(matrix.translateX, matrix.translateY, 1, 1);
     };
 
     this.text.renderingScale = (cameraScale) => {
-      return Math.max(1, Math.min(5, 1 / cameraScale));
+      // Slightly larger base multiplier (1.2x)
+      return Math.max(1, Math.min(6, 1.2 / cameraScale));
     };
 
     this.transformation.subject.subscribe(() => {
