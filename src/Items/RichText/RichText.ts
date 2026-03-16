@@ -425,7 +425,7 @@ export class RichText extends BaseItem {
     }
 
     const point = new Point(left, top);
-    this.getParentWorldMatrix().apply(point);
+    this.getParentVisualWorldMatrix().apply(point);
 
     return {
       point,

@@ -9,14 +9,14 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { Operation } from "Events";
 import { TransformationData } from "Items/Transformation/TransformationData";
 import { BaseOperation } from "Events/EventsOperations";
-import {BaseCommand, createCommand} from "Events/Command";
-import {Subject} from "../../Subject";
-import {Path, Paths} from "../Path";
-import {BaseItemOperation} from "./BaseItemOperation";
-import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
-import {Point} from "../Point";
-import {Matrix} from "../Transformation/Matrix";
-import {ApplyMatrixOperation, TransformMany, TransformationOperation} from "../Transformation/TransformationOperations";
+import { BaseCommand, createCommand } from "Events/Command";
+import { Subject } from "../../Subject";
+import { Path, Paths } from "../Path";
+import { BaseItemOperation } from "./BaseItemOperation";
+import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
+import { Point } from "../Point";
+import { Matrix } from "../Transformation/Matrix";
+import { ApplyMatrixOperation, TransformMany, TransformationOperation } from "../Transformation/TransformationOperations";
 
 /**
  * Converts a world-space Transformation operation into an equivalent local-space
@@ -135,10 +135,12 @@ export class BaseItem extends Mbr implements Geometry {
 	 * Called when this item's parent changes. Subclasses override this to
 	 * propagate the new parent to child objects (e.g. text.parent in Sticker/Shape).
 	 */
-	protected onParentChanged(_newParent: string): void {}
+	protected onParentChanged(_newParent: string): void { }
 
 	/**
 	 * Returns the parent's world matrix. For Frames, only the translation component
+	 * is returned by default to ensure children are not affected by frame scaling.
+	 * If `visual` is true, the full matrix (including scale) is returned.
 	 * is returned by default to ensure children are not affected by frame scaling.
 	 * If `visual` is true, the full matrix (including scale) is returned.
 	 */
@@ -154,15 +156,41 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	/**
+	 * Returns the parent's world matrix including scaling for all containers.
+	 * Used for positioning UI overlays that live outside the board's SVG/Canvas.
+	 */
+	getParentVisualWorldMatrix(): Matrix {
+		if (this.parent === "Board") {
+			return new Matrix();
+		}
+		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
+		if (!container) {
+			return new Matrix();
+		}
+		return container.getVisualWorldMatrix();
+	}
+
+	/**
 	 * Returns the world-space matrix by walking up the parent chain.
 	 * For top-level items (parent === "Board") this is identical to the item's
 	 * own transformation matrix. For nested items it is parentTransform × localMatrix.
+	 * Note: Frames act as non-scaling containers for children.
 	 */
 	getWorldMatrix(): Matrix {
 		if (this.parent === "Board") {
 			return this.transformation.toMatrix();
 		}
 		return this.transformation.toMatrix().composeWith(this.getParentWorldMatrix());
+	}
+
+	/**
+	 * Returns the visual world-space matrix, including scaling from all parents.
+	 */
+	getVisualWorldMatrix(): Matrix {
+		if (this.parent === "Board") {
+			return this.transformation.toMatrix();
+		}
+		return this.transformation.toMatrix().composeWith(this.getParentVisualWorldMatrix());
 	}
 
 	/**
@@ -196,7 +224,7 @@ export class BaseItem extends Mbr implements Geometry {
 			class: this.itemType,
 			method: "addChildren",
 			item: [this.getId()],
-			newData: {childIds: children.map(child => child.getId())},
+			newData: { childIds: children.map(child => child.getId()) },
 		});
 	}
 
@@ -209,7 +237,7 @@ export class BaseItem extends Mbr implements Geometry {
 			class: this.itemType,
 			method: "removeChildren",
 			item: [this.getId()],
-			newData: {childIds: childrenArr.map(child => child.getId())},
+			newData: { childIds: childrenArr.map(child => child.getId()) },
 		});
 	}
 
@@ -278,10 +306,10 @@ export class BaseItem extends Mbr implements Geometry {
 		const parentMatrix = this.getParentWorldMatrix();
 		const local = this.getMbr();
 		const corners = [
-			new Point(local.left,  local.top),
+			new Point(local.left, local.top),
 			new Point(local.right, local.top),
 			new Point(local.right, local.bottom),
-			new Point(local.left,  local.bottom),
+			new Point(local.left, local.bottom),
 		];
 		for (const c of corners) parentMatrix.apply(c);
 		return new Mbr(
@@ -431,8 +459,8 @@ export class BaseItem extends Mbr implements Geometry {
 				class: itemType,
 				method: "toggleResizeEnabled",
 				item: itemIds,
-				newData: {resizeEnabled: false},
-				prevData: {resizeEnabled: true},
+				newData: { resizeEnabled: false },
+				prevData: { resizeEnabled: true },
 			});
 		})
 	}
@@ -454,8 +482,8 @@ export class BaseItem extends Mbr implements Geometry {
 				class: itemType,
 				method: "toggleResizeEnabled",
 				item: itemIds,
-				newData: {resizeEnabled: true},
-				prevData: {resizeEnabled: false},
+				newData: { resizeEnabled: true },
+				prevData: { resizeEnabled: false },
 			});
 		})
 	}
