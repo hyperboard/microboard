@@ -59,13 +59,13 @@ export class GravityEngine {
 			!item.transformation.isLocked && !EXCLUDED_ITEM_TYPES.has(item.itemType));
 		if (items.length < 1) return;
 
-		// Board center = average position of all items
+		// Board center = average MBR center of all items
 		let sumX = 0;
 		let sumY = 0;
 		for (const item of items) {
-			const pos = item.transformation.getTranslation();
-			sumX += pos.x;
-			sumY += pos.y;
+			const mbr = item.getMbr();
+			sumX += mbr.left + mbr.getWidth() * 0.5;
+			sumY += mbr.top  + mbr.getHeight() * 0.5;
 		}
 		const centerX = sumX / items.length;
 		const centerY = sumY / items.length;
@@ -77,7 +77,6 @@ export class GravityEngine {
 			}
 			const vel = this.velocities.get(id)!;
 
-			const pos1 = item.transformation.getTranslation();
 			const mbr1 = item.getMbr();
 			const w1 = mbr1.getWidth();
 			const h1 = mbr1.getHeight();
@@ -85,34 +84,40 @@ export class GravityEngine {
 			let ax = 0;
 			let ay = 0;
 
+			// MBR center of item1
+			const cx1 = mbr1.left + w1 * 0.5;
+			const cy1 = mbr1.top  + h1 * 0.5;
+
 			// ── Attraction toward center ──────────────────────────────────────
-			const dcx = centerX - pos1.x;
-			const dcy = centerY - pos1.y;
+			const dcx = centerX - cx1;
+			const dcy = centerY - cy1;
 			const distCenter = Math.sqrt(dcx * dcx + dcy * dcy) + 1;
 			ax += this.G_CENTER * dcx / distCenter;
 			ay += this.G_CENTER * dcy / distCenter;
 
 			// ── Inter-item gravity + collision repulsion ──────────────────────
 			const nearby = this.board.items.getEnclosedOrCrossed(
-				pos1.x - this.MAX_DISTANCE,
-				pos1.y - this.MAX_DISTANCE,
-				pos1.x + this.MAX_DISTANCE * 2,
-				pos1.y + this.MAX_DISTANCE * 2,
+				cx1 - this.MAX_DISTANCE,
+				cy1 - this.MAX_DISTANCE,
+				cx1 + this.MAX_DISTANCE * 2,
+				cy1 + this.MAX_DISTANCE * 2,
 			).filter((other: Item) => other.getId() !== id && !EXCLUDED_ITEM_TYPES.has(other.itemType));
 
 			for (const other of nearby) {
-				const pos2 = other.transformation.getTranslation();
 				const mbr2 = other.getMbr();
 				const w2 = mbr2.getWidth();
 				const h2 = mbr2.getHeight();
 				const mass2 = w2 * h2;
 
-				const dx = pos2.x - pos1.x;
-				const dy = pos2.y - pos1.y;
+				// Use MBR centers for correct distance calculation
+				const cx2 = mbr2.left + w2 * 0.5;
+				const cy2 = mbr2.top  + h2 * 0.5;
+				const dx = cx2 - cx1;
+				const dy = cy2 - cy1;
 				const distSq = dx * dx + dy * dy;
 				const dist = Math.sqrt(distSq) + 0.001;
 
-				// Minimum separation distance: half-extents sum of both items
+				// Minimum center-to-center separation before repulsion kicks in
 				const minDist = (w1 + w2) * 0.5 + (h1 + h2) * 0.5;
 
 				if (dist < minDist) {

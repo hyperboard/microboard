@@ -455,6 +455,12 @@ export class Comment implements Geometry {
 
   onRemove(): void {}
 
+  highlightMbr(): void {}
+
+  clearHighlightMbr(): void {}
+
+  renderHoverHighlight(_context: DrawingContext): void {}
+
   render(context: DrawingContext): void {}
 
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
