@@ -11,6 +11,7 @@ import {
   Shape,
 } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
+import { BaseItem } from "Items/BaseItem/BaseItem";
 import { BoardSelection } from "Selection";
 import { SessionStorage } from "SessionStorage";
 import "./QuickAddButtons.css";
@@ -53,8 +54,9 @@ export function getQuickAddButtons(
     connectorStartPoint: Point
   ): { newItem: Item; connectorData: ConnectorData } {
     const connectorStorage = new SessionStorage();
-    const currMbr = selectedItem.getPathMbr();
+    const currMbr = selectedItem instanceof BaseItem ? selectedItem.getWorldMbr() : selectedItem.getPathMbr();
     const selectedItemData = selectedItem.serialize();
+    const selectedMatrix = selectedItem instanceof BaseItem ? selectedItem.getWorldMatrix() : new Matrix(selectedItemData.transformation?.translateX || 0, selectedItemData.transformation?.translateY || 0);
     const width = currMbr.getWidth();
     const height = currMbr.getHeight();
     let offsetX = width;
@@ -111,10 +113,10 @@ export function getQuickAddButtons(
     if (newItemData.transformation) {
       newItemData.transformation.translateX =
         adjustment.translateX +
-        (selectedItemData.transformation?.translateX || 0);
+        selectedMatrix.translateX;
       newItemData.transformation.translateY =
         adjustment.translateY +
-        (selectedItemData.transformation?.translateY || 0) +
+        selectedMatrix.translateY +
         height / 2 -
         newHeight / 2;
     }
@@ -249,7 +251,7 @@ export function getQuickAddButtons(
     customMbr?: Mbr
   ): { positions: Point[]; item: Item } | undefined {
     const single = selection.items.getSingle();
-    const itemMbr = customMbr ? customMbr : single?.getMbr();
+    const itemMbr = customMbr ? customMbr : (single instanceof BaseItem ? single.getWorldMbr() : single?.getMbr());
     if (
       !itemMbr ||
       (single?.itemType !== "Sticker" &&
