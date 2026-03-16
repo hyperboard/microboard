@@ -46,7 +46,7 @@ const width = 200;
 const height = 200;
 
 export const StickerShape = {
-  textBounds: new Mbr(6.67, 6.67, width - 6.67, height - 6.67),
+  textBounds: new Mbr(8, 8, width - 8, height - 8),
   stickerPath: new Path(
     [
       new Line(new Point(0, 0), new Point(width, 0)),
@@ -357,21 +357,24 @@ export class Sticker extends BaseItem {
     const autoScale =
       (this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
     const textElement = this.text.renderHTML(documentFactory);
-    const padding = 6;
+    const padding = 8;
     textElement.id = `${this.getId()}_text`;
     textElement.style.overflow = "auto";
     positionRelatively(textElement, div, padding);
     resetElementScale(textElement);
     scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
     scaleElementBy(textElement, autoScale, autoScale);
-    textElement.style.maxWidth = `${
-      (width / autoScale - (2 * padding) / autoScale) * scaleX
-    }px`;
+    
+    // Calculate the available width in Board pixels, then translate to CSS/HTML space
+    const maxAvailableWidth = (unscaledWidth - 2 * padding);
+    textElement.style.maxWidth = `${maxAvailableWidth * scaleX}px`;
+    
     if (autoScale < 1) {
-      textElement.style.width = `${
-        parseInt(textElement.style.width) / (scaleX * autoScale) -
-        2 * padding * scaleX
-      }px`;
+      // If autosized down, the logical width is larger (width / autoScale)
+      // We need to ensure the element doesn't exceed the sticker bounds
+      textElement.style.width = `${maxAvailableWidth * scaleX}px`;
+    } else {
+      textElement.style.width = "100%";
     }
     const textHeight = this.text.layoutNodes.height * autoScale;
     if (textHeight < height) {
