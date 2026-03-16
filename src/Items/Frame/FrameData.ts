@@ -7,15 +7,15 @@ import { BorderStyle, BorderWidth } from '../Path';
 import { DefaultRichTextData } from '../RichText/RichTextData';
 import { FrameType } from './Basic';
 import { conf } from 'Settings';
-import { ColorValue, fixedColor } from 'Color';
+import { ColorValue, fixedColor, semanticColor } from 'Color';
 
-export const FRAME_BORDER_COLOR = 'rgba(10, 15, 41, 0.08)';
+export const FRAME_BORDER_COLOR = semanticColor('contrastGray');
 
 export const FRAME_HIGHLIGHTER_BORDER_COLOR = '#93AFF6';
 export const FRAME_CHILDREN_HIGHLIGHTER_COLOR = 'rgb(10, 15, 41, .08)';
 export const FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR = '#4778F5';
 
-export const FRAME_TITLE_COLOR = 'rgb(107, 110, 120)';
+export const FRAME_TITLE_COLOR = semanticColor('contrastNeutral');
 export const FRAME_TYPES = [
 	// { id: "Custom", label: i18n.t("frame.custom") },
 	{ id: 'Custom', label: 'Custom' },
@@ -69,10 +69,10 @@ export class DefaultFrameData implements FrameData {
 	readonly itemType = 'Frame';
 	constructor(
 		public shapeType: FrameType = 'Custom',
-		public backgroundColor: ColorValue = fixedColor(FRAME_FILL_COLOR),
+		public backgroundColor: ColorValue = semanticColor('contrastNeutral'),
 		public backgroundOpacity = 1,
-		public borderColor: ColorValue = fixedColor(FRAME_BORDER_COLOR),
-		public borderOpacity = 0.08,
+		public borderColor: ColorValue = FRAME_BORDER_COLOR,
+		public borderOpacity = 1,
 		public borderStyle: BorderStyle = 'solid',
 		public borderWidth: BorderWidth = 0.2,
 		public transformation = new DefaultTransformationData(),

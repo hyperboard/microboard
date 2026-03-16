@@ -1,10 +1,11 @@
+import type { ColorValue } from '../../../../Color/index.js';
 import { HorisontalAlignment } from '../../../Alignment.js';
 import { BlockNode } from '../../Editor/BlockNode.js';
 import { TextNode, TextStyle } from '../../Editor/TextNode.js';
 
 export function getParagraph(
   fontStyles: TextStyle[],
-  fontColor: string,
+  fontColor: string | ColorValue,
   fontSize: number,
   fontFamily: string,
   defaultHorizontalAlignment: HorisontalAlignment,

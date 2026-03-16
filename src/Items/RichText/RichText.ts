@@ -92,6 +92,8 @@ export class RichText extends BaseItem {
   private _onLimitReached: () => void = () => {};
   private shrinkWidth = false;
   prevMbr: Mbr | null = null;
+  customTransformationMatrix?: () => Matrix;
+  renderingScale?: (cameraScale: number) => number;
 
   rtCounter = 0;
 
@@ -527,11 +529,8 @@ export class RichText extends BaseItem {
    * Get the container that would be used to align the CanvasDocument.
    */
   getTransformedContainer(): Mbr {
-    if (this.insideOf === "Frame") {
-      const { translateX, translateY, scaleX } = this.transformation.getMatrixData();
-      const scaleY = (this.getMbr().getHeight() * 2) / 10;
-      const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
-      return this.container.getTransformed(matrix);
+    if (this.customTransformationMatrix) {
+      return this.container.getTransformed(this.customTransformationMatrix());
     }
     return this.container.getTransformed(this.transformation.toMatrix());
   }
@@ -1031,7 +1030,9 @@ export class RichText extends BaseItem {
       ctx.clip(this.clipPath.nativePath);
     }
     const autoSizeScale = this.autoSize ? this.autoSizeScale : undefined;
-    this.layoutNodes.render(ctx, autoSizeScale);
+    const cameraScale = context.getCameraScale();
+    const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
+    this.layoutNodes.render(ctx, autoSizeScale ? autoSizeScale * extraScale : extraScale);
     ctx.restore();
     if (this.getLinkTo() && (this.insideOf === "RichText" || !this.insideOf)) {
       const { top, right } = this.getMbr();
@@ -1206,7 +1207,9 @@ export class RichText extends BaseItem {
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.getMatrixData();
 
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    const cameraScale = this.board.camera.getScale();
+    const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
+    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
 
     const transformedWidth = this.getTransformedContainer().getWidth();
     const transformedHeight = this.getTransformedContainer().getHeight();

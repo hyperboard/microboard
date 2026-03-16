@@ -86,6 +86,17 @@ export class Frame extends BaseItem {
       {...conf.DEFAULT_TEXT_STYLES, fontColor: FRAME_TITLE_COLOR}
     );
     this.text.setSelectionHorisontalAlignment("left");
+
+    this.text.customTransformationMatrix = () => {
+      const { translateX, translateY, scaleX } = this.transformation.getMatrixData();
+      const scaleY = (this.getMbr().getHeight() * 2) / 10;
+      return new Matrix(translateX, translateY, scaleX, scaleY);
+    };
+
+    this.text.renderingScale = (cameraScale) => {
+      return Math.max(1, Math.min(5, 1 / cameraScale));
+    };
+
     this.transformation.subject.subscribe(() => {
       this.transformPath();
       this.updateMbr();
