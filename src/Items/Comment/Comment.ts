@@ -293,13 +293,18 @@ export class Comment implements Geometry {
     });
   }
 
+  private _syncing = false;
+
   private transform(): void {
+    if (this._syncing) return;
+    this._syncing = true;
     const { translateX, translateY } = this.transformation.getMatrixData();
     if (translateX && translateY) {
       this.anchor = new Point(translateX, translateY);
     } else {
       this.transformation.setLocal(this.anchor.x, this.anchor.y);
     }
+    this._syncing = false;
   }
 
   getUnreadMessages(userId = ANONYMOUS_ID): Message[] | null {
