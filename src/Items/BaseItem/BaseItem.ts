@@ -137,13 +137,10 @@ export class BaseItem extends Mbr implements Geometry {
 	 */
 	protected onParentChanged(_newParent: string): void {}
 
-	getId(): string {
-		return this.id;
-	}
-
 	/**
 	 * Returns the parent's world matrix. For Frames, only the translation component
-	 * is returned to ensure children are not affected by frame scaling.
+	 * is returned by default to ensure children are not affected by frame scaling.
+	 * If `visual` is true, the full matrix (including scale) is returned.
 	 */
 	getParentWorldMatrix(): Matrix {
 		if (this.parent === "Board") {
@@ -153,18 +150,13 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!container) {
 			return new Matrix();
 		}
-		const matrix = container.getWorldMatrix();
-		if (container.itemType === "Frame") {
-			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
-		}
-		return matrix;
+		return container.getWorldMatrix();
 	}
 
 	/**
-	 * Returns the full world-space matrix by walking up the parent chain.
+	 * Returns the world-space matrix by walking up the parent chain.
 	 * For top-level items (parent === "Board") this is identical to the item's
 	 * own transformation matrix. For nested items it is parentTransform × localMatrix.
-	 * Note: Frames act as non-scaling containers.
 	 */
 	getWorldMatrix(): Matrix {
 		if (this.parent === "Board") {
@@ -178,11 +170,7 @@ export class BaseItem extends Mbr implements Geometry {
 	 * the translation part. For other items it is the full world matrix.
 	 */
 	getNestingMatrix(): Matrix {
-		const matrix = this.getWorldMatrix();
-		if (this.itemType === "Frame") {
-			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
-		}
-		return matrix;
+		return this.getWorldMatrix();
 	}
 
 	setId(id: string): this {
