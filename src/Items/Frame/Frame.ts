@@ -89,7 +89,7 @@ export class Frame extends BaseItem {
 
     this.text.customTransformationMatrix = () => {
       const { translateX, translateY, scaleX } = this.transformation.getMatrixData();
-      const scaleY = (this.getMbr().getHeight() * 2) / 10;
+      const scaleY = (this.text.layoutNodes.height * scaleX) / 10;
       return new Matrix(translateX, translateY, scaleX, scaleY);
     };
 

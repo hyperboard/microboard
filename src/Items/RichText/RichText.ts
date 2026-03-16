@@ -77,7 +77,7 @@ export class RichText extends BaseItem {
 
   private isContainerSet = false;
   isRenderEnabled = true;
-  private layoutNodes: LayoutBlockNodes;
+  public layoutNodes: LayoutBlockNodes;
   private clipPath = new conf.path2DFactory();
   private updateRequired = false;
   private autoSizeScale = 1;
@@ -529,10 +529,25 @@ export class RichText extends BaseItem {
    * Get the container that would be used to align the CanvasDocument.
    */
   getTransformedContainer(): Mbr {
+    const cameraScale = this.board.camera.getScale();
+    const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
+
+    let matrix: Matrix;
     if (this.customTransformationMatrix) {
-      return this.container.getTransformed(this.customTransformationMatrix());
+      matrix = this.customTransformationMatrix();
+    } else {
+      matrix = this.transformation.toMatrix();
     }
-    return this.container.getTransformed(this.transformation.toMatrix());
+
+    const { translateX, translateY, scaleX, scaleY } = matrix;
+    const scaledMatrix = new Matrix(
+      translateX,
+      translateY,
+      scaleX * extraScale,
+      scaleY * extraScale
+    );
+
+    return this.container.getTransformed(scaledMatrix);
   }
 
   emitWithoutApplying = (op: RichTextOperation): void => {
@@ -998,7 +1013,18 @@ export class RichText extends BaseItem {
     this.insideOf = data.insideOf;
     if (typeof document !== "undefined") {
       document.fonts.ready.then(() => {
-        this.updateElement();
+    this.layoutNodes = getBlockNodes(
+      this.getBlockNodes(),
+      this.shrinkWidth ? Infinity : this.getMaxWidth() || 0,
+      this.shrinkWidth,
+      this.insideOf === "Frame"
+    );
+
+    this.alignInRectangle(
+      this.getTransformedContainer(),
+      this.editor.verticalAlignment
+    );
+    this.transformCanvas();
       });
     }
     this.subject.publish(this);
@@ -1018,21 +1044,23 @@ export class RichText extends BaseItem {
     }
     const { ctx } = context;
     ctx.save();
+
+    const cameraScale = context.getCameraScale();
+    const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
+
+    // Use this.left and this.top which are already world coordinates from alignInRectangle
     ctx.translate(this.left, this.top);
 
-    const shouldScale = !this.isInShape && !this.autoSize;
-    if (shouldScale) {
-      const { scaleX, scaleY } = this.transformation.getMatrixData();
-      ctx.scale(scaleX, scaleY);
-    }
+    const { scaleX, scaleY } = this.transformation.getMatrixData();
+    ctx.scale(scaleX * extraScale, scaleY * extraScale);
+
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
     if (shouldClip) {
       ctx.clip(this.clipPath.nativePath);
     }
+
     const autoSizeScale = this.autoSize ? this.autoSizeScale : undefined;
-    const cameraScale = context.getCameraScale();
-    const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
-    this.layoutNodes.render(ctx, autoSizeScale ? autoSizeScale * extraScale : extraScale);
+    this.layoutNodes.render(ctx, autoSizeScale);
     ctx.restore();
     if (this.getLinkTo() && (this.insideOf === "RichText" || !this.insideOf)) {
       const { top, right } = this.getMbr();
@@ -1204,15 +1232,15 @@ export class RichText extends BaseItem {
     // : this.editor.editor.children.map(renderNode);
     const elements = this.editor.editor.children.map(renderNode);
 
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-
     const cameraScale = this.board.camera.getScale();
     const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
 
-    const transformedWidth = this.getTransformedContainer().getWidth();
-    const transformedHeight = this.getTransformedContainer().getHeight();
+    // Use total world scale but keep world position from alignInRectangle
+    const { scaleX, scaleY } = this.transformation.getMatrixData();
+    const transform = `translate(${this.left}px, ${this.top}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
+
+    const transformedWidth = this.getMbr().getWidth();
+    const transformedHeight = this.getMbr().getHeight();
 
     const div = documentFactory.createElement("rich-text");
     div.id = this.getId();
