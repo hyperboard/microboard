@@ -425,7 +425,7 @@ export class RichText extends BaseItem {
     }
 
     const point = new Point(left, top);
-    this.getParentVisualWorldMatrix().apply(point);
+    this.getParentWorldMatrix().apply(point);
 
     return {
       point,
@@ -527,7 +527,13 @@ export class RichText extends BaseItem {
    * Get the container that would be used to align the CanvasDocument.
    */
   getTransformedContainer(): Mbr {
-    return this.container.getTransformed(this.getWorldMatrix());
+    if (this.insideOf === "Frame") {
+      const { translateX, translateY, scaleX } = this.transformation.getMatrixData();
+      const scaleY = (this.getMbr().getHeight() * 2) / 10;
+      const matrix = new Matrix(translateX, translateY, scaleX, scaleY);
+      return this.container.getTransformed(matrix);
+    }
+    return this.container.getTransformed(this.transformation.toMatrix());
   }
 
   emitWithoutApplying = (op: RichTextOperation): void => {
