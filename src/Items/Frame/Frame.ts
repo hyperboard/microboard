@@ -89,8 +89,8 @@ export class Frame extends BaseItem {
     this.text.setSelectionHorisontalAlignment("left");
 
     // Adjust container to be taller and further above the border
-    this.textContainer.top = -25;
-    this.textContainer.bottom = -2;
+    this.textContainer.top = -45;
+    this.textContainer.bottom = -12;
 
     this.text.customTransformationMatrix = () => {
       const matrix = this.transformation.toMatrix();
