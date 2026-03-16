@@ -403,6 +403,17 @@ export class Transformation {
 		}, timeStamp);
 	}
 
+	applyMatrixSilent(matrixData: MatrixData): void {
+		this.previous = this.matrix.copy();
+		this.matrix.scale(matrixData.scaleX, matrixData.scaleY);
+		this.matrix.translate(matrixData.translateX, matrixData.translateY);
+		this.subject.publish(this, {
+			class: 'Transformation',
+			method: 'applyMatrix',
+			items: [{ id: this.id, matrix: matrixData }],
+		});
+	}
+
 	setIsLocked(isLocked: boolean, timestamp?: number): void {
 		if (isLocked) {
 			this.emit({

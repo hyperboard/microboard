@@ -43,6 +43,7 @@ import { BaseItem } from "./Items/BaseItem";
 import { BaseItemData } from "./Items/BaseItem/BaseItem";
 import { ItemDataWithId } from "./Items/Item";
 import {Account} from "types/Account";
+import {GravityEngine} from "./Gravity/GravityEngine";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -1412,6 +1413,24 @@ export class Board {
   cleanup() {
     this.selection.quickAddButtons.clear();
     this.presence.cleanup();
+  }
+
+  private gravity: GravityEngine | null = null;
+
+  enableGravity(): void {
+    if (this.gravity) return;
+    this.gravity = new GravityEngine(this);
+    this.gravity.start();
+  }
+
+  disableGravity(): void {
+    if (!this.gravity) return;
+    this.gravity.stop();
+    this.gravity = null;
+  }
+
+  isGravityEnabled(): boolean {
+    return this.gravity !== null;
   }
 }
 
