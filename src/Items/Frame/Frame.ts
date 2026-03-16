@@ -313,16 +313,6 @@ export class Frame extends BaseItem {
     );
     const newMatrix = this.transformation.toMatrix();
 
-    // Compensate children if frame origin moved (top/left)
-    if (newMatrix.translateX !== oldMatrix.translateX || newMatrix.translateY !== oldMatrix.translateY) {
-      const dx = newMatrix.translateX - oldMatrix.translateX;
-      const dy = newMatrix.translateY - oldMatrix.translateY;
-      this.index?.list().forEach(child => {
-        if (child instanceof BaseItem) {
-          child.transformation.translateBy(-dx, -dy, timeStamp);
-        }
-      });
-    }
 
     this.setLastFrameScale();
     res.mbr = this.getMbr();

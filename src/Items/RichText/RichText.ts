@@ -92,7 +92,6 @@ export class RichText extends BaseItem {
   private _onLimitReached: () => void = () => {};
   private shrinkWidth = false;
   prevMbr: Mbr | null = null;
-  worldMatrixGetter?: () => Matrix;
 
   rtCounter = 0;
 
@@ -426,20 +425,7 @@ export class RichText extends BaseItem {
     }
 
     const point = new Point(left, top);
-
-    if (this.worldMatrixGetter) {
-      this.worldMatrixGetter().apply(point);
-    } else if (this.isInShape) {
-      // If manually not set, try to find the item in board index to get its world transform
-      const item = this.board.items.getById(this.id);
-      if (item) {
-        item.getParentWorldMatrix().apply(point);
-      } else {
-        this.getParentWorldMatrix().apply(point);
-      }
-    } else {
-      this.getParentWorldMatrix().apply(point);
-    }
+    this.getParentWorldMatrix().apply(point);
 
     return {
       point,

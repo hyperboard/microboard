@@ -189,6 +189,12 @@ export class Shape extends BaseItem {
     return this;
   }
 
+  protected onParentChanged(newParent: string): void {
+    if (this.text) {
+      this.text.parent = newParent;
+    }
+  }
+
   getId(): string {
     return this.id;
   }
