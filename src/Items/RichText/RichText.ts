@@ -543,10 +543,9 @@ export class RichText extends BaseItem {
     const scaledMatrix = new Matrix(
       translateX,
       translateY,
-      scaleX * extraScale,
-      scaleY * extraScale
+      scaleX,
+      scaleY
     );
-
 
     return this.container.getTransformed(scaledMatrix);
   }
