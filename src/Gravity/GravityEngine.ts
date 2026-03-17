@@ -1,4 +1,5 @@
 import { Board } from 'Board';
+import { conf } from 'Settings';
 import { ApplyMatrixOperation } from 'Items/Transformation/TransformationOperations';
 
 interface Velocity {
@@ -31,14 +32,8 @@ export class GravityEngine {
 	private syncTimer: ReturnType<typeof setInterval> | null = null;
 	private lastSyncedPositions = new Map<string, { x: number; y: number }>();
 
-	readonly G = 80;               // gravitational constant between items
-	readonly G_CENTER = 120;       // attraction toward board center
-	readonly DAMPING = 0.96;       // velocity damping per tick
-	readonly RESTITUTION = 0.5;    // bounce coefficient: 0 = stick, 1 = perfectly elastic
-	readonly REPULSION = 200;      // extra spring force on overlap (px/s² per px), on top of bounce
-	readonly TICK_MS = 33;         // ~30fps physics
-	readonly SYNC_MS = 300;        // network sync interval
-	readonly MAX_DISTANCE = 3000;  // gravity cutoff radius
+	readonly TICK_MS = 33;
+	readonly SYNC_MS = 300;
 	readonly SOFTENING_SQ = 50 * 50;
 	readonly MIN_MOVE_PX = 0.1;
 
@@ -109,8 +104,8 @@ export class GravityEngine {
 			const dcx = centerX - s1.cx;
 			const dcy = centerY - s1.cy;
 			const distCenter = Math.sqrt(dcx * dcx + dcy * dcy) + 1;
-			ax += this.G_CENTER * dcx / distCenter;
-			ay += this.G_CENTER * dcy / distCenter;
+			ax += conf.GRAVITY_G_CENTER * dcx / distCenter;
+			ay += conf.GRAVITY_G_CENTER * dcy / distCenter;
 
 			// ── Inter-item forces ─────────────────────────────────────────────
 			for (let j = 0; j < snap.length; j++) {
@@ -121,7 +116,7 @@ export class GravityEngine {
 				const dy = s2.cy - s1.cy;
 				const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
 
-				if (dist > this.MAX_DISTANCE) continue;
+				if (dist > conf.GRAVITY_MAX_DISTANCE) continue;
 
 				// AABB overlap check using fresh coordinates
 				const overlapping =
@@ -139,13 +134,12 @@ export class GravityEngine {
 						const sign = s1.cx < s2.cx ? -1 : 1;
 						// Bounce: reflect approach velocity with restitution.
 						// This is the core of elastic collision — items bounce instead of sticking.
-						if (sign * vel.vx < 0) vel.vx = -vel.vx * this.RESTITUTION;
-						// Small extra spring force to fully resolve deep penetration.
-						ax += sign * this.REPULSION * overlapX;
+						if (sign * vel.vx < 0) vel.vx = -vel.vx * conf.GRAVITY_RESTITUTION;
+						ax += sign * conf.GRAVITY_REPULSION * overlapX;
 					} else {
 						const sign = s1.cy < s2.cy ? -1 : 1;
-						if (sign * vel.vy < 0) vel.vy = -vel.vy * this.RESTITUTION;
-						ay += sign * this.REPULSION * overlapY;
+						if (sign * vel.vy < 0) vel.vy = -vel.vy * conf.GRAVITY_RESTITUTION;
+						ay += sign * conf.GRAVITY_REPULSION * overlapY;
 					}
 				} else {
 					// No overlap → gravitational attraction.
@@ -155,14 +149,14 @@ export class GravityEngine {
 					if (dist < touchDist + 5) continue;
 
 					const distSq = dx * dx + dy * dy;
-					const gravAcc = this.G * s2.mass / (distSq + this.SOFTENING_SQ);
+					const gravAcc = conf.GRAVITY_G * s2.mass / (distSq + this.SOFTENING_SQ);
 					ax += gravAcc * dx / dist;
 					ay += gravAcc * dy / dist;
 				}
 			}
 
-			vel.vx = (vel.vx + ax * dt) * this.DAMPING;
-			vel.vy = (vel.vy + ay * dt) * this.DAMPING;
+			vel.vx = (vel.vx + ax * dt) * conf.GRAVITY_DAMPING;
+			vel.vy = (vel.vy + ay * dt) * conf.GRAVITY_DAMPING;
 
 			const moveX = vel.vx * dt;
 			const moveY = vel.vy * dt;

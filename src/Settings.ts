@@ -535,6 +535,14 @@ export const conf = {
   MAX_CARD_SIZE: 500,
 
   CONNECTOR_ITEM_OFFSET: 20,
+
+  // Gravity mode physics — tweak at runtime: conf.GRAVITY_G = 200
+  GRAVITY_G: 80,               // gravitational constant between items
+  GRAVITY_G_CENTER: 120,       // attraction toward board center of mass
+  GRAVITY_DAMPING: 0.96,       // velocity damping per tick (0–1)
+  GRAVITY_RESTITUTION: 0.5,    // bounce on collision: 0 = stick, 1 = elastic
+  GRAVITY_REPULSION: 200,      // extra spring force on overlap (px/s² per px)
+  GRAVITY_MAX_DISTANCE: 3000,  // gravity cutoff radius in px
 };
 
 export type Settings = typeof conf;
