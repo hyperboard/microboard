@@ -12,4 +12,18 @@ interface RemoveChild {
 	childId: string;
 }
 
-export type GroupOperation = AddChild | RemoveChild;
+interface AddChildren {
+	class: "Group";
+	method: "addChildren";
+	item: string[];
+	newData: { childIds: string[] };
+}
+
+interface RemoveChildren {
+	class: "Group";
+	method: "removeChildren";
+	item: string[];
+	newData: { childIds: string[] };
+}
+
+export type GroupOperation = AddChild | RemoveChild | AddChildren | RemoveChildren;

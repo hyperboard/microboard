@@ -494,19 +494,19 @@ export class BaseItem extends Mbr implements Geometry {
 				break;
 			}
 			case "LinkTo":
-				this.linkTo.apply(op);
+				this.linkTo.apply(op as any);
 				break;
 			case this.itemType:
 				op = op as unknown as BaseItemOperation
 				switch (op.method) {
 					case "removeChildren":
-						this.applyRemoveChildren(op.newData.childIds)
+						this.applyRemoveChildren((op.newData as any).childIds)
 						break;
 					case "addChildren":
-						this.applyAddChildren(op.newData.childIds)
+						this.applyAddChildren((op.newData as any).childIds)
 						break;
 					case "toggleResizeEnabled":
-						this.resizeEnabled = op.newData.resizeEnabled;
+						this.resizeEnabled = (op.newData as any).resizeEnabled;
 						break;
 				}
 		}

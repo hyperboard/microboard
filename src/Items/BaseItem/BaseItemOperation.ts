@@ -6,7 +6,7 @@ export interface RemoveChildren extends BaseOperation<{ childIds: string[] }> {
   method: "removeChildren";
 }
 
-export interface AddChildren extends BaseOperation<{ childIds: string }> {
+export interface AddChildren extends BaseOperation<{ childIds: string[] }> {
   method: "addChildren";
 }
 

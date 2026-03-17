@@ -55,22 +55,14 @@ export class Group extends BaseItem {
   }
 
   apply(op: Operation): void {
+    super.apply(op);
     switch (op.class) {
       case "Group":
-        // Old log events use singular addChild/removeChild — route them through
-        // the BaseItem index-based path for forward compatibility.
         if (op.method === "addChild") {
           this.applyAddChildren([op.childId]);
         } else if (op.method === "removeChild") {
           this.applyRemoveChildren([op.childId]);
-        } else if (op.method === "addChildren") {
-          this.applyAddChildren(op.newData.childIds);
-        } else if (op.method === "removeChildren") {
-          this.applyRemoveChildren(op.newData.childIds);
         }
-        break;
-      case "Transformation":
-        super.apply(op);
         break;
       default:
         return;
@@ -110,10 +102,10 @@ export class Group extends BaseItem {
       const childLocalMbr = (child as BaseItem).getMbr();
       // Transform the four corners of the child's local Mbr through the group's world matrix
       const corners = [
-        { x: childLocalMbr.left,  y: childLocalMbr.top    },
-        { x: childLocalMbr.right, y: childLocalMbr.top    },
-        { x: childLocalMbr.right, y: childLocalMbr.bottom },
-        { x: childLocalMbr.left,  y: childLocalMbr.bottom },
+        new Point(childLocalMbr.left,  childLocalMbr.top),
+        new Point(childLocalMbr.right, childLocalMbr.top),
+        new Point(childLocalMbr.right, childLocalMbr.bottom),
+        new Point(childLocalMbr.left,  childLocalMbr.bottom),
       ];
       for (const corner of corners) {
         groupWorldMatrix.apply(corner);

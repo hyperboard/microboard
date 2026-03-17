@@ -33,8 +33,8 @@ export class GroupCommand implements Command {
 					const operation: GroupOperation = {
 						...this.operation,
 						method: "removeChild",
-						childId: group.getId(),
-					};
+						childId: (this.operation as any).childId,
+					} as GroupOperation;
 
 					return {
 						item: group,
@@ -48,8 +48,36 @@ export class GroupCommand implements Command {
 					const operation: GroupOperation = {
 						...this.operation,
 						method: "addChild",
-						childId: group.getId(),
+						childId: (this.operation as any).childId,
+					} as GroupOperation;
+
+					return {
+						item: group,
+						operation,
 					};
+				});
+			}
+			case "addChildren": {
+				const groups = Array.isArray(group) ? group : [group];
+				return groups.map(group => {
+					const operation: GroupOperation = {
+						...this.operation,
+						method: "removeChildren",
+					} as GroupOperation;
+
+					return {
+						item: group,
+						operation,
+					};
+				});
+			}
+			case "removeChildren": {
+				const groups = Array.isArray(group) ? group : [group];
+				return groups.map(group => {
+					const operation: GroupOperation = {
+						...this.operation,
+						method: "addChildren",
+					} as GroupOperation;
 
 					return {
 						item: group,
