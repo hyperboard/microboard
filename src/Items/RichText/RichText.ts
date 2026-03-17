@@ -383,10 +383,10 @@ export class RichText extends BaseItem {
 
   getMaxWidth(): number | undefined {
     if (this.autoSize) {
-      return this.editor.maxWidth || this.getTransformedContainer().getWidth();
+      return this.editor.maxWidth || this.container.getWidth();
     }
     if (this.isContainerSet) {
-      return this.getTransformedContainer().getWidth();
+      return this.container.getWidth();
     } else {
       return this.containerMaxWidth || this.editor.maxWidth;
     }
@@ -1044,6 +1044,7 @@ export class RichText extends BaseItem {
     }
     const { ctx } = context;
     ctx.save();
+    ctx.translate(this.left, this.top);
 
     const cameraScale = context.getCameraScale();
     const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
@@ -1054,18 +1055,14 @@ export class RichText extends BaseItem {
     } else {
       matrix = this.transformation.toMatrix();
     }
+    const { scaleX, scaleY } = matrix;
 
-    const { translateX, translateY, scaleX, scaleY } = matrix;
-    const scaledMatrix = new Matrix(
-      translateX,
-      translateY,
-      scaleX * extraScale,
-      scaleY * extraScale
-    );
-
-    context.matrix = scaledMatrix;
-    context.applyChanges();
-    ctx.translate(this.container.left, this.container.top);
+    const shouldScale = !this.isInShape && !this.autoSize;
+    if (shouldScale) {
+      ctx.scale(scaleX * extraScale, scaleY * extraScale);
+    } else if (extraScale !== 1) {
+      ctx.scale(extraScale, extraScale);
+    }
 
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
     if (shouldClip) {
@@ -1254,16 +1251,9 @@ export class RichText extends BaseItem {
     } else {
       matrix = this.transformation.toMatrix();
     }
+    const { scaleX, scaleY } = matrix;
 
-    const { translateX, translateY, scaleX, scaleY } = matrix;
-    const scaledMatrix = new Matrix(
-      translateX,
-      translateY,
-      scaleX * extraScale,
-      scaleY * extraScale
-    );
-
-    const transform = `translate(${scaledMatrix.translateX + this.container.left * scaledMatrix.scaleX}px, ${scaledMatrix.translateY + this.container.top * scaledMatrix.scaleY}px) scale(${scaledMatrix.scaleX}, ${scaledMatrix.scaleY})`;
+    const transform = `translate(${this.left}px, ${this.top}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
 
     const transformedWidth = this.getMbr().getWidth();
     const transformedHeight = this.getMbr().getHeight();
