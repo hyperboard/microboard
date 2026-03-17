@@ -83,7 +83,6 @@ export class RichText extends BaseItem {
   private autoSizeScale = 1;
   private containerMaxWidth?: number;
   readonly linkTo: LinkTo;
-  private localArea: Mbr;
   maxHeight: number;
   private selection?: BaseSelection;
   transformationRenderBlock?: boolean = undefined;
@@ -111,7 +110,6 @@ export class RichText extends BaseItem {
     private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES
   ) {
     super(board, id);
-    this.localArea = container.copy();
     counter = counter + 1;
     this.rtCounter = counter;
 
@@ -339,7 +337,7 @@ export class RichText extends BaseItem {
     }
 
     this.alignInRectangle(
-      this.localArea,
+      this.getTransformedContainer(),
       this.editor.verticalAlignment
     );
     this.transformCanvas();
@@ -454,7 +452,7 @@ export class RichText extends BaseItem {
       this.bottom = transformed.bottom;
     } else {
       this.alignInRectangle(
-        this.localArea,
+        this.getTransformedContainer(),
         this.editor.verticalAlignment
       );
     }
@@ -492,8 +490,9 @@ export class RichText extends BaseItem {
   }
 
   setClipPath(): void {
-    const width = this.localArea.getWidth();
-    const height = this.localArea.getHeight();
+    const container = this.getTransformedContainer();
+    const width = container.getWidth();
+    const height = container.getHeight();
     this.clipPath = new conf.path2DFactory();
     this.clipPath.rect(0, 0, width, height);
   }
@@ -502,9 +501,11 @@ export class RichText extends BaseItem {
    */
   setContainer(container: Mbr): void {
     this.isContainerSet = true;
-    this.localArea = container.copy();
-    this.container = container; 
-    this.updateElement();
+    this.container = container;
+    this.alignInRectangle(
+      this.getTransformedContainer(),
+      this.editor.verticalAlignment
+    );
   }
 
   applyMaxWidth(maxWidth: number): this {
@@ -546,7 +547,8 @@ export class RichText extends BaseItem {
       scaleY * extraScale
     );
 
-    return this.localArea.getTransformed(scaledMatrix);
+
+    return this.container.getTransformed(scaledMatrix);
   }
 
   emitWithoutApplying = (op: RichTextOperation): void => {
@@ -1020,7 +1022,7 @@ export class RichText extends BaseItem {
     );
 
     this.alignInRectangle(
-      this.localArea,
+      this.getTransformedContainer(),
       this.editor.verticalAlignment
     );
     this.transformCanvas();
@@ -1064,8 +1066,7 @@ export class RichText extends BaseItem {
 
     context.matrix = scaledMatrix;
     context.applyChanges();
-    
-    ctx.translate(this.left, this.top);
+    ctx.translate(this.container.left, this.container.top);
 
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
     if (shouldClip) {
@@ -1263,7 +1264,7 @@ export class RichText extends BaseItem {
       scaleY * extraScale
     );
 
-    const transform = `translate(${scaledMatrix.translateX + this.left * scaledMatrix.scaleX}px, ${scaledMatrix.translateY + this.top * scaledMatrix.scaleY}px) scale(${scaledMatrix.scaleX}, ${scaledMatrix.scaleY})`;
+    const transform = `translate(${scaledMatrix.translateX + this.container.left * scaledMatrix.scaleX}px, ${scaledMatrix.translateY + this.container.top * scaledMatrix.scaleY}px) scale(${scaledMatrix.scaleX}, ${scaledMatrix.scaleY})`;
 
     const transformedWidth = this.getMbr().getWidth();
     const transformedHeight = this.getMbr().getHeight();
@@ -1399,27 +1400,5 @@ export class RichText extends BaseItem {
 
   getPrevMbr(): Mbr | null {
     return this.prevMbr;
-  }
-
-  getMbr(): Mbr {
-    const cameraScale = this.board.camera.getScale();
-    const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;
-
-    let matrix: Matrix;
-    if (this.customTransformationMatrix) {
-      matrix = this.customTransformationMatrix();
-    } else {
-      matrix = this.transformation.toMatrix();
-    }
-
-    const { translateX, translateY, scaleX, scaleY } = matrix;
-    const scaledMatrix = new Matrix(
-      translateX,
-      translateY,
-      scaleX * extraScale,
-      scaleY * extraScale
-    );
-
-    return new Mbr(this.left, this.top, this.right, this.bottom).getTransformed(scaledMatrix);
   }
 }

@@ -71,10 +71,14 @@ export class Frame extends BaseItem {
     public borderWidth = defaultFrameData.borderWidth
   ) {
     super(board, id, undefined, true);
-    this.updateTextContainer();
     this.path = Frames[this.shapeType].path.copy();
     this.transformation = new Transformation(this.id, board.events);
     this.linkTo = new LinkTo(this.id, board.events);
+
+    const textBounds = Frames[this.shapeType].textBounds.copy();
+    textBounds.top = HEADING_TOP_OFFSET;
+    textBounds.bottom = HEADING_BOTTOM_OFFSET;
+    this.textContainer = textBounds;
 
     this.text = new RichText(
       board,
@@ -225,8 +229,10 @@ export class Frame extends BaseItem {
     textBounds.top = HEADING_TOP_OFFSET;
     textBounds.bottom = HEADING_BOTTOM_OFFSET;
     this.textContainer = textBounds;
-    this.text.setContainer(this.textContainer.copy());
-    this.text.updateElement();
+    if (this.text) {
+      this.text.setContainer(this.textContainer.copy());
+      this.text.updateElement();
+    }
   }
 
   getPaths(): Path | Paths {
