@@ -46,7 +46,7 @@ export class Frame extends BaseItem {
   parent = "Board";
   readonly transformation: Transformation;
   readonly subject = new Subject<Frame>();
-  private textContainer: Mbr;
+  private textContainer: Mbr = new Mbr();
   private path: Path;
   private children: string[] = [];
   private mbr: Mbr = new Mbr();
@@ -71,10 +71,7 @@ export class Frame extends BaseItem {
     public borderWidth = defaultFrameData.borderWidth
   ) {
     super(board, id, undefined, true);
-    this.textContainer = Frames[this.shapeType].textBounds.copy();
-    // Adjust container to be taller and further above the border
-    this.textContainer.top = HEADING_TOP_OFFSET;
-    this.textContainer.bottom = HEADING_BOTTOM_OFFSET;
+    this.updateTextContainer();
     this.path = Frames[this.shapeType].path.copy();
     this.transformation = new Transformation(this.id, board.events);
     this.linkTo = new LinkTo(this.id, board.events);
@@ -220,9 +217,14 @@ export class Frame extends BaseItem {
 
   private initPath(): void {
     this.path = Frames[this.shapeType].path.copy();
-    this.textContainer = Frames[this.shapeType].textBounds.copy();
-    this.textContainer.top = HEADING_TOP_OFFSET;
-    this.textContainer.bottom = HEADING_BOTTOM_OFFSET;
+    this.updateTextContainer();
+  }
+
+  private updateTextContainer(): void {
+    const textBounds = Frames[this.shapeType].textBounds.copy();
+    textBounds.top = HEADING_TOP_OFFSET;
+    textBounds.bottom = HEADING_BOTTOM_OFFSET;
+    this.textContainer = textBounds;
     this.text.setContainer(this.textContainer.copy());
     this.text.updateElement();
   }
@@ -412,10 +414,8 @@ export class Frame extends BaseItem {
     }
     if (data.text) {
       this.text.deserialize(data.text);
-      // Re-apply offsets to ensure they aren't overridden by old serialized container
-      this.textContainer.top = HEADING_TOP_OFFSET;
-      this.textContainer.bottom = HEADING_BOTTOM_OFFSET;
-      this.text.setContainer(this.textContainer.copy());
+      // Re-apply offsets and ensure container is local
+      this.updateTextContainer();
     }
     this.canChangeRatio = data.canChangeRatio ?? this.canChangeRatio;
     this.subject.publish(this);
@@ -433,15 +433,13 @@ export class Frame extends BaseItem {
 
   private transformPath(saveProportions = false): void {
     this.path = Frames[this.shapeType].path.copy();
-    this.textContainer = Frames[this.shapeType].textBounds.copy();
+    this.updateTextContainer();
     if (saveProportions) {
       const newMatrix = this.getSavedProportionsMatrix();
       this.path.transform(newMatrix);
-      this.textContainer.transform(newMatrix);
       this.transformation.applyScaleTo(newMatrix.scaleX, newMatrix.scaleY);
     } else {
       this.path.transform(this.transformation.toMatrix());
-      this.textContainer.transform(this.transformation.toMatrix());
     }
 
     // TODO fix text container Y translation
