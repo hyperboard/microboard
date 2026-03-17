@@ -5,6 +5,7 @@ import {
   CreateLockedGroupItem,
   DataMap,
   ItemsIndexRecord,
+  RemoveGroup,
   RemoveItem,
   RemoveLockedGroup,
 } from "BoardOperations";
@@ -206,11 +207,16 @@ export class Board {
         return this.applyAddItems(op);
       case "addLockedGroup":
         return this.applyAddLockedGroupOperation(op);
+      case "addGroup":
+        return this.applyAddGroupOperation(op);
       case "remove": {
         return this.applyRemoveOperation(op);
       }
       case "removeLockedGroup": {
         return this.applyRemoveLockedGroupOperation(op);
+      }
+      case "removeGroup": {
+        return this.applyRemoveGroupOperation(op);
       }
       case "paste": {
         return this.applyPasteOperation(op.itemsMap);
@@ -257,11 +263,28 @@ export class Board {
       this.index.moveToZIndex(item, zIndex);
     }
 
+    item.isLockedGroup = true;
     item.getChildren().forEach((item) => {
       item.transformation.isLocked = true;
     });
 
     item.transformation.isLocked = true;
+  }
+
+  private applyAddGroupOperation(op: CreateLockedGroupItem): void {
+    const item = this.createItem(op.item, op.data) as Group;
+    const groupChildrenIds = item.getChildrenIds();
+    this.index.insert(item);
+
+    const lastChildrenId = this.index.getById(
+      groupChildrenIds[groupChildrenIds.length - 1]
+    );
+    if (lastChildrenId) {
+      const zIndex = this.index.getZIndex(lastChildrenId) + 1;
+      this.index.moveToZIndex(item, zIndex);
+    }
+
+    item.isLockedGroup = false;
   }
 
   private applyRemoveOperation(op: RemoveItem): void {
@@ -289,6 +312,25 @@ export class Board {
       item.parent = "Board";
     });
     item.transformation.isLocked = false;
+
+    const removedItems: Item[] = [];
+    this.findItemAndApply(op.item, (item) => {
+      this.index.remove(item);
+      this.selection.remove(item);
+      removedItems.push(item);
+    });
+  }
+
+  private applyRemoveGroupOperation(op: RemoveLockedGroup): void {
+    const item = this.index.getById(op.item[0]);
+
+    if (!item || !(item instanceof Group)) {
+      return;
+    }
+
+    item.getChildren().forEach((item) => {
+      item.parent = "Board";
+    });
 
     const removedItems: Item[] = [];
     this.findItemAndApply(op.item, (item) => {
@@ -398,20 +440,21 @@ export class Board {
     return newItem as T;
   }
 
-  addLockedGroup(item: Group): Item {
+  addLockedGroup(items: BaseItem[]): Group {
     const id = this.getNewItemId();
+    const groupData: GroupData = {
+      itemType: "Group",
+      children: items.map((i) => i.getId()),
+      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, rotate: 0, isLocked: false },
+      isLockedGroup: true,
+    };
     this.emit({
       class: "Board",
       method: "addLockedGroup",
       item: id,
-      data: item.serialize(),
+      data: groupData,
     });
-    const newItem = this.items.getById(id);
-    if (!newItem) {
-      throw new Error(`Add item. Item ${id} was not created.`);
-    }
-    this.handleNesting(newItem);
-    return newItem;
+    return this.items.getById(id) as Group;
   }
 
   remove(item: Item, withConnectors = true): void {
@@ -451,11 +494,12 @@ export class Board {
     const groupData: GroupData = {
       itemType: "Group",
       children: items.map((i) => i.getId()),
-      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
+      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, rotate: 0, isLocked: false },
+      isLockedGroup: false,
     };
     this.emit({
       class: "Board",
-      method: "addLockedGroup",
+      method: "addGroup",
       item: id,
       data: groupData,
     });
@@ -468,7 +512,7 @@ export class Board {
   ungroup(group: Group): void {
     this.emit({
       class: "Board",
-      method: "removeLockedGroup",
+      method: "removeGroup",
       item: [group.getId()],
     });
   }

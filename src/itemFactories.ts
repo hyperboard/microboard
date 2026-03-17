@@ -183,7 +183,7 @@ function createGroup(id: string, data: ItemData, board: Board): Group {
     throw new Error("Invalid data for Group");
   }
 
-  const group = new Group(board, board.events, data.children, "")
+  const group = new Group(board, board.events, data.children, id)
       .setId(id)
       .deserialize(data);
 

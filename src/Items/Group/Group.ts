@@ -14,6 +14,7 @@ export interface GroupData {
   readonly itemType: "Group";
   children: string[];
   transformation: TransformationData;
+  isLockedGroup?: boolean;
 }
 
 export class Group extends BaseItem {
@@ -23,6 +24,7 @@ export class Group extends BaseItem {
   readonly transformation: Transformation;
   readonly subject = new Subject<Group>();
   transformationRenderBlock?: boolean = undefined;
+  isLockedGroup = false;
 
   constructor(
     board: Board,
@@ -146,6 +148,7 @@ export class Group extends BaseItem {
       // Children IDs only — transforms are serialized as world transforms by SpatialIndex.copy()
       children: this.getChildrenIds(),
       transformation: this.transformation.serialize(),
+      isLockedGroup: this.isLockedGroup,
     };
   }
 
@@ -155,6 +158,9 @@ export class Group extends BaseItem {
     }
     if (data.children && data.children.length > 0) {
       this.applyAddChildren(data.children);
+    }
+    if (data.isLockedGroup !== undefined) {
+      this.isLockedGroup = data.isLockedGroup;
     }
     this.subject.publish(this);
     return this;

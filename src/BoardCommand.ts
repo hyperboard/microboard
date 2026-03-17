@@ -117,6 +117,13 @@ export class BoardCommand implements Command {
 					item: [operation.item],
 				};
 			}
+			case 'addGroup': {
+				return {
+					class: 'Board',
+					method: 'removeGroup',
+					item: [operation.item],
+				};
+			}
 			case 'removeLockedGroup': {
 				const items = this.board.items;
 				const reverse: BoardOps[] = [];
@@ -129,6 +136,25 @@ export class BoardCommand implements Command {
 					reverse.push({
 						class: 'Board',
 						method: 'addLockedGroup',
+						item: itemId,
+						data: item.serialize(),
+					});
+				}
+
+				return reverse;
+			}
+			case 'removeGroup': {
+				const items = this.board.items;
+				const reverse: BoardOps[] = [];
+
+				for (const itemId of operation.item) {
+					const item = items.getById(itemId);
+					if (!item || item.itemType !== 'Group') {
+						throw new Error('Get reverse board operation. Item not found');
+					}
+					reverse.push({
+						class: 'Board',
+						method: 'addGroup',
 						item: itemId,
 						data: item.serialize(),
 					});

@@ -36,6 +36,11 @@ export interface CreateLockedGroupItem extends SingleItemBoardOp {
 	data: GroupData;
 }
 
+export interface CreateGroup extends SingleItemBoardOp {
+	method: "addGroup";
+	data: GroupData;
+}
+
 export interface RemoveItem extends MultiItemBoardOp {
 	method: "remove";
 }
@@ -50,6 +55,10 @@ export interface UnlockItem extends MultiItemBoardOp {
 
 export interface RemoveLockedGroup extends MultiItemBoardOp {
 	method: "removeLockedGroup";
+}
+
+export interface RemoveGroup extends MultiItemBoardOp {
+	method: "removeGroup";
 }
 
 interface MoveToZIndex extends SingleItemBoardOp {
@@ -94,8 +103,10 @@ interface Duplicate extends ItemMapBoardOp {
 export type BoardOps =
 	| CreateItem
 	| CreateLockedGroupItem
+	| CreateGroup
 	| RemoveItem
 	| RemoveLockedGroup
+	| RemoveGroup
 	| MoveToZIndex
 	| MoveManyToZIndex
 	| MoveSecondBeforeFirst
