@@ -38,6 +38,9 @@ import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 const defaultFrameData = new DefaultFrameData();
 
+const HEADING_TOP_OFFSET = -45;
+const HEADING_BOTTOM_OFFSET = -12;
+
 export class Frame extends BaseItem {
   readonly itemType = "Frame";
   parent = "Board";
@@ -69,6 +72,9 @@ export class Frame extends BaseItem {
   ) {
     super(board, id, undefined, true);
     this.textContainer = Frames[this.shapeType].textBounds.copy();
+    // Adjust container to be taller and further above the border
+    this.textContainer.top = HEADING_TOP_OFFSET;
+    this.textContainer.bottom = HEADING_BOTTOM_OFFSET;
     this.path = Frames[this.shapeType].path.copy();
     this.transformation = new Transformation(this.id, board.events);
     this.linkTo = new LinkTo(this.id, board.events);
@@ -87,10 +93,6 @@ export class Frame extends BaseItem {
     );
     this.text.editor.verticalAlignment = "bottom";
     this.text.setSelectionHorisontalAlignment("left");
-
-    // Adjust container to be taller and further above the border
-    this.textContainer.top = -45;
-    this.textContainer.bottom = -12;
 
     this.text.customTransformationMatrix = () => {
       const matrix = this.transformation.toMatrix();
@@ -219,6 +221,8 @@ export class Frame extends BaseItem {
   private initPath(): void {
     this.path = Frames[this.shapeType].path.copy();
     this.textContainer = Frames[this.shapeType].textBounds.copy();
+    this.textContainer.top = HEADING_TOP_OFFSET;
+    this.textContainer.bottom = HEADING_BOTTOM_OFFSET;
     this.text.setContainer(this.textContainer.copy());
     this.text.updateElement();
   }
@@ -408,6 +412,10 @@ export class Frame extends BaseItem {
     }
     if (data.text) {
       this.text.deserialize(data.text);
+      // Re-apply offsets to ensure they aren't overridden by old serialized container
+      this.textContainer.top = HEADING_TOP_OFFSET;
+      this.textContainer.bottom = HEADING_BOTTOM_OFFSET;
+      this.text.setContainer(this.textContainer.copy());
     }
     this.canChangeRatio = data.canChangeRatio ?? this.canChangeRatio;
     this.subject.publish(this);
