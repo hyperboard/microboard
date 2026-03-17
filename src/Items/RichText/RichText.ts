@@ -281,10 +281,10 @@ export class RichText extends BaseItem {
     const shouldUpdateLayout = this.getTextWidth() > (maxWidth || 0);
     if (shouldUpdateLayout) {
       this.updateElement();
-      this.subject.publish(this);
     } else {
       this.transformCanvas();
       this.recoordinate(maxWidth);
+      this.subject.publish(this);
     }
   }
 
@@ -1013,18 +1013,7 @@ export class RichText extends BaseItem {
     this.insideOf = data.insideOf;
     if (typeof document !== "undefined") {
       document.fonts.ready.then(() => {
-    this.layoutNodes = getBlockNodes(
-      this.getBlockNodes(),
-      this.shrinkWidth ? Infinity : this.getMaxWidth() || 0,
-      this.shrinkWidth,
-      this.insideOf === "Frame"
-    );
-
-    this.alignInRectangle(
-      this.getTransformedContainer(),
-      this.editor.verticalAlignment
-    );
-    this.transformCanvas();
+        this.updateElement();
       });
     }
     this.subject.publish(this);
