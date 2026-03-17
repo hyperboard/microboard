@@ -110,7 +110,9 @@ export class Shape extends BaseItem {
       this.subject.publish(this);
     });
     this.text.insideOf = this.itemType;
+    this.transformPath();
     this.updateMbr();
+    this.subject.publish(this);
   }
 
   private saveShapeData(): void {

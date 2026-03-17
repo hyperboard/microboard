@@ -144,6 +144,8 @@ export class Sticker extends BaseItem {
       this.subject.publish(this);
     });
     this.text.updateElement();
+    this.transformPath();
+    this.subject.publish(this);
   }
 
   emit(operation: StickerOperation): void {
