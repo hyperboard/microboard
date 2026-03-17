@@ -33,8 +33,9 @@ export class GravityEngine {
 
 	readonly G = 80;               // gravitational constant between items
 	readonly G_CENTER = 120;       // attraction toward board center
-	readonly DAMPING = 0.92;       // velocity damping per tick
-	readonly REPULSION = 800;      // spring acceleration constant for overlap (px/s² per px of overlap)
+	readonly DAMPING = 0.96;       // velocity damping per tick
+	readonly RESTITUTION = 0.5;    // bounce coefficient: 0 = stick, 1 = perfectly elastic
+	readonly REPULSION = 200;      // extra spring force on overlap (px/s² per px), on top of bounce
 	readonly TICK_MS = 33;         // ~30fps physics
 	readonly SYNC_MS = 300;        // network sync interval
 	readonly MAX_DISTANCE = 3000;  // gravity cutoff radius
@@ -130,22 +131,29 @@ export class GravityEngine {
 					s2.bottom > s1.top;
 
 				if (overlapping) {
-					// Compute overlap depth on each axis for direction of push
+					// Compute overlap depth on each axis (minimum translation vector).
 					const overlapX = Math.min(s1.right, s2.right) - Math.max(s1.left, s2.left);
 					const overlapY = Math.min(s1.bottom, s2.bottom) - Math.max(s1.top, s2.top);
 
-					// Push along the axis of least overlap (minimum translation vector).
-					// Acceleration = REPULSION * penetration_depth — mass-independent so
-					// large items push with the same force as small ones.
 					if (overlapX < overlapY) {
 						const sign = s1.cx < s2.cx ? -1 : 1;
+						// Bounce: reflect approach velocity with restitution.
+						// This is the core of elastic collision — items bounce instead of sticking.
+						if (sign * vel.vx < 0) vel.vx = -vel.vx * this.RESTITUTION;
+						// Small extra spring force to fully resolve deep penetration.
 						ax += sign * this.REPULSION * overlapX;
 					} else {
 						const sign = s1.cy < s2.cy ? -1 : 1;
+						if (sign * vel.vy < 0) vel.vy = -vel.vy * this.RESTITUTION;
 						ay += sign * this.REPULSION * overlapY;
 					}
 				} else {
-					// No overlap → gravitational attraction
+					// No overlap → gravitational attraction.
+					// Don't apply gravity when nearly touching to prevent velocity buildup
+					// that would overwhelm the repulsion impulse on the next tick.
+					const touchDist = (s1.w + s2.w + s1.h + s2.h) * 0.25; // approx avg half-extent sum
+					if (dist < touchDist + 5) continue;
+
 					const distSq = dx * dx + dy * dy;
 					const gravAcc = this.G * s2.mass / (distSq + this.SOFTENING_SQ);
 					ax += gravAcc * dx / dist;
