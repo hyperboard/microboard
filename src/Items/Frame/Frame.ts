@@ -38,8 +38,8 @@ import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 const defaultFrameData = new DefaultFrameData();
 
-const HEADING_TOP_OFFSET = -45;
-const HEADING_BOTTOM_OFFSET = -12;
+const HEADING_TOP_OFFSET = -33;
+const HEADING_BOTTOM_OFFSET = -5;
 
 export class Frame extends BaseItem {
   readonly itemType = "Frame";
