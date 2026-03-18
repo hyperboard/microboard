@@ -536,6 +536,13 @@ export const conf = {
 
   CONNECTOR_ITEM_OFFSET: 20,
 
+  // Force-directed graph physics — tweak at runtime: conf.FG_SPRING_K = 5
+  FG_SPRING_K: 3,           // spring stiffness (Hooke constant)
+  FG_TARGET_GAP: 60,        // padding between item edges at rest (px)
+  FG_REPULSION: 400000,     // node-node repulsion constant (px³/s²)
+  FG_DAMPING: 0.8,          // heavy damping so graph settles quickly
+  FG_SLEEP_THRESHOLD: 0.5,  // stop engine when total kinetic energy < this
+
   // Gravity mode physics — tweak at runtime: conf.GRAVITY_G = 200
   GRAVITY_G: 80,               // gravitational constant between items
   GRAVITY_G_CENTER: 120,       // attraction toward board center of mass

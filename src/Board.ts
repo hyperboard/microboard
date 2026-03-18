@@ -46,6 +46,7 @@ import { BaseItemData } from "./Items/BaseItem/BaseItem";
 import { ItemDataWithId } from "./Items/Item";
 import {Account} from "types/Account";
 import {GravityEngine} from "./Gravity/GravityEngine";
+import { ForceGraphEngine } from './ForceGraph/ForceGraphEngine';
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -1517,6 +1518,31 @@ export class Board {
 
   isGravityEnabled(): boolean {
     return this.gravity !== null;
+  }
+
+  // ── Force-directed graph layout ───────────────────────────────────────────
+
+  private forceGraph: ForceGraphEngine | null = null;
+
+  enableForceGraph(): void {
+    if (this.forceGraph) return;
+    this.forceGraph = new ForceGraphEngine(this);
+    this.forceGraph.start();
+  }
+
+  disableForceGraph(): void {
+    if (!this.forceGraph) return;
+    this.forceGraph.stop();
+    this.forceGraph = null;
+  }
+
+  isForceGraphEnabled(): boolean {
+    return this.forceGraph !== null;
+  }
+
+  /** Call after dragging a node to re-wake the physics engine if it was sleeping. */
+  wakeForceGraph(): void {
+    this.forceGraph?.wake();
   }
 }
 
