@@ -41,7 +41,11 @@ export class GravityEngine {
 
 	start(): void {
 		if (this.tickTimer !== null) return;
+		// Snapshot current positions so first syncPositions sends the correct delta,
+		// not zero (which would lose the first 300 ms of movement).
 		for (const item of this.board.items.listAll()) {
+			const pos = item.transformation.getTranslation();
+			this.lastSyncedPositions.set(item.getId(), { x: pos.x, y: pos.y });
 			this.velocities.set(item.getId(), { vx: 0, vy: 0 });
 		}
 		this.tickTimer = setInterval(() => this.tick(), this.TICK_MS);
@@ -51,6 +55,8 @@ export class GravityEngine {
 	stop(): void {
 		if (this.tickTimer !== null) { clearInterval(this.tickTimer); this.tickTimer = null; }
 		if (this.syncTimer !== null) { clearInterval(this.syncTimer); this.syncTimer = null; }
+		// Flush any movement accumulated since the last periodic sync.
+		this.syncPositions();
 		this.velocities.clear();
 		this.lastSyncedPositions.clear();
 	}
