@@ -540,8 +540,8 @@ export const conf = {
   FG_SPRING_K: 3,           // spring stiffness (Hooke constant)
   FG_TARGET_GAP: 20,        // padding between item edges at rest (px)
   FG_REPULSION: 400000,     // node-node repulsion constant (px³/s²)
-  FG_DAMPING: 0.5,          // heavy damping so graph settles quickly (0=instant stop, 1=no damping)
-  FG_SLEEP_THRESHOLD: 2,    // stop engine when total kinetic energy < this
+  FG_DAMPING: 0.9,          // velocity multiplier per tick (0=instant stop, 1=no damping)
+  FG_SLEEP_THRESHOLD: 10,   // stop engine when total kinetic energy < this
 
   // Gravity mode physics — tweak at runtime: conf.GRAVITY_G = 200
   GRAVITY_G: 80,               // gravitational constant between items
