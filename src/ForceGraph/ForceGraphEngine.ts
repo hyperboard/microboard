@@ -167,11 +167,17 @@ export class ForceGraphEngine {
 
 				const dx = s2.cx - s1.cx;
 				const dy = s2.cy - s1.cy;
-				const distSq = dx * dx + dy * dy + this.SOFTENING_SQ;
-				const repMag = conf.FG_REPULSION / distSq;
+				const centerDist = Math.sqrt(dx * dx + dy * dy) + 0.001;
 
-				const fx = dx * repMag;
-				const fy = dy * repMag;
+				// Repulsion based on edge-to-edge distance so large nodes repel
+				// with the same effective force as small ones at the same visual gap.
+				const r1 = Math.max(s1.w, s1.h) * 0.5;
+				const r2 = Math.max(s2.w, s2.h) * 0.5;
+				const edgeDist = Math.max(centerDist - r1 - r2, 1);
+				const repMag = conf.FG_REPULSION / (edgeDist * edgeDist + this.SOFTENING_SQ);
+
+				const fx = (dx / centerDist) * repMag;
+				const fy = (dy / centerDist) * repMag;
 
 				ax.set(s1.id, (ax.get(s1.id) ?? 0) - fx);
 				ay.set(s1.id, (ay.get(s1.id) ?? 0) - fy);
