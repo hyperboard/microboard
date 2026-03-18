@@ -3,6 +3,32 @@ import { conf } from 'Settings';
 import { ApplyMatrixOperation } from 'Items/Transformation/TransformationOperations';
 import { Connector } from 'Items/Connector/Connector';
 
+// ── Union-Find for connected-component detection ──────────────────────────────
+class UnionFind {
+	private parent = new Map<string, string>();
+
+	find(id: string): string {
+		if (!this.parent.has(id)) this.parent.set(id, id);
+		const root = this.parent.get(id)!;
+		if (root !== id) {
+			const canonical = this.find(root);
+			this.parent.set(id, canonical);
+			return canonical;
+		}
+		return root;
+	}
+
+	union(a: string, b: string): void {
+		const ra = this.find(a);
+		const rb = this.find(b);
+		if (ra !== rb) this.parent.set(ra, rb);
+	}
+
+	sameComponent(a: string, b: string): boolean {
+		return this.find(a) === this.find(b);
+	}
+}
+
 interface Velocity { vx: number; vy: number; }
 
 interface NodeSnapshot {
@@ -84,6 +110,17 @@ export class ForceGraphEngine {
 		}
 		const snap = Array.from(snapMap.values());
 
+		// ── Build connected components (Union-Find over connector edges) ──────
+		// Repulsion is isolated per component — exactly like the demo's graphId.
+		// This prevents separate graph clusters from pushing each other apart.
+		const uf = new UnionFind();
+		for (const connector of this.getConnectors()) {
+			const { startItem, endItem } = connector.getConnectedItems();
+			if (startItem && endItem) {
+				uf.union(startItem.getId(), endItem.getId());
+			}
+		}
+
 		// Accumulate accelerations for this tick
 		const ax = new Map<string, number>();
 		const ay = new Map<string, number>();
@@ -118,12 +155,15 @@ export class ForceGraphEngine {
 			ay.set(s2.id, (ay.get(s2.id) ?? 0) - fy);
 		}
 
-		// ── B. Repulsion between all pairs (prevents overlap/pileup) ─────────
-		// Classic Fruchterman-Reingold: all nodes push each other away.
+		// ── B. Repulsion — only between nodes in the same component ──────────
+		// Nodes from different graph clusters don't interact, so clusters stay put.
 		for (let i = 0; i < snap.length; i++) {
 			for (let j = i + 1; j < snap.length; j++) {
 				const s1 = snap[i];
 				const s2 = snap[j];
+
+				// Skip nodes from different connected components
+				if (!uf.sameComponent(s1.id, s2.id)) continue;
 
 				const dx = s2.cx - s1.cx;
 				const dy = s2.cy - s1.cy;
