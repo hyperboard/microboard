@@ -558,16 +558,10 @@ export class Shape extends BaseItem {
 
     const textElement = this.text.renderHTML(documentFactory);
     textElement.id = `${this.getId()}_text`;
-    textElement.style.maxWidth = `${width}px`;
     textElement.style.overflow = "auto";
     positionRelatively(textElement, div);
     resetElementScale(textElement);
     scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
-    const [dx, dy] = [
-      (width - parseInt(textElement.style.width)) / scaleX / 2 - 1,
-      (height - parseInt(textElement.style.height)) / scaleY / 2 - 1,
-    ];
-    translateElementBy(textElement, dx, dy);
 
     div.setAttribute("data-link-to", this.linkTo.serialize() || "");
     if (this.getLinkTo()) {

@@ -386,7 +386,7 @@ export class RichText extends BaseItem {
       return this.editor.maxWidth || this.container.getWidth();
     }
     if (this.isContainerSet) {
-      return this.container.getWidth();
+      return this.getTransformedContainer().getWidth();
     } else {
       return this.containerMaxWidth || this.editor.maxWidth;
     }
