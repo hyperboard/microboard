@@ -1556,6 +1556,11 @@ export class Board {
     this.forceGraph?.setComponentTargetGap(nodeId, gap);
   }
 
+  /** Flush pending physics positions to the server immediately (call before drag starts). */
+  syncForceGraph(): void {
+    this.forceGraph?.flushSync();
+  }
+
   /** Call after dragging a node to re-wake the physics engine if it was sleeping. */
   wakeForceGraph(): void {
     this.forceGraph?.wake();

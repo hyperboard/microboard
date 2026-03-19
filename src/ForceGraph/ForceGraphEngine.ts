@@ -135,11 +135,26 @@ export class ForceGraphEngine {
 		return this.activeComponents.size > 0;
 	}
 
-	/** Re-wake physics after a node is manually dragged (or targetGap changed). */
+	/**
+	 * Flush pending physics positions immediately.
+	 * Call BEFORE a manual drag starts so the server knows the current physics position
+	 * before the drag delta is applied on top of it.
+	 */
+	flushSync(): void {
+		this.syncPositions();
+	}
+
+	/**
+	 * Re-wake physics after a manual drag ends.
+	 * Resets sync baseline to the post-drag position so the drag delta
+	 * (already sent by the normal operation system) is not double-counted.
+	 */
 	wake(): void {
 		if (this.activeComponents.size === 0) return;
-		// Reset sync baseline to current positions so manual movements made while
-		// the engine was sleeping are not double-counted in the next syncPositions call.
+		// Reset baseline to current position (post-drag).
+		// flushSync() was already called on pointer-down, so the server knows
+		// the pre-drag physics position. The drag delta was sent by the normal
+		// operation system. Our next sync should only track NEW physics movement.
 		const activeIds = this.getActiveNodeIds();
 		for (const item of this.board.items.listAll()) {
 			if (!activeIds.has(item.getId())) continue;
@@ -398,7 +413,14 @@ export class ForceGraphEngine {
 
 	private syncPositions(): void {
 		const activeIds = this.getActiveNodeIds();
-		const nodes = this.getNodes().filter(item => activeIds.has(item.getId()));
+		// Exclude selected items — their movement is sent by the normal drag system.
+		// Including them here would double-count the drag delta.
+		const selectedIds = new Set(this.board.selection.list().map(i => i.getId()));
+		const nodes = this.getNodes().filter(item =>
+			activeIds.has(item.getId()) &&
+			!selectedIds.has(item.getId()) &&
+			!(item.parent !== 'Board' && selectedIds.has(item.parent)),
+		);
 		if (nodes.length === 0) return;
 
 		const movedItems = nodes
