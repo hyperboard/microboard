@@ -1524,20 +1524,26 @@ export class Board {
 
   private forceGraph: ForceGraphEngine | null = null;
 
-  enableForceGraph(): void {
-    if (this.forceGraph) return;
-    this.forceGraph = new ForceGraphEngine(this);
-    this.forceGraph.start();
+  /** Enable force-directed layout for the connected component containing `nodeId`. */
+  enableForceGraph(nodeId: string): void {
+    if (!this.forceGraph) {
+      this.forceGraph = new ForceGraphEngine(this);
+    }
+    this.forceGraph.enableForGraph(nodeId);
   }
 
-  disableForceGraph(): void {
+  /** Disable graph mode for the component containing `nodeId`. */
+  disableForceGraph(nodeId: string): void {
     if (!this.forceGraph) return;
-    this.forceGraph.stop();
-    this.forceGraph = null;
+    this.forceGraph.disableForGraph(nodeId);
+    if (!this.forceGraph.hasActiveComponents()) {
+      this.forceGraph = null;
+    }
   }
 
-  isForceGraphEnabled(): boolean {
-    return this.forceGraph !== null;
+  /** Returns true if `nodeId` is currently in an active force-directed component. */
+  isNodeInForceGraph(nodeId: string): boolean {
+    return this.forceGraph?.isNodeInActiveGraph(nodeId) ?? false;
   }
 
   /** Call after dragging a node to re-wake the physics engine if it was sleeping. */
