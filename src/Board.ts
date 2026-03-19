@@ -1520,6 +1520,9 @@ export class Board {
     return this.gravity !== null;
   }
 
+  syncGravity(): void { this.gravity?.flushSync(); }
+  wakeGravity(): void { this.gravity?.wake(); }
+
   // ── Force-directed graph layout ───────────────────────────────────────────
 
   private forceGraph: ForceGraphEngine | null = null;

@@ -61,10 +61,31 @@ export class GravityEngine {
 		this.lastSyncedPositions.clear();
 	}
 
+	flushSync(): void {
+		this.syncPositions();
+	}
+
+	wake(): void {
+		// Reset baseline to current positions so the next syncPositions doesn't
+		// re-send movement that was already committed by the drag operation.
+		for (const item of this.board.items.listAll()) {
+			const pos = item.transformation.getTranslation();
+			this.lastSyncedPositions.set(item.getId(), { x: pos.x, y: pos.y });
+		}
+		if (this.tickTimer !== null) return; // already running
+		this.tickTimer = setInterval(() => this.tick(), this.TICK_MS);
+		this.syncTimer = setInterval(() => this.syncPositions(), this.SYNC_MS);
+	}
+
 	private tick(): void {
 		const dt = this.TICK_MS / 1000;
-		const items = this.board.items.listAll().filter(item =>
-			!item.transformation.isLocked && !EXCLUDED_ITEM_TYPES.has(item.itemType));
+		const draggedIds = this.board.getDraggedItemIds();
+		const items = this.board.items.listAll().filter(item => {
+			if (item.transformation.isLocked || EXCLUDED_ITEM_TYPES.has(item.itemType)) return false;
+			if (draggedIds.has(item.getId())) return false;
+			if (item.parent !== 'Board' && draggedIds.has(item.parent)) return false;
+			return true;
+		});
 		if (items.length < 1) return;
 
 		// Build snapshot using transformation.getTranslation() for CURRENT position.
@@ -181,8 +202,13 @@ export class GravityEngine {
 	}
 
 	private syncPositions(): void {
-		const items = this.board.items.listAll().filter(item =>
-			!item.transformation.isLocked && !EXCLUDED_ITEM_TYPES.has(item.itemType));
+		const draggedIds = this.board.getDraggedItemIds();
+		const items = this.board.items.listAll().filter(item => {
+			if (item.transformation.isLocked || EXCLUDED_ITEM_TYPES.has(item.itemType)) return false;
+			if (draggedIds.has(item.getId())) return false;
+			if (item.parent !== 'Board' && draggedIds.has(item.parent)) return false;
+			return true;
+		});
 		if (items.length === 0) return;
 
 		const movedItems = items
