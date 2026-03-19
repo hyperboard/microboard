@@ -195,9 +195,12 @@ export class Connector extends BaseItem {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
-			this.smartJumpStartEdge();
-			this.updatePaths();
-			this.subject.publish(this);
+			// smartJumpStartEdge emits setStartPoint (which calls updatePaths + publish internally)
+			// so skip the redundant calls when a jump occurs.
+			if (!this.smartJumpStartEdge()) {
+				this.updatePaths();
+				this.subject.publish(this);
+			}
 		}
 	};
 
@@ -205,38 +208,40 @@ export class Connector extends BaseItem {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
-			this.smartJumpStartEdge();
-			this.updatePaths();
-			this.subject.publish(this);
+			if (!this.smartJumpStartEdge()) {
+				this.updatePaths();
+				this.subject.publish(this);
+			}
 		}
 	};
 
 	/**
 	 * If the start point is attached to one of the 4 edge-center anchors, re-evaluate
 	 * which edge best faces the current end position and jump there to avoid sharp bends.
-	 * Purely local/visual — no operation is emitted.
+	 * Emits a setStartPoint operation so the jump is persisted and synced.
+	 * Returns true if a jump was performed (caller should skip its own updatePaths/publish).
 	 */
-	private smartJumpStartEdge(): void {
+	private smartJumpStartEdge(): boolean {
 		const start = this.startPoint;
-		if (start.pointType !== 'Fixed' && start.pointType !== 'Floating') return;
+		if (start.pointType !== 'Fixed' && start.pointType !== 'Floating') return false;
 
 		const item = start.item;
 		const anchors = item.getSnapAnchorPoints?.();
-		if (!anchors || anchors.length === 0) return;
+		if (!anchors || anchors.length === 0) return false;
 
-		// Only jump if currently on one of the 4 edge-center anchors.
-		// Use world-space comparison (works correctly for scaled items too).
+		// Only jump if currently on one of the 4 edge-center anchors (world-space check,
+		// works correctly for scaled items unlike the local-space edge field).
 		const EPS = 2;
 		const isOnAnchor = anchors.some(a =>
 			Math.abs(a.x - start.x) < EPS && Math.abs(a.y - start.y) < EPS
 		);
-		if (!isOnAnchor) return;
+		if (!isOnAnchor) return false;
 
 		// Direction from the start item center toward the end point.
 		const center = item.getMbr().getCenter();
 		const dx = this.endPoint.x - center.x;
 		const dy = this.endPoint.y - center.y;
-		if (dx === 0 && dy === 0) return;
+		if (dx === 0 && dy === 0) return false;
 
 		// Pick the anchor whose outward direction best aligns with the end direction.
 		let best = anchors[0];
@@ -254,11 +259,12 @@ export class Connector extends BaseItem {
 		}
 
 		// Already on the best anchor — nothing to do.
-		if (Math.abs(best.x - start.x) < EPS && Math.abs(best.y - start.y) < EPS) return;
+		if (Math.abs(best.x - start.x) < EPS && Math.abs(best.y - start.y) < EPS) return false;
 
-		// Replace with a new FixedPoint at the best anchor.
-		// Subscription is on item.subject (not the point object), so no re-subscribe needed.
-		this.startPoint = new FixedPoint(item, toRelativePoint(best, item));
+		// Emit setStartPoint so the jump is persisted and synced to collaborators.
+		// applyStartPoint (called internally) handles updatePaths + subject.publish.
+		this.setStartPoint(new FixedPoint(item, toRelativePoint(best, item)));
+		return true;
 	}
 
 	clearObservedItems() {
