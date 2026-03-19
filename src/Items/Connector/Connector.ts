@@ -19,7 +19,6 @@ import {
 	ControlPointData,
 	FindItemFn,
 	FixedPoint,
-	FloatingPoint,
 	getControlPoint,
 	toRelativePoint,
 } from './ControlPoint';
@@ -221,13 +220,17 @@ export class Connector extends BaseItem {
 		const start = this.startPoint;
 		if (start.pointType !== 'Fixed' && start.pointType !== 'Floating') return;
 
-		// Only apply to edge attachments (snapped to one of the 4 edge centers).
-		const startEdge = (start as FixedPoint | FloatingPoint).getEdge();
-		if (!startEdge) return;
-
 		const item = start.item;
 		const anchors = item.getSnapAnchorPoints?.();
 		if (!anchors || anchors.length === 0) return;
+
+		// Only jump if currently on one of the 4 edge-center anchors.
+		// Use world-space comparison (works correctly for scaled items too).
+		const EPS = 2;
+		const isOnAnchor = anchors.some(a =>
+			Math.abs(a.x - start.x) < EPS && Math.abs(a.y - start.y) < EPS
+		);
+		if (!isOnAnchor) return;
 
 		// Direction from the start item center toward the end point.
 		const center = item.getMbr().getCenter();
@@ -250,16 +253,12 @@ export class Connector extends BaseItem {
 			}
 		}
 
-		// Convert best world anchor to item-local relative coords.
-		const bestRel = toRelativePoint(best, item);
-
-		// Skip if already on the best anchor (avoid creating a new object unnecessarily).
-		const cur = start.relativePoint;
-		if (Math.abs(bestRel.x - cur.x) < 0.5 && Math.abs(bestRel.y - cur.y) < 0.5) return;
+		// Already on the best anchor — nothing to do.
+		if (Math.abs(best.x - start.x) < EPS && Math.abs(best.y - start.y) < EPS) return;
 
 		// Replace with a new FixedPoint at the best anchor.
-		// Subscription is on item.subject (not on the point object), so no re-subscribe needed.
-		this.startPoint = new FixedPoint(item, bestRel);
+		// Subscription is on item.subject (not the point object), so no re-subscribe needed.
+		this.startPoint = new FixedPoint(item, toRelativePoint(best, item));
 	}
 
 	clearObservedItems() {
