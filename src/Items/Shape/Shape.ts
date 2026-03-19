@@ -179,6 +179,7 @@ export class Shape extends BaseItem {
       this.text.deserialize(data.text);
     }
     this.transformPath();
+    this.text.updateElement();
     this.subject.publish(this);
     return this;
   }

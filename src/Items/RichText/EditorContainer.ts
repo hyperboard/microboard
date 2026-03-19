@@ -293,7 +293,7 @@ export class EditorContainer {
           break;
         case "setSelectionFontHighlight":
         case "setSelectionFontStyle":
-        case "setSelectionHorizontalAlignment":
+        case "setSelectionHorisontalAlignment":
           this.applySelectionOp(op);
           break;
         case "setFontStyle":

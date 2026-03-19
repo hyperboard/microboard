@@ -179,15 +179,15 @@ export class SessionStorage {
 		return this.get<string>(`fontHighlightColor_${itemType}`);
 	}
 
-	setHorizontalAlignment(
+	setHorisontalAlignment(
 		itemType: string,
-		horizontalAlignment: 'left' | 'center' | 'right'
+		horisontalAlignment: 'left' | 'center' | 'right'
 	): void {
-		this.set(`fontHorizontalAlignment_${itemType}`, horizontalAlignment);
+		this.set(`fontHorisontalAlignment_${itemType}`, horisontalAlignment);
 	}
 
-	getHorizontalAlignment(itemType: string): 'left' | 'center' | 'right' | undefined {
-		return this.get<'left' | 'center' | 'right'>(`fontHorizontalAlignment_${itemType}`);
+	getHorisontalAlignment(itemType: string): 'left' | 'center' | 'right' | undefined {
+		return this.get<'left' | 'center' | 'right'>(`fontHorisontalAlignment_${itemType}`);
 	}
 
 	setVerticalAlignment(itemType: string, verticalAlignment: 'top' | 'center' | 'bottom'): void {

@@ -427,13 +427,15 @@ export class RichText extends BaseItem {
     }
 
     const point = new Point(left, top);
-    this.getParentWorldMatrix().apply(point);
+    if (!this.isInShape || this.autoSize) {
+      this.getParentWorldMatrix().apply(point);
+    }
 
     return {
       point,
       width,
       height,
-      maxWidth: maxWidth ? maxWidth + 1 : undefined,
+      maxWidth: maxWidth ? maxWidth : undefined,
       maxHeight,
       // isInShape items (Shape, Sticker fixed-font) render at raw font sizes on canvas
       // with no ctx.scale applied, so the HTML editor must also use scale=1.

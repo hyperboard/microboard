@@ -50,7 +50,7 @@ interface SetMaxWidth extends RichTextBaseOp {
 }
 
 export type SelectionMethod =
-	| 'setSelectionHorizontalAlignment'
+	| 'setSelectionHorisontalAlignment'
 	| 'setSelectionFontHighlight'
 	| 'setSelectionFontSize'
 	| 'setSelectionFontFamily'

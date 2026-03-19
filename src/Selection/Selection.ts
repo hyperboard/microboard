@@ -421,7 +421,7 @@ export class BoardSelection {
       const textSize = tempStorage.getFontSize(item.itemType);
       const highlightColor = tempStorage.getFontHighlight(item.itemType);
       const styles = tempStorage.getFontStyles(item.itemType);
-      const horizontalAlignment = tempStorage.getHorizontalAlignment(
+      const horisontalAlignment = tempStorage.getHorisontalAlignment(
         item.itemType
       );
       const verticalAlignment = tempStorage.getVerticalAlignment(item.itemType);
@@ -448,8 +448,8 @@ export class BoardSelection {
         const stylesArr = styles;
         text.setSelectionFontStyle(stylesArr, "None");
       }
-      if (horizontalAlignment && !(item instanceof Sticker)) {
-        text.setSelectionHorisontalAlignment(horizontalAlignment);
+      if (horisontalAlignment && !(item instanceof Sticker)) {
+        text.setSelectionHorisontalAlignment(horisontalAlignment);
       }
       if (verticalAlignment && !(item instanceof Sticker)) {
         this.setVerticalAlignment(verticalAlignment);
@@ -1402,7 +1402,7 @@ export class BoardSelection {
         ops,
       });
 
-      tempStorage.setHorizontalAlignment(item.itemType, horisontalAlignment);
+      tempStorage.setHorisontalAlignment(item.itemType, horisontalAlignment);
     }
     this.emitApplied({
       class: "RichText",
