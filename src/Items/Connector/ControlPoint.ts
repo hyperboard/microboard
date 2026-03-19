@@ -6,7 +6,7 @@ import { RichText } from "../RichText";
 import { AINode } from "../AINode";
 import { BaseItem } from "../BaseItem";
 
-type Edge = "top" | "bottom" | "left" | "right";
+export type Edge = "top" | "bottom" | "left" | "right";
 
 export interface BoardPointData {
 	pointType: "Board";
@@ -63,6 +63,7 @@ export class BoardPoint extends Point {
 export class FloatingPoint extends Point {
 	readonly pointType = "Floating";
 	private edge: Edge | undefined;
+	getEdge(): Edge | undefined { return this.edge; }
 
 	constructor(
 		public item: Item,
@@ -114,6 +115,7 @@ export class FloatingPoint extends Point {
 export class FixedPoint extends Point {
 	readonly pointType = "Fixed";
 	private edge: Edge | undefined;
+	getEdge(): Edge | undefined { return this.edge; }
 
 	constructor(
 		public item: Item,

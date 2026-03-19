@@ -18,7 +18,10 @@ import {
 	ControlPoint,
 	ControlPointData,
 	FindItemFn,
+	FixedPoint,
+	FloatingPoint,
 	getControlPoint,
+	toRelativePoint,
 } from './ControlPoint';
 import { getLine } from './getLine/getLine';
 import { ConnectorEdge } from './Pointers';
@@ -193,6 +196,7 @@ export class Connector extends BaseItem {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
+			this.smartJumpStartEdge();
 			this.updatePaths();
 			this.subject.publish(this);
 		}
@@ -202,10 +206,61 @@ export class Connector extends BaseItem {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
+			this.smartJumpStartEdge();
 			this.updatePaths();
 			this.subject.publish(this);
 		}
 	};
+
+	/**
+	 * If the start point is attached to one of the 4 edge-center anchors, re-evaluate
+	 * which edge best faces the current end position and jump there to avoid sharp bends.
+	 * Purely local/visual — no operation is emitted.
+	 */
+	private smartJumpStartEdge(): void {
+		const start = this.startPoint;
+		if (start.pointType !== 'Fixed' && start.pointType !== 'Floating') return;
+
+		// Only apply to edge attachments (snapped to one of the 4 edge centers).
+		const startEdge = (start as FixedPoint | FloatingPoint).getEdge();
+		if (!startEdge) return;
+
+		const item = start.item;
+		const anchors = item.getSnapAnchorPoints?.();
+		if (!anchors || anchors.length === 0) return;
+
+		// Direction from the start item center toward the end point.
+		const center = item.getMbr().getCenter();
+		const dx = this.endPoint.x - center.x;
+		const dy = this.endPoint.y - center.y;
+		if (dx === 0 && dy === 0) return;
+
+		// Pick the anchor whose outward direction best aligns with the end direction.
+		let best = anchors[0];
+		let bestDot = -Infinity;
+		for (const anchor of anchors) {
+			const ax = anchor.x - center.x;
+			const ay = anchor.y - center.y;
+			const len = Math.sqrt(ax * ax + ay * ay);
+			if (len === 0) continue;
+			const dot = (ax * dx + ay * dy) / len;
+			if (dot > bestDot) {
+				bestDot = dot;
+				best = anchor;
+			}
+		}
+
+		// Convert best world anchor to item-local relative coords.
+		const bestRel = toRelativePoint(best, item);
+
+		// Skip if already on the best anchor (avoid creating a new object unnecessarily).
+		const cur = start.relativePoint;
+		if (Math.abs(bestRel.x - cur.x) < 0.5 && Math.abs(bestRel.y - cur.y) < 0.5) return;
+
+		// Replace with a new FixedPoint at the best anchor.
+		// Subscription is on item.subject (not on the point object), so no re-subscribe needed.
+		this.startPoint = new FixedPoint(item, bestRel);
+	}
 
 	clearObservedItems() {
 		const startPoint = this.getStartPoint();
