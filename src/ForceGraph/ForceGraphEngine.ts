@@ -151,10 +151,10 @@ export class ForceGraphEngine {
 	 */
 	wake(): void {
 		if (this.activeComponents.size === 0) return;
-		// Reset baseline to current position (post-drag).
-		// flushSync() was already called on pointer-down, so the server knows
-		// the pre-drag physics position. The drag delta was sent by the normal
-		// operation system. Our next sync should only track NEW physics movement.
+		// Reset baseline to current position for all active nodes.
+		// flushSync() was called on pointer-down (server knows pre-drag physics position).
+		// The drag delta was sent by the normal operation system.
+		// Our next sync must start from the post-drag position to avoid double-counting.
 		const activeIds = this.getActiveNodeIds();
 		for (const item of this.board.items.listAll()) {
 			if (!activeIds.has(item.getId())) continue;
@@ -267,16 +267,16 @@ export class ForceGraphEngine {
 		const dt = this.TICK_MS / 1000;
 
 		// Only process nodes that belong to active components.
-		// Skip selected items and children of selected groups — they may be dragged
-		// by the user and physics should not fight the hand.
+		// Skip dragged items (both selected-drag and unselected-drag) so physics
+		// does not fight the user's hand.
 		const activeIds = this.getActiveNodeIds();
-		const selectedIds = new Set(this.board.selection.list().map(i => i.getId()));
+		const draggedIds = this.board.getDraggedItemIds();
 		const allNodes = this.getNodes();
 		const nodes = allNodes.filter(item => {
 			if (!activeIds.has(item.getId())) return false;
-			if (selectedIds.has(item.getId())) return false;
-			// If the item lives inside a selected Group, skip it too
-			if (item.parent !== 'Board' && selectedIds.has(item.parent)) return false;
+			if (draggedIds.has(item.getId())) return false;
+			// If the item lives inside a dragged Group, skip it too
+			if (item.parent !== 'Board' && draggedIds.has(item.parent)) return false;
 			return true;
 		});
 
@@ -413,13 +413,13 @@ export class ForceGraphEngine {
 
 	private syncPositions(): void {
 		const activeIds = this.getActiveNodeIds();
-		// Exclude selected items — their movement is sent by the normal drag system.
-		// Including them here would double-count the drag delta.
-		const selectedIds = new Set(this.board.selection.list().map(i => i.getId()));
+		// Exclude dragged items (selected or unselected drag) — their movement is
+		// sent by the normal drag system; including them would double-count the delta.
+		const draggedIds = this.board.getDraggedItemIds();
 		const nodes = this.getNodes().filter(item =>
 			activeIds.has(item.getId()) &&
-			!selectedIds.has(item.getId()) &&
-			!(item.parent !== 'Board' && selectedIds.has(item.parent)),
+			!draggedIds.has(item.getId()) &&
+			!(item.parent !== 'Board' && draggedIds.has(item.parent)),
 		);
 		if (nodes.length === 0) return;
 

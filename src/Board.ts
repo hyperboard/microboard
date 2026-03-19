@@ -1556,6 +1556,23 @@ export class Board {
     this.forceGraph?.setComponentTargetGap(nodeId, gap);
   }
 
+  /**
+   * Returns IDs of all items currently being dragged (both selected and unselected drag).
+   * Used by physics engines to skip items that are under user control.
+   */
+  getDraggedItemIds(): Set<string> {
+    const ids = new Set<string>();
+    if (!this.selection.transformationRenderBlock) return ids;
+    // Case 1: dragging selected items
+    for (const item of this.selection.list()) ids.add(item.getId());
+    // Case 2: dragging an unselected item (selection is empty, item is in downOnItem)
+    const selectTool = this.tools.getSelect();
+    if (selectTool?.isDraggingUnselectedItem && selectTool.downOnItem) {
+      ids.add(selectTool.downOnItem.getId());
+    }
+    return ids;
+  }
+
   /** Flush pending physics positions to the server immediately (call before drag starts). */
   syncForceGraph(): void {
     this.forceGraph?.flushSync();
