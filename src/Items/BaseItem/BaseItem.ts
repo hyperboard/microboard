@@ -304,6 +304,21 @@ export class BaseItem extends Mbr implements Geometry {
 		);
 	}
 
+	private hasAncestor(itemId: string): boolean {
+		let parentId = this.parent;
+		while (parentId && parentId !== "Board") {
+			if (parentId === itemId) {
+				return true;
+			}
+			const parent = this.board.items.getById(parentId) as BaseItem | undefined;
+			if (!parent || parent.parent === parentId) {
+				break;
+			}
+			parentId = parent.parent;
+		}
+		return false;
+	}
+
 	applyAddChildren(childIds: string[]): void {
 		if (!this.index) {
 			return;
@@ -313,7 +328,8 @@ export class BaseItem extends Mbr implements Geometry {
 			const foundItem = this.board.items.getById(childId) as BaseItem | undefined;
 			if (
 				this.parent !== childId &&
-				this.getId() !== childId
+				this.getId() !== childId &&
+				!this.hasAncestor(childId)
 			) {
 				if (!this.index?.getById(childId) && foundItem) {
 					// Convert the child's current world transform to local (relative to this container).

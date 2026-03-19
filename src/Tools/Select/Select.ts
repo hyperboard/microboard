@@ -2,7 +2,6 @@ import { Board } from 'Board';
 import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
 import {Line, Mbr, Item, Point, Frame, Connector, Comment, RichText} from 'Items';
 import { DrawingContext } from 'Items/DrawingContext';
-import { Group } from 'Items/Group';
 import { quickAddItem } from 'Selection/QuickAddButtons';
 import { conf } from 'Settings';
 import { createDebounceUpdater } from 'Tools/DebounceUpdater';
@@ -277,10 +276,15 @@ export class Select extends Tool {
 
 		const selectionMbr = selection.getMbr();
 		const selectionItems = selection.list();
+		const selectableHover = hover.map(item => this.board.selection.getSelectableItem(item));
 		this.isDownOnSelection =
 			selectionMbr !== undefined &&
 			selectionMbr.isUnderPoint(pointer.point) &&
-			hover.every(hovered => selectionItems.some(selected => selected.getId() === hovered.getId()));
+			selectableHover.every(
+				hovered =>
+					hovered &&
+					selectionItems.some(selected => selected.getId() === hovered.getId())
+			);
 
 		this.isDraggingSelection = this.isDownOnSelection;
 		if (this.isDraggingSelection) {
@@ -728,7 +732,7 @@ export class Select extends Tool {
 			this.board.pointer.subject.publish(this.board.pointer);
 
 			if (isCtrl || isShift) {
-				const underPointer = hovered[0];
+				const underPointer = this.board.selection.getSelectableItem(hovered[0]);
 				const isEmptySelection = this.board.selection.items.list().length === 0;
 				if (!underPointer && !isEmptySelection && isShift) {
 					this.board.selection.add(this.board.selection.items.list());
@@ -744,17 +748,6 @@ export class Select extends Tool {
 				const isNotInSelection = this.board.selection.items.findById(underPointer.getId()) === null;
 				if (isNotInSelection) {
 					this.board.selection.add(underPointer);
-					if ("index" in underPointer && underPointer.index) {
-						const { left, right, top, bottom } = underPointer.getMbr();
-						const childrenIds = underPointer.getChildrenIds();
-						console.log("UNDERPOINTER", underPointer)
-						console.log("CHILDREN", childrenIds)
-							const itemsInFrame = this.board.items
-								.getEnclosedOrCrossed(left, top, right, bottom)
-								.filter(item => childrenIds && childrenIds.includes(item.getId()));
-							this.board.selection.add(itemsInFrame);
-
-					}
 					this.board.selection.setContext('EditUnderPointer');
 				} else {
 					this.board.selection.remove(underPointer);
@@ -778,11 +771,6 @@ export class Select extends Tool {
 					this.board.selection.editText();
 				} else {
 					this.board.selection.editUnderPointer();
-				}
-
-				if (topItem instanceof Group) {
-					const groupChildren = topItem.getChildren();
-					this.board.selection.add(groupChildren);
 				}
 
 				this.board.tools.publish();

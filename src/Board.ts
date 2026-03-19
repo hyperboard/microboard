@@ -308,9 +308,10 @@ export class Board {
       return;
     }
 
-    item.getChildren().forEach((item) => {
-      item.transformation.isLocked = false;
-      item.parent = "Board";
+    const children = [...item.getChildren()];
+    item.applyRemoveChildren(children.map((child) => child.getId()));
+    children.forEach((child) => {
+      child.transformation.isLocked = false;
     });
     item.transformation.isLocked = false;
 
@@ -329,9 +330,7 @@ export class Board {
       return;
     }
 
-    item.getChildren().forEach((item) => {
-      item.parent = "Board";
-    });
+    item.applyRemoveChildren(item.getChildrenIds());
 
     const removedItems: Item[] = [];
     this.findItemAndApply(op.item, (item) => {

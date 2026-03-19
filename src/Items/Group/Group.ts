@@ -32,8 +32,9 @@ export class Group extends BaseItem {
     children: string[] = [],
     id = ""
   ) {
-    // isGroupItem=true creates this.index (SimpleSpatialIndex) and sets canBeNested=false
+    // isGroupItem=true creates this.index (SimpleSpatialIndex) for child storage.
     super(board, id, undefined, true);
+    this.canBeNested = true;
     this.linkTo = new LinkTo(this.id, this.events);
     this.transformation = new Transformation(this.id, this.events);
 

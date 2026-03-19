@@ -541,11 +541,6 @@ export class Items {
     size = 16;
     const tolerated = this.index.getEnclosedOrCrossed(x - size, y - size, x + size, y + size);
 
-    const groups = tolerated.filter(item => item.itemType === 'Group');
-    if (groups.length > 0) {
-      return groups;
-    }
-
     let enclosed = tolerated.some(item => item instanceof Connector)
       ? tolerated
       : this.index.getEnclosedOrCrossed(x, y, x, y);

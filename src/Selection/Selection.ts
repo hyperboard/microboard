@@ -27,6 +27,7 @@ import { BaseSelection, BaseRange } from "slate";
 import { ReactEditor } from "slate-react";
 import { tempStorage } from "SessionStorage";
 import {BaseItem} from "../Items/BaseItem";
+import { Group } from "Items/Group";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -297,10 +298,27 @@ export class BoardSelection {
     return this.items.getMbr();
   }
 
+  getSelectableItem(item: Item | null | undefined): Item | null {
+    if (!item) {
+      return null;
+    }
+
+    if (!(item instanceof BaseItem) || item.parent === "Board") {
+      return item;
+    }
+
+    const parent = this.board.items.getById(item.parent);
+    if (parent instanceof Group) {
+      return parent;
+    }
+
+    return item;
+  }
+
   selectUnderPointer(): void {
     this.removeAll();
     const stack = this.board.items.getUnderPointer();
-    const top = stack.pop();
+    const top = this.getSelectableItem(stack.pop());
     if (top) {
       this.add(top);
       this.setTextToEdit(undefined);
@@ -363,7 +381,7 @@ export class BoardSelection {
   editUnderPointer(): void {
     this.removeAll();
     const stack = this.board.items.getUnderPointer();
-    const item = stack.pop();
+    const item = this.getSelectableItem(stack.pop());
     if (item) {
       this.add(item);
       this.setTextToEdit(undefined);
@@ -445,7 +463,7 @@ export class BoardSelection {
   editTextUnderPointer(): void {
     this.removeAll();
     const stack = this.board.items.getUnderPointer();
-    const top = stack.pop();
+    const top = this.getSelectableItem(stack.pop());
     if (top) {
       this.add(top);
       // this.setTextToEdit(top);
