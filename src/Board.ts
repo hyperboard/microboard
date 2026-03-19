@@ -1562,11 +1562,13 @@ export class Board {
    */
   getDraggedItemIds(): Set<string> {
     const ids = new Set<string>();
-    if (!this.selection.transformationRenderBlock) return ids;
-    // Case 1: dragging selected items
-    for (const item of this.selection.list()) ids.add(item.getId());
-    // Case 2: dragging an unselected item (selection is empty, item is in downOnItem)
     const selectTool = this.tools.getSelect();
+    // Case 1: dragging selected items — transformationRenderBlock is true
+    if (this.selection.transformationRenderBlock) {
+      for (const item of this.selection.list()) ids.add(item.getId());
+    }
+    // Case 2: dragging an unselected item — transformationRenderBlock is NOT set,
+    // selection.list() is empty (removeAll() called), item is in downOnItem
     if (selectTool?.isDraggingUnselectedItem && selectTool.downOnItem) {
       ids.add(selectTool.downOnItem.getId());
     }
