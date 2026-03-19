@@ -135,11 +135,18 @@ export class ForceGraphEngine {
 		return this.activeComponents.size > 0;
 	}
 
-	/** Re-wake physics after a node is manually dragged. */
+	/** Re-wake physics after a node is manually dragged (or targetGap changed). */
 	wake(): void {
-		if (this.activeComponents.size > 0 && this.tickTimer === null) {
-			this.tickTimer = setInterval(() => this.tick(), this.TICK_MS);
+		if (this.activeComponents.size === 0) return;
+		// Reset sync baseline to current positions so manual movements made while
+		// the engine was sleeping are not double-counted in the next syncPositions call.
+		const activeIds = this.getActiveNodeIds();
+		for (const item of this.board.items.listAll()) {
+			if (!activeIds.has(item.getId())) continue;
+			const pos = item.transformation.getTranslation();
+			this.lastSyncedPositions.set(item.getId(), { x: pos.x, y: pos.y });
 		}
+		this.ensureRunning();
 	}
 
 	/** Full stop — called when Board destroys the engine. */
@@ -244,10 +251,19 @@ export class ForceGraphEngine {
 	private tick(): void {
 		const dt = this.TICK_MS / 1000;
 
-		// Only process nodes that belong to active components
+		// Only process nodes that belong to active components.
+		// Skip selected items and children of selected groups — they may be dragged
+		// by the user and physics should not fight the hand.
 		const activeIds = this.getActiveNodeIds();
+		const selectedIds = new Set(this.board.selection.list().map(i => i.getId()));
 		const allNodes = this.getNodes();
-		const nodes = allNodes.filter(item => activeIds.has(item.getId()));
+		const nodes = allNodes.filter(item => {
+			if (!activeIds.has(item.getId())) return false;
+			if (selectedIds.has(item.getId())) return false;
+			// If the item lives inside a selected Group, skip it too
+			if (item.parent !== 'Board' && selectedIds.has(item.parent)) return false;
+			return true;
+		});
 
 		if (nodes.length < 1) return;
 
@@ -370,10 +386,10 @@ export class ForceGraphEngine {
 			}
 		}
 
-		// ── D. Sleep when settled (tick timer only; sync timer keeps running) ─
+		// ── D. Sleep when settled — stop BOTH timers so the sync timer cannot
+		// pick up manual item movements (already sent via normal ops) and double-count them.
 		if (totalEnergy < conf.FG_SLEEP_THRESHOLD && this.tickTimer !== null) {
-			clearInterval(this.tickTimer);
-			this.tickTimer = null;
+			this.stopTimers();
 			this.syncPositions();
 		}
 	}
