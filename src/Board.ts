@@ -1546,6 +1546,16 @@ export class Board {
     return this.forceGraph?.isNodeInActiveGraph(nodeId) ?? false;
   }
 
+  /** Get the connector target gap (px) for the component containing `nodeId`. */
+  getForceGraphGap(nodeId: string): number | undefined {
+    return this.forceGraph?.getComponentTargetGap(nodeId);
+  }
+
+  /** Set the connector target gap (px) for the component containing `nodeId`. */
+  setForceGraphGap(nodeId: string, gap: number): void {
+    this.forceGraph?.setComponentTargetGap(nodeId, gap);
+  }
+
   /** Call after dragging a node to re-wake the physics engine if it was sleeping. */
   wakeForceGraph(): void {
     this.forceGraph?.wake();

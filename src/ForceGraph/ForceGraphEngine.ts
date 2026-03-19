@@ -115,6 +115,22 @@ export class ForceGraphEngine {
 		return !!this.findComponentId(nodeId);
 	}
 
+	/** Get the current target gap for the component containing `nodeId`. Returns undefined if not active. */
+	getComponentTargetGap(nodeId: string): number | undefined {
+		const compId = this.findComponentId(nodeId);
+		return compId ? this.activeComponents.get(compId)?.targetGap : undefined;
+	}
+
+	/** Update the target gap (connector length) for the component containing `nodeId` and re-wake. */
+	setComponentTargetGap(nodeId: string, gap: number): void {
+		const compId = this.findComponentId(nodeId);
+		if (!compId) return;
+		const comp = this.activeComponents.get(compId);
+		if (!comp) return;
+		comp.targetGap = gap;
+		this.wake();
+	}
+
 	hasActiveComponents(): boolean {
 		return this.activeComponents.size > 0;
 	}
@@ -199,8 +215,8 @@ export class ForceGraphEngine {
 			count++;
 		}
 		const avgMaxDim = count > 0 ? totalMaxDim / count : 100;
-		// Gap = 30% of avg node size, plus the user-tunable constant
-		return avgMaxDim * 0.3 + conf.FG_TARGET_GAP;
+		// Gap = 150% of avg node size so connectors visually breathe
+		return avgMaxDim * 1.5;
 	}
 
 	private getActiveNodeIds(): Set<string> {
