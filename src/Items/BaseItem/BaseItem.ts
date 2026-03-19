@@ -337,6 +337,7 @@ export class BaseItem extends Mbr implements Geometry {
 					// whether we are processing a live user action or replaying an old event.
 					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerNestingMatrix);
 					this.board.items.index.remove(foundItem);
+					
 					foundItem.parent = this.getId();
 					foundItem.onParentChanged(this.getId());
 					foundItem.transformation.setLocalMatrix(localMatrix);
@@ -595,9 +596,9 @@ export class BaseItem extends Mbr implements Geometry {
 
 	renderHTML(documentFactory: DocumentFactory): HTMLElement {
 		const div = documentFactory.createElement("base-item");
-		const { translateX, translateY } =
+		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.getMatrixData();
-		const transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
+		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
 
 		div.style.backgroundColor = "#b2b0c3";
 		div.id = this.getId();

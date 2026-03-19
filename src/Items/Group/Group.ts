@@ -198,6 +198,15 @@ export class Group extends BaseItem {
   }
 
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    return documentFactory.createElement("div");
+    const div = documentFactory.createElement("div");
+    div.id = this.id;
+    const { translateX, translateY, scaleX, scaleY } =
+      this.transformation.getMatrixData();
+
+    div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    div.style.position = "absolute";
+    div.style.transformOrigin = "0 0";
+
+    return div;
   }
 }

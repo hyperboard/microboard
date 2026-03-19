@@ -89,18 +89,18 @@ export class SpatialIndex {
 
   remove(item: Item): void {
     if ("index" in item && item.index) {
-      item.removeChildItems(item.index.list());
+      (item as any).removeChildItems(item.index.list());
     }
+    this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
+    this.itemsIndex.remove(item);
+
     if (item.parent !== 'Board') {
-      // Item is inside a container — remove it from the container's index,
-      // not from this (board-level) itemsArray.
-      const parentFrame = this.items.getById(item.parent) as BaseItem;
+      // Item is inside a container — also remove it from the container's index
+      const parentFrame = this.items.getById(item.parent) as any;
       parentFrame?.removeChildItems(item);
       this.subject.publish(this.items);
       return;
     }
-    this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
-    this.itemsIndex.remove(item);
 
     if (this.itemsArray.length === 0) {
       this.Mbr = new Mbr();
@@ -128,7 +128,8 @@ export class SpatialIndex {
           translateY: worldMatrix.translateY,
           scaleX: worldMatrix.scaleX,
           scaleY: worldMatrix.scaleY,
-        };
+          isLocked: false,
+        } as any;
       }
       return serialized;
     });
@@ -137,7 +138,7 @@ export class SpatialIndex {
   getItemsWithIncludedChildren(items: Item[]): Item[] {
     return items.flatMap(item => {
       if ("index" in item && item.index) {
-        return [item, ...item.index.list()];
+        return [item, ...(item as any).index.list()];
       }
       return item;
     });
@@ -331,7 +332,7 @@ export class SpatialIndex {
 
   getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
     const mbr = new Mbr(left, top, right, bottom);
-    const items = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
+    const items: any[] = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
@@ -468,7 +469,7 @@ export class Items {
   }
 
   listGroupItems(): BaseItem[] {
-    return this.index.list().filter(item => "index" in item && item.index);
+    return this.index.list().filter(item => "index" in item && item.index) as BaseItem[];
   }
 
   getById(id: string): BaseItem | undefined {
@@ -563,7 +564,7 @@ export class Items {
         }
 
         const isItemTransparent =
-          item instanceof Shape && item?.getBackgroundColor() === 'none';
+          item instanceof Shape && (item as any).getBackgroundColor() === 'none';
         const itemZIndex = this.getZIndex(item);
         const accZIndex = this.getZIndex(acc.nearest!);
 
@@ -713,7 +714,7 @@ export class Items {
 
     items.forEach(item => {
       if ("index" in item && item.index) {
-        groups.push(item)
+        groups.push(item as any)
       } else {
         rest.push(item)
       }
@@ -721,7 +722,7 @@ export class Items {
 
     const childrenMap = new Map<string, string>();
     const GroupsHTML = groups.map(group => {
-      group.getChildrenIds().forEach(childId => childrenMap.set(childId, group.getId()));
+      group.getChildrenIds()?.forEach(childId => childrenMap.set(childId, group.getId()));
 
       const html = group.renderHTML(documentFactory);
       translateElementBy(html, -lowestCoordinates.left, -lowestCoordinates.top);
@@ -755,7 +756,10 @@ export class Items {
             (endY - lowestCoordinates.top).toString()
           );
         }
-        return translateElementBy(item, -lowestCoordinates.left, -lowestCoordinates.top);
+        if (!childrenMap.get(item.id)) {
+          return translateElementBy(item, -lowestCoordinates.left, -lowestCoordinates.top);
+        }
+        return item;
       });
 
     for (const item of restHTML) {

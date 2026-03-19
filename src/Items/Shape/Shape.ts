@@ -451,8 +451,9 @@ export class Shape extends BaseItem {
     if (
       this.text.isEmpty() &&
       (this.backgroundOpacity === 0 ||
-        this.backgroundColor === "none" ||
-        this.backgroundColor === "")
+        (this.backgroundColor as any) === "none" ||
+        (this.backgroundColor as any) === "transparent" ||
+        (this.backgroundColor as any) === "")
     ) {
       // If there's no text and no background (opacity 0 or color is 'none' or empty string), check only the path edges
       return this.path.isPointOverEdges(point, tolerance);
@@ -491,8 +492,8 @@ export class Shape extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
-    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, 'background'));
-    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, 'foreground'));
+    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, "background") as any);
+    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, "foreground") as any);
     this.path.render(context);
     this.text.render(context);
     if (this.getLinkTo()) {
@@ -528,8 +529,8 @@ export class Shape extends BaseItem {
       .renderHTML(documentFactory);
     const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
     paths.forEach((element) => {
-      element.setAttribute("fill", this.backgroundColor);
-      element.setAttribute("stroke", this.borderColor);
+      element.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background") as any);
+      element.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground") as any);
       element.setAttribute(
         "stroke-dasharray",
         LinePatterns[this.borderStyle].join(", ")
@@ -548,8 +549,8 @@ export class Shape extends BaseItem {
     div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
     div.style.position = "absolute";
     div.setAttribute("data-shape-type", this.shapeType);
-    div.setAttribute("fill", this.backgroundColor);
-    div.setAttribute("stroke", this.borderColor);
+    div.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background") as any);
+    div.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground") as any);
     div.setAttribute("data-border-style", this.borderStyle);
     div.setAttribute(
       "stroke-dasharray",
@@ -599,10 +600,10 @@ export class Shape extends BaseItem {
       this.borderWidth = this.path.getBorderWidth() || this.borderWidth;
       this.borderStyle = this.path.getBorderStyle() || this.borderStyle;
       this.backgroundColor =
-        this.path.getBackgroundColor() || this.backgroundColor;
+        (this.path.getBackgroundColor() || this.backgroundColor) as any;
       this.backgroundOpacity =
         this.path.getBackgroundOpacity() || this.backgroundOpacity;
-      this.borderColor = this.path.getBorderColor() || this.borderColor;
+      this.borderColor = (this.path.getBorderColor() || this.borderColor) as any;
       this.borderOpacity = this.path.getBorderOpacity() || this.borderOpacity;
     }
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
@@ -611,9 +612,6 @@ export class Shape extends BaseItem {
   }
 
   private transformPath(): void {
-    if (conf.isNode()) {
-      return;
-    }
     this.path = Shapes[this.shapeType].createPath(this.mbr);
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
     this.text.setContainer(this.textContainer.copy());
