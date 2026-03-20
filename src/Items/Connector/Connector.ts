@@ -195,9 +195,9 @@ export class Connector extends BaseItem {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
-			// smartJumpStartEdge emits setStartPoint (which calls updatePaths + publish internally)
-			// so skip the redundant calls when a jump occurs.
-			if (!this.smartJumpStartEdge()) {
+			const j1 = this.smartJumpStartEdge();
+			const j2 = this.smartJumpEndEdge();
+			if (!j1 && !j2) {
 				this.updatePaths();
 				this.subject.publish(this);
 			}
@@ -208,7 +208,9 @@ export class Connector extends BaseItem {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
-			if (!this.smartJumpStartEdge()) {
+			const j1 = this.smartJumpEndEdge();
+			const j2 = this.smartJumpStartEdge();
+			if (!j1 && !j2) {
 				this.updatePaths();
 				this.subject.publish(this);
 			}
@@ -264,6 +266,47 @@ export class Connector extends BaseItem {
 		// Emit setStartPoint so the jump is persisted and synced to collaborators.
 		// applyStartPoint (called internally) handles updatePaths + subject.publish.
 		this.setStartPoint(new FixedPoint(item, toRelativePoint(best, item)));
+		return true;
+	}
+
+	/** Mirror of smartJumpStartEdge for the end point. */
+	private smartJumpEndEdge(): boolean {
+		const end = this.endPoint;
+		if (end.pointType !== 'Fixed' && end.pointType !== 'Floating') return false;
+
+		const item = end.item;
+		const anchors = item.getSnapAnchorPoints?.();
+		if (!anchors || anchors.length === 0) return false;
+
+		const EPS = 2;
+		const isOnAnchor = anchors.some(a =>
+			Math.abs(a.x - end.x) < EPS && Math.abs(a.y - end.y) < EPS
+		);
+		if (!isOnAnchor) return false;
+
+		// Direction from the end item center toward the start point.
+		const center = item.getMbr().getCenter();
+		const dx = this.startPoint.x - center.x;
+		const dy = this.startPoint.y - center.y;
+		if (dx === 0 && dy === 0) return false;
+
+		let best = anchors[0];
+		let bestDot = -Infinity;
+		for (const anchor of anchors) {
+			const ax = anchor.x - center.x;
+			const ay = anchor.y - center.y;
+			const len = Math.sqrt(ax * ax + ay * ay);
+			if (len === 0) continue;
+			const dot = (ax * dx + ay * dy) / len;
+			if (dot > bestDot) {
+				bestDot = dot;
+				best = anchor;
+			}
+		}
+
+		if (Math.abs(best.x - end.x) < EPS && Math.abs(best.y - end.y) < EPS) return false;
+
+		this.setEndPoint(new FixedPoint(item, toRelativePoint(best, item)));
 		return true;
 	}
 
