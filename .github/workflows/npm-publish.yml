@@ -12,6 +12,10 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.release.outputs.published }}
+      version: ${{ steps.release.outputs.version }}
+      package_name: ${{ steps.release.outputs.package_name }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -36,6 +40,12 @@ jobs:
         continue-on-error: true # Temporary: keep publish flow moving even if lint reports issues
         run: bun run lint
 
+      - name: Capture package metadata before bump
+        id: package-before
+        run: |
+          echo "version=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
+          echo "package_name=$(node -p 'require(\"./package.json\").name')" >> "$GITHUB_OUTPUT"
+
       - name: Automated Version Bump
         id: version-bump
         uses: phips28/gh-action-bump-version@master
@@ -50,13 +60,69 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Capture package metadata after bump
+        id: package-after
+        run: echo "version=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve release state
+        id: release
+        run: |
+          BEFORE_VERSION="${{ steps.package-before.outputs.version }}"
+          AFTER_VERSION="${{ steps.package-after.outputs.version }}"
+          PACKAGE_NAME="${{ steps.package-before.outputs.package_name }}"
+
+          if [ "$BEFORE_VERSION" = "$AFTER_VERSION" ]; then
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "version=$AFTER_VERSION" >> "$GITHUB_OUTPUT"
+            echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+            echo "No version change detected. Skipping npm publish."
+            exit 0
+          fi
+
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "version=$AFTER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "Publishing $PACKAGE_NAME@$AFTER_VERSION"
+
       - name: Setup Node.js
+        if: steps.release.outputs.published == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Publish to NPP
+      - name: Publish to NPM
+        if: steps.release.outputs.published == 'true'
         run: |
           npm install -g npm@latest
           npm publish --provenance
+
+  notify-ui:
+    runs-on: ubuntu-latest
+    needs: publish
+    if: needs.publish.outputs.published == 'true'
+    steps:
+      - name: Notify UI repository about published version
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.UI_REPOSITORY_DISPATCH_TOKEN }}
+          script: |
+            const [owner, repo] = "${{ vars.UI_REPOSITORY }}".split("/");
+
+            if (!owner || !repo) {
+              core.setFailed("Repository variable UI_REPOSITORY must be set as owner/repo.");
+              return;
+            }
+
+            await github.rest.repos.createDispatchEvent({
+              owner,
+              repo,
+              event_type: "microboard_published",
+              client_payload: {
+                package_name: "${{ needs.publish.outputs.package_name }}",
+                version: "${{ needs.publish.outputs.version }}",
+                source_repository: "${{ github.repository }}",
+                source_sha: "${{ github.sha }}",
+                workflow: "${{ github.workflow }}"
+              }
+            });
