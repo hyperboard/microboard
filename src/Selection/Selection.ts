@@ -47,6 +47,15 @@ type SelectionSnapshot = {
     textToEdit: string;
   } | null;
 };
+
+export type SelectionHierarchyNode = {
+  id: string;
+  itemType: string;
+  parentId: string | null;
+  hasChildren: boolean;
+  isCanvasSelectable: boolean;
+};
+
 export class BoardSelection {
   readonly subject = new Subject<BoardSelection>();
   readonly itemSubject = new Subject<Item>();
@@ -82,7 +91,7 @@ export class BoardSelection {
     selectedItems.forEach((itemId) => {
       const item = this.board.items.getById(itemId);
       if (item) {
-        this.items.add(item);
+        this.add(item);
       }
     });
   }
@@ -199,14 +208,26 @@ export class BoardSelection {
   );
 
   add(value: Item | Item[]): void {
-    this.items.add(value);
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        item.subject.subscribe(this.itemObserver);
-      }
-    } else {
-      value.subject.subscribe(this.itemObserver);
+    const values = Array.isArray(value) ? value : [value];
+    const nextItems = this.normalizeSelectionItems([
+      ...this.items.list(),
+      ...values,
+    ]);
+    const currentIds = new Set(this.items.ids());
+    const nextIds = new Set(nextItems.map((item) => item.getId()));
+
+    const removed = this.items.list().filter((item) => !nextIds.has(item.getId()));
+    const added = nextItems.filter((item) => !currentIds.has(item.getId()));
+
+    if (removed.length > 0) {
+      this.items.remove(removed);
+      removed.forEach((item) => item.subject.unsubscribe(this.itemObserver));
     }
+    if (added.length > 0) {
+      this.items.add(added);
+      added.forEach((item) => item.subject.subscribe(this.itemObserver));
+    }
+
     this.subject.publish(this);
     this.itemsSubject.publish([]);
   }
@@ -302,17 +323,67 @@ export class BoardSelection {
     if (!item) {
       return null;
     }
-
-    if (!(item instanceof BaseItem) || item.parent === "Board") {
-      return item;
+    if (item instanceof Group) {
+      return null;
     }
-
-    const parent = this.board.items.getById(item.parent);
-    if (parent instanceof Group) {
-      return parent;
-    }
-
     return item;
+  }
+
+  private getParentItem(item: Item | string | null | undefined): BaseItem | null {
+    const resolved =
+      typeof item === "string" ? this.board.items.getById(item) : item || null;
+    if (!resolved || !(resolved instanceof BaseItem) || resolved.parent === "Board") {
+      return null;
+    }
+    return (this.board.items.getById(resolved.parent) as BaseItem | undefined) || null;
+  }
+
+  private isAncestor(candidate: Item, descendant: Item): boolean {
+    if (!(descendant instanceof BaseItem)) {
+      return false;
+    }
+
+    let parentId = descendant.parent;
+    while (parentId && parentId !== "Board") {
+      if (parentId === candidate.getId()) {
+        return true;
+      }
+      const parent = this.board.items.getById(parentId) as BaseItem | undefined;
+      if (!parent || parent.parent === parentId) {
+        return false;
+      }
+      parentId = parent.parent;
+    }
+
+    return false;
+  }
+
+  private normalizeSelectionItems(items: Item[]): Item[] {
+    const normalized: Item[] = [];
+
+    for (const item of items) {
+      const alreadyCovered = normalized.some(
+        (selected) =>
+          selected.getId() === item.getId() || this.isAncestor(selected, item)
+      );
+      if (alreadyCovered) {
+        continue;
+      }
+
+      for (let i = normalized.length - 1; i >= 0; i -= 1) {
+        if (this.isAncestor(item, normalized[i])) {
+          normalized.splice(i, 1);
+        }
+      }
+
+      normalized.push(item);
+    }
+
+    return normalized;
+  }
+
+  private getCanvasSelectableItems(items: Item[]): Item[] {
+    return items.filter((item) => !(item instanceof Group));
   }
 
   selectUnderPointer(): void {
@@ -476,11 +547,8 @@ export class BoardSelection {
 
   selectEnclosedBy(rect: Mbr): void {
     this.removeAll();
-    const list = this.board.items.getEnclosed(
-      rect.left,
-      rect.top,
-      rect.right,
-      rect.bottom
+    const list = this.getCanvasSelectableItems(
+      this.board.items.getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
     );
     if (list.length !== 0) {
       this.add(list);
@@ -495,13 +563,15 @@ export class BoardSelection {
     const enclosedFrames = this.board.items
       .getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
       .filter((item) => !item.transformation.isLocked);
-    const list = this.board.items
-      .getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
-      .filter(
-        (item) =>
-          (!(item instanceof Frame) || enclosedFrames.includes(item)) &&
-          !item.transformation.isLocked
-      );
+    const list = this.getCanvasSelectableItems(
+      this.board.items
+        .getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
+        .filter(
+          (item) =>
+            (!(item instanceof Frame) || enclosedFrames.includes(item)) &&
+            !item.transformation.isLocked
+        )
+    );
     if (list.length !== 0) {
       this.add(list);
       this.setContext("SelectByRect");
@@ -781,6 +851,104 @@ export class BoardSelection {
       return undefined;
     }
     return this.textToEdit;
+  }
+
+  getParent(item: Item | string | null | undefined): BaseItem | null {
+    return this.getParentItem(item);
+  }
+
+  getParentChain(item: Item | string | null | undefined): BaseItem[] {
+    const chain: BaseItem[] = [];
+    let parent = this.getParentItem(item);
+
+    while (parent) {
+      chain.push(parent);
+      parent = this.getParentItem(parent);
+    }
+
+    return chain;
+  }
+
+  getHierarchyPath(item: Item | string | null | undefined): SelectionHierarchyNode[] {
+    const resolved =
+      typeof item === "string" ? this.board.items.getById(item) : item || null;
+    if (!resolved) {
+      return [];
+    }
+
+    const nodes = [...this.getParentChain(resolved).reverse(), resolved];
+    return nodes
+      .filter((node): node is BaseItem => node instanceof BaseItem)
+      .map((node) => ({
+        id: node.getId(),
+        itemType: node.itemType,
+        parentId: node.parent === "Board" ? null : node.parent,
+        hasChildren: (node.getChildrenIds()?.length || 0) > 0,
+        isCanvasSelectable: !(node instanceof Group),
+      }));
+  }
+
+  getSelectionHierarchyPaths(): SelectionHierarchyNode[][] {
+    return this.items.list().map((item) => this.getHierarchyPath(item));
+  }
+
+  getCommonParent(): BaseItem | null {
+    const selected = this.items.list();
+    if (selected.length === 0) {
+      return null;
+    }
+
+    const firstParent = this.getParentItem(selected[0]);
+    if (!firstParent) {
+      return null;
+    }
+
+    const firstParentId = firstParent.getId();
+    const hasSameParent = selected.every(
+      (item) => this.getParentItem(item)?.getId() === firstParentId
+    );
+
+    return hasSameParent ? firstParent : null;
+  }
+
+  canPromoteSelectionToParent(): boolean {
+    return this.getCommonParent() !== null;
+  }
+
+  selectParent(): BaseItem | null {
+    const parent = this.getCommonParent();
+    if (!parent) {
+      return null;
+    }
+
+    this.removeAll();
+    this.add(parent);
+    this.setContext("SelectUnderPointer");
+    return parent;
+  }
+
+  selectAncestorById(ancestorId: string): BaseItem | null {
+    const selected = this.items.list();
+    if (selected.length === 0) {
+      return null;
+    }
+
+    const ancestor = this.board.items.getById(ancestorId);
+    if (!(ancestor instanceof BaseItem)) {
+      return null;
+    }
+
+    const isSharedAncestor = selected.every(
+      (item) => item.getId() === ancestorId || this.isAncestor(ancestor, item)
+    );
+    if (!isSharedAncestor) {
+      return null;
+    }
+
+    this.removeAll();
+    this.add(ancestor);
+    this.setContext("SelectUnderPointer");
+    return ancestor;
   }
 
   nestSelectedItems(unselectedItem?: Item | null, checkFrames = true): void {

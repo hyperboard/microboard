@@ -40,7 +40,7 @@ describe("group regressions", () => {
     expect(underPointer[0]?.getId()).toBe(child.getId());
   });
 
-  it("promotes a grouped child click into selecting its parent group", () => {
+  it("keeps grouped child click on the child instead of promoting to the group", () => {
     const child = createItem(board, "child", 10, 10, 30, 30);
     const sibling = createItem(board, "sibling", 40, 10, 60, 30);
     const group = board.group([child, sibling]);
@@ -48,7 +48,8 @@ describe("group regressions", () => {
     board.pointer.pointTo(20, 20);
     board.selection.editUnderPointer();
 
-    expect(board.selection.items.getSingle()).toBe(group);
+    expect(board.selection.items.getSingle()).toBe(child);
+    expect(board.selection.items.getSingle()).not.toBe(group);
   });
 
   it("ungroups into plain board items instead of leaving nested group state behind", () => {

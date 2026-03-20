@@ -87,8 +87,8 @@ export class SpatialIndex {
     this.subject.publish(this.items);
   };
 
-  remove(item: Item): void {
-    if ("index" in item && item.index) {
+  remove(item: Item, preserveChildren = false): void {
+    if (!preserveChildren && "index" in item && item.index) {
       (item as any).removeChildItems(item.index.list());
     }
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
@@ -359,6 +359,9 @@ export class SpatialIndex {
         if (!item.getMbr().isUnderPoint(point)) {
           return false;
         }
+      }
+      if (item.itemType === "Group") {
+        return false;
       }
       return true;
     })

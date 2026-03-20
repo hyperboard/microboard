@@ -375,8 +375,8 @@ export class Tools extends ToolContext {
 
     this.board.camera.zoomToFit(frameMbr, zoomOffset, 0);
     this.board.selection.removeAll();
-    this.board.selection.items.removeAll();
-    this.board.selection.items.add(frames[newFrameIndex]);
+    this.board.selection.add(frames[newFrameIndex]);
+    this.board.selection.setContext("SelectUnderPointer");
     localStorage.setItem(`lastVisitedFrame`, frames[newFrameIndex].getId());
     this.publish();
   }

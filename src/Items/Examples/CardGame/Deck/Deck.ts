@@ -455,9 +455,9 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
     const deck = new Deck(board, "");
     deck.transformation.setLocal(cardsOrDecks[cardsOrDecks.length - 1].left, cardsOrDecks[cardsOrDecks.length - 1].top);
     const addedDeck = board.add(deck);
-    board.selection.items.removeAll();
+    board.selection.removeAll();
     addedDeck.addChildItems(cardsOrDecks);
-    board.selection.items.add(addedDeck);
+    board.selection.add(addedDeck);
   } else {
     let mainDeck: Deck | null = null;
     const cards: Card[] = [];
@@ -474,9 +474,9 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
         }
       }
     });
-    board.selection.items.removeAll();
+    board.selection.removeAll();
     mainDeck.addChildItems(cards);
-    board.selection.items.add(mainDeck);
+    board.selection.add(mainDeck);
   }
 };
 

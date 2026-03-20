@@ -336,7 +336,7 @@ export class BaseItem extends Mbr implements Geometry {
 					// All operations in the log are world-space, so this conversion is always correct
 					// whether we are processing a live user action or replaying an old event.
 					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerNestingMatrix);
-					this.board.items.index.remove(foundItem);
+					this.board.items.index.remove(foundItem, true);
 					
 					foundItem.parent = this.getId();
 					foundItem.onParentChanged(this.getId());
@@ -364,7 +364,7 @@ export class BaseItem extends Mbr implements Geometry {
 				if (foundItem) {
 					// Convert local transform back to world before returning the item to the board index.
 					const worldMatrix = foundItem.transformation.toMatrix().composeWith(containerNestingMatrix);
-					this.index?.remove(foundItem);
+					this.index?.remove(foundItem, true);
 					foundItem.parent = "Board";
 					foundItem.onParentChanged("Board");
 					foundItem.transformation.setLocalMatrix(worldMatrix);

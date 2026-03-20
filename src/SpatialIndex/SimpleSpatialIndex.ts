@@ -43,8 +43,8 @@ export class SimpleSpatialIndex {
     this.subject.publish(this.items);
   };
 
-  remove(item: Item): void {
-    if ("index" in item && item.index) {
+  remove(item: Item, preserveChildren = false): void {
+    if (!preserveChildren && "index" in item && item.index) {
       item.removeChildItems(item.index.list());
     }
     // if (item.parent !== 'Board') {
