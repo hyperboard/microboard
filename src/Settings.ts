@@ -536,12 +536,13 @@ export const conf = {
 
   CONNECTOR_ITEM_OFFSET: 20,
 
-  // Force-directed graph physics — tweak at runtime: conf.FG_SPRING_K = 5
-  FG_SPRING_K: 3,           // spring stiffness (Hooke constant)
+  // Force-directed graph physics — tweak at runtime: conf.FG_SPRING_K = 0.2
+  FG_SPRING_K: 0.2,         // spring stiffness (Hooke constant, applied directly to velocity)
   FG_TARGET_GAP: 20,        // padding between item edges at rest (px)
-  FG_REPULSION: 400000,     // node-node repulsion constant (px³/s²)
-  FG_DAMPING: 0.9,          // velocity multiplier per tick (0=instant stop, 1=no damping)
-  FG_SLEEP_THRESHOLD: 10,   // stop engine when total kinetic energy < this
+  FG_REPULSION: 100,        // node-node repulsion constant (R/distSq, applied directly to velocity)
+  FG_MIN_DIST_SQ: 100,      // minimum distSq for repulsion to avoid singularity
+  FG_DAMPING: 0.6,          // velocity multiplier per tick (0=instant stop, 1=no damping)
+  FG_SLEEP_THRESHOLD: 0.5,  // stop engine when Σ(|vx|+|vy|) < this
 
   // Gravity mode physics — tweak at runtime: conf.GRAVITY_G = 200
   GRAVITY_G: 80,               // gravitational constant between items
