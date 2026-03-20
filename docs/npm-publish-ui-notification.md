@@ -55,6 +55,5 @@ ${{ github.event.client_payload.version }}
 
 ## Trigger behavior
 
-- The UI notification runs only if a new package version was actually produced.
 - The notification job runs only after the publish job completes successfully.
-- If no version bump happens, `npm publish` is skipped and no UI notification is sent.
+- The workflow uses the version produced by the version bump step as the value sent to the UI repository.

@@ -13,9 +13,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     outputs:
-      published: ${{ steps.release.outputs.published }}
-      version: ${{ steps.release.outputs.version }}
-      package_name: ${{ steps.release.outputs.package_name }}
+      version: ${{ steps.version-bump.outputs.newTag }}
+      package_name: ${{ steps.package-metadata.outputs.package_name }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -40,12 +39,6 @@ jobs:
         continue-on-error: true # Temporary: keep publish flow moving even if lint reports issues
         run: bun run lint
 
-      - name: Capture package metadata before bump
-        id: package-before
-        run: |
-          echo "version=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
-          echo "package_name=$(node -p 'require(\"./package.json\").name')" >> "$GITHUB_OUTPUT"
-
       - name: Automated Version Bump
         id: version-bump
         uses: phips28/gh-action-bump-version@master
@@ -55,44 +48,20 @@ jobs:
           major-wording: "MAJOR,BREAKING CHANGE"
           patch-wording: "fix,refactor,add"
           rc-wording: "RELEASE,alpha"
-          # Используем токен с нужными правами
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Capture package metadata after bump
-        id: package-after
-        run: echo "version=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve release state
-        id: release
-        run: |
-          BEFORE_VERSION="${{ steps.package-before.outputs.version }}"
-          AFTER_VERSION="${{ steps.package-after.outputs.version }}"
-          PACKAGE_NAME="${{ steps.package-before.outputs.package_name }}"
-
-          if [ "$BEFORE_VERSION" = "$AFTER_VERSION" ]; then
-            echo "published=false" >> "$GITHUB_OUTPUT"
-            echo "version=$AFTER_VERSION" >> "$GITHUB_OUTPUT"
-            echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
-            echo "No version change detected. Skipping npm publish."
-            exit 0
-          fi
-
-          echo "published=true" >> "$GITHUB_OUTPUT"
-          echo "version=$AFTER_VERSION" >> "$GITHUB_OUTPUT"
-          echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
-          echo "Publishing $PACKAGE_NAME@$AFTER_VERSION"
+      - name: Capture package metadata
+        id: package-metadata
+        run: echo "package_name=$(node -p 'require("./package.json").name' | tr -d '\n')" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js
-        if: steps.release.outputs.published == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
 
       - name: Publish to NPM
-        if: steps.release.outputs.published == 'true'
         run: |
           npm install -g npm@latest
           npm publish --provenance
@@ -100,7 +69,6 @@ jobs:
   notify-ui:
     runs-on: ubuntu-latest
     needs: publish
-    if: needs.publish.outputs.published == 'true'
     steps:
       - name: Notify UI repository about published version
         uses: actions/github-script@v7
