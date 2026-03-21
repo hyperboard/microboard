@@ -1,7 +1,7 @@
 import { forceNumberIntoInterval } from 'lib';
 import { Point } from '../Point';
 import { Mbr } from '../Mbr';
-import { Matrix } from '../Transformation';
+import { Matrix } from "../Transformation/Matrix";
 import { GeometricNormal } from '../GeometricNormal';
 
 interface RelationBase {

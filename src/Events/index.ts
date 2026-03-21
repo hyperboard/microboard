@@ -10,6 +10,16 @@ export type {
   EventsOperation,
   Operation,
 } from "./EventsOperations";
+export {
+  isTransformation,
+  isBoardOp,
+  isRichTextOp,
+  isShapeOp,
+  isConnectorOp,
+  isDrawingOp,
+  isEventsOp,
+  isItemOp
+} from "./EventsOperations";
 export type { Command } from "./Command";
 export type { SyncLog } from "./SyncLog";
 export * from "./MessageRouter";

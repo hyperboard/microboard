@@ -2,7 +2,14 @@ import {DocumentFactory} from 'api/DocumentFactory';
 import {ItemsIndexRecord} from 'BoardOperations';
 import {Camera} from 'Camera';
 import {translateElementBy, positionRelatively} from 'HTMLRender';
-import {Item, Frame, Mbr, ItemData, Point, Connector, Comment, Shape} from 'Items';
+import type { Item, ItemData } from "Items/Item";
+import type { Frame } from "Items/Frame/Frame";
+import { Mbr } from "Items/Mbr/Mbr";
+import { Point } from "Items/Point/Point";
+import type { Connector } from "Items/Connector/Connector";
+import type { Comment } from "Items/Comment/Comment";
+import type { Shape } from "Items/Shape/Shape";
+import type { FrameType } from "Items/Frame/Basic";
 import {DrawingContext} from 'Items/DrawingContext';
 import {Pointer} from 'Pointer';
 import {conf} from 'Settings';
@@ -395,7 +402,7 @@ export class SpatialIndex {
   }
 
   getComments(): Comment[] {
-    return this.itemsArray.filter(item => item instanceof Comment) as Comment[];
+    return this.itemsArray.filter(item => item.itemType === "Comment") as Comment[];
   }
 
   getMbr(): Mbr {
@@ -545,7 +552,7 @@ export class Items {
     size = 16;
     const tolerated = this.index.getEnclosedOrCrossed(x - size, y - size, x + size, y + size);
 
-    let enclosed = tolerated.some(item => item instanceof Connector)
+    let enclosed = tolerated.some(item => item.itemType === "Connector")
       ? tolerated
       : this.index.getEnclosedOrCrossed(x, y, x, y);
 
@@ -562,12 +569,12 @@ export class Items {
       (acc, item) => {
         const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
-        if (item.itemType === "Drawing" && !item.isPointNearLine(this.pointer.point)) {
+        if (item.itemType === "Drawing" && !(item as any).isPointNearLine(this.pointer.point)) {
           return acc;
         }
 
         const isItemTransparent =
-          item instanceof Shape && (item as any).getBackgroundColor() === 'none';
+          item.itemType === "Shape" && (item as any).getBackgroundColor() === 'none';
         const itemZIndex = this.getZIndex(item);
         const accZIndex = this.getZIndex(acc.nearest!);
 
@@ -615,11 +622,11 @@ export class Items {
 
   getLinkedConnectorsById(id: string): Connector[] {
     return this.listAll().filter(item => {
-      if (!(item instanceof Connector)) {
+      if (item.itemType !== "Connector") {
         return false;
       }
 
-      const {startItem, endItem} = item.getConnectedItems();
+      const {startItem, endItem} = (item as Connector).getConnectedItems();
       if (startItem?.getId() === id || endItem?.getId() === id) {
         return true;
       }
@@ -633,10 +640,10 @@ export class Items {
       return [];
     }
     return this.listAll().filter(item => {
-      if (!(item instanceof Connector) || !item.isConnected()) {
+      if (item.itemType !== "Connector" || !(item as any).isConnected()) {
         return false;
       }
-      const {startItem, endItem} = item.getConnectedItems();
+      const {startItem, endItem} = (item as Connector).getConnectedItems();
       if (startPointerItemId && endPointerItemId) {
         if (
           startPointerItemId &&
@@ -658,6 +665,30 @@ export class Items {
       }
       return false;
     }) as Connector[];
+  }
+
+  setFrameType(frameType: FrameType): void {
+    // const frames = this.items.getIdsByItemTypes(["Frame"]);
+    // if (frames.length) {
+    // this.emit({
+    //   class: "Frame",
+    //   method: "setFrameType",
+    //   item: frames,
+    //   frameType
+    // });
+    // }
+    const items = this.listAll();
+    items.forEach((item) => {
+      if (item.itemType === "Frame") {
+        (item as Frame).setFrameType(frameType);
+      }
+    });
+  }
+
+  getFrameType(): FrameType {
+    const items = this.listAll();
+    const frame = items.find(item => item.itemType === "Frame");
+    return frame ? (frame as Frame).getFrameType() : "Custom";
   }
 
   render(context: DrawingContext): void {

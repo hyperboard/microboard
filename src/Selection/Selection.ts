@@ -1,20 +1,33 @@
 import { safeRequestAnimationFrame } from "api/safeRequestAnimationFrame";
 import { Board } from "Board";
 import { Events, Operation, Command } from "Events";
-import { createCommand } from "Events/Command";
-import { BoardPoint, Connector, Item, Point, BaseItem, Frame, ImageItem, RichText, Sticker, Mbr, ItemData } from "Items";
-import { AINode, CONTEXT_NODE_HIGHLIGHT_COLOR } from "Items/AINode";
+import { createCommand } from "Events/CreateCommand";
+import { BoardPoint } from "Items/Connector/ControlPoint";
+import type { Connector } from "Items/Connector/Connector";
+import type { Item, ItemData, ItemDataWithId } from "Items/Item";
+import { Point } from "Items/Point/Point";
+import type { BaseItem } from "Items/BaseItem/BaseItem";
+import type { Frame } from "Items/Frame/Frame";
+import type { ImageItem } from "Items/Image/Image";
+import type { RichText } from "Items/RichText/RichText";
+import type { Sticker } from "Items/Sticker/Sticker";
+import { Mbr } from "Items/Mbr/Mbr";
+import type { Shape } from "Items/Shape/Shape";
+import type { Drawing } from "Items/Drawing/Drawing";
+import type { FrameData } from "Items/Frame/FrameData";
+import { AINode, CONTEXT_NODE_HIGHLIGHT_COLOR } from "Items/AINode/AINode";
 import { HorisontalAlignment, VerticalAlignment } from "Items/Alignment";
-import { ColorValue } from "Color";
-import { ConnectorLineStyle } from "Items/Connector";
-import { CONNECTOR_COLOR } from "Items/Connector/Connector";
+import { ColorValue } from "Color/ColorValue";
+import { ConnectorLineStyle } from "Items/Connector/ConnectorTypes";
+import { CONNECTOR_COLOR } from "../Items/Connector/ConnectorTypes";
 import { ConnectorPointerStyle } from "Items/Connector/Pointers/Pointers";
 import { DrawingContext } from "Items/DrawingContext";
 import { FrameType } from "Items/Frame/Basic";
-import { BorderStyle } from "Items/Path";
-import { TextStyle } from "Items/RichText";
+import { BorderStyle } from "Items/Path/Path";
+import { TextStyle } from "Items/RichText/Editor/TextNode";
 import { ItemOp } from "Items/RichText/RichTextOperations";
-import { DefaultShapeData, ShapeType } from "Items/Shape";
+import { DefaultShapeData } from "Items/Shape/ShapeData";
+import { ShapeType } from "Items/Shape/ShapeType";
 import { ApplyMatrixItem } from "Items/Transformation/TransformationOperations";
 import { toFiniteNumber } from "lib";
 import { conf } from "Settings";
@@ -257,7 +270,7 @@ export class BoardSelection {
 
   removeAll(): void {
     const single = this.items.getSingle();
-    if (single instanceof RichText && single.isEmpty()) {
+    if (single?.itemType === "RichText" && (single as RichText).isEmpty()) {
       this.board.remove(single);
     }
     this.board.removeVoidComments();
@@ -322,7 +335,7 @@ export class BoardSelection {
     if (!item) {
       return null;
     }
-    if (item instanceof Group) {
+    if (item.itemType === "Group") {
       return null;
     }
     return item;
@@ -331,14 +344,14 @@ export class BoardSelection {
   private getParentItem(item: Item | string | null | undefined): BaseItem | null {
     const resolved =
       typeof item === "string" ? this.board.items.getById(item) : item || null;
-    if (!resolved || !(resolved instanceof BaseItem) || resolved.parent === "Board") {
+    if (!resolved || !('itemType' in resolved) || resolved.parent === "Board") {
       return null;
     }
     return (this.board.items.getById(resolved.parent) as BaseItem | undefined) || null;
   }
 
   private isAncestor(candidate: Item, descendant: Item): boolean {
-    if (!(descendant instanceof BaseItem)) {
+    if (!('itemType' in descendant)) {
       return false;
     }
 
@@ -382,7 +395,7 @@ export class BoardSelection {
   }
 
   private getCanvasSelectableItems(items: Item[]): Item[] {
-    return items.filter((item) => !(item instanceof Group));
+    return items.filter((item) => item.itemType !== "Group");
   }
 
   selectUnderPointer(): void {
@@ -518,10 +531,10 @@ export class BoardSelection {
         const stylesArr = styles;
         text.setSelectionFontStyle(stylesArr, "None");
       }
-      if (horisontalAlignment && !(item instanceof Sticker)) {
+      if (horisontalAlignment && item?.itemType !== "Sticker") {
         text.setSelectionHorisontalAlignment(horisontalAlignment);
       }
-      if (verticalAlignment && !(item instanceof Sticker)) {
+      if (verticalAlignment && item?.itemType !== "Sticker") {
         this.setVerticalAlignment(verticalAlignment);
       }
     }
@@ -567,7 +580,7 @@ export class BoardSelection {
         .getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
         .filter(
           (item) =>
-            (!(item instanceof Frame) || enclosedFrames.includes(item)) &&
+            (item.itemType !== "Frame" || enclosedFrames.includes(item as any)) &&
             !item.transformation.isLocked
         )
     );
@@ -617,16 +630,16 @@ export class BoardSelection {
         endPoint.pointType !== "Board" ? endPoint.item.getId() : null;
       const single = this.items.getSingle();
       const frameChild =
-        single instanceof BaseItem && single.index ? single.getChildrenIds() : null;
+        single && "index" in single ? (single as any).getChildrenIds() : null;
 
       const hasStartItem =
         startItemId &&
         !this.items.findById(startItemId) &&
-        !frameChild?.some((child) => child === startItemId);
+        !frameChild?.some((child: string) => child === startItemId);
       const hasEndItem =
         endItemId &&
         !this.items.findById(endItemId) &&
-        !frameChild?.some((child) => child === endItemId);
+        !frameChild?.some((child: string) => child === endItemId);
 
       if (hasStartItem) {
         serializedData.startPoint = new BoardPoint(
@@ -653,11 +666,13 @@ export class BoardSelection {
       !isCopyTextExist;
 
     if (isChangeCopiedFrameText) {
+      const frameData = serializedData as FrameData;
+      const textItemData = frameData.text as Record<string, unknown>;
       const copiedFrameText =
-        copyText + (textItem || (serializedData as any).text?.placeholderText);
+        copyText + (textItem || (textItemData?.placeholderText as string | undefined) || "");
       item.getRichText()?.editor.clearText();
       item.getRichText()?.editor.addText(copiedFrameText);
-      serializedData.text = item.getRichText()?.serialize();
+      serializedData.text = item.getRichText()?.serialize() as any;
       item.getRichText()?.editor.clearText();
       item.getRichText()?.editor.addText(textItem || "");
     }
@@ -674,9 +689,10 @@ export class BoardSelection {
       } {
     const copiedItemsMap: { [key: string]: ItemData } = {};
     const single = this.items.getSingle();
-    if (!skipImageBlobCopy && single && single instanceof ImageItem) {
-      this.handleItemCopy(single, copiedItemsMap);
-      return { imageElement: single.image, imageData: copiedItemsMap };
+    if (!skipImageBlobCopy && single?.itemType === "Image") {
+      const imageItem = single as ImageItem;
+      this.handleItemCopy(imageItem, copiedItemsMap);
+      return { imageElement: imageItem.image, imageData: copiedItemsMap };
     }
 
     this.list().forEach((item) => {
@@ -768,7 +784,10 @@ export class BoardSelection {
 
   getFillColor(): ColorValue | string {
     const tmp = this.items.list()[0];
-    return "getBackgroundColor" in tmp ? (tmp as any).getBackgroundColor() : defaultShapeData.backgroundColor;
+    if (tmp.itemType === "Shape") {
+      return (tmp as Shape).getBackgroundColor();
+    }
+    return defaultShapeData.backgroundColor;
   }
 
   getBorderStyle(): string {
@@ -778,7 +797,10 @@ export class BoardSelection {
 
   getStrokeColor(): ColorValue | string {
     const shape = this.items.list()[0];
-    return "getStrokeColor" in shape ? (shape as any).getStrokeColor() : defaultShapeData.borderColor;
+    if (shape.itemType === "Shape" || shape.itemType === "Drawing") {
+      return (shape as Shape | Drawing).getStrokeColor();
+    }
+    return defaultShapeData.borderColor;
   }
 
   getStrokeWidth(): number {
@@ -878,13 +900,13 @@ export class BoardSelection {
 
     const nodes = [...this.getParentChain(resolved).reverse(), resolved];
     return nodes
-      .filter((node): node is BaseItem => node instanceof BaseItem)
+      .filter((node): node is BaseItem => 'itemType' in node)
       .map((node) => ({
         id: node.getId(),
         itemType: node.itemType,
         parentId: node.parent === "Board" ? null : node.parent,
         hasChildren: (node.getChildrenIds()?.length || 0) > 0,
-        isCanvasSelectable: !(node instanceof Group),
+        isCanvasSelectable: node.itemType !== "Group",
       }));
   }
 
@@ -934,7 +956,7 @@ export class BoardSelection {
     }
 
     const ancestor = this.board.items.getById(ancestorId);
-    if (!(ancestor instanceof BaseItem)) {
+    if (!ancestor || !('itemType' in ancestor)) {
       return null;
     }
 
@@ -961,9 +983,9 @@ export class BoardSelection {
     }
     const selectedMbr = selected.reduce((acc: Mbr | undefined, item) => {
       if (!acc) {
-        return item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
+        return 'itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr();
       }
-      return acc.combine(item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr());
+      return acc.combine('itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr());
     }, undefined);
 
     if (selectedMbr) {
@@ -1374,23 +1396,23 @@ export class BoardSelection {
     // this.emit({
     // 	class: "Frame",
     // 	method: "setFrameType",
-    // 	item: frames,
-    // 	shapeType: frameType,
-    // 	prevShapeType: this.getFrameType(),
+    //   item: frames,
+    //   shapeType: frameType,
+    //   prevShapeType: this.getFrameType(),
     // });
     // }
 
     const items = this.items.list();
     items.forEach((item) => {
-      if (item instanceof Frame) {
-        item.setFrameType(frameType);
+      if (item.itemType === "Frame") {
+        (item as Frame).setFrameType(frameType);
       }
     });
   }
 
   getFrameType(): FrameType {
     const frame = this.items.getItemsByItemTypes(["Frame"])[0] as Frame;
-    return frame?.getFrameType() ?? "Custom";
+    return frame ? (frame as Frame).getFrameType() : "Custom";
   }
 
   setShapeType(shapeType: ShapeType): void {
@@ -1598,8 +1620,8 @@ export class BoardSelection {
       }
 
       tempStorage.setVerticalAlignment(item.itemType, verticalAlignment || "top");
-      if (item instanceof RichText) {
-        item.setEditorFocus(this.context);
+      if (item.itemType === "RichText") {
+        (item as RichText).setEditorFocus(this.context);
       }
       text.setEditorFocus(this.context);
     }
@@ -1771,7 +1793,7 @@ export class BoardSelection {
     item: Item,
     customScale?: number
   ): void {
-    const mbr = item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
+    const mbr = 'itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr();
     mbr.strokeWidth = !customScale
       ? 1 / context.matrix.scaleX
       : 1 / customScale;
@@ -1808,8 +1830,9 @@ export class BoardSelection {
     }
 
     const contextItems: Item[] = [];
-    if (single && single instanceof AINode) {
-      const contextItemsIds = single.getContextItems();
+    if (single?.itemType === "AINode") {
+      const aiNode = single as AINode;
+      const contextItemsIds = aiNode.getContextItems();
       if (contextItemsIds.length) {
         const newContextItems = this.board.items
           .listAll()
@@ -1838,14 +1861,14 @@ export class BoardSelection {
     }
 
     contextItems.forEach((item) => {
-      if (item instanceof AINode) {
+      if (item.itemType === "AINode") {
         const path = item.getPath();
         path.setBorderColor(CONTEXT_NODE_HIGHLIGHT_COLOR);
         path.setBorderWidth(2);
         path.setBackgroundColor("none");
         path.render(context);
       } else {
-        const itemRect = item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
+        const itemRect = 'itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr();
         itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
         itemRect.strokeWidth = 2;
         itemRect.render(context);

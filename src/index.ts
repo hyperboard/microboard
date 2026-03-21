@@ -27,3 +27,9 @@ export * from "./sha256";
 export * from "./lib";
 export { initI18N } from "api/initI18N";
 export {getMediaSignedUrl} from "api/MediaHelpers"
+
+import { createCommand } from "./Events/CreateCommand";
+import { BaseItem } from "./Items/BaseItem/BaseItem";
+import { Events } from "./Events/Events";
+BaseItem.createCommand = createCommand;
+Events.createCommand = createCommand;

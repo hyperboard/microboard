@@ -1,36 +1,34 @@
 import { positionAbsolutely } from "HTMLRender";
-import {
-  ItemType,
-  ItemData,
-  Matrix,
-  RichTextData,
-  FrameData,
-  ShapeData,
-  ConnectorData, BlockNode, TextNode,
-} from "Items";
-import { AINodeData } from "Items/AINode";
+import { ItemType, ItemData, ItemDataWithId } from "Items/Item";
+import { Matrix } from "Items/Transformation/Matrix";
+import { RichTextData } from "Items/RichText/RichTextData";
+import { FrameData } from "Items/Frame/FrameData";
+import { ShapeData } from "Items/Shape/ShapeData";
+import { ConnectorData } from "Items/Connector/ConnectorOperations";
+import { BlockNode } from "Items/RichText/Editor/BlockNode";
 import { HorisontalAlignment, VerticalAlignment } from "Items/Alignment";
-import { AudioItemData } from "Items/Audio";
-import { CommentData } from "Items/Comment";
-import { ConnectorLineStyle } from "Items/Connector";
-import { ConnectionLineWidth } from "Items/Connector/Connector";
+import { ConnectorLineStyle } from "Items/Connector/ConnectorTypes";
+import { ConnectionLineWidth } from "Items/Connector/ConnectorTypes";
 import { ControlPointData } from "Items/Connector/ControlPoint";
 import { ConnectorPointerStyle } from "Items/Connector/Pointers/Pointers";
-import { DrawingData } from "Items/Drawing";
 import { Frames } from "Items/Frame/Basic";
-import { ImageItemData } from "Items/Image";
-import { BorderStyle } from "Items/Path";
+import { BorderStyle } from "Items/Path/Path";
 import { DefaultRichTextData } from "Items/RichText/RichTextData";
-import { ShapeType } from "Items/Shape";
+import { ShapeType } from "Items/Shape/ShapeType";
 import { StickerData } from "Items/Sticker/StickerOperation";
-import { TransformationData } from "Items/Transformation";
-import { VideoItemData } from "Items/Video";
+import { TransformationData } from "Items/Transformation/TransformationData";
 import { conf } from "Settings";
 import { Descendant } from "slate";
-import {ItemDataWithId} from "./Items/Item";
-import {ListItemNode} from "./Items/RichText/Editor/BlockNode";
-import {BaseItemData} from "./Items/BaseItem/BaseItem";
-import {coerceColorValue} from "./Color";
+import { ListItemNode } from "./Items/RichText/Editor/BlockNode";
+import { BaseItemData } from "./Items/BaseItem/BaseItem";
+import { coerceColorValue } from "./Color";
+import { TextNode } from "./Items/RichText/Editor/TextNode";
+import { ImageItemData } from "./Items/Image";
+import { VideoItemData } from "./Items/Video";
+import { AudioItemData } from "./Items/Audio";
+import { CommentData } from "./Items/Comment";
+import { DrawingData } from "./Items/Drawing";
+import { AINodeData } from "./Items/AINode";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -63,9 +61,9 @@ type TagFactories = {
   ) =>
     | ItemDataWithId
     | {
-        data: BaseItemData & { id: string };
-        childrenMap: { [id: string]: ItemDataWithId };
-      };
+      data: BaseItemData & { id: string };
+      childrenMap: { [id: string]: ItemDataWithId };
+    };
 };
 export const parsersHTML: TagFactories = {
   "sticker-item": parseHTMLSticker,
@@ -192,8 +190,8 @@ function parseHTMLRichText(
           language: languageClass?.[1] || null,
           children: codeElement
             ? Array.from(codeElement.children).map((child) =>
-                parseNode(child as HTMLElement)
-              ) as TextNode[]
+              parseNode(child as HTMLElement)
+            ) as TextNode[]
             : [],
         };
       }
@@ -430,9 +428,9 @@ function parseHTMLBaseItem(
 ):
   | ItemDataWithId
   | {
-      data: BaseItemData & { id: string };
-      childrenMap: { [id: string]: ItemDataWithId };
-    } {
+    data: BaseItemData & { id: string };
+    childrenMap: { [id: string]: ItemDataWithId };
+  } {
   const data = JSON.parse(el.getAttribute("serialized-data")!) as BaseItemData;
 
   const baseItemItemData: ItemDataWithId = {

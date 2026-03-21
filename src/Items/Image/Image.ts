@@ -1,12 +1,13 @@
 import { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
-import { Line } from "../Line";
-import { Path, Paths } from "../Path";
-import { Point } from "../Point";
-import { Transformation } from "../Transformation";
+import { Line } from "../Line/Line";
+import { Path } from "../Path/Path";
+import { Paths } from "../Path/Paths";
+import { Point } from "../Point/Point";
+import { Transformation } from "../Transformation/Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
-import { Placeholder } from "../Placeholder";
+import { Placeholder } from "../Placeholder/Placeholder";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";

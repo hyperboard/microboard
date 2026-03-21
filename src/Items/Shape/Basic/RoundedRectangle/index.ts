@@ -1,4 +1,8 @@
-import { Mbr, CubicBezier, Line, Path, Point } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { CubicBezier } from 'Items/Curve/Curve';
+import { Line } from 'Items/Line/Line';
+import { Path } from 'Items/Path/Path';
+import { Point } from 'Items/Point/Point';
 
 export const RoundedRectangle = {
 	name: 'RoundedRectangle',

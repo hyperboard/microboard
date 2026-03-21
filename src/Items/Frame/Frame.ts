@@ -1,15 +1,13 @@
-import {
-  Mbr,
-  Line,
-  Point,
-  Transformation,
-  Path,
-  Paths,
-  Item,
-  RichText,
-  Matrix,
-  SerializedItemData,
-} from "..";
+import { Mbr } from "../Mbr/Mbr";
+import { Line } from "../Line/Line";
+import { Point } from "../Point/Point";
+import { Transformation } from "../Transformation/Transformation";
+import { Path } from "../Path/Path";
+import { Paths } from "../Path/Paths";
+import type { Item } from "../Item";
+import { RichText } from "../RichText/RichText";
+import { Matrix } from "../Transformation/Matrix";
+import type { SerializedItemData } from "../BaseItem/BaseItem";
 import {Subject} from "Subject";
 import {DrawingContext} from "../DrawingContext";
 import {Operation} from "Events";

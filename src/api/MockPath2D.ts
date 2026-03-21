@@ -6,8 +6,8 @@ import { Path2DFactory } from "./Path2DFactory";
  * All methods are stubbed and don't perform actual path operations.
  */
 export class MockPath2D implements Path2DFactory {
-	nativePath: any = null;
-	private commands: { method: string; args: any[] }[] = [];
+	nativePath: unknown = null;
+	private commands: { method: string; args: unknown[] }[] = [];
 
 	constructor(d?: string) {
 		if (d) {
@@ -125,7 +125,7 @@ export class MockPath2D implements Path2DFactory {
 	 * Get all commands that were called on this path
 	 * Useful for testing to verify the sequence of operations
 	 */
-	getCommands(): { method: string; args: any[] }[] {
+	getCommands(): { method: string; args: unknown[] }[] {
 		return [...this.commands];
 	}
 
@@ -142,7 +142,7 @@ export class MockPath2D implements Path2DFactory {
 	 * @param method - The method name to check
 	 * @param args - Optional arguments to verify
 	 */
-	wasCalledWith(method: string, args?: any[]): boolean {
+	wasCalledWith(method: string, args?: unknown[]): boolean {
 		return this.commands.some(cmd => {
 			if (cmd.method !== method) {
 				return false;

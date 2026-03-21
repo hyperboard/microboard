@@ -7,23 +7,23 @@ import {
   scaleElementBy,
   translateElementBy,
 } from "HTMLRender/HTMLRender";
-import { AINodeData, createNodePath } from "Items/AINode/AINodeData";
-import { DrawingContext } from "Items/DrawingContext";
-import { GeometricNormal } from "Items/GeometricNormal";
-import { Geometry } from "Items/Geometry";
-import { Line } from "Items/Line/Line";
-import { LinkTo } from "Items/LinkTo/LinkTo";
-import { Mbr } from "Items/Mbr/Mbr";
-import { LinePatterns, Path } from "Items/Path/Path";
-import { Paths } from "Items/Path/Paths";
-import { Point } from "Items/Point/Point";
-import { RichText } from "Items/RichText/RichText";
-import { Matrix } from "Items/Transformation/Matrix";
-import { Transformation } from "Items/Transformation/Transformation";
-import { TransformationOperation } from "Items/Transformation/TransformationOperations";
+import { AINodeData, createNodePath } from "./AINodeData";
+import { DrawingContext } from "../DrawingContext";
+import { GeometricNormal } from "../GeometricNormal";
+import { Geometry } from "../Geometry";
+import { Line } from "../Line/Line";
+import { LinkTo } from "../LinkTo/LinkTo";
+import { Mbr } from "../Mbr/Mbr";
+import { LinePatterns, Path } from "../Path/Path";
+import { Paths } from "../Path/Paths";
+import { Point } from "../Point/Point";
+import { RichText } from "../RichText/RichText";
+import { Matrix } from "../Transformation/Matrix";
+import { Transformation } from "../Transformation/Transformation";
+import { TransformationOperation } from "../Transformation/TransformationOperations";
 import { conf } from "Settings";
 import { Subject } from "Subject";
-import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "../BaseItem/BaseItem";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;

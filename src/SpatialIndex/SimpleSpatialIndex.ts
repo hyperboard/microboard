@@ -1,9 +1,11 @@
 import {Subject} from "../Subject";
-import {DrawingContext, Item, Point, Mbr} from "../Items";
+import {DrawingContext} from "../Items/DrawingContext";
+import {Item, ItemDataWithId} from "../Items/Item";
+import {Point} from "../Items/Point/Point";
+import {Mbr} from "../Items/Mbr/Mbr";
 import {Camera} from "../Camera";
 import {Pointer} from "../Pointer";
-import {BaseItem} from "../Items/BaseItem";
-import {ItemDataWithId} from "../Items/Item";
+import type {BaseItem} from "../Items/BaseItem/BaseItem";
 import {ItemsIndexRecord} from "../BoardOperations";
 import {Items} from "./SpacialIndex";
 

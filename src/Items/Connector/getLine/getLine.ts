@@ -1,5 +1,5 @@
 import { Path } from "../../Path";
-import { ConnectorLineStyle } from "../Connector";
+import { ConnectorLineStyle } from "../ConnectorTypes";
 import {BoardPoint, ControlPoint} from "../ControlPoint";
 import { getCurvedLine } from "./getCurvedLine";
 import { getOrthogonalLine } from "./getOrthogonalLine";

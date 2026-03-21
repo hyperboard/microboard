@@ -1,4 +1,4 @@
-import { Command } from './Events';
+import { Command, Operation, isBoardOp } from './Events';
 import { BoardOps } from './BoardOperations';
 import { Board } from 'Board';
 
@@ -183,8 +183,10 @@ export class BoardCommand implements Command {
 		}
 	}
 
-	merge(op: BoardOps): this {
-		this.operation = op;
+	merge(op: Operation): this {
+		if (isBoardOp(op)) {
+			this.operation = op;
+		}
 		return this;
 	}
 }

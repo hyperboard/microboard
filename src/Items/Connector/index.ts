@@ -1,6 +1,7 @@
-export { Connector, ConnectionLineWidths, CONNECTOR_POINTER_TYPES } from "./Connector";
+export { Connector } from "./Connector";
+export { ConnectionLineWidths, CONNECTOR_COLOR, CONNECTOR_POINTER_TYPES } from "./ConnectorTypes";
 export { ConnectorData } from "./ConnectorOperations";
-export type { ConnectorLineStyle, ConnectionLineWidth } from "./Connector";
+export type { ConnectorLineStyle, ConnectionLineWidth } from "./ConnectorTypes";
 export type { ConnectorOperation } from "./ConnectorOperations";
 export {
   BoardPoint,

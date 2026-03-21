@@ -1,5 +1,5 @@
 import { Point, Matrix, Path, CubicBezier } from 'Items';
-import { ConnectorLineStyle } from '../Connector';
+import { ConnectorLineStyle } from '../ConnectorTypes';
 import { ControlPoint } from '../ControlPoint';
 import { getPointer, Pointer } from './Pointers';
 

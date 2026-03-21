@@ -28,7 +28,12 @@ const screenPath = new Path(
   "#000000"
 )
 
-export const defaultScreenData: BaseItemData = {
+export interface ScreenData extends BaseItemData {
+  ownerId?: string;
+  backgroundUrl?: string;
+}
+
+export const defaultScreenData: ScreenData = {
   itemType: "Screen",
   ownerId: "",
   backgroundUrl: ""
@@ -43,6 +48,7 @@ export class Screen extends BaseItem {
   public borderStyle: BorderStyle = "solid";
   backgroundUrl = "";
   backgroundImage: HTMLImageElement | null = null;
+  ownerId = "";
 
   constructor(
     board: Board,
@@ -51,7 +57,7 @@ export class Screen extends BaseItem {
     isGroupItem?: boolean,
   ) {
     super(board, id, defaultItemData || defaultScreenData, true);
-    const data = (defaultItemData || defaultScreenData) as any;
+    const data = (defaultItemData || defaultScreenData) as ScreenData;
     this.ownerId = data.ownerId || "";
     this.path = new Path(); // use a dummy path, it will be reassigned in transformPath
 

@@ -1,4 +1,4 @@
-import { Command } from 'Events';
+import { Command, Operation, isDrawingOp } from 'Events';
 import { Drawing } from './Drawing';
 import { DrawingOperation } from './DrawingOperation';
 
@@ -13,8 +13,10 @@ export class DrawingCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
-	merge(op: DrawingOperation): this {
-		this.operation = op;
+	merge(op: Operation): this {
+		if (isDrawingOp(op)) {
+			this.operation = op;
+		}
 		return this;
 	}
 

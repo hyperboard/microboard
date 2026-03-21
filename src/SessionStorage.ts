@@ -1,6 +1,6 @@
 import { ShapeData } from 'Items';
 import { ConnectorLineStyle } from 'Items/Connector';
-import { ConnectionLineWidth } from 'Items/Connector/Connector';
+import { ConnectionLineWidth } from 'Items/Connector/ConnectorTypes';
 import { ConnectorEdge } from 'Items/Connector/Pointers';
 import { ConnectorPointerStyle } from 'Items/Connector/Pointers/Pointers';
 import { BorderStyle } from 'Items/Path';

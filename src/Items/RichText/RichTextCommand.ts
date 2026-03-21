@@ -1,8 +1,8 @@
 import { Board } from 'Board';
 import { RichText } from './RichText';
 import { GroupEdit, RichTextOperation } from './RichTextOperations';
-import { Command } from 'Events';
-import { Operation } from 'slate';
+import { Command, Operation, isRichTextOp } from 'Events';
+import { Operation as SlateOperation } from 'slate';
 import { conf } from 'Settings';
 
 export class RichTextCommand implements Command {
@@ -47,7 +47,7 @@ export class RichTextCommand implements Command {
 			case 'setSelectionFontStyle':
 			case 'setSelectionFontColor':
 			case 'setSelectionBlockType':
-				const inverseOps = this.operation.ops.map(op => Operation.inverse(op)).reverse();
+				const inverseOps = this.operation.ops.map(op => SlateOperation.inverse(op)).reverse();
 				// actually there is only one item
 				return items.map(item => {
 					const operation = {
@@ -151,9 +151,11 @@ export class RichTextCommand implements Command {
 		}
 	}
 
-	merge(op: RichTextOperation): this {
-		this.operation = op;
-		this.reverse = this.getReverse();
+	merge(op: Operation): this {
+		if (isRichTextOp(op)) {
+			this.operation = op;
+			this.reverse = this.getReverse();
+		}
 		return this;
 	}
 }
@@ -214,7 +216,7 @@ export class RichTextGroupCommand implements Command {
 					class: 'RichText',
 					method: 'edit',
 					item: [richText.getId() ?? ''],
-					ops: ops.map(op => Operation.inverse(op)).reverse(),
+					ops: ops.map(op => SlateOperation.inverse(op)).reverse(),
 					selection: null
 				},
 			});

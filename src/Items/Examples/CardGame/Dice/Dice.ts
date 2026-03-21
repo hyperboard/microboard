@@ -15,7 +15,13 @@ export type DiceType = "common" | "custom";
 
 const TIMEOUT = 2000;
 
-export const defaultDiceData: BaseItemData = {
+export interface DiceData extends BaseItemData {
+  type?: DiceType;
+  valueIndex?: number;
+  values?: (number | string)[];
+}
+
+export const defaultDiceData: DiceData = {
   itemType: "Dice",
   type: "common",
   backgroundColor: "#FFFFFF",
@@ -39,6 +45,11 @@ export class Dice extends BaseItem {
   public borderStyle: BorderStyle = "solid";
   private borderWidth = 1;
 
+  private values: (number | string)[] = [];
+  private valueIndex = 0;
+  private renderValues: (number | HTMLImageElement)[] = [];
+  private animationFrameId: number | undefined;
+
   constructor(
     board: Board,
     id = "",
@@ -48,12 +59,15 @@ export class Dice extends BaseItem {
     super(board, id, defaultItemData || defaultDiceData, isGroupItem);
     this.path = createRoundedRectanglePath(this).copy(); // definitely assign it
 
-    const data = (defaultItemData || defaultDiceData) as any;
+    const data = (defaultItemData || defaultDiceData) as DiceData;
     if (data.type) {
       this.type = data.type;
     }
     if (data.values) {
       this.values = data.values;
+    }
+    if (data.valueIndex !== undefined) {
+      this.valueIndex = data.valueIndex;
     }
 
     this.updateRenderValues();

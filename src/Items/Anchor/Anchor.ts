@@ -1,5 +1,6 @@
 import { DrawingContext } from 'Items/DrawingContext';
-import { Mbr, Point } from '..';
+import { Mbr } from '../Mbr/Mbr';
+import { Point } from '../Point/Point';
 
 export const ANCHOR_BORDER_COLOR = 'rgb(147, 175, 246)';
 export const ANCHOR_BACKGROUND_COLOR = 'rgb(255, 255, 255)';

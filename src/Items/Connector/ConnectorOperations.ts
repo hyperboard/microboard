@@ -1,12 +1,11 @@
 import { BoardPoint, ControlPointData, FindItemFn } from "./ControlPoint";
-import { ConnectionLineWidth, ConnectorLineStyle } from "./Connector";
+import { ConnectionLineWidth, ConnectorLineStyle, CONNECTOR_COLOR } from "./ConnectorTypes";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BorderStyle } from "../Path";
 import { ColorValue, fixedColor } from "Color";
-import { CONNECTOR_COLOR } from "./Connector";
 
 export class ConnectorData {
 	readonly itemType = "Connector";

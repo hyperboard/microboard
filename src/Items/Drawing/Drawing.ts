@@ -1,11 +1,12 @@
 import { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
-import { Line } from "../Line";
-import { Mbr } from "../Mbr";
-import { BorderStyle, BorderWidth, Path, scalePatterns } from "../Path";
-import { Point } from "../Point";
-import { Transformation } from "../Transformation";
+import { Line } from "../Line/Line";
+import { Mbr } from "../Mbr/Mbr";
+import { Path, scalePatterns } from "../Path/Path";
+import type { BorderStyle, BorderWidth } from "../Path/Path";
+import { Point } from "../Point/Point";
+import { Transformation } from "../Transformation/Transformation";
 import { DrawingCommand } from "./DrawingCommand";
 import { DrawingOperation } from "./DrawingOperation";
 import { TransformationData } from "../Transformation/TransformationData";
@@ -248,7 +249,7 @@ export class Drawing extends BaseItem {
     ctx.lineCap = "round";
     ctx.setLineDash(this.linePattern);
     this.transformation.applyToContext(ctx);
-    ctx.stroke(this.path2d.nativePath);
+    ctx.stroke(this.path2d.nativePath as Path2D);
     ctx.restore();
     if (this.getLinkTo()) {
       const { top, right } = this.getMbr();

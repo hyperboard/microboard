@@ -6,13 +6,14 @@ import { Transformation } from "Items/Transformation/Transformation";
 import { Board } from "Board";
 import { DrawingContext } from "Items/DrawingContext";
 import { DocumentFactory } from "api/DocumentFactory";
-import { Operation } from "Events";
+import type { Operation } from "../../Events/EventsOperations";
+import type { Command } from "../../Events/Command";
 import { TransformationData } from "Items/Transformation/TransformationData";
 import { createEventsList } from "Events/Log/createEventsList";
 import { BaseOperation } from "Events/EventsOperations";
 import { BaseCommand } from "Events/BaseCommand";
 import {Subject} from "../../Subject";
-import {Path, Paths} from "../Path";
+import { Path, Paths } from "../Path/index";
 import {BaseItemOperation} from "./BaseItemOperation";
 import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 import {Point} from "../Point";
@@ -90,8 +91,7 @@ export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
 };
 
 export class BaseItem extends Mbr implements Geometry {
-	[key: string]: any;
-	static createCommand?: (board: Board, operation: Operation) => any;
+	static createCommand?: (board: Board, operation: Operation) => Command;
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	parent: string = "Board";
@@ -100,7 +100,7 @@ export class BaseItem extends Mbr implements Geometry {
 	readonly index: SimpleSpatialIndex | null = null;
 	board: Board;
 	id: string;
-	subject = new Subject<any>();
+	subject = new Subject<any>(); // TODO: Narrow this in a later pass (Pass 2/3)
 	onRemoveCallbacks: (() => void)[] = [];
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
@@ -128,7 +128,7 @@ export class BaseItem extends Mbr implements Geometry {
 		}
 		if (defaultItemData) {
 			Object.entries(defaultItemData).forEach(([key, value]) => {
-				this[key] = value;
+				(this as any)[key] = value;
 			});
 		}
 		this.linkTo = new LinkTo(this.id, board.events);
@@ -402,10 +402,11 @@ export class BaseItem extends Mbr implements Geometry {
 			this.applyAddChildren(data.childIds);
 		}
 		Object.entries(data).forEach(([key, value]) => {
-			if (this[key]?.deserialize) {
-				this[key].deserialize(value);
+			const target = (this as any)[key];
+			if (target?.deserialize) {
+				target.deserialize(value);
 			} else {
-				this[key] = value;
+				(this as any)[key] = value;
 			}
 		});
 

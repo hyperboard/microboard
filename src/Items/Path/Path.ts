@@ -385,7 +385,7 @@ export class Path implements Geometry, PathStylize {
 		if (context.isBorderInvisible && !this.shadowBlur) {
 			if (shouldFillBackground) {
 				ctx.fillStyle = this.backgroundColor;
-				ctx.fill(this.path2d.nativePath);
+				ctx.fill(this.path2d.nativePath as Path2D);
 			}
 		} else {
 			if (this.shadowBlur) {
@@ -409,7 +409,7 @@ export class Path implements Geometry, PathStylize {
 			ctx.setLineDash(this.linePattern);
 			if (shouldFillBackground) {
 				ctx.fillStyle = this.backgroundColor;
-				ctx.fill(this.path2d.nativePath);
+				ctx.fill(this.path2d.nativePath as Path2D);
 			}
 		}
 
@@ -423,7 +423,7 @@ export class Path implements Geometry, PathStylize {
 		// 	ctx.globalCompositeOperation = 'source-over';
 		// }
 
-		ctx.stroke(this.path2d.nativePath);
+		ctx.stroke(this.path2d.nativePath as Path2D);
 	}
 
 	getSvgPath(): string {

@@ -1,16 +1,19 @@
-import { RichText } from 'Items';
+import { RichText } from 'Items/RichText/RichText';
 import { Subject } from 'Subject';
 import { Board } from 'Board';
 import { Operation } from 'Events';
-import { CubicBezier } from '../Curve';
+import { CubicBezier } from '../Curve/Curve';
 import { DrawingContext } from '../DrawingContext';
 import { GeometricNormal } from '../GeometricNormal';
-import { Item } from '../Item';
-import { Line } from '../Line';
-import { Mbr } from '../Mbr';
-import { BorderStyle, Path, Paths } from '../Path';
-import { Point } from '../Point';
-import { Matrix, Transformation } from '../Transformation';
+import type { Item } from '../Item';
+import { Line } from '../Line/Line';
+import { Mbr } from '../Mbr/Mbr';
+import { Path } from '../Path/Path';
+import { Paths } from '../Path/Paths';
+import type { BorderStyle } from '../Path/Path';
+import { Point } from '../Point/Point';
+import { Matrix } from '../Transformation/Matrix';
+import { Transformation } from '../Transformation/Transformation';
 import { ConnectorCommand } from './ConnectorCommand';
 import { ConnectorData, ConnectorOperation } from './ConnectorOperations';
 import {
@@ -31,21 +34,19 @@ import { positionRelatively, resetElementScale, scaleElementBy } from 'HTMLRende
 import { DocumentFactory } from 'api/DocumentFactory';
 import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
-import { BaseItem, SerializedItemData } from "../BaseItem";
+import { BaseItem } from "../BaseItem/BaseItem";
+import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor, fixedColor } from 'Color';
 
-export const ConnectorLineStyles = ['straight', 'curved', 'orthogonal'] as const;
-
-export type ConnectorLineStyle = (typeof ConnectorLineStyles)[number];
-
-export const ConnectionLineWidths = [1, 2, 3, 4, 5, 6, 7, 8, 12] as const;
-
-export type ConnectionLineWidth = (typeof ConnectionLineWidths)[number];
-
-export const CONNECTOR_COLOR = 'rgb(20, 21, 26)';
-export const CONNECTOR_LINE_WIDTH = 1;
-export const CONNECTOR_BORDER_STYLE: BorderStyle = 'solid';
-export const DEFAULT_END_POINTER = 'TriangleFilled';
+import {
+	ConnectionLineWidth,
+	ConnectorLineStyle,
+	CONNECTOR_COLOR,
+	CONNECTOR_LINE_WIDTH,
+	CONNECTOR_BORDER_STYLE,
+	DEFAULT_END_POINTER,
+	CONNECTOR_POINTER_TYPES,
+} from './ConnectorTypes';
 export const DRAW_TEXT_BORDER = false;
 export const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
@@ -1310,21 +1311,3 @@ export class Connector extends BaseItem {
 		return this.linkTo.link;
 	}
 }
-export const CONNECTOR_POINTER_TYPES = [
-	'None',
-	'ArrowBroad',
-	'ArrowThin',
-	'TriangleFilled',
-	'CircleFilled',
-	'Angle',
-	'TriangleEmpty',
-	'DiamondFilled',
-	'DiamondEmpty',
-	'Zero',
-	'One',
-	'Many',
-	'ManyMandatory',
-	'OneMandatory',
-	'ManyOptional',
-	'OneOptional',
-] as const;

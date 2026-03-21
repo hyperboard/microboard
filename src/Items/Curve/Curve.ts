@@ -1,9 +1,9 @@
 import { Bezier, Projection } from 'bezier-js';
 import { toFiniteNumber } from 'lib';
-import { Mbr } from '../Mbr';
-import { Line } from '../Line';
-import { Point } from '../Point';
-import { Matrix } from '../Transformation';
+import { Mbr } from "../Mbr/Mbr";
+import { Line } from "../Line/Line";
+import { Point } from "../Point/Point";
+import { Matrix } from "../Transformation/Matrix";
 import { GeometricNormal } from '../GeometricNormal';
 
 export class BaseCurve {

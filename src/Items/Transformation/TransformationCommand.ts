@@ -1,6 +1,6 @@
 import { Transformation } from "./Transformation";
 import { TransformationOperation, MatrixData } from "./TransformationOperations";
-import { Command, Operation } from "../../Events";
+import { Command, Operation, isTransformation } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 /** Minimal interface to avoid circular import with BaseItem/Item */
@@ -33,9 +33,11 @@ export class TransformationCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
-	merge(op: TransformationOperation): this {
-		this.operation = op;
-		this.reverse = this.getReverse();
+	merge(op: Operation): this {
+		if (isTransformation(op)) {
+			this.operation = op;
+			this.reverse = this.getReverse();
+		}
 		return this;
 	}
 

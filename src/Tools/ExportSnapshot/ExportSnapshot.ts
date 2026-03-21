@@ -218,7 +218,8 @@ export class ExportSnapshot extends Tool {
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;
     ctx.translate(translateX, translateY);
-    ctx.stroke(path.nativePath);
+    ctx.clip(path.nativePath as Path2D);
+    ctx.stroke(path.nativePath as Path2D);
     ctx.restore();
   }
 

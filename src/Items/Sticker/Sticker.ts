@@ -1,9 +1,10 @@
 import { Operation } from "Events";
 import { Subject } from "Subject";
-import { Line } from "../Line";
+import { Line } from "../Line/Line";
 import { Matrix } from "../Transformation/Matrix";
 import { Mbr } from "../Mbr/Mbr";
-import { Path, Paths } from "../Path";
+import { Path } from "../Path/Path";
+import { Paths } from "../Path/Paths";
 import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
 import type { TransformationOperation } from "../Transformation/TransformationOperations";
@@ -12,7 +13,7 @@ import { ResizeType } from "../../Selection/Transformer/TransformerHelpers/getRe
 import { DrawingContext } from "../DrawingContext";
 import { GeometricNormal } from "../GeometricNormal";
 import { Geometry } from "../Geometry";
-import { RichText } from "../RichText";
+import { RichText } from "../RichText/RichText";
 import { StickerCommand } from "./StickerCommand";
 import { StickerData, StickerOperation } from "./StickerOperation";
 import { LinkTo } from "../LinkTo/LinkTo";
@@ -26,7 +27,8 @@ import {
   translateElementBy,
 } from "HTMLRender";
 import { conf } from "Settings";
-import {BaseItem, SerializedItemData} from "../BaseItem";
+import { BaseItem } from "../BaseItem/BaseItem";
+import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 export const stickerColors = {

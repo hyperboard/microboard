@@ -1,19 +1,16 @@
 import { Board } from "Board";
-import type { RichTextData } from "./Items";
-import {
-  ItemData,
-  Item,
-  Point,
-  Shape,
-  RichText,
-  Mbr,
-  Connector,
-  Frame,
-  ShapeData,
-  ConnectorData,
-  FrameData,
-  Comment,
-} from "Items";
+import type { RichTextData } from "./Items/RichText/RichTextData";
+import type { ItemData, Item } from "Items/Item";
+import { Point } from "Items/Point";
+import { Shape } from "Items/Shape/Shape";
+import { RichText } from "Items/RichText/RichText";
+import { Mbr } from "Items/Mbr/Mbr";
+import { Connector } from "Items/Connector/Connector";
+import { Frame } from "Items/Frame/Frame";
+import type { ShapeData } from "Items/Shape/ShapeData";
+import type { ConnectorData } from "Items/Connector/ConnectorOperations";
+import type { FrameData } from "Items/Frame/FrameData";
+import { Comment } from "Items/Comment/Comment";
 import { AINode, AINodeData } from "Items/AINode";
 import { AudioItem, AudioItemData } from "Items/Audio";
 import { Drawing, DrawingData } from "Items/Drawing";
@@ -61,7 +58,7 @@ function createComment(id: string, data: ItemData, board: Board): Comment {
   }
   const comment = new Comment(board, new Point(), board.events)
       .setId(id)
-      .deserialize(data as CommentData | SerializedItemData<CommentData>);
+      .deserialize({ ...data, id } as any);
   return comment;
 }
 
@@ -77,7 +74,7 @@ function createAINode(id: string, data: ItemData, board: Board): AINode {
       nodeData.contextItems,
   )
       .setId(id)
-      .deserialize(data as any);
+      .deserialize({ ...data, id } as any);
   return node;
 }
 
@@ -85,7 +82,7 @@ function createShape(id: string, data: ItemData, board: Board): Shape {
   if (!isShapeData(data)) {
     throw new Error("Invalid data for Shape");
   }
-  const shape = new Shape(board).setId(id).deserialize(data);
+  const shape = new Shape(board).setId(id).deserialize(data as ShapeData);
   return shape;
 }
 
@@ -149,7 +146,7 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
   }
   const drawing = new Drawing(board, [], board.events)
       .setId(id)
-      .deserialize(data as any);
+      .deserialize({ ...data, id } as any);
   return drawing;
 }
 
@@ -160,7 +157,7 @@ function createFrame(id: string, data: ItemData, board: Board): Frame {
   const frame = new Frame(board, board.items.getById.bind(board.items))
       .setId(id)
       .setBoard(board)
-      .deserialize(data);
+      .deserialize(data as FrameData);
   return frame;
 }
 
@@ -186,7 +183,7 @@ function createGroup(id: string, data: ItemData, board: Board): Group {
 
   const group = new Group(board, board.events, data.children, id)
       .setId(id)
-      .deserialize(data as any);
+      .deserialize({ ...data, id } as any);
   return group;
 }
 

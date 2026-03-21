@@ -1,5 +1,8 @@
 import { safeRequestAnimationFrame } from 'api/safeRequestAnimationFrame';
-import { Matrix, Point, Mbr, Item } from 'Items';
+import { Matrix } from 'Items/Transformation/Matrix';
+import { Point } from 'Items/Point/Point';
+import { Mbr } from 'Items/Mbr/Mbr';
+import type { Item } from 'Items/Item';
 import { Keyboard } from 'Keyboard';
 import { toFiniteNumber } from 'lib';
 import { Pointer } from 'Pointer';

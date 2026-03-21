@@ -1,7 +1,7 @@
 import { Board } from 'Board';
 import { Connector, Item, Point } from 'Items';
 import { ConnectorLineStyle } from 'Items/Connector';
-import { ConnectionLineWidth } from 'Items/Connector/Connector';
+import { ConnectionLineWidth } from 'Items/Connector/ConnectorTypes';
 import { ConnectorSnap } from 'Items/Connector/ConnectorSnap';
 import { ConnectorPointerStyle } from 'Items/Connector/Pointers/Pointers';
 import { DrawingContext } from 'Items/DrawingContext';

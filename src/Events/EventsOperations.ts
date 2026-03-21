@@ -1,18 +1,18 @@
-import {TransformationOperation} from "../Items";
-import {ShapeOperation} from "../Items/Shape";
-import {RichTextOperation} from "../Items";
-import {BoardOps} from "../BoardOperations";
-import {ConnectorOperation} from "../Items/Connector";
-import {DrawingOperation} from "Items/Drawing/DrawingOperation";
-import {StickerOperation} from "../Items/Sticker/StickerOperation";
-import {FrameOperation} from "../Items/Frame";
-import {LinkToOperation} from "../Items/LinkTo/LinkToOperation";
-import {PlaceholderOperation} from "Items/Placeholder/PlaceholderOperation";
-import {GroupOperation} from "Items/Group/GroupOperation";
-import {CommentOperation} from "../Items/Comment";
-import {ImageOperation} from "Items/Image";
-import {VideoOperation} from "Items/Video/VideoOperation";
-import {AudioOperation} from "Items/Audio/AudioOperation";
+import type {TransformationOperation} from "../Items/Transformation/TransformationOperations";
+import type {ShapeOperation} from "../Items/Shape/ShapeOperation";
+import type {RichTextOperation} from "../Items/RichText/RichTextOperations";
+import type {BoardOps} from "../BoardOperations";
+import type {ConnectorOperation} from "../Items/Connector/ConnectorOperations";
+import type {DrawingOperation} from "../Items/Drawing/DrawingOperation";
+import type {StickerOperation} from "../Items/Sticker/StickerOperation";
+import type {FrameOperation} from "../Items/Frame/FrameOperation";
+import type {LinkToOperation} from "../Items/LinkTo/LinkToOperation";
+import type {PlaceholderOperation} from "../Items/Placeholder/PlaceholderOperation";
+import type {GroupOperation} from "../Items/Group/GroupOperation";
+import type {CommentOperation} from "../Items/Comment/CommentOperation";
+import type {ImageOperation} from "../Items/Image/ImageOperation";
+import type {VideoOperation} from "../Items/Video/VideoOperation";
+import type {AudioOperation} from "../Items/Audio/AudioOperation";
 
 interface Undo {
     class: "Events";
@@ -57,3 +57,35 @@ export type UndoableOperation = BoardOps | ItemOperation;
 export type Operation = UndoableOperation | EventsOperation;
 
 export type MethodType = Operation["method"];
+
+export function isTransformation(op: Operation): op is TransformationOperation {
+    return op.class === "Transformation";
+}
+
+export function isBoardOp(op: Operation): op is BoardOps {
+    return op.class === "Board";
+}
+
+export function isRichTextOp(op: Operation): op is RichTextOperation {
+    return op.class === "RichText";
+}
+
+export function isShapeOp(op: Operation): op is ShapeOperation {
+    return op.class === "Shape";
+}
+
+export function isConnectorOp(op: Operation): op is ConnectorOperation {
+    return op.class === "Connector";
+}
+
+export function isDrawingOp(op: Operation): op is DrawingOperation {
+    return op.class === "Drawing";
+}
+
+export function isItemOp(op: Operation): op is ItemOperation {
+    return !isBoardOp(op) && !isEventsOp(op);
+}
+
+export function isEventsOp(op: Operation): op is EventsOperation {
+    return op.class === "Events";
+}

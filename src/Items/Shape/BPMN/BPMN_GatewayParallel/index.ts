@@ -1,4 +1,9 @@
-import { Mbr, Line, Path, Point, Paths, CubicBezier } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { CubicBezier } from 'Items/Curve/Curve';
+import { Line } from 'Items/Line/Line';
+import { Path } from 'Items/Path/Path';
+import { Paths } from 'Items/Path/Paths';
+import { Point } from 'Items/Point/Point';
 
 export const BPMN_GatewayParallel = {
 	name: 'BPMN_GatewayParallel',

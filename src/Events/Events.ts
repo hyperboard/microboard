@@ -1,11 +1,12 @@
 import { Connection } from 'Settings';
 import { Board } from 'Board';
 import { Subject } from 'Subject';
-import { Command, createCommand } from './Command';
+import { Command } from './Command';
 import { createEventsLog, EventsLog } from './Log';
 import { Operation } from './EventsOperations';
 import { PresenceEventType } from 'Presence/Events';
 import { conf } from 'Settings';
+import { createCommand } from './CreateCommand';
 
 export interface BoardEvent {
 	order: number;
@@ -46,6 +47,8 @@ export interface SyncBoardEventPack extends BoardEventPack {
 export type SyncEvent = SyncBoardEvent | SyncBoardEventPack;
 
 export class Events {
+	static createCommand: (board: Board, operation: Operation) => Command;
+
 	subject: Subject<BoardEvent>;
 	log: EventsLog;
 	board: Board;
@@ -56,7 +59,7 @@ export class Events {
 	constructor(board: Board, connection: Connection | undefined, lastIndex: number) {
 		this.board = board;
 		this.connection = connection;
-		this.log = createEventsLog(board);
+		this.log = createEventsLog(board, (ops: Operation) => Events.createCommand(board, ops));
 		this.log.list.setSnapshotLastIndex(lastIndex);
 		this.subject = new Subject<BoardEvent>();
 		this.latestEvent = {};
@@ -71,7 +74,7 @@ export class Events {
 	 * @param command Optional command associated with the operation
 	 */
 	emit(operation: Operation, command?: Command): void {
-		if ((operation as any).method === "transformMany") {
+		if (operation.method === "transformMany") {
 			console.error("[DEBUG] transformMany emitted from Events.emit!", JSON.stringify(operation));
 			console.trace("[DEBUG] transformMany stack trace");
 		}
@@ -85,7 +88,7 @@ export class Events {
 		const event = { order: 0, body };
 		const record = {
 			event,
-			command: command || createCommand(this.board, operation),
+			command: command || Events.createCommand(this.board, operation),
 		};
 		this.log.insertNewLocalEventRecordAfterEmit(record);
 		this.setLatestUserEvent(operation, userId);
@@ -110,7 +113,7 @@ export class Events {
 	 * @param operation The operation to apply and emit
 	 */
 	applyAndEmit(operation: Operation): void {
-		const cmd = createCommand(this.board, operation);
+		const cmd = Events.createCommand(this.board, operation);
 		cmd.apply();
 		this.emit(operation, cmd);
 	}
@@ -229,3 +232,5 @@ export function createEvents(
 ): Events {
 	return new Events(board, connection, lastIndex);
 }
+
+Events.createCommand = createCommand;

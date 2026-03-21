@@ -1,4 +1,8 @@
-import { Mbr, Path, Point, Arc, Paths } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { Arc } from 'Items/Arc/Arc';
+import { Path } from 'Items/Path/Path';
+import { Paths } from 'Items/Path/Paths';
+import { Point } from 'Items/Point/Point';
 
 export const BPMN_IntermediateEventNoneInterrupting = {
 	name: 'BPMN_IntermediateEventNoneInterrupting',

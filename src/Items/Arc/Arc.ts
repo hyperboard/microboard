@@ -1,4 +1,7 @@
-import { Point, Line, Mbr, Matrix } from "..";
+import { Point } from "../Point/Point";
+import { Line } from "../Line/Line";
+import { Mbr } from "../Mbr/Mbr";
+import { Matrix } from "../Transformation/Matrix";
 import { GeometricNormal } from "../GeometricNormal";
 
 function getArcIntersectionPoints(segment: Line, arc: Arc): Point[] {

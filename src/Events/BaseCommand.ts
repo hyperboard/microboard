@@ -1,7 +1,8 @@
-import { Board } from "Board";
-import { BaseOperation, Operation } from "./EventsOperations";
+import type { Board } from "Board";
+import { BaseOperation, Operation, isItemOp } from "./EventsOperations";
+import { Command } from "./Command";
 
-export class BaseCommand {
+export class BaseCommand implements Command {
   private reverse: { itemId: string; operation: BaseOperation }[];
 
   constructor(
@@ -12,8 +13,10 @@ export class BaseCommand {
     this.reverse = this.getReverse();
   }
 
-  merge(op: BaseOperation): this {
-    this.operation = op;
+  merge(op: Operation): this {
+    if (isItemOp(op)) {
+      this.operation = op as BaseOperation;
+    }
     return this;
   }
 

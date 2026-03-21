@@ -1,7 +1,8 @@
-import { CubicBezier } from 'Items/Curve';
-import { Line } from 'Items/Line';
-import { Path, Paths } from 'Items/Path';
-import { Point } from 'Items/Point';
+import { CubicBezier } from 'Items/Curve/Curve';
+import { Line } from 'Items/Line/Line';
+import { Path } from 'Items/Path/Path';
+import { Paths } from 'Items/Path/Paths';
+import { Point } from 'Items/Point/Point';
 
 export interface Pointer {
 	name: string;

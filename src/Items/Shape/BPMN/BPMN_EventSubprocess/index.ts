@@ -1,4 +1,9 @@
-import { Mbr, CubicBezier, Line, Path, Point, Paths } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { CubicBezier } from 'Items/Curve/Curve';
+import { Line } from 'Items/Line/Line';
+import { Path } from 'Items/Path/Path';
+import { Point } from 'Items/Point/Point';
+import { Paths } from 'Items/Path/Paths';
 
 export const BPMN_EventSubprocess = {
 	name: 'BPMN_EventSubprocess',

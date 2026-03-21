@@ -1,7 +1,7 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { Board } from "Board";
 import { Events, Operation } from "Events";
-import { Point } from "Items";
+import { Point } from "../Point/Point";
 import { DrawingContext } from "Items/DrawingContext";
 import { Line } from "Items/Line";
 import { LinkTo } from "Items/LinkTo/LinkTo";

@@ -1,18 +1,18 @@
-import { AINode, AINodeData } from "./AINode";
-import { AudioItem, AudioItemData } from "./Audio";
-import { Comment, CommentData } from "./Comment";
-import { Connector, ConnectorData } from "./Connector";
-import { Drawing, DrawingData } from "./Drawing";
-import { Frame, FrameData } from "./Frame";
-import { Group, GroupData } from "./Group";
-import { ImageItem, ImageItemData } from "./Image";
-import { Placeholder, PlaceholderData } from "./Placeholder";
-import { RichText, RichTextData } from "./RichText";
-import { Shape, ShapeData } from "./Shape";
-import { Sticker } from "./Sticker";
-import { StickerData } from "./Sticker/StickerOperation";
-import { VideoItem, VideoItemData } from "./Video";
-import {BaseItem, SerializedItemData} from "Items/BaseItem/BaseItem";
+import type { AINode, AINodeData } from "./AINode";
+import type { AudioItem, AudioItemData } from "./Audio";
+import type { Comment, CommentData } from "./Comment";
+import type { Connector, ConnectorData } from "./Connector";
+import type { Drawing, DrawingData } from "./Drawing";
+import type { Frame, FrameData } from "./Frame";
+import type { Group, GroupData } from "./Group";
+import type { ImageItem, ImageItemData } from "./Image";
+import type { Placeholder, PlaceholderData } from "./Placeholder";
+import type { RichText, RichTextData } from "./RichText";
+import type { Shape, ShapeData } from "./Shape";
+import type { Sticker } from "./Sticker";
+import type { StickerData } from "./Sticker/StickerOperation";
+import type { VideoItem, VideoItemData } from "./Video";
+import type { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 
 export type Item =
   | RichText

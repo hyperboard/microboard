@@ -1,11 +1,11 @@
 import { SessionStorage } from "SessionStorage";
-import { Board } from "Board";
+import type { Board } from "Board";
 import { DocumentFactory } from "api/DocumentFactory";
 import { Camera } from "Camera";
-import { Operation } from "Events";
+import type { Operation } from "Events";
 import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
 import { decodeHtml } from "parserHTML";
-import { SelectionContext } from "Selection";
+import type { SelectionContext } from "Selection";
 import { conf, DefaultTextStyles } from "Settings";
 import { resolveColor } from "Color";
 import { Subject } from "Subject";
@@ -19,15 +19,13 @@ import {
   Text,
   Transforms,
 } from "slate";
-import {
-  ItemType,
-  Matrix,
-  Mbr,
-  Point,
-  RichTextData,
-  Transformation,
-  TransformationOperation,
-} from "..";
+import { ItemType } from "../Item";
+import { Matrix } from "../Transformation/Matrix";
+import { Mbr } from "../Mbr/Mbr";
+import { Point } from "../Point/Point";
+import { RichTextData } from "./RichTextData";
+import { Transformation } from "../Transformation/Transformation";
+import { TransformationOperation } from "../Transformation/TransformationOperations";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { LinkTo } from "../LinkTo/LinkTo";
@@ -48,7 +46,8 @@ import { getSelectedBlockNode } from "./editorHelpers/common/getSelectedBlockNod
 import { getSelectionStyles } from "./editorHelpers/common/getSelectionStyles";
 import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
-import {BaseItem, SerializedItemData} from "../BaseItem";
+import { BaseItem } from "../BaseItem/BaseItem";
+import type { SerializedItemData } from "../BaseItem/BaseItem";
 
 let isEditInProcessValue = false;
 
@@ -1055,7 +1054,7 @@ export class RichText extends BaseItem {
 
     const shouldClip = this.insideOf === "Shape" || this.insideOf === "Sticker";
     if (shouldClip) {
-      ctx.clip(this.clipPath.nativePath);
+      ctx.clip(this.clipPath.nativePath as Path2D);
     }
 
     const autoSizeScale = this.autoSize ? this.autoSizeScale : undefined;

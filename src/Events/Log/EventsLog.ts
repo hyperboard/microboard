@@ -3,7 +3,7 @@ import { BoardOps } from 'BoardOperations';
 import { BoardEvent, BoardEventPack, SyncBoardEvent, SyncEvent } from '../Events';
 import { Operation } from '../EventsOperations';
 import { createEventsList, EventsList } from './createEventsList';
-import { createCommand, Command } from '../Command';
+import { Command } from '../Command';
 import { getRecordByIdFromList } from './getRecordByIdFromList';
 import { getRedoRecordFromList } from './getRedoRecordFromList';
 import { getUndoRecordFromList } from './getUndoRecordFromList';
@@ -44,9 +44,9 @@ export class EventsLog {
 	resendIntervalTimer: NodeJS.Timeout | null = null;
 	saveFileTimeout: NodeJS.Timeout | null = null;
 
-	constructor(board: Board) {
+	constructor(board: Board, commandFactory: (ops: Operation) => Command) {
 		this.board = board;
-		this.list = createEventsList((ops: Operation) => createCommand(board, ops));
+		this.list = createEventsList(commandFactory);
 	}
 
 	/**
@@ -150,6 +150,6 @@ export class EventsLog {
 	}
 }
 
-export function createEventsLog(board: Board): EventsLog {
-	return new EventsLog(board);
+export function createEventsLog(board: Board, commandFactory: (ops: Operation) => Command): EventsLog {
+	return new EventsLog(board, commandFactory);
 }

@@ -1,7 +1,7 @@
 /* eslint-disable id-length */
 
 export interface Path2DFactory {
-	nativePath: any;
+	nativePath: unknown;
 	/**
 	 * Adds the given path to the current path, optionally applying a transformation.
 	 * @param path - The Path2D to add.

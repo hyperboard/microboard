@@ -1,6 +1,5 @@
 import type { BaseSelection } from "slate";
 import { Board } from "Board";
-import { createCommand } from "../Command";
 import { SyncEvent, BoardEvent, SyncBoardEvent } from "../Events";
 import { mergeEvents } from "../mergeEvents";
 import { transformEvents } from "../transformEvents";
@@ -65,7 +64,7 @@ export function insertEventsFromOtherConnectionsIntoList(
 	const mergedEvents = mergeEvents(transformed);
 
 	for (const event of mergedEvents) {
-		const command = createCommand(board, event.body.operation);
+		const command = list.commandFactory(event.body.operation);
 		const record = { event, command };
 		command.apply();
 		list.addConfirmedRecords([record]);

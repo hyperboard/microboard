@@ -17,7 +17,14 @@ import {registerHotkey} from "Keyboard/HotkeyRegistry";
 import {getMediaSignedUrl} from "api/MediaHelpers";
 
 
-export const defaultCardData: BaseItemData = {
+export interface CardData extends BaseItemData {
+  isOpen?: boolean;
+  faceUrl?: string;
+  backsideUrl?: string;
+  dimensions?: {width: number; height: number};
+}
+
+export const defaultCardData: CardData = {
   itemType: "Card",
   isOpen: false,
   faceUrl: "",
@@ -41,18 +48,17 @@ export class Card extends BaseItem {
   constructor(
     board: Board,
     id = "",
-    urls?: { faceUrl: string, backsideUrl: string },
-    dimensions?: { width: number; height: number },
+    defaultData: CardData = defaultCardData,
   ) {
-    super(board, id, defaultCardData);
+    super(board, id, defaultData);
 
-    if (dimensions) {
-      this.dimensions = dimensions;
+    if (defaultData.dimensions) {
+      this.dimensions = defaultData.dimensions;
     }
 
-    if (urls) {
-      this.faceUrl = urls.faceUrl;
-      this.backsideUrl = urls.backsideUrl;
+    if (defaultData.faceUrl && defaultData.backsideUrl) {
+      this.faceUrl = defaultData.faceUrl;
+      this.backsideUrl = defaultData.backsideUrl;
 
       this.createImages();
     }

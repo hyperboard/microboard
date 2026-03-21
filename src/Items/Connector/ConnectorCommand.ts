@@ -1,5 +1,5 @@
 import { Connector } from ".";
-import { Command } from "../../Events";
+import { Command, Operation, isConnectorOp } from "../../Events";
 import { ConnectorOperation } from "./ConnectorOperations";
 
 type ReverseOperation = { item: Connector; operation: ConnectorOperation }[];
@@ -14,8 +14,10 @@ export class ConnectorCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
-	merge(op: ConnectorOperation): this {
-		this.operation = op;
+	merge(op: Operation): this {
+		if (isConnectorOp(op)) {
+			this.operation = op;
+		}
 		return this;
 	}
 

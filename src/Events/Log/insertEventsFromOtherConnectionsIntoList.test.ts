@@ -6,7 +6,7 @@ import { Board } from "Board";
 import { BoardEvent, createEvents } from "../Events";
 import { insertEventsFromOtherConnectionsIntoList } from "./insertEventsFromOtherConnectionsIntoList";
 import { createEventsList, EventsList } from "./createEventsList";
-import { createCommand } from "../Command";
+import { createCommand } from "../CreateCommand";
 import { SyncBoardEvent } from "../Events";
 import { Operation } from "../EventsOperations";
 import { CreateItem } from "BoardOperations";

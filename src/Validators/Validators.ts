@@ -25,16 +25,17 @@ type PointData = {
   y: number;
 };
 
-export function validateItemsMap(parsedObject: any): parsedObject is ItemsMap {
+export function validateItemsMap(parsedObject: unknown): parsedObject is ItemsMap {
   // Validate the presence and structure of the serialized ItemsMap object
   if (typeof parsedObject !== "object" || parsedObject === null) {
     return false;
   }
 
+  const data = parsedObject as Record<string, unknown>;
   // Validate each item in the ItemsMap
-  for (const key in parsedObject) {
-    if (parsedObject.hasOwnProperty(key)) {
-      const itemData = parsedObject[key];
+  for (const key in data) {
+    if (data.hasOwnProperty(key)) {
+      const itemData = data[key];
       if (!validateItemData(itemData)) {
         return false;
       }
@@ -44,7 +45,9 @@ export function validateItemsMap(parsedObject: any): parsedObject is ItemsMap {
   return true;
 }
 
-export const itemValidators: Record<string, (data: any) => boolean> = {
+export type ItemValidator = (data: unknown) => boolean;
+
+export const itemValidators: Record<string, ItemValidator> = {
   Sticker: validateStickerData,
   Shape: validateShapeData,
   RichText: validateRichTextData,
@@ -59,10 +62,12 @@ export const itemValidators: Record<string, (data: any) => boolean> = {
   Audio: validateAudioItemData,
 };
 
-function validateItemData(itemData: any): boolean {
+function validateItemData(itemData: unknown): boolean {
   // Check if the itemData has a valid itemType property
   if (
-    !itemData.hasOwnProperty("itemType") ||
+    typeof itemData !== "object" ||
+    itemData === null ||
+    !("itemType" in itemData) ||
     typeof itemData.itemType !== "string"
   ) {
     return false;
@@ -72,7 +77,11 @@ function validateItemData(itemData: any): boolean {
   return validator ? validator(itemData) : false;
 }
 
-function validateFrameData(frameData: FrameData): boolean {
+function validateFrameData(data: unknown): boolean {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const frameData = data as Record<string, unknown>;
   // Validate the presence and types of properties in FrameData
   const isValid =
     frameData.hasOwnProperty("shapeType") &&
@@ -98,94 +107,115 @@ function validateFrameData(frameData: FrameData): boolean {
   return isValid;
 }
 
-function validateShapeData(shapeData: any): boolean {
+function validateShapeData(shapeData: unknown): boolean {
+  if (typeof shapeData !== "object" || shapeData === null) {
+    return false;
+  }
+  const data = shapeData as Record<string, unknown>;
+
   // Validate the presence and types of properties in ShapeData
   const isValid =
-    shapeData.hasOwnProperty("shapeType") &&
-    shapeData.hasOwnProperty("backgroundColor") &&
-    shapeData.hasOwnProperty("backgroundOpacity") &&
-    shapeData.hasOwnProperty("borderColor") &&
-    shapeData.hasOwnProperty("borderOpacity") &&
-    shapeData.hasOwnProperty("borderStyle") &&
-    shapeData.hasOwnProperty("borderWidth") &&
-    shapeData.hasOwnProperty("transformation") &&
-    shapeData.hasOwnProperty("text") &&
-    typeof shapeData.shapeType === "string" &&
-    typeof shapeData.backgroundColor === "string" &&
-    typeof shapeData.backgroundOpacity === "number" &&
-    typeof shapeData.borderColor === "string" &&
-    typeof shapeData.borderOpacity === "number" &&
-    typeof shapeData.borderStyle === "string" &&
-    typeof shapeData.borderWidth === "number" &&
-    validateTransformationData(shapeData.transformation) &&
-    validateRichTextData(shapeData.text);
+    data.hasOwnProperty("shapeType") &&
+    data.hasOwnProperty("backgroundColor") &&
+    data.hasOwnProperty("backgroundOpacity") &&
+    data.hasOwnProperty("borderColor") &&
+    data.hasOwnProperty("borderOpacity") &&
+    data.hasOwnProperty("borderStyle") &&
+    data.hasOwnProperty("borderWidth") &&
+    data.hasOwnProperty("transformation") &&
+    data.hasOwnProperty("text") &&
+    typeof data.shapeType === "string" &&
+    typeof data.backgroundColor === "string" &&
+    typeof data.backgroundOpacity === "number" &&
+    typeof data.borderColor === "string" &&
+    typeof data.borderOpacity === "number" &&
+    typeof data.borderStyle === "string" &&
+    typeof data.borderWidth === "number" &&
+    validateTransformationData(data.transformation) &&
+    validateRichTextData(data.text);
   return isValid;
 }
 
-function validateStickerData(shapeData: any): boolean {
+function validateStickerData(shapeData: unknown): boolean {
+  if (typeof shapeData !== "object" || shapeData === null) {
+    return false;
+  }
+  const data = shapeData as Record<string, unknown>;
   const isValid =
-    shapeData.hasOwnProperty("itemType") &&
-    shapeData.hasOwnProperty("backgroundColor") &&
-    shapeData.hasOwnProperty("transformation") &&
-    shapeData.hasOwnProperty("text") &&
-    typeof shapeData.backgroundColor === "string" &&
-    validateTransformationData(shapeData.transformation) &&
-    validateRichTextData(shapeData.text);
+    data.hasOwnProperty("itemType") &&
+    data.hasOwnProperty("backgroundColor") &&
+    data.hasOwnProperty("transformation") &&
+    data.hasOwnProperty("text") &&
+    typeof data.backgroundColor === "string" &&
+    validateTransformationData(data.transformation) &&
+    validateRichTextData(data.text);
   return isValid;
 }
 
-function validateTransformationData(transformationData: any): boolean {
+function validateTransformationData(transformationData: unknown): boolean {
+  if (typeof transformationData !== "object" || transformationData === null) {
+    return false;
+  }
+  const data = transformationData as Record<string, unknown>;
   // Validate the presence and types of properties in TransformationData
   const isValid =
-    transformationData.hasOwnProperty("translateX") &&
-    transformationData.hasOwnProperty("translateY") &&
-    transformationData.hasOwnProperty("scaleX") &&
-    transformationData.hasOwnProperty("scaleY") &&
-    transformationData.hasOwnProperty("rotate") &&
-    typeof transformationData.translateX === "number" &&
-    typeof transformationData.translateY === "number" &&
-    typeof transformationData.scaleX === "number" &&
-    typeof transformationData.scaleY === "number" &&
-    typeof transformationData.rotate === "number";
+    data.hasOwnProperty("translateX") &&
+    data.hasOwnProperty("translateY") &&
+    data.hasOwnProperty("scaleX") &&
+    data.hasOwnProperty("scaleY") &&
+    data.hasOwnProperty("rotate") &&
+    typeof data.translateX === "number" &&
+    typeof data.translateY === "number" &&
+    typeof data.scaleX === "number" &&
+    typeof data.scaleY === "number" &&
+    typeof data.rotate === "number";
   return isValid;
 }
 
-export function validateRichTextData(richTextData: any): boolean {
+export function validateRichTextData(richTextData: unknown): boolean {
+  if (typeof richTextData !== "object" || richTextData === null) {
+    return false;
+  }
+  const data = richTextData as Record<string, unknown>;
   // Validate the presence and types of properties in RichTextData
   const isValid =
-    richTextData.hasOwnProperty("children") &&
-    Array.isArray(richTextData.children) &&
-    validateChildren(richTextData.children) &&
-    (typeof richTextData.verticalAlignment === "string" ||
-      richTextData.verticalAlignment === undefined) &&
-    (typeof richTextData.maxWidth === "number" ||
-      richTextData.maxWidth === undefined);
+    data.hasOwnProperty("children") &&
+    Array.isArray(data.children) &&
+    validateChildren(data.children) &&
+    (typeof data.verticalAlignment === "string" ||
+      data.verticalAlignment === undefined) &&
+    (typeof data.maxWidth === "number" ||
+      data.maxWidth === undefined);
   return isValid;
 }
 
-function validateConnectorData(connectorData: any): boolean {
+function validateConnectorData(connectorData: unknown): boolean {
+  if (typeof connectorData !== "object" || connectorData === null) {
+    return false;
+  }
+  const data = connectorData as Record<string, unknown>;
   // Validate the presence and types of properties in ConnectorData
   const isValid =
-    connectorData.hasOwnProperty("startPoint") &&
-    connectorData.hasOwnProperty("endPoint") &&
-    connectorData.hasOwnProperty("startPointerStyle") &&
-    connectorData.hasOwnProperty("endPointerStyle") &&
-    connectorData.hasOwnProperty("lineStyle") &&
-    connectorData.hasOwnProperty("lineColor") &&
-    connectorData.hasOwnProperty("lineWidth") &&
-    connectorData.hasOwnProperty("transformation") &&
-    typeof connectorData.startPoint === "object" &&
-    typeof connectorData.endPoint === "object" &&
-    typeof connectorData.startPointerStyle === "string" &&
-    typeof connectorData.endPointerStyle === "string" &&
-    typeof connectorData.lineStyle === "string" &&
-    typeof connectorData.lineColor === "string" &&
-    typeof connectorData.lineWidth === "number" &&
-    validateTransformationData(connectorData.transformation);
+    data.hasOwnProperty("startPoint") &&
+    data.hasOwnProperty("endPoint") &&
+    data.hasOwnProperty("startPointerStyle") &&
+    data.hasOwnProperty("endPointerStyle") &&
+    data.hasOwnProperty("lineStyle") &&
+    data.hasOwnProperty("lineColor") &&
+    data.hasOwnProperty("lineWidth") &&
+    data.hasOwnProperty("transformation") &&
+    typeof data.startPoint === "object" &&
+    typeof data.endPoint === "object" &&
+    typeof data.startPointerStyle === "string" &&
+    typeof data.endPointerStyle === "string" &&
+    typeof data.lineStyle === "string" &&
+    typeof data.lineColor === "string" &&
+    typeof data.lineWidth === "number" &&
+    validateTransformationData(data.transformation);
   return isValid;
 }
 
-function validateChildren(children: any): children is Descendant[] {
+function validateChildren(children: unknown): children is Descendant[] {
   if (!Array.isArray(children)) {
     return false;
   }
@@ -200,8 +230,8 @@ function validateChildren(children: any): children is Descendant[] {
   return true;
 }
 
-function validateDescendant(descendant: any): descendant is Descendant {
-  if (typeof descendant !== "object" || descendant === null) {
+function validateDescendant(descendant: unknown): descendant is Descendant {
+  if (typeof descendant !== "object" || descendant === null || !("type" in descendant)) {
     return false;
   }
 
@@ -228,67 +258,91 @@ function validateDescendant(descendant: any): descendant is Descendant {
   }
 }
 
-function validateParagraphNode(node: any): node is ParagraphNode {
+function validateParagraphNode(node: unknown): node is ParagraphNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    node.hasOwnProperty("type") &&
-    node.hasOwnProperty("children") &&
-    typeof node.type === "string" &&
-    Array.isArray(node.children) &&
-    node.children.every((child: any) => validateTextNode(child))
+    n.hasOwnProperty("type") &&
+    n.hasOwnProperty("children") &&
+    typeof n.type === "string" &&
+    Array.isArray(n.children) &&
+    n.children.every((child: unknown) => validateTextNode(child))
   );
 }
 
-function validateHeadingNode(node: any): node is HeadingNode {
+function validateHeadingNode(node: unknown): node is HeadingNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    node.hasOwnProperty("type") &&
-    node.hasOwnProperty("children") &&
-    typeof node.type === "string" &&
-    Array.isArray(node.children) &&
-    node.children.every((child: any) => validateTextNode(child))
+    n.hasOwnProperty("type") &&
+    n.hasOwnProperty("children") &&
+    typeof n.type === "string" &&
+    Array.isArray(n.children) &&
+    n.children.every((child: unknown) => validateTextNode(child))
   );
 }
 
-function validateBlockQuoteNode(node: any): node is BlockQuoteNode {
+function validateBlockQuoteNode(node: unknown): node is BlockQuoteNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    node.hasOwnProperty("type") &&
-    node.hasOwnProperty("children") &&
-    typeof node.type === "string" &&
-    Array.isArray(node.children) &&
-    node.children.every((child: any) => validateTextNode(child))
+    n.hasOwnProperty("type") &&
+    n.hasOwnProperty("children") &&
+    typeof n.type === "string" &&
+    Array.isArray(n.children) &&
+    n.children.every((child: unknown) => validateTextNode(child))
   );
 }
 
-function validateBulletedListNode(node: any): node is BulletedListNode {
+function validateBulletedListNode(node: unknown): node is BulletedListNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    node.hasOwnProperty("type") &&
-    node.hasOwnProperty("children") &&
-    typeof node.type === "string" &&
-    Array.isArray(node.children) &&
-    node.children.every((child: any) => validateListItemChild(child))
+    n.hasOwnProperty("type") &&
+    n.hasOwnProperty("children") &&
+    typeof n.type === "string" &&
+    Array.isArray(n.children) &&
+    n.children.every((child: unknown) => validateListItemChild(child))
   );
 }
 
-function validateNumberedListNode(node: any): node is NumberedListNode {
+function validateNumberedListNode(node: unknown): node is NumberedListNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    node.hasOwnProperty("type") &&
-    node.hasOwnProperty("children") &&
-    typeof node.type === "string" &&
-    Array.isArray(node.children) &&
-    node.children.every((child: any) => validateListItemChild(child))
+    n.hasOwnProperty("type") &&
+    n.hasOwnProperty("children") &&
+    typeof n.type === "string" &&
+    Array.isArray(n.children) &&
+    n.children.every((child: unknown) => validateListItemChild(child))
   );
 }
 
-function validateListItemNode(node: any): node is ListItemNode {
+function validateListItemNode(node: unknown): node is ListItemNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    node.hasOwnProperty("type") &&
-    node.hasOwnProperty("children") &&
-    typeof node.type === "string" &&
-    Array.isArray(node.children) &&
-    node.children.every((child: any) => validateListItemChild(child))
+    n.hasOwnProperty("type") &&
+    n.hasOwnProperty("children") &&
+    typeof n.type === "string" &&
+    Array.isArray(n.children) &&
+    n.children.every((child: unknown) => validateListItemChild(child))
   );
 }
 
-function validateListItemChild(child: any): child is ListItemChild {
+function validateListItemChild(child: unknown): child is ListItemChild {
   return (
     validateTextNode(child) ||
     validateBulletedListNode(child) ||
@@ -296,63 +350,83 @@ function validateListItemChild(child: any): child is ListItemChild {
   );
 }
 
-function validateTextNode(node: any): node is TextNode {
+function validateTextNode(node: unknown): node is TextNode {
+  if (typeof node !== "object" || node === null) {
+    return false;
+  }
+  const n = node as Record<string, unknown>;
   return (
-    // node.hasOwnProperty("type") &&
-    // typeof node.type === "string" &&
-    node.hasOwnProperty("text") && typeof node.text === "string"
+    // n.hasOwnProperty("type") &&
+    // typeof n.type === "string" &&
+    n.hasOwnProperty("text") && typeof n.text === "string"
   );
 }
 
-function validateImageItemData(data: any): data is ImageItemData {
+function validateImageItemData(data: unknown): data is ImageItemData {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   const isValid =
-    data.hasOwnProperty("transformation") &&
-    data.hasOwnProperty("storageLink") &&
-    typeof data.transformation === "object" &&
-    typeof data.storageLink === "string" &&
-    validateTransformationData(data.transformation);
+    d.hasOwnProperty("transformation") &&
+    d.hasOwnProperty("storageLink") &&
+    typeof d.transformation === "object" &&
+    typeof d.storageLink === "string" &&
+    validateTransformationData(d.transformation);
   return isValid;
 }
 
-function validateVideoItemData(data: any): data is VideoItemData {
+function validateVideoItemData(data: unknown): data is VideoItemData {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   const isValid =
-    data.hasOwnProperty("transformation") &&
-    data.hasOwnProperty("url") &&
-    data.hasOwnProperty("isStorageUrl") &&
-    data.hasOwnProperty("previewUrl") &&
-    typeof data.transformation === "object" &&
-    typeof data.url === "string" &&
-    typeof data.previewUrl === "string" &&
-    typeof data.isStorageUrl === "boolean" &&
-    validateTransformationData(data.transformation);
+    d.hasOwnProperty("transformation") &&
+    d.hasOwnProperty("url") &&
+    d.hasOwnProperty("isStorageUrl") &&
+    d.hasOwnProperty("previewUrl") &&
+    typeof d.transformation === "object" &&
+    typeof d.url === "string" &&
+    typeof d.previewUrl === "string" &&
+    typeof d.isStorageUrl === "boolean" &&
+    validateTransformationData(d.transformation);
   return isValid;
 }
 
-function validateAudioItemData(data: any): data is AudioItemData {
+function validateAudioItemData(data: unknown): data is AudioItemData {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   const isValid =
-    data.hasOwnProperty("transformation") &&
-    data.hasOwnProperty("url") &&
-    data.hasOwnProperty("extension") &&
-    typeof data.transformation === "object" &&
-    typeof data.url === "string" &&
-    typeof data.extension === "string" &&
-    validateTransformationData(data.transformation);
+    d.hasOwnProperty("transformation") &&
+    d.hasOwnProperty("url") &&
+    d.hasOwnProperty("extension") &&
+    typeof d.transformation === "object" &&
+    typeof d.url === "string" &&
+    typeof d.extension === "string" &&
+    validateTransformationData(d.transformation);
   return isValid;
 }
 
-function validateDrawingData(data: any): data is DrawingData {
+function validateDrawingData(data: unknown): data is DrawingData {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   if (
     !(
-      data.hasOwnProperty("transformation") &&
-      data.hasOwnProperty("points") &&
-      typeof data.transformation === "object" &&
-      Array.isArray(data.points)
+      d.hasOwnProperty("transformation") &&
+      d.hasOwnProperty("points") &&
+      typeof d.transformation === "object" &&
+      Array.isArray(d.points)
     )
   ) {
     return false;
   }
 
-  for (const point of data.points) {
+  for (const point of d.points) {
     if (!validatePointData(point)) {
       return false;
     }
@@ -361,40 +435,56 @@ function validateDrawingData(data: any): data is DrawingData {
   return true;
 }
 
-function validatePlaceholderData(data: any): data is PlaceholderData {
+function validatePlaceholderData(data: unknown): data is PlaceholderData {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   const isValid =
-    data.hasOwnProperty("transformation") &&
-    data.hasOwnProperty("icon") &&
-    data.hasOwnProperty("miroData") &&
-    typeof data.transformation === "object" &&
-    typeof data.icon === "string" &&
-    typeof data.miroData === "object" &&
-    validateTransformationData(data.transformation);
+    d.hasOwnProperty("transformation") &&
+    d.hasOwnProperty("icon") &&
+    d.hasOwnProperty("miroData") &&
+    typeof d.transformation === "object" &&
+    typeof d.icon === "string" &&
+    typeof d.miroData === "object" &&
+    validateTransformationData(d.transformation);
   return isValid;
 }
 
-function validateAINodeData(data: any): data is PlaceholderData {
+function validateAINodeData(data: unknown): boolean {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   const isValid =
-    data.hasOwnProperty("itemType") &&
-    data.hasOwnProperty("isUserRequest") &&
-    data.hasOwnProperty("transformation") &&
-    data.hasOwnProperty("text") &&
-    typeof data.isUserRequest === "boolean" &&
-    validateTransformationData(data.transformation);
+    d.hasOwnProperty("itemType") &&
+    d.hasOwnProperty("isUserRequest") &&
+    d.hasOwnProperty("transformation") &&
+    d.hasOwnProperty("text") &&
+    typeof d.isUserRequest === "boolean" &&
+    validateTransformationData(d.transformation);
   // validateRichTextData(data.text);
   return isValid;
 }
 
-function validatePointData(data: any): data is PointData {
+function validatePointData(data: unknown): data is PointData {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const d = data as Record<string, unknown>;
   return (
-    data.hasOwnProperty("x") &&
-    data.hasOwnProperty("y") &&
-    typeof data.x === "number" &&
-    typeof data.y === "number"
+    d.hasOwnProperty("x") &&
+    d.hasOwnProperty("y") &&
+    typeof d.x === "number" &&
+    typeof d.y === "number"
   );
 }
 
-function validateGroupData(groupData: GroupData): boolean {
+function validateGroupData(data: unknown): boolean {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const groupData = data as Record<string, unknown>;
   const isValid =
     groupData.hasOwnProperty("itemType") &&
     groupData.hasOwnProperty("transformation") &&

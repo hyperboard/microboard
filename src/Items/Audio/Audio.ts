@@ -1,12 +1,12 @@
 import { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
-import { Transformation } from "../Transformation";
+import { Transformation } from "../Transformation/Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { DocumentFactory } from "api/DocumentFactory";
-import { Path } from "../Path";
+import { Path } from "../Path/Path";
 import { Point } from "Items/Point/Point";
 import { Line } from "Items/Line/Line";
 import { conf } from "Settings";

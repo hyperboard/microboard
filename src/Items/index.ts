@@ -1,3 +1,6 @@
+export { BaseItem } from "./BaseItem";
+export type { BaseItemData, SerializedItemData } from "./BaseItem";
+
 export { Point } from "./Point";
 export { Line } from "./Line";
 export { CubicBezier, QuadraticBezier } from "./Curve";
@@ -16,13 +19,10 @@ export * from "./Frame";
 export * from "./Video";
 export * from "./Audio";
 export * from "./AINode";
-export * from "./Point";
 export * from "./Image";
 export * from "./Drawing";
 export * from "./Placeholder";
 export * from "./Group";
-export { BaseItem } from "./BaseItem";
-export type { BaseItemData, SerializedItemData } from "./BaseItem";
 
 export type { Item, ItemType, ItemData } from "./Item";
 

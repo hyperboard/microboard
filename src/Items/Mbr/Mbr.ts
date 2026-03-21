@@ -1,8 +1,8 @@
 import { forceNumberIntoInterval, toFiniteNumber } from "lib";
 import { resolveColor } from "Color/resolveColor";
-import { Point } from "../Point";
-import { Line } from "../Line";
-import { Matrix } from "../Transformation";
+import { Point } from "../Point/Point";
+import { Line } from "../Line/Line";
+import { Matrix } from "../Transformation/Matrix";
 import { VerticalAlignment } from "Items/Alignment";
 import { DrawingContext } from "Items/DrawingContext";
 import {
@@ -11,8 +11,8 @@ import {
 } from "../Line";
 import { Geometry } from "../Geometry";
 import { GeometricNormal } from "../GeometricNormal";
-import { BorderStyle, Path, scalePatterns } from "../Path";
-import { RichText } from "..";
+import type { BorderStyle } from "../Path/Path";
+import type { RichText } from "../RichText/RichText";
 
 /**
  * The minimum bounding rectangle (MBR), also known as bounding box (BBOX) or envelope.

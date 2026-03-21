@@ -1,4 +1,8 @@
-import { Mbr, Line, Path, Paths, Point } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { Line } from 'Items/Line/Line';
+import { Path } from 'Items/Path/Path';
+import { Paths } from 'Items/Path/Paths';
+import { Point } from 'Items/Point/Point';
 
 export const PredefinedProcess = {
 	name: 'PredefinedProcess',

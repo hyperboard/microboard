@@ -1,8 +1,6 @@
 import { Board } from "Board";
-import { createCommand } from "../Command";
 import { SyncBoardEvent } from "../Events";
 import { EventsList } from "./createEventsList";
-
 export function deserializeAndApplyToList(
 	events: SyncBoardEvent[],
 	list: EventsList,
@@ -23,14 +21,14 @@ export function deserializeAndApplyToList(
 						operation: op,
 					},
 				};
-				const command = createCommand(board, op);
+				const command = list.commandFactory(op);
 				const record = { event: singleEvent, command };
 				command.apply();
 				list.addConfirmedRecords([record]);
 			}
 		} else {
 			// Handle single operation event.
-			const command = createCommand(board, event.body.operation);
+			const command = list.commandFactory(event.body.operation);
 			const record = { event, command };
 			command.apply();
 			list.addConfirmedRecords([record]);

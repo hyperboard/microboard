@@ -1,6 +1,6 @@
 import { Shape } from "./Shape";
 import { SetBorderWidth, ShapeOperation } from "./ShapeOperation";
-import { Command } from "../../Events";
+import { Command, Operation, isShapeOp } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class ShapeCommand implements Command {
@@ -13,8 +13,10 @@ export class ShapeCommand implements Command {
 		this.reverse = this.getReverse();
 	}
 
-	merge(op: ShapeOperation): this {
-		this.operation = op;
+	merge(op: Operation): this {
+		if (isShapeOp(op)) {
+			this.operation = op;
+		}
 		return this;
 	}
 

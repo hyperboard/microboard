@@ -13,24 +13,20 @@ import {
 import { Camera } from "Camera";
 import { Events, ItemOperation, Operation } from "Events";
 import { SyncBoardEvent } from "Events/Events";
-import { itemFactories } from "itemFactories";
-import {
-  Comment,
-  Connector,
-  ConnectorData,
-  Frame,
-  FrameData,
-  Item,
-  ItemData,
-  Matrix,
-  Mbr,
-} from "Items";
-import { AINode } from "Items/AINode";
+import { Matrix } from "Items/Transformation/Matrix";
+import { Mbr } from "Items/Mbr/Mbr";
+import type { Comment } from "Items/Comment/Comment";
+import type { Connector } from "Items/Connector/Connector";
+import type { ConnectorData } from "Items/Connector/ConnectorOperations";
+import type { Frame } from "Items/Frame/Frame";
+import type { FrameData } from "Items/Frame/FrameData";
+import type { Item, ItemData } from "Items/Item";
+import type { AINode } from "Items/AINode";
 import { ControlPointData } from "Items/Connector/ControlPoint";
 import { drawBackground } from "Background";
 import { DrawingContext } from "Items/DrawingContext";
-import { Group, GroupData } from "Items/Group";
-import { ImageItem } from "Items/Image";
+import type { Group, GroupData } from "Items/Group";
+import type { ImageItem } from "Items/Image";
 import { Keyboard } from "Keyboard";
 import { parsersHTML } from "parserHTML";
 import { Pointer } from "Pointer";
@@ -43,8 +39,8 @@ import { Subject } from "Subject";
 import { Tools } from "Tools";
 import { v4 as uuidv4 } from "uuid";
 import { ItemsMap } from "Validators";
-import { BaseItem } from "./Items/BaseItem";
-import { BaseItemData } from "./Items/BaseItem/BaseItem";
+import type { BaseItem } from "./Items/BaseItem";
+import type { BaseItemData } from "./Items/BaseItem/BaseItem";
 import { ItemDataWithId } from "./Items/Item";
 import {Account} from "types/Account";
 import {GravityEngine} from "./Gravity/GravityEngine";
@@ -54,7 +50,7 @@ export type InterfaceType = "edit" | "view" | "loading";
 
 export class Board {
   events!: Events;
-  private isBoardMenuOpen = false;
+  public isBoardMenuOpen = false;
   readonly selection: BoardSelection;
   readonly tools = new Tools(this);
   readonly pointer = new Pointer();
@@ -240,10 +236,11 @@ export class Board {
       });
       // todo think if should be removed
       items.forEach((item) => {
-        if (item instanceof Connector && data[item.getId()]) {
+        if (item.itemType === "Connector" && data[item.getId()]) {
+          const connector = item as Connector;
           const connectorData = data[item.getId()] as ConnectorData;
-          item.applyStartPoint(connectorData.startPoint);
-          item.applyEndPoint(connectorData.endPoint);
+          connector.applyStartPoint(connectorData.startPoint);
+          connector.applyEndPoint(connectorData.endPoint);
         }
       });
       return;
@@ -259,7 +256,7 @@ export class Board {
     this.index.insert(item);
 
     const lastChildrenId = this.index.getById(
-      groupChildrenIds[groupChildrenIds.length - 1]
+      groupChildrenIds?.[groupChildrenIds.length - 1] ?? ""
     );
     if (lastChildrenId) {
       const zIndex = this.index.getZIndex(lastChildrenId) + 1;
@@ -296,8 +293,8 @@ export class Board {
       this.index.remove(item);
       this.selection.remove(item);
 
-      if (item instanceof Connector) {
-        item.clearObservedItems();
+      if (item.itemType === "Connector") {
+        (item as Connector).clearObservedItems();
       }
       removedItems.push(item);
     });
@@ -306,12 +303,12 @@ export class Board {
   private applyRemoveGroupOperation(op: RemoveGroup | RemoveLockedGroup): void {
     const item = this.index.getById(op.item[0]);
 
-    if (!item || !(item instanceof Group)) {
+    if (!item || item.itemType !== "Group") {
       return;
     }
 
-    const children = [...item.getChildren()];
-    item.applyRemoveChildren(children.map((child) => child.getId()));
+    const children = [...(item as Group).getChildren()];
+    (item as Group).applyRemoveChildren(children.map((child) => child.getId()));
     children.forEach((child) => {
       child.transformation.isLocked = false;
     });
@@ -389,6 +386,7 @@ export class Board {
   }
 
   createItem(id: string, data: ItemData): Item {
+    const { itemFactories } = require("itemFactories");
     const factory = itemFactories[data.itemType];
     if (!factory) {
       throw new Error(`Unknown item type: ${data.itemType}`);
@@ -641,9 +639,9 @@ export class Board {
             const created = this.createItem(this.getNewItemId(), childData);
             const added = this.add(created);
             idsMap[childData.id] = added.getId();
-            if (added instanceof Connector) {
+            if (added.itemType === "Connector") {
               addedConnectors.push({
-                item: added,
+                item: added as Connector,
                 data: childData as ConnectorData,
               });
             }
@@ -656,9 +654,9 @@ export class Board {
           const added = this.add(
             this.createItem(this.getNewItemId(), parsedData)
           );
-          if (added instanceof Connector) {
+          if (added.itemType === "Connector") {
             addedConnectors.push({
-              item: added,
+              item: added as Connector,
               data: parsedData as ConnectorData,
             });
           }
@@ -711,9 +709,9 @@ export class Board {
 
     const addItem = (itemData: ItemData & { id: string }): Item => {
       const item = this.createItem(itemData.id, itemData);
-      if (item instanceof Connector) {
+      if (item.itemType === "Connector") {
         createdConnectors[itemData.id] = {
-          item,
+          item: item as Connector,
           itemData: itemData as ConnectorData & { id: string },
         };
       }
@@ -765,9 +763,9 @@ export class Board {
     if (Array.isArray(items)) {
       for (const itemData of items) {
         const item = this.createItem(itemData.id, itemData);
-        if (item instanceof Connector) {
+        if (item.itemType === "Connector") {
           createdConnectors[itemData.id] = {
-            item,
+            item: item as Connector,
             itemData: itemData as ConnectorData & { id: string },
           };
         }
@@ -785,8 +783,11 @@ export class Board {
       for (const key in items as any) {
         const itemData = (items as Record<string, ItemData>)[key]; // Type cast for index access
         const item = this.createItem(key, itemData);
-        if (item instanceof Connector) {
-          createdConnectors[key] = { item, itemData: itemData as ConnectorData & { id: string } }; // Type cast for itemData
+        if (item.itemType === "Connector") {
+          createdConnectors[key] = {
+            item: item as Connector,
+            itemData: itemData as ConnectorData & { id: string }
+          }; // Type cast for itemData
         }
         this.index.insert(item);
       }
@@ -1134,7 +1135,8 @@ export class Board {
 
   removeVoidComments() {
     const voidComments = this.items.listAll().filter((item) => {
-      return item instanceof Comment && !item.getThread().length;
+      const comment = item as Comment;
+      return item.itemType === "Comment" && !comment.getThread().length;
     });
     if (voidComments) {
       for (const comment of voidComments) {
@@ -1149,10 +1151,11 @@ export class Board {
       return [];
     }
     const parentItem = this.items.findById(parentId);
-    if (!parentItem || !(parentItem instanceof AINode)) {
+    if (!parentItem || parentItem.itemType !== "AINode") {
       return [];
     }
-    return [parentItem, ...this.getParentAINodes(parentItem)];
+    const parentAINode = parentItem as AINode;
+    return [parentAINode, ...this.getParentAINodes(parentAINode)];
   }
 
   setIsBoardMenuOpen(isOpen: boolean): void {

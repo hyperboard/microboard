@@ -1,14 +1,12 @@
-import {
-  Mbr,
-  Line,
-  Point,
-  Transformation,
-  Path,
-  Paths,
-  Matrix,
-  TransformationOperation,
-  Connector,
-} from "..";
+import { Mbr } from "../Mbr/Mbr";
+import { Line } from "../Line/Line";
+import { Point } from "../Point/Point";
+import { Transformation } from "../Transformation/Transformation";
+import { Path } from "../Path/Path";
+import { Paths } from "../Path/Paths";
+import { Matrix } from "../Transformation/Matrix";
+import { TransformationOperation } from "../Transformation/TransformationOperations";
+import type { Connector } from "../Connector/Connector";
 import { BasicShapes } from "./Basic";
 import { ShapeType } from "./index";
 import { BorderStyle, BorderWidth, LinePatterns } from "../Path";
@@ -267,24 +265,24 @@ export class Shape extends BaseItem {
     // Smell: Can we not iterate over all items?
     for (const connector of this.board.items.listAll()) {
       if (
-        connector instanceof Connector &&
-        (connector.getConnectedItems().endItem?.getId() === this.getId() ||
-          connector.getConnectedItems().startItem?.getId() === this.getId())
+        connector.itemType === "Connector" &&
+        ((connector as Connector).getConnectedItems().endItem?.getId() === this.getId() ||
+          (connector as Connector).getConnectedItems().startItem?.getId() === this.getId())
       ) {
-        if (connector.getConnectedItems().endItem?.getId() === this.getId()) {
+        if ((connector as Connector).getConnectedItems().endItem?.getId() === this.getId()) {
           const nearestPoint = this.getNearestEdgePointTo(
-            connector.getEndPoint().copy()
+            (connector as Connector).getEndPoint().copy()
           );
-          connector.setEndPoint(
+          (connector as Connector).setEndPoint(
             new FixedPoint(this, toRelativePoint(nearestPoint, this))
           );
         }
 
-        if (connector.getConnectedItems().startItem?.getId() === this.getId()) {
+        if ((connector as Connector).getConnectedItems().startItem?.getId() === this.getId()) {
           const nearestPoint = this.getNearestEdgePointTo(
-            connector.getStartPoint().copy()
+            (connector as Connector).getStartPoint().copy()
           );
-          connector.setStartPoint(
+          (connector as Connector).setStartPoint(
             new FixedPoint(this, toRelativePoint(nearestPoint, this))
           );
         }

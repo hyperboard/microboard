@@ -19,7 +19,8 @@ import { CustomTool } from "Tools/CustomTool";
 import { Tool } from "./Tool";
 import { isIframe } from "api/isIfarme";
 
-export const registeredTools: Record<string, typeof CustomTool> = {};
+export type CustomToolConstructor = new (board: Board, name: string, ...args: any[]) => CustomTool;
+export const registeredTools: Record<string, CustomToolConstructor> = {};
 
 export class Tools extends ToolContext {
   readonly subject = new Subject<Tools>();
@@ -43,7 +44,7 @@ export class Tools extends ToolContext {
         return;
       }
 
-      this.tool = new (tool as any)(this.board, toolName);
+      this.tool = new tool(this.board, toolName);
       if (clearSelection) {
         this.board.selection.removeAll();
       }
@@ -63,7 +64,7 @@ export class Tools extends ToolContext {
     this.publish();
   }
 
-  switchMode(mode: any): void {
+  switchMode(mode: "navigate" | "select"): void {
     this.beforeNavigateMode = mode;
   }
 
@@ -315,7 +316,7 @@ export class Tools extends ToolContext {
   }
 
   publish(): void {
-    (this.board as any).isBoardMenuOpen = false;
+    this.board.isBoardMenuOpen = false;
     this.subject.publish(this);
   }
 

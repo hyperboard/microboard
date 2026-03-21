@@ -1,14 +1,12 @@
-import {
-  RichTextOperation,
-  TransformationOperation,
-  ConnectorOperation,
-} from "Items";
+import { RichTextOperation } from "Items/RichText/RichTextOperations";
+import { TransformationOperation } from "Items/Transformation/TransformationOperations";
+import { ConnectorOperation } from "Items/Connector/ConnectorOperations";
 import { Path } from "slate";
-import { Operation } from "./EventsOperations";
-import { type ShapeOperation } from "Items/Shape";
-import { DrawingOperation } from "Items/Drawing/DrawingOperation";
-import { BoardOps, CreateItem } from "BoardOperations";
+import { BoardOps, DataMap } from "BoardOperations";
 import { RichTextData } from "Items/RichText/RichTextData";
+import { Operation, isTransformation, isBoardOp, isRichTextOp } from "./EventsOperations";
+import { ShapeOperation } from "Items/Shape/ShapeOperation";
+import { DrawingOperation } from "Items/Drawing/DrawingOperation";
 
 // TODO API Conditional to Map
 export function canNotBeMerged(op: Operation): boolean {
@@ -28,28 +26,31 @@ export function canNotBeMerged(op: Operation): boolean {
 }
 
 function areItemsTheSame(opA: Operation, opB: Operation): boolean {
-  if (opA.method === "transformMany" && opB.method === "transformMany") {
-    const itemsA = Object.keys(opA.items);
-    const itemsB = Object.keys(opB.items);
-    const setA = new Set(itemsA);
-    const setB = new Set(itemsB);
+  if (isTransformation(opA) && isTransformation(opB)) {
+    if (opA.method === "transformMany" && opB.method === "transformMany") {
+      const itemsA = Object.keys(opA.items);
+      const itemsB = Object.keys(opB.items);
+      const setA = new Set(itemsA);
+      const setB = new Set(itemsB);
 
-    const areArraysEqual =
-      setA.size === setB.size && [...setA].every((item) => setB.has(item));
-    return areArraysEqual;
+      const areArraysEqual =
+        setA.size === setB.size && [...setA].every((item) => setB.has(item));
+      return areArraysEqual;
+    }
   }
-  // @ts-expect-error incorrect type
-  if (!(Array.isArray(opA.item) && Array.isArray(opB.item))) {
+
+  if (!("item" in opA) || !("item" in opB)) {
     return false;
   }
-  // @ts-expect-error incorrect type
-  if (opA.item.length !== opB.item.length) {
+
+  const itemsA = Array.isArray(opA.item) ? opA.item : [opA.item];
+  const itemsB = Array.isArray(opB.item) ? opB.item : [opB.item];
+
+  if (itemsA.length !== itemsB.length) {
     return false;
   }
-  // @ts-expect-error incorrect type
-  for (let i = 0; i < opA.item.length; i++) {
-    // @ts-expect-error incorrect type
-    if (opA.item[i] !== opB.item[i]) {
+  for (let i = 0; i < itemsA.length; i++) {
+    if (itemsA[i] !== itemsB[i]) {
       return false;
     }
   }
@@ -317,10 +318,12 @@ function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
     }
     const secondLevelChild = firstLevelChild.children[0];
 
-    const op = {
+    const op: BoardOps = {
       ...opA,
+      method: "add",
       data: {
         ...data,
+        itemType: "RichText",
         children: [
           {
             ...firstLevelChild,
@@ -333,7 +336,7 @@ function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
           },
         ],
       },
-    } as any;
+    } as BoardOps;
     return op;
   }
   return;
@@ -422,11 +425,12 @@ function mergeBoardOperations(
       ? opA.data
       : { [opA.item]: opA.data };
 
-    return {
+    const mergedOp: BoardOps = {
       ...opB,
       item: [...opAItems, ...opBItems],
-      data: { ...opBData, ...opAData },
-    } as any;
+      data: { ...(opAData as DataMap), ...(opBData as DataMap) },
+    } as BoardOps;
+    return mergedOp;
   }
 
   return undefined;

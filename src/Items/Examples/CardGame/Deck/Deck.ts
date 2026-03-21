@@ -198,15 +198,15 @@ export class Deck extends BaseItem {
     const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
     this.left = translateX;
     this.top = translateY;
-    this.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET * ((this.children.length || 1) - 1)));
-    this.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET * ((this.children.length || 1) - 1) : 0));
+    this.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET * ((this.childIds.length || 1) - 1)));
+    this.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET * ((this.childIds.length || 1) - 1) : 0));
     this.path = new Path(this.getMbr().getLines(), true, "#FFFFFF");
   }
 
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
-    if (data.children) {
-      this.children = data.children;
+    if (data.childIds) {
+      this.childIds = data.childIds;
     }
     this.updateMbr();
     this.subject.publish(this);

@@ -1,5 +1,5 @@
 import { BorderStyle } from "../Path";
-import { ShapeType } from "./index";
+import { ShapeType } from "./ShapeType";
 import { ColorValue } from "Color";
 
 export type ShapeOperation =

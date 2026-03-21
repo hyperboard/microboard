@@ -1,4 +1,10 @@
-import { Mbr, Path, Line, Point } from 'Items';
+import { Mbr } from 'Items/Mbr/Mbr';
+import { Path } from 'Items/Path/Path';
+import { Line } from 'Items/Line/Line';
+import { Point } from 'Items/Point/Point';
+import { Arc } from 'Items/Arc/Arc';
+import { CubicBezier } from 'Items/Curve/Curve';
+import { Paths } from 'Items/Path/Paths';
 
 export const ArrowRight = {
 	name: 'ArrowRight',
