@@ -24,7 +24,7 @@ export function handleCreateSnapshotRequestMessage(msg: any, board: Board): void
 		boardId,
 		snapshot,
 		lastEventOrder: lastOrder,
-	});
+	} as any);
 }
 
 function getSnapshotToPublish(board: Board): SnapshotToPublish | null {

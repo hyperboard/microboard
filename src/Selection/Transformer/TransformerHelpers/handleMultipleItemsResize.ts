@@ -48,7 +48,7 @@ export function handleMultipleItemsResize({
     // Use world-space position for the resize delta calculation so that nested
     // items (which store local transforms) are placed correctly relative to
     // the world-space initMbr.
-    const worldMbr = item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+    const worldMbr = item instanceof BaseItem ? (item as any).getWorldMbr() : (item as any).getMbr();
     let itemX = worldMbr.left;
     let itemY = worldMbr.top;
 

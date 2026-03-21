@@ -654,7 +654,7 @@ export class BoardSelection {
 
     if (isChangeCopiedFrameText) {
       const copiedFrameText =
-        copyText + (textItem || serializedData.text?.placeholderText);
+        copyText + (textItem || (serializedData as any).text?.placeholderText);
       item.getRichText()?.editor.clearText();
       item.getRichText()?.editor.addText(copiedFrameText);
       serializedData.text = item.getRichText()?.serialize();

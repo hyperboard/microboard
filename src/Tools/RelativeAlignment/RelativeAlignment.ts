@@ -42,7 +42,7 @@ export class AlignmentHelper {
 
   combineMBRs(items: Item[]): Mbr {
     const worldMbr = (item: Item): Mbr =>
-      item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+      item instanceof BaseItem ? (item as any).getWorldMbr() : (item as any).getMbr();
     return items.reduce((acc, item, i) => {
       if (i === 0) {
         return acc;
@@ -66,14 +66,14 @@ export class AlignmentHelper {
       : Array.isArray(movingItem)
       ? this.combineMBRs(movingItem)
       : movingItem.itemType === "Shape"
-      ? movingItem.getPath().getMbr()
-      : movingItem.getMbr();
+      ? (movingItem as any).getPath().getMbr()
+      : (movingItem as any).getMbr();
     const camera = this.board.camera.getMbr();
     const cameraWidth = camera.getWidth();
     const scale = this.board.camera.getScale();
     const dynamicAlignThreshold = Math.min(this.alignThreshold / scale, 8);
     const childrenIds =
-      "index" in movingItem && movingItem.index ? movingItem.getChildrenIds() : [];
+      ("index" in movingItem && (movingItem as any).index ? (movingItem as any).getChildrenIds() : []) || [];
 
     const nearbyItems = this.canvasDrawer.getLastCreatedCanvas()
       ? this.spatialIndex.getNearestTo(
@@ -87,11 +87,11 @@ export class AlignmentHelper {
             movingMBR.getCenter(),
             20,
             (otherItem: Item) =>
-              otherItem !== movingMBR &&
+              otherItem !== (movingMBR as any) &&
               otherItem.itemType !== "Connector" &&
               otherItem.itemType !== "Drawing" &&
               otherItem.isInView(camera) &&
-              !childrenIds.includes(otherItem.getId()),
+              !(childrenIds as string[]).includes(otherItem.getId()),
             Math.ceil(cameraWidth)
           )
           .filter((item) =>
@@ -128,7 +128,7 @@ export class AlignmentHelper {
       if (item === movingItem || item.itemType === "Comment" || (item instanceof BaseItem && !item.shouldUseRelativeAlignment)) {
         return;
       }
-      const itemMbr = item.getPathMbr();
+      const itemMbr = (item as any).getPathMbr();
 
       const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
       const centerXItem = (itemMbr.left + itemMbr.right) / 2;

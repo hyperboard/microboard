@@ -54,16 +54,16 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 		return false;
 	}
 
-	const isBlockEmpty = textNode.text === '';
-	const isOnlyChildParagraph = listItemNode.children.length === 1;
+	const isBlockEmpty = (textNode as any).text === '';
+	const isOnlyChildParagraph = (listItemNode as any).children.length === 1;
 
 	if (isBlockEmpty && isOnlyChildParagraph) {
 		const listItemIndex = listItemPath[listItemPath.length - 1];
 		const [parentList, parentListPath] = Editor.parent(editor, listItemPath);
-		if (Editor.isEditor(parentList) || (parentList.type !== "ol_list" && parentList.type !== "ul_list")) {
+		if (Editor.isEditor(parentList) || ((parentList as any).type !== "ol_list" && (parentList as any).type !== "ul_list")) {
 			return false;
 		}
-		const listType = parentList.type;
+		const listType = (parentList as any).type;
 
 		Editor.withoutNormalizing(editor, () => {
 			const nextPath = Path.next(parentListPath);
@@ -76,15 +76,15 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 				{ at: nextPath }
 			);
 
-			if (parentList.children.length > listItemIndex + 1) {
+			if ((parentList as any).children.length > listItemIndex + 1) {
 				const newListPath = Path.next(nextPath);
-				const itemsAfter = parentList.children.slice(listItemIndex + 1) as BlockNode[];
+				const itemsAfter = (parentList as any).children.slice(listItemIndex + 1) as BlockNode[];
 
 				Transforms.insertNodes(
 					editor,
 					{
 						type: listType,
-						listLevel: listNode.listLevel || 0,
+						listLevel: (listNode as any).listLevel || 0,
 						children: itemsAfter.map(item => ({
 							type: 'list_item',
 							children: item.children as BlockNode[],

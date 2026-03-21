@@ -25,12 +25,12 @@ export function setSelectionFontStyle(editor: Editor, style: TextStyle | TextSty
 
 		const { selection } = editor;
 		if (selection && Range.isExpanded(selection)) {
-			Transforms.setNodes(
+			(Transforms.setNodes as any)(
 				editor,
-				{ [style]: value } as Parameters<typeof Transforms.setNodes>[1],
+				{ [style]: value },
 				{
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					match: n => !Editor.isEditor(n) && (n as any).type === 'text',
+					match: (n: any) => !Editor.isEditor(n) && (n as any).type === 'text',
 					split: true,
 				}
 			);

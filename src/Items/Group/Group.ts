@@ -12,7 +12,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 
 export interface GroupData {
   readonly itemType: "Group";
-  children: string[];
+  childIds: string[];
   transformation: TransformationData;
   isLockedGroup?: boolean;
   [key: string]: any;
@@ -30,7 +30,7 @@ export class Group extends BaseItem {
   constructor(
     board: Board,
     private events?: Events,
-    children: string[] = [],
+    childIds: string[] = [],
     id = ""
   ) {
     // isGroupItem=true creates this.index (SimpleSpatialIndex) for child storage.
@@ -45,8 +45,8 @@ export class Group extends BaseItem {
     });
 
     // Restore children passed via constructor (used when creating Group from existing data)
-    if (children.length > 0) {
-      this.applyAddChildren(children);
+    if (childIds.length > 0) {
+      this.applyAddChildren(childIds);
     }
   }
 
@@ -149,7 +149,7 @@ export class Group extends BaseItem {
       id: this.id,
       itemType: "Group",
       // Children IDs only — transforms are serialized as world transforms by SpatialIndex.copy()
-      children: this.getChildrenIds(),
+      childIds: this.getChildrenIds(),
       transformation: this.transformation.serialize(),
       isLockedGroup: this.isLockedGroup,
     };
@@ -159,8 +159,8 @@ export class Group extends BaseItem {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }
-    if (data.children && data.children.length > 0) {
-      this.applyAddChildren(data.children);
+    if (data.childIds && data.childIds.length > 0) {
+      this.applyAddChildren(data.childIds);
     }
     if (data.isLockedGroup !== undefined) {
       this.isLockedGroup = data.isLockedGroup;

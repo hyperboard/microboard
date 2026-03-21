@@ -6,6 +6,7 @@ import { transformEvents } from "../transformEvents";
 import { HistoryRecord } from "./EventsLog";
 import { Operation } from "../EventsOperations";
 import { Command } from "../Command";
+import { BoardOps } from "BoardOperations";
 
 export type FilterPredicate = (
   value: HistoryRecord,
@@ -49,7 +50,7 @@ export interface EventsList {
 }
 
 export function createEventsList(
-  createCommand: (BoardOps) => Command
+  createCommand: (ops: Operation) => Command
 ): EventsList {
   const confirmedRecords: HistoryRecord[] = [];
   const recordsToSend: HistoryRecord[] = [];

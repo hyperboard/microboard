@@ -19,12 +19,12 @@ export const setLink = (
 
 	const format = link ? 'rgba(71, 120, 245, 1)' : 'rgb(20, 21, 26)';
 
-	Transforms.setNodes(
+	(Transforms.setNodes as any)(
 		editor,
-		{ fontColor: format } as any,
+		{ fontColor: format },
 		{
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			match: n => !Editor.isEditor(n) && (n as any).type === 'text',
+			match: (n: any) => !Editor.isEditor(n) && (n as any).type === "text",
 			split: true,
 		}
 	);
@@ -34,6 +34,6 @@ export const setLink = (
 	})) {
 		const nodeRange = Editor.range(editor, path);
 		Transforms.select(editor, nodeRange);
-		Transforms.setNodes(editor, { link } as any, { split: false, match: n => !Editor.isEditor(n) && (n as any).type === 'text' });
+		(Transforms.setNodes as any)(editor, { link }, { split: false, match: (n: any) => !Editor.isEditor(n) && (n as any).type === 'text' });
 	}
 };

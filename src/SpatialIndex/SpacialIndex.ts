@@ -89,7 +89,7 @@ export class SpatialIndex {
 
   remove(item: Item, preserveChildren = false): void {
     if (!preserveChildren && "index" in item && item.index) {
-      (item as any).removeChildItems(item.index.list());
+      (item as any).removeChildItems((item as any).index.list());
     }
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
     this.itemsIndex.remove(item);
@@ -116,7 +116,7 @@ export class SpatialIndex {
 
   copy(): ItemDataWithId[] {
     return this.getItemsWithIncludedChildren(this.itemsArray).map(item => {
-      const serialized = { ...item.serialize(true), id: item.getId() };
+      const serialized = { ...item.serialize(), id: item.getId() };
       // Nested items store local transforms internally. For serialization we always
       // write world transforms so that old and new clients can load the data correctly.
       // applyAddChildren will convert back to local on load.
@@ -187,7 +187,7 @@ export class SpatialIndex {
 
   sendToBack(item: Item, shouldPublish = true): void {
     if (item.parent !== "Board") {
-      this.getById(item.parent)?.index?.sendToBack(item);
+      (this.getById(item.parent) as any)?.index?.sendToBack(item);
       if (shouldPublish) {
         this.subject.publish(this.items);
       }

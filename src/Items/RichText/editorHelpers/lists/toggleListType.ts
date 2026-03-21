@@ -24,7 +24,7 @@ export function toggleListType(
 	Editor.withoutNormalizing(editor, () => {
 		const { anchor } = selection;
 		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-		if (!textNode || Editor.isEditor(textNode) || textNode.type !== 'text' || !("text" in  textNode)) {
+		if (!textNode || Editor.isEditor(textNode) || (textNode as any).type !== 'text' || !("text" in  textNode)) {
 			result = false;
 			return;
 		}
@@ -38,7 +38,7 @@ export function toggleListType(
 
 		const listItemPath = Path.parent(paragraphPath);
 		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || Editor.isEditor(listItem) || listItem.type !== 'list_item') {
+		if (!listItem || Editor.isEditor(listItem) || (listItem as any).type !== 'list_item') {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -49,7 +49,7 @@ export function toggleListType(
 
 		const listPath = Path.parent(listItemPath);
 		const [list] = Editor.node(editor, listPath);
-		if (!list  || Editor.isEditor(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
+		if (!list  || Editor.isEditor(list) || ((list as any).type !== 'ol_list' && (list as any).type !== 'ul_list')) {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -58,9 +58,9 @@ export function toggleListType(
 			return;
 		}
 
-		if (list.type === targetListType) {
+		if ((list as any).type === targetListType) {
 			// Get all children in the parent list so we can split properly
-			const listChildren = [...(list.children as Element[])];
+			const listChildren = [...((list as any).children as Element[])];
 
 			if (listChildren.length === 1) {
 				// If there's only one item, unwrap the entire list
@@ -84,7 +84,7 @@ export function toggleListType(
 				if (listItemIndex > 0) {
 					Transforms.splitNodes(editor, {
 						at: [...listItemPath, 0],
-						match: n => Element.isElement(n) && (n as any).type === list.type,
+						match: n => Element.isElement(n) && (n as any).type === (list as any).type,
 					});
 				}
 
@@ -93,7 +93,7 @@ export function toggleListType(
 					const nextPath = Path.next(listItemPath);
 					Transforms.splitNodes(editor, {
 						at: nextPath,
-						match: n => Element.isElement(n) && (n as any).type === list.type,
+						match: n => Element.isElement(n) && (n as any).type === (list as any).type,
 					});
 				}
 
@@ -116,7 +116,7 @@ export function toggleListType(
 				editor,
 				{
 					type: targetListType,
-					listLevel: list.listLevel || 1,
+					listLevel: (list as any).listLevel || 1,
 				},
 				{ at: listPath }
 			);

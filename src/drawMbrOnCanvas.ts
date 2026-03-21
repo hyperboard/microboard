@@ -254,8 +254,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 				const item = board.items.getById(id);
 				if (item) {
 					item.transformationRenderBlock = undefined;
-					// @ts-expect-error different types of items output the type never
-					item.subject.publish(item);
+					(item as any).subject.publish(item);
 				}
 			});
 			lastTranslationKeys = undefined;
@@ -329,7 +328,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 				} else {
 					mbr.combine(item.getMbr());
 					if (item.itemType === "Frame") {
-						mbr.combine(item.getRichText().getMbr());
+						mbr.combine((item as any).getRichText().getMbr());
 					}
 				}
 			}

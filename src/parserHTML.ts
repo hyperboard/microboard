@@ -270,7 +270,7 @@ function parseHTMLFrame(el: HTMLElement): {
     backgroundOpacity: parseFloat(el.style.opacity) || 1,
     borderColor: coerceColorValue(el.style.borderColor || ""),
     borderWidth: parseInt(el.style.borderWidth) || 0,
-    children: [],
+    childIds: [],
     borderOpacity: 1,
     borderStyle: (el.style.borderStyle as BorderStyle) || "",
     linkTo: el.getAttribute("data-link-to") || undefined,
@@ -305,7 +305,7 @@ function parseHTMLFrame(el: HTMLElement): {
       acc[child.id] = "data" in parsed ? (parsed.data as ItemDataWithId) : (parsed as ItemDataWithId);
       return acc;
     }, {});
-  data.children = Object.values(childrenMap).map((child) => child.id);
+  data.childIds = Object.values(childrenMap).map((child) => child.id);
 
   return { data, childrenMap };
 }
@@ -455,7 +455,7 @@ function parseHTMLBaseItem(
         "data" in parsed ? (parsed.data as ItemDataWithId) : (parsed as ItemDataWithId);
       return acc;
     }, {});
-  data.children = Object.values(childrenMap).map((child) => child.id);
+  data.childIds = Object.values(childrenMap).map((child) => child.id);
 
   if (Object.values(childrenMap).length) {
     return { data: baseItemItemData, childrenMap };

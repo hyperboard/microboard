@@ -1,6 +1,7 @@
 import { Board, BoardSnapshot } from 'Board';
 import { BoardOps } from 'BoardOperations';
 import { BoardEvent, BoardEventPack, SyncBoardEvent, SyncEvent } from '../Events';
+import { Operation } from '../EventsOperations';
 import { createEventsList, EventsList } from './createEventsList';
 import { createCommand, Command } from '../Command';
 import { getRecordByIdFromList } from './getRecordByIdFromList';
@@ -45,7 +46,7 @@ export class EventsLog {
 
 	constructor(board: Board) {
 		this.board = board;
-		this.list = createEventsList((ops: BoardOps) => createCommand(board, ops));
+		this.list = createEventsList((ops: Operation) => createCommand(board, ops));
 	}
 
 	/**
@@ -67,7 +68,7 @@ export class EventsLog {
 	 * Confirms events that have been sent, updating their status in the log
 	 * Note: Implementation treats the parameter as BoardEventPack
 	 */
-	confirmSentLocalEvent(event: BoardEvent | BoardEventPack): void {
+	confirmSentLocalEvent(event: SyncEvent): void {
 		const events = expandEvents([event]);
 		this.list.confirmSentRecords(events);
 	}

@@ -23,9 +23,9 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 
 		const unwrapCandidates: BlockNode[] = [];
 
-		nodes.forEach(([node, path]) => {
+		nodes.forEach(([n, path]) => {
 			const parentList = getBlockParentList(editor, path);
-			node = node as BlockNode;
+			const node = n as any as BlockNode;
 			if (parentList) {
 				unwrapCandidates.push(node);
 				if (!nodesWithLists[parentList[1].length]) {
@@ -139,7 +139,7 @@ function wrapNodes(
 
 	Transforms.wrapNodes(
 		editor,
-		{ type: targetListType, listLevel: 1, children: [] },
+		{ type: targetListType, listLevel: 1, children: [] } as any,
 		{ at: listRange }
 	);
 
@@ -150,9 +150,9 @@ function wrapNodes(
 	const listPath = Path.parent(listRange.anchor.path);
 
 	if (Element.isElement(list)) {
-		for (let i = 0; i < list.children.length; i++) {
+		for (let i = 0; i < (list as any).children.length; i++) {
 			const childPath = [...listPath, i];
-			Transforms.wrapNodes(editor, { type: 'list_item', children: [] }, { at: childPath });
+			Transforms.wrapNodes(editor, { type: 'list_item', children: [] } as any, { at: childPath });
 		}
 	}
 }

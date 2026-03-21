@@ -54,9 +54,9 @@ export function getQuickAddButtons(
     connectorStartPoint: Point
   ): { newItem: Item; connectorData: ConnectorData } {
     const connectorStorage = new SessionStorage();
-    const currMbr = selectedItem instanceof BaseItem ? selectedItem.getWorldMbr() : selectedItem.getPathMbr();
+    const currMbr = selectedItem instanceof BaseItem ? (selectedItem as any).getWorldMbr() : (selectedItem as any).getPathMbr();
     const selectedItemData = selectedItem.serialize();
-    const selectedMatrix = selectedItem instanceof BaseItem ? selectedItem.getWorldMatrix() : new Matrix(selectedItemData.transformation?.translateX || 0, selectedItemData.transformation?.translateY || 0);
+    const selectedMatrix = selectedItem instanceof BaseItem ? (selectedItem as any).getWorldMatrix() : new Matrix((selectedItemData as any).transformation?.translateX || 0, (selectedItemData as any).transformation?.translateY || 0);
     const width = currMbr.getWidth();
     const height = currMbr.getHeight();
     let offsetX = width;
@@ -251,7 +251,7 @@ export function getQuickAddButtons(
     customMbr?: Mbr
   ): { positions: Point[]; item: Item } | undefined {
     const single = selection.items.getSingle();
-    const itemMbr = customMbr ? customMbr : (single instanceof BaseItem ? single.getWorldMbr() : single?.getMbr());
+    const itemMbr = customMbr ? customMbr : (single instanceof BaseItem ? (single as any).getWorldMbr() : (single as any)?.getMbr());
     if (
       !itemMbr ||
       (single?.itemType !== "Sticker" &&

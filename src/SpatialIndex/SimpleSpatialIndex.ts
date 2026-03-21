@@ -61,7 +61,7 @@ export class SimpleSpatialIndex {
 
   copy(): ItemDataWithId[] {
     return  this.itemsArray.map(item => ({
-      ...item.serialize(true),
+      ...item.serialize(),
       id: item.getId(),
     }));
   }

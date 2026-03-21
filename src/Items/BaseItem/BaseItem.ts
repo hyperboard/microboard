@@ -80,7 +80,8 @@ export interface BaseItemData {
 	itemType: string;
 	transformation?: TransformationData;
 	linkTo?: string;
-	[key: string]: any;
+	childIds?: string[];
+	[key: string]: unknown;
 }
 
 export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
@@ -99,15 +100,15 @@ export class BaseItem extends Mbr implements Geometry {
 	readonly index: SimpleSpatialIndex | null = null;
 	board: Board;
 	id: string;
-	subject = new Subject<any>
-	onRemoveCallbacks: (() => void)[] = []
+	subject = new Subject<any>();
+	onRemoveCallbacks: (() => void)[] = [];
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
 	shouldUseRelativeAlignment = true;
 	resizeEnabled = true;
 	onlyProportionalResize = false;
 	itemType = "";
-	children: string[] = [];
+	childIds: string[] = [];
 	isHoverHighlighted = false;
 
 	static readonly HOVER_HIGHLIGHT_COLOR = "rgba(71, 120, 245, 0.7)";
@@ -135,7 +136,7 @@ export class BaseItem extends Mbr implements Geometry {
 	}
 
 	updateChildrenIds(): void {
-		this.children = this.index?.items.listAll().map(item => item.getId()) || [];
+		this.childIds = this.index?.items.listAll().map(item => item.getId()) || [];
 	}
 
 	/**
@@ -396,9 +397,9 @@ export class BaseItem extends Mbr implements Geometry {
 		return null;
 	}
 
-	deserialize(data: SerializedItemData<any> | BaseItemData): this {
-		if (data.children) {
-			this.applyAddChildren(data.children);
+	deserialize(data: SerializedItemData | BaseItemData): this {
+		if (data.childIds) {
+			this.applyAddChildren(data.childIds);
 		}
 		Object.entries(data).forEach(([key, value]) => {
 			if (this[key]?.deserialize) {
@@ -417,7 +418,7 @@ export class BaseItem extends Mbr implements Geometry {
 			linkTo: this.linkTo.serialize(),
 			transformation: this.transformation.serialize(),
 			itemType: this.itemType,
-			children: this.children,
+			childIds: this.childIds,
 			resizeEnabled: this.resizeEnabled,
 		};
 	}

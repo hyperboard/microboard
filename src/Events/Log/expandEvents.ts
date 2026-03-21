@@ -1,7 +1,7 @@
 import { SyncEvent, SyncBoardEvent } from "../Events";
 
 export function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
-	return events.flatMap((event: any): SyncBoardEvent[] => {
+	return events.flatMap((event): SyncBoardEvent[] => {
 		if ("operations" in event.body) {
 			// Это BoardEventPack
 			return event.body.operations.map(operation => ({
@@ -12,10 +12,11 @@ export function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
 					boardId: event.body.boardId,
 					operation,
 				},
+				userId: event.body.userId,
 				lastKnownOrder:
 					"lastKnownOrder" in event
-						? event.lastKnownOrder
-						: event.body.lastKnownOrder,
+						? (event as any).lastKnownOrder
+						: (event.body as any).lastKnownOrder,
 			}));
 		} else {
 			// Это обычный BoardEvent

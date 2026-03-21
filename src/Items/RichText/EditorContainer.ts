@@ -52,7 +52,7 @@ type OperationFontSizeProperties = {
 }
 
 export class EditorContainer {
-  readonly editor: any;
+  readonly editor: Editor & any;
 
   maxWidth: number | undefined = undefined;
   textScale = 1;
@@ -99,7 +99,7 @@ export class EditorContainer {
     private updateElement: () => void
   ) {
     const baseEditor = createEditor();
-    this.editor = withHistory(withReact(baseEditor));
+    this.editor = withHistory(withReact(baseEditor)) as Editor & any;
     const editor = this.editor;
     /** The editor must have initial descendants */
     // horizontalAlignment for Shape - center, for RichText - left
@@ -272,7 +272,7 @@ export class EditorContainer {
     const op = this.recordedOps;
     this.recordedOps = null;
 
-    const opsArr = (op ? ("ops" in op ? op.ops : op) : []) as Operation[];
+    const opsArr = (op ? ("ops" in op ? op.ops : op) : []) as SlateOp[];
 
     return opsArr.filter((op) => op.type !== "set_selection");
   }
@@ -286,16 +286,13 @@ export class EditorContainer {
         case "setVerticalAlignment":
           this.verticalAlignment = op.verticalAlignment;
           break;
-        case "setSelectionBlockType":
         case "setSelectionFontColor":
         case "setSelectionFontFamily":
         case "setSelectionFontSize":
-          this.applyRichTextOp(op);
-          break;
         case "setSelectionFontHighlight":
         case "setSelectionFontStyle":
         case "setSelectionHorisontalAlignment":
-          this.applySelectionOp(op);
+          this.applySelectionOp(op as SelectionOp);
           break;
         case "setFontStyle":
         case "setFontColor":

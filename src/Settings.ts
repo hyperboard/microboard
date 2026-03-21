@@ -1,44 +1,46 @@
 import { Path2DFactory } from "./api/Path2DFactory";
-import type { BoardSnapshot } from "./Board";
+import type { Board, BoardSnapshot } from "./Board";
 import { BrowserDocumentFactory } from "./api/BrowserDocumentFactory";
 import { BrowserPath2D } from "./api/BrowserPath2DFactory";
 import { MockDocumentFactory } from "./api/MockDocumentFactory";
 import { MockPath2D } from "api/MockPath2D";
 import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
-import i18n from "i18next";
+import i18n, { TFunction } from "i18next";
 import type { BorderStyle } from "Items/Path/Path";
 import type { Theme, ColorValue } from "./Color/ColorValue";
 export type { Theme, ColorValue };
 import { semanticColor } from "./Color/ColorValue";
+import type { PresenceEventType } from "Presence/Events";
+import type { SocketMsg } from "Events/MessageRouter/boardMessageInterface";
+import type { Editor } from "slate";
 
 export interface Connection {
   connectionId: number;
   getCurrentUser: () => string;
   connect(): Promise<void>;
-  subscribe(board: any): void;
-  unsubscribe(board: any): void;
+  subscribe(board: Board): void;
+  unsubscribe(board: Board): void;
 
-  publishPresenceEvent(boardId: string, event: any): void;
+  publishPresenceEvent(boardId: string, event: PresenceEventType): void;
   publishAuth(): Promise<void>;
   publishLogout(): void;
 
-  onMessage?: (msg: any) => void;
+  onMessage?: (msg: SocketMsg) => void;
   onAccessDenied: (boardId: string, forceUpdate?: boolean) => void;
   notifyAboutLostConnection: () => void;
   dismissNotificationAboutLostConnection: () => void;
   resetConnection: () => void;
-  send: (msg: any) => void;
+  send: (msg: SocketMsg) => void;
 }
 
 // Define minimal interface for i18next that we need
 export interface I18NextInterface {
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: Record<string, any>) => string;
   changeLanguage: (
     lng: string,
-    callback?: (err: any, t: any) => void
-  ) => Promise<any>;
-  // Add other methods you need from i18next
+    callback?: (err: any, t: TFunction) => void
+  ) => Promise<TFunction>;
 }
 
 export interface NotifyFunction {
@@ -148,9 +150,9 @@ type GetYouTubeIdFunction = (url?: string) => string | null;
 type GetDOMParser = () => {
   parseFromString: (str: string, type: DOMParserSupportedType) => Document;
 };
-type ReactEditorFocus = (editor: any) => void;
+type ReactEditorFocus = (editor: Editor) => void;
 type ReactEditorToSlatePoint = (
-  editor: any,
+  editor: Editor,
   domNode: Node,
   offset: number,
   options: any

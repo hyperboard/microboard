@@ -58,7 +58,7 @@ export interface FrameData {
 	borderOpacity: number;
 	borderStyle: BorderStyle;
 	borderWidth: BorderWidth;
-	children: string[];
+	childIds: string[];
 	transformation?: TransformationData;
 	text?: RichTextData;
 	canChangeRatio?: boolean;
@@ -78,7 +78,7 @@ export class DefaultFrameData implements FrameData {
 		public borderStyle: BorderStyle = 'solid',
 		public borderWidth: BorderWidth = 0.2,
 		public transformation = new DefaultTransformationData(),
-		public children: string[] = [],
+		public childIds: string[] = [],
 		public text: RichTextData = new DefaultRichTextData([], 'top', 600),
 		public canChangeRatio = true,
 		public linkTo?: string

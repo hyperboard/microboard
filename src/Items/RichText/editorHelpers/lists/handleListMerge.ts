@@ -19,7 +19,7 @@ export function handleListMerge(editor: CustomEditor): boolean {
   if (
     !textNode ||
     Editor.isEditor(textNode) ||
-    textNode.type !== 'text' ||
+    (textNode as any).type !== 'text' ||
     !("text" in textNode) ||
     !isCursorAtStartOfFirstChild(editor, textNodePath)
   ) {
@@ -28,29 +28,29 @@ export function handleListMerge(editor: CustomEditor): boolean {
 
   const paragraphPath = Path.parent(textNodePath);
   const [paragraph] = Editor.node(editor, paragraphPath);
-  if (!paragraph || !isCursorAtStartOfFirstChild(editor, paragraphPath)) {
+  if (!paragraph || Editor.isEditor(paragraph) || (paragraph as any).type === "text" || !isCursorAtStartOfFirstChild(editor, paragraphPath)) {
     return false;
   }
 
   const listItemPath = Path.parent(paragraphPath);
   const [listItem] = Editor.node(editor, listItemPath);
-  if (!listItem || Editor.isEditor(listItem) || listItem.type !== 'list_item') {
+  if (!listItem || Editor.isEditor(listItem) || (listItem as any).type !== 'list_item') {
     return false;
   }
 
   const listPath = Path.parent(listItemPath);
   const [list] = Editor.node(editor, listPath);
-  if (!list || Editor.isEditor(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
+  if (!list || Editor.isEditor(list) || !((list as any).type === "ul_list" || (list as any).type === "ol_list")) {
     return false;
   }
 
   const listItemIndex = listItemPath[listItemPath.length - 1];
-  const currentListItemChildren = listItem.children;
+  const currentListItemChildren = (listItem as any).children;
 
   if (listItemIndex === 0) {
     const listParentPath = Path.parent(listPath);
 
-    const currentListItemChildren = [...listItem.children];
+    const currentListItemChildren = [...(listItem as any).children];
 
     Transforms.removeNodes(editor, { at: listItemPath });
 
@@ -60,7 +60,7 @@ export function handleListMerge(editor: CustomEditor): boolean {
     }
     const listPosition = listPath[listPath.length - 1];
 
-    currentListItemChildren.forEach((childNode, index) => {
+    currentListItemChildren.forEach((childNode: any, index: number) => {
       const copiedNode = structuredClone(childNode);
       copiedNode.paddingTop = 0;
       Transforms.insertNodes(editor, copiedNode, {
@@ -80,26 +80,26 @@ export function handleListMerge(editor: CustomEditor): boolean {
   } else {
     const previousItemPath = Path.previous(listItemPath);
     const [previousItem] = Editor.node(editor, previousItemPath);
-    if ("text" in previousItem) {
+    if (!previousItem || "text" in previousItem) {
       return false;
     }
 
-    currentListItemChildren.forEach((childNode, index) => {
+    currentListItemChildren.forEach((childNode: any, index: number) => {
       const copiedNode = structuredClone(childNode);
       copiedNode.paddingTop = 0;
       Transforms.insertNodes(editor, copiedNode, {
-        at: [...previousItemPath, previousItem.children.length + index],
+        at: [...previousItemPath, (previousItem as any).children.length + index],
       });
     });
 
     Transforms.removeNodes(editor, { at: listItemPath });
     Transforms.select(editor, {
       anchor: {
-        path: [...previousItemPath, previousItem.children.length, 0],
+        path: [...previousItemPath, (previousItem as any).children.length, 0],
         offset: 0,
       },
       focus: {
-        path: [...previousItemPath, previousItem.children.length, 0],
+        path: [...previousItemPath, (previousItem as any).children.length, 0],
         offset: 0,
       },
     });

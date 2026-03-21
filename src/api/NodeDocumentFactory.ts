@@ -36,7 +36,7 @@ Image.prototype.onload = function () {};
 Image.prototype.onerror = function () {};
 
 // Create canvas context
-global.createCanvasContext = (width, height) => {
+(global as any).createCanvasContext = (width: number, height: number): any => {
 	const canvas = createCanvas(width, height);
 	return canvas.getContext("2d");
 };

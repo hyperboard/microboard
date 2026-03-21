@@ -14,7 +14,7 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 	if (
 		!textNode ||
 		Editor.isEditor(textNode) ||
-		textNode.type !== 'text' ||
+		(textNode as any).type !== 'text' ||
 		!("text" in textNode) ||
 		!isCursorAtStartOfFirstChild(editor, textNodePath)
 	) {
@@ -29,25 +29,25 @@ export function handleWrapIntoNestedList(editor: CustomEditor): boolean {
 
 	const listItemPath = Path.parent(paragraphPath);
 	const [listItem] = Editor.node(editor, listItemPath);
-	if (!listItem || Editor.isEditor(listItem) || listItem.type !== 'list_item') {
+	if (!listItem || Editor.isEditor(listItem) || (listItem as any).type !== 'list_item') {
 		return false;
 	}
 
 	const listPath = Path.parent(listItemPath);
 	const [list] = Editor.node(editor, listPath);
-	if (!list || Editor.isEditor(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
+	if (!list || Editor.isEditor(list) || ((list as any).type !== 'ol_list' && (list as any).type !== 'ul_list')) {
 		return false;
 	}
 
-	Transforms.wrapNodes(editor, { type: 'list_item', children: [] }, { at: paragraphPath });
+	Transforms.wrapNodes(editor, { type: 'list_item', children: [] } as any, { at: paragraphPath });
 
 	Transforms.wrapNodes(
 		editor,
 		{
-			type: list.type,
-			listLevel: (list.listLevel || 1) + 1,
+			type: (list as any).type,
+			listLevel: ((list as any).listLevel || 1) + 1,
 			children: [],
-		},
+		} as any,
 		{ at: paragraphPath }
 	);
 

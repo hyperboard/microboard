@@ -430,7 +430,7 @@ export class Board {
     const id = this.getNewItemId();
     const groupData: GroupData = {
       itemType: "Group",
-      children: items.map((i) => i.getId()),
+      childIds: items.map((i) => i.getId()),
       transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, rotate: 0, isLocked: false },
       isLockedGroup: true,
     };
@@ -479,7 +479,7 @@ export class Board {
     const id = this.getNewItemId();
     const groupData: GroupData = {
       itemType: "Group",
-      children: items.map((i) => i.getId()),
+      childIds: items.map((i) => i.getId()),
       transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, rotate: 0, isLocked: false },
       isLockedGroup: false,
     };
@@ -743,7 +743,10 @@ export class Board {
     }
     for (const key in createdGroups) {
       const { item, itemData } = createdGroups[key];
-      item.applyAddChildren(itemData.children);
+      const childIds = (itemData as any).childIds;
+      if (childIds) {
+        item.applyAddChildren(childIds);
+      }
     }
   }
 
@@ -796,7 +799,10 @@ export class Board {
     }
     for (const key in createdGroups) {
       const { item, itemData } = createdGroups[key];
-      item.applyAddChildren(itemData.children);
+      const childIds = (itemData as any).childIds || (itemData as any).children;
+      if (childIds) {
+        item.applyAddChildren(childIds);
+      }
     }
 
     if (events.length) {
@@ -1017,8 +1023,8 @@ export class Board {
       const itemData = itemsMap[itemId];
 
       if (itemData.itemType === "Connector") {
-        replaceConnectorItem(itemData.startPoint);
-        replaceConnectorItem(itemData.endPoint);
+        replaceConnectorItem((itemData as any).startPoint);
+        replaceConnectorItem((itemData as any).endPoint);
       }
     }
 
@@ -1057,12 +1063,12 @@ export class Board {
     for (const itemId in itemsMap) {
       const itemData = itemsMap[itemId];
       if (itemData.itemType === "Image") {
-        mediaStorageIds.push(itemData.storageLink.split("/").pop());
+        mediaStorageIds.push((itemData as any).storageLink.split("/").pop());
       } else if (
-        (itemData.itemType === "Video" && itemData.isStorageUrl) ||
-        (itemData.itemType === "Audio" && itemData.isStorageUrl)
+        (itemData.itemType === "Video" && (itemData as any).isStorageUrl) ||
+        (itemData.itemType === "Audio" && (itemData as any).isStorageUrl)
       ) {
-        mediaStorageIds.push(itemData.url.split("/").pop());
+        mediaStorageIds.push((itemData as any).url.split("/").pop());
       }
       const newItemId = newItemIdMap[itemId];
       const { translateX, translateY } = itemData.transformation || {
@@ -1070,17 +1076,18 @@ export class Board {
         translateY: 0,
       };
       if (itemData.itemType === "Connector") {
-        if (itemData.startPoint.pointType === "Board") {
-          itemData.startPoint.x += -minX + x;
-          itemData.startPoint.y += -minY + y;
+        const connectorData = itemData as any;
+        if (connectorData.startPoint.pointType === "Board") {
+          connectorData.startPoint.x += -minX + x;
+          connectorData.startPoint.y += -minY + y;
         }
-        if (itemData.endPoint.pointType === "Board") {
-          itemData.endPoint.x += -minX + x;
-          itemData.endPoint.y += -minY + y;
+        if (connectorData.endPoint.pointType === "Board") {
+          connectorData.endPoint.x += -minX + x;
+          connectorData.endPoint.y += -minY + y;
         }
-        if (itemData.middlePoint?.pointType === "Board") {
-          itemData.middlePoint.x += -minX + x;
-          itemData.middlePoint.y += -minY + y;
+        if (connectorData.middlePoint?.pointType === "Board") {
+          connectorData.middlePoint.x += -minX + x;
+          connectorData.middlePoint.y += -minY + y;
         }
       } else if (itemData.transformation) {
         itemData.transformation.translateX = translateX - minX + x;
@@ -1088,11 +1095,11 @@ export class Board {
       }
       if (
         itemData.itemType !== "RichText" &&
-        "children" in itemData &&
-        itemData.children?.length
+        "childIds" in itemData &&
+        (itemData as any).childIds?.length
       ) {
-        itemData.children = itemData.children.map(
-          (childId: string) => newItemIdMap[childId]
+        (itemData as any).childIds = (itemData as any).childIds.map(
+          (childId: string) => newItemIdMap[childId] || childId
         );
       }
       newMap[newItemId] = itemData;
@@ -1289,8 +1296,8 @@ export class Board {
       const itemData = itemsMap[itemId];
 
       if (itemData.itemType === "Connector") {
-        replaceConnectorHeadItemId(itemData.startPoint);
-        replaceConnectorHeadItemId(itemData.endPoint);
+        replaceConnectorHeadItemId((itemData as any).startPoint);
+        replaceConnectorHeadItemId((itemData as any).endPoint);
       }
     }
 
@@ -1342,13 +1349,19 @@ export class Board {
         translateY: 0,
       };
       if (itemData.itemType === "Connector") {
-        if (itemData.startPoint.pointType === "Board") {
-          itemData.startPoint.x += -minX + right + width;
-          itemData.startPoint.y += -minY + top;
+        const connectorData = itemData as any;
+        if (connectorData.startPoint) {
+          connectorData.startPoint.x += -minX + right + width;
+          connectorData.startPoint.y += -minY + top;
         }
-        if (itemData.endPoint.pointType === "Board") {
-          itemData.endPoint.x += -minX + right + width;
-          itemData.endPoint.y += -minY + top;
+        if (connectorData.endPoint) {
+          connectorData.endPoint.x += -minX + right + width;
+          connectorData.endPoint.y += -minY + top;
+        }
+
+        if (connectorData.middlePoint?.pointType === "Board") {
+          connectorData.middlePoint.x += -minX + right + width;
+          connectorData.middlePoint.y += -minY + top;
         }
       } else if (itemData.transformation) {
         itemData.transformation.translateX = translateX - minX + right + width;
@@ -1405,11 +1418,17 @@ export class Board {
         throw new Error("Pasting itemId doesn't exist in itemsMap");
       }
 
-      if (data.itemType === "Frame") {
-        data.text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
+      // Create item first to get its type
+      const item = this.createItem(itemId, data);
+
+      if (item.itemType === "AINode") {
+        (data as any).text = (item as any).text.serialize();
       }
 
-      const item = this.createItem(itemId, data);
+      if (data.itemType === "Frame") {
+        (data as any).text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
+      }
+
       this.index.insert(item);
       items.push(item);
     };

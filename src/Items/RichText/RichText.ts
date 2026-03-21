@@ -901,13 +901,12 @@ export class RichText extends BaseItem {
           ? conf.documentFactory.caretPositionFromPoint(point.x, point.y)
           : conf.documentFactory.caretRangeFromPoint(point.x, point.y);
         if (domRange) {
-          // @ts-expect-error: Suppress TS error for non-existent method
-          const textNode = conf.documentFactory.caretPositionFromPoint
-            ? (domRange as CaretPosition).offsetNode
+          const isCaretPosition = "offsetNode" in domRange;
+          const textNode = isCaretPosition
+            ? (domRange as any).offsetNode
             : (domRange as Range).startContainer;
-          // @ts-expect-error: Suppress TS error for non-existent method
-          const offset = conf.documentFactory.caretPositionFromPoint
-            ? (domRange as CaretPosition).offset
+          const offset = isCaretPosition
+            ? (domRange as any).offset
             : (domRange as Range).startOffset;
           const slatePoint = conf.reactEditorToSlatePoint(
             this.editor.editor,

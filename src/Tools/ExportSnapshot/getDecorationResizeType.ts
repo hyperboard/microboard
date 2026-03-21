@@ -8,7 +8,7 @@ export function getDecorationResizeType(
   tolerance = 10
 ): ResizeType | undefined {
   for (const key in conf.EXPORT_FRAME_DECORATIONS) {
-    const decoration = conf.EXPORT_FRAME_DECORATIONS[key];
+    const decoration = (conf.EXPORT_FRAME_DECORATIONS as any)[key];
     const decorationBounds = {
       left: mbr.left + (decoration.offsetX ?? 0),
       top: mbr.top + (decoration.offsetY ?? 0),

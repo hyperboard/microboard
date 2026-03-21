@@ -34,8 +34,8 @@ export function handleBoardEventMessage(
 
   log.insertEventsFromOtherConnections({
     ...event,
-    userId: message.userId,
-  });
+    userId: Number(message.userId),
+  } as any);
   const last = log.getLastConfirmed();
   if (last) {
     board.events.subject.publish(last);

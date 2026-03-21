@@ -137,7 +137,7 @@ export class BoardCommand implements Command {
 						class: 'Board',
 						method: 'addLockedGroup',
 						item: itemId,
-						data: item.serialize(),
+						data: item.serialize() as any,
 					});
 				}
 
@@ -156,7 +156,7 @@ export class BoardCommand implements Command {
 						class: 'Board',
 						method: 'addGroup',
 						item: itemId,
-						data: item.serialize(),
+						data: item.serialize() as any,
 					});
 				}
 
@@ -178,6 +178,8 @@ export class BoardCommand implements Command {
 					item: item,
 				};
 			}
+			default:
+				throw new Error(`Reverse not implemented for ${operation.method}`);
 		}
 	}
 

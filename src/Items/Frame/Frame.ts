@@ -389,14 +389,14 @@ export class Frame extends BaseItem {
       borderStyle: this.borderStyle,
       borderWidth: this.borderWidth,
       transformation: this.transformation.serialize(),
-      children: this.getChildrenIds(),
+      childIds: this.childIds,
       text: this.text.serialize(),
       canChangeRatio: this.canChangeRatio,
       linkTo: this.linkTo.serialize(),
     };
   }
 
-  deserialize(data: Partial<FrameData>): this {
+  deserialize(data: SerializedItemData<FrameData> | FrameData): this {
     if (data.shapeType) {
       this.shapeType = data.shapeType ?? this.shapeType;
       this.initPath();
@@ -416,8 +416,8 @@ export class Frame extends BaseItem {
       this.transformation.deserialize(data.transformation);
       this.transformPath();
     }
-    if (data.children) {
-      this.applyAddChildren(data.children);
+    if (data.childIds) {
+      this.childIds = data.childIds || [];
     }
     if (data.text) {
       this.text.deserialize(data.text);
