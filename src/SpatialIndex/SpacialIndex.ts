@@ -9,13 +9,14 @@ import { Point } from "Items/Point/Point";
 import type { Connector } from "Items/Connector/Connector";
 import type { Comment } from "Items/Comment/Comment";
 import type { Shape } from "Items/Shape/Shape";
+import type { Drawing } from "Items/Drawing/Drawing";
 import type { FrameType } from "Items/Frame/Basic";
 import {DrawingContext} from 'Items/DrawingContext';
 import {Pointer} from 'Pointer';
 import {conf} from 'Settings';
 import {Subject} from 'Subject';
 import {LayeredIndex} from './LayeredIndex';
-import {BaseItem} from "../Items/BaseItem";
+import {BaseItem, SerializedItemData} from "../Items/BaseItem";
 import {ItemDataWithId} from "../Items/Item";
 
 /**
@@ -95,16 +96,19 @@ export class SpatialIndex {
   };
 
   remove(item: Item, preserveChildren = false): void {
-    if (!preserveChildren && "index" in item && item.index) {
-      (item as any).removeChildItems((item as any).index.list());
+    const baseItem = item as BaseItem;
+    if (!preserveChildren && baseItem.index) {
+      baseItem.removeChildItems(baseItem.index.list());
     }
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
     this.itemsIndex.remove(item);
 
     if (item.parent !== 'Board') {
       // Item is inside a container — also remove it from the container's index
-      const parentFrame = this.items.getById(item.parent) as any;
-      parentFrame?.removeChildItems(item);
+      const parentFrame = this.items.getById(item.parent);
+      if (parentFrame) {
+        parentFrame.removeChildItems(item);
+      }
       this.subject.publish(this.items);
       return;
     }
@@ -136,7 +140,7 @@ export class SpatialIndex {
           scaleX: worldMatrix.scaleX,
           scaleY: worldMatrix.scaleY,
           isLocked: false,
-        } as any;
+        } as SerializedItemData["transformation"];
       }
       return serialized;
     });
@@ -144,8 +148,9 @@ export class SpatialIndex {
 
   getItemsWithIncludedChildren(items: Item[]): Item[] {
     return items.flatMap(item => {
-      if ("index" in item && item.index) {
-        return [item, ...(item as any).index.list()];
+      const baseItem = item as BaseItem;
+      if (baseItem.index) {
+        return [item, ...baseItem.index.list()];
       }
       return item;
     });
@@ -194,7 +199,10 @@ export class SpatialIndex {
 
   sendToBack(item: Item, shouldPublish = true): void {
     if (item.parent !== "Board") {
-      (this.getById(item.parent) as any)?.index?.sendToBack(item);
+      const parent = this.getById(item.parent);
+      if (parent?.index) {
+        parent.index.sendToBack(item);
+      }
       if (shouldPublish) {
         this.subject.publish(this.items);
       }
@@ -339,7 +347,7 @@ export class SpatialIndex {
 
   getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
     const mbr = new Mbr(left, top, right, bottom);
-    const items: any[] = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
+    const items = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
@@ -569,12 +577,13 @@ export class Items {
       (acc, item) => {
         const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
-        if (item.itemType === "Drawing" && !(item as any).isPointNearLine(this.pointer.point)) {
+        if (item.itemType === "Drawing" && !(item as Drawing).isPointNearLine(this.pointer.point)) {
           return acc;
         }
 
+        const color = item.itemType === "Shape" ? (item as Shape).getBackgroundColor() : null;
         const isItemTransparent =
-          item.itemType === "Shape" && (item as any).getBackgroundColor() === 'none';
+          color?.type === 'fixed' && color.value === 'none';
         const itemZIndex = this.getZIndex(item);
         const accZIndex = this.getZIndex(acc.nearest!);
 
@@ -640,7 +649,7 @@ export class Items {
       return [];
     }
     return this.listAll().filter(item => {
-      if (item.itemType !== "Connector" || !(item as any).isConnected()) {
+      if (item.itemType !== "Connector" || !(item as Connector).isConnected()) {
         return false;
       }
       const {startItem, endItem} = (item as Connector).getConnectedItems();
@@ -748,7 +757,7 @@ export class Items {
 
     items.forEach(item => {
       if ("index" in item && item.index) {
-        groups.push(item as any)
+        groups.push(item as BaseItem)
       } else {
         rest.push(item)
       }

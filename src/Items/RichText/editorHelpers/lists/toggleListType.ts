@@ -1,5 +1,5 @@
-import { ListType } from 'Items/RichText/Editor/BlockNode';
-import { Editor, Element, Path, Range, Transforms } from 'slate';
+import { BulletedListNode, ListItemNode, ListType, NumberedListNode } from 'Items/RichText/Editor/BlockNode';
+import { Editor, Element, Path, Range, Text, Transforms } from 'slate';
 import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
 import { wrapIntoList } from 'Items/RichText/editorHelpers/lists/wrapIntoList';
 import { toggleListTypeForSelection } from 'Items/RichText/editorHelpers/lists/toggleListTypeForSelection';
@@ -24,21 +24,21 @@ export function toggleListType(
 	Editor.withoutNormalizing(editor, () => {
 		const { anchor } = selection;
 		const [textNode, textNodePath] = Editor.node(editor, anchor.path);
-		if (!textNode || Editor.isEditor(textNode) || (textNode as any).type !== 'text' || !("text" in  textNode)) {
+		if (!textNode || !Text.isText(textNode)) {
 			result = false;
 			return;
 		}
 
 		const paragraphPath = Path.parent(textNodePath);
 		const [paragraph] = Editor.node(editor, paragraphPath);
-		if (!paragraph) {
+		if (!paragraph || !Element.isElement(paragraph)) {
 			result = false;
 			return;
 		}
 
 		const listItemPath = Path.parent(paragraphPath);
 		const [listItem] = Editor.node(editor, listItemPath);
-		if (!listItem || Editor.isEditor(listItem) || (listItem as any).type !== 'list_item') {
+		if (!listItem || !Element.isElement(listItem) || listItem.type !== 'list_item') {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -49,7 +49,7 @@ export function toggleListType(
 
 		const listPath = Path.parent(listItemPath);
 		const [list] = Editor.node(editor, listPath);
-		if (!list  || Editor.isEditor(list) || ((list as any).type !== 'ol_list' && (list as any).type !== 'ul_list')) {
+		if (!list || !Element.isElement(list) || (list.type !== 'ol_list' && list.type !== 'ul_list')) {
 			if (shouldWrap) {
 				wrapIntoList(editor, targetListType, selection);
 				return;
@@ -58,22 +58,24 @@ export function toggleListType(
 			return;
 		}
 
-		if ((list as any).type === targetListType) {
+		const typedList = list as BulletedListNode | NumberedListNode;
+
+		if (typedList.type === targetListType) {
 			// Get all children in the parent list so we can split properly
-			const listChildren = [...((list as any).children as Element[])];
+			const listChildren = typedList.children;
 
 			if (listChildren.length === 1) {
 				// If there's only one item, unwrap the entire list
 				Transforms.unwrapNodes(editor, {
 					at: listPath,
-					match: n => Element.isElement(n) && (n as any).type === 'list_item',
+					match: n => Element.isElement(n) && n.type === 'list_item',
 					split: true,
 				});
 
 				Transforms.unwrapNodes(editor, {
 					at: listPath,
 					match: n =>
-						Element.isElement(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
+						Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
 					split: true,
 				});
 			} else {
@@ -84,7 +86,7 @@ export function toggleListType(
 				if (listItemIndex > 0) {
 					Transforms.splitNodes(editor, {
 						at: [...listItemPath, 0],
-						match: n => Element.isElement(n) && (n as any).type === (list as any).type,
+						match: n => Element.isElement(n) && n.type === typedList.type,
 					});
 				}
 
@@ -93,21 +95,21 @@ export function toggleListType(
 					const nextPath = Path.next(listItemPath);
 					Transforms.splitNodes(editor, {
 						at: nextPath,
-						match: n => Element.isElement(n) && (n as any).type === (list as any).type,
+						match: n => Element.isElement(n) && n.type === typedList.type,
 					});
 				}
 
 				// Now unwrap just the list item at the selection
 				Transforms.unwrapNodes(editor, {
 					at: paragraphPath,
-					match: n => Element.isElement(n) && (n as any).type === 'list_item',
+					match: n => Element.isElement(n) && n.type === 'list_item',
 					split: true,
 				});
 
 				Transforms.unwrapNodes(editor, {
 					at: paragraphPath,
 					match: n =>
-						Element.isElement(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
+						Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
 					split: true,
 				});
 			}
@@ -116,7 +118,7 @@ export function toggleListType(
 				editor,
 				{
 					type: targetListType,
-					listLevel: (list as any).listLevel || 1,
+					listLevel: typedList.listLevel || 1,
 				},
 				{ at: listPath }
 			);

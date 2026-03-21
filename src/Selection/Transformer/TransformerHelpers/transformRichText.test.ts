@@ -46,6 +46,7 @@ describe("transformRichText", () => {
     mockRichText = {
       getId: () => "richText1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMbr: () => new Mbr(10, 10, 50, 50),
       getWidth: () => 40,
       getHeight: () => 40,
       getTextString: () => "Short text",
@@ -65,6 +66,7 @@ describe("transformRichText", () => {
     mockComment = {
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
+      getWorldMbr: () => new Mbr(60, 60, 100, 100),
       getItemToFollow: () => mockRichText.getId(),
     } as unknown as Comment;
 

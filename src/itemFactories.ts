@@ -20,7 +20,7 @@ import { Placeholder, PlaceholderData } from "Items/Placeholder";
 import { Sticker } from "Items/Sticker";
 import { StickerData } from "Items/Sticker/StickerOperation";
 import { VideoItem, VideoItemData } from "Items/Video";
-import {CommentData} from "./Items/Comment";
+import { CommentData } from "./Items/Comment";
 import { SerializedItemData } from "Items/BaseItem/BaseItem";
 
 interface ItemFactory {
@@ -57,8 +57,8 @@ function createComment(id: string, data: ItemData, board: Board): Comment {
     throw new Error("Invalid data for Comment");
   }
   const comment = new Comment(board, new Point(), board.events)
-      .setId(id)
-      .deserialize({ ...data, id } as any);
+    .setId(id)
+    .deserialize({ ...data, id });
   return comment;
 }
 
@@ -68,13 +68,13 @@ function createAINode(id: string, data: ItemData, board: Board): AINode {
   }
   const nodeData = data as AINodeData;
   const node = new AINode(
-      board,
-      nodeData.isUserRequest,
-      nodeData.parentNodeId,
-      nodeData.contextItems,
+    board,
+    nodeData.isUserRequest,
+    nodeData.parentNodeId,
+    nodeData.contextItems,
   )
-      .setId(id)
-      .deserialize({ ...data, id } as any);
+    .setId(id)
+    .deserialize({ ...data, id });
   return node;
 }
 
@@ -91,8 +91,8 @@ function createRichText(id: string, data: ItemData, board: Board): RichText {
     throw new Error("Invalid data for RichText");
   }
   const richText = new RichText(board, new Mbr(), id)
-      .setId(id)
-      .deserialize(data);
+    .setId(id)
+    .deserialize(data);
   return richText;
 }
 
@@ -109,8 +109,8 @@ function createImage(id: string, data: ItemData, board: Board): ImageItem {
     throw new Error("Invalid data for ImageItem");
   }
   const image = new ImageItem(data, board, board.events, id)
-      .setId(id)
-      .deserialize(data);
+    .setId(id)
+    .deserialize(data);
   return image;
 }
 
@@ -119,8 +119,8 @@ function createVideo(id: string, data: ItemData, board: Board): VideoItem {
     throw new Error("Invalid data for VideoItem");
   }
   const video = new VideoItem(data, board, board.events, id, data.extension)
-      .setId(id)
-      .deserialize(data);
+    .setId(id)
+    .deserialize(data);
   return video;
 }
 
@@ -129,14 +129,14 @@ function createAudio(id: string, data: ItemData, board: Board): AudioItem {
     throw new Error("Invalid data for AudioItem");
   }
   const audio = new AudioItem(
-      board,
-      data.url,
-      board.events,
-      id,
-      data.extension,
+    board,
+    data.url,
+    board.events,
+    id,
+    data.extension,
   )
-      .setId(id)
-      .deserialize(data);
+    .setId(id)
+    .deserialize(data);
   return audio;
 }
 
@@ -145,8 +145,8 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
     throw new Error("Invalid data for Drawing");
   }
   const drawing = new Drawing(board, [], board.events)
-      .setId(id)
-      .deserialize({ ...data, id } as any);
+    .setId(id)
+    .deserialize({ ...data, id } as any);
   return drawing;
 }
 
@@ -155,23 +155,23 @@ function createFrame(id: string, data: ItemData, board: Board): Frame {
     throw new Error("Invalid data for Drawing");
   }
   const frame = new Frame(board, board.items.getById.bind(board.items))
-      .setId(id)
-      .setBoard(board)
-      .deserialize(data as FrameData);
+    .setId(id)
+    .setBoard(board)
+    .deserialize(data as FrameData);
   return frame;
 }
 
 function createPlaceholder(
-    id: string,
-    data: ItemData,
-    board: Board,
+  id: string,
+  data: ItemData,
+  board: Board,
 ): Placeholder {
   if (!isPlaceholderData(data)) {
     throw new Error("Invalid data for Placeholder");
   }
   const placeholder = new Placeholder(board, board.events, data.miroData)
-      .setId(id)
-      .deserialize(data);
+    .setId(id)
+    .deserialize(data);
 
   return placeholder;
 }
@@ -182,8 +182,8 @@ function createGroup(id: string, data: ItemData, board: Board): Group {
   }
 
   const group = new Group(board, board.events, data.children, id)
-      .setId(id)
-      .deserialize({ ...data, id } as any);
+    .setId(id)
+    .deserialize({ ...data, id } as any);
   return group;
 }
 

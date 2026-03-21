@@ -450,9 +450,10 @@ export class Shape extends BaseItem {
     if (
       this.text.isEmpty() &&
       (this.backgroundOpacity === 0 ||
-        (this.backgroundColor as any) === "none" ||
-        (this.backgroundColor as any) === "transparent" ||
-        (this.backgroundColor as any) === "")
+        (this.backgroundColor.type === "fixed" &&
+          (this.backgroundColor.value === "none" ||
+            this.backgroundColor.value === "transparent" ||
+            this.backgroundColor.value === "")))
     ) {
       // If there's no text and no background (opacity 0 or color is 'none' or empty string), check only the path edges
       return this.path.isPointOverEdges(point, tolerance);
@@ -491,8 +492,8 @@ export class Shape extends BaseItem {
     if (this.transformationRenderBlock) {
       return;
     }
-    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, "background") as any);
-    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, "foreground") as any);
+    this.path.setBackgroundColor(resolveColor(this.backgroundColor, conf.theme, "background"));
+    this.path.setBorderColor(resolveColor(this.borderColor, conf.theme, "foreground"));
     this.path.render(context);
     this.text.render(context);
     if (this.getLinkTo()) {
@@ -528,8 +529,8 @@ export class Shape extends BaseItem {
       .renderHTML(documentFactory);
     const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
     paths.forEach((element) => {
-      element.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background") as any);
-      element.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground") as any);
+      element.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background"));
+      element.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground"));
       element.setAttribute(
         "stroke-dasharray",
         LinePatterns[this.borderStyle].join(", ")
@@ -548,8 +549,8 @@ export class Shape extends BaseItem {
     div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
     div.style.position = "absolute";
     div.setAttribute("data-shape-type", this.shapeType);
-    div.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background") as any);
-    div.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground") as any);
+    div.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background"));
+    div.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground"));
     div.setAttribute("data-border-style", this.borderStyle);
     div.setAttribute(
       "stroke-dasharray",
@@ -595,14 +596,15 @@ export class Shape extends BaseItem {
 
   private initPath(): void {
     this.path = Shapes[this.shapeType].createPath(this.mbr);
-    if (this.shapeType.split("_").length > 1) {
+    const isBPMN = this.shapeType.split("_").length > 1
+    if (isBPMN) {
       this.borderWidth = this.path.getBorderWidth() || this.borderWidth;
       this.borderStyle = this.path.getBorderStyle() || this.borderStyle;
       this.backgroundColor =
-        (this.path.getBackgroundColor() || this.backgroundColor) as any;
+        (this.path.getBackgroundColor() ? { type: "fixed", value: this.path.getBackgroundColor() } : this.backgroundColor);
       this.backgroundOpacity =
         this.path.getBackgroundOpacity() || this.backgroundOpacity;
-      this.borderColor = (this.path.getBorderColor() || this.borderColor) as any;
+      this.borderColor = (this.path.getBorderColor() ? { type: "fixed", value: this.path.getBorderColor() } : this.borderColor);
       this.borderOpacity = this.path.getBorderOpacity() || this.borderOpacity;
     }
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
@@ -616,17 +618,17 @@ export class Shape extends BaseItem {
     this.text.setContainer(this.textContainer.copy());
     this.textContainer.transform(this.transformation.toMatrix());
     /*
-		const previous = this.transformation.previous.copy();
-		console.log("previous", previous);
-		previous.invert();
-		console.log("inverted", previous);
-		const delta = previous.multiplyByMatrix(
-			this.transformation.toMatrix(),
-		);
-		console.log("matrix", this.transformation.getMatrixData());
-		console.log("delta", delta);
-		this.path.transform(delta);
-		*/
+    const previous = this.transformation.previous.copy();
+    console.log("previous", previous);
+    previous.invert();
+    console.log("inverted", previous);
+    const delta = previous.multiplyByMatrix(
+      this.transformation.toMatrix(),
+    );
+    console.log("matrix", this.transformation.getMatrixData());
+    console.log("delta", delta);
+    this.path.transform(delta);
+    */
     this.path.transform(this.transformation.toMatrix());
 
     this.path.setBackgroundOpacity(this.backgroundOpacity);

@@ -180,16 +180,16 @@ export class Connector extends BaseItem {
 		this.text.setClipPath();
 		this.updateTitle();
 		/*
-        const { x, y } = this.getMiddlePoint();
+		const { x, y } = this.getMiddlePoint();
 
-        this.text.transformation.apply({
-            class: "Transformation",
-            method: "translateTo",
-            item: [this.id],
-            x: x,
-            y: y,
-        });
-        */
+		this.text.transformation.apply({
+			class: "Transformation",
+			method: "translateTo",
+			item: [this.id],
+			x: x,
+			y: y,
+		});
+		*/
 	}
 
 	observerStartPointItem = (): void => {

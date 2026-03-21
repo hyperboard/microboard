@@ -1,12 +1,12 @@
 import { Board } from "Board";
 import { CanvasDrawer } from "drawMbrOnCanvas";
-import {Item, Mbr, Line, Frame, Point} from "Items";
+import { Item, Mbr, Line, Frame, Point } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { SpatialIndex } from "SpatialIndex";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
-import {ApplyMatrixItem} from "../../Items/Transformation/TransformationOperations";
-import {BaseItem} from "../../Items/BaseItem";
+import { ApplyMatrixItem } from "../../Items/Transformation/TransformationOperations";
+import { BaseItem } from "../../Items/BaseItem";
 
 export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";
 
@@ -42,7 +42,7 @@ export class AlignmentHelper {
 
   combineMBRs(items: Item[]): Mbr {
     const worldMbr = (item: Item): Mbr =>
-      item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
+      item.getWorldMbr();
     return items.reduce((acc, item, i) => {
       if (i === 0) {
         return acc;
@@ -64,8 +64,8 @@ export class AlignmentHelper {
     const movingMBR = this.canvasDrawer.getLastCreatedCanvas()
       ? this.canvasDrawer.getMbr()
       : Array.isArray(movingItem)
-      ? this.combineMBRs(movingItem)
-      : ("getPath" in movingItem ? (movingItem as any).getPath().getMbr() : (movingItem as BaseItem).getMbr());
+        ? this.combineMBRs(movingItem)
+        : ("getPath" in movingItem ? (movingItem).getPath().getMbr() : (movingItem as BaseItem).getMbr());
     const camera = this.board.camera.getMbr();
     const cameraWidth = camera.getWidth();
     const scale = this.board.camera.getScale();
@@ -75,26 +75,26 @@ export class AlignmentHelper {
 
     const nearbyItems = this.canvasDrawer.getLastCreatedCanvas()
       ? this.spatialIndex.getNearestTo(
+        movingMBR.getCenter(),
+        20,
+        (item) => !excludeItems.includes(item),
+        Math.ceil(cameraWidth)
+      )
+      : this.spatialIndex
+        .getNearestTo(
           movingMBR.getCenter(),
           20,
-          (item) => !excludeItems.includes(item),
+          (otherItem: Item) =>
+            otherItem !== (movingMBR as unknown as Item) &&
+            otherItem.itemType !== "Connector" &&
+            otherItem.itemType !== "Drawing" &&
+            otherItem.isInView(camera) &&
+            !(childrenIds as string[]).includes(otherItem.getId()),
           Math.ceil(cameraWidth)
         )
-      : this.spatialIndex
-          .getNearestTo(
-            movingMBR.getCenter(),
-            20,
-            (otherItem: Item) =>
-            otherItem !== (movingMBR as unknown as Item) &&
-              otherItem.itemType !== "Connector" &&
-              otherItem.itemType !== "Drawing" &&
-              otherItem.isInView(camera) &&
-              !(childrenIds as string[]).includes(otherItem.getId()),
-            Math.ceil(cameraWidth)
-          )
-          .filter((item) =>
-            Array.isArray(movingItem) ? !movingItem.includes(item) : true
-          );
+        .filter((item) =>
+          Array.isArray(movingItem) ? !movingItem.includes(item) : true
+        );
     // .filter(item => !excludeItems.includes(item));
 
     const verticalAlignments: Map<number, { minY: number; maxY: number }> =
@@ -126,7 +126,7 @@ export class AlignmentHelper {
       if (item === movingItem || item.itemType === "Comment" || (item instanceof BaseItem && !item.shouldUseRelativeAlignment)) {
         return;
       }
-      const itemMbr = item instanceof BaseItem ? item.getPathMbr() : (item as any).getMbr();
+      const itemMbr = item.getPathMbr();
 
       const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
       const centerXItem = (itemMbr.left + itemMbr.right) / 2;
@@ -338,20 +338,20 @@ export class AlignmentHelper {
         check: number;
         translation: number;
       }[] = [
-        {
-          check: alignment.itemOffset - alignment.offset,
-          translation: alignment.offset - alignment.itemOffset,
-        },
-        {
-          check: alignment.itemOffset + alignment.itemSize - alignment.offset,
-          translation:
-            alignment.offset - (alignment.itemOffset + alignment.itemSize),
-        },
-        {
-          check: alignment.itemCenter - alignment.offset,
-          translation: alignment.offset - alignment.itemCenter,
-        },
-      ];
+          {
+            check: alignment.itemOffset - alignment.offset,
+            translation: alignment.offset - alignment.itemOffset,
+          },
+          {
+            check: alignment.itemOffset + alignment.itemSize - alignment.offset,
+            translation:
+              alignment.offset - (alignment.itemOffset + alignment.itemSize),
+          },
+          {
+            check: alignment.itemCenter - alignment.offset,
+            translation: alignment.offset - alignment.itemCenter,
+          },
+        ];
 
       for (const { check, translation } of snapConditions) {
         if (Math.abs(check) < dynamicSnapThreshold) {
@@ -384,7 +384,7 @@ export class AlignmentHelper {
       if (
         this.snapMemory[axis] !== null &&
         Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) >
-          dynamicSnapThreshold
+        dynamicSnapThreshold
       ) {
         this.snapMemory[axis] = null;
       }
@@ -428,20 +428,20 @@ export class AlignmentHelper {
         check: number;
         translation: number;
       }[] = [
-        {
-          check: alignment.itemOffset - alignment.offset,
-          translation: alignment.offset - alignment.itemOffset,
-        },
-        {
-          check: alignment.itemOffset + alignment.itemSize - alignment.offset,
-          translation:
-            alignment.offset - (alignment.itemOffset + alignment.itemSize),
-        },
-        {
-          check: alignment.itemCenter - alignment.offset,
-          translation: alignment.offset - alignment.itemCenter,
-        },
-      ];
+          {
+            check: alignment.itemOffset - alignment.offset,
+            translation: alignment.offset - alignment.itemOffset,
+          },
+          {
+            check: alignment.itemOffset + alignment.itemSize - alignment.offset,
+            translation:
+              alignment.offset - (alignment.itemOffset + alignment.itemSize),
+          },
+          {
+            check: alignment.itemCenter - alignment.offset,
+            translation: alignment.offset - alignment.itemCenter,
+          },
+        ];
 
       for (const { check, translation } of snapConditions) {
         if (Math.abs(check) < dynamicSnapThreshold) {
@@ -474,7 +474,7 @@ export class AlignmentHelper {
       if (
         this.snapMemory[axis] !== null &&
         Math.abs(cursorPosition[axis] - this.snapMemory[axis]!) >
-          dynamicSnapThreshold
+        dynamicSnapThreshold
       ) {
         this.snapMemory[axis] = null;
       }

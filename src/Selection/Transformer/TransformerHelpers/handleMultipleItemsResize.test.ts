@@ -46,6 +46,7 @@ describe("handleMultipleItemsResize", () => {
     mockRichText = Object.assign(Object.create(RichText.prototype), {
       getId: () => "richText1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMbr: () => new Mbr(10, 10, 50, 50),
       getWidth: () => 40,
       transformation: {
         getScale: () => ({ x: 1, y: 1 }),
@@ -58,6 +59,7 @@ describe("handleMultipleItemsResize", () => {
     mockAINode = Object.assign(Object.create(AINode.prototype), {
       getId: () => "aiNode1",
       getMbr: () => new Mbr(20, 20, 60, 60),
+      getWorldMbr: () => new Mbr(20, 20, 60, 60),
       text: {
         getWidth: () => 40,
         editor: {
@@ -72,12 +74,14 @@ describe("handleMultipleItemsResize", () => {
     mockSticker = Object.assign(Object.create(Sticker.prototype), {
       getId: () => "sticker1",
       getMbr: () => new Mbr(30, 30, 70, 70),
+      getWorldMbr: () => new Mbr(30, 30, 70, 70),
       itemType: "Sticker",
     }) as unknown as Sticker;
 
     mockFrame = {
       getId: () => "frame1",
       getMbr: () => new Mbr(40, 40, 80, 80),
+      getWorldMbr: () => new Mbr(40, 40, 80, 80),
       itemType: "Frame",
       getCanChangeRatio: () => true,
       getFrameType: () => "Default",
@@ -193,6 +197,8 @@ describe("handleMultipleItemsResize", () => {
       getId: () => "drawing1",
       itemType: "Drawing",
       getMbr: () => new Mbr(50, 50, 90, 90),
+      getWorldMbr: () => new Mbr(50, 50, 90, 90),
+      getWorldMatrix: () => ({ translateX: 50, translateY: 50 }),
       transformation: {
         getMatrixData: () => ({ translateX: 50, translateY: 50 }),
       },
@@ -218,6 +224,7 @@ describe("handleMultipleItemsResize", () => {
     const mockComment = {
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
+      getWorldMbr: () => new Mbr(60, 60, 100, 100),
       getItemToFollow: () => mockRichText.getId(),
     } as unknown as Item;
 

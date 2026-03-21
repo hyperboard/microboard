@@ -9,6 +9,7 @@ export type {
   ItemOperation,
   EventsOperation,
   Operation,
+  BaseOperation,
 } from "./EventsOperations";
 export {
   isTransformation,

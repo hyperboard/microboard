@@ -1,6 +1,6 @@
-import {Events, Operation} from "Events";
+import { Events, Operation } from "Events";
 import { DrawingContext } from "../DrawingContext";
-import { Shapes } from "../Shape/index";
+import { Shapes, ShapeType } from "../Shape/index";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Subject } from "Subject";
 import { GeometricNormal } from "../GeometricNormal";
@@ -12,13 +12,13 @@ import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
 import { Matrix } from "../Transformation/Matrix";
 import type { TransformationData } from "../Transformation/TransformationData";
-import {PlaceholderOperation} from "./PlaceholderOperation";
-import {PlaceholderCommand} from "./PlaceholderCommand";
-import {getResize} from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix";
+import { PlaceholderOperation } from "./PlaceholderOperation";
+import { PlaceholderCommand } from "./PlaceholderCommand";
+import { getResize } from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
-import {Board} from "../../Board";
-import {DocumentFactory} from "../../api/DocumentFactory";
+import { Board } from "../../Board";
+import { DocumentFactory } from "../../api/DocumentFactory";
 
 const PlaceholderImg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M5 11.1L7 9.1L12.5 14.6L16 11.1L19 14.1V5H5V11.1ZM4 3H20C20.2652 3 20.5196 3.10536 20.7071 3.29289C20.8946 3.48043 21 3.73478 21 4V20C21 20.2652 20.8946 20.5196 20.7071 20.7071C20.5196 20.8946 20.2652 21 20 21H4C3.73478 21 3.48043 20.8946 3.29289 20.7071C3.10536 20.5196 3 20.2652 3 20V4C3 3.73478 3.10536 3.48043 3.29289 3.29289C3.48043 3.10536 3.73478 3 4 3ZM15.5 10C15.1022 10 14.7206 9.84196 14.4393 9.56066C14.158 9.27936 14 8.89782 14 8.5C14 8.10218 14.158 7.72064 14.4393 7.43934C14.7206 7.15804 15.1022 7 15.5 7C15.8978 7 16.2794 7.15804 16.5607 7.43934C16.842 7.72064 17 8.10218 17 8.5C17 8.89782 16.842 9.27936 16.5607 9.56066C16.2794 9.84196 15.8978 10 15.5 10Z" fill="white" fill-opacity="0.6"/>
@@ -35,11 +35,11 @@ export interface PlaceholderData {
 
 export class Placeholder extends BaseItem {
     readonly itemType = "Placeholder";
-    shapeType = "Rectangle";
+    shapeType: ShapeType = "Rectangle";
     parent = "Board";
     readonly transformation: Transformation;
-    private path = (Shapes as any)[this.shapeType].path.copy();
-    private mbr = (Shapes as any)[this.shapeType].path.getMbr().copy();
+    private path = Shapes[this.shapeType].path.copy() as Path;
+    private mbr = Shapes[this.shapeType].path.getMbr().copy();
     readonly subject = new Subject<Placeholder>();
     transformationRenderBlock?: boolean = undefined;
     iconImage?: HTMLImageElement;
@@ -257,7 +257,7 @@ export class Placeholder extends BaseItem {
     }
 
     getSnapAnchorPoints(): Point[] {
-        const anchorPoints = (Shapes as any)[this.shapeType].anchorPoints;
+        const anchorPoints = Shapes[this.shapeType].anchorPoints;
         const points: Point[] = [];
         for (const anchorPoint of anchorPoints) {
             points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
@@ -291,18 +291,18 @@ export class Placeholder extends BaseItem {
     }
 
     private transformPath(): void {
-        this.path = (Shapes as any)[this.shapeType].createPath(this.mbr);
+        this.path = Shapes[this.shapeType].createPath(this.mbr) as Path;
         this.path.transform(this.transformation.toMatrix());
         this.path.setBackgroundColor(this.backgroundColor);
         this.path.setBorderColor("transparent");
     }
 
     private initPath(): void {
-        this.path = (Shapes as any)[this.shapeType].createPath(this.mbr);
+        this.path = Shapes[this.shapeType].createPath(this.mbr) as Path;
     }
 
     private loadIconImage(): void {
-        const blob = new Blob([PlaceholderImg], {type: "image/svg+xml"});
+        const blob = new Blob([PlaceholderImg], { type: "image/svg+xml" });
         const url = URL.createObjectURL(blob);
 
         this.iconImage = new Image();

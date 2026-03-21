@@ -46,6 +46,7 @@ describe("transformAINode", () => {
     mockAINode = {
       getId: () => "aiNode1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMbr: () => new Mbr(10, 10, 50, 50),
       text: {
         getWidth: () => 40,
         getScale: () => 1,
@@ -63,6 +64,7 @@ describe("transformAINode", () => {
     mockComment = {
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
+      getWorldMbr: () => new Mbr(60, 60, 100, 100),
       getItemToFollow: () => mockAINode.getId(),
     } as unknown as Comment;
 

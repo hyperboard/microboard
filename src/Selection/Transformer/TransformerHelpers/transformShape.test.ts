@@ -54,6 +54,7 @@ describe("transformShape", () => {
       itemType: "Sticker",
       getId: () => "sticker1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMbr: () => new Mbr(10, 10, 50, 50),
       doResize: jest.fn().mockReturnValue({ mbr: new Mbr(10, 10, 60, 60) }),
     } as unknown as Sticker;
 
@@ -62,6 +63,7 @@ describe("transformShape", () => {
       itemType: "Shape",
       getId: () => "shape1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMbr: () => new Mbr(10, 10, 50, 50),
       doResize: jest.fn().mockReturnValue({ mbr: new Mbr(10, 10, 60, 60) }),
     } as unknown as Shape;
 
@@ -70,6 +72,7 @@ describe("transformShape", () => {
       itemType: "Frame",
       getId: () => "frame1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMbr: () => new Mbr(10, 10, 50, 50),
       doResize: jest.fn().mockReturnValue({ mbr: new Mbr(10, 10, 60, 60) }),
     } as unknown as Frame;
 
@@ -77,6 +80,7 @@ describe("transformShape", () => {
     mockComment = {
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
+      getWorldMbr: () => new Mbr(60, 60, 100, 100),
       getItemToFollow: () => mockShape.getId(),
     } as unknown as Comment;
 

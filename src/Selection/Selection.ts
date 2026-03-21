@@ -1,6 +1,6 @@
 import { safeRequestAnimationFrame } from "api/safeRequestAnimationFrame";
 import { Board } from "Board";
-import { Events, Operation, Command } from "Events";
+import { Events, Operation, Command, BaseOperation } from "Events";
 import { createCommand } from "Events/CreateCommand";
 import { BoardPoint } from "Items/Connector/ControlPoint";
 import type { Connector } from "Items/Connector/Connector";
@@ -580,7 +580,7 @@ export class BoardSelection {
         .getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
         .filter(
           (item) =>
-            (item.itemType !== "Frame" || enclosedFrames.includes(item as any)) &&
+            (item.itemType !== "Frame" || enclosedFrames.includes(item)) &&
             !item.transformation.isLocked
         )
     );
@@ -630,7 +630,7 @@ export class BoardSelection {
         endPoint.pointType !== "Board" ? endPoint.item.getId() : null;
       const single = this.items.getSingle();
       const frameChild =
-        single && "index" in single ? (single as any).getChildrenIds() : null;
+        single && "index" in single && single.index ? (single as BaseItem).getChildrenIds() : null;
 
       const hasStartItem =
         startItemId &&
@@ -667,12 +667,12 @@ export class BoardSelection {
 
     if (isChangeCopiedFrameText) {
       const frameData = serializedData as FrameData;
-      const textItemData = frameData.text as Record<string, unknown>;
+      const textItemData = frameData.text;
       const copiedFrameText =
         copyText + (textItem || (textItemData?.placeholderText as string | undefined) || "");
       item.getRichText()?.editor.clearText();
       item.getRichText()?.editor.addText(copiedFrameText);
-      serializedData.text = item.getRichText()?.serialize() as any;
+      frameData.text = item.getRichText()?.serialize();
       item.getRichText()?.editor.clearText();
       item.getRichText()?.editor.addText(textItem || "");
     }
@@ -684,9 +684,9 @@ export class BoardSelection {
   copy(skipImageBlobCopy?: boolean):
     | { [key: string]: ItemData }
     | {
-        imageElement: HTMLImageElement;
-        imageData: { [key: string]: ItemData };
-      } {
+      imageElement: HTMLImageElement;
+      imageData: { [key: string]: ItemData };
+    } {
     const copiedItemsMap: { [key: string]: ItemData } = {};
     const single = this.items.getSingle();
     if (!skipImageBlobCopy && single?.itemType === "Image") {
@@ -983,9 +983,9 @@ export class BoardSelection {
     }
     const selectedMbr = selected.reduce((acc: Mbr | undefined, item) => {
       if (!acc) {
-        return 'itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr();
+        return (item as BaseItem).getWorldMbr();
       }
-      return acc.combine('itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr());
+      return acc.combine((item as BaseItem).getWorldMbr());
     }, undefined);
 
     if (selectedMbr) {
@@ -1033,76 +1033,38 @@ export class BoardSelection {
         if (checkFrames) {
           const childrenIds = val.item.getChildrenIds();
           if (childrenIds) {
-          const currGroup = val.item;
-          const currMbr = currGroup.getWorldMbr();
-          const children = childrenIds
-            .map((childId) => this.board.items.getById(childId))
-            .filter((item) => !!item);
-          const underGroup = this.board.items
-            .getEnclosedOrCrossed(
-              currMbr.left,
-              currMbr.top,
-              currMbr.right,
-              currMbr.bottom
-            )
-            .filter(
-              (item) =>
-                item.parent === "Board" || item.parent === currGroup.getId()
-            );
-          const uniqueItems = new Set();
-          const toCheck = [...children, ...underGroup].filter((item) => {
-            const id = item.getId();
-            if (uniqueItems.has(id)) {
-              return false;
-            }
-            uniqueItems.add(id);
-            return true;
-          });
-          // toCheck.forEach(child => currFrame.emitNesting(child));
-          currGroup.emitNesting(toCheck);
+            const currGroup = val.item;
+            const currMbr = currGroup.getWorldMbr();
+            const children = childrenIds
+              .map((childId) => this.board.items.getById(childId))
+              .filter((item) => !!item);
+            const underGroup = this.board.items
+              .getEnclosedOrCrossed(
+                currMbr.left,
+                currMbr.top,
+                currMbr.right,
+                currMbr.bottom
+              )
+              .filter(
+                (item) =>
+                  item.parent === "Board" || item.parent === currGroup.getId()
+              );
+            const uniqueItems = new Set();
+            const toCheck = [...children, ...underGroup].filter((item) => {
+              const id = item.getId();
+              if (uniqueItems.has(id)) {
+                return false;
+              }
+              uniqueItems.add(id);
+              return true;
+            });
+            // toCheck.forEach(child => currFrame.emitNesting(child));
+            currGroup.emitNesting(toCheck);
           }
         }
       });
     }
   }
-
-  // translateBy(x: number, y: number, timeStamp?: number): void {
-  // 	this.emit({
-  // 		class: "Transformation",
-  // 		method: "translateBy",
-  // 		item: this.items.ids(),
-  // 		x,
-  // 		y,
-  // 		timeStamp,
-  // 	});
-  // 	this.off();
-  // }
-  //
-  // scaleBy(x: number, y: number, timeStamp?: number): void {
-  // 	this.emit({
-  // 		class: "Transformation",
-  // 		method: "scaleBy",
-  // 		item: this.items.ids(),
-  // 		x,
-  // 		y,
-  // 		timeStamp,
-  // 	});
-  // }
-  //
-  // scaleByTranslateBy(
-  // 	scale: { x: number; y: number },
-  // 	translate: { x: number; y: number },
-  // 	timeStamp?: number,
-  // ): void {
-  // 	this.emit({
-  // 		class: "Transformation",
-  // 		method: "scaleByTranslateBy",
-  // 		item: this.items.ids(),
-  // 		scale,
-  // 		translate,
-  // 		timeStamp,
-  // 	});
-  // }
 
   /** Emits applyMatrix with multiple items */
   transformMany(items: ApplyMatrixItem[], timeStamp?: number): void {
@@ -1202,13 +1164,13 @@ export class BoardSelection {
       class: "Shape",
       method: "setBorderColor",
       item: [] as string[],
-      newData: {borderColor}
+      newData: { borderColor }
     };
-    const operations: {[itemType: string]: typeof operation} = {};
+    const operations: { [itemType: string]: BaseOperation<any> } = {};
 
     this.items.list().forEach((item) => {
       if (!operations[item.itemType]) {
-        const operationCopy = {...operation}
+        const operationCopy = { ...operation }
         if (item.itemType === "Connector") {
           operationCopy.method = "setLineColor"
           operationCopy.lineColor = borderColor;
@@ -1218,7 +1180,7 @@ export class BoardSelection {
         } else {
           operationCopy.borderColor = borderColor;
         }
-        operations[item.itemType] = {...operationCopy, class: item.itemType, item: [item.getId()]};
+        operations[item.itemType] = { ...operationCopy, class: item.itemType, item: [item.getId()] } as BaseOperation<any>;
       } else {
         operations[item.itemType].item.push(item.getId());
       }
@@ -1227,34 +1189,6 @@ export class BoardSelection {
     Object.values(operations).forEach((op) => {
       this.emit(op as any);
     })
-
-    // const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    // if (shapes.length > 0) {
-    //   this.emit({
-    //     class: "Shape",
-    //     method: "setBorderColor",
-    //     item: shapes,
-    //     borderColor,
-    //   });
-    // }
-    // const connectors = this.items.getIdsByItemTypes(["Connector"]);
-    // if (connectors.length > 0) {
-    //   this.emit({
-    //     class: "Connector",
-    //     method: "setLineColor",
-    //     item: connectors,
-    //     lineColor: borderColor,
-    //   });
-    // }
-    // const drawings = this.items.getIdsByItemTypes(["Drawing"]);
-    // if (drawings.length > 0) {
-    //   this.emit({
-    //     class: "Drawing",
-    //     method: "setStrokeColor",
-    //     item: drawings,
-    //     color: borderColor,
-    //   });
-    // }
   }
 
   setStrokeWidth(width: number): void {
@@ -1263,13 +1197,13 @@ export class BoardSelection {
       class: "Shape",
       method: "setBorderWidth",
       item: [] as string[],
-      newData: {borderWidth: width}
+      newData: { borderWidth: width }
     };
-    const operations: {[itemType: string]: typeof operation} = {};
+    const operations: { [itemType: string]: BaseOperation<any> } = {};
 
     this.items.list().forEach((item) => {
       if (!operations[item.itemType]) {
-        const operationCopy = {...operation}
+        const operationCopy = { ...operation }
         if (item.itemType === "Connector") {
           operationCopy.method = "setLineWidth";
           operationCopy.lineWidth = width;
@@ -1281,7 +1215,7 @@ export class BoardSelection {
           operationCopy.borderWidth = width;
           operationCopy.prevBorderWidth = this.getStrokeWidth();
         }
-        operations[item.itemType] = {...operationCopy, class: item.itemType, item: [item.getId()]};
+        operations[item.itemType] = { ...operationCopy, class: item.itemType, item: [item.getId()] } as BaseOperation<any>;
       } else {
         operations[item.itemType].item.push(item.getId());
       }
@@ -1291,35 +1225,7 @@ export class BoardSelection {
       this.emit(op as any);
     })
 
-    // const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    // if (shapes.length > 0) {
-    //   this.emit({
-    //     class: "Shape",
-    //     method: "setBorderWidth",
-    //     item: shapes,
-    //     borderWidth: width,
-    //     prevBorderWidth: this.getStrokeWidth(),
-    //   });
-    // }
-    // const connectors = this.items.getIdsByItemTypes(["Connector"]);
-    // if (connectors.length > 0) {
-    //   this.emit({
-    //     class: "Connector",
-    //     method: "setLineWidth",
-    //     item: connectors,
-    //     lineWidth: width as ConnectionLineWidth,
-    //   });
-    // }
-    // const drawings = this.items.getIdsByItemTypes(["Drawing"]);
-    // if (drawings.length > 0) {
-    //   this.emit({
-    //     class: "Drawing",
-    //     method: "setStrokeWidth",
-    //     item: drawings,
-    //     width: width,
-    //     prevWidth: this.getStrokeWidth(),
-    //   });
-    // }
+
   }
 
   setFillColor(backgroundColor: string): void {
@@ -1329,13 +1235,13 @@ export class BoardSelection {
       method: "setBackgroundColor",
       item: [] as string[],
       backgroundColor,
-      newData: {backgroundColor}
+      newData: { backgroundColor }
     };
-    const operations: {[itemType: string]: typeof operation} = {};
+    const operations: { [itemType: string]: BaseOperation<any> } = {};
 
     this.items.list().forEach((item) => {
       if (!operations[item.itemType]) {
-        operations[item.itemType] = {...operation, class: item.itemType, item: [item.getId()]};
+        operations[item.itemType] = { ...operation, class: item.itemType, item: [item.getId()] } as BaseOperation<any>;
       } else {
         operations[item.itemType].item.push(item.getId());
       }
@@ -1344,33 +1250,7 @@ export class BoardSelection {
     Object.values(operations).forEach((op) => {
       this.emit(op as any);
     })
-    // const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    // if (shapes.length) {
-    //   this.emit({
-    //     class: "Shape",
-    //     method: "setBackgroundColor",
-    //     item: shapes,
-    //     backgroundColor,
-    //   });
-    // }
-    // const stickers = this.items.getIdsByItemTypes(["Sticker"]);
-    // if (stickers.length) {
-    //   this.emit({
-    //     class: "Sticker",
-    //     method: "setBackgroundColor",
-    //     item: stickers,
-    //     backgroundColor,
-    //   });
-    // }
-    // const frames = this.items.getIdsByItemTypes(["Frame"]);
-    // if (frames.length) {
-    //   this.emit({
-    //     class: "Frame",
-    //     method: "setBackgroundColor",
-    //     item: frames,
-    //     backgroundColor,
-    //   });
-    // }
+
   }
 
   setCanChangeRatio(canChangeRatio: boolean): void {
@@ -1391,17 +1271,6 @@ export class BoardSelection {
   }
 
   setFrameType(frameType: FrameType): void {
-    // const frames = this.items.getIdsByItemTypes(["Frame"]);
-    // if (frames.length) {
-    // this.emit({
-    // 	class: "Frame",
-    // 	method: "setFrameType",
-    //   item: frames,
-    //   shapeType: frameType,
-    //   prevShapeType: this.getFrameType(),
-    // });
-    // }
-
     const items = this.items.list();
     items.forEach((item) => {
       if (item.itemType === "Frame") {
@@ -1649,31 +1518,6 @@ export class BoardSelection {
       })
       .map((connector) => connector.getId());
 
-    // connectors.forEach(connector => {
-    // 	const startPoint = connector.getStartPoint();
-    // 	const endPoint = connector.getEndPoint();
-    //
-    // 	if (
-    // 		(startPoint.pointType === "Fixed" ||
-    // 			startPoint.pointType === "FixedConnector") &&
-    // 		itemIds.includes(startPoint.item.getId() || "")
-    // 	) {
-    // 		const { x, y } = startPoint;
-    // 		const pointData = new BoardPoint(x, y);
-    // 		connector.applyStartPoint(pointData);
-    // 	}
-    //
-    // 	if (
-    // 		(endPoint.pointType === "Fixed" ||
-    // 			endPoint.pointType === "FixedConnector") &&
-    // 		itemIds.includes(endPoint.item.getId() || "")
-    // 	) {
-    // 		const { x, y } = endPoint;
-    // 		const pointData = new BoardPoint(x, y);
-    // 		connector.applyEndPoint(pointData);
-    // 	}
-    // });
-
     this.emit({
       class: "Board",
       method: "remove",
@@ -1793,7 +1637,7 @@ export class BoardSelection {
     item: Item,
     customScale?: number
   ): void {
-    const mbr = 'itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr();
+    const mbr = (item as BaseItem).getWorldMbr();
     mbr.strokeWidth = !customScale
       ? 1 / context.matrix.scaleX
       : 1 / customScale;
@@ -1868,7 +1712,7 @@ export class BoardSelection {
         path.setBackgroundColor("none");
         path.render(context);
       } else {
-        const itemRect = 'itemType' in item ? (item as BaseItem).getWorldMbr() : (item as any).getMbr();
+        const itemRect = (item as BaseItem).getWorldMbr();
         itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
         itemRect.strokeWidth = 2;
         itemRect.render(context);

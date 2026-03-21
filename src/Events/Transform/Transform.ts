@@ -84,8 +84,7 @@ function isTransformableOp(op: SlateOp): op is SlateOpsToTransform {
 }
 type TransformFunction<T extends SlateOpsToTransform, U extends SlateOpsToTransform> = (
 	confirmed: T,
-	toTransform: U,
-	editor: any
+	toTransform: U
 ) => U | undefined;
 
 type OperationTransformMap = {
@@ -95,7 +94,7 @@ type OperationTransformMap = {
 					Extract<SlateOpsToTransform, { type: K }>,
 					Extract<SlateOpsToTransform, { type: L }>
 			  >
-			| (() => void); // TODO remove () => void when finished
+			| (() => void);
 	};
 };
 
@@ -182,10 +181,39 @@ const operationTransformMap: OperationTransformMap = {
 	},
 };
 
+function applySlateOpTransform(confOp: SlateOp, transfOp: SlateOp): SlateOp {
+	if (!isTransformableOp(confOp) || !isTransformableOp(transfOp)) {
+		return transfOp;
+	}
+
+	const transformFunction = operationTransformMap[confOp.type][transfOp.type];
+	if (typeof transformFunction === 'function' && transformFunction.length > 0) {
+		const transformed = (
+			transformFunction as (
+				conf: SlateOpsToTransform,
+				transf: SlateOpsToTransform
+			) => SlateOpsToTransform | undefined
+		)(confOp, transfOp);
+		if (transformed) {
+			return transformed;
+		}
+	}
+	return transfOp;
+}
+
+function transformSlateOps(confirmedOps: SlateOp[], toTransformOps: SlateOp[]): SlateOp[] {
+	return toTransformOps.map(transfOp => {
+		let actualyTransformed = { ...transfOp };
+		for (const confOp of confirmedOps) {
+			actualyTransformed = applySlateOpTransform(confOp, actualyTransformed);
+		}
+		return actualyTransformed;
+	});
+}
+
 export function transformRichTextOperation(
 	confirmed: RichTextOperation,
 	toTransform: RichTextOperation
-	// board: Board,
 ): RichTextOperation | undefined {
 	// groupEdit - groupEdit
 	if (confirmed.method === 'groupEdit' && toTransform.method === 'groupEdit') {
@@ -193,51 +221,14 @@ export function transformRichTextOperation(
 			const confirmedItemOp = confirmed.itemsOps.find(
 				confItemOp => confItemOp.item === toTransformItemOp.item
 			);
-			// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
 
-			// if (!confirmedItemOp || !rt) {
 			if (!confirmedItemOp) {
 				return toTransformItemOp;
 			}
 
-			// const editor = rt.editor.editor;
-			const transformedOps: SlateOp[] = [];
-
-			for (const transfOp of toTransformItemOp.ops) {
-				let actualyTransformed = { ...transfOp };
-
-				for (const confOp of confirmedItemOp.ops) {
-					const confType = confOp.type;
-					const transfType = actualyTransformed.type;
-
-					if (
-						isTransformableOp(confOp) &&
-						isTransformableOp(actualyTransformed)
-					) {
-						if (
-							confOp.type in operationTransformMap &&
-							actualyTransformed.type in operationTransformMap[confOp.type]
-						) {
-							const transformFunction = (
-								operationTransformMap[confOp.type] as any
-							)[actualyTransformed.type];
-							const transformed =
-								typeof transformFunction === 'function' &&
-								transformFunction(confOp as any, actualyTransformed as any);
-
-							if (transformed) {
-								actualyTransformed = transformed;
-							}
-						}
-					}
-				}
-
-				transformedOps.push(actualyTransformed);
-			}
-
 			return {
 				...toTransformItemOp,
-				ops: transformedOps,
+				ops: transformSlateOps(confirmedItemOp.ops, toTransformItemOp.ops),
 			};
 		});
 
@@ -253,142 +244,34 @@ export function transformRichTextOperation(
 		toTransform.method === 'edit' &&
 		toTransform.item[0] === confirmed.item[0]
 	) {
-		// const rt = board.items.getById(toTransform.item[0])?.getRichText();
-		// if (!rt) {
-		// 	return undefined;
-		// }
-		const transformedOps: SlateOp[] = [];
-
-		for (const transfOp of toTransform.ops) {
-			let actualyTransformed = { ...transfOp };
-
-			for (const confOp of confirmed.ops) {
-				const confType = confOp.type;
-				const transfType = actualyTransformed.type;
-
-				if (
-					isTransformableOp(confOp) &&
-					isTransformableOp(actualyTransformed)
-				) {
-					if (
-						confOp.type in operationTransformMap &&
-						actualyTransformed.type in operationTransformMap[confOp.type]
-					) {
-						const transformFunction = (
-							operationTransformMap[confOp.type] as any
-						)[actualyTransformed.type];
-						const transformed =
-							typeof transformFunction === 'function' &&
-							transformFunction(confOp as any, actualyTransformed as any);
-
-						if (transformed) {
-							actualyTransformed = transformed;
-						}
-					}
-				}
-			}
-
-			transformedOps.push(actualyTransformed);
-		}
-
 		return {
 			...toTransform,
-			ops: transformedOps,
+			ops: transformSlateOps(confirmed.ops, toTransform.ops),
 		};
 	}
 
 	// groupEdit - edit
 	if (confirmed.method === 'groupEdit' && toTransform.method === 'edit') {
-		const transformedOps: SlateOp[] = [];
-
-		for (const confItemOp of confirmed.itemsOps) {
-			// const rt = board.items.getById(toTransform.item[0])?.getRichText();
-			// if (confItemOp.item === toTransform.item[0] && rt) {
-			if (confItemOp.item === toTransform.item[0]) {
-				for (const transfOp of toTransform.ops) {
-					let actualyTransformed = { ...transfOp };
-
-					for (const confOp of confItemOp.ops) {
-						const confType = confOp.type;
-						const transfType = actualyTransformed.type;
-
-						if (
-							confType in operationTransformMap &&
-							transfType in operationTransformMap[confType as SlateOpTypesToTransform]
-						) {
-							const transformFunction = (
-								operationTransformMap[confType as SlateOpTypesToTransform] as any
-							)[transfType];
-							const transformed =
-								typeof transformFunction === 'function' &&
-								transformFunction(confOp as any, actualyTransformed as any);
-
-							if (transformed) {
-								actualyTransformed = transformed;
-							}
-						}
-					}
-
-					transformedOps.push(actualyTransformed);
-				}
-			} else {
-				transformedOps.push(...toTransform.ops);
-			}
+		const confItemOp = confirmed.itemsOps.find(op => op.item === toTransform.item[0]);
+		if (confItemOp) {
+			return {
+				...toTransform,
+				ops: transformSlateOps(confItemOp.ops, toTransform.ops),
+			};
 		}
-
-		return {
-			...toTransform,
-			ops: transformedOps,
-		};
+		return toTransform;
 	}
 
 	// edit - groupEdit
 	if (confirmed.method === 'edit' && toTransform.method === 'groupEdit') {
 		const transformedItemsOps = toTransform.itemsOps.map(toTransformItemOp => {
-			const transformedOps: SlateOp[] = [];
-
-			// const rt = board.items.getById(toTransformItemOp.item)?.getRichText();
-			// if (confirmed.item[0] === toTransformItemOp.item && rt ) {
 			if (confirmed.item[0] === toTransformItemOp.item) {
-				for (const transfOp of toTransformItemOp.ops) {
-					let actualyTransformed = { ...transfOp };
-
-					for (const confOp of confirmed.ops) {
-						const confType = confOp.type;
-						const transfType = actualyTransformed.type;
-
-						if (
-							(confType === 'insert_text' || confType === 'remove_text' || confType === 'insert_node' || confType === 'remove_node' || confType === 'split_node' || confType === 'merge_node' || confType === 'move_node' || confType === 'set_node') &&
-							(transfType === 'insert_text' || transfType === 'remove_text' || transfType === 'insert_node' || transfType === 'remove_node' || transfType === 'split_node' || transfType === 'merge_node' || transfType === 'move_node' || transfType === 'set_node')
-						) {
-							if (
-								confType in operationTransformMap &&
-								transfType in operationTransformMap[confType as SlateOpTypesToTransform]
-							) {
-								const transformFunction = (
-									operationTransformMap[confType as SlateOpTypesToTransform] as any
-								)[transfType];
-								const transformed =
-									typeof transformFunction === 'function' &&
-									transformFunction(confOp as any, actualyTransformed as any);
-
-								if (transformed) {
-									actualyTransformed = transformed;
-								}
-							}
-						}
-					}
-
-					transformedOps.push(actualyTransformed);
-				}
-			} else {
-				transformedOps.push(...toTransformItemOp.ops);
+				return {
+					...toTransformItemOp,
+					ops: transformSlateOps(confirmed.ops, toTransformItemOp.ops),
+				};
 			}
-
-			return {
-				...toTransformItemOp,
-				ops: transformedOps,
-			};
+			return toTransformItemOp;
 		});
 
 		return {

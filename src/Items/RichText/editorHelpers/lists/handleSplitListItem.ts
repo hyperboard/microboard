@@ -1,8 +1,8 @@
-import { Descendant, Editor, Element, Node, Path, Range, Transforms } from 'slate';
+import { Descendant, Editor, Element, Node, Path, Range, Transforms, Text } from 'slate';
 import { getAreAllChildrenEmpty } from 'Items/RichText/editorHelpers/common/getAreAllChildrenEmpty';
 import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
 import { createParagraphNode } from 'Items/RichText/editorHelpers/common/createParagraphNode';
-import {BlockNode} from "../../Editor/BlockNode";
+import {BlockNode, ListItemNode, BulletedListNode, NumberedListNode} from "../../Editor/BlockNode";
 import {TextNode} from "../../Editor/TextNode";
 
 export function handleSplitListItem(editor: CustomEditor): boolean {
@@ -17,7 +17,7 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 		return false;
 	}
 	const [textNode, textNodePath] = textNodeEntry;
-	if (!Node.isNode(textNode) || Editor.isEditor(textNode) || !('text' in textNode)) {
+	if (!Node.isNode(textNode) || Editor.isEditor(textNode) || !Text.isText(textNode)) {
 		return false;
 	}
 
@@ -37,9 +37,10 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 		return false;
 	}
 	const [listItemNode] = listItemEntry;
-	if (!Element.isElement(listItemNode) || listItemNode.type !== 'list_item') {
+	if (!Element.isElement(listItemNode) || (listItemNode as unknown as BlockNode).type !== 'list_item') {
 		return false;
 	}
+	const listItem = listItemNode as unknown as ListItemNode;
 
 	const listPath = Path.parent(listItemPath);
 	const listEntry = Editor.node(editor, listPath);
@@ -49,21 +50,23 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 	const [listNode] = listEntry;
 	if (
 		!Element.isElement(listNode) ||
-		(listNode.type !== 'ol_list' && listNode.type !== 'ul_list')
+		((listNode as unknown as BlockNode).type !== 'ol_list' && (listNode as unknown as BlockNode).type !== 'ul_list')
 	) {
 		return false;
 	}
+	const list = listNode as unknown as (BulletedListNode | NumberedListNode);
 
-	const isBlockEmpty = (textNode as any).text === '';
-	const isOnlyChildParagraph = (listItemNode as any).children.length === 1;
+	const isBlockEmpty = (textNode as unknown as TextNode).text === '';
+	const isOnlyChildParagraph = listItem.children.length === 1;
 
 	if (isBlockEmpty && isOnlyChildParagraph) {
 		const listItemIndex = listItemPath[listItemPath.length - 1];
 		const [parentList, parentListPath] = Editor.parent(editor, listItemPath);
-		if (Editor.isEditor(parentList) || ((parentList as any).type !== "ol_list" && (parentList as any).type !== "ul_list")) {
+		if (Editor.isEditor(parentList) || !Element.isElement(parentList) || ((parentList as unknown as BlockNode).type !== "ol_list" && (parentList as unknown as BlockNode).type !== "ul_list")) {
 			return false;
 		}
-		const listType = (parentList as any).type;
+		const parentListElement = parentList as unknown as (BulletedListNode | NumberedListNode);
+		const listType = parentListElement.type;
 
 		Editor.withoutNormalizing(editor, () => {
 			const nextPath = Path.next(parentListPath);
@@ -76,20 +79,20 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 				{ at: nextPath }
 			);
 
-			if ((parentList as any).children.length > listItemIndex + 1) {
+			if (parentListElement.children.length > listItemIndex + 1) {
 				const newListPath = Path.next(nextPath);
-				const itemsAfter = (parentList as any).children.slice(listItemIndex + 1) as BlockNode[];
+				const itemsAfter = parentListElement.children.slice(listItemIndex + 1);
 
 				Transforms.insertNodes(
 					editor,
 					{
 						type: listType,
-						listLevel: (listNode as any).listLevel || 0,
+						listLevel: list.listLevel || 0,
 						children: itemsAfter.map(item => ({
 							type: 'list_item',
-							children: item.children as BlockNode[],
+							children: item.children,
 						})),
-					},
+					} as BlockNode,
 					{ at: newListPath }
 				);
 			}
@@ -100,10 +103,10 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 			});
 
 			const [updatedParentList] = Editor.node(editor, parentListPath);
-			if (Editor.isEditor(updatedParentList)) {
+			if (Editor.isEditor(updatedParentList) || !Element.isElement(updatedParentList)) {
 				return false;
 			}
-			if (getAreAllChildrenEmpty(updatedParentList)) {
+			if (getAreAllChildrenEmpty(updatedParentList as unknown as ListItemNode)) {
 				Transforms.removeNodes(editor, { at: parentListPath });
 			}
 
@@ -118,7 +121,7 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 
 	Transforms.splitNodes(editor, {
 		at: editor.selection.anchor,
-		match: n => Element.isElement(n) && (n as any).type === 'list_item',
+		match: n => Element.isElement(n) && (n as unknown as BlockNode).type === 'list_item',
 		always: true,
 	});
 
@@ -126,7 +129,7 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 	const newParagraphPath = [...nextListItemPath, 0];
 	const [newNode] = Editor.node(editor, newParagraphPath);
 	if (Element.isElement(newNode)) {
-		Transforms.setNodes(editor, { paddingTop: 0.5 }, { at: newParagraphPath });
+		Transforms.setNodes(editor, { paddingTop: 0.5 } as Partial<BlockNode>, { at: newParagraphPath });
 	}
 
 	return true;

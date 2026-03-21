@@ -1,5 +1,5 @@
-import { BlockNode, ListType } from 'Items/RichText/Editor/BlockNode';
-import { Editor, Element, NodeEntry, Path, Range, Transforms } from 'slate';
+import { BlockNode, BulletedListNode, ListItemNode, ListType, NumberedListNode } from 'Items/RichText/Editor/BlockNode';
+import { Editor, Element, NodeEntry, Path, Text, Transforms } from 'slate';
 import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
 import { getBlockParentList } from 'Items/RichText/editorHelpers/lists/getBlockParentList';
 
@@ -15,7 +15,7 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 			Editor.nodes(editor, {
 				at: selection,
 				mode: 'lowest',
-				match: n => !Editor.isEditor(n) && (n as any).type !== "text" && Editor.isBlock(editor, n),
+				match: n => Element.isElement(n) && !Editor.isEditor(n) && Editor.isBlock(editor, n),
 			})
 		);
 
@@ -25,7 +25,7 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 
 		nodes.forEach(([n, path]) => {
 			const parentList = getBlockParentList(editor, path);
-			const node = n as any as BlockNode;
+			const node = n as BlockNode;
 			if (parentList) {
 				unwrapCandidates.push(node);
 				if (!nodesWithLists[parentList[1].length]) {
@@ -35,9 +35,7 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 						nodeEntry => nodeEntry[0] === parentList[0]
 					)
 				) {
-					if (nodesWithLists[parentList[1].length]) {
-						nodesWithLists[parentList[1].length].push(parentList);
-					}
+					nodesWithLists[parentList[1].length].push(parentList);
 				}
 			} else {
 				if (nodesWithLists[path.length]) {
@@ -48,13 +46,11 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 			}
 		});
 
-		const [level, nodesArr] = Object.entries(nodesWithLists)[0];
-
-		if (nodesArr.length === 0) {
+		const entries = Object.entries(nodesWithLists);
+		if (entries.length === 0) {
 			return false;
 		}
-
-		const nodePaths = nodesArr.map(([_, path]) => path);
+		const [level, nodesArr] = entries[0];
 
 		const newSelectionStart: Path = nodesArr[0][1];
 		const newSelectionEnd: Path = [...nodesArr[nodesArr.length - 1][1]];
@@ -62,15 +58,15 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 
 		for (const [node, path] of nodesArr) {
 			if (Element.isElement(node)) {
-				if ((node as any).type === 'ol_list' || (node as any).type === 'ul_list') {
-					const childrenCount = (node as any).children.length;
+				if (node.type === 'ol_list' || node.type === 'ul_list') {
+					const childrenCount = node.children.length;
 					newSelectionEnd[newSelectionEnd.length - 1] =
 						newSelectionEnd[newSelectionEnd.length - 1] + childrenCount - 1;
 					path[path.length - 1] = path[path.length - 1] + diff;
 					Transforms.unwrapNodes(editor, {
 						at: path,
 						mode: 'highest',
-						match: n => Element.isElement(n) && (n as any).type === 'list_item',
+						match: n => Element.isElement(n) && n.type === 'list_item',
 						split: true,
 					});
 
@@ -78,14 +74,14 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 						at: path,
 						mode: 'highest',
 						match: n =>
-							Element.isElement(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
+							Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
 						split: true,
 					});
 					diff = diff + childrenCount - 1;
-				} else if ((node as any).type === 'list_item') {
+				} else if (node.type === 'list_item') {
 					Transforms.unwrapNodes(editor, {
 						at: path,
-						match: n => Element.isElement(n) && (n as any).type === 'list_item',
+						match: n => Element.isElement(n) && n.type === 'list_item',
 						split: true,
 					});
 				}
@@ -98,14 +94,14 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 				mode: 'all',
 				match: n => Element.isElement(n),
 			})
-		).filter(([_, path]) => path.length === Number(level));
+		).filter(([_, path]) => path.length === Number(level)) as NodeEntry<BlockNode>[];
 
 		const beforeSplitNodes: NodeEntry<BlockNode>[] = [];
 		const afterSplitNodes: NodeEntry<BlockNode>[] = [];
 		let splitFound = false;
 		const firstLevelNodes = nodesWithLists[Object.keys(nodesWithLists)[0] as unknown as number];
 		const shouldUnwrapNodes =
-			firstLevelNodes.length === 1 && targetListType === firstLevelNodes[0][0].type;
+			firstLevelNodes.length === 1 && (firstLevelNodes[0][0].type === 'ol_list' || firstLevelNodes[0][0].type === 'ul_list') && targetListType === firstLevelNodes[0][0].type;
 
 		refreshedNodes.forEach(([node, path]) => {
 			if (shouldUnwrapNodes && unwrapCandidates.includes(node)) {
@@ -120,26 +116,26 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 		});
 
 		if (afterSplitNodes.length) {
-			wrapNodes(editor, afterSplitNodes, targetListType);
+			wrapNodesCustom(editor, afterSplitNodes, targetListType);
 		}
 
 		if (beforeSplitNodes.length) {
-			wrapNodes(editor, beforeSplitNodes, targetListType);
+			wrapNodesCustom(editor, beforeSplitNodes, targetListType);
 		}
 	});
 	return true;
 }
 
-function wrapNodes(
+function wrapNodesCustom(
 	editor: Editor,
 	nodes: NodeEntry<BlockNode>[],
-	targetListType: 'ul_list' | 'ol_list'
+	targetListType: ListType
 ) {
 	const listRange = Editor.range(editor, nodes[0][1], nodes[nodes.length - 1][1]);
 
 	Transforms.wrapNodes(
 		editor,
-		{ type: targetListType, listLevel: 1, children: [] } as any,
+		{ type: targetListType, listLevel: 1, children: [] },
 		{ at: listRange }
 	);
 
@@ -149,10 +145,10 @@ function wrapNodes(
 	);
 	const listPath = Path.parent(listRange.anchor.path);
 
-	if (Element.isElement(list)) {
-		for (let i = 0; i < (list as any).children.length; i++) {
+	if (Element.isElement(list) && (list.type === 'ol_list' || list.type === 'ul_list')) {
+		for (let i = 0; i < list.children.length; i++) {
 			const childPath = [...listPath, i];
-			Transforms.wrapNodes(editor, { type: 'list_item', children: [] } as any, { at: childPath });
+			Transforms.wrapNodes(editor, { type: 'list_item', children: [] }, { at: childPath });
 		}
 	}
 }

@@ -48,14 +48,14 @@ export function handleMultipleItemsResize({
     // Use world-space position for the resize delta calculation so that nested
     // items (which store local transforms) are placed correctly relative to
     // the world-space initMbr.
-    const worldMbr = item instanceof BaseItem ? (item as any).getWorldMbr() : (item as any).getMbr();
+    const worldMbr = (item as any).getWorldMbr ? (item as any).getWorldMbr() : item.getMbr();
     let itemX = worldMbr.left;
     let itemY = worldMbr.top;
 
     if (item.itemType === "Drawing") {
       // Drawing items use transform origin directly; for nested Drawings use world position.
       if (item instanceof BaseItem && item.parent !== "Board") {
-        const worldMatrix = item.getWorldMatrix();
+        const worldMatrix = (item as any).getWorldMatrix ? (item as any).getWorldMatrix() : item.transformation.toMatrix();
         itemX = worldMatrix.translateX;
         itemY = worldMatrix.translateY;
       } else {
