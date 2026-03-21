@@ -145,19 +145,10 @@ async function build() {
 
     // Generate TypeScript declarations
     console.log("📝 Generating TypeScript declarations...");
-    try {
-      execSync(
-        "bunx tsc -p tsconfig.json --noEmit false --emitDeclarationOnly; bunx tsc-alias -p tsconfig.json",
-        { stdio: "inherit" }
-      );
-    } catch (error) {
-      console.warn(
-        "⚠️ TypeScript declarations generation failed, but continuing build process."
-      );
-      console.warn(
-        "⚠️ This is a temporary allowance and should be fixed in the future."
-      );
-    }
+    execSync(
+      "bunx tsc -p tsconfig.json --noEmit false --emitDeclarationOnly; bunx tsc-alias -p tsconfig.json",
+      { stdio: "inherit" }
+    );
 
     console.log("🎉 Build completed successfully!");
   } catch (error) {
