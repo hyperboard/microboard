@@ -42,9 +42,17 @@ import { ItemsMap } from "Validators";
 import type { BaseItem } from "./Items/BaseItem";
 import type { BaseItemData } from "./Items/BaseItem/BaseItem";
 import { ItemDataWithId } from "./Items/Item";
-import {Account} from "types/Account";
-import {GravityEngine} from "./Gravity/GravityEngine";
+import { Account } from "types/Account";
+import { GravityEngine } from "./Gravity/GravityEngine";
 import { ForceGraphEngine } from './ForceGraph/ForceGraphEngine';
+import {
+  isAINodeData,
+  isAudioItemData,
+  isConnectorData,
+  isFrameData,
+  isImageItemData,
+  isVideoItemData,
+} from "itemFactories";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -365,7 +373,7 @@ export class Board {
           if (
             !acc ||
             groupItem.getDistanceToPoint(itemCenter) >
-              acc.getDistanceToPoint(itemCenter)
+            acc.getDistanceToPoint(itemCenter)
           ) {
             acc = groupItem;
           }
@@ -741,7 +749,7 @@ export class Board {
     }
     for (const key in createdGroups) {
       const { item, itemData } = createdGroups[key];
-      const childIds = (itemData as any).childIds;
+      const childIds = (itemData).childIds;
       if (childIds) {
         item.applyAddChildren(childIds);
       }
@@ -780,14 +788,15 @@ export class Board {
     } else {
       // TODO remove on snapshots update
       // This branch handles older snapshots where 'items' was an object {id: data}
-      for (const key in items as any) {
-        const itemData = (items as Record<string, ItemData>)[key]; // Type cast for index access
+      const itemsMap = items as Record<string, ItemData>;
+      for (const key in itemsMap) {
+        const itemData = itemsMap[key];
         const item = this.createItem(key, itemData);
-        if (item.itemType === "Connector") {
+        if (isConnectorData(itemData)) {
           createdConnectors[key] = {
             item: item as Connector,
             itemData: itemData as ConnectorData & { id: string }
-          }; // Type cast for itemData
+          };
         }
         this.index.insert(item);
       }
@@ -800,7 +809,8 @@ export class Board {
     }
     for (const key in createdGroups) {
       const { item, itemData } = createdGroups[key];
-      const childIds = (itemData as any).childIds || (itemData as any).children;
+      const itemDataWithChildren = itemData as BaseItemData & { childIds?: string[]; children?: string[] };
+      const childIds = itemDataWithChildren.childIds || itemDataWithChildren.children;
       if (childIds) {
         item.applyAddChildren(childIds);
       }
@@ -1023,9 +1033,9 @@ export class Board {
     for (const itemId in itemsMap) {
       const itemData = itemsMap[itemId];
 
-      if (itemData.itemType === "Connector") {
-        replaceConnectorItem((itemData as any).startPoint);
-        replaceConnectorItem((itemData as any).endPoint);
+      if (isConnectorData(itemData)) {
+        replaceConnectorItem(itemData.startPoint);
+        replaceConnectorItem(itemData.endPoint);
       }
     }
 
@@ -1063,32 +1073,35 @@ export class Board {
 
     for (const itemId in itemsMap) {
       const itemData = itemsMap[itemId];
-      if (itemData.itemType === "Image") {
-        mediaStorageIds.push((itemData as any).storageLink.split("/").pop());
+      if (isImageItemData(itemData)) {
+        if (itemData.storageLink) {
+          mediaStorageIds.push(itemData.storageLink.split("/").pop()!);
+        }
       } else if (
-        (itemData.itemType === "Video" && (itemData as any).isStorageUrl) ||
-        (itemData.itemType === "Audio" && (itemData as any).isStorageUrl)
+        (isVideoItemData(itemData) && itemData.isStorageUrl) ||
+        (isAudioItemData(itemData) && itemData.isStorageUrl)
       ) {
-        mediaStorageIds.push((itemData as any).url.split("/").pop());
+        if (itemData.url) {
+          mediaStorageIds.push(itemData.url.split("/").pop()!);
+        }
       }
       const newItemId = newItemIdMap[itemId];
       const { translateX, translateY } = itemData.transformation || {
         translateX: 0,
         translateY: 0,
       };
-      if (itemData.itemType === "Connector") {
-        const connectorData = itemData as any;
-        if (connectorData.startPoint.pointType === "Board") {
-          connectorData.startPoint.x += -minX + x;
-          connectorData.startPoint.y += -minY + y;
+      if (isConnectorData(itemData)) {
+        if (itemData.startPoint.pointType === "Board") {
+          itemData.startPoint.x += -minX + x;
+          itemData.startPoint.y += -minY + y;
         }
-        if (connectorData.endPoint.pointType === "Board") {
-          connectorData.endPoint.x += -minX + x;
-          connectorData.endPoint.y += -minY + y;
+        if (itemData.endPoint.pointType === "Board") {
+          itemData.endPoint.x += -minX + x;
+          itemData.endPoint.y += -minY + y;
         }
-        if (connectorData.middlePoint?.pointType === "Board") {
-          connectorData.middlePoint.x += -minX + x;
-          connectorData.middlePoint.y += -minY + y;
+        if (itemData.middlePoint?.pointType === "Board") {
+          itemData.middlePoint.x += -minX + x;
+          itemData.middlePoint.y += -minY + y;
         }
       } else if (itemData.transformation) {
         itemData.transformation.translateX = translateX - minX + x;
@@ -1097,9 +1110,10 @@ export class Board {
       if (
         itemData.itemType !== "RichText" &&
         "childIds" in itemData &&
-        (itemData as any).childIds?.length
+        (itemData as Extract<ItemData, { childIds?: string[] }>).childIds?.length
       ) {
-        (itemData as any).childIds = (itemData as any).childIds.map(
+        const itemDataWithChildren = itemData as Extract<ItemData, { childIds: string[] }>;
+        itemDataWithChildren.childIds = itemDataWithChildren.childIds.map(
           (childId: string) => newItemIdMap[childId] || childId
         );
       }
@@ -1298,9 +1312,9 @@ export class Board {
     for (const itemId in itemsMap) {
       const itemData = itemsMap[itemId];
 
-      if (itemData.itemType === "Connector") {
-        replaceConnectorHeadItemId((itemData as any).startPoint);
-        replaceConnectorHeadItemId((itemData as any).endPoint);
+      if (isConnectorData(itemData)) {
+        replaceConnectorHeadItemId(itemData.startPoint);
+        replaceConnectorHeadItemId(itemData.endPoint);
       }
     }
 
@@ -1351,20 +1365,19 @@ export class Board {
         translateX: 0,
         translateY: 0,
       };
-      if (itemData.itemType === "Connector") {
-        const connectorData = itemData as any;
-        if (connectorData.startPoint) {
-          connectorData.startPoint.x += -minX + right + width;
-          connectorData.startPoint.y += -minY + top;
+      if (isConnectorData(itemData)) {
+        if (itemData.startPoint.pointType === "Board") {
+          itemData.startPoint.x += -minX + right + width;
+          itemData.startPoint.y += -minY + top;
         }
-        if (connectorData.endPoint) {
-          connectorData.endPoint.x += -minX + right + width;
-          connectorData.endPoint.y += -minY + top;
+        if (itemData.endPoint.pointType === "Board") {
+          itemData.endPoint.x += -minX + right + width;
+          itemData.endPoint.y += -minY + top;
         }
 
-        if (connectorData.middlePoint?.pointType === "Board") {
-          connectorData.middlePoint.x += -minX + right + width;
-          connectorData.middlePoint.y += -minY + top;
+        if (itemData.middlePoint?.pointType === "Board") {
+          itemData.middlePoint.x += -minX + right + width;
+          itemData.middlePoint.y += -minY + top;
         }
       } else if (itemData.transformation) {
         itemData.transformation.translateX = translateX - minX + right + width;
@@ -1424,12 +1437,12 @@ export class Board {
       // Create item first to get its type
       const item = this.createItem(itemId, data);
 
-      if (item.itemType === "AINode") {
-        (data as any).text = (item as any).text.serialize();
+      if (isAINodeData(data) && item.itemType === "AINode") {
+        data.text = (item as AINode).text.serialize();
       }
 
-      if (data.itemType === "Frame") {
-        (data as any).text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
+      if (isFrameData(data) && item.itemType === "Frame" && data.text) {
+        data.text.placeholderText = `Frame ${this.getMaxFrameSerial() + 1}`;
       }
 
       this.index.insert(item);
