@@ -2,7 +2,7 @@ import { Point, Mbr } from "Items";
 import {
   ResizeType,
   getResizeType,
-} from "../TransformerHelpers/getResizeType.ts";
+} from "../TransformerHelpers/getResizeType";
 
 /**
  * A funciton to get the resize type of a text item.

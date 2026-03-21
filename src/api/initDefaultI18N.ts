@@ -30,8 +30,9 @@ export function initDefaultI18N(): typeof i18n {
 
   conf.i18n = i18n;
   conf.planNames = {
-    basic: i18n.t("userPlan.plans.basic.name"),
-    plus: i18n.t("userPlan.plans.plus.name"),
+    basic: 'Basic',
+    plus: 'Plus',
+    plusAI: 'Plus AI',
   };
 
   return i18n;

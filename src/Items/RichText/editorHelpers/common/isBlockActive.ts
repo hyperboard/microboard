@@ -9,7 +9,7 @@ export function isBlockActive(editor: Editor, format: BlockType): boolean {
 	const [match] = Editor.nodes(editor, {
 		at: Editor.unhangRange(editor, selection),
 		match: node => {
-			return !Editor.isEditor(node) && Element.isElement(node) && node.type === format;
+			return !Editor.isEditor(node) && Element.isElement(node) && (node as any).type === format;
 		},
 	});
 	return !!match;

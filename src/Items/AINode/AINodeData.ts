@@ -17,6 +17,7 @@ export interface AINodeData {
 	isUserRequest: boolean;
 	contextItems: string[];
 	threadDirection: ThreadDirection;
+	[key: string]: unknown;
 }
 
 const convexity = 1;

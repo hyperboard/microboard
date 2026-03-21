@@ -1,4 +1,4 @@
-import {type Hotkey, HotkeyConfig, HotkeysMap} from "./types";
+import {type Hotkey, HotkeyConfig, HotkeysMap, HotkeyName} from "./types";
 import {Board} from "../Board";
 
 export const editModeHotkeyRegistry: HotkeysMap = {};
@@ -9,9 +9,9 @@ type RegisterHotkeyArgs = {name: string, hotkey: Hotkey, hotkeyConfig: HotkeyCon
 
 export function registerHotkey({name, hotkey, hotkeyConfig, boardMode}: RegisterHotkeyArgs) {
   if (boardMode === "edit") {
-    editModeHotkeyRegistry[name] = hotkeyConfig;
+    editModeHotkeyRegistry[name as HotkeyName] = hotkeyConfig as any;
   } else {
-    viewModeHotkeyRegistry[name] = hotkeyConfig;
+    viewModeHotkeyRegistry[name as HotkeyName] = hotkeyConfig as any;
   }
   hotkeyNames[name] = hotkey;
 }

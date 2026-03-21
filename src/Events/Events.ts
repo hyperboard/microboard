@@ -33,7 +33,7 @@ export interface BoardEventPackBody {
 
 export interface SyncBoardEvent extends BoardEvent {
 	lastKnownOrder: number;
-	userId: string;
+	userId: any;
 }
 
 interface SyncBoardEventPackBody extends BoardEventPackBody {

@@ -34,7 +34,7 @@ export class AddHighlighter extends AddDrawing {
 		drawing.setStrokeOpacity(0.5);
 	}
 
-	private updateSettings() {
+	protected updateSettings(): void {
 		localStorage.setItem(
 			conf.HIGHLIGHTER_SETTINGS_KEY,
 			JSON.stringify({

@@ -66,14 +66,14 @@ export function toggleListType(
 				// If there's only one item, unwrap the entire list
 				Transforms.unwrapNodes(editor, {
 					at: listPath,
-					match: n => Element.isElement(n) && n.type === 'list_item',
+					match: n => Element.isElement(n) && (n as any).type === 'list_item',
 					split: true,
 				});
 
 				Transforms.unwrapNodes(editor, {
 					at: listPath,
 					match: n =>
-						Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
+						Element.isElement(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
 					split: true,
 				});
 			} else {
@@ -84,7 +84,7 @@ export function toggleListType(
 				if (listItemIndex > 0) {
 					Transforms.splitNodes(editor, {
 						at: [...listItemPath, 0],
-						match: n => Element.isElement(n) && n.type === list.type,
+						match: n => Element.isElement(n) && (n as any).type === list.type,
 					});
 				}
 
@@ -93,21 +93,21 @@ export function toggleListType(
 					const nextPath = Path.next(listItemPath);
 					Transforms.splitNodes(editor, {
 						at: nextPath,
-						match: n => Element.isElement(n) && n.type === list.type,
+						match: n => Element.isElement(n) && (n as any).type === list.type,
 					});
 				}
 
 				// Now unwrap just the list item at the selection
 				Transforms.unwrapNodes(editor, {
 					at: paragraphPath,
-					match: n => Element.isElement(n) && n.type === 'list_item',
+					match: n => Element.isElement(n) && (n as any).type === 'list_item',
 					split: true,
 				});
 
 				Transforms.unwrapNodes(editor, {
 					at: paragraphPath,
 					match: n =>
-						Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
+						Element.isElement(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
 					split: true,
 				});
 			}

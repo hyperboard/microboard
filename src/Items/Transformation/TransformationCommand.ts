@@ -1,5 +1,5 @@
 import { Transformation } from "./Transformation";
-import { TransformationOperation } from "./TransformationOperations";
+import { TransformationOperation, MatrixData } from "./TransformationOperations";
 import { Command, Operation } from "../../Events";
 import { mapItemsByOperation } from "../ItemsCommandUtils";
 
@@ -188,9 +188,15 @@ export class TransformationCommand implements Command {
 				const { operation, transformation } = this;
 				return transformation.map(currTrans => {
 					const op = operation.items[currTrans.getId()];
-					const m = op.method === "applyMatrix" ? op.matrix
-						: op.method === "scaleByTranslateBy" ? { translateX: -op.translate.x, translateY: -op.translate.y, scaleX: 1 / op.scale.x, scaleY: 1 / op.scale.y, shearX: 0, shearY: 0 }
-						: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 };
+					let m: MatrixData;
+					if (op.method === "applyMatrix") {
+						m = op.items.find(i => i.id === currTrans.getId())?.matrix || { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 };
+					} else if (op.method === "scaleByTranslateBy") {
+						m = { translateX: -op.translate.x, translateY: -op.translate.y, scaleX: 1 / op.scale.x, scaleY: 1 / op.scale.y, shearX: 0, shearY: 0 };
+					} else {
+						m = { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 };
+					}
+
 					return {
 						item: currTrans,
 						operation: {

@@ -16,7 +16,7 @@ import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
 import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { Board } from "Board";
-import { BaseItem } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { ColorValue, ColorRole, coerceColorValue, resolveColor, semanticColor } from "Color";
 
 export interface DrawingData {
@@ -27,6 +27,7 @@ export interface DrawingData {
   strokeWidth: number;
   colorRole?: ColorRole; // 'foreground' for pen (default), 'background' for highlighter
   linkTo?: string;
+  [key: string]: unknown;
 }
 
 export class Drawing extends BaseItem {
@@ -68,13 +69,14 @@ export class Drawing extends BaseItem {
     this.updateLines();
   }
 
-  serialize(): DrawingData {
+  serialize(): SerializedItemData<DrawingData> {
     this.optimizePoints();
     const points: { x: number; y: number }[] = [];
     for (const point of this.points) {
       points.push({ x: point.x, y: point.y });
     }
     return {
+      id: this.id,
       itemType: "Drawing",
       points,
       transformation: this.transformation.serialize(),
@@ -85,7 +87,7 @@ export class Drawing extends BaseItem {
     };
   }
 
-  deserialize(data: DrawingData): this {
+  deserialize(data: SerializedItemData<DrawingData>): this {
     this.points = [];
     for (const point of data.points) {
       this.points.push(new Point(point.x, point.y));

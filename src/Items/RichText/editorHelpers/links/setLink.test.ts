@@ -129,7 +129,7 @@ describe("setLink", () => {
 		setLink(editor, undefined, editor.selection);
 
 		const [node] = Editor.node(editor, [0, 0]);
-		expect(node.link).toBeUndefined();
+		expect((node as any).link).toBeUndefined();
 	});
 
 	it("should select the whole text if no selection is provided", () => {
@@ -140,7 +140,7 @@ describe("setLink", () => {
 
 		setLink(editor, "http://example.com", null);
 		const [node] = Editor.node(editor, [0, 0]);
-		expect(node.link).toBe("http://example.com");
+		expect((node as any).link).toBe("http://example.com");
 	});
 
 	it("should set link to the whole text when the selection is invalid", () => {
@@ -148,6 +148,6 @@ describe("setLink", () => {
 
 		setLink(editor, "http://example.com", null);
 		const [node] = Editor.node(editor, [0, 0]);
-		expect(node.link).toBe("http://example.com");
+		expect((node as any).link).toBe("http://example.com");
 	});
 });

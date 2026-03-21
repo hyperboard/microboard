@@ -137,8 +137,9 @@ export class Shape extends BaseItem {
     }
   }
 
-  serialize(): ShapeData {
+  serialize(): SerializedItemData<ShapeData> {
     return {
+      id: this.id,
       itemType: "Shape",
       shapeType: this.shapeType,
       backgroundColor: this.backgroundColor,
@@ -153,7 +154,7 @@ export class Shape extends BaseItem {
     };
   }
 
-  deserialize(data: SerializedItemData<ShapeData>): this {
+  deserialize(data: SerializedItemData<ShapeData> | ShapeData): this {
     if (data.shapeType) {
       this.shapeType = data.shapeType;
       this.initPath();

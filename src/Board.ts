@@ -8,6 +8,7 @@ import {
   RemoveGroup,
   RemoveItem,
   RemoveLockedGroup,
+  CreateGroup,
 } from "BoardOperations";
 import { Camera } from "Camera";
 import { Events, ItemOperation, Operation } from "Events";
@@ -33,9 +34,10 @@ import { ImageItem } from "Items/Image";
 import { Keyboard } from "Keyboard";
 import { parsersHTML } from "parserHTML";
 import { Pointer } from "Pointer";
+import { cursorsMap } from "Pointer/Pointer";
 import { Presence } from "Presence/Presence";
 import { BoardSelection } from "Selection";
-import { conf } from "Settings";
+import { conf, Theme } from "Settings";
 import { SpatialIndex } from "SpatialIndex";
 import { Subject } from "Subject";
 import { Tools } from "Tools";
@@ -99,6 +101,10 @@ export class Board {
 
   getAccount(): Account | null {
     return this.account || null;
+  }
+
+  getTheme(): Theme {
+    return conf.theme;
   }
 
   getNewItemId(): string {
@@ -194,14 +200,12 @@ export class Board {
         const items = op.item
           .map((item) => this.items.getById(item))
           .filter((item): item is Item => item !== undefined);
-        // @ts-expect-error incorrect type
         return this.index.bringManyToFront(items);
       }
       case "sendToBack": {
         const items = op.item
           .map((item) => this.items.getById(item))
           .filter((item): item is Item => item !== undefined);
-        // @ts-expect-error incorrect type
         return this.index.sendManyToBack(items);
       }
       case "add":
@@ -209,16 +213,14 @@ export class Board {
       case "addLockedGroup":
         return this.applyAddLockedGroupOperation(op);
       case "addGroup":
-        return this.applyAddGroupOperation(op);
+      case "addLockedGroup":
+        return this.applyAddGroupOperation(op as CreateGroup | CreateLockedGroupItem);
       case "remove": {
         return this.applyRemoveOperation(op);
       }
-      case "removeLockedGroup": {
-        return this.applyRemoveLockedGroupOperation(op);
-      }
-      case "removeGroup": {
-        return this.applyRemoveGroupOperation(op);
-      }
+      case "removeGroup":
+      case "removeLockedGroup":
+        return this.applyRemoveGroupOperation(op as RemoveGroup | RemoveLockedGroup);
       case "paste": {
         return this.applyPasteOperation(op.itemsMap);
       }
@@ -272,7 +274,7 @@ export class Board {
     item.transformation.isLocked = true;
   }
 
-  private applyAddGroupOperation(op: CreateLockedGroupItem): void {
+  private applyAddGroupOperation(op: CreateGroup | CreateLockedGroupItem): void {
     const item = this.createItem(op.item, op.data) as Group;
     const groupChildrenIds = item.getChildrenIds();
     this.index.insert(item);
@@ -301,7 +303,7 @@ export class Board {
     });
   }
 
-  private applyRemoveLockedGroupOperation(op: RemoveLockedGroup): void {
+  private applyRemoveGroupOperation(op: RemoveGroup | RemoveLockedGroup): void {
     const item = this.index.getById(op.item[0]);
 
     if (!item || !(item instanceof Group)) {
@@ -323,22 +325,6 @@ export class Board {
     });
   }
 
-  private applyRemoveGroupOperation(op: RemoveLockedGroup): void {
-    const item = this.index.getById(op.item[0]);
-
-    if (!item || !(item instanceof Group)) {
-      return;
-    }
-
-    item.applyRemoveChildren(item.getChildrenIds());
-
-    const removedItems: Item[] = [];
-    this.findItemAndApply(op.item, (item) => {
-      this.index.remove(item);
-      this.selection.remove(item);
-      removedItems.push(item);
-    });
-  }
 
   private applyItemOperation(op: ItemOperation): void {
     if ("item" in op) {
@@ -414,7 +400,7 @@ export class Board {
     el: HTMLElement
   ):
     | ItemDataWithId
-    | { data: FrameData; childrenMap: { [id: string]: ItemDataWithId } } {
+    | { data: BaseItemData & { id: string }; childrenMap: { [id: string]: ItemDataWithId } } {
     const parser = parsersHTML[el.tagName.toLowerCase()];
     if (!parser) {
       throw new Error(`Unknown element tag: ${el.tagName.toLowerCase()}`);
@@ -770,7 +756,7 @@ export class Board {
     > = {};
     const createdGroups: Record<
       string,
-      { item: Frame; itemData: BaseItemData }
+      { item: Item; itemData: BaseItemData }
     > = {};
 
     if (Array.isArray(items)) {
@@ -792,12 +778,12 @@ export class Board {
       }
     } else {
       // TODO remove on snapshots update
-      // @ts-expect-error - for older snapshots, that were {id: data}
-      for (const key in items) {
-        const itemData = items[key];
+      // This branch handles older snapshots where 'items' was an object {id: data}
+      for (const key in items as any) {
+        const itemData = (items as Record<string, ItemData>)[key]; // Type cast for index access
         const item = this.createItem(key, itemData);
         if (item instanceof Connector) {
-          createdConnectors[key] = { item, itemData };
+          createdConnectors[key] = { item, itemData: itemData as ConnectorData & { id: string } }; // Type cast for itemData
         }
         this.index.insert(item);
       }
@@ -1106,7 +1092,7 @@ export class Board {
         itemData.children?.length
       ) {
         itemData.children = itemData.children.map(
-          (childId) => newItemIdMap[childId]
+          (childId: string) => newItemIdMap[childId]
         );
       }
       newMap[newItemId] = itemData;
@@ -1380,7 +1366,7 @@ export class Board {
       if ("children" in itemData && itemData.children?.length) {
         // handle new id for children
         itemData.children = itemData.children.map(
-          (childId) => newItemIdMap[childId]
+          (childId: string) => newItemIdMap[childId]
         );
       }
 

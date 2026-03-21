@@ -9,6 +9,7 @@ import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n from "i18next";
 import type { BorderStyle } from "Items/Path/Path";
 import type { Theme, ColorValue } from "./Color/ColorValue";
+export type { Theme, ColorValue };
 import { semanticColor } from "./Color/ColorValue";
 
 export interface Connection {

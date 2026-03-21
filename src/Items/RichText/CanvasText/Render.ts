@@ -96,6 +96,7 @@ export interface LayoutBlockNode {
 		| 'ul_list'
 		| 'ol_list'
 		| 'list_item'
+		| 'block-quote'
 		| 'text';
 	lineHeight: number;
 	children: LayoutTextNode[];
@@ -117,7 +118,7 @@ const sliceTextByWidth = (textChild: TextNode, maxWidth: number): LayoutTextNode
 
 	for (let i = 0; i < text.length; i++) {
 		const nextText = currentText + text[i];
-		const nextWidth = measureText(nextText + '...', textStyle).width;
+		const nextWidth = measureText(nextText + '...', textStyle || '14px Arial').width;
 		currentWidth = nextWidth;
 
 		if (nextWidth > maxWidth) {
@@ -155,7 +156,7 @@ function getBlockNode(
 	newLine = false
 ): LayoutBlockNode {
 	const node: LayoutBlockNode = {
-		type: data.type,
+		type: data.type as any,
 		lineHeight: 1.4,
 		children: [],
 		lines: [],
@@ -762,15 +763,17 @@ interface MeasuredRect {
 	height: number;
 }
 
-function measureText(text: string, style, paddingTop = 0, marginLeft = 0): MeasuredRect {
-	if (measureCache[style.font]) {
-		if (measureCache[style.font][text]) {
-			const rect = { ...measureCache[style.font][text] };
+function measureText(text: string, style: LeafStyle | string, paddingTop = 0, marginLeft = 0): MeasuredRect {
+	const font = typeof style === 'string' ? style : style.font || '14px Arial';
+	if (measureCache[font]) {
+		if (measureCache[font][text]) {
+			const rect = { ...measureCache[font][text] };
 			rect.width += marginLeft;
 			rect.height += paddingTop;
+			return rect;
 		}
 	}
-	conf.measureCtx.font = style.font;
+	conf.measureCtx.font = font;
 	const measure = conf.measureCtx.measureText(text);
 	const actualBoundingBoxAscent = toFiniteNumber(measure.actualBoundingBoxAscent);
 	const actualBoundingBoxDescent = toFiniteNumber(measure.actualBoundingBoxDescent);
@@ -793,10 +796,10 @@ function measureText(text: string, style, paddingTop = 0, marginLeft = 0): Measu
 		width: Math.max(width, actualBoundingBoxLeft + actualBoundingBoxRight),
 		height: ascent + descent,
 	};
-	if (!measureCache[style.font]) {
-		measureCache[style.font] = {};
+	if (!measureCache[font]) {
+		measureCache[font] = {};
 	}
-	measureCache[style.font][text] = rect;
+	measureCache[font][text] = rect;
 	const rectCopy = { ...rect };
 	rectCopy.width += marginLeft;
 	rectCopy.height += paddingTop;

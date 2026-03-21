@@ -30,6 +30,7 @@ import { Descendant } from "slate";
 import {ItemDataWithId} from "./Items/Item";
 import {ListItemNode} from "./Items/RichText/Editor/BlockNode";
 import {BaseItemData} from "./Items/BaseItem/BaseItem";
+import {coerceColorValue} from "./Color";
 
 type MapTagByType = Record<ItemType, string>;
 export const tagByType: MapTagByType = {
@@ -57,7 +58,14 @@ const headingTagsMap = {
 } as const
 
 type TagFactories = {
-  [K in keyof MapTagByType as MapTagByType[K]]: (el: HTMLElement) => ItemDataWithId;
+  [K in keyof MapTagByType as MapTagByType[K]]: (
+    el: HTMLElement
+  ) =>
+    | ItemDataWithId
+    | {
+        data: BaseItemData & { id: string };
+        childrenMap: { [id: string]: ItemDataWithId };
+      };
 };
 export const parsersHTML: TagFactories = {
   "sticker-item": parseHTMLSticker,
@@ -258,9 +266,9 @@ function parseHTMLFrame(el: HTMLElement): {
     itemType: "Frame",
     shapeType: "Custom",
     // (el.getAttribute("data-shape-type") as FrameType) || "Custom",
-    backgroundColor: el.style.backgroundColor || "",
+    backgroundColor: coerceColorValue(el.style.backgroundColor || ""),
     backgroundOpacity: parseFloat(el.style.opacity) || 1,
-    borderColor: el.style.borderColor || "",
+    borderColor: coerceColorValue(el.style.borderColor || ""),
     borderWidth: parseInt(el.style.borderWidth) || 0,
     children: [],
     borderOpacity: 1,
@@ -284,7 +292,6 @@ function parseHTMLFrame(el: HTMLElement): {
       realTransformation: transformation,
     });
   }
-
   const childrenMap = Array.from(el.children)
     .filter(
       (child) =>
@@ -292,9 +299,10 @@ function parseHTMLFrame(el: HTMLElement): {
     )
     .map((child) => positionAbsolutely(child as HTMLElement, el))
     .reduce((acc: { [id: string]: ItemDataWithId }, child) => {
-      acc[child.id] = parsersHTML[child.tagName.toLowerCase()](
+      const parsed = parsersHTML[child.tagName.toLowerCase()](
         child as HTMLElement
       );
+      acc[child.id] = "data" in parsed ? (parsed.data as ItemDataWithId) : (parsed as ItemDataWithId);
       return acc;
     }, {});
   data.children = Object.values(childrenMap).map((child) => child.id);
@@ -309,8 +317,8 @@ function parseHTMLShape(el: HTMLElement): ShapeData & { id: string } {
     shapeType: (el.getAttribute("data-shape-type") as ShapeType) || "Rectangle",
     backgroundOpacity: parseFloat(el.style.opacity) || 1,
     borderOpacity: 1,
-    backgroundColor: el.getAttribute("fill") || "",
-    borderColor: el.getAttribute("stroke") || "",
+    backgroundColor: coerceColorValue(el.getAttribute("fill") || ""),
+    borderColor: coerceColorValue(el.getAttribute("stroke") || ""),
     borderWidth: parseInt(el.getAttribute("stroke-width") || "0"),
     borderStyle: (el.getAttribute("data-border-style") as BorderStyle) || "",
     transformation: getTransformationData(el),
@@ -335,7 +343,7 @@ function parseHTMLSticker(el: HTMLElement): StickerData & { id: string } {
   const stickerData: StickerData & { id: string } = {
     id: el.id,
     itemType: "Sticker",
-    backgroundColor: el.style.backgroundColor || "",
+    backgroundColor: coerceColorValue(el.style.backgroundColor || ""),
     transformation,
     text: new DefaultRichTextData(),
     linkTo: el.getAttribute("data-link-to") || undefined,
@@ -417,13 +425,21 @@ function parseHTMLComment(el: HTMLElement): CommentData & { id: string } {
   return commentItemData;
 }
 
-function parseHTMLBaseItem(el: HTMLElement): BaseItemData & { id: string } {
+function parseHTMLBaseItem(
+  el: HTMLElement
+):
+  | ItemDataWithId
+  | {
+      data: BaseItemData & { id: string };
+      childrenMap: { [id: string]: ItemDataWithId };
+    } {
   const data = JSON.parse(el.getAttribute("serialized-data")!) as BaseItemData;
 
-  const baseItemItemData: BaseItemData & { id: string } = {
+  const baseItemItemData: ItemDataWithId = {
     id: el.id,
+    transformation: getTransformationData(el),
     ...data,
-  };
+  } as any;
 
   const childrenMap = Array.from(el.children)
     .filter(
@@ -432,9 +448,11 @@ function parseHTMLBaseItem(el: HTMLElement): BaseItemData & { id: string } {
     )
     .map((child) => positionAbsolutely(child as HTMLElement, el))
     .reduce((acc: { [id: string]: ItemDataWithId }, child) => {
-      acc[child.id] = parsersHTML[child.tagName.toLowerCase()](
+      const parsed = parsersHTML[child.tagName.toLowerCase()](
         child as HTMLElement
       );
+      acc[child.id] =
+        "data" in parsed ? (parsed.data as ItemDataWithId) : (parsed as ItemDataWithId);
       return acc;
     }, {});
   data.children = Object.values(childrenMap).map((child) => child.id);
@@ -516,7 +534,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
       "None",
     lineStyle:
       (el.getAttribute("data-line-style") as ConnectorLineStyle) || "straight",
-    lineColor: el.getAttribute("data-line-color") || "",
+    lineColor: coerceColorValue(el.getAttribute("data-line-color") || ""),
     lineWidth: parseInt(
       el.getAttribute("data-line-width") || "1"
     ) as ConnectionLineWidth,

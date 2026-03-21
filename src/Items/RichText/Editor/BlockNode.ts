@@ -16,6 +16,7 @@ export const BlockTypes = [
 	"heading_three",
 	"heading_four",
 	"heading_five",
+	"block-quote",
 ] as const;
 
 export type BlockType = (typeof BlockTypes)[number];
@@ -78,13 +79,13 @@ export type HeadingFiveNode = {
 	paddingBottom?: number;
 };
 
-// export type BlockQuoteNode = {
-// 	type: "block-quote";
-// 	children: TextNode[];
-// 	horisontalAlignment?: HorisontalAlignment;
-// 	paddingTop?: number;
-// 	paddingBottom?: number;
-// };
+export type BlockQuoteNode = {
+	type: "block-quote";
+	children: TextNode[];
+	horisontalAlignment?: HorisontalAlignment;
+	paddingTop?: number;
+	paddingBottom?: number;
+};
 
 export type BulletedListNode = {
 	type: "ul_list";
@@ -131,7 +132,8 @@ export type BlockNode =
 	| HeadingFiveNode
 	| BulletedListNode
 	| NumberedListNode
-	| ListItemNode;
+	| ListItemNode
+	| BlockQuoteNode;
 
 export type NoneListBlockNode =
 	| ParagraphNode
@@ -140,4 +142,5 @@ export type NoneListBlockNode =
 	| HeadingTwoNode
 	| HeadingThreeNode
 	| HeadingFourNode
-	| HeadingFiveNode;
+	| HeadingFiveNode
+	| BlockQuoteNode;

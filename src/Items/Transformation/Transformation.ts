@@ -435,8 +435,14 @@ export class Transformation {
 
 	applyTransformMany(op: TransformationOperation): void {
 		if (op.method === 'applyMatrix') {
-			this._matrix.scale(op.matrix.scaleX, op.matrix.scaleY);
-			this._matrix.translate(op.matrix.translateX, op.matrix.translateY);
+			const itemOp = op.items.find((i) => i.id === this.id);
+			if (itemOp) {
+				this._matrix.scale(itemOp.matrix.scaleX, itemOp.matrix.scaleY);
+				this._matrix.translate(
+					itemOp.matrix.translateX,
+					itemOp.matrix.translateY
+				);
+			}
 		} else if (op.method === 'scaleByTranslateBy') {
 			this.applyScaleByTranslateBy(op.scale, op.translate);
 		} else if (op.method === 'scaleBy') {

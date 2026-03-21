@@ -16,6 +16,7 @@ import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { BlockNode, ListType, ParagraphNode } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./editorHelpers/common/isTextEmpty";
+import { ColorValue } from 'Color';
 import {
   RichTextOperation,
   SelectionOp,
@@ -51,7 +52,7 @@ type OperationFontSizeProperties = {
 }
 
 export class EditorContainer {
-  readonly editor: BaseEditor & ReactEditor & HistoryEditor;
+  readonly editor: any;
 
   maxWidth: number | undefined = undefined;
   textScale = 1;
@@ -429,9 +430,9 @@ export class EditorContainer {
     });
   }
 
-  setSelectionFontColor(format: string, selectionContext?: string): SlateOp[] {
+  setSelectionFontColor(format: string | ColorValue, selectionContext?: string): SlateOp[] {
     this.startOpRecording();
-    setSelectionFontColor(this.editor, format, selectionContext);
+    setSelectionFontColor(this.editor, format as any, selectionContext);
     return this.stopOpRecordingAndGetOps();
   }
 
@@ -469,11 +470,11 @@ export class EditorContainer {
   }
 
   setSelectionFontHighlight(
-    format: string,
+    format: string | ColorValue,
     selectionContext?: string
   ): SlateOp[] {
     this.startOpRecording();
-    setSelectionFontHighlight(this.editor, format, selectionContext);
+    setSelectionFontHighlight(this.editor, format as any, selectionContext);
     return this.stopOpRecordingAndGetOps();
   }
 

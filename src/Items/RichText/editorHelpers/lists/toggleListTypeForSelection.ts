@@ -15,7 +15,7 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 			Editor.nodes(editor, {
 				at: selection,
 				mode: 'lowest',
-				match: n => !Editor.isEditor(n) && n.type !== "text" && Editor.isBlock(editor, n),
+				match: n => !Editor.isEditor(n) && (n as any).type !== "text" && Editor.isBlock(editor, n),
 			})
 		);
 
@@ -62,15 +62,15 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 
 		for (const [node, path] of nodesArr) {
 			if (Element.isElement(node)) {
-				if (node.type === 'ol_list' || node.type === 'ul_list') {
-					const childrenCount = node.children.length;
+				if ((node as any).type === 'ol_list' || (node as any).type === 'ul_list') {
+					const childrenCount = (node as any).children.length;
 					newSelectionEnd[newSelectionEnd.length - 1] =
 						newSelectionEnd[newSelectionEnd.length - 1] + childrenCount - 1;
 					path[path.length - 1] = path[path.length - 1] + diff;
 					Transforms.unwrapNodes(editor, {
 						at: path,
 						mode: 'highest',
-						match: n => Element.isElement(n) && n.type === 'list_item',
+						match: n => Element.isElement(n) && (n as any).type === 'list_item',
 						split: true,
 					});
 
@@ -78,14 +78,14 @@ export function toggleListTypeForSelection(editor: CustomEditor, targetListType:
 						at: path,
 						mode: 'highest',
 						match: n =>
-							Element.isElement(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
+							Element.isElement(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
 						split: true,
 					});
 					diff = diff + childrenCount - 1;
-				} else if (node.type === 'list_item') {
+				} else if ((node as any).type === 'list_item') {
 					Transforms.unwrapNodes(editor, {
 						at: path,
-						match: n => Element.isElement(n) && n.type === 'list_item',
+						match: n => Element.isElement(n) && (n as any).type === 'list_item',
 						split: true,
 					});
 				}

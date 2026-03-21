@@ -11,7 +11,7 @@ export function getFirstSelectionLink(
 
 	for (const [node] of Editor.nodes(editor, {
 		at: selection,
-		match: n => "link" in n && !!n.link,
+		match: n => "link" in n && !!(n as any).link,
 	})) {
 		return (node as TextNode).link;
 	}

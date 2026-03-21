@@ -11,7 +11,7 @@ import { TransformationData, Transformation } from "Items/Transformation";
 import { conf } from "Settings";
 import { Subject } from "Subject";
 import { VideoCommand } from "./VideoCommand";
-import { BaseItem } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import {getMediaSignedUrl} from "api/MediaHelpers";
 
 export interface VideoItemData {
@@ -22,6 +22,7 @@ export interface VideoItemData {
   isStorageUrl: boolean;
   previewUrl?: string;
   extension: string;
+  [key: string]: unknown;
 }
 
 export interface Dimension {
@@ -70,16 +71,16 @@ export const createPlaceholderImage = (
 export class VideoItem extends BaseItem {
   readonly itemType = "Video";
   parent = "Board";
-  preview: HTMLImageElement;
+  private url = "";
+  private previewUrl = "";
+  private isStorageUrl = false;
+  preview!: HTMLImageElement;
   readonly transformation: Transformation;
   readonly linkTo: LinkTo;
   readonly subject = new Subject<VideoItem>();
   loadCallbacks: ((video: VideoItem) => void)[] = [];
   beforeLoadCallbacks: ((video: VideoItem) => void)[] = [];
   transformationRenderBlock?: boolean = undefined;
-  private url = "";
-  private previewUrl = "";
-  private isStorageUrl = false;
   videoDimension: Dimension;
   board: Board;
   private isPlaying = false;
@@ -340,8 +341,9 @@ export class VideoItem extends BaseItem {
     return div;
   }
 
-  serialize(): VideoItemData {
+  serialize(): SerializedItemData<VideoItemData> {
     return {
+      id: this.id,
       itemType: "Video",
       url: this.url,
       videoDimension: this.videoDimension,
@@ -352,7 +354,7 @@ export class VideoItem extends BaseItem {
     };
   }
 
-  deserialize(data: Partial<VideoItemData>): VideoItem {
+  	deserialize(data: SerializedItemData<VideoItemData> | VideoItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }

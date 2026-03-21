@@ -23,7 +23,7 @@ import { Transformation } from "Items/Transformation/Transformation";
 import { TransformationOperation } from "Items/Transformation/TransformationOperations";
 import { conf } from "Settings";
 import { Subject } from "Subject";
-import { BaseItem } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
@@ -41,10 +41,10 @@ export class AINode extends BaseItem {
   readonly transformation: Transformation;
   readonly text: RichText;
   readonly linkTo: LinkTo;
-  private path: Paths | Path;
+  private path!: Paths | Path;
   readonly subject = new Subject<AINode>();
   private parentNodeId?: string;
-  private isUserRequest: boolean;
+  private isUserRequest!: boolean;
   private contextItems: string[] = [];
   private threadDirection: ThreadDirection = 3;
   private contextRange = 5;
@@ -59,7 +59,7 @@ export class AINode extends BaseItem {
     parentNodeId?: string,
     contextItems: string[] = [],
     threadDirection?: ThreadDirection,
-    private id = ""
+    id = ""
   ) {
     super(board, id);
     this.buttonIcon = conf.documentFactory.createElement(
@@ -159,20 +159,21 @@ export class AINode extends BaseItem {
     );
   }
 
-  serialize(isCopy = false): AINodeData {
+  serialize(): SerializedItemData<AINodeData> {
     return {
+      id: this.id,
       itemType: "AINode",
       transformation: this.transformation.serialize(),
       text: this.text.serialize(),
       linkTo: this.linkTo.serialize(),
-      parentNodeId: isCopy ? undefined : this.parentNodeId,
+      parentNodeId: this.parentNodeId,
       isUserRequest: this.isUserRequest,
       contextItems: this.contextItems,
       threadDirection: this.threadDirection,
     };
   }
 
-  deserialize(data: Partial<AINodeData>): this {
+  deserialize(data: SerializedItemData<AINodeData> | AINodeData): this {
     if (data.text) {
       this.text.deserialize(data.text);
     }

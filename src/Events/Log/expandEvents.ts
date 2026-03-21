@@ -1,7 +1,7 @@
 import { SyncEvent, SyncBoardEvent } from "../Events";
 
 export function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
-	return events.flatMap(event => {
+	return events.flatMap((event: any): SyncBoardEvent[] => {
 		if ("operations" in event.body) {
 			// Это BoardEventPack
 			return event.body.operations.map(operation => ({

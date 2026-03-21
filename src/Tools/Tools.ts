@@ -43,7 +43,7 @@ export class Tools extends ToolContext {
         return;
       }
 
-      this.tool = new tool(this.board, toolName);
+      this.tool = new (tool as any)(this.board, toolName);
       if (clearSelection) {
         this.board.selection.removeAll();
       }
@@ -63,7 +63,7 @@ export class Tools extends ToolContext {
     this.publish();
   }
 
-  setBeforeNavigateMode(mode): void {
+  switchMode(mode: any): void {
     this.beforeNavigateMode = mode;
   }
 
@@ -315,7 +315,7 @@ export class Tools extends ToolContext {
   }
 
   publish(): void {
-    this.board.isBoardMenuOpen = false;
+    (this.board as any).isBoardMenuOpen = false;
     this.subject.publish(this);
   }
 

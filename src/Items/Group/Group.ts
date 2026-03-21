@@ -7,7 +7,7 @@ import { Events, Operation } from "Events";
 import { Mbr, Line, Point, Transformation, Item } from "..";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { BaseItem } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { DocumentFactory } from "api/DocumentFactory";
 
 export interface GroupData {
@@ -15,6 +15,7 @@ export interface GroupData {
   children: string[];
   transformation: TransformationData;
   isLockedGroup?: boolean;
+  [key: string]: any;
 }
 
 export class Group extends BaseItem {
@@ -143,8 +144,9 @@ export class Group extends BaseItem {
     return this.linkTo.link;
   }
 
-  serialize(): GroupData {
+  serialize(): SerializedItemData<GroupData> {
     return {
+      id: this.id,
       itemType: "Group",
       // Children IDs only — transforms are serialized as world transforms by SpatialIndex.copy()
       children: this.getChildrenIds(),
@@ -153,7 +155,7 @@ export class Group extends BaseItem {
     };
   }
 
-  deserialize(data: GroupData): this {
+  deserialize(data: SerializedItemData<GroupData>): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }

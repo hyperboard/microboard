@@ -489,16 +489,13 @@ export class Path implements Geometry, PathStylize {
 
 	// smell have to redo without document
 	renderHTML(documentFactory: DocumentFactory): SVGPathElement {
-		const pathElement = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'path');
+		const pathElement = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'path') as any;
 
 		pathElement.setAttribute('d', this.getSvgPath());
 		pathElement.setAttribute('fill', this.backgroundColor);
 		pathElement.setAttribute('fill-opacity', this.backgroundOpacity.toString());
 		pathElement.setAttribute('stroke', this.borderColor);
 		pathElement.setAttribute('vector-effect', 'non-scaling-stroke');
-		pathElement.setAttribute('stroke-width', this.borderWidth.toString());
-		pathElement.setAttribute('stroke-opacity', this.borderOpacity.toString());
-		pathElement.setAttribute('stroke-dasharray', LinePatterns[this.borderStyle].join(', '));
 
 		return pathElement;
 	}
@@ -552,5 +549,9 @@ export class Path implements Geometry, PathStylize {
 	addConnectedItemType(name: string): this {
 		this.connectedItemType = name;
 		return this;
+	}
+
+	getRichText() {
+		return null;
 	}
 }

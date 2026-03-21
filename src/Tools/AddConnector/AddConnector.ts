@@ -8,6 +8,7 @@ import { DrawingContext } from 'Items/DrawingContext';
 import { BorderStyle } from 'Items/Path';
 import { SessionStorage } from 'SessionStorage';
 import { BoardTool } from 'Tools/BoardTool';
+import { coerceOptionalColorValue } from 'Color';
 
 export class AddConnector extends BoardTool {
   connector: Connector | null = null;
@@ -68,7 +69,7 @@ export class AddConnector extends BoardTool {
         this.lineStyle,
         this.startPointer,
         this.endPointer,
-        this.lineColor,
+        coerceOptionalColorValue(this.lineColor),
         this.lineWidth,
         this.strokeStyle
       );
@@ -90,7 +91,7 @@ export class AddConnector extends BoardTool {
         this.lineStyle,
         this.startPointer,
         this.endPointer,
-        this.lineColor,
+        coerceOptionalColorValue(this.lineColor),
         this.lineWidth,
         this.strokeStyle
       );

@@ -21,6 +21,8 @@ export * from "./Image";
 export * from "./Drawing";
 export * from "./Placeholder";
 export * from "./Group";
+export { BaseItem } from "./BaseItem";
+export type { BaseItemData, SerializedItemData } from "./BaseItem";
 
 export type { Item, ItemType, ItemData } from "./Item";
 

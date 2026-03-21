@@ -13,7 +13,7 @@ export function setNodeChildrenStyles({
 	horisontalAlignment,
 	node,
 }: {
-	editor?: BaseEditor & ReactEditor & HistoryEditor;
+	editor?: any;
 	horisontalAlignment?: HorisontalAlignment;
 	node: NoneListBlockNode;
 }): void {
@@ -91,7 +91,7 @@ export function setNodeStyles({
 	node: BlockNode;
 	isPaddingTopNeeded: boolean;
 	listLevel?: number;
-	editor?: BaseEditor & ReactEditor & HistoryEditor;
+	editor?: any;
 	horisontalAlignment?: HorisontalAlignment;
 }) {
 	if (node.type === "list_item") {

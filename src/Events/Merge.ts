@@ -7,7 +7,8 @@ import { Path } from "slate";
 import { Operation } from "./EventsOperations";
 import { type ShapeOperation } from "Items/Shape";
 import { DrawingOperation } from "Items/Drawing/DrawingOperation";
-import { BoardOps } from "BoardOperations";
+import { BoardOps, CreateItem } from "BoardOperations";
+import { RichTextData } from "Items/RichText/RichTextData";
 
 // TODO API Conditional to Map
 export function canNotBeMerged(op: Operation): boolean {
@@ -306,23 +307,33 @@ function mergeRichTextCreation(opA: BoardOps, opB: RichTextOperation) {
     opA.item === opB.item[0] &&
     opB.ops[0].type === "insert_text"
   ) {
+    const data = opA.data as RichTextData;
+    if (!data.children || !data.children[0] || !('children' in data.children[0])) {
+      return;
+    }
+    const firstLevelChild = data.children[0];
+    if (!firstLevelChild.children || !firstLevelChild.children[0] || !('text' in firstLevelChild.children[0])) {
+      return;
+    }
+    const secondLevelChild = firstLevelChild.children[0];
+
     const op = {
       ...opA,
       data: {
-        ...opA.data,
+        ...data,
         children: [
           {
-            ...opA.data.children[0],
+            ...firstLevelChild,
             children: [
               {
-                ...opA.data.children[0].children[0],
-                text: opA.data.children[0].children[0].text + opB.ops[0].text,
+                ...secondLevelChild,
+                text: secondLevelChild.text + opB.ops[0].text,
               },
             ],
           },
         ],
       },
-    };
+    } as any;
     return op;
   }
   return;
@@ -415,7 +426,7 @@ function mergeBoardOperations(
       ...opB,
       item: [...opAItems, ...opBItems],
       data: { ...opBData, ...opAData },
-    };
+    } as any;
   }
 
   return undefined;

@@ -40,7 +40,7 @@ export class RichTextCommand implements Command {
 		const items = Array.isArray(this.richText) ? this.richText : [this.richText];
 		switch (this.operation.method) {
 			case 'edit':
-			case 'setSelectionHorizontalAlignment':
+			case 'setSelectionHorisontalAlignment':
 			case 'setSelectionFontHighlight':
 			case 'setSelectionFontSize':
 			case 'setSelectionFontFamily':

@@ -31,7 +31,7 @@ import { positionRelatively, resetElementScale, scaleElementBy } from 'HTMLRende
 import { DocumentFactory } from 'api/DocumentFactory';
 import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
-import {BaseItem} from "../BaseItem";
+import { BaseItem, SerializedItemData } from "../BaseItem";
 import { ColorValue, coerceColorValue, resolveColor, fixedColor } from 'Color';
 
 export const ConnectorLineStyles = ['straight', 'curved', 'orthogonal'] as const;
@@ -1027,13 +1027,16 @@ export class Connector extends BaseItem {
 		return false;
 	}
 
-	serialize(): ConnectorData {
+	serialize(): SerializedItemData<ConnectorData> {
 		const text = this.text.serialize();
-		text.transformation = undefined;
+		if (text) {
+			(text as any).transformation = undefined;
+		}
 		const mbr = this.getMbr();
 		const transformation = new Transformation();
 		transformation.setLocal(mbr.left, mbr.top);
 		return {
+			id: this.id,
 			itemType: 'Connector',
 			transformation: transformation.serialize(),
 			startPoint: this.startPoint.serialize(),
@@ -1050,7 +1053,7 @@ export class Connector extends BaseItem {
 		};
 	}
 
-	deserialize(data: Partial<ConnectorData>): this {
+	deserialize(data: SerializedItemData<ConnectorData> | ConnectorData): this {
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
@@ -1071,7 +1074,7 @@ export class Connector extends BaseItem {
 		}
 		const linkTo = data.linkTo;
 		if (linkTo) {
-			this.linkTo.deserialize(typeof linkTo === 'string' ? linkTo : linkTo.link);
+			this.linkTo.deserialize(linkTo);
 		}
 		this.startPointerStyle = data.startPointerStyle ?? this.startPointerStyle;
 		this.endPointerStyle = data.endPointerStyle ?? this.endPointerStyle;

@@ -7,7 +7,7 @@ import { Board } from "Board";
 import { Subject } from "Subject";
 import {registerItem, registerTool} from "Items/RegisterItem";
 import { DrawingContext } from "Items/DrawingContext";
-import {BorderWidth, Path} from "../../../Path";
+import {BorderWidth, Path, BorderStyle} from "../../../Path";
 import {Line} from "../../../Line";
 import {Point} from "../../../Point";
 import {AddPouch, AddScreen} from "./AddScreen";
@@ -39,15 +39,21 @@ export class Screen extends BaseItem {
   private path: Path;
   private borderWidth = 1;
   backgroundColor = "#FFFFFF";
+  public borderColor = "#000000";
+  public borderStyle: BorderStyle = "solid";
   backgroundUrl = "";
   backgroundImage: HTMLImageElement | null = null;
 
   constructor(
     board: Board,
     id = "",
-    private ownerId = "",
+    defaultItemData?: BaseItemData,
+    isGroupItem?: boolean,
   ) {
-    super(board, id, defaultScreenData, true);
+    super(board, id, defaultItemData || defaultScreenData, true);
+    const data = (defaultItemData || defaultScreenData) as any;
+    this.ownerId = data.ownerId || "";
+    this.path = new Path(); // use a dummy path, it will be reassigned in transformPath
 
     this.transformation.subject.subscribe(() => {
       this.transformPath();

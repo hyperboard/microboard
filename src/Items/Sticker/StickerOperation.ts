@@ -5,10 +5,11 @@ import { ColorValue, semanticColor } from 'Color';
 
 export class StickerData {
 	readonly itemType = 'Sticker';
+	[key: string]: unknown;
 	constructor(
 		public backgroundColor: ColorValue = semanticColor('contrastBlue'),
 		public transformation = new DefaultTransformationData(),
-		public linkTo?: string | LinkTo,
+		public linkTo?: string,
 		public text = new DefaultRichTextData([], 'center', undefined)
 	) {}
 }

@@ -26,7 +26,7 @@ import {
   translateElementBy,
 } from "HTMLRender";
 import { conf } from "Settings";
-import {BaseItem} from "../BaseItem";
+import {BaseItem, SerializedItemData} from "../BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 export const stickerColors = {
@@ -163,8 +163,9 @@ export class Sticker extends BaseItem {
     storage.setStickerData(this.serialize());
   }
 
-  serialize(): StickerData {
+  serialize(): SerializedItemData<StickerData> {
     return {
+      id: this.id,
       itemType: "Sticker",
       backgroundColor: this.backgroundColor,
       transformation: this.transformation.serialize(),
@@ -173,7 +174,7 @@ export class Sticker extends BaseItem {
     };
   }
 
-  deserialize(data: Partial<StickerData>): this {
+  deserialize(data: SerializedItemData<StickerData> | StickerData): this {
     if (data.backgroundColor != null) {
       this.backgroundColor = coerceColorValue(data.backgroundColor);
     }
@@ -186,9 +187,7 @@ export class Sticker extends BaseItem {
     this.text.updateElement();
     const linkTo = data.linkTo;
     if (linkTo) {
-      this.linkTo.deserialize(
-        typeof linkTo === "string" ? linkTo : linkTo.link
-      );
+      this.linkTo.deserialize(linkTo);
     }
     // this.transformPath();
     this.subject.publish(this);

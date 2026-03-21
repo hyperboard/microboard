@@ -118,7 +118,7 @@ export function handleSplitListItem(editor: CustomEditor): boolean {
 
 	Transforms.splitNodes(editor, {
 		at: editor.selection.anchor,
-		match: n => Element.isElement(n) && n.type === 'list_item',
+		match: n => Element.isElement(n) && (n as any).type === 'list_item',
 		always: true,
 	});
 

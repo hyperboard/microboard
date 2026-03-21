@@ -1,5 +1,5 @@
 import {BaseItem, BaseItemData, SerializedItemData} from "../../../BaseItem/BaseItem";
-import {BorderWidth, LinePatterns, Path, Shapes} from "Items";
+import {BorderWidth, LinePatterns, Path, Shapes, BorderStyle, Point} from "Items";
 import {createRoundedRectanglePath} from "Items/Shape/Basic/RoundedRectangle";
 import {Subject} from "Subject";
 import {Board} from "Board";
@@ -33,21 +33,27 @@ export class Dice extends BaseItem {
   private type: DiceType = "common";
   private path: Path;
   readonly subject = new Subject<Dice>();
-  private borderWidth = 1;
-  valueIndex = 0;
-  values: (number | string)[] = [];
-  renderValues: Record<number, number | HTMLImageElement> = {};
-  private animationFrameId?: number;
   drawingContext: DrawingContext | null = null;
+  public backgroundColor = "#FFFFFF";
+  public borderColor = "#000207";
+  public borderStyle: BorderStyle = "solid";
+  private borderWidth = 1;
 
-  constructor(board: Board, id = "", type?: DiceType, values?: (number | string)[] ) {
-    super(board, id, defaultDiceData);
+  constructor(
+    board: Board,
+    id = "",
+    defaultItemData?: BaseItemData,
+    isGroupItem?: boolean
+  ) {
+    super(board, id, defaultItemData || defaultDiceData, isGroupItem);
+    this.path = createRoundedRectanglePath(this).copy(); // definitely assign it
 
-    if (type) {
-      this.type = type;
+    const data = (defaultItemData || defaultDiceData) as any;
+    if (data.type) {
+      this.type = data.type;
     }
-    if (values) {
-      this.values = values;
+    if (data.values) {
+      this.values = data.values;
     }
 
     this.updateRenderValues();
@@ -73,7 +79,7 @@ export class Dice extends BaseItem {
   }
 
   async updateRenderValues(): Promise<void> {
-    this.values.forEach(async (value, index) => {
+    this.values.forEach(async (value: number | string, index: number) => {
       if (typeof value === "number") {
         this.renderValues[index] = value;
       } else {

@@ -11,13 +11,14 @@ import { Point } from "Items/Point/Point";
 import { Line } from "Items/Line/Line";
 import { conf } from "Settings";
 import { AudioCommand } from "Items/Audio/AudioCommand";
-import { BaseItem } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 
 export interface AudioItemData {
   itemType: "Audio";
   url: string;
   transformation: TransformationData;
   extension?: string;
+  [key: string]: unknown;
 }
 
 export class AudioItem extends BaseItem {
@@ -193,8 +194,9 @@ export class AudioItem extends BaseItem {
     return div;
   }
 
-  serialize(): AudioItemData {
+  serialize(): SerializedItemData<AudioItemData> {
     return {
+      id: this.id,
       itemType: "Audio",
       url: this.url,
       transformation: this.transformation.serialize(),
@@ -202,7 +204,7 @@ export class AudioItem extends BaseItem {
     };
   }
 
-  deserialize(data: Partial<AudioItemData>): AudioItem {
+  	deserialize(data: SerializedItemData<AudioItemData> | AudioItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }

@@ -12,10 +12,10 @@ import {
   NumberedListNode,
   ListItemNode,
   ListItemChild,
+  HeadingNode,
 } from "Items/RichText/Editor/BlockNode";
 import { TextNode } from "Items/RichText/Editor/TextNode";
 import { VideoItemData } from "Items/Video";
-import { HeadingNode } from "remark-slate";
 import { Descendant } from "slate";
 
 export type ItemsMap = Record<string, ItemData>;

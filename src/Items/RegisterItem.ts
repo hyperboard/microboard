@@ -60,10 +60,10 @@ function createItemCommandFactory(itemType: string) {
   return function itemCommandFactory(
     items: Item[],
     operation: ItemOperation,
-    board: Board,
+    board?: Board,
   ): Command {
     return new BaseCommand(
-      board,
+      board as any,
       items.filter((item): boolean => item.itemType === itemType).map(item => item.getId()),
       operation as BaseOperation
     );

@@ -1,6 +1,6 @@
 import { Board } from "Board";
 import { BoardTool } from "Tools/BoardTool";
-import {Comment} from "../../Items";
+import { Comment, Point } from "../../Items";
 
 export class AddComment extends BoardTool {
   isDown = false;
@@ -30,9 +30,12 @@ export class AddComment extends BoardTool {
   leftButtonUp(): boolean {
     this.isDown = false;
     this.board.selection.removeAll();
-    this.comment = this.board.add(
-      new Comment(this.board.pointer.point)
+    const comment = new Comment(
+      this.board,
+      this.board.pointer.point,
+      this.board.events
     );
+    this.comment = this.board.add(comment);
     this.board.tools.publish();
     return true;
   }

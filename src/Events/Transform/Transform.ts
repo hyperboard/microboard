@@ -69,10 +69,23 @@ import { moveNode_splitNode } from './moveNode_splitNode';
 
 type SlateOpTypesToTransform = TextOperation['type'] | NodeOperation['type'];
 export type SlateOpsToTransform = TextOperation | NodeOperation;
+
+function isTransformableOp(op: SlateOp): op is SlateOpsToTransform {
+	return (
+		op.type === 'insert_text' ||
+		op.type === 'remove_text' ||
+		op.type === 'insert_node' ||
+		op.type === 'remove_node' ||
+		op.type === 'split_node' ||
+		op.type === 'merge_node' ||
+		op.type === 'move_node' ||
+		op.type === 'set_node'
+	);
+}
 type TransformFunction<T extends SlateOpsToTransform, U extends SlateOpsToTransform> = (
 	confirmed: T,
 	toTransform: U,
-	editor: BaseEditor & ReactEditor & HistoryEditor
+	editor: any
 ) => U | undefined;
 
 type OperationTransformMap = {
@@ -194,15 +207,28 @@ export function transformRichTextOperation(
 				let actualyTransformed = { ...transfOp };
 
 				for (const confOp of confirmedItemOp.ops) {
-					const transformFunction =
-						operationTransformMap[confOp.type]?.[actualyTransformed.type];
-					const transformed =
-						transformFunction &&
-						// transformFunction(confOp, actualyTransformed, editor);
-						transformFunction(confOp, actualyTransformed);
+					const confType = confOp.type;
+					const transfType = actualyTransformed.type;
 
-					if (transformed) {
-						actualyTransformed = transformed;
+					if (
+						isTransformableOp(confOp) &&
+						isTransformableOp(actualyTransformed)
+					) {
+						if (
+							confOp.type in operationTransformMap &&
+							actualyTransformed.type in operationTransformMap[confOp.type]
+						) {
+							const transformFunction = (
+								operationTransformMap[confOp.type] as any
+							)[actualyTransformed.type];
+							const transformed =
+								typeof transformFunction === 'function' &&
+								transformFunction(confOp as any, actualyTransformed as any);
+
+							if (transformed) {
+								actualyTransformed = transformed;
+							}
+						}
 					}
 				}
 
@@ -237,15 +263,28 @@ export function transformRichTextOperation(
 			let actualyTransformed = { ...transfOp };
 
 			for (const confOp of confirmed.ops) {
-				const transformFunction =
-					operationTransformMap[confOp.type]?.[actualyTransformed.type];
-				const transformed =
-					transformFunction &&
-					// transformFunction(confOp, actualyTransformed, rt.editor.editor);
-					transformFunction(confOp, actualyTransformed);
+				const confType = confOp.type;
+				const transfType = actualyTransformed.type;
 
-				if (transformed) {
-					actualyTransformed = transformed;
+				if (
+					isTransformableOp(confOp) &&
+					isTransformableOp(actualyTransformed)
+				) {
+					if (
+						confOp.type in operationTransformMap &&
+						actualyTransformed.type in operationTransformMap[confOp.type]
+					) {
+						const transformFunction = (
+							operationTransformMap[confOp.type] as any
+						)[actualyTransformed.type];
+						const transformed =
+							typeof transformFunction === 'function' &&
+							transformFunction(confOp as any, actualyTransformed as any);
+
+						if (transformed) {
+							actualyTransformed = transformed;
+						}
+					}
 				}
 			}
 
@@ -270,14 +309,23 @@ export function transformRichTextOperation(
 					let actualyTransformed = { ...transfOp };
 
 					for (const confOp of confItemOp.ops) {
-						const transformFunction =
-							operationTransformMap[confOp.type]?.[actualyTransformed.type];
-						const transformed =
-							transformFunction && transformFunction(confOp, actualyTransformed);
-						// transformFunction(confOp, actualyTransformed, rt.editor.editor);
+						const confType = confOp.type;
+						const transfType = actualyTransformed.type;
 
-						if (transformed) {
-							actualyTransformed = transformed;
+						if (
+							confType in operationTransformMap &&
+							transfType in operationTransformMap[confType as SlateOpTypesToTransform]
+						) {
+							const transformFunction = (
+								operationTransformMap[confType as SlateOpTypesToTransform] as any
+							)[transfType];
+							const transformed =
+								typeof transformFunction === 'function' &&
+								transformFunction(confOp as any, actualyTransformed as any);
+
+							if (transformed) {
+								actualyTransformed = transformed;
+							}
 						}
 					}
 
@@ -306,14 +354,28 @@ export function transformRichTextOperation(
 					let actualyTransformed = { ...transfOp };
 
 					for (const confOp of confirmed.ops) {
-						const transformFunction =
-							operationTransformMap[confOp.type]?.[actualyTransformed.type];
-						const transformed =
-							transformFunction && transformFunction(confOp, actualyTransformed);
-						// transformFunction(confOp, actualyTransformed, rt.editor.editor);
+						const confType = confOp.type;
+						const transfType = actualyTransformed.type;
 
-						if (transformed) {
-							actualyTransformed = transformed;
+						if (
+							(confType === 'insert_text' || confType === 'remove_text' || confType === 'insert_node' || confType === 'remove_node' || confType === 'split_node' || confType === 'merge_node' || confType === 'move_node' || confType === 'set_node') &&
+							(transfType === 'insert_text' || transfType === 'remove_text' || transfType === 'insert_node' || transfType === 'remove_node' || transfType === 'split_node' || transfType === 'merge_node' || transfType === 'move_node' || transfType === 'set_node')
+						) {
+							if (
+								confType in operationTransformMap &&
+								transfType in operationTransformMap[confType as SlateOpTypesToTransform]
+							) {
+								const transformFunction = (
+									operationTransformMap[confType as SlateOpTypesToTransform] as any
+								)[transfType];
+								const transformed =
+									typeof transformFunction === 'function' &&
+									transformFunction(confOp as any, actualyTransformed as any);
+
+								if (transformed) {
+									actualyTransformed = transformed;
+								}
+							}
 						}
 					}
 

@@ -1,5 +1,4 @@
 import { Board } from 'Board';
-import { SnapshotToPublish } from '../Events';
 import { conf } from 'Settings';
 
 export interface SnapshotRequestMsg {
@@ -13,22 +12,25 @@ export type SnapshotToPublish = {
 	lastOrder: number;
 };
 
-export function handleCreateSnapshotRequestMessage(msg, board: Board): void {
-	const { boardId, snapshot, lastOrder } = getSnapshotToPublish(board);
+export function handleCreateSnapshotRequestMessage(msg: any, board: Board): void {
+	const result = getSnapshotToPublish(board);
+	if (!result) {
+		return;
+	}
+	const { boardId, snapshot, lastOrder } = result;
 
 	conf.connection.send({
 		type: 'BoardSnapshot',
 		boardId,
 		snapshot,
 		lastEventOrder: lastOrder,
-		// lastEventOrder: snapshot.lastIndex,
 	});
 }
 
-function getSnapshotToPublish(board: Board): SnapshotToPublish {
+function getSnapshotToPublish(board: Board): SnapshotToPublish | null {
 	const { log } = board.events;
 	if (!log) {
-		return;
+		return null;
 	}
 	const boardId = board.getBoardId();
 	log.list.revertUnconfirmed();

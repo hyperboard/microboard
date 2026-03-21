@@ -18,7 +18,7 @@ export function getListTypeAtSelectionStart(editor: CustomEditor): ListType | nu
 
 	const listEntry = Editor.above<Element>(editor, {
 		at: startPoint,
-		match: n => !Editor.isEditor(n) && (n.type === 'ol_list' || n.type === 'ul_list'),
+		match: n => !Editor.isEditor(n) && ((n as any).type === 'ol_list' || (n as any).type === 'ul_list'),
 	});
 
 	if (listEntry) {

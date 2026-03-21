@@ -63,10 +63,12 @@ export interface FrameData {
 	text?: RichTextData;
 	canChangeRatio?: boolean;
 	linkTo?: string;
+	[key: string]: unknown;
 }
 
 export class DefaultFrameData implements FrameData {
 	readonly itemType = 'Frame';
+	[key: string]: unknown;
 	constructor(
 		public shapeType: FrameType = 'Custom',
 		public backgroundColor: ColorValue = semanticColor('contrastNeutral'),

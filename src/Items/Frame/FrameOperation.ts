@@ -37,9 +37,25 @@ interface RemoveChild {
 	childId: string[];
 }
 
+interface AddChildren {
+	class: "Frame";
+	method: "addChildren";
+	item: string[];
+	childId: string[];
+}
+
+interface RemoveChildren {
+	class: "Frame";
+	method: "removeChildren";
+	item: string[];
+	childId: string[];
+}
+
 export type FrameOperation =
 	| SetBackgroundColor
 	| SetCanChangeRatio
 	| SetFrameType
 	| AddChild
-	| RemoveChild;
+	| RemoveChild
+	| AddChildren
+	| RemoveChildren;

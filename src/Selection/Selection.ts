@@ -2,10 +2,11 @@ import { safeRequestAnimationFrame } from "api/safeRequestAnimationFrame";
 import { Board } from "Board";
 import { Events, Operation, Command } from "Events";
 import { createCommand } from "Events/Command";
-import {Item, RichText, Mbr, Frame, ItemData, Connector, ImageItem, ConnectionLineWidth} from "Items";
+import { BoardPoint, Connector, Item, Point, BaseItem, Frame, ImageItem, RichText, Sticker, Mbr, ItemData } from "Items";
 import { AINode, CONTEXT_NODE_HIGHLIGHT_COLOR } from "Items/AINode";
 import { HorisontalAlignment, VerticalAlignment } from "Items/Alignment";
-import { BoardPoint, ConnectorLineStyle } from "Items/Connector";
+import { ColorValue } from "Color";
+import { ConnectorLineStyle } from "Items/Connector";
 import { CONNECTOR_COLOR } from "Items/Connector/Connector";
 import { ConnectorPointerStyle } from "Items/Connector/Pointers/Pointers";
 import { DrawingContext } from "Items/DrawingContext";
@@ -14,7 +15,6 @@ import { BorderStyle } from "Items/Path";
 import { TextStyle } from "Items/RichText";
 import { ItemOp } from "Items/RichText/RichTextOperations";
 import { DefaultShapeData, ShapeType } from "Items/Shape";
-import { Sticker } from "Items/Sticker";
 import { ApplyMatrixItem } from "Items/Transformation/TransformationOperations";
 import { toFiniteNumber } from "lib";
 import { conf } from "Settings";
@@ -26,7 +26,6 @@ import { SelectionTransformer } from "./SelectionTransformer";
 import { BaseSelection, BaseRange } from "slate";
 import { ReactEditor } from "slate-react";
 import { tempStorage } from "SessionStorage";
-import {BaseItem} from "../Items/BaseItem";
 import { Group } from "Items/Group";
 
 const defaultShapeData = new DefaultShapeData();
@@ -488,14 +487,14 @@ export class BoardSelection {
     this.textToEdit = text;
 
     if (text.isEmpty()) {
-      const textColor = tempStorage.getFontColor(item.itemType);
-      const textSize = tempStorage.getFontSize(item.itemType);
-      const highlightColor = tempStorage.getFontHighlight(item.itemType);
-      const styles = tempStorage.getFontStyles(item.itemType);
+      const textColor = tempStorage.getFontColor(item!.itemType);
+      const textSize = tempStorage.getFontSize(item!.itemType);
+      const highlightColor = tempStorage.getFontHighlight(item!.itemType);
+      const styles = tempStorage.getFontStyles(item!.itemType);
       const horisontalAlignment = tempStorage.getHorisontalAlignment(
-        item.itemType
+        item!.itemType
       );
-      const verticalAlignment = tempStorage.getVerticalAlignment(item.itemType);
+      const verticalAlignment = tempStorage.getVerticalAlignment(item!.itemType);
       if (textColor) {
         text.setSelectionFontColor(textColor, "None");
       }
@@ -507,7 +506,7 @@ export class BoardSelection {
         this.emit({
           class: "RichText",
           method: "setFontSize",
-          item: [item.getId()],
+          item: [item!.getId()],
           fontSize: textSize,
           context: this.getContext(),
         });
@@ -594,7 +593,7 @@ export class BoardSelection {
     item: Item,
     copiedItemsMap: { [key: string]: ItemData }
   ): void {
-    const serializedData = item.serialize(true);
+    const serializedData = item.serialize() as ItemData;
     const zIndex = this.board.items.index.getZIndex(item);
     if (item.itemType === "Comment") {
       return;
@@ -691,9 +690,10 @@ export class BoardSelection {
         }
         return [];
       })
+      .filter((id): id is string => id !== null)
       .forEach((id) => {
         if (!(id in copiedItemsMap)) {
-          const childItem = this.board.items.getById(id);
+          const childItem = this.board.items.getById(id!);
           if (!childItem) {
             console.warn(`Didn't find item with ${id} while copying`);
           } else {
@@ -756,19 +756,19 @@ export class BoardSelection {
     return Math.round(fontSize);
   }
 
-  getFontHighlight(): string {
+  getFontHighlight(): ColorValue | string {
     const color = this.getText()?.getFontHighlight() || "none";
     return color;
   }
 
-  getFontColor(): string {
+  getFontColor(): ColorValue | string {
     const color = this.getText()?.getFontColor() || "none";
     return color;
   }
 
-  getFillColor(): string {
+  getFillColor(): ColorValue | string {
     const tmp = this.items.list()[0];
-    return "getBackgroundColor" in tmp ? tmp.getBackgroundColor() : defaultShapeData.backgroundColor;
+    return "getBackgroundColor" in tmp ? (tmp as any).getBackgroundColor() : defaultShapeData.backgroundColor;
   }
 
   getBorderStyle(): string {
@@ -776,9 +776,9 @@ export class BoardSelection {
     return "getBorderStyle" in shape ? shape.getBorderStyle() : defaultShapeData.borderStyle;
   }
 
-  getStrokeColor(): string {
+  getStrokeColor(): ColorValue | string {
     const shape = this.items.list()[0];
-    return "getStrokeColor" in shape ? shape.getStrokeColor() : defaultShapeData.borderColor;
+    return "getStrokeColor" in shape ? (shape as any).getStrokeColor() : defaultShapeData.borderColor;
   }
 
   getStrokeWidth(): number {
@@ -791,8 +791,8 @@ export class BoardSelection {
     return connector?.getLineWidth() || 1;
   }
 
-  getConnectorLineColor(): string {
-    const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+  getConnectorLineColor(): ColorValue | string {
+    const connector = this.items.getItemsByItemTypes(["Connector"])[0] as Connector;
     return connector?.getLineColor() || CONNECTOR_COLOR;
   }
 
@@ -961,9 +961,9 @@ export class BoardSelection {
     }
     const selectedMbr = selected.reduce((acc: Mbr | undefined, item) => {
       if (!acc) {
-        return item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+        return item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
       }
-      return acc.combine(item instanceof BaseItem ? item.getWorldMbr() : item.getMbr());
+      return acc.combine(item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr());
     }, undefined);
 
     if (selectedMbr) {
@@ -1203,7 +1203,7 @@ export class BoardSelection {
     })
 
     Object.values(operations).forEach((op) => {
-      this.emit(op);
+      this.emit(op as any);
     })
 
     // const shapes = this.items.getIdsByItemTypes(["Shape"]);
@@ -1266,7 +1266,7 @@ export class BoardSelection {
     })
 
     Object.values(operations).forEach((op) => {
-      this.emit(op);
+      this.emit(op as any);
     })
 
     // const shapes = this.items.getIdsByItemTypes(["Shape"]);
@@ -1320,7 +1320,7 @@ export class BoardSelection {
     })
 
     Object.values(operations).forEach((op) => {
-      this.emit(op);
+      this.emit(op as any);
     })
     // const shapes = this.items.getIdsByItemTypes(["Shape"]);
     // if (shapes.length) {
@@ -1771,7 +1771,7 @@ export class BoardSelection {
     item: Item,
     customScale?: number
   ): void {
-    const mbr = item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+    const mbr = item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
     mbr.strokeWidth = !customScale
       ? 1 / context.matrix.scaleX
       : 1 / customScale;
@@ -1845,7 +1845,7 @@ export class BoardSelection {
         path.setBackgroundColor("none");
         path.render(context);
       } else {
-        const itemRect = item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+        const itemRect = item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
         itemRect.borderColor = CONTEXT_NODE_HIGHLIGHT_COLOR;
         itemRect.strokeWidth = 2;
         itemRect.render(context);

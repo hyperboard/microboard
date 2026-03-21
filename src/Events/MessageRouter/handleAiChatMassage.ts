@@ -231,7 +231,7 @@ function handleAudioGenerate(response: GenerateAudioResponse, board: Board): voi
 			return;
 		}
 
-		const audio = new AudioItem(board, true, audioUrl, board.events, '', 'wav');
+		const audio = new AudioItem(board, audioUrl, board.events, '', 'wav');
 		const { left, top, right } = placeholderNode.getMbr();
 		audio.transformation.applyTranslateTo(
 			left + (right - left - conf.AUDIO_DIMENSIONS.width) / 2,
@@ -338,9 +338,9 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 								};
 								oldIdConnector.setEndPoint(
 									getControlPointData(
-										newImageAI,
-										reverseIndexMap[threadDirection]
-									)
+									newImageAI,
+									(reverseIndexMap as any)[threadDirection]
+								)
 								);
 							}
 							board.selection.removeAll();

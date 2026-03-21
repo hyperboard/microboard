@@ -121,7 +121,7 @@ export class SelectionItems {
 			return;
 		}
 		const worldMbr = (item: Item): Mbr =>
-			item instanceof BaseItem ? item.getWorldMbr() : item.getMbr();
+			item instanceof BaseItem ? item.getWorldMbr() : (item as any).getMbr();
 		const mbr = worldMbr(items[0]);
 		items.slice(1).forEach(item => mbr.combine(worldMbr(item)));
 		return mbr;

@@ -322,7 +322,7 @@ export class Deck extends BaseItem {
     const tempContext = {...context, ctx: tempCtx};
 
     cards.forEach((_, index) => {
-      topCard.render(tempContext, this.isPerpendicular ? 0 : index * conf.DECK_HORIZONTAL_OFFSET, this.isPerpendicular ? index * conf.DECK_VERTICAL_OFFSET : 0);
+      topCard.render(tempContext as any, this.isPerpendicular ? 0 : index * conf.DECK_HORIZONTAL_OFFSET, this.isPerpendicular ? index * conf.DECK_VERTICAL_OFFSET : 0);
     });
 
     this.cachedCanvas = tempCanvas;
@@ -463,20 +463,22 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
     const cards: Card[] = [];
     cardsOrDecks.forEach((item) => {
       if (item.itemType === "Card") {
-        cards.push(item);
+        cards.push(item as any);
       } else if (item.itemType === "Deck") {
         if (mainDeck) {
-          cards.push(...mainDeck.getDeck());
+          cards.push(...(mainDeck as any).getDeck());
           board.remove(mainDeck);
-          mainDeck = item;
+          mainDeck = item as any;
         } else {
-          mainDeck = item;
+          mainDeck = item as any;
         }
       }
     });
     board.selection.removeAll();
-    mainDeck.addChildItems(cards);
-    board.selection.add(mainDeck);
+    if (mainDeck) {
+      (mainDeck as any).addChildItems(cards);
+      board.selection.add(mainDeck);
+    }
   }
 };
 

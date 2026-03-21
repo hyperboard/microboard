@@ -8,6 +8,7 @@ import {
   Item,
   RichText,
   Matrix,
+  SerializedItemData,
 } from "..";
 import {Subject} from "Subject";
 import {DrawingContext} from "../DrawingContext";
@@ -48,7 +49,6 @@ export class Frame extends BaseItem {
   readonly subject = new Subject<Frame>();
   private textContainer: Mbr = new Mbr();
   private path: Path;
-  private children: string[] = [];
   private mbr: Mbr = new Mbr();
   readonly linkTo: LinkTo;
   readonly text: RichText;
@@ -377,8 +377,9 @@ export class Frame extends BaseItem {
     }
   }
 
-  serialize(): FrameData {
+  serialize(): SerializedItemData<FrameData> {
     return {
+      id: this.id,
       itemType: "Frame",
       shapeType: this.shapeType,
       backgroundColor: this.backgroundColor,
@@ -388,7 +389,7 @@ export class Frame extends BaseItem {
       borderStyle: this.borderStyle,
       borderWidth: this.borderWidth,
       transformation: this.transformation.serialize(),
-      children: this.index?.list().map((child) => child.getId()) || [],
+      children: this.getChildrenIds(),
       text: this.text.serialize(),
       canChangeRatio: this.canChangeRatio,
       linkTo: this.linkTo.serialize(),

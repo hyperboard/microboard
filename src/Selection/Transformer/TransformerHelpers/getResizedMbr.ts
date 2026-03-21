@@ -1,5 +1,5 @@
 import { Point, Mbr } from "Items/index";
-import { ResizeType } from "./getResizeType.ts";
+import { ResizeType } from "./getResizeType";
 
 export function getResizedMbr(
   resizeType: ResizeType,

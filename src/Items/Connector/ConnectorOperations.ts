@@ -17,12 +17,13 @@ export class ConnectorData {
 	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";
 	lineColor: ColorValue = fixedColor(CONNECTOR_COLOR);
-	linkTo?: string | LinkTo;
+	linkTo?: string;
 	lineWidth: ConnectionLineWidth = 1;
 	borderStyle: BorderStyle = "solid";
 	transformation = new DefaultTransformationData();
 	text = new DefaultRichTextData([], "center", undefined);
 	optionalFindItemFn?: FindItemFn;
+	[key: string]: unknown;
 }
 
 interface SetStartPoint {

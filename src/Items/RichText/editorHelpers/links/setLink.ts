@@ -21,7 +21,7 @@ export const setLink = (
 
 	Transforms.setNodes(
 		editor,
-		{ fontColor: format } as Parameters<typeof Transforms.setNodes>[1],
+		{ fontColor: format } as any,
 		{
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			match: n => !Editor.isEditor(n) && (n as any).type === 'text',
@@ -30,10 +30,10 @@ export const setLink = (
 	);
 
 	for (const [node, path] of Editor.nodes(editor, {
-		match: n => !Editor.isEditor(n) && n.type === 'text',
+		match: n => !Editor.isEditor(n) && (n as any).type === 'text',
 	})) {
 		const nodeRange = Editor.range(editor, path);
 		Transforms.select(editor, nodeRange);
-		Transforms.setNodes(editor, { link }, { split: false, match: n => !Editor.isEditor(n) && n.type === 'text' });
+		Transforms.setNodes(editor, { link } as any, { split: false, match: n => !Editor.isEditor(n) && (n as any).type === 'text' });
 	}
 };

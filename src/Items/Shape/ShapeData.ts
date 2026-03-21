@@ -21,10 +21,12 @@ export interface ShapeData {
   transformation: TransformationData;
   text: RichTextData;
   linkTo?: string;
+  [key: string]: unknown;
 }
 
 export class DefaultShapeData implements ShapeData {
   readonly itemType = "Shape";
+  [key: string]: unknown;
   constructor(
     public shapeType: ShapeType = "Rectangle",
     public backgroundColor: ColorValue = fixedColor("none"),

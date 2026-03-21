@@ -17,7 +17,7 @@ export function deserializeAndApplyToList(
 				// Create a new event object for this particular operation.
 				const singleEvent: SyncBoardEvent = {
 					...event,
-					operations,
+					operations: (event as any).body.operations,
 					body: {
 						...event.body,
 						operation: op,

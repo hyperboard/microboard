@@ -110,6 +110,7 @@ export function getStartPointer(
 		start: pointer.start.getTransformed(matrix),
 		end: pointer.end.getTransformed(matrix),
 		name: pointer.name,
+		middle: [],
 	};
 }
 
@@ -128,6 +129,7 @@ export function getEndPointer(
 		start: pointer.start.getTransformed(matrix),
 		end: pointer.end.getTransformed(matrix),
 		name: pointer.name,
+		middle: [],
 	};
 }
 

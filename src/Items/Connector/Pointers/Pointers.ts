@@ -4,19 +4,19 @@ import { Path, Paths } from 'Items/Path';
 import { Point } from 'Items/Point';
 
 export interface Pointer {
-	name: ConnectorPointerStyle;
+	name: string;
 	path: Path | Paths;
 	start: Point;
 	end: Point;
-	middle: Point[];
+	middle: readonly Point[];
 }
 
 export function getPointer(style: string): Pointer {
-	const path = Pointers[style];
+	const path = (Pointers as unknown as Record<string, Pointer>)[style];
 	if (!path) {
-		return Pointers.None;
+		return Pointers.None as unknown as Pointer;
 	}
-	return path;
+	return path as unknown as Pointer;
 }
 
 const Pointers = {
@@ -25,6 +25,7 @@ const Pointers = {
 		path: new Path([new Line(new Point(99, 50), new Point(128, 50))]),
 		start: new Point(99, 50),
 		end: new Point(128, 50),
+		middle: [],
 	},
 	Angle: {
 		name: 'Angle',
@@ -37,6 +38,7 @@ const Pointers = {
 		),
 		start: new Point(94, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	ArrowBroad: {
 		name: 'ArrowBroad',
@@ -55,6 +57,7 @@ const Pointers = {
 		),
 		start: new Point(70, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	ArrowThin: {
 		name: 'ArrowThin',
@@ -73,6 +76,7 @@ const Pointers = {
 		),
 		start: new Point(70, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	CircleFilled: {
 		name: 'CircleFilled',
@@ -95,6 +99,7 @@ const Pointers = {
 		),
 		start: new Point(64.5, 50.5),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	DiamondEmpty: {
 		name: 'DiamondEmpty',
@@ -109,6 +114,7 @@ const Pointers = {
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	DiamondFilled: {
 		name: 'DiamondFilled',
@@ -123,6 +129,7 @@ const Pointers = {
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	Many: {
 		name: 'Many',
@@ -138,6 +145,7 @@ const Pointers = {
 		]),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	ManyMandatory: {
 		name: 'ManyManadatory',
@@ -154,6 +162,7 @@ const Pointers = {
 		]),
 		start: new Point(62.72, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	ManyOptional: {
 		name: 'ManyOptional',
@@ -186,6 +195,7 @@ const Pointers = {
 		]),
 		start: new Point(34.5, 49.5),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	One: {
 		name: 'One',
@@ -195,6 +205,7 @@ const Pointers = {
 		]),
 		start: new Point(79.1, 49.5),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	OneMandatory: {
 		name: 'OneMandatory',
@@ -206,6 +217,7 @@ const Pointers = {
 		]),
 		start: new Point(64.5, 49.5),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	OneOptional: {
 		name: 'OneOptional',
@@ -232,6 +244,7 @@ const Pointers = {
 		]),
 		start: new Point(34.5, 49.5),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	TriangleEmpty: {
 		name: 'TriangleEmpty',
@@ -245,6 +258,7 @@ const Pointers = {
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	TriangleFilled: {
 		name: 'TriangleFilled',
@@ -258,6 +272,7 @@ const Pointers = {
 		),
 		start: new Point(65, 50),
 		end: new Point(95, 50),
+		middle: [],
 	},
 	Zero: {
 		name: 'Zero',
@@ -280,6 +295,7 @@ const Pointers = {
 		),
 		start: new Point(64.5, 49.5),
 		end: new Point(95, 50),
+		middle: [],
 	},
 } as const;
 

@@ -12,7 +12,7 @@ export function getSelectionStyles(editor: Editor): string[] | undefined {
 	const nodes = getAllTextNodesInSelection(editor);
 	const styles: TextStyle[][] = nodes.reduce((acc: TextStyle[][], node: TextNode) => {
 		const styles: TextStyle[] = [];
-		if (node.text === '') {
+		if ((node as any).text === '') {
 			return acc;
 		}
 

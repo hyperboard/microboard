@@ -6,7 +6,7 @@ import { RefObject } from 'react';
 
 export function updateRects(
 	board: Board,
-	ref: RefObject<HTMLElement>,
+	ref: any,
 	mbr?: Mbr,
 	verticalOffset?: number,
 	horizontalOffset?: number,

@@ -29,7 +29,7 @@ export class AddDrawing extends BoardTool {
     }
   }
 
-  private updateSettings() {
+  protected updateSettings() {
     localStorage.setItem(
       conf.PEN_SETTINGS_KEY,
       JSON.stringify({

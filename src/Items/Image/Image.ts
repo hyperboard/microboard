@@ -14,7 +14,7 @@ import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
 import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
-import { BaseItem } from "Items/BaseItem/BaseItem";
+import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import {getMediaSignedUrl} from "api/MediaHelpers";
 
 export interface ImageItemData {
@@ -23,6 +23,7 @@ export interface ImageItemData {
   imageDimension: Dimension;
   transformation: TransformationData;
   linkTo?: string;
+  [key: string]: unknown;
 }
 
 export interface Dimension {
@@ -81,7 +82,7 @@ export class ImageItem extends BaseItem {
   loadCallbacks: ((image: ImageItem) => void)[] = [];
   beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
   transformationRenderBlock?: boolean = undefined;
-  private storageLink: string;
+  private storageLink!: string;
   private signedUrl = "";
   imageDimension: Dimension;
   board: Board;
@@ -240,8 +241,9 @@ export class ImageItem extends BaseItem {
     return this.id;
   }
 
-  serialize(): ImageItemData {
+  serialize(): SerializedItemData<ImageItemData> {
     return {
+      id: this.id,
       itemType: "Image",
       storageLink: this.storageLink,
       imageDimension: this.imageDimension,
@@ -271,7 +273,7 @@ export class ImageItem extends BaseItem {
     }
   }
 
-  deserialize(data: Partial<ImageItemData>): ImageItem {
+  deserialize(data: SerializedItemData<ImageItemData> | ImageItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }

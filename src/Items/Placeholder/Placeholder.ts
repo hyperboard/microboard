@@ -11,8 +11,8 @@ import {Point} from "../Point";
 import {Transformation, Matrix, TransformationData} from "../Transformation";
 import {PlaceholderOperation} from "./PlaceholderOperation";
 import {PlaceholderCommand} from "./PlaceholderCommand";
-import {getResize} from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix.ts";
-import {BaseItem} from "../BaseItem";
+import {getResize} from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix";
+import {BaseItem, SerializedItemData} from "../BaseItem";
 import {Board} from "../../Board";
 import {DocumentFactory} from "../../api/DocumentFactory";
 
@@ -26,6 +26,7 @@ export interface PlaceholderData {
     icon: string;
     transformation: TransformationData;
     miroData?: unknown;
+    [key: string]: unknown;
 }
 
 export class Placeholder extends BaseItem {
@@ -33,11 +34,11 @@ export class Placeholder extends BaseItem {
     shapeType = "Rectangle";
     parent = "Board";
     readonly transformation: Transformation;
-    private path = Shapes[this.shapeType].path.copy();
-    private mbr = Shapes[this.shapeType].path.getMbr().copy();
+    private path = (Shapes as any)[this.shapeType].path.copy();
+    private mbr = (Shapes as any)[this.shapeType].path.getMbr().copy();
     readonly subject = new Subject<Placeholder>();
     transformationRenderBlock?: boolean = undefined;
-    iconImage;
+    iconImage?: HTMLImageElement;
 
     constructor(
         board: Board,
@@ -68,8 +69,9 @@ export class Placeholder extends BaseItem {
         }
     }
 
-    serialize(): PlaceholderData {
+    serialize(): SerializedItemData<PlaceholderData> {
         return {
+            id: this.id,
             itemType: "Placeholder",
             backgroundColor: this.backgroundColor,
             icon: this.icon,
@@ -78,7 +80,7 @@ export class Placeholder extends BaseItem {
         };
     }
 
-    deserialize(data: Partial<PlaceholderData>): this {
+    deserialize(data: SerializedItemData<PlaceholderData> | PlaceholderData): this {
         this.initPath();
         this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
         this.icon = data.icon ?? this.icon;
@@ -251,7 +253,7 @@ export class Placeholder extends BaseItem {
     }
 
     getSnapAnchorPoints(): Point[] {
-        const anchorPoints = Shapes[this.shapeType].anchorPoints;
+        const anchorPoints = (Shapes as any)[this.shapeType].anchorPoints;
         const points: Point[] = [];
         for (const anchorPoint of anchorPoints) {
             points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
@@ -285,14 +287,14 @@ export class Placeholder extends BaseItem {
     }
 
     private transformPath(): void {
-        this.path = Shapes[this.shapeType].createPath(this.mbr);
+        this.path = (Shapes as any)[this.shapeType].createPath(this.mbr);
         this.path.transform(this.transformation.toMatrix());
         this.path.setBackgroundColor(this.backgroundColor);
         this.path.setBorderColor("transparent");
     }
 
     private initPath(): void {
-        this.path = Shapes[this.shapeType].createPath(this.mbr);
+        this.path = (Shapes as any)[this.shapeType].createPath(this.mbr);
     }
 
     private loadIconImage(): void {

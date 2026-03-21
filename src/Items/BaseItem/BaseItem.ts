@@ -1,6 +1,6 @@
 import { Mbr } from "Items/Mbr/Mbr";
 import { Geometry } from "Items/Geometry";
-import { RichText } from "Items/RichText/RichText";
+import type { RichText } from "Items/RichText/RichText";
 import { LinkTo } from "Items/LinkTo/LinkTo";
 import { Transformation } from "Items/Transformation/Transformation";
 import { Board } from "Board";
@@ -8,8 +8,9 @@ import { DrawingContext } from "Items/DrawingContext";
 import { DocumentFactory } from "api/DocumentFactory";
 import { Operation } from "Events";
 import { TransformationData } from "Items/Transformation/TransformationData";
+import { createEventsList } from "Events/Log/createEventsList";
 import { BaseOperation } from "Events/EventsOperations";
-import {BaseCommand, createCommand} from "Events/Command";
+import { BaseCommand } from "Events/BaseCommand";
 import {Subject} from "../../Subject";
 import {Path, Paths} from "../Path";
 import {BaseItemOperation} from "./BaseItemOperation";
@@ -75,15 +76,21 @@ function toLocalTransformOp(
 	}
 }
 
-export type BaseItemData = { itemType: string } & Record<string, any>;
-export type SerializedItemData<T extends BaseItemData = BaseItemData> = {
+export interface BaseItemData {
+	itemType: string;
+	transformation?: TransformationData;
 	linkTo?: string;
+	[key: string]: any;
+}
+
+export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
+	id: string;
 	transformation: TransformationData;
-	children?: string[]
-} & T;
+};
 
 export class BaseItem extends Mbr implements Geometry {
 	[key: string]: any;
+	static createCommand?: (board: Board, operation: Operation) => any;
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	parent: string = "Board";
@@ -389,7 +396,7 @@ export class BaseItem extends Mbr implements Geometry {
 		return null;
 	}
 
-	deserialize(data: SerializedItemData): this {
+	deserialize(data: SerializedItemData<any> | BaseItemData): this {
 		if (data.children) {
 			this.applyAddChildren(data.children);
 		}
@@ -404,20 +411,15 @@ export class BaseItem extends Mbr implements Geometry {
 		return this;
 	}
 
-	serialize(): SerializedItemData {
-		const serializedData: SerializedItemData = {
+	serialize(): SerializedItemData<BaseItemData> {
+		return {
+			id: this.id,
 			linkTo: this.linkTo.serialize(),
 			transformation: this.transformation.serialize(),
-			itemType: this.defaultItemData?.itemType || this.itemType,
-			children: this.index?.list().map((child) => child.getId()),
+			itemType: this.itemType,
+			children: this.children,
 			resizeEnabled: this.resizeEnabled,
 		};
-		Object.keys(this.defaultItemData || {}).forEach((key: string) => {
-			const value = this[key];
-			serializedData[key] = value?.serialize?.() || value;
-		});
-
-		return serializedData;
 	}
 
 	isClosed() {
@@ -438,7 +440,10 @@ export class BaseItem extends Mbr implements Geometry {
 		if (!this.board.events) {
 			return;
 		}
-		const command = createCommand(this.board, operation as Operation);
+		if (!BaseItem.createCommand) {
+			throw new Error("BaseItem.createCommand is not initialized");
+		}
+		const command = BaseItem.createCommand(this.board, operation as Operation);
 		command.apply();
 		this.board.events.emit(operation as Operation, command);
 	}

@@ -7,9 +7,9 @@ import { Matrix } from '../Transformation';
 import { GeometricNormal } from '../GeometricNormal';
 
 export class BaseCurve {
-	constructor(public curve: Bezier) {}
+	constructor(public curve: any) {}
 
-	protected updateCache(curve: Bezier): void {
+	protected updateCache(curve: any): void {
 		this.curve = curve;
 	}
 
@@ -27,13 +27,13 @@ export class BaseCurve {
 	}
 
 	getNearestEdgePointTo(point: Point): Point {
-		const projection: Projection = this.curve.project(point);
+		const projection: any = this.curve.project(point);
 		const { x, y } = projection;
 		return new Point(x, y);
 	}
 
 	getDistance(point: Point): number {
-		const projection: Projection = this.curve.project(point);
+		const projection: any = this.curve.project(point);
 		const nearestPoint = new Point(projection.x, projection.y);
 		return point.getDistance(nearestPoint);
 	}
@@ -107,7 +107,7 @@ export class BaseCurve {
 export class QuadraticBezier extends BaseCurve {
 	type = 'QuadBezier' as const;
 
-	static getCache(start = new Point(), control = new Point(), end = new Point()): Bezier {
+	static getCache(start = new Point(), control = new Point(), end = new Point()): any {
 		return new Bezier(start.x, start.y, control.x, control.y, end.x, end.y);
 	}
 
@@ -168,7 +168,7 @@ export class CubicBezier extends BaseCurve {
 		startControl = new Point(),
 		end = new Point(),
 		endControl = new Point()
-	): Bezier {
+	): any {
 		return new Bezier(
 			start.x,
 			start.y,
@@ -248,7 +248,7 @@ export class CubicBezier extends BaseCurve {
 	}
 }
 
-function findTForLength(curve: Bezier, target: number, error = 0.05, start = 0, end = 1): number {
+function findTForLength(curve: any, target: number, error = 0.05, start = 0, end = 1): number {
 	// eslint-disable-next-line id-length
 	let t = (start + end) / 2;
 	let iterations = 0;

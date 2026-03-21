@@ -11,7 +11,7 @@ export function getAllTextNodesInSelection(editor: Editor): TextNode[] {
 	for (const [node] of Editor.nodes(editor, {
 		at: selection,
 		// @ts-expect-error
-		match: n => n.type === 'text',
+		match: n => (n as any).type === "text",
 	})) {
 		textNodes.push(node as TextNode);
 	}

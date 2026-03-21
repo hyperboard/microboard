@@ -10,6 +10,7 @@ export function initI18N(i18nInstance: I18nType): I18nType {
   conf.planNames = {
     basic: i18nInstance.t("userPlan.plans.basic.name"),
     plus: i18nInstance.t("userPlan.plans.plus.name"),
+    plusAI: i18nInstance.t("userPlan.plans.plusAI.name"),
   };
   return i18nInstance;
 }

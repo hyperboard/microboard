@@ -1,4 +1,5 @@
 import type { SelectionContext } from "Selection/Selection";
+import { Board } from 'Board';
 import hotkeys from "hotkeys.json"; // Smell View from Board
 
 export type Hotkey = {
@@ -13,7 +14,7 @@ export type Hotkey = {
 
 export type HotkeyName = keyof typeof hotkeys;
 
-export type HotkeyCb = (event?: KeyboardEvent) => void;
+export type HotkeyCb = (event?: KeyboardEvent, board?: Board) => void;
 export type HotkeyConfig = {
   cb: HotkeyCb;
   selectionContext?: SelectionContext[];

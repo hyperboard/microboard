@@ -9,10 +9,13 @@ import { Geometry } from "../Geometry";
 import { GeometricNormal } from "../GeometricNormal";
 import { RichText } from "../RichText";
 import { DrawingContext } from "../DrawingContext";
+import { SerializedItemData } from "../BaseItem";
 import { Line } from "../Line";
 import { v4 as uuidv4 } from "uuid";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { DocumentFactory } from "api/DocumentFactory";
+import { BaseItem } from "Items/BaseItem/BaseItem";
+import { Board } from "Board";
 
 export interface Commentator {
   username: string;
@@ -37,12 +40,12 @@ export interface CommentData {
   usersUnreadMarks: number[];
   resolved: boolean;
   itemToFollow?: string;
+  [key: string]: unknown;
 }
 
 const ANONYMOUS_ID = 9_999_999_999;
 
-export class Comment implements Geometry {
-  readonly itemType = "Comment";
+export class Comment extends BaseItem {
   parent = "Board";
   readonly transformation: Transformation;
   private commentators: Commentator[] = [];
@@ -55,18 +58,13 @@ export class Comment implements Geometry {
   transformationRenderBlock?: boolean = undefined;
   resizeEnabled = true;
 
-  // Stubs matching BaseItem interface — Comment is passed to Select tool's
-  // drag logic which calls these methods. Without them runtime errors occur.
-  readonly index = null;
-  canBeNested = false;
-  children: string[] = [];
-  onRemoveCallbacks: (() => void)[] = [];
-
   constructor(
+    board: Board,
     private anchor = new Point(),
     private events?: Events,
-    private id = ""
+    id = ""
   ) {
+    super(board, id);
     this.transformation = new Transformation(id, events);
     this.transformation.subject.subscribe(() => {
       this.transform();
@@ -79,8 +77,9 @@ export class Comment implements Geometry {
     });
   }
 
-  serialize(): CommentData {
+  serialize(): SerializedItemData<CommentData> {
     return {
+      id: this.id,
       itemType: "Comment",
       anchor: this.anchor,
       thread: this.thread,
@@ -92,7 +91,7 @@ export class Comment implements Geometry {
     };
   }
 
-  deserialize(data: CommentData): this {
+  deserialize(data: SerializedItemData<CommentData> | CommentData): this {
     if (data.anchor) {
       this.anchor = new Point(data.anchor.x, data.anchor.y);
     }
@@ -112,7 +111,7 @@ export class Comment implements Geometry {
     return this;
   }
 
-  private emit(operation: CommentOperation): void {
+  public emit(operation: CommentOperation): void {
     if (this.events) {
       const command = new CommentCommand([this], operation);
       command.apply();
@@ -160,7 +159,7 @@ export class Comment implements Geometry {
         this.transform();
         break;
       case "Transformation":
-        super.apply(op);
+        super.apply(op as any);
         break;
       default:
         return;
@@ -295,7 +294,7 @@ export class Comment implements Geometry {
 
   private _syncing = false;
 
-  private transform(): void {
+  public transform(): void {
     if (this._syncing) return;
     this._syncing = true;
     const { translateX, translateY } = this.transformation.getMatrixData();
@@ -426,13 +425,7 @@ export class Comment implements Geometry {
     return this.linkTo.link;
   }
 
-  getPath(): null {
-    return null;
-  }
-
-  getSnapAnchorPoints(): Point[] | null {
-    return null;
-  }
+  // BaseItem stubs
 
   // BaseItem stubs — called by Select tool drag/drop and nesting logic.
   // Comment is not a real board item so all these are no-ops or return null.

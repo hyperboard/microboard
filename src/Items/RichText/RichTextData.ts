@@ -15,10 +15,12 @@ export interface RichTextData {
 	placeholderText: string;
 	realSize: 'auto' | number;
 	linkTo?: string;
+	[key: string]: any;
 }
 
 export class DefaultRichTextData implements RichTextData {
 	readonly itemType = 'RichText';
+	[key: string]: unknown;
 	constructor(
 		public children: Descendant[] = [],
 		public verticalAlignment: VerticalAlignment = 'center',

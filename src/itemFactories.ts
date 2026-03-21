@@ -24,6 +24,7 @@ import { Sticker } from "Items/Sticker";
 import { StickerData } from "Items/Sticker/StickerOperation";
 import { VideoItem, VideoItemData } from "Items/Video";
 import {CommentData} from "./Items/Comment";
+import { SerializedItemData } from "Items/BaseItem/BaseItem";
 
 interface ItemFactory {
   (id: string, data: ItemData, board: Board): Item;
@@ -58,9 +59,9 @@ function createComment(id: string, data: ItemData, board: Board): Comment {
   if (!isCommentData(data)) {
     throw new Error("Invalid data for Comment");
   }
-  const comment = new Comment(new Point(), board.events)
+  const comment = new Comment(board, new Point(), board.events)
       .setId(id)
-      .deserialize(data as CommentData);
+      .deserialize(data as CommentData | SerializedItemData<CommentData>);
   return comment;
 }
 
@@ -76,7 +77,7 @@ function createAINode(id: string, data: ItemData, board: Board): AINode {
       nodeData.contextItems,
   )
       .setId(id)
-      .deserialize(data as Partial<AINodeData>);
+      .deserialize(data as any);
   return node;
 }
 
@@ -148,7 +149,7 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
   }
   const drawing = new Drawing(board, [], board.events)
       .setId(id)
-      .deserialize(data);
+      .deserialize(data as any);
   return drawing;
 }
 
@@ -185,8 +186,7 @@ function createGroup(id: string, data: ItemData, board: Board): Group {
 
   const group = new Group(board, board.events, data.children, id)
       .setId(id)
-      .deserialize(data);
-
+      .deserialize(data as any);
   return group;
 }
 
@@ -194,11 +194,11 @@ function isStickerData(data: ItemData): data is StickerData {
   return data.itemType === "Sticker";
 }
 
-function isCommentData(data: ItemData): data is ItemData {
+function isCommentData(data: ItemData): data is CommentData {
   return data.itemType === "Comment";
 }
 
-function isAINodeData(data: ItemData): data is ItemData {
+function isAINodeData(data: ItemData): data is AINodeData {
   return data.itemType === "AINode";
 }
 

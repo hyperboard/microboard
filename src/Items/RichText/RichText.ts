@@ -48,7 +48,7 @@ import { getSelectedBlockNode } from "./editorHelpers/common/getSelectedBlockNod
 import { getSelectionStyles } from "./editorHelpers/common/getSelectionStyles";
 import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
-import {BaseItem} from "../BaseItem";
+import {BaseItem, SerializedItemData} from "../BaseItem";
 
 let isEditInProcessValue = false;
 
@@ -83,7 +83,7 @@ export class RichText extends BaseItem {
   private autoSizeScale = 1;
   private containerMaxWidth?: number;
   readonly linkTo: LinkTo;
-  maxHeight: number;
+  maxHeight = 0;
   private selection?: BaseSelection;
   transformationRenderBlock?: boolean = undefined;
   lastClickPoint?: Point;
@@ -848,7 +848,7 @@ export class RichText extends BaseItem {
 
   getBlockType(): BlockType {
     const blockNode = getSelectedBlockNode(this.editor.editor);
-    return blockNode ? blockNode.type : "paragraph";
+    return (blockNode ? blockNode.type : "paragraph") as BlockType;
   }
 
   getHorisontalAlignment(): HorisontalAlignment | undefined {
@@ -950,21 +950,20 @@ export class RichText extends BaseItem {
     this.subject.publish(this);
   }
 
-  serialize(): RichTextData {
+  serialize(): SerializedItemData<RichTextData> {
     return {
+      id: this.id,
       itemType: "RichText",
+      children: this.getText(),
       verticalAlignment: this.editor.verticalAlignment,
-      children: this.editor.editor.children,
-      maxWidth: this.editor.maxWidth,
-      containerMaxWidth: this.getMaxWidth(),
+      maxWidth: this.getMaxWidth(),
+      transformation: this.transformation.serialize(),
+      containerMaxWidth: this.containerMaxWidth,
+      insideOf: this.insideOf,
       placeholderText: this.placeholderText,
-      transformation:
-        this.isInShape || this.autoSize
-          ? undefined
-          : this.transformation.serialize(),
-      insideOf: this.insideOf ? this.insideOf : this.itemType,
-      realSize: this.autoSize ? "auto" : this.getFontSize(),
+      realSize: this.isAutosize() ? "auto" : this.getFontSize(),
       linkTo: this.linkTo.serialize(),
+      maxHeight: this.maxHeight,
     };
   }
 
@@ -983,7 +982,7 @@ export class RichText extends BaseItem {
     }
   }
 
-  deserialize(data: Partial<RichTextData>): this {
+  deserialize(data: SerializedItemData<RichTextData> | RichTextData): this {
     if (data.children) {
       this.editor.editor.children = data.children;
       this.editorTransforms.select(
@@ -1149,7 +1148,7 @@ export class RichText extends BaseItem {
               five: 5,
             } as const;
             const header = conf.documentFactory.createElement(
-              `h${levels[level]}`
+              `h${levels[level as keyof typeof levels]}`
             );
             applyCommonStyles(header);
             header.append(...children);

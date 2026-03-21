@@ -16,7 +16,7 @@ export function handleBoardSubscriptionCompletedMsg(
     handleHTMLSnapshotApplication(msg.JSONSnapshot, board);
     log.list.clearConfirmedRecords();
   }
-  handleBoardEventListApplication(msg.eventsSinceLastSnapshot, board);
+  handleBoardEventListApplication(msg.eventsSinceLastSnapshot as any, board);
 
   board.setInterfaceType(msg.mode);
 

@@ -79,8 +79,8 @@ export class Star extends BaseItem {
 		this.path = starPath.copy();
 		this.path.transform(this.transformation.toMatrix());
 
-		this.path.setBackgroundColor(this.backgroundColor);
-		this.path.setBorderColor(this.borderColor);
+		this.path.setBackgroundColor(this.backgroundColor as any);
+		this.path.setBorderColor(this.borderColor as any);
 		this.path.setBorderWidth(this.borderWidth);
 		this.path.setBorderStyle(this.borderStyle);
 	}

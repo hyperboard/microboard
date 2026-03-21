@@ -2,6 +2,7 @@ import { BaseSelection, Operation } from 'slate';
 import { HorisontalAlignment, VerticalAlignment } from '../Alignment';
 import { TextStyle } from './Editor/TextNode';
 import { SelectionContext } from 'Selection/Selection';
+import { ColorValue } from 'Color';
 
 interface RichTextBaseOp {
 	class: 'RichText';
@@ -10,7 +11,7 @@ interface RichTextBaseOp {
 
 interface SetFontColor extends RichTextBaseOp {
 	method: 'setFontColor';
-	fontColor: string;
+	fontColor: string | ColorValue;
 }
 
 interface SetFontStyle extends RichTextBaseOp {
@@ -31,7 +32,7 @@ interface SetFontSize extends RichTextBaseOp {
 
 interface SetFontHighlight extends RichTextBaseOp {
 	method: 'setFontHighlight';
-	fontHighlight: string;
+	fontHighlight: string | ColorValue;
 }
 
 interface SetHorisontalAligment extends RichTextBaseOp {
