@@ -7,16 +7,16 @@ import {Camera} from "../Camera";
 import {Pointer} from "../Pointer";
 import type {BaseItem} from "../Items/BaseItem/BaseItem";
 import {ItemsIndexRecord} from "../BoardOperations";
-import {Items} from "./SpacialIndex";
+import {Items, ISpatialIndex, coerceMbr} from "./SpacialIndex";
 
-export class SimpleSpatialIndex {
+export class SimpleSpatialIndex implements ISpatialIndex {
   subject = new Subject<Items>();
   private itemsArray: Item[] = [];
   private Mbr = new Mbr();
   readonly items: Items;
 
   constructor(view: Camera, pointer: Pointer) {
-    this.items = new Items(this as any, view, pointer, this.subject);
+    this.items = new Items(this, view, pointer, this.subject);
   }
 
   clear(): void {
@@ -47,13 +47,16 @@ export class SimpleSpatialIndex {
 
   remove(item: Item, preserveChildren = false): void {
     if (!preserveChildren && "index" in item && item.index) {
-      item.removeChildItems(item.index.list());
+      item.removeChildItems(item.index.listAll());
     }
     // if (item.parent !== 'Board') {
     //   const parentFrame = this.items.getById(item.parent) as BaseItem;
     //   parentFrame?.removeChildItems(item);
     // }
-    this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
+    const index = this.itemsArray.indexOf(item);
+    if (index !== -1) {
+      this.itemsArray.splice(index, 1);
+    }
 
     this.Mbr = new Mbr();
     this.itemsArray.forEach(item => this.Mbr.combine([item.getMbr()]));
@@ -79,7 +82,7 @@ export class SimpleSpatialIndex {
   moveManyToZIndex(itemsRecord: ItemsIndexRecord): void {
     const items = Object.keys(itemsRecord)
       .map(id => this.items.getById(id))
-      .filter(item => item !== undefined);
+      .filter(item => item !== undefined) as Item[];
     const zIndex = Object.values(itemsRecord);
 
     for (let i = 0; i < zIndex.length; i++) {
@@ -151,19 +154,16 @@ export class SimpleSpatialIndex {
     this.subject.publish(this.items);
   }
 
-  getById(id: string): BaseItem | undefined {
-    const item = this.itemsArray.find(item => item.getId() === id);
-    if (item) {
-      return item as BaseItem;
-    }
+  getById(id: string): Item | undefined {
+    return this.itemsArray.find(item => item.getId() === id);
   }
 
   findById(id: string): Item | undefined {
-    return this.getById(id); // Reuse `getById` for consistency
+    return this.getById(id);
   }
 
-  getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
-    const mbr = new Mbr(left, top, right, bottom);
+  listEnclosedBy(left: number | Mbr | { left: number; top: number; right: number; bottom: number }, top?: number, right?: number, bottom?: number): Item[] {
+    const mbr = coerceMbr(left, top, right, bottom);
     const items: Item[] = [];
     this.itemsArray.forEach((item: Item) => {
       if (item.isEnclosedBy(mbr)) {
@@ -173,8 +173,8 @@ export class SimpleSpatialIndex {
     return items;
   }
 
-  getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
-    const mbr = new Mbr(left, top, right, bottom);
+  listEnclosedOrCrossedBy(left: number | Mbr | { left: number; top: number; right: number; bottom: number }, top?: number, right?: number, bottom?: number): Item[] {
+    const mbr = coerceMbr(left, top, right, bottom);
     const items: Item[] = [];
     this.itemsArray.forEach((item: Item) => {
       if (item.isEnclosedOrCrossedBy(mbr)) {
@@ -184,21 +184,46 @@ export class SimpleSpatialIndex {
     return items;
   }
 
-  getUnderPoint(point: Point, tolerace = 5): Item[] {
+  listUnderPoint(point: Point, tolerance = 5): Item[] {
     const items: Item[] = [];
     this.itemsArray.forEach((item: Item) => {
-      if (item.isUnderPoint(point, tolerace)) {
+      if (item.isUnderPoint(point, tolerance)) {
         items.push(item);
       }
     })
     return items;
   }
 
+  listRectsEnclosedOrCrossedBy(left: number | Mbr | { left: number; top: number; right: number; bottom: number }, top?: number, right?: number, bottom?: number): Mbr[] {
+    return this.listEnclosedOrCrossedBy(left, top, right, bottom).map(item => item.getMbr());
+  }
+
+  listNearestTo(
+    point: Point,
+    maxItems: number,
+    filter: (item: Item) => boolean,
+    maxDistance: number
+  ): Item[] {
+    const itemsWithDistance = this.itemsArray
+      .filter(filter)
+      .map(item => ({
+        item,
+        distance: item.getMbr().getDistanceToPoint(point)
+      }));
+
+    const inRange = itemsWithDistance.filter(x => x.distance <= maxDistance);
+
+    return inRange
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, maxItems)
+      .map(x => x.item);
+  }
+
   getMbr(): Mbr {
     return this.Mbr;
   }
 
-  list(): Item[] {
+  listAll(): Item[] {
     return this.itemsArray.concat();
   }
 

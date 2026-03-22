@@ -21,7 +21,7 @@ export interface AudioItemData {
   [key: string]: unknown;
 }
 
-export class AudioItem extends BaseItem {
+export class AudioItem extends BaseItem<AudioItem> {
   readonly itemType = "Audio";
   parent = "Board";
   readonly transformation: Transformation;

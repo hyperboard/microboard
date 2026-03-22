@@ -188,7 +188,7 @@ export class BoardSelection {
 
   updateQueue: Set<() => void> = new Set();
 
-  decorateObserverToScheduleUpdate<T extends (...args: any[]) => void>(
+  decorateObserverToScheduleUpdate<T extends (...args: never[]) => void>(
     observer: T
   ): T {
     return ((...args: Parameters<T>) => {

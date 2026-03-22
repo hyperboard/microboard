@@ -638,11 +638,12 @@ export class Board {
       for (const parsedData of data) {
         if ("childrenMap" in parsedData) {
           // Frame
+          const frameData = parsedData as { data: BaseItemData & { id: string }; childrenMap: { [id: string]: ItemDataWithId } };
           const addedFrame: BaseItem = this.add(
-            this.createItem(this.getNewItemId(), parsedData.data)
+            this.createItem(this.getNewItemId(), frameData.data as unknown as ItemData)
           );
           const addedChildren = (
-            Object.values(parsedData.childrenMap) as ItemDataWithId[]
+            Object.values(frameData.childrenMap) as unknown as ItemDataWithId[]
           ).map((childData) => {
             const created = this.createItem(this.getNewItemId(), childData);
             const added = this.add(created);
@@ -656,19 +657,20 @@ export class Board {
             return added;
           });
           addedFrame.addChildItems(addedChildren);
-          parsedData.data.children = addedChildren.map((item) => item.getId());
-          idsMap[parsedData.data.id] = addedFrame.getId();
+          (frameData.data as any).children = addedChildren.map((item) => item.getId());
+          idsMap[frameData.data.id] = addedFrame.getId();
         } else {
+          const itemData = parsedData as ItemDataWithId;
           const added = this.add(
-            this.createItem(this.getNewItemId(), parsedData)
+            this.createItem(this.getNewItemId(), itemData)
           );
           if (added.itemType === "Connector") {
             addedConnectors.push({
               item: added as Connector,
-              data: parsedData as ConnectorData,
+              data: itemData as unknown as ConnectorData,
             });
           }
-          idsMap[parsedData.id] = added.getId();
+          idsMap[itemData.id] = added.getId();
         }
       }
       addedConnectors.forEach((connector) => {
@@ -730,15 +732,16 @@ export class Board {
       return item;
     };
 
-    for (const itemData of items) {
-      if ("childrenMap" in itemData) {
+    for (const rawItemData of items) {
+      if ("childrenMap" in rawItemData) {
         // Frame
-        (Object.values(itemData.childrenMap) as ItemDataWithId[]).map(
+        const frameData = rawItemData as { data: ItemData & { id: string }; childrenMap: { [id: string]: ItemDataWithId } };
+        (Object.values(frameData.childrenMap) as ItemDataWithId[]).map(
           (childData) => addItem(childData)
         );
-        addItem(itemData.data);
+        addItem(frameData.data);
       } else {
-        addItem(itemData);
+        addItem(rawItemData as ItemData & { id: string });
       }
     }
 
@@ -1180,114 +1183,6 @@ export class Board {
     return this.isBoardMenuOpen;
   }
 
-  // paste(itemsMap: ItemsMap, select = true): void {
-  // 	const newItemIdMap: { [key: string]: string } = {};
-
-  // 	for (const itemId in itemsMap) {
-  // 		// Generate new IDs for all the items being pasted
-  // 		const newItemId = this.getNewItemId();
-  // 		newItemIdMap[itemId] = newItemId;
-  // 	}
-
-  // 	// Replace connector
-  // 	function replaceConnectorItem(point: ControlPointData): void {
-  // 		switch (point.pointType) {
-  // 			case "Floating":
-  // 			case "Fixed":
-  // 				const newItemId = newItemIdMap[point.itemId];
-  // 				if (newItemId) {
-  // 					point.itemId = newItemId;
-  // 				}
-  // 				break;
-  // 		}
-  // 	}
-
-  // 	for (const itemId in itemsMap) {
-  // 		const itemData = itemsMap[itemId];
-
-  // 		if (itemData.itemType === "Connector") {
-  // 			replaceConnectorItem(itemData.startPoint);
-  // 			replaceConnectorItem(itemData.endPoint);
-  // 		}
-  // 	}
-
-  // 	const newMap: { [key: string]: ItemData } = {};
-  // 	// iterate over itemsMap to find the minimal translation
-  // 	let minX = Infinity;
-  // 	let minY = Infinity;
-  // 	for (const itemId in itemsMap) {
-  // 		const itemData = itemsMap[itemId];
-  // 		const { translateX, translateY } = itemData.transformation || {
-  // 			translateX: 0,
-  // 			translateY: 0,
-  // 		};
-
-  // 		if (translateX < minX) {
-  // 			minX = translateX;
-  // 		}
-
-  // 		if (translateY < minY) {
-  // 			minY = translateY;
-  // 		}
-  // 	}
-
-  // 	if (minX === Infinity) {
-  // 		minX = 0;
-  // 	}
-
-  // 	if (minY === Infinity) {
-  // 		minY = 0;
-  // 	}
-
-  // 	const { x, y } = this.pointer.point;
-
-  // 	for (const itemId in itemsMap) {
-  // 		const itemData = itemsMap[itemId];
-  // 		const newItemId = newItemIdMap[itemId];
-  // 		const { translateX, translateY } = itemData.transformation || {
-  // 			translateX: 0,
-  // 			translateY: 0,
-  // 		};
-  // 		if (itemData.itemType === "Connector") {
-  // 			if (itemData.startPoint.pointType === "Board") {
-  // 				itemData.startPoint.x += -minX + x;
-  // 				itemData.startPoint.y += -minY + y;
-  // 			}
-  // 			if (itemData.endPoint.pointType === "Board") {
-  // 				itemData.endPoint.x += -minX + x;
-  // 				itemData.endPoint.y += -minY + y;
-  // 			}
-  // 		} else if (itemData.transformation) {
-  // 			itemData.transformation.translateX = translateX - minX + x;
-  // 			itemData.transformation.translateY = translateY - minY + y;
-  // 		}
-  // 		if (itemData.itemType === "Frame") {
-  // 			// handle new id for children
-  // 			itemData.children = itemData.children.map(
-  // 				childId => newItemIdMap[childId],
-  // 			);
-  // 		}
-  // 		newMap[newItemId] = itemData;
-  // 	}
-
-  // 	this.emit({
-  // 		class: "Board",
-  // 		method: "paste",
-  // 		itemsMap: newMap,
-  // 		select,
-  // 	});
-
-  // 	const items = Object.keys(newMap)
-  // 		.map(id => this.items.getById(id))
-  // 		.filter(item => typeof item !== "undefined");
-  // 	this.handleNesting(items);
-  // 	this.selection.removeAll();
-  // 	this.selection.add(items);
-  // 	this.selection.setContext("EditUnderPointer");
-
-  // 	return;
-  // }
-
   duplicate(itemsMap: { [key: string]: ItemData }): void {
     const newItemIdMap: { [key: string]: string } = {};
     for (const itemId in itemsMap) {
@@ -1392,9 +1287,10 @@ export class Board {
           itemData.transformation.translateX = translateX + width * 10 + 10;
         }
       }
-      if ("children" in itemData && itemData.children?.length) {
+      const itemDataWithChildren = itemData as { children?: string[] };
+      if ("children" in itemDataWithChildren && itemDataWithChildren.children?.length) {
         // handle new id for children
-        itemData.children = itemData.children.map(
+        itemDataWithChildren.children = itemDataWithChildren.children.map(
           (childId: string) => newItemIdMap[childId]
         );
       }
@@ -1422,8 +1318,8 @@ export class Board {
 
     const sortedItemsMap = Object.entries(itemsMap).sort(
       ([, dataA], [, dataB]) => {
-        if ("zIndex" in dataA && "zIndex" in dataB) {
-          return dataA.zIndex - dataB.zIndex;
+        if ("zIndex" in (dataA as object) && "zIndex" in (dataB as object)) {
+          return (dataA as Record<string, number>).zIndex - (dataB as Record<string, number>).zIndex;
         }
         return 0;
       }

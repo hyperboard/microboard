@@ -9,7 +9,7 @@ import { BaseItem, BaseItemData } from "Items/BaseItem/BaseItem";
 import { BaseOperation, ItemOperation } from "Events/EventsOperations";
 import { itemValidators } from "Validators";
 
-type ItemConstructor = new (board: Board, id: string, defaultData: BaseItemData) => BaseItem;
+type ItemConstructor = new (board: Board, id: string, defaultData: BaseItemData) => any;
 
 type RegisterItemArgs = {
   item: ItemConstructor;
@@ -41,7 +41,7 @@ function createItemFactory(item: ItemConstructor, defaultData: BaseItemData) {
     if (data.itemType !== defaultData.itemType) {
       throw new Error(`Invalid data for ${defaultData.itemType}`);
     }
-    return new item(board, id, defaultData).setId(id).deserialize(data as BaseItemData);
+    return (new item(board, id, defaultData) as BaseItem).setId(id).deserialize(data as BaseItemData);
   };
 }
 

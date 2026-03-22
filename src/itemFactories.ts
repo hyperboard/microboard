@@ -146,7 +146,8 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
   }
   const drawing = new Drawing(board, [], board.events)
     .setId(id)
-    .deserialize({ ...data, id } as any);
+    .setId(id)
+    .deserialize({ ...data, id });
   return drawing;
 }
 
@@ -181,9 +182,9 @@ function createGroup(id: string, data: ItemData, board: Board): Group {
     throw new Error("Invalid data for Group");
   }
 
-  const group = new Group(board, board.events, data.children, id)
+  const group = new Group(board, board.events, data.childIds, id)
     .setId(id)
-    .deserialize({ ...data, id } as any);
+    .deserialize({ ...data, id });
   return group;
 }
 

@@ -44,7 +44,39 @@ function worldBoundsToLocal(
   };
 }
 
-export class SpatialIndex {
+export function coerceMbr(
+  left: number | Mbr | { left: number; top: number; right: number; bottom: number },
+  top?: number,
+  right?: number,
+  bottom?: number
+): Mbr {
+  if (left instanceof Mbr) return left;
+  if (typeof left === "object" && left !== null) return new Mbr(left.left, left.top, left.right, left.bottom);
+  return new Mbr(left as number, top!, right!, bottom!);
+}
+
+export interface ISpatialIndex {
+  change(item: Item): void;
+  listAll(): Item[];
+  listUnderPoint(point: Point | { x: number; y: number }, tolerance?: number): Item[];
+  listEnclosedOrCrossedBy(rect: Mbr | { left: number; top: number; right: number; bottom: number } | number, top?: number, right?: number, bottom?: number): Item[];
+  listEnclosedBy(rect: Mbr | { left: number; top: number; right: number; bottom: number } | number, top?: number, right?: number, bottom?: number): Item[];
+  getZIndex(item: Item): number;
+  getById(id: string): Item | undefined;
+  findById(id: string): Item | undefined;
+  insert(item: Item): void;
+  remove(item: Item, preserveChildren?: boolean): void;
+  change(item: Item): void;
+  clear(): void;
+  getMbr(): Mbr;
+  listRectsEnclosedOrCrossedBy(rect: Mbr | { left: number; top: number; right: number; bottom: number } | number, top?: number, right?: number, bottom?: number): Mbr[];
+  listNearestTo(point: Point, maxItems: number, filter: (item: Item) => boolean, maxDistance: number): Item[];
+  getByZIndex(index: number): Item;
+  getLastZIndex(): number;
+  copy(): ItemDataWithId[];
+}
+
+export class SpatialIndex implements ISpatialIndex {
   subject = new Subject<Items>();
   private itemsArray: Item[] = [];
   private itemsIndex = new LayeredIndex((item: Item): number => {
@@ -98,7 +130,7 @@ export class SpatialIndex {
   remove(item: Item, preserveChildren = false): void {
     const baseItem = item as BaseItem;
     if (!preserveChildren && baseItem.index) {
-      baseItem.removeChildItems(baseItem.index.list());
+      baseItem.removeChildItems(baseItem.index.listAll());
     }
     this.itemsArray.splice(this.itemsArray.indexOf(item), 1);
     this.itemsIndex.remove(item);
@@ -150,7 +182,7 @@ export class SpatialIndex {
     return items.flatMap(item => {
       const baseItem = item as BaseItem;
       if (baseItem.index) {
-        return [item, ...baseItem.index.list()];
+        return [item, ...baseItem.index.listAll()];
       }
       return item;
     });
@@ -158,7 +190,7 @@ export class SpatialIndex {
 
   getItemChildren(item: Item): Item[] {
     if ("index" in item && item.index) {
-      return item.index.list();
+      return item.index.listAll();
     }
     return [];
   }
@@ -328,14 +360,19 @@ export class SpatialIndex {
     return this.getById(id); // Reuse `getById` for consistency
   }
 
-  getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
-    const mbr = new Mbr(left, top, right, bottom);
-    const items = this.itemsIndex.getEnclosed(mbr);
+  listEnclosedBy(
+    left: number | Mbr | { left: number; top: number; right: number; bottom: number },
+    top?: number,
+    right?: number,
+    bottom?: number
+  ): Item[] {
+    const mbr = coerceMbr(left, top, right, bottom);
+    const items = this.itemsIndex.listEnclosedBy(mbr);
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        const local = worldBoundsToLocal(item as BaseItem, left, top, right, bottom);
-        children.push(...item.index.getEnclosed(local.left, local.top, local.right, local.bottom));
+        const local = worldBoundsToLocal(item as BaseItem, mbr.left, mbr.top, mbr.right, mbr.bottom);
+        children.push(...item.index.listEnclosedBy(local.left, local.top, local.right, local.bottom));
         if (!item.getMbr().isEnclosedBy(mbr)) {
           return false;
         }
@@ -345,14 +382,19 @@ export class SpatialIndex {
     return [...clearItems, ...children];
   }
 
-  getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
-    const mbr = new Mbr(left, top, right, bottom);
-    const items = this.itemsIndex.getEnclosedOrCrossedBy(mbr);
+  listEnclosedOrCrossedBy(
+    left: number | Mbr | { left: number; top: number; right: number; bottom: number },
+    top?: number,
+    right?: number,
+    bottom?: number
+  ): Item[] {
+    const mbr = coerceMbr(left, top, right, bottom);
+    const items = this.itemsIndex.listEnclosedOrCrossedBy(mbr);
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
-        const local = worldBoundsToLocal(item as BaseItem, left, top, right, bottom);
-        children.push(...item.index.getEnclosedOrCrossed(local.left, local.top, local.right, local.bottom));
+        const local = worldBoundsToLocal(item as BaseItem, mbr.left, mbr.top, mbr.right, mbr.bottom);
+        children.push(...item.index.listEnclosedOrCrossedBy(local.left, local.top, local.right, local.bottom));
         if (!item.getMbr().isEnclosedOrCrossedBy(mbr)) {
           return false;
         }
@@ -362,15 +404,24 @@ export class SpatialIndex {
     return [...clearItems, ...children];
   }
 
-  getUnderPoint(point: Point, tolerance = 5): Item[] {
-    const items = this.itemsIndex.getUnderPoint(point, tolerance);
+  listRectsEnclosedOrCrossedBy(
+    left: number | Mbr | { left: number; top: number; right: number; bottom: number },
+    top?: number,
+    right?: number,
+    bottom?: number
+  ): Mbr[] {
+    return this.listEnclosedOrCrossedBy(left, top, right, bottom).map(item => item.getMbr());
+  }
+
+  listUnderPoint(point: Point, tolerance = 5): Item[] {
+    const items = this.itemsIndex.listUnderPoint(point, tolerance);
     const children: Item[] = [];
     const clearItems = items.filter((item: Item) => {
       if ("index" in item && item.index) {
         // Transform the world-space point into the container's nested coordinate space.
         const localPt = new Point(point.x, point.y);
         (item as BaseItem).getNestingMatrix().getInverse().apply(localPt);
-        children.push(...item.index.getUnderPoint(localPt, tolerance));
+        children.push(...item.index.listUnderPoint(localPt, tolerance));
         if (!item.getMbr().isUnderPoint(point)) {
           return false;
         }
@@ -383,30 +434,13 @@ export class SpatialIndex {
     return [...clearItems, ...children];
   }
 
-  getRectsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
-    const mbr = new Mbr(left, top, right, bottom);
-    const items = this.itemsIndex.getRectsEnclosedOrCrossedBy(mbr);
-    const children: Item[] = [];
-    const clearItems = items.filter((item: Item) => {
-      if ("index" in item && item.index) {
-        const local = worldBoundsToLocal(item as BaseItem, left, top, right, bottom);
-        children.push(...item.index.getEnclosedOrCrossed(local.left, local.top, local.right, local.bottom));
-        if (!item.getMbr().isEnclosedOrCrossedBy(mbr)) {
-          return false;
-        }
-      }
-      return true;
-    })
-    return [...clearItems, ...children];
-  }
-
-  getItemsEnclosedOrCrossed(
-    left: number,
-    top: number,
-    right: number,
-    bottom: number
+  listNearestTo(
+    point: Point,
+    maxItems: number,
+    filter: (item: Item) => boolean,
+    maxDistance: number
   ): Item[] {
-    return this.getRectsEnclosedOrCrossed(left, top, right, bottom);
+    return this.itemsIndex.listNearestTo(point, maxItems, filter, maxDistance);
   }
 
   getComments(): Comment[] {
@@ -443,7 +477,7 @@ export class SpatialIndex {
       .map(x => x.item);
   }
 
-  list(): Item[] {
+  listAll(): Item[] {
     return this.getItemsWithIncludedChildren(this.itemsArray).concat();
   }
 
@@ -471,7 +505,7 @@ export class SpatialIndex {
 
 export class Items {
   constructor(
-    public index: SpatialIndex,
+    public index: ISpatialIndex,
     private view: Camera,
     private pointer: Pointer,
     readonly subject: Subject<Items>
@@ -483,15 +517,37 @@ export class Items {
   }
 
   listAll(): Item[] {
-    return this.index.list();
+    return this.index.listAll();
+  }
+
+  listUnderPoint(point: Point, tolerance = 5): Item[] {
+    return this.index.listUnderPoint(point, tolerance);
+  }
+
+  listEnclosedBy(
+    left: number | Mbr | { left: number; top: number; right: number; bottom: number },
+    top?: number,
+    right?: number,
+    bottom?: number
+  ): Item[] {
+    return this.index.listEnclosedBy(left, top, right, bottom);
+  }
+
+  listEnclosedOrCrossedBy(
+    left: number | Mbr | { left: number; top: number; right: number; bottom: number },
+    top?: number,
+    right?: number,
+    bottom?: number
+  ): Item[] {
+    return this.index.listEnclosedOrCrossedBy(left, top, right, bottom);
   }
 
   listGroupItems(): BaseItem[] {
-    return this.index.list().filter(item => "index" in item && item.index) as BaseItem[];
+    return this.index.listAll().filter(item => "index" in item && item.index) as BaseItem[];
   }
 
   getById(id: string): BaseItem | undefined {
-    return this.index.getById(id);
+    return this.index.getById(id) as BaseItem | undefined;
   }
 
   findById(id: string): Item | undefined {
@@ -499,19 +555,19 @@ export class Items {
   }
 
   getEnclosed(left: number, top: number, right: number, bottom: number): Item[] {
-    return this.index.getEnclosed(left, top, right, bottom);
+    return this.index.listEnclosedBy(left, top, right, bottom);
   }
 
   getEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): Item[] {
-    return this.index.getEnclosedOrCrossed(left, top, right, bottom);
+    return this.index.listEnclosedOrCrossedBy(left, top, right, bottom);
   }
 
   getGroupItemsEnclosedOrCrossed(left: number, top: number, right: number, bottom: number): BaseItem[] {
-    return this.index.getEnclosedOrCrossed(left, top, right, bottom).filter(item => item instanceof BaseItem && item.index) as BaseItem[];
+    return this.index.listEnclosedOrCrossedBy(left, top, right, bottom).filter(item => "index" in item && item.index) as BaseItem[];
   }
 
   getUnderPoint(point: Point, tolerance = 5): Item[] {
-    return this.index.getUnderPoint(point, tolerance);
+    return this.index.listUnderPoint(point, tolerance);
   }
 
   getMbr(): Mbr {
@@ -537,12 +593,12 @@ export class Items {
 
   getInView(): Item[] {
     const {left, top, right, bottom} = this.view.getMbr();
-    return this.index.getRectsEnclosedOrCrossed(left, top, right, bottom);
+    return this.index.listEnclosedOrCrossedBy(left, top, right, bottom);
   }
 
   getItemsInView(): Item[] {
     const {left, top, right, bottom} = this.view.getMbr();
-    return this.index.getItemsEnclosedOrCrossed(left, top, right, bottom);
+    return this.index.listEnclosedOrCrossedBy(left, top, right, bottom);
   }
 
   getGroupItemsInView(): BaseItem[] {
@@ -551,18 +607,18 @@ export class Items {
   }
 
   getComments(): Comment[] {
-    return this.index.getComments();
+    return this.listAll().filter((item): item is Comment => item.itemType === "Comment");
   }
 
   getUnderPointer(size = 0): Item[] {
     const {x, y} = this.pointer.point;
     const unmodifiedSize = size;
     size = 16;
-    const tolerated = this.index.getEnclosedOrCrossed(x - size, y - size, x + size, y + size);
+    const tolerated = this.index.listEnclosedOrCrossedBy(x - size, y - size, x + size, y + size);
 
     let enclosed = tolerated.some(item => item.itemType === "Connector")
       ? tolerated
-      : this.index.getEnclosedOrCrossed(x, y, x, y);
+      : this.index.listEnclosedOrCrossedBy(x, y, x, y);
 
     const underPointer = this.getUnderPoint(new Point(x, y), size);
     if (enclosed.length === 0) {
@@ -574,7 +630,7 @@ export class Items {
     }
 
     const {nearest} = enclosed.reduce(
-      (acc, item) => {
+      (acc: { nearest?: Item; area: number }, item: Item) => {
         const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
         if (item.itemType === "Drawing" && !(item as Drawing).isPointNearLine(this.pointer.point)) {
@@ -614,7 +670,7 @@ export class Items {
     maxItems = 10,
     filter: (item: Item) => boolean = () => true
   ): Item[] {
-    return this.index.getNearestTo(this.pointer.point, maxItems, filter, maxDistance);
+    return this.index.listNearestTo(this.pointer.point, maxItems, filter, maxDistance);
   }
 
   getZIndex(item: Item): number {

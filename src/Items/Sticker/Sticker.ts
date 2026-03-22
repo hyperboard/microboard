@@ -75,7 +75,7 @@ const defaultStickerData = new StickerData();
 const _hypotenuse = Math.sqrt(height * height + width * width);
 const _relation = width / height;
 
-export class Sticker extends BaseItem {
+export class Sticker extends BaseItem<Sticker> {
   parent = "Board";
   readonly itemType = "Sticker";
   readonly transformation: Transformation;

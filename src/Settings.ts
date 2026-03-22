@@ -13,7 +13,7 @@ export type { Theme, ColorValue };
 import { semanticColor } from "./Color/ColorValue";
 import type { PresenceEventType } from "Presence/Events";
 import type { SocketMsg } from "Events/MessageRouter/boardMessageInterface";
-import type { Editor } from "slate";
+import type { Editor, BasePoint } from "slate";
 
 export interface Connection {
   connectionId: number;
@@ -36,10 +36,10 @@ export interface Connection {
 
 // Define minimal interface for i18next that we need
 export interface I18NextInterface {
-  t: (key: string, options?: Record<string, any>) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
   changeLanguage: (
     lng: string,
-    callback?: (err: any, t: TFunction) => void
+    callback?: (err: Error | null, t: TFunction) => void
   ) => Promise<TFunction>;
 }
 
@@ -155,8 +155,8 @@ type ReactEditorToSlatePoint = (
   editor: Editor,
   domNode: Node,
   offset: number,
-  options: any
-) => any;
+  options?: Record<string, unknown>
+) => BasePoint | null;
 
 /**
  * Set properties before using the board.
@@ -182,9 +182,9 @@ export const conf = {
   i18n,
 
   hooks: {
-    beforeMediaUpload: async (...args: any[]) => false,
-    beforeMediaRemove: async (...args: any[]) => false,
-    onUploadMediaError: async (...args: any[]) => false,
+    beforeMediaUpload: async (...args: unknown[]) => false,
+    beforeMediaRemove: async (...args: unknown[]) => false,
+    onUploadMediaError: async (...args: unknown[]) => false,
   },
 
   getAccessToken: (() => null) as GetAccessTokenFunction,

@@ -45,7 +45,7 @@ export interface CommentData {
 
 const ANONYMOUS_ID = 9_999_999_999;
 
-export class Comment extends BaseItem {
+export class Comment extends BaseItem<Comment> {
   parent = "Board";
   readonly transformation: Transformation;
   private commentators: Commentator[] = [];

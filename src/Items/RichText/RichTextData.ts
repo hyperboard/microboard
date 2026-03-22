@@ -15,7 +15,7 @@ export interface RichTextData {
 	placeholderText: string;
 	realSize: 'auto' | number;
 	linkTo?: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export class DefaultRichTextData implements RichTextData {

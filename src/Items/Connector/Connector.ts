@@ -62,7 +62,7 @@ export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
 
 export const CONNECTOR_ANCHOR_TYPE = 'rect';
 export const CONNECTOR_LINE_CAP = 'round';
-export class Connector extends BaseItem {
+export class Connector extends BaseItem<Connector> {
 	readonly itemType = 'Connector';
 	parent = 'Board';
 	readonly transformation: Transformation;

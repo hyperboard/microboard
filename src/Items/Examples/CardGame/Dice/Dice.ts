@@ -34,7 +34,7 @@ export const defaultDiceData: DiceData = {
   values: [1, 2, 3, 4, 5, 6],
 };
 
-export class Dice extends BaseItem {
+export class Dice extends BaseItem<Dice> {
   readonly itemType = "Dice";
   private type: DiceType = "common";
   private path: Path;

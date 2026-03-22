@@ -70,18 +70,25 @@ export function createEventsList(
 
   function getOpItems(op: Operation): string[] {
       if ("item" in op) {
-          const item = (op as any).item;
-          if (Array.isArray(item)) return item;
+          const item = (op as { item: unknown }).item;
+          if (Array.isArray(item)) return item as string[];
           if (typeof item === "string") return [item];
-          return Object.keys(item);
+          if (item && typeof item === "object") return Object.keys(item);
       }
-      if ("itemsMap" in op) return Object.keys(op.itemsMap);
+      if ("itemsMap" in op && op.itemsMap) return Object.keys(op.itemsMap);
       if ("items" in op) {
-          const items = (op as any).items;
-          if (Array.isArray(items)) return items.map((i: any) => typeof i === "string" ? i : i.id);
-          return Object.keys(items);
+          const items = (op as { items: unknown }).items;
+          if (Array.isArray(items)) {
+              return items
+                  .map((i: unknown) => (typeof i === "string" ? i : (i as { id: string }).id))
+                  .filter(Boolean);
+          }
+          if (items && typeof items === "object" && items !== null) return Object.keys(items);
       }
-      if ("itemsOps" in op) return (op as any).itemsOps.map((io: any) => io.item);
+      if ("itemsOps" in op) {
+          const itemsOps = (op as { itemsOps: unknown[] }).itemsOps;
+          return itemsOps.map((io) => (io as { item: string }).item);
+      }
       return [];
   }
 

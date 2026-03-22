@@ -32,7 +32,7 @@ export const defaultCardData: CardData = {
   dimensions: {width: conf.CARD_DIMENSIONS.width, height: conf.CARD_DIMENSIONS.height},
 };
 
-export class Card extends BaseItem {
+export class Card extends BaseItem<Card> {
   readonly subject = new Subject<Card>();
   private faceUrl = "";
   private backsideUrl = "";

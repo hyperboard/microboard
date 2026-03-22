@@ -77,7 +77,7 @@ export async function exportBoardSnapshot({
 	context.matrix.applyToContext(context.ctx);
 
 	const { left, top, right, bottom } = selection;
-	const inView = board.items.index.getRectsEnclosedOrCrossed(left, top, right, bottom);
+	const inView = board.items.index.listEnclosedOrCrossedBy(left, top, right, bottom);
 
 	for (const item of inView) {
 		item.render(context);

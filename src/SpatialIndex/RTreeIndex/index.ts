@@ -1,7 +1,7 @@
 import RBush, { BBox } from 'rbush';
 import knn from 'rbush-knn';
 import { Point, Mbr } from 'Items';
-import { Item } from 'Items';
+import type { Item, ItemDataWithId } from 'Items/Item';
 import { Container } from '../LayeredIndex';
 
 /* 
@@ -65,7 +65,7 @@ export class RTreeIndex {
 		// });
 	}
 
-	list(): Item[] {
+	listAll(): Item[] {
 		const containers = this.tree.all();
 		const items: Item[] = [];
 		for (const container of containers) {
@@ -74,7 +74,7 @@ export class RTreeIndex {
 		return items;
 	}
 
-	getEnclosed(rect: Mbr): Item[] {
+	listEnclosedBy(rect: Mbr): Item[] {
 		return this.tree
 			.search({
 				minX: rect.left,
@@ -86,7 +86,7 @@ export class RTreeIndex {
 			.map(container => container.item);
 	}
 
-	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
+	listEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		return this.tree
 			.search({
 				minX: rect.left,
@@ -113,7 +113,7 @@ export class RTreeIndex {
 		*/
 	}
 
-	getUnderPoint(point: Point, tolerance = 5): Item[] {
+	listUnderPoint(point: Point, tolerance = 5): Item[] {
 		return this.tree
 			.search({
 				minX: point.x,
@@ -125,7 +125,7 @@ export class RTreeIndex {
 			.map(container => container.item);
 	}
 
-	getRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
+	listRectsEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		return this.tree
 			.search({
 				minX: rect.left,
@@ -158,7 +158,7 @@ export class RTreeIndex {
 		});
 	}
 
-	getNearestTo(
+	listNearestTo(
 		point: Point,
 		maxItems: number,
 		filter: (item: Item) => boolean,
@@ -171,26 +171,30 @@ export class RTreeIndex {
 			maxItems,
 			container => filter(container.item),
 			maxDistance
-		).map(container => container.item);
-		/*
-		function containerFilter(container: Container): boolean {
-			return filter(container.item);
-		}
-		const { x, y } = point;
-		const items = [];
-		const containers = knn<Container>(
-			this.tree,
-			x,
-			y,
-			maxItems,
-			containerFilter,
-			maxDistance,
-		);
-		for (const container of containers) {
-			items.push(container.item);
-		}
-		return items;
-		*/
+				).map(container => container.item);
+	}
+
+	getById(id: string): Item | undefined {
+		return this.listAll().find(item => item.getId() === id);
+	}
+
+	findById(id: string): Item | undefined {
+		return this.getById(id);
+	}
+
+	getByZIndex(index: number): Item {
+		return this.listAll()[index];
+	}
+
+	getLastZIndex(): number {
+		return this.listAll().length - 1;
+	}
+
+	copy(): ItemDataWithId[] {
+		return this.listAll().map(item => ({
+			...item.serialize(),
+			id: item.getId(),
+		}));
 	}
 
 	batchInsert(batch: Container[]): void {

@@ -68,7 +68,7 @@ export const createPlaceholderImage = (
   return image;
 };
 
-export class VideoItem extends BaseItem {
+export class VideoItem extends BaseItem<VideoItem> {
   readonly itemType = "Video";
   parent = "Board";
   private url = "";

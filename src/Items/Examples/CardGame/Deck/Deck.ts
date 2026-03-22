@@ -18,7 +18,7 @@ export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
 };
 
-export class Deck extends BaseItem {
+export class Deck extends BaseItem<Deck> {
   readonly subject = new Subject<Deck>();
   shouldUseCustomRender = false;
   private cachedCanvas: HTMLCanvasElement | null = null;
@@ -35,9 +35,9 @@ export class Deck extends BaseItem {
   ) {
     super(board, id, defaultDeckData, true);
 
-    this.index!.getUnderPoint = () => []
-    this.index!.getEnclosed = () => []
-    this.index!.getEnclosedOrCrossed = () => []
+    this.index!.listUnderPoint = () => []
+    this.index!.listEnclosedBy = () => []
+    this.index!.listEnclosedOrCrossedBy = () => []
 
     this.transformation.subject.subscribe(() => {
       this.updateMbr();
@@ -69,8 +69,8 @@ export class Deck extends BaseItem {
         if (canAddItem) {
           this.isPerpendicular = foundItem.getIsRotatedPerpendicular()
           foundItem.transformation.setLocal(
-            this.left + (this.index?.list().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
-            this.top + (this.index?.list().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
+            this.left + (this.index?.listAll().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
+            this.top + (this.index?.listAll().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
           );
           if (firstCard) {
             const {scaleX, scaleY} = foundItem.transformation.getMatrixData();
@@ -116,11 +116,12 @@ export class Deck extends BaseItem {
   }
 
   getDeck(): Card[] {
-    return (this.index?.list() || []) as Card[];
+    return (this.index?.listAll() || []) as Card[];
   }
 
   getTopCard(): Card | undefined {
-    const card = this.index?.list()[this.index?.list().length - 1] as Card | undefined;
+    const cards = this.index?.listAll() || [];
+    const card = cards[cards.length - 1] as Card | undefined;
     if (card) {
       this.removeChildItems(card);
       return card;
@@ -128,15 +129,15 @@ export class Deck extends BaseItem {
   }
 
   getCards(count: number): Card[] | undefined {
-    const cards = this.index?.list().reverse().slice(0, count) as Card[] | undefined;
-    if (cards) {
+    const cards = (this.index?.listAll() || []).reverse().slice(0, count) as Card[];
+    if (cards.length > 0) {
       this.removeChildItems(cards);
       return cards;
     }
   }
 
   getBottomCard(): Card | undefined {
-    const card = this.index?.list()[0] as Card | undefined;
+    const card = this.index?.listAll()[0] as Card | undefined;
     if (card) {
       this.removeChildItems(card);
       return card;
@@ -144,7 +145,8 @@ export class Deck extends BaseItem {
   }
 
   getRandomCard(): Card | undefined {
-    const card = this.index?.list()[Math.floor(Math.random() * this.index?.list().length)] as Card | undefined;
+    const cards = this.index?.listAll() || [];
+    const card = cards[Math.floor(Math.random() * cards.length)] as Card | undefined;
     if (card) {
       this.removeChildItems(card);
       return card;
@@ -155,22 +157,22 @@ export class Deck extends BaseItem {
     if (!this.index) {
       return;
     }
-    const shuffled = [...this.index.list()];
+    const shuffled = [...this.index.listAll()];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
     this.emitAnimation();
-    this.removeChildItems(this.index.list());
+    this.removeChildItems(this.index.listAll());
     this.addChildItems(shuffled);
   }
 
   flipDeck(): void {
-    if (!this.index || !this.index.list().length) {
+    if (!this.index || !this.index.listAll().length) {
       return;
     }
-    const cards = this.index.list() as Card[];
+    const cards = this.index.listAll() as Card[];
     cards[0].toggleIsOpen(cards);
     const reversed = [...cards].reverse();
     this.removeChildItems(cards);
@@ -194,7 +196,7 @@ export class Deck extends BaseItem {
   updateMbr(): void {
     const {translateX, translateY} =
       this.transformation.getMatrixData();
-    const items = this.index!.list();
+    const items = this.index!.listAll();
     const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
     this.left = translateX;
     this.top = translateY;
@@ -277,7 +279,7 @@ export class Deck extends BaseItem {
 
   renderHTML(documentFactory: DocumentFactory): HTMLElement {
     const div = super.renderHTML(documentFactory);
-    const cards = this.index?.list() as Card[];
+    const cards = this.index?.listAll() as Card[];
     const topCard = cards[cards.length - 1];
     if (!topCard) {
       return div;
@@ -288,7 +290,7 @@ export class Deck extends BaseItem {
 
     const topCardElement = topCard.renderHTML(documentFactory);
     div.appendChild(topCardElement);
-    const offset = ((this.index?.list().length || 0) - 1) * 2;
+    const offset = ((this.index?.listAll().length || 0) - 1) * 2;
     topCardElement.style.transform = `translate(${offset}px, ${0}px) scale(1, 1)`
 
     div.id = this.getId();
@@ -304,7 +306,7 @@ export class Deck extends BaseItem {
   }
 
   private updateCache(context: DrawingContext) {
-    const cards = this.index?.list() as Card[];
+    const cards = this.index?.listAll() as Card[];
     const topCard = cards[cards.length - 1];
     const topCardImage = topCard?.getImage();
     const width = this.getWidth();
@@ -319,10 +321,10 @@ export class Deck extends BaseItem {
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
 
-    const tempContext = {...context, ctx: tempCtx};
+    const tempContext = new DrawingContext(context.camera, tempCtx, context.cursorCtx, context.matrix);
 
     cards.forEach((_, index) => {
-      topCard.render(tempContext as any, this.isPerpendicular ? 0 : index * conf.DECK_HORIZONTAL_OFFSET, this.isPerpendicular ? index * conf.DECK_VERTICAL_OFFSET : 0);
+      topCard.render(tempContext, this.isPerpendicular ? 0 : index * conf.DECK_HORIZONTAL_OFFSET, this.isPerpendicular ? index * conf.DECK_VERTICAL_OFFSET : 0);
     });
 
     this.cachedCanvas = tempCanvas;
@@ -331,7 +333,7 @@ export class Deck extends BaseItem {
   }
 
   getFirstCard() {
-    return this.index?.list()[0] as Card | undefined;
+    return this.index?.listAll()[0] as Card | undefined;
   }
 }
 
@@ -449,37 +451,37 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
     return;
   }
 
-  const cardsOrDecks = board.selection.items.list();
-  const onlyCards = board.selection.items.isAllItemsType("Card");
-  if (onlyCards) {
-    const deck = new Deck(board, "");
-    deck.transformation.setLocal(cardsOrDecks[cardsOrDecks.length - 1].left, cardsOrDecks[cardsOrDecks.length - 1].top);
-    const addedDeck = board.add(deck);
-    board.selection.removeAll();
-    addedDeck.addChildItems(cardsOrDecks);
-    board.selection.add(addedDeck);
-  } else {
-    let mainDeck: Deck | null = null;
-    const cards: Card[] = [];
-    cardsOrDecks.forEach((item) => {
-      if (item.itemType === "Card") {
-        cards.push(item as any);
-      } else if (item.itemType === "Deck") {
-        if (mainDeck) {
-          cards.push(...(mainDeck as any).getDeck());
-          board.remove(mainDeck);
-          mainDeck = item as any;
-        } else {
-          mainDeck = item as any;
+    const cardsOrDecks = board.selection.items.listAll();
+    const onlyCards = board.selection.items.isAllItemsType("Card");
+    if (onlyCards) {
+      const deck = new Deck(board, "");
+      deck.transformation.setLocal(cardsOrDecks[cardsOrDecks.length - 1].left, cardsOrDecks[cardsOrDecks.length - 1].top);
+      const addedDeck = board.add(deck);
+      board.selection.removeAll();
+      addedDeck.addChildItems(cardsOrDecks);
+      board.selection.add(addedDeck);
+    } else {
+      let mainDeck: Deck | null = null;
+      const cards: Card[] = [];
+      cardsOrDecks.forEach((item) => {
+        if (item.itemType === "Card") {
+          cards.push(item as Card);
+        } else if (item.itemType === "Deck") {
+          const deck = item as Deck;
+          if (mainDeck) {
+            cards.push(...deck.getDeck());
+            board.remove(deck);
+          } else {
+            mainDeck = deck;
+          }
         }
+      });
+      board.selection.removeAll();
+      if (mainDeck) {
+        (mainDeck as Deck).addChildItems(cards);
+        board.selection.add(mainDeck);
       }
-    });
-    board.selection.removeAll();
-    if (mainDeck) {
-      (mainDeck as any).addChildItems(cards);
-      board.selection.add(mainDeck);
     }
-  }
 };
 
 registerHotkey({

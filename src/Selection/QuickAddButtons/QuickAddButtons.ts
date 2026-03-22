@@ -134,7 +134,7 @@ export function getQuickAddButtons(
     let step = 1;
     while (
       board.index
-        .getItemsEnclosedOrCrossed(
+        .listEnclosedOrCrossedBy(
           newMbr.left,
           newMbr.top,
           newMbr.right,

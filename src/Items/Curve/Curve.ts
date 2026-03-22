@@ -7,7 +7,7 @@ import { Matrix } from "../Transformation/Matrix";
 import { GeometricNormal } from '../GeometricNormal';
 
 export class BaseCurve {
-	constructor(public curve: any) {}
+	constructor(public curve: any) {} // TODO: Use Bezier type from @types/bezier-js once installed
 
 	protected updateCache(curve: any): void {
 		this.curve = curve;
@@ -27,13 +27,13 @@ export class BaseCurve {
 	}
 
 	getNearestEdgePointTo(point: Point): Point {
-		const projection: any = this.curve.project(point);
+		const projection = this.curve.project(point);
 		const { x, y } = projection;
 		return new Point(x, y);
 	}
 
 	getDistance(point: Point): number {
-		const projection: any = this.curve.project(point);
+		const projection = this.curve.project(point);
 		const nearestPoint = new Point(projection.x, projection.y);
 		return point.getDistance(nearestPoint);
 	}

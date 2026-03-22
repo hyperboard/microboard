@@ -31,7 +31,7 @@ export interface DrawingData {
   [key: string]: unknown;
 }
 
-export class Drawing extends BaseItem {
+export class Drawing extends BaseItem<Drawing> {
   readonly itemType = "Drawing";
   parent = "Board";
   readonly transformation: Transformation;

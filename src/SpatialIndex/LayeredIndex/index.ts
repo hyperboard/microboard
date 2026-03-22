@@ -1,6 +1,6 @@
 import { Mbr } from 'Items/Mbr/Mbr';
 import type { Point } from 'Items/Point/Point';
-import type { Item } from 'Items/Item';
+import type { Item, ItemDataWithId } from 'Items/Item';
 import { Layers } from './Layers';
 import { getContainersSortedByZIndex } from './getContainersSortedByZIndex';
 import { RTreeIndex } from '../RTreeIndex';
@@ -35,31 +35,28 @@ export class LayeredIndex<T extends Item> {
 		return true;
 	}
 
-	findById(id: string): Item | undefined {
-		const container = this.map.get(id);
-		return container ? container.item : undefined;
-	}
 
-	getEnclosed(rect: Mbr): Item[] {
+
+	listEnclosedBy(rect: Mbr): Item[] {
 		let items: Item[] = [];
 		for (const layer of this.layers.array) {
-			items = items.concat(layer.getEnclosed(rect));
+			items = items.concat(layer.listEnclosedBy(rect));
 		}
 		return items;
 	}
 
-	getEnclosedOrCrossedBy(rect: Mbr): Item[] {
+	listEnclosedOrCrossedBy(rect: Mbr): Item[] {
 		let items: Item[] = [];
 		for (const layer of this.layers.array) {
-			items = items.concat(layer.getEnclosedOrCrossedBy(rect));
+			items = items.concat(layer.listEnclosedOrCrossedBy(rect));
 		}
 		return items;
 	}
 
-	getUnderPoint(point: Point, tolerance = 5): Item[] {
+	listUnderPoint(point: Point, tolerance = 5): Item[] {
 		let items: Item[] = [];
 		for (const layer of this.layers.array) {
-			const layerItems = layer.getUnderPoint(point, tolerance);
+			const layerItems = layer.listUnderPoint(point, tolerance);
 			if (layerItems.length > 0) {
 				items = items.concat(layerItems);
 			}
@@ -67,7 +64,7 @@ export class LayeredIndex<T extends Item> {
 		return items;
 	}
 
-	getRectsEnclosedOrCrossedBy(rect: Mbr): T[] {
+	listRectsEnclosedOrCrossedBy(rect: Mbr): T[] {
 		const items: Container[] = [];
 		const minMax = {
 			minX: rect.left,
@@ -111,7 +108,7 @@ export class LayeredIndex<T extends Item> {
 		return false;
 	}
 
-	getNearestTo(
+	listNearestTo(
 		point: Point,
 		maxItems: number,
 		filter: (item: Item) => boolean,
@@ -119,7 +116,7 @@ export class LayeredIndex<T extends Item> {
 	): Item[] {
 		let items: Item[] = [];
 		for (const layer of this.layers.array) {
-			items = items.concat(layer.getNearestTo(point, maxItems, filter, maxDistance));
+			items = items.concat(layer.listNearestTo(point, maxItems, filter, maxDistance));
 		}
 		return items;
 	}
@@ -156,7 +153,7 @@ export class LayeredIndex<T extends Item> {
 		}
 		const bounds = container.item.getMbrWithChildren();
 		this.remove(container.item);
-		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
+		const inBounds = this.listRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
 		const containersAbove: Container[] = [];
 		const containerZIndex = this.getZIndex(container.item);
@@ -185,7 +182,7 @@ export class LayeredIndex<T extends Item> {
 		}
 		const bounds = container.item.getMbrWithChildren();
 		this.remove(container.item);
-		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
+		const inBounds = this.listRectsEnclosedOrCrossedBy(bounds);
 		const containersInBounds = this.getContainersFromItems(inBounds);
 		const containersBelow: Container[] = [];
 		const containerZIndex = this.getZIndex(container.item);
@@ -211,7 +208,7 @@ export class LayeredIndex<T extends Item> {
 	insert(item: T): void {
 		const toInsert = new Container(item.getId(), item, 0, this.getZIndex(item));
 		const bounds = item.getMbrWithChildren();
-		const inBounds = this.getRectsEnclosedOrCrossedBy(bounds);
+		const inBounds = this.listRectsEnclosedOrCrossedBy(bounds);
 
 		if (inBounds.length === 0) {
 			return this.insertContainer(toInsert);
@@ -316,12 +313,36 @@ export class LayeredIndex<T extends Item> {
 		}
 	}
 
-	list(): T[] {
+	listAll(): T[] {
 		const items: T[] = [];
 		for (const record of this.map) {
 			items.push(record[1].item as T);
 		}
 		return items;
+	}
+
+	getById(id: string): Item | undefined {
+		const container = this.map.get(id);
+		return container ? container.item : undefined;
+	}
+
+	findById(id: string): Item | undefined {
+		return this.getById(id);
+	}
+
+	getByZIndex(index: number): Item {
+		return this.listAll()[index];
+	}
+
+	getLastZIndex(): number {
+		return this.listAll().length - 1;
+	}
+
+	copy(): ItemDataWithId[] {
+		return this.listAll().map(item => ({
+			...item.serialize(),
+			id: item.getId(),
+		}));
 	}
 
 	batchInsert(items: T[]): void {

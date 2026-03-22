@@ -54,7 +54,7 @@ const starPath = new Path(
 	true,
 );
 
-export class Star extends BaseItem {
+export class Star extends BaseItem<Star> {
 	readonly itemType = "Star";
 	private path: Path;
 	readonly subject = new Subject<Star>();

@@ -73,7 +73,7 @@ export interface ImageConstructorData {
   imageDimension: Dimension;
 }
 
-export class ImageItem extends BaseItem {
+export class ImageItem extends BaseItem<ImageItem> {
   readonly itemType = "Image";
   parent = "Board";
   image: HTMLImageElement;

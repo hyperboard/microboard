@@ -65,7 +65,7 @@ let counter = 0;
  * A geometric item to render a rich text on a DrawingContext.
  *
  */
-export class RichText extends BaseItem {
+export class RichText extends BaseItem<RichText> {
   readonly itemType = "RichText";
   parent = "Board";
   readonly subject = new Subject<RichText>();

@@ -33,7 +33,7 @@ export interface PlaceholderData {
     [key: string]: unknown;
 }
 
-export class Placeholder extends BaseItem {
+export class Placeholder extends BaseItem<Placeholder> {
     readonly itemType = "Placeholder";
     shapeType: ShapeType = "Rectangle";
     parent = "Board";

@@ -40,7 +40,7 @@ const defaultFrameData = new DefaultFrameData();
 const HEADING_TOP_OFFSET = -33;
 const HEADING_BOTTOM_OFFSET = -5;
 
-export class Frame extends BaseItem {
+export class Frame extends BaseItem<Frame> {
   readonly itemType = "Frame";
   parent = "Board";
   readonly transformation: Transformation;
@@ -270,7 +270,7 @@ export class Frame extends BaseItem {
   }
 
   getChildrenIds(): string[] {
-    return this.index?.list().map(item => item.getId()) || [];
+    return this.index?.listAll().map(item => item.getId()) || [];
   }
 
   updateMbr(): void {

@@ -42,7 +42,7 @@ const defaultShapeData = new DefaultShapeData();
 
 export const Shapes = { ...BasicShapes, ...BPMN };
 
-export class Shape extends BaseItem {
+export class Shape extends BaseItem<Shape> {
   readonly itemType = "Shape";
   parent = "Board";
   readonly transformation: Transformation;

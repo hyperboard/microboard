@@ -19,6 +19,7 @@ import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 import {Point} from "../Point";
 import {Matrix} from "../Transformation/Matrix";
 import {ApplyMatrixOperation, TransformMany, TransformationOperation} from "../Transformation/TransformationOperations";
+import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 
 /**
  * Converts a world-space Transformation operation into an equivalent local-space
@@ -90,7 +91,7 @@ export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
 	transformation: TransformationData;
 };
 
-export class BaseItem extends Mbr implements Geometry {
+export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geometry {
 	static createCommand?: (board: Board, operation: Operation) => Command;
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
@@ -100,7 +101,7 @@ export class BaseItem extends Mbr implements Geometry {
 	readonly index: SimpleSpatialIndex | null = null;
 	board: Board;
 	id: string;
-	subject = new Subject<any>(); // TODO: Narrow this in a later pass (Pass 2/3)
+	subject = new Subject<T>();
 	onRemoveCallbacks: (() => void)[] = [];
 	shouldUseCustomRender = false;
 	shouldRenderOutsideViewRect = true;
@@ -128,7 +129,7 @@ export class BaseItem extends Mbr implements Geometry {
 		}
 		if (defaultItemData) {
 			Object.entries(defaultItemData).forEach(([key, value]) => {
-				(this as any)[key] = value;
+				(this as unknown as Record<string, unknown>)[key] = value;
 			});
 		}
 		this.linkTo = new LinkTo(this.id, board.events);
@@ -355,7 +356,7 @@ export class BaseItem extends Mbr implements Geometry {
 		});
 		this.updateChildrenIds();
 		this.updateMbr();
-		this.subject.publish(this);
+		this.subject.publish(this as unknown as T);
 	}
 
 	applyRemoveChildren(childIds: string[]): void {
@@ -382,7 +383,7 @@ export class BaseItem extends Mbr implements Geometry {
 		});
 		this.updateChildrenIds();
 		this.updateMbr();
-		this.subject.publish(this);
+		this.subject.publish(this as unknown as T);
 	}
 
 	updateMbr(): void {
@@ -402,11 +403,11 @@ export class BaseItem extends Mbr implements Geometry {
 			this.applyAddChildren(data.childIds);
 		}
 		Object.entries(data).forEach(([key, value]) => {
-			const target = (this as any)[key];
+			const target = (this as unknown as Record<string, Record<string, unknown> | undefined>)[key];
 			if (target?.deserialize) {
-				target.deserialize(value);
+				(target as any).deserialize(value);
 			} else {
-				(this as any)[key] = value;
+				(this as unknown as Record<string, unknown>)[key] = value;
 			}
 		});
 
@@ -518,19 +519,19 @@ export class BaseItem extends Mbr implements Geometry {
 				break;
 			}
 			case "LinkTo":
-				this.linkTo.apply(op as any);
+				this.linkTo.apply(op as LinkToOperation);
 				break;
 			case this.itemType:
 				op = op as unknown as BaseItemOperation
 				switch (op.method) {
 					case "removeChildren":
-						this.applyRemoveChildren((op.newData as any).childIds)
+						this.applyRemoveChildren((op.newData as { childIds: string[] }).childIds)
 						break;
 					case "addChildren":
-						this.applyAddChildren((op.newData as any).childIds)
+						this.applyAddChildren((op.newData as { childIds: string[] }).childIds)
 						break;
 					case "toggleResizeEnabled":
-						this.resizeEnabled = (op.newData as any).resizeEnabled;
+						this.resizeEnabled = (op.newData as { resizeEnabled: boolean }).resizeEnabled;
 						break;
 				}
 		}
@@ -577,12 +578,12 @@ export class BaseItem extends Mbr implements Geometry {
 
 	highlightMbr(): void {
 		this.isHoverHighlighted = true;
-		this.subject.publish(this);
+		this.subject.publish(this as unknown as T);
 	}
 
 	clearHighlightMbr(): void {
 		this.isHoverHighlighted = false;
-		this.subject.publish(this);
+		this.subject.publish(this as unknown as T);
 	}
 
 	renderHoverHighlight(context: DrawingContext): void {

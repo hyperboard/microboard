@@ -27,7 +27,7 @@ export class CustomTool extends BoardTool {
 	constructor(
 		board: Board,
 		public name: string,
-		private itemClass: typeof BaseItem,
+		private itemClass: any,
 	) {
 		super(board);
 		this.item = new itemClass(board, "");
@@ -47,7 +47,7 @@ export class ShapeTool extends CustomTool {
 	constructor(
 		board: Board,
 		name: string,
-		item: typeof BaseItem,
+		item: any,
 		private settings?: ShapeToolSettings,
 	) {
 		super(board, name, item);
@@ -134,7 +134,7 @@ export class StickerTool extends CustomTool {
 	constructor(
 		board: Board,
 		name: string,
-		item: typeof BaseItem,
+		item: any,
 		private settings: StickerToolSettings,
 	) {
 		super(board, name, item);

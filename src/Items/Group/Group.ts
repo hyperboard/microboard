@@ -19,10 +19,10 @@ export interface GroupData {
   childIds: string[];
   transformation: TransformationData;
   isLockedGroup?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export class Group extends BaseItem {
+export class Group extends BaseItem<Group> {
   readonly linkTo: LinkTo;
   readonly itemType = "Group";
   parent = "Board";
@@ -96,7 +96,7 @@ export class Group extends BaseItem {
 
   getMbr(): Mbr {
     // World Mbr = union of each child's local Mbr transformed by group's world matrix
-    const children = this.index!.list();
+    const children = this.index!.listAll();
     if (children.length === 0) {
       return new Mbr(this.left, this.top, this.right, this.bottom);
     }
@@ -137,11 +137,11 @@ export class Group extends BaseItem {
   }
 
   getChildrenIds(): string[] {
-    return this.index!.list().map(item => item.getId());
+    return this.index!.listAll().map(item => item.getId());
   }
 
   getChildren(): Item[] {
-    return this.index!.list() as Item[];
+    return this.index!.listAll() as Item[];
   }
 
   getLinkTo(): string | undefined {
@@ -197,7 +197,7 @@ export class Group extends BaseItem {
     const ctx = context.ctx;
     ctx.save();
     this.transformation.applyToContext(ctx);
-    for (const child of this.index!.list()) {
+    for (const child of this.index!.listAll()) {
       child.render(context);
     }
     ctx.restore();

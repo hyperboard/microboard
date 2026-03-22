@@ -39,7 +39,7 @@ export const defaultScreenData: ScreenData = {
   backgroundUrl: ""
 };
 
-export class Screen extends BaseItem {
+export class Screen extends BaseItem<Screen> {
   readonly subject = new Subject<Screen>();
   private path: Path;
   private borderWidth = 1;
@@ -189,9 +189,9 @@ export class Screen extends BaseItem {
   applyOwnerId(ownerId: string): void {
     this.ownerId = ownerId;
     if (!this.ownerId) {
-      this.index!.getUnderPoint = () => []
-      this.index!.getEnclosed = () => []
-      this.index!.getEnclosedOrCrossed = () => []
+      this.index!.listUnderPoint = () => []
+      this.index!.listEnclosedBy = () => []
+      this.index!.listEnclosedOrCrossedBy = () => []
     }
   }
 
@@ -218,9 +218,9 @@ export class Screen extends BaseItem {
       this.applyBackgroundUrl(this.backgroundUrl);
     }
     if (!this.ownerId) {
-      this.index!.getUnderPoint = () => []
-      this.index!.getEnclosed = () => []
-      this.index!.getEnclosedOrCrossed = () => []
+      this.index!.listUnderPoint = () => []
+      this.index!.listEnclosedBy = () => []
+      this.index!.listEnclosedOrCrossedBy = () => []
     }
     this.transformPath();
     this.subject.publish(this);
@@ -228,7 +228,8 @@ export class Screen extends BaseItem {
   }
 
   getRandomItem(): BaseItem | undefined {
-    const item = this.index?.list()[Math.floor(Math.random() * this.index?.list().length)] as BaseItem | undefined;
+    const items = this.index?.listAll() || [];
+    const item = items[Math.floor(Math.random() * items.length)] as BaseItem | undefined;
     if (item) {
       this.removeChildItems(item);
       return item;

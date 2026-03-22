@@ -32,6 +32,10 @@ export class SelectionItems {
 		return Array.from(this.items.values());
 	}
 
+	listAll(): Item[] {
+		return this.list();
+	}
+
 	isEmpty(): boolean {
 		return this.items.size === 0;
 	}

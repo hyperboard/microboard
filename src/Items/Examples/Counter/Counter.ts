@@ -22,7 +22,7 @@ export const defaultCounterData: BaseItemData = {
 
 export const COUNTER_DIMENSIONS = { width: 200, height: 200 };
 
-export class Counter extends BaseItem {
+export class Counter extends BaseItem<Counter> {
 	private count = 0;
 	readonly subject = new Subject<Counter>();
 	shouldUseCustomRender = true;
