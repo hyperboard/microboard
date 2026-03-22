@@ -15,7 +15,7 @@ export function handleConfirmation(msg: ConfirmationMsg, board: Board): void {
 	conf.connection?.dismissNotificationAboutLostConnection();
 	log.currentSequenceNumber++;
 	log.pendingEvent.event.order = msg.order;
-	log.confirmSentLocalEventIds(log.pendingEvent.sentEventIds);
+	log.confirmSentLocalEventIds(log.pendingEvent.sentEventIds, msg.order);
 	board.subject.publish();
 	log.pendingEvent = null;
 	log.firstSentTime = null;

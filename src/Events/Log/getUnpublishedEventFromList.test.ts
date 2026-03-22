@@ -98,12 +98,12 @@ describe("getUnpublishedEventFromList", () => {
     const unpublishedBatch = getUnpublishedEventFromList(eventsList);
 
     expect(unpublishedBatch).not.toBeNull();
-    expect(unpublishedBatch?.sentEventIds).toEqual(["77:1", "77:2"]);
+    expect(unpublishedBatch?.sentEventIds).toEqual(["77:1"]);
     expect(unpublishedBatch?.event.body.operations).toHaveLength(1);
     expect(unpublishedBatch?.event.body.operations[0]).toMatchObject({
       class: "Transformation",
       method: "applyMatrix",
-      actualId: "77:2",
+      actualId: "77:1",
       items: [
         {
           id: "shape-1",
@@ -191,6 +191,7 @@ describe("getUnpublishedEventFromList", () => {
     );
 
     expect(board.events.log.list.getRecordsToSend()).toHaveLength(0);
-    expect(board.events.log.list.getConfirmedRecords()).toHaveLength(2);
+    expect(board.events.log.list.getConfirmedRecords()).toHaveLength(1);
+    expect(board.events.log.list.getConfirmedRecords()[0].event.order).toBe(10);
   });
 });

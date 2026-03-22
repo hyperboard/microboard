@@ -1,4 +1,4 @@
-import { BoardEvent, SyncBoardEvent } from "../Events";
+import { BoardEvent } from "../Events";
 import { mergeOperations } from "../Merge";
 import { mergeRecords } from "../mergeRecords";
 import { SyncLog, SyncLogSubject, createSyncLog, SyncLogMsg } from "../SyncLog";
@@ -6,8 +6,6 @@ import { transformEvents } from "../transformEvents";
 import { HistoryRecord } from "./EventsLog";
 import { Operation } from "../EventsOperations";
 import { Command } from "../Command";
-import { BoardOps } from "BoardOperations";
-import { Subject } from "../../Subject";
 
 export type FilterPredicate = (
   value: HistoryRecord,
@@ -20,7 +18,7 @@ export interface EventsList {
   addConfirmedRecords(records: HistoryRecord[]): void;
   addNewRecords(records: HistoryRecord[]): void;
   confirmSentRecords(records: BoardEvent[]): void;
-  confirmSentRecordIds(eventIds: string[]): void;
+  confirmSentRecordIds(eventIds: string[], order: number): void;
   getConfirmedRecords(): HistoryRecord[];
   getRecordsToSend(): HistoryRecord[];
   getNewRecords(): HistoryRecord[];
@@ -69,53 +67,71 @@ export function createEventsList(
     }
   }
 
-  function getOpItems(op: Operation): string[] {
-      if ("item" in op) {
-          const item = (op as { item: unknown }).item;
-          if (Array.isArray(item)) return item as string[];
-          if (typeof item === "string") return [item];
-          if (item && typeof item === "object") return Object.keys(item);
-      }
-      if ("itemsMap" in op && op.itemsMap) return Object.keys(op.itemsMap);
-      if ("items" in op) {
-          const items = (op as { items: unknown }).items;
-          if (Array.isArray(items)) {
-              return items
-                  .map((i: unknown) => (typeof i === "string" ? i : (i as { id: string }).id))
-                  .filter(Boolean);
-          }
-          if (items && typeof items === "object" && items !== null) return Object.keys(items);
-      }
-      if ("itemsOps" in op) {
-          const itemsOps = (op as { itemsOps: unknown[] }).itemsOps;
-          return itemsOps.map((io) => (io as { item: string }).item);
-      }
-      return [];
+  function apply(records: HistoryRecord[]): void {
+    for (const record of records) {
+      record.command = commandFactory(record.event.body.operation);
+      record.command.apply();
+    }
+  }
+
+  function mergeAndPushConfirmedRecords(records: HistoryRecord[]): void {
+    const lastConfirmedRecord = confirmedRecords.pop();
+    const recordsToMerge = lastConfirmedRecord
+      ? [lastConfirmedRecord, ...records]
+      : records;
+    const mergedRecords = mergeRecords(recordsToMerge);
+    confirmedRecords.push(...mergedRecords);
   }
 
   return {
     commandFactory,
     addConfirmedRecords(records: HistoryRecord[]) {
-      confirmedRecords.push(...records);
       syncLog.push({ msg: "confirmed", records } as SyncLogMsg);
+      mergeAndPushConfirmedRecords(records);
     },
     addNewRecords(records: HistoryRecord[]) {
-      newRecords.push(...records);
-      syncLog.push({ msg: "addedNew", records } as SyncLogMsg);
-    },
-    confirmSentRecords(events: BoardEvent[]) {
-      for (const event of events) {
-        const index = recordsToSend.findIndex(
-          (r) => r.event.body.eventId === event.body.eventId
-        );
-        if (index !== -1) {
-          const [record] = recordsToSend.splice(index, 1);
-          confirmedRecords.push(record);
-          syncLog.push({ msg: "confirmed", records: [record] } as SyncLogMsg);
+      for (const record of records) {
+        if (newRecords.length > 0) {
+          const lastRecord = newRecords[newRecords.length - 1];
+          const mergedOperation = mergeOperations(
+            lastRecord.event.body.operation,
+            record.event.body.operation
+          );
+
+          if (mergedOperation) {
+            lastRecord.event = {
+              ...lastRecord.event,
+              body: {
+                ...lastRecord.event.body,
+                operation: mergedOperation,
+              },
+            };
+            lastRecord.command = commandFactory(mergedOperation);
+            continue;
+          }
         }
+
+        newRecords.push(record);
+        syncLog.push({ msg: "addedNew", records: [record] } as SyncLogMsg);
       }
     },
-    confirmSentRecordIds(eventIds: string[]) {
+    confirmSentRecords(events: BoardEvent[]) {
+      const records = recordsToSend;
+      if (records.length !== events.length) {
+        console.error("Mismatch between records and events length");
+        return;
+      }
+
+      for (let i = 0; i < records.length; i++) {
+        records[i].event.order = events[i].order;
+      }
+
+      syncLog.push({ msg: "confirmed", records: [...records] } as SyncLogMsg);
+      mergeAndPushConfirmedRecords(records);
+      recordsToSend.splice(0, records.length);
+    },
+    confirmSentRecordIds(eventIds: string[], order: number) {
+      const confirmedRecordsById: HistoryRecord[] = [];
       for (const eventId of eventIds) {
         const index = recordsToSend.findIndex(
           (record) => record.event.body.eventId === eventId
@@ -124,9 +140,16 @@ export function createEventsList(
           continue;
         }
         const [record] = recordsToSend.splice(index, 1);
-        confirmedRecords.push(record);
-        syncLog.push({ msg: "confirmed", records: [record] } as SyncLogMsg);
+        record.event.order = order;
+        confirmedRecordsById.push(record);
       }
+
+      if (confirmedRecordsById.length === 0) {
+        return;
+      }
+
+      syncLog.push({ msg: "confirmed", records: confirmedRecordsById } as SyncLogMsg);
+      mergeAndPushConfirmedRecords(confirmedRecordsById);
     },
     getConfirmedRecords() {
       return confirmedRecords;
@@ -141,11 +164,13 @@ export function createEventsList(
       return [...confirmedRecords, ...recordsToSend, ...newRecords];
     },
     prepareRecordsToSend() {
-      const records = [...newRecords];
-      recordsToSend.push(...records);
-      newRecords.length = 0;
-      syncLog.push({ msg: "toSend", records } as SyncLogMsg);
-      return records;
+      if (recordsToSend.length === 0 && newRecords.length > 0) {
+        const records = [...newRecords];
+        recordsToSend.push(...records);
+        newRecords.length = 0;
+        syncLog.push({ msg: "toSend", records } as SyncLogMsg);
+      }
+      return recordsToSend;
     },
     forwardIterable() {
       return (function* () {
@@ -170,12 +195,37 @@ export function createEventsList(
       syncLog.push({ msg: "revertUnconfirmed", records: toRevert } as SyncLogMsg);
     },
     applyUnconfirmed(predicate?: FilterPredicate) {
-      const unconfirmed = [...recordsToSend, ...newRecords].filter(
-        predicate || (() => true)
-      );
-      for (const record of unconfirmed) {
-        record.command.apply();
+      const filter = predicate || (() => true);
+
+      if (justConfirmed.length > 0) {
+        const confirmedEvents = justConfirmed.map((record) => record.event);
+        const transformedSend = transformEvents(
+          confirmedEvents,
+          recordsToSend.map((record) => record.event)
+        );
+        const transformedNew = transformEvents(
+          confirmedEvents,
+          newRecords.map((record) => record.event)
+        );
+
+        const updatedRecordsToSend = transformedSend.map((event) => ({
+          event,
+          command: commandFactory(event.body.operation),
+        }));
+        const updatedNewRecords = transformedNew.map((event) => ({
+          event,
+          command: commandFactory(event.body.operation),
+        }));
+
+        recordsToSend.length = 0;
+        recordsToSend.push(...updatedRecordsToSend);
+        newRecords.length = 0;
+        newRecords.push(...updatedNewRecords);
+        justConfirmed.length = 0;
       }
+
+      const unconfirmed = [...recordsToSend, ...newRecords].filter(filter);
+      apply(unconfirmed);
       syncLog.push({ msg: "applyUnconfirmed", records: unconfirmed } as SyncLogMsg);
     },
     justConfirmed,
@@ -196,25 +246,36 @@ export function createEventsList(
       syncLogSubject.publish(syncLog);
     },
     removeUnconfirmedEventsByItems(itemIds: string[]) {
-        const itemIdSet = new Set(itemIds);
-        const filter = (record: HistoryRecord) => {
-            const opItems = getOpItems(record.event.body.operation);
-            return !opItems.some(id => itemIdSet.has(id));
-        };
-        
-        const filteredNewRecords = newRecords.filter(filter);
-        newRecords.length = 0;
-        newRecords.push(...filteredNewRecords);
-        
-        const filteredRecordsToSend = recordsToSend.filter(filter);
+      function shouldRemoveEvent(operation: Operation, ids: string[]): boolean {
+        if (operation.method === "add" && operation.class === "Board") {
+          if (Array.isArray(operation.item)) {
+            return operation.item.some((id) => ids.includes(id));
+          }
+          return ids.includes(operation.item);
+        }
+
+        if (operation.method === "remove" && operation.class === "Board") {
+          return operation.item.some((id) => ids.includes(id));
+        }
+
+        return false;
+      }
+
+      const nextRecordsToSend = recordsToSend.filter(
+        (record) => !shouldRemoveEvent(record.event.body.operation, itemIds)
+      );
+      if (nextRecordsToSend.length !== recordsToSend.length) {
         recordsToSend.length = 0;
-        recordsToSend.push(...filteredRecordsToSend);
-        
-        syncLog.length = 0;
-        syncLog.push({ msg: "confirmed", records: confirmedRecords } as SyncLogMsg);
-        syncLog.push({ msg: "toSend", records: recordsToSend } as SyncLogMsg);
-        syncLog.push({ msg: "addedNew", records: newRecords } as SyncLogMsg);
-        syncLogSubject.publish(syncLog);
+        recordsToSend.push(...nextRecordsToSend);
+      }
+
+      const nextNewRecords = newRecords.filter(
+        (record) => !shouldRemoveEvent(record.event.body.operation, itemIds)
+      );
+      if (nextNewRecords.length !== newRecords.length) {
+        newRecords.length = 0;
+        newRecords.push(...nextNewRecords);
+      }
     },
     isAllEventsConfirmed() {
       return recordsToSend.length === 0 && newRecords.length === 0;

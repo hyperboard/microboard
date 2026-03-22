@@ -74,8 +74,8 @@ export class EventsLog {
 		this.list.confirmSentRecords(events);
 	}
 
-	confirmSentLocalEventIds(eventIds: string[]): void {
-		this.list.confirmSentRecordIds(eventIds);
+	confirmSentLocalEventIds(eventIds: string[], order: number): void {
+		this.list.confirmSentRecordIds(eventIds, order);
 	}
 
 	/**
