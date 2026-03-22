@@ -1,13 +1,8 @@
 import { Board } from "Board";
 import { conf } from "Settings";
+import { ModeMsg } from './boardMessageInterface';
 
 export type ViewMode = "view" | "edit" | "loading";
-
-export interface ModeMsg {
-  type: "Mode";
-  boardId: string;
-  mode: ViewMode;
-}
 
 export function handleModeMessage(message: ModeMsg, board: Board): void {
   if (board.getInterfaceType() !== message.mode) {

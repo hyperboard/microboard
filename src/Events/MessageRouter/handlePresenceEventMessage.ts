@@ -1,5 +1,5 @@
 import { Board } from 'Board';
-import { PresenceEventMsg, UserJoinMsg } from 'Presence/Events';
+import { PresenceEventMsg, UserJoinMsg } from './boardMessageInterface';
 
 export function handlePresenceEventMessage(message: PresenceEventMsg, board: Board): void {
 	board.presence.push(message);

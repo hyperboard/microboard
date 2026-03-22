@@ -1,10 +1,6 @@
 import { Board } from 'Board';
 import { conf } from 'Settings';
-
-export interface SnapshotRequestMsg {
-	type: 'CreateSnapshotRequest';
-	boardId: string;
-}
+import { SnapshotRequestMsg, BoardSnapshotMsg } from './boardMessageInterface';
 
 export type SnapshotToPublish = {
 	boardId: string;
@@ -12,7 +8,7 @@ export type SnapshotToPublish = {
 	lastOrder: number;
 };
 
-export function handleCreateSnapshotRequestMessage(msg: any, board: Board): void {
+export function handleCreateSnapshotRequestMessage(msg: SnapshotRequestMsg, board: Board): void {
 	const result = getSnapshotToPublish(board);
 	if (!result) {
 		return;
@@ -24,7 +20,7 @@ export function handleCreateSnapshotRequestMessage(msg: any, board: Board): void
 		boardId,
 		snapshot,
 		lastEventOrder: lastOrder,
-	} as any);
+	} as BoardSnapshotMsg);
 }
 
 function getSnapshotToPublish(board: Board): SnapshotToPublish | null {

@@ -3,23 +3,21 @@ import { SyncEvent, SyncBoardEvent } from "../Events";
 export function expandEvents(events: SyncEvent[]): SyncBoardEvent[] {
 	return events.flatMap((event): SyncBoardEvent[] => {
 		if ("operations" in event.body) {
-			// Это BoardEventPack
-			return event.body.operations.map(operation => ({
+			// It's a BoardEventPack
+			const { operations, lastKnownOrder, ...bodyWithoutOps } = event.body;
+			return operations.map(operation => ({
 				order: event.order,
 				body: {
-					eventId: operation.actualId || event.body.eventId,
-					userId: event.body.userId,
-					boardId: event.body.boardId,
+					eventId: operation.actualId || bodyWithoutOps.eventId,
+					userId: bodyWithoutOps.userId,
+					boardId: bodyWithoutOps.boardId,
 					operation,
 				},
-				userId: event.body.userId,
-				lastKnownOrder:
-					"lastKnownOrder" in event
-						? (event as any).lastKnownOrder
-						: (event.body as any).lastKnownOrder,
+				userId: bodyWithoutOps.userId,
+				lastKnownOrder: lastKnownOrder,
 			}));
 		} else {
-			// Это обычный BoardEvent
+			// It's a regular BoardEvent
 			return [event as SyncBoardEvent];
 		}
 	});

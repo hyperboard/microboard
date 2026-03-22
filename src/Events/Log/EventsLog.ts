@@ -1,6 +1,6 @@
 import { Board, BoardSnapshot } from 'Board';
 import { BoardOps } from 'BoardOperations';
-import { BoardEvent, BoardEventPack, SyncBoardEvent, SyncEvent } from '../Events';
+import { BoardEvent, BoardEventPack, SyncBoardEvent, SyncBoardEventPack, SyncEvent } from '../Events';
 import { Operation } from '../EventsOperations';
 import { createEventsList, EventsList } from './createEventsList';
 import { Command } from '../Command';
@@ -35,7 +35,7 @@ export class EventsLog {
 
 	currentSequenceNumber = 0;
 	pendingEvent: {
-		event: BoardEventPack;
+		event: SyncBoardEventPack;
 		sequenceNumber: number;
 		lastSentTime: number;
 	} | null = null;

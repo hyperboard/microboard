@@ -1,4 +1,4 @@
-import { PresenceUser } from "./Presence";
+export type { PresenceUser } from "./Presence";
 
 export interface PointerMoveEvent {
 	method: "PointerMove";
@@ -82,24 +82,3 @@ export type PresenceEventType =
 	| StopFollowingEvent
 	| FollowEvent;
 
-export interface UserJoinMsg {
-	type: "UserJoin";
-	timestamp: number;
-	userId: number;
-	boardId: string;
-	snapshots: Record<string, PresenceUser>;
-	// events: PresenceEventMsg<PresenceEventType>[];
-}
-
-export interface PresenceEventMsg<T = PresenceEventType> {
-	type: "PresenceEvent";
-	boardId: string;
-	event: T;
-	userId: string;
-	softId: string | null;
-	hardId: string | null;
-	messageId: string;
-	nickname: string;
-	color: string | null;
-	avatar: string | null;
-}

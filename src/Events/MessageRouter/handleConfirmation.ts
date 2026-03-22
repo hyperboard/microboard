@@ -1,12 +1,6 @@
 import { Board } from 'Board';
 import { conf } from 'Settings';
-
-export interface ConfirmationMsg {
-	type: 'Confirmation';
-	boardId: string;
-	sequenceNumber: number;
-	order: number;
-}
+import { ConfirmationMsg } from './boardMessageInterface';
 
 export function handleConfirmation(msg: ConfirmationMsg, board: Board): void {
 	const { log } = board.events;
@@ -21,7 +15,7 @@ export function handleConfirmation(msg: ConfirmationMsg, board: Board): void {
 	conf.connection?.dismissNotificationAboutLostConnection();
 	log.currentSequenceNumber++;
 	log.pendingEvent.event.order = msg.order;
-	log.confirmSentLocalEvent(log.pendingEvent.event as any);
+	log.confirmSentLocalEvent(log.pendingEvent.event);
 	board.subject.publish();
 	log.pendingEvent = null;
 	log.firstSentTime = null;

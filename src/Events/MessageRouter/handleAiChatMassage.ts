@@ -1,17 +1,12 @@
 import { Board } from 'Board';
 import { Connector } from 'Items';
-import { AINode } from 'Items/AINode';
+import { AINode, ThreadDirection } from 'Items/AINode';
 import { AudioItem } from 'Items/Audio';
 import { ImageItem } from 'Items/Image';
 import { prepareImage } from 'Items/Image/ImageHelpers';
 import { getControlPointData } from 'Selection/QuickAddButtons';
 import { conf } from 'Settings';
-
-export interface AiChatMsg<T = AiChatEventType> {
-	type: 'AiChat';
-	boardId: string;
-	event: T;
-}
+import { AiChatMsg } from './boardMessageInterface';
 
 export type AiChatEventType =
 	| UserRequest
@@ -238,12 +233,12 @@ function handleAudioGenerate(response: GenerateAudioResponse, board: Board): voi
 			top
 		);
 		audio.updateMbr();
-		const threadDirection = placeholderNode.getThreadDirection();
+		const threadDirection: ThreadDirection = placeholderNode.getThreadDirection();
 		board.remove(placeholderNode, false);
 		const boardAudio = board.add(audio);
 		board.selection.removeAll();
 		board.selection.add(boardAudio);
-		const reverseIndexMap = {
+		const reverseIndexMap: Record<ThreadDirection, ThreadDirection> = {
 			0: 1,
 			1: 0,
 			2: 3,
@@ -317,7 +312,7 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 						// error
 						imageItem.transformation.translateTo(imageCenterX, imageTopY);
 						imageItem.setId(placeholderId);
-						let threadDirection = 3;
+						let threadDirection: ThreadDirection = 3;
 						if (placeholderNode instanceof AINode) {
 							threadDirection = placeholderNode.getThreadDirection();
 						}
@@ -330,7 +325,7 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 									board.aiImageConnectorID
 								) as Connector;
 
-								const reverseIndexMap = {
+								const reverseIndexMap: Record<ThreadDirection, ThreadDirection> = {
 									0: 1,
 									1: 0,
 									2: 3,
@@ -339,7 +334,7 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 								oldIdConnector.setEndPoint(
 									getControlPointData(
 									newImageAI,
-									(reverseIndexMap as any)[threadDirection]
+									reverseIndexMap[threadDirection]
 								)
 								);
 							}

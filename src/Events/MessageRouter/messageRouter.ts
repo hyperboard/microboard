@@ -1,14 +1,19 @@
-import { PresenceEventMsg, UserJoinMsg } from 'Presence/Events';
-import { createMessageRouter } from './createMessageRouter';
-import { AiChatMsg, handleAiChatMassage } from './handleAiChatMassage';
-import { BoardEventMsg, handleBoardEventMessage } from './handleBoardEventMessage';
-import { handleBoardSubscriptionCompletedMsg } from './handleBoardSubscriptionCompletedMsg';
-import { ConfirmationMsg, handleConfirmation } from './handleConfirmation';
 import {
+	AiChatMsg,
+	BoardEventMsg,
+	ConfirmationMsg,
+	ModeMsg,
+	PresenceEventMsg,
 	SnapshotRequestMsg,
-	handleCreateSnapshotRequestMessage,
-} from './handleCreateSnapshotRequestMessage';
-import { ModeMsg, handleModeMessage } from './handleModeMessage';
+	UserJoinMsg
+} from './boardMessageInterface';
+import { createMessageRouter } from './createMessageRouter';
+import { handleAiChatMassage } from './handleAiChatMassage';
+import { handleBoardEventMessage } from './handleBoardEventMessage';
+import { handleBoardSubscriptionCompletedMsg } from './handleBoardSubscriptionCompletedMsg';
+import { handleConfirmation } from './handleConfirmation';
+import { handleCreateSnapshotRequestMessage } from './handleCreateSnapshotRequestMessage';
+import { handleModeMessage } from './handleModeMessage';
 import { handlePresenceEventMessage, handleUserJoinMessage } from './handlePresenceEventMessage';
 
 export const messageRouter = createMessageRouter();

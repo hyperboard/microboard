@@ -1,14 +1,6 @@
 import { Board } from "Board";
-import { conf } from "Settings";
-import { SyncEvent } from "../Events";
-
-export interface BoardEventMsg {
-  type: "BoardEvent";
-  boardId: string;
-  event: SyncEvent;
-  sequenceNumber: number;
-  userId: string;
-}
+import { SyncBoardEvent, SyncBoardEventPack, SyncEvent } from "../Events";
+import { BoardEventMsg } from './boardMessageInterface';
 
 export function handleBoardEventMessage(
   message: BoardEventMsg,
@@ -32,10 +24,21 @@ export function handleBoardEventMessage(
     return;
   }
 
-  log.insertEventsFromOtherConnections({
-    ...event,
-    userId: Number(message.userId),
-  } as any);
+  if ("operations" in event.body) {
+    log.insertEventsFromOtherConnections({
+      ...event,
+      body: {
+        ...event.body,
+        userId: Number(message.userId),
+      },
+    } as SyncBoardEventPack);
+  } else {
+    log.insertEventsFromOtherConnections({
+      ...event,
+      userId: Number(message.userId),
+    } as SyncBoardEvent);
+  }
+
   const last = log.getLastConfirmed();
   if (last) {
     board.events.subject.publish(last);

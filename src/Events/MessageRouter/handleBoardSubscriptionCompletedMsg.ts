@@ -2,6 +2,7 @@ import {Board, BoardSnapshot} from "Board";
 import { conf } from "Settings";
 import { BoardEventPack, SyncBoardEvent, SyncEvent } from "../Events";
 import { BoardSubscriptionCompletedMsg } from "./boardMessageInterface";
+import { expandEvents } from "../Log/expandEvents";
 
 export function handleBoardSubscriptionCompletedMsg(
   msg: BoardSubscriptionCompletedMsg,
@@ -16,7 +17,7 @@ export function handleBoardSubscriptionCompletedMsg(
     handleHTMLSnapshotApplication(msg.JSONSnapshot, board);
     log.list.clearConfirmedRecords();
   }
-  handleBoardEventListApplication(msg.eventsSinceLastSnapshot as any, board);
+  handleBoardEventListApplication(expandEvents(msg.eventsSinceLastSnapshot), board);
 
   board.setInterfaceType(msg.mode);
 

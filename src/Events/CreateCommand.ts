@@ -297,7 +297,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 
 function getItemIdListFromOp(operation: Operation): string[] {
 	if ("item" in operation) {
-		const item = (operation as any).item;
+		const item = (operation as { item: string | string[] | Record<string, unknown> }).item;
 		if (Array.isArray(item)) {
 			return item;
 		}
@@ -307,17 +307,17 @@ function getItemIdListFromOp(operation: Operation): string[] {
 		return Object.keys(item);
 	}
 	if ("itemsMap" in operation) {
-		return Object.keys(operation.itemsMap);
+		return Object.keys((operation as { itemsMap: Record<string, unknown> }).itemsMap);
 	}
 	if ("items" in operation) {
-		const items = (operation as any).items;
+		const items = (operation as { items: (string | { id: string })[] | Record<string, unknown> }).items;
 		if (Array.isArray(items)) {
-			return items.map((i: any) => (typeof i === "string" ? i : i.id));
+			return items.map((i) => (typeof i === "string" ? i : i.id));
 		}
 		return Object.keys(items);
 	}
 	if ("itemsOps" in operation) {
-		return operation.itemsOps.map(itemOp => itemOp.item);
+		return (operation as { itemsOps: { item: string }[] }).itemsOps.map(itemOp => itemOp.item);
 	}
 	return [];
 }

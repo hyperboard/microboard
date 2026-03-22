@@ -1,23 +1,26 @@
 import { Board } from "Board";
-import { SyncBoardEvent } from "../Events";
+import { SyncBoardEvent, SyncEvent } from "../Events";
 import { EventsList } from "./createEventsList";
+
 export function deserializeAndApplyToList(
-	events: SyncBoardEvent[],
+	events: SyncEvent[],
 	list: EventsList,
 	board: Board,
 ): void {
 	list.clear();
 
 	for (const event of events) {
-		const body = event.body as any;
-		if (body.operations && Array.isArray(body.operations)) {
+		if ("operations" in event.body) {
 			// Handle batch events: if there is an array of operations, iterate over each one.
-			for (const op of body.operations) {
+			const { operations, lastKnownOrder, ...bodyWithoutOps } = event.body;
+			for (const op of operations) {
 				// Create a new event object for this particular operation.
 				const singleEvent: SyncBoardEvent = {
-					...event,
+					order: event.order,
+					lastKnownOrder: lastKnownOrder,
+					userId: bodyWithoutOps.userId,
 					body: {
-						...event.body,
+						...bodyWithoutOps,
 						operation: op,
 					},
 				};
@@ -29,7 +32,7 @@ export function deserializeAndApplyToList(
 		} else {
 			// Handle single operation event.
 			const command = list.commandFactory(event.body.operation);
-			const record = { event, command };
+			const record = { event: event as SyncBoardEvent, command };
 			command.apply();
 			list.addConfirmedRecords([record]);
 		}
