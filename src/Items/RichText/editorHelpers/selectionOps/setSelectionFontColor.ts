@@ -1,10 +1,11 @@
 import { Editor } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
+import type { ColorValue } from 'Color';
 
 export function setSelectionFontColor(
 	editor: Editor,
-	format: string,
+	format: string | ColorValue,
 	selectionContext?: string
 ): void {
 	const marks = getSelectionMarks(editor);

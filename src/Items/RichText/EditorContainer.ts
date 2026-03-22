@@ -43,6 +43,7 @@ import { setSelectionFontHighlight } from "Items/RichText/editorHelpers/selectio
 import { setSelectionFontSize } from "Items/RichText/editorHelpers/selectionOps/setSelectionFontSize";
 import { setSelectionFontStyle } from "Items/RichText/editorHelpers/selectionOps/setSelectionFontStyle";
 import { setSelectionFontColor } from "Items/RichText/editorHelpers/selectionOps/setSelectionFontColor";
+import { CustomEditor } from "Items/RichText/Editor/Editor.d";
 
 // import { getSlateFragmentAttribute } from "slate-react/dist/utils/dom";
 
@@ -52,7 +53,7 @@ type OperationFontSizeProperties = {
 }
 
 export class EditorContainer {
-  readonly editor: Editor & any;
+  readonly editor: CustomEditor;
 
   maxWidth: number | undefined = undefined;
   textScale = 1;
@@ -99,7 +100,7 @@ export class EditorContainer {
     private updateElement: () => void
   ) {
     const baseEditor = createEditor();
-    this.editor = withHistory(withReact(baseEditor)) as Editor & any;
+    this.editor = withHistory(withReact(baseEditor)) as CustomEditor;
     const editor = this.editor;
     /** The editor must have initial descendants */
     // horizontalAlignment for Shape - center, for RichText - left
@@ -243,7 +244,7 @@ export class EditorContainer {
     }
 
     if ("children" in node && Array.isArray(node.children)) {
-      return node.children.reduce((acc: string, child: any) => {
+      return node.children.reduce((acc: string, child: BlockNode | TextNode) => {
         return acc + this.getTextFromNode(child);
       }, "");
     }
@@ -429,7 +430,7 @@ export class EditorContainer {
 
   setSelectionFontColor(format: string | ColorValue, selectionContext?: string): SlateOp[] {
     this.startOpRecording();
-    setSelectionFontColor(this.editor, format as any, selectionContext);
+    setSelectionFontColor(this.editor, format, selectionContext);
     return this.stopOpRecordingAndGetOps();
   }
 
@@ -471,7 +472,7 @@ export class EditorContainer {
     selectionContext?: string
   ): SlateOp[] {
     this.startOpRecording();
-    setSelectionFontHighlight(this.editor, format as any, selectionContext);
+    setSelectionFontHighlight(this.editor, format, selectionContext);
     return this.stopOpRecordingAndGetOps();
   }
 
