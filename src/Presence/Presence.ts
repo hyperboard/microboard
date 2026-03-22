@@ -8,8 +8,6 @@ import { Subject } from 'Subject';
 import { PRESENCE_COLORS } from './consts';
 import {
 	PresenceEventType,
-	PresenceEventMsg,
-	UserJoinMsg,
 	PointerMoveEvent,
 	SelectionEvent,
 	SetUserColorEvent,
@@ -21,6 +19,7 @@ import {
 	StopFollowingEvent,
 	FollowEvent,
 } from './Events';
+import { PresenceEventMsg, UserJoinMsg } from 'Events/MessageRouter/boardMessageInterface';
 import { catmullRomInterpolate, rgbToRgba } from './helpers';
 import { throttleWithDebounce } from './throttle';
 import { conf } from 'Settings';
