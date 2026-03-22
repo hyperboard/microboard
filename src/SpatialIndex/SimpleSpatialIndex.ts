@@ -25,6 +25,9 @@ export class SimpleSpatialIndex implements ISpatialIndex {
   }
 
   insert(item: Item): void {
+    if (this.itemsArray.includes(item) || this.getById(item.getId())) {
+      return;
+    }
     this.itemsArray.push(item);
 
     if (this.Mbr.getWidth() === 0 && this.Mbr.getHeight() === 0) {

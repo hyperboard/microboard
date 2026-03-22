@@ -345,7 +345,13 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 					// All operations in the log are world-space, so this conversion is always correct
 					// whether we are processing a live user action or replaying an old event.
 					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerNestingMatrix);
-					this.board.items.index.remove(foundItem, true);
+					const currentParentId = foundItem.parent;
+					const currentParent =
+						currentParentId !== "Board"
+							? (this.board.items.getById(currentParentId) as BaseItem | undefined)
+							: undefined;
+					const sourceIndex = currentParent?.index || this.board.items.index;
+					sourceIndex.remove(foundItem, true);
 					
 					foundItem.parent = this.getId();
 					foundItem.onParentChanged(this.getId());

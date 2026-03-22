@@ -208,6 +208,25 @@ describe("hierarchical selection rules", () => {
     expect(outside.transformation.getTranslation().x).toBe(outsideBefore.x + 25);
   });
 
+  test("moving a child between groups does not duplicate it in the board index", () => {
+    const child = createItem(board, "child", 10, 10, 30, 30);
+    const sibling = createItem(board, "sibling", 40, 10, 60, 30);
+    const outside = createItem(board, "outside", 120, 10, 140, 30);
+    const firstGroup = board.group([child, sibling]);
+    const secondGroup = board.group([outside]);
+
+    secondGroup.applyAddChildren([child.getId()]);
+
+    const childEntries = board.items
+      .listAll()
+      .filter((item) => item.getId() === child.getId());
+
+    expect(child.parent).toBe(secondGroup.getId());
+    expect(firstGroup.getChildrenIds()).toEqual([sibling.getId()]);
+    expect(secondGroup.getChildrenIds()).toEqual([outside.getId(), child.getId()]);
+    expect(childEntries).toHaveLength(1);
+  });
+
   test("moving child updates computed group bounds", () => {
     const child = createItem(board, "child", 10, 10, 30, 30);
     const sibling = createItem(board, "sibling", 40, 20, 60, 40);

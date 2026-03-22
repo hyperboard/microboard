@@ -98,6 +98,9 @@ export class SpatialIndex implements ISpatialIndex {
   }
 
   insert(item: Item): void {
+    if (this.itemsArray.includes(item) || this.getById(item.getId())) {
+      return;
+    }
     this.itemsArray.push(item);
     this.itemsIndex.insert(item);
 
