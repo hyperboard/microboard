@@ -2,18 +2,23 @@ import { BoardEventPack, BoardEvent } from "../Events";
 import { Operation } from "../EventsOperations";
 import { EventsList } from "./createEventsList";
 import { HistoryRecord } from "./EventsLog";
+import { mergeRecords } from "../mergeRecords";
 
 export function getUnpublishedEventFromList(
 	list: EventsList,
-): BoardEventPack | null {
+): { event: BoardEventPack; sentEventIds: string[] } | null {
 	const recordsToSend = list.prepareRecordsToSend();
 
 	if (recordsToSend.length === 0) {
 		return null;
 	}
 
-	const operations = getOperationsFromEventRecords(recordsToSend);
-	return combineOperationsIntoPack(recordsToSend[0].event, operations);
+	const mergedRecords = mergeRecords(recordsToSend);
+	const operations = getOperationsFromEventRecords(mergedRecords);
+	return {
+		event: combineOperationsIntoPack(recordsToSend[0].event, operations),
+		sentEventIds: recordsToSend.map(record => record.event.body.eventId),
+	};
 }
 
 function getOperationsFromEventRecords(

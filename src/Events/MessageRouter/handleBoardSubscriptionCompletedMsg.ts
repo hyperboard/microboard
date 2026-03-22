@@ -62,11 +62,11 @@ function tryPublishEvent(board: Board): void {
   if (log.pendingEvent) {
     return;
   }
-  const unpublishedEvent = log.getUnpublishedEvent();
-  if (!unpublishedEvent) {
+  const unpublishedBatch = log.getUnpublishedEvent();
+  if (!unpublishedBatch) {
     return;
   }
-  sendBoardEvent(board, unpublishedEvent, log.currentSequenceNumber);
+  sendBoardEvent(board, unpublishedBatch, log.currentSequenceNumber);
 }
 
 function tryResendEvent(board: Board): void {
@@ -89,7 +89,14 @@ function tryResendEvent(board: Board): void {
     conf.connection?.notifyAboutLostConnection();
   }
 
-  sendBoardEvent(board, log.pendingEvent.event, log.currentSequenceNumber);
+  sendBoardEvent(
+    board,
+    {
+      event: log.pendingEvent.event,
+      sentEventIds: log.pendingEvent.sentEventIds,
+    },
+    log.currentSequenceNumber
+  );
 }
 
 function stopIntervals(board: Board): void {
@@ -142,10 +149,11 @@ function handleBoardEventListApplication(
 
 function sendBoardEvent(
   board: Board,
-  event: BoardEventPack,
+  batch: { event: BoardEventPack; sentEventIds: string[] },
   sequenceNumber: number
 ): void {
   const { log } = board.events;
+  const { event, sentEventIds } = batch;
 
   const toSend: SyncEvent = {
     ...event,
@@ -165,6 +173,7 @@ function sendBoardEvent(
   const date = Date.now();
   log.pendingEvent = {
     event: toSend,
+    sentEventIds,
     sequenceNumber,
     lastSentTime: date,
   };

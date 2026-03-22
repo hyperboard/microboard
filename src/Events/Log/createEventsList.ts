@@ -20,6 +20,7 @@ export interface EventsList {
   addConfirmedRecords(records: HistoryRecord[]): void;
   addNewRecords(records: HistoryRecord[]): void;
   confirmSentRecords(records: BoardEvent[]): void;
+  confirmSentRecordIds(eventIds: string[]): void;
   getConfirmedRecords(): HistoryRecord[];
   getRecordsToSend(): HistoryRecord[];
   getNewRecords(): HistoryRecord[];
@@ -112,6 +113,19 @@ export function createEventsList(
           confirmedRecords.push(record);
           syncLog.push({ msg: "confirmed", records: [record] } as SyncLogMsg);
         }
+      }
+    },
+    confirmSentRecordIds(eventIds: string[]) {
+      for (const eventId of eventIds) {
+        const index = recordsToSend.findIndex(
+          (record) => record.event.body.eventId === eventId
+        );
+        if (index === -1) {
+          continue;
+        }
+        const [record] = recordsToSend.splice(index, 1);
+        confirmedRecords.push(record);
+        syncLog.push({ msg: "confirmed", records: [record] } as SyncLogMsg);
       }
     },
     getConfirmedRecords() {

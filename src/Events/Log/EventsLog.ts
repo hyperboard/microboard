@@ -36,6 +36,7 @@ export class EventsLog {
 	currentSequenceNumber = 0;
 	pendingEvent: {
 		event: SyncBoardEventPack;
+		sentEventIds: string[];
 		sequenceNumber: number;
 		lastSentTime: number;
 	} | null = null;
@@ -71,6 +72,10 @@ export class EventsLog {
 	confirmSentLocalEvent(event: SyncEvent): void {
 		const events = expandEvents([event]);
 		this.list.confirmSentRecords(events);
+	}
+
+	confirmSentLocalEventIds(eventIds: string[]): void {
+		this.list.confirmSentRecordIds(eventIds);
 	}
 
 	/**
@@ -127,7 +132,7 @@ export class EventsLog {
 	/**
 	 * Retrieves unpublished events ready to be sent
 	 */
-	getUnpublishedEvent(): BoardEventPack | null {
+	getUnpublishedEvent(): { event: BoardEventPack; sentEventIds: string[] } | null {
 		return getUnpublishedEventFromList(this.list);
 	}
 

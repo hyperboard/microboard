@@ -16,27 +16,19 @@ export function handleBoardEventMessage(
     return;
   }
 
-  const eventUserId = parseFloat(event.body.eventId.split(":")[0]);
-  const currentUserId = Number(localStorage.getItem("userId") || "0");
-  const isEventFromCurrentUser = eventUserId === currentUserId;
+  const eventConnectionId = Number(event.body.eventId.split(":")[0]);
+  const currentConnectionId = board.events.connection?.connectionId;
+  const isEventFromCurrentUser =
+    currentConnectionId !== undefined && eventConnectionId === currentConnectionId;
 
   if (isEventFromCurrentUser) {
     return;
   }
 
   if ("operations" in event.body) {
-    log.insertEventsFromOtherConnections({
-      ...event,
-      body: {
-        ...event.body,
-        userId: Number(message.userId),
-      },
-    } as SyncBoardEventPack);
+    log.insertEventsFromOtherConnections(event as SyncBoardEventPack);
   } else {
-    log.insertEventsFromOtherConnections({
-      ...event,
-      userId: Number(message.userId),
-    } as SyncBoardEvent);
+    log.insertEventsFromOtherConnections(event as SyncBoardEvent);
   }
 
   const last = log.getLastConfirmed();
