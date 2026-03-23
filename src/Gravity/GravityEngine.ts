@@ -84,6 +84,8 @@ export class GravityEngine {
 			if (item.transformation.isLocked || EXCLUDED_ITEM_TYPES.has(item.itemType)) return false;
 			if (draggedIds.has(item.getId())) return false;
 			if (item.parent !== 'Board' && draggedIds.has(item.parent)) return false;
+			// Skip items managed by ForceGraphEngine — it handles their physics and sync.
+			if (this.board.isNodeInForceGraph(item.getId())) return false;
 			return true;
 		});
 		if (items.length < 1) return;
@@ -207,28 +209,32 @@ export class GravityEngine {
 			if (item.transformation.isLocked || EXCLUDED_ITEM_TYPES.has(item.itemType)) return false;
 			if (draggedIds.has(item.getId())) return false;
 			if (item.parent !== 'Board' && draggedIds.has(item.parent)) return false;
+			// Skip items managed by ForceGraphEngine — it handles their sync.
+			if (this.board.isNodeInForceGraph(item.getId())) return false;
 			return true;
 		});
 		if (items.length === 0) return;
 
-		const movedItems = items
-			.map(item => {
-				const id = item.getId();
-				const pos = item.transformation.getTranslation();
-				const last = this.lastSyncedPositions.get(id);
-				const dx = last ? pos.x - last.x : 0;
-				const dy = last ? pos.y - last.y : 0;
+		// Only update baseline for items that are actually sent.
+		// Updating sub-threshold items would reset their accumulated delta → cumulative desync.
+		const toSend: { id: string; dx: number; dy: number }[] = [];
+		for (const item of items) {
+			const id = item.getId();
+			const pos = item.transformation.getTranslation();
+			const last = this.lastSyncedPositions.get(id);
+			const dx = last ? pos.x - last.x : 0;
+			const dy = last ? pos.y - last.y : 0;
+			if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+				toSend.push({ id, dx, dy });
 				this.lastSyncedPositions.set(id, { x: pos.x, y: pos.y });
-				return { id, dx, dy };
-			})
-			.filter(({ dx, dy }) => Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5);
-
-		if (movedItems.length === 0) return;
+			}
+		}
+		if (toSend.length === 0) return;
 
 		const operation: ApplyMatrixOperation = {
 			class: 'Transformation',
 			method: 'applyMatrix',
-			items: movedItems.map(({ id, dx, dy }) => ({
+			items: toSend.map(({ id, dx, dy }) => ({
 				id,
 				matrix: { translateX: dx, translateY: dy, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
 			})),
