@@ -380,9 +380,14 @@ export class ForceGraphEngine {
 
 				const dx = s2.cx - s1.cx;
 				const dy = s2.cy - s1.cy;
-				// Spec formula: force = R / distSq (clamped to MIN_DIST_SQ).
-				const distSq = Math.max(dx * dx + dy * dy, conf.FG_MIN_DIST_SQ);
-				const force = conf.FG_REPULSION / distSq;
+				// Edge-to-edge distance: large nodes (e.g. 400px) can overlap with centers 200px apart,
+				// making distSq=40000 and force=0.0025 — negligible. Subtract half-extents first.
+				const centerDist = Math.sqrt(dx * dx + dy * dy) || 1;
+				const halfA = Math.max(s1.w, s1.h) * 0.5;
+				const halfB = Math.max(s2.w, s2.h) * 0.5;
+				const edgeDist = Math.max(centerDist - halfA - halfB, 0);
+				const edgeDistSq = Math.max(edgeDist * edgeDist, conf.FG_MIN_DIST_SQ);
+				const force = conf.FG_REPULSION / edgeDistSq;
 
 				ax.set(s1.id, (ax.get(s1.id) ?? 0) - dx * force);
 				ay.set(s1.id, (ay.get(s1.id) ?? 0) - dy * force);
