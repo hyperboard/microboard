@@ -48,7 +48,6 @@ function getEvent(
 ): SyncBoardEvent {
   return {
     order,
-    userId: userId.toString(),
     lastKnownOrder,
     body: {
       eventId,

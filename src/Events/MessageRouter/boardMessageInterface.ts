@@ -51,6 +51,7 @@ export interface VersionCheckMsg {
 
 export interface AuthConfirmationMsg {
 	type: "AuthConfirmation";
+	sessionId?: string;
 }
 
 export interface PingMsg {
@@ -90,7 +91,6 @@ export interface BoardEventMsg {
 	boardId: string;
 	event: SyncEvent;
 	sequenceNumber: number;
-	userId: string;
 }
 
 export interface ConfirmationMsg {
@@ -114,7 +114,9 @@ export interface SnapshotRequestMsg {
 export interface UserJoinMsg {
 	type: "UserJoin";
 	timestamp: number;
-	userId: number;
+	userId?: number | string;
+	sessionId?: string;
+	authorUserId?: string;
 	boardId: string;
 	snapshots: Record<string, PresenceUser>;
 }
@@ -123,7 +125,9 @@ export interface PresenceEventMsg<T = PresenceEventType> {
 	type: "PresenceEvent";
 	boardId: string;
 	event: T;
-	userId: string;
+	userId?: string;
+	sessionId?: string;
+	authorUserId?: string;
 	softId: string | null;
 	hardId: string | null;
 	messageId: string;

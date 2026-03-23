@@ -41,9 +41,23 @@ interface Cursor {
 	y: number;
 }
 
+function getPresenceSessionId(
+	message: Pick<PresenceEventMsg | UserJoinMsg, "sessionId" | "userId">,
+): string | undefined {
+	if (message.sessionId) {
+		return message.sessionId;
+	}
+	if (message.userId === undefined || message.userId === null) {
+		return undefined;
+	}
+	return String(message.userId);
+}
+
 export interface PresenceUser {
 	nickname: string;
 	userId: string;
+	sessionId?: string;
+	authorUserId?: string | null;
 	softId: string | null;
 	hardId: string | null;
 	color: string; // rgb
@@ -80,7 +94,6 @@ export class Presence {
 	trackedUser: PresenceUser | null = null;
 	private cursorsEnabled = true;
 	private drawingContext: DrawingContext | null = null;
-	private currentUserId: string | null = null;
 	users: Map<string, PresenceUser> = new Map();
 	followers: string[] = [];
 	private svgImageCache: { [color: string]: HTMLImageElement } = {};
@@ -135,10 +148,10 @@ export class Presence {
 		});
 
 		// todo move browser api
-		if (typeof window !== 'undefined') {
-			window.addEventListener('storage', this.updateCurrentUser.bind(this));
+			if (typeof window !== 'undefined') {
+				window.addEventListener('storage', this.onStorageChange);
+			}
 		}
-	}
 
 	clear(): void {
 		this.users = new Map();
@@ -190,22 +203,35 @@ export class Presence {
 		);
 	}
 
-	setCurrentUser(userId: string): void {
-		this.currentUserId = userId;
+	private readonly onStorageChange = (_event: StorageEvent): void => {};
+
+	private getCurrentSessionId(): string | null {
+		return this.events?.connection?.getSessionId?.() || this.events?.connection?.sessionId || null;
 	}
 
-	private updateCurrentUser(event: StorageEvent) {
-		if (event.key === 'currentUser') {
-			if (event.newValue) {
-				this.setCurrentUser(event.newValue);
-			}
+	private getLegacyCurrentUserId(): string | null {
+		if (typeof localStorage === 'undefined') {
+			return null;
 		}
+		return localStorage.getItem('currentUser');
+	}
+
+	private isCurrentSessionTarget(value: number | string | undefined): boolean {
+		if (value === undefined || value === null) {
+			return false;
+		}
+		const currentSessionId = this.getCurrentSessionId();
+		if (currentSessionId && String(value) === currentSessionId) {
+			return true;
+		}
+		const currentUser = this.getLegacyCurrentUserId();
+		return currentUser !== null && String(value) === currentUser;
 	}
 
 	cleanup() {
 		// todo move browser api
 		if (typeof window !== 'undefined') {
-			window.removeEventListener('storage', this.updateCurrentUser.bind(this));
+			window.removeEventListener('storage', this.onStorageChange);
 		}
 		this.drawingContext = null;
 		this.clear();
@@ -254,7 +280,13 @@ export class Presence {
 
 	join(msg: UserJoinMsg): void {
 		Object.entries(msg.snapshots).map(([userId, snapshot]) => {
-			this.users.set(userId, snapshot);
+			const sessionId = snapshot.sessionId || userId;
+			this.users.set(sessionId, {
+				...snapshot,
+				userId: snapshot.userId || sessionId,
+				sessionId,
+				authorUserId: snapshot.authorUserId || null,
+			});
 		});
 		this.subject.publish(this);
 	}
@@ -268,19 +300,13 @@ export class Presence {
 		);
 
 		if (excludeSelf) {
-			const currentUser = localStorage.getItem('currentUser');
-			if (currentUser) {
-				filteredUsers = filteredUsers.filter(user => user.userId !== currentUser);
+			const currentSessionId = this.getCurrentSessionId();
+			if (currentSessionId) {
+				filteredUsers = filteredUsers.filter(user => user.sessionId !== currentSessionId);
 			}
 		}
 
-		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
-		filteredUsers.forEach(user => {
-			const key = user.hardId === null ? Symbol() : user.hardId;
-			uniqueUsers.set(key, user);
-		});
-
-		return Array.from(uniqueUsers.values());
+		return filteredUsers;
 	}
 
 	getColors(): string[] {
@@ -291,9 +317,13 @@ export class Presence {
 		if (!this.drawingContext) {
 			return;
 		}
-		const { userId, event: eventData } = event;
+		const sessionId = getPresenceSessionId(event);
+		if (!sessionId) {
+			return;
+		}
+		const { event: eventData } = event;
 
-		let user = this.users.get(userId);
+		let user = this.users.get(sessionId);
 		if (!user) {
 			let color: string | null = null;
 			const storageColor = localStorage.getItem(`userColor`);
@@ -305,8 +335,10 @@ export class Presence {
 				color = this.generateUserColor();
 			}
 
-			this.users.set(userId.toString(), {
-				userId: userId.toString(),
+			this.users.set(sessionId, {
+				userId: sessionId,
+				sessionId,
+				authorUserId: event.authorUserId || null,
 				softId: event.softId,
 				hardId: event.hardId,
 				color,
@@ -321,7 +353,7 @@ export class Presence {
 				boardId: this.board.getBoardId(),
 				lastPointerActivity: eventData.timestamp,
 			});
-			user = this.users.get(userId.toString())!;
+			user = this.users.get(sessionId)!;
 		}
 
 		switch (eventData.method) {
@@ -381,6 +413,9 @@ export class Presence {
 		if (msg.color) {
 			userCopy.color = msg.color;
 		}
+		if (msg.authorUserId) {
+			userCopy.authorUserId = msg.authorUserId;
+		}
 		userCopy.nickname = msg.nickname;
 		userCopy.boardId = msg.boardId;
 		if (shouldUpdateActivity) {
@@ -389,67 +424,67 @@ export class Presence {
 	}
 
 	processFollowEvent(msg: PresenceEventMsg<FollowEvent>): void {
-		const currentUser = localStorage.getItem(`currentUser`);
-		if (!currentUser) {
-			return;
-		}
-
-		if (msg.event.user === currentUser) {
-			this.followers.push(msg.userId.toString());
+		if (this.isCurrentSessionTarget(msg.event.user)) {
+			const sessionId = getPresenceSessionId(msg);
+			if (!sessionId) {
+				return;
+			}
+			this.followers.push(sessionId);
 			this.followers = Array.from(new Set(this.followers));
 		}
 	}
 
 	processBringToMe(msg: PresenceEventMsg<BringToMeEvent>): void {
-		const currentUser = localStorage.getItem(`currentUser`);
-		if (!currentUser) {
-			return;
-		}
-		if (msg.event.users.includes(currentUser)) {
-			const bringerId = msg.userId.toString();
+		if (msg.event.users.some(user => this.isCurrentSessionTarget(user))) {
+			const bringerId = getPresenceSessionId(msg);
+			if (!bringerId) {
+				return;
+			}
 			const userToTrack = this.users.get(bringerId);
 			if (userToTrack) {
 				this.trackedUser = userToTrack;
-				this.enableTracking(userToTrack.userId);
+				this.enableTracking(userToTrack.sessionId || userToTrack.userId);
 			}
 		}
 	}
 
 	processStopFollowing(msg: PresenceEventMsg<StopFollowingEvent>): void {
-		const currentUser = localStorage.getItem(`currentUser`);
-		if (!currentUser) {
+		const sessionId = getPresenceSessionId(msg);
+		if (!sessionId) {
 			return;
 		}
-		if (msg.event.users.includes(currentUser)) {
-			this.followers = this.followers.filter(follower => follower !== msg.userId.toString());
+		if (msg.event.users.some(user => this.isCurrentSessionTarget(user))) {
+			this.followers = this.followers.filter(follower => follower !== sessionId);
 		}
 		if (!this.trackedUser) {
 			return;
 		}
-		if (this.trackedUser.userId !== msg.userId) {
+		if (this.trackedUser.sessionId !== sessionId) {
 			return;
 		}
-		if (msg.event.users.includes(currentUser) && this.trackedUser.userId === msg.userId) {
+		if (msg.event.users.some(user => this.isCurrentSessionTarget(user))) {
 			this.disableTracking();
 		}
 	}
 
 	processPing(msg: PresenceEventMsg<PresencePingEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		user.lastPing = msg.event.timestamp;
 		const userCopy = { ...user };
 		this.updateUserMetaInfo(msg, userCopy, false);
-		this.users.set(msg.userId.toString(), userCopy);
+		this.users.set(sessionId, userCopy);
 	}
 
 	processCameraEvent(msg: PresenceEventMsg<CameraEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		const eventData: CameraEvent = msg.event;
 		const userCopy = { ...user };
 		userCopy.camera = eventData;
 		this.updateUserMetaInfo(msg, userCopy);
-		this.users.set(msg.userId.toString(), userCopy);
-		if (this.trackedUser && this.trackedUser.userId === msg.userId.toString()) {
+		this.users.set(sessionId, userCopy);
+		if (this.trackedUser && this.trackedUser.sessionId === sessionId) {
 			this.trackedUser.camera = eventData;
 			this.board.camera.animateToMatrix(
 				new Matrix(
@@ -465,53 +500,58 @@ export class Presence {
 	}
 
 	processDrawSelect(msg: PresenceEventMsg<DrawSelectEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		const eventData: DrawSelectEvent = msg.event;
 		const userCopy = { ...user };
 		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.select = eventData.size;
 
-		this.users.set(msg.userId.toString(), userCopy);
+		this.users.set(sessionId, userCopy);
 	}
 
 	processCancelDrawSelect(msg: PresenceEventMsg<CancelDrawSelectEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		const userCopy = { ...user };
 		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.select = undefined;
 
-		this.users.set(msg.userId.toString(), userCopy);
+		this.users.set(sessionId, userCopy);
 	}
 
 	processPointerMove(msg: PresenceEventMsg<PointerMoveEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		const eventData: PointerMoveEvent = msg.event;
 		const userCopy = { ...user };
 		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.lastPointerActivity = Date.now();
 		userCopy.pointer = { x: eventData.position.x, y: eventData.position.y };
-		this.users.set(msg.userId.toString(), userCopy);
+		this.users.set(sessionId, userCopy);
 	}
 
 	processSelection(msg: PresenceEventMsg<SelectionEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		const eventData: SelectionEvent = msg.event;
 		const userCopy = { ...user };
 		this.updateUserMetaInfo(msg, userCopy);
 		userCopy.selection = eventData.selectedItems;
-		this.users.set(msg.userId.toString(), userCopy);
+		this.users.set(sessionId, userCopy);
 	}
 
 	processSetColor(msg: PresenceEventMsg<SetUserColorEvent>): void {
-		const user = this.users.get(msg.userId.toString())!;
+		const sessionId = getPresenceSessionId(msg)!;
+		const user = this.users.get(sessionId)!;
 		const userCopy = { ...user };
 		userCopy.colorChangeable = false;
 		this.updateUserMetaInfo(msg, userCopy);
-		this.users.set(msg.userId.toString(), userCopy);
+		this.users.set(sessionId, userCopy);
 	}
 
-	enableTracking(userId: string): void {
-		const user = this.users.get(userId);
+	enableTracking(sessionId: string): void {
+		const user = this.users.get(sessionId);
 		if (!user) {
 			this.trackedUser = null;
 		} else {
@@ -530,7 +570,7 @@ export class Presence {
 			}
 			this.emit({
 				method: 'Follow',
-				user: userId,
+				user: sessionId,
 				timestamp: Date.now(),
 			});
 		}
@@ -544,7 +584,7 @@ export class Presence {
 		this.emit({
 			method: 'StopFollowing',
 			timestamp: Date.now(),
-			users: [this.trackedUser?.userId],
+			users: [this.trackedUser.sessionId || this.trackedUser.userId],
 		});
 		this.trackedUser = null;
 	}
@@ -576,18 +616,6 @@ export class Presence {
 		color: string;
 		nickname: string;
 	}[] {
-		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
-		this.users.forEach(user => {
-			if (user.userId !== this.currentUserId) {
-				const key =
-					user.hardId !== null ? `hardId:${user.hardId}` : `softId:${user.userId}`;
-				const existingUser = uniqueUsers.get(key);
-				if (!existingUser || user.lastActivity > existingUser.lastActivity) {
-					uniqueUsers.set(key, user);
-				}
-			}
-		});
-
 		const selects: {
 			left: number;
 			top: number;
@@ -597,7 +625,11 @@ export class Presence {
 			nickname: string;
 		}[] = [];
 
-		uniqueUsers.forEach(user => {
+		const currentSessionId = this.getCurrentSessionId();
+		this.users.forEach(user => {
+			if (currentSessionId && user.sessionId === currentSessionId) {
+				return;
+			}
 			if (user.select && Date.now() - user.lastActivity <= CURSORS_IDLE_CLEANUP_DELAY) {
 				selects.push({
 					...user.select,
@@ -620,22 +652,6 @@ export class Presence {
 		const currentBoardId = this.board.getBoardId();
 		const now = Date.now();
 
-		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
-		this.users.forEach(user => {
-			if (
-				user.userId !== this.currentUserId &&
-				user.boardId === currentBoardId &&
-				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
-			) {
-				const key =
-					user.hardId !== null ? `hardId:${user.hardId}` : `softId:${user.userId}`;
-				const existingUser = uniqueUsers.get(key);
-				if (!existingUser || user.lastActivity > existingUser.lastActivity) {
-					uniqueUsers.set(key, user);
-				}
-			}
-		});
-
 		const cursors: {
 			userId: string;
 			x: number;
@@ -644,13 +660,20 @@ export class Presence {
 			nickname: string;
 		}[] = [];
 
-		uniqueUsers.forEach(user => {
-			cursors.push({
-				...user.pointer,
-				userId: user.userId,
-				color: user.color,
-				nickname: user.nickname,
-			});
+		const currentSessionId = this.getCurrentSessionId();
+		this.users.forEach(user => {
+			if (
+				currentSessionId !== user.sessionId &&
+				user.boardId === currentBoardId &&
+				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
+			) {
+				cursors.push({
+					...user.pointer,
+					userId: user.sessionId || user.userId,
+					color: user.color,
+					nickname: user.nickname,
+				});
+			}
 		});
 
 		return cursors;
@@ -660,25 +683,17 @@ export class Presence {
 		const currentBoardId = this.board.getBoardId();
 		const now = Date.now();
 
-		const uniqueUsers = new Map<string | null | symbol, PresenceUser>();
-		this.users.forEach(user => {
-			if (
-				user.userId !== this.currentUserId &&
-				user.boardId === currentBoardId &&
-				now - user.lastPointerActivity <= CURSORS_IDLE_CLEANUP_DELAY
-			) {
-				const key =
-					user.hardId !== null ? `hardId:${user.hardId}` : `softId:${user.userId}`;
-				const existingUser = uniqueUsers.get(key);
-				if (!existingUser || user.lastActivity > existingUser.lastActivity) {
-					uniqueUsers.set(key, user);
-				}
-			}
-		});
-
 		const selections: { selection: Item[]; color: string }[] = [];
 
-		uniqueUsers.forEach(user => {
+		const currentSessionId = this.getCurrentSessionId();
+		this.users.forEach(user => {
+			if (
+				currentSessionId === user.sessionId ||
+				user.boardId !== currentBoardId ||
+				now - user.lastPointerActivity > CURSORS_IDLE_CLEANUP_DELAY
+			) {
+				return;
+			}
 			if (Date.now() - user.lastActivity >= CURSORS_IDLE_CLEANUP_DELAY) {
 				return;
 			}

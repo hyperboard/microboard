@@ -3,13 +3,13 @@ import { HistoryRecord } from "./EventsLog";
 import { shouldSkipEvent } from "./shouldSkipEvent";
 
 export function getRedoRecordFromList(
-	userId: number,
+	sessionIds: string[],
 	list: EventsList,
 ): HistoryRecord | null {
 	let counter = 0;
 
 	for (const record of list.backwardIterable()) {
-		if (shouldSkipEvent(record, userId)) {
+		if (shouldSkipEvent(record, sessionIds)) {
 			continue;
 		}
 

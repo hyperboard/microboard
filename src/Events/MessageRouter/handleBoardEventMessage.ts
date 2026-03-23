@@ -1,6 +1,7 @@
 import { Board } from "Board";
 import { SyncBoardEvent, SyncBoardEventPack, SyncEvent } from "../Events";
 import { BoardEventMsg } from './boardMessageInterface';
+import { getBoardEventSessionId, getConnectionSessionId } from "../identity";
 
 export function handleBoardEventMessage(
   message: BoardEventMsg,
@@ -16,10 +17,10 @@ export function handleBoardEventMessage(
     return;
   }
 
-  const eventConnectionId = Number(event.body.eventId.split(":")[0]);
-  const currentConnectionId = board.events.connection?.connectionId;
+  const eventSessionId = getBoardEventSessionId(event.body);
+  const currentConnectionId = getConnectionSessionId(board.events.connection);
   const isEventFromCurrentUser =
-    currentConnectionId !== undefined && eventConnectionId === currentConnectionId;
+    eventSessionId !== undefined && eventSessionId === currentConnectionId;
 
   if (isEventFromCurrentUser) {
     return;

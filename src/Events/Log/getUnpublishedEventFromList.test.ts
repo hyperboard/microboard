@@ -10,10 +10,14 @@ import { ApplyMatrixOperation } from "Items/Transformation/TransformationOperati
 import { handleConfirmation } from "../MessageRouter/handleConfirmation";
 import { Connection, conf } from "Settings";
 
-function createConnection(connectionId: number): Connection {
+function createConnection(connectionId: number, sessionId = `session-${connectionId}`): Connection {
   return {
     connectionId,
+    sessionId,
+    authorUserId: "user-1",
     getCurrentUser: () => "user-1",
+    getSessionId: () => sessionId,
+    getAuthorUserId: () => "user-1",
     connect: async () => {},
     subscribe: () => {},
     unsubscribe: () => {},
@@ -37,7 +41,9 @@ function createTransformationRecord(
       order: 0,
       body: {
         eventId,
-        userId: 77,
+        userId: "session-77",
+        sessionId: "session-77",
+        authorUserId: "user-1",
         boardId: "test-board",
         operation,
       },
@@ -99,6 +105,9 @@ describe("getUnpublishedEventFromList", () => {
 
     expect(unpublishedBatch).not.toBeNull();
     expect(unpublishedBatch?.sentEventIds).toEqual(["77:1"]);
+    expect(unpublishedBatch?.event.body.sessionId).toBe("session-77");
+    expect(unpublishedBatch?.event.body.authorUserId).toBe("user-1");
+    expect(unpublishedBatch?.event.body.userId).toBe("session-77");
     expect(unpublishedBatch?.event.body.operations).toHaveLength(1);
     expect(unpublishedBatch?.event.body.operations[0]).toMatchObject({
       class: "Transformation",

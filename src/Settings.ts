@@ -17,7 +17,11 @@ import type { Editor, BasePoint } from "slate";
 
 export interface Connection {
   connectionId: number;
+  sessionId?: string;
+  authorUserId?: string;
   getCurrentUser: () => string;
+  getSessionId?: () => string | undefined;
+  getAuthorUserId?: () => string | undefined;
   connect(): Promise<void>;
   subscribe(board: Board): void;
   unsubscribe(board: Board): void;

@@ -7,6 +7,12 @@ import { Operation } from './EventsOperations';
 import { PresenceEventType } from 'Presence/Events';
 import { conf } from 'Settings';
 import { createCommand } from './CreateCommand';
+import {
+	getBoardEventSessionId,
+	getConnectionAuthorUserId,
+	getConnectionSessionId,
+	getConnectionSessionIds,
+} from './identity';
 
 export interface BoardEvent {
 	order: number;
@@ -15,7 +21,9 @@ export interface BoardEvent {
 
 export interface BoardEventBody {
 	eventId: string;
-	userId: number;
+	userId?: number | string;
+	authorUserId?: string;
+	sessionId?: string;
 	boardId: string;
 	operation: Operation;
 }
@@ -27,14 +35,15 @@ export interface BoardEventPack {
 
 export interface BoardEventPackBody {
 	eventId: string;
-	userId: number;
+	userId?: number | string;
+	authorUserId?: string;
+	sessionId?: string;
 	boardId: string;
 	operations: (Operation & { actualId?: string })[];
 }
 
 export interface SyncBoardEvent extends BoardEvent {
 	lastKnownOrder: number;
-	userId: number;
 }
 
 interface SyncBoardEventPackBody extends BoardEventPackBody {
@@ -53,7 +62,7 @@ export class Events {
 	log: EventsLog;
 	board: Board;
 	connection: Connection | undefined;
-	private latestEvent: { [key: string]: number } = {};
+	private latestEvent: { [key: string]: string } = {};
 	private eventCounter = 0;
 
 	constructor(board: Board, connection: Connection | undefined, lastIndex: number) {
@@ -78,21 +87,24 @@ export class Events {
 			console.error("[DEBUG] transformMany emitted from Events.emit!", JSON.stringify(operation));
 			console.trace("[DEBUG] transformMany stack trace");
 		}
-		const userId = this.getUserId();
-		const body = {
-			eventId: this.getNextEventId(),
-			userId,
-			boardId: this.board.getBoardId(),
-			operation: operation,
-		} as BoardEventBody;
+			const sessionId = this.getSessionId();
+			const authorUserId = this.getAuthorUserId();
+			const body = {
+				eventId: this.getNextEventId(),
+				userId: sessionId,
+				authorUserId,
+				sessionId,
+				boardId: this.board.getBoardId(),
+				operation: operation,
+			} as BoardEventBody;
 		const event = { order: 0, body };
 		const record = {
 			event,
 			command: command || Events.createCommand(this.board, operation),
 		};
 		this.log.insertNewLocalEventRecordAfterEmit(record);
-		this.setLatestUserEvent(operation, userId);
-		this.subject.publish(event);
+			this.setLatestUserEvent(operation, sessionId);
+			this.subject.publish(event);
 
 		if (this.board.getBoardId().includes('local')) {
 			if (this.log.saveFileTimeout) {
@@ -123,13 +135,13 @@ export class Events {
 	 * @param apply Whether to apply the undo operation (defaults to true)
 	 */
 	undo(): void {
-		const currentUserId = this.getUserId();
-		const record = this.log.getUndoRecord(currentUserId);
+			const currentSessionIds = this.getSessionIds();
+			const record = this.log.getUndoRecord(currentSessionIds);
 		if (!record) {
 			return;
 		}
-		const { operation, userId, eventId } = record.event.body;
-		const canUndo = this.canUndoEvent(operation, userId);
+			const { operation, eventId } = record.event.body;
+			const canUndo = this.canUndoEvent(operation, getBoardEventSessionId(record.event.body));
 		if (!canUndo) {
 			return;
 		}
@@ -145,8 +157,8 @@ export class Events {
 	 * @param apply Whether to apply the redo operation (defaults to true)
 	 */
 	redo(): void {
-		const userId = this.getUserId();
-		const record = this.log.getRedoRecord(userId);
+			const sessionIds = this.getSessionIds();
+			const record = this.log.getRedoRecord(sessionIds);
 		if (!record) {
 			return;
 		}
@@ -162,12 +174,15 @@ export class Events {
 	 * @returns Whether an undo operation is possible
 	 */
 	canUndo(): boolean {
-		const userId = this.getUserId();
-		const record = this.log.getUndoRecord(userId);
+			const sessionIds = this.getSessionIds();
+			const record = this.log.getUndoRecord(sessionIds);
 		if (!record) {
 			return false;
 		}
-		return this.canUndoEvent(record.event.body.operation, record.event.body.userId);
+			return this.canUndoEvent(
+				record.event.body.operation,
+				getBoardEventSessionId(record.event.body),
+			);
 	}
 
 	/**
@@ -175,9 +190,9 @@ export class Events {
 	 * @returns Whether a redo operation is possible
 	 */
 	canRedo(): boolean {
-		const userId = this.getUserId();
-		const record = this.log.getRedoRecord(userId);
-		return record !== null;
+			const sessionIds = this.getSessionIds();
+			const record = this.log.getRedoRecord(sessionIds);
+			return record !== null;
 	}
 
 	/**
@@ -188,7 +203,7 @@ export class Events {
 		conf.connection.publishPresenceEvent(this.board.getBoardId(), event);
 	} // TODO Switch to pulling from connection instead of pushing from presence, then remove this method
 
-	private canUndoEvent(op: Operation, byUserId?: number): boolean {
+	private canUndoEvent(op: Operation, bySessionId?: string): boolean {
 		if (op.method === 'undo') {
 			return false;
 		}
@@ -197,15 +212,15 @@ export class Events {
 		if (isRedoPasteOrDuplicate) {
 			return true;
 		}
-		const key = this.getOpKey(op);
-		const latest = this.latestEvent[key];
-		return byUserId === undefined || byUserId === latest;
+			const key = this.getOpKey(op);
+			const latest = this.latestEvent[key];
+			return bySessionId === undefined || bySessionId === latest;
 	}
 
-	private setLatestUserEvent(op: Operation, userId: number): void {
+	private setLatestUserEvent(op: Operation, sessionId: string): void {
 		if (op.class !== 'Events' && op.method !== 'paste' && op.method !== 'duplicate') {
 			const key = this.getOpKey(op);
-			this.latestEvent[key] = userId;
+			this.latestEvent[key] = sessionId;
 		}
 	}
 
@@ -214,14 +229,22 @@ export class Events {
 		return op.method;
 	}
 
-	private getUserId(): number {
-		return this.connection?.connectionId || 0;
+	private getSessionId(): string {
+		return getConnectionSessionId(this.connection);
+	}
+
+	private getSessionIds(): string[] {
+		return getConnectionSessionIds(this.connection);
+	}
+
+	private getAuthorUserId(): string | undefined {
+		return getConnectionAuthorUserId(this.connection);
 	}
 
 	private getNextEventId(): string {
 		const id = ++this.eventCounter;
-		const userId = this.getUserId();
-		return userId + ':' + id;
+		const sessionId = this.getSessionId();
+		return sessionId + ':' + id;
 	}
 }
 

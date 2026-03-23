@@ -13,16 +13,15 @@ export function deserializeAndApplyToList(
 		if ("operations" in event.body) {
 			// Handle batch events: if there is an array of operations, iterate over each one.
 			const { operations, lastKnownOrder, ...bodyWithoutOps } = event.body;
-			for (const op of operations) {
-				// Create a new event object for this particular operation.
-				const singleEvent: SyncBoardEvent = {
-					order: event.order,
-					lastKnownOrder: lastKnownOrder,
-					userId: bodyWithoutOps.userId,
-					body: {
-						...bodyWithoutOps,
-						operation: op,
-					},
+				for (const op of operations) {
+					// Create a new event object for this particular operation.
+					const singleEvent: SyncBoardEvent = {
+						order: event.order,
+						lastKnownOrder: lastKnownOrder,
+						body: {
+							...bodyWithoutOps,
+							operation: op,
+						},
 				};
 				const command = list.commandFactory(op);
 				const record = { event: singleEvent, command };

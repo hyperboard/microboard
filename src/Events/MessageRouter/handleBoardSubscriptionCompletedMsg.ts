@@ -167,7 +167,6 @@ function sendBoardEvent(
     boardId: board.getBoardId(),
     event: toSend,
     sequenceNumber,
-    userId: conf.connection.getCurrentUser(),
   });
 
   const date = Date.now();

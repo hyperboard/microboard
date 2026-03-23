@@ -88,15 +88,15 @@ export class EventsLog {
 	/**
 	 * Finds the most recent undoable record for a specific user
 	 */
-	getUndoRecord(userId: number): HistoryRecord | null {
-		return getUndoRecordFromList(userId, this.list);
+	getUndoRecord(sessionIds: string[]): HistoryRecord | null {
+		return getUndoRecordFromList(sessionIds, this.list);
 	}
 
 	/**
 	 * Finds the most recent redoable record for a specific user
 	 */
-	getRedoRecord(userId: number): HistoryRecord | null {
-		return getRedoRecordFromList(userId, this.list);
+	getRedoRecord(sessionIds: string[]): HistoryRecord | null {
+		return getRedoRecordFromList(sessionIds, this.list);
 	}
 
 	/**
