@@ -173,6 +173,10 @@ export class ForceGraphEngine {
 	 */
 	wake(): void {
 		if (this.activeComponents.size === 0) return;
+		// Flush physics-only moves of non-dragged nodes that accumulated since the last
+		// periodic sync. Without this, movements between the last sync and wake() are
+		// discarded when we reset baselines below — the server never receives them.
+		this.syncPositions();
 		// Reset baseline to current position for all active nodes.
 		// flushSync() was called on pointer-down (server knows pre-drag physics position).
 		// The drag delta was sent by the normal operation system.
