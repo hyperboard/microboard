@@ -385,12 +385,11 @@ export class ForceGraphEngine {
 				const refDimA = Math.max(s1.w, s1.h);
 				const refDimB = Math.max(s2.w, s2.h);
 				const refDist = (refDimA + refDimB) * 0.5 + Math.max(refDimA, refDimB);
-				const refDistSq = refDist * refDist;
-				// Scale minDistSq proportionally so clamping is relative too.
-				const minDistSq = conf.FG_MIN_DIST_SQ * refDistSq / 10000;
+				// Scale minDist proportionally (minDist = refDist/10).
+				const minDistSq = (refDist * refDist) / 100;
 				const distSq = Math.max(dx * dx + dy * dy, minDistSq);
-				// Repulsion scales with refDist² → force magnitude independent of node size.
-				const force = conf.FG_REPULSION * refDistSq / distSq;
+				// force = R*refDist/distSq -> accel along line = R/x (x=dist/refDist): scale-independent.
+				const force = conf.FG_REPULSION * refDist / distSq;
 
 				ax.set(s1.id, (ax.get(s1.id) ?? 0) - dx * force);
 				ay.set(s1.id, (ay.get(s1.id) ?? 0) - dy * force);
