@@ -356,10 +356,11 @@ export class ForceGraphEngine {
 		for (const item of allNodes) {
 			if (!activeIds.has(item.getId())) continue;
 			const pos = item.transformation.getTranslation();
-			// Read width/height directly from Mbr fields — no Mbr object allocation.
-			// item.right - item.left is safe during physics: pure translation preserves width.
-			const w = Math.max(item.right - item.left, 1);
-			const h = Math.max(item.bottom - item.top, 1);
+			// getMbr() is required — some items (e.g. Shape) override it to return
+			// their internal mbr rather than BaseItem's left/right/top/bottom fields.
+			const mbr = item.getMbr();
+			const w = Math.max(mbr.getWidth(), 1);
+			const h = Math.max(mbr.getHeight(), 1);
 			snapMap.set(item.getId(), { id: item.getId(), cx: pos.x + w * 0.5, cy: pos.y + h * 0.5, w, h });
 		}
 		const snap = Array.from(snapMap.values());

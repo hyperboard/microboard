@@ -121,8 +121,9 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 
 	get physicsHalfExtent(): number {
 		if (this._physicsHalfExtent < 0) {
-			const w = Math.max(this.right - this.left, 1);
-			const h = Math.max(this.bottom - this.top, 1);
+			const mbr = this.getMbr();
+			const w = Math.max(mbr.getWidth(), 1);
+			const h = Math.max(mbr.getHeight(), 1);
 			this._physicsHalfExtent = Math.max(w, h) * 0.5;
 		}
 		return this._physicsHalfExtent;
