@@ -356,12 +356,11 @@ export class ForceGraphEngine {
 		for (const item of allNodes) {
 			if (!activeIds.has(item.getId())) continue;
 			const pos = item.transformation.getTranslation();
-			// physicsHalfExtent is cached on the item (invalidated on resize only).
-			// getMbr() is skipped — avoids Mbr allocation and stale-left/top issue.
-			const half = item.physicsHalfExtent;
-			const w = half * 2;
-			const h = half * 2;
-			snapMap.set(item.getId(), { id: item.getId(), cx: pos.x + half, cy: pos.y + half, w, h });
+			// Read width/height directly from Mbr fields — no Mbr object allocation.
+			// item.right - item.left is safe during physics: pure translation preserves width.
+			const w = Math.max(item.right - item.left, 1);
+			const h = Math.max(item.bottom - item.top, 1);
+			snapMap.set(item.getId(), { id: item.getId(), cx: pos.x + w * 0.5, cy: pos.y + h * 0.5, w, h });
 		}
 		const snap = Array.from(snapMap.values());
 		if (snap.length < 1) return;
