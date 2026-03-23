@@ -68,6 +68,7 @@ export class Connector extends BaseItem<Connector> {
 	readonly transformation: Transformation;
 	private middlePoint: ControlPoint | null = new BoardPoint();
 	private lineColor: ColorValue;
+	private smartJump = true;
 	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth;
 	borderStyle: BorderStyle;
@@ -225,6 +226,7 @@ export class Connector extends BaseItem<Connector> {
 	 * Returns true if a jump was performed (caller should skip its own updatePaths/publish).
 	 */
 	private smartJumpStartEdge(): boolean {
+		if (!this.smartJump) return false;
 		const start = this.startPoint;
 		if (start.pointType !== 'Fixed' && start.pointType !== 'Floating') return false;
 
@@ -272,6 +274,7 @@ export class Connector extends BaseItem<Connector> {
 
 	/** Mirror of smartJumpStartEdge for the end point. */
 	private smartJumpEndEdge(): boolean {
+		if (!this.smartJump) return false;
 		const end = this.endPoint;
 		if (end.pointType !== 'Fixed' && end.pointType !== 'Floating') return false;
 
@@ -311,7 +314,24 @@ export class Connector extends BaseItem<Connector> {
 		return true;
 	}
 
-	clearObservedItems() {
+	setSmartJump(value: boolean): void {
+		this.emit({
+			class: 'Connector',
+			method: 'setSmartJump',
+			item: [this.id],
+			smartJump: value,
+		});
+	}
+
+	private applySmartJump(value: boolean): void {
+		this.smartJump = value;
+	}
+
+	getSmartJump(): boolean {
+		return this.smartJump;
+	}
+
+		clearObservedItems() {
 		const startPoint = this.getStartPoint();
 		const endPoint = this.getEndPoint();
 
@@ -397,6 +417,9 @@ export class Connector extends BaseItem<Connector> {
 						break;
 					case 'switchPointers':
 						this.applySwitchPointers();
+						break;
+					case 'setSmartJump':
+						this.applySmartJump(operation.smartJump);
 						break;
 				}
 				break;
@@ -1050,6 +1073,7 @@ export class Connector extends BaseItem<Connector> {
 			lineWidth: this.lineWidth,
 			text: text,
 			borderStyle: this.borderStyle,
+			smartJump: this.smartJump,
 			linkTo: this.linkTo.serialize(),
 		};
 	}
@@ -1085,6 +1109,9 @@ export class Connector extends BaseItem<Connector> {
 		}
 		this.lineWidth = data.lineWidth ?? this.lineWidth;
 		this.borderStyle = data.borderStyle ?? this.borderStyle;
+		if (data.smartJump != null) {
+			this.smartJump = data.smartJump;
+		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}

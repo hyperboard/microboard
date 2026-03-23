@@ -19,6 +19,7 @@ export class ConnectorData {
 	linkTo?: string;
 	lineWidth: ConnectionLineWidth = 1;
 	borderStyle: BorderStyle = "solid";
+	smartJump: boolean = true;
 	transformation = new DefaultTransformationData();
 	text = new DefaultRichTextData([], "center", undefined);
 	optionalFindItemFn?: FindItemFn;
@@ -97,6 +98,13 @@ interface SwitchPointers {
 	item: string[];
 }
 
+interface SetSmartJump {
+	class: "Connector";
+	method: "setSmartJump";
+	item: string[];
+	smartJump: boolean;
+}
+
 export type ConnectorOperation =
 	| SetStartPoint
 	| SetEndPoint
@@ -107,4 +115,5 @@ export type ConnectorOperation =
 	| SetLineColor
 	| SetLineWidth
 	| SwitchPointers
-	| SetBorderStyle;
+	| SetBorderStyle
+	| SetSmartJump;
