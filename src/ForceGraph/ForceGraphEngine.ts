@@ -62,7 +62,7 @@ export class ForceGraphEngine {
 	 *  board-event subscription below doesn't double-update lastSyncedPositions. */
 	private isPhysicsEmit = false;
 
-	private readonly TICK_MS = 33;
+	private get TICK_MS() { return conf.FG_TICK_MS; }
 	private readonly SYNC_MS = 300;
 	private readonly MIN_MOVE_PX = 0.05;
 
