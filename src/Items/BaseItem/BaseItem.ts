@@ -408,7 +408,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	}
 
 	updateMbr(): void {
-		this._physicsHalfExtent = -1;
+		return;
 	}
 
 	getLinkTo(): string | undefined {
@@ -537,18 +537,6 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 					}
 				}
 				this.transformation.apply(transformOp);
-				// Invalidate physics size cache on scale changes.
-				// translate-only and applyMatrix(scale=1) are the hot path — skip invalidation.
-				const m = transformOp.method;
-				if (m !== "translateTo" && m !== "translateBy" && m !== "rotateTo" && m !== "rotateBy" && m !== "locked" && m !== "unlocked") {
-					if (m === "applyMatrix") {
-						if ((transformOp as ApplyMatrixOperation).items.some(i => i.matrix.scaleX !== 1 || i.matrix.scaleY !== 1)) {
-							this._physicsHalfExtent = -1;
-						}
-					} else {
-						this._physicsHalfExtent = -1;
-					}
-				}
 				break;
 			}
 			case "LinkTo":
