@@ -62,6 +62,16 @@ export class ForceGraphEngine {
 	 *  board-event subscription below doesn't double-update lastSyncedPositions. */
 	private isPhysicsEmit = false;
 
+	// ── Topology cache ────────────────────────────────────────────────────────
+	/** Cached connector list — invalidated when items are added/removed. */
+	private _cachedConnectors: Connector[] | null = null;
+	/** Cached non-connector node list — invalidated when items are added/removed. */
+	private _cachedNodes: ReturnType<Board['items']['listAll']> | null = null;
+	/** Cached flat set of all active node ids across components. */
+	private _activeNodeIdsCache: Set<string> | null = null;
+	/** True when a board add/remove event has occurred since the last BFS refresh. */
+	private _topologyDirty = true;
+
 	private get TICK_MS() { return conf.FG_TICK_MS; }
 	private readonly SYNC_MS = 300;
 	private readonly MIN_MOVE_PX = 0.05;
@@ -74,7 +84,15 @@ export class ForceGraphEngine {
 		board.events.subject.subscribe(event => {
 			if (this.isPhysicsEmit) return;
 			const op = event.body?.operation;
-			if (!op || op.class !== 'Transformation' || op.method !== 'applyMatrix') return;
+			if (!op) return;
+			// Board add/remove → connector/node lists and topology are now stale.
+			if (op.class === 'Board') {
+				this._cachedConnectors = null;
+				this._cachedNodes = null;
+				this._topologyDirty = true;
+				return;
+			}
+			if (op.class !== 'Transformation' || op.method !== 'applyMatrix') return;
 			for (const { id, matrix } of (op as ApplyMatrixOperation).items) {
 				const last = this.lastSyncedPositions.get(id);
 				if (last) {
@@ -114,6 +132,7 @@ export class ForceGraphEngine {
 
 		const targetGap = this.calibrateTargetGap(nodeIds);
 		this.activeComponents.set(startNodeId, { nodeIds, targetGap });
+		this._activeNodeIdsCache = null;
 		this.initNodes(nodeIds);
 		this.ensureRunning();
 	}
@@ -127,6 +146,7 @@ export class ForceGraphEngine {
 		if (!compId) return;
 
 		this.activeComponents.delete(compId);
+		this._activeNodeIdsCache = null;
 
 		if (this.activeComponents.size === 0) {
 			this.stopTimers();
@@ -217,8 +237,11 @@ export class ForceGraphEngine {
 		}
 	}
 
-	/** Re-BFS each active component to pick up nodes/connectors added after enableForGraph. */
+	/** Re-BFS each active component to pick up nodes/connectors added after enableForGraph.
+	 *  Runs only when _topologyDirty is set (board add/remove event). */
 	private refreshComponentTopology(): void {
+		if (!this._topologyDirty) return;
+		this._topologyDirty = false;
 		for (const [compId, comp] of this.activeComponents) {
 			const current = this.bfsComponent(compId);
 			const newIds = new Set<string>();
@@ -227,6 +250,7 @@ export class ForceGraphEngine {
 			}
 			if (newIds.size > 0) {
 				this.initNodes(newIds, comp.nodeIds);
+				this._activeNodeIdsCache = null; // nodeIds set grew
 			}
 		}
 	}
@@ -288,23 +312,32 @@ export class ForceGraphEngine {
 	}
 
 	private getActiveNodeIds(): Set<string> {
-		const all = new Set<string>();
-		for (const { nodeIds } of this.activeComponents.values()) {
-			for (const id of nodeIds) all.add(id);
+		if (!this._activeNodeIdsCache) {
+			const all = new Set<string>();
+			for (const { nodeIds } of this.activeComponents.values()) {
+				for (const id of nodeIds) all.add(id);
+			}
+			this._activeNodeIdsCache = all;
 		}
-		return all;
+		return this._activeNodeIdsCache;
 	}
 
 	private getNodes() {
-		return this.board.items.listAll().filter(
-			item => !EXCLUDED_TYPES.has(item.itemType) && !item.transformation.isLocked
-		);
+		if (!this._cachedNodes) {
+			this._cachedNodes = this.board.items.listAll().filter(
+				item => !EXCLUDED_TYPES.has(item.itemType) && !item.transformation.isLocked
+			);
+		}
+		return this._cachedNodes;
 	}
 
 	private getConnectors(): Connector[] {
-		return this.board.items.listAll().filter(
-			(item): item is Connector => item.itemType === 'Connector'
-		);
+		if (!this._cachedConnectors) {
+			this._cachedConnectors = this.board.items.listAll().filter(
+				(item): item is Connector => item.itemType === 'Connector'
+			);
+		}
+		return this._cachedConnectors;
 	}
 
 	// ── Physics tick ──────────────────────────────────────────────────────────
@@ -323,10 +356,12 @@ export class ForceGraphEngine {
 		for (const item of allNodes) {
 			if (!activeIds.has(item.getId())) continue;
 			const pos = item.transformation.getTranslation();
-			const mbr = item.getMbr();
-			const w = Math.max(mbr.getWidth(), 1);
-			const h = Math.max(mbr.getHeight(), 1);
-			snapMap.set(item.getId(), { id: item.getId(), cx: pos.x + w * 0.5, cy: pos.y + h * 0.5, w, h });
+			// physicsHalfExtent is cached on the item (invalidated on resize only).
+			// getMbr() is skipped — avoids Mbr allocation and stale-left/top issue.
+			const half = item.physicsHalfExtent;
+			const w = half * 2;
+			const h = half * 2;
+			snapMap.set(item.getId(), { id: item.getId(), cx: pos.x + half, cy: pos.y + half, w, h });
 		}
 		const snap = Array.from(snapMap.values());
 		if (snap.length < 1) return;

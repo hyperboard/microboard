@@ -114,6 +114,20 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 
 	static readonly HOVER_HIGHLIGHT_COLOR = "rgba(71, 120, 245, 0.7)";
 
+	/** Cached max half-extent for force-graph physics: max(w, h) * 0.5.
+	 *  -1 means dirty. Physics never scales items, so this is valid for the
+	 *  entire simulation once computed. Invalidated on resize/scale only. */
+	private _physicsHalfExtent = -1;
+
+	get physicsHalfExtent(): number {
+		if (this._physicsHalfExtent < 0) {
+			const w = Math.max(this.right - this.left, 1);
+			const h = Math.max(this.bottom - this.top, 1);
+			this._physicsHalfExtent = Math.max(w, h) * 0.5;
+		}
+		return this._physicsHalfExtent;
+	}
+
 	constructor(
 		board: Board,
 		id = "",
@@ -393,7 +407,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	}
 
 	updateMbr(): void {
-		return;
+		this._physicsHalfExtent = -1;
 	}
 
 	getLinkTo(): string | undefined {
@@ -522,6 +536,18 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 					}
 				}
 				this.transformation.apply(transformOp);
+				// Invalidate physics size cache on scale changes.
+				// translate-only and applyMatrix(scale=1) are the hot path — skip invalidation.
+				const m = transformOp.method;
+				if (m !== "translateTo" && m !== "translateBy" && m !== "rotateTo" && m !== "rotateBy" && m !== "locked" && m !== "unlocked") {
+					if (m === "applyMatrix") {
+						if ((transformOp as ApplyMatrixOperation).items.some(i => i.matrix.scaleX !== 1 || i.matrix.scaleY !== 1)) {
+							this._physicsHalfExtent = -1;
+						}
+					} else {
+						this._physicsHalfExtent = -1;
+					}
+				}
 				break;
 			}
 			case "LinkTo":
