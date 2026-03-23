@@ -356,12 +356,11 @@ export class ForceGraphEngine {
 
 			const maxDimA = Math.max(s1.w, s1.h);
 			const maxDimB = Math.max(s2.w, s2.h);
-			// Gap = max node size, matching quickAdd spacing (offsetX = width of source item).
-			// center-to-center = halfA + halfB + max(A, B) = 2×dim for equal-size nodes.
+			// target = half-extents sum + one max-dim gap (matches quickAdd spacing).
 			const targetDist = (maxDimA + maxDimB) * 0.5 + Math.max(maxDimA, maxDimB);
 
-			// Normalize by targetDist → dimensionless stretch, stiffness scale-independent.
-			const force = (dist - targetDist) / targetDist * conf.FG_SPRING_K;
+			// Spec formula: force = (dist - target) * K
+			const force = (dist - targetDist) * conf.FG_SPRING_K;
 			const fx = (dx / dist) * force;
 			const fy = (dy / dist) * force;
 
@@ -381,15 +380,9 @@ export class ForceGraphEngine {
 
 				const dx = s2.cx - s1.cx;
 				const dy = s2.cy - s1.cy;
-				// Reference distance for this pair — same formula as spring targetDist.
-				const refDimA = Math.max(s1.w, s1.h);
-				const refDimB = Math.max(s2.w, s2.h);
-				const refDist = (refDimA + refDimB) * 0.5 + Math.max(refDimA, refDimB);
-				// Scale minDist proportionally (minDist = refDist/10).
-				const minDistSq = (refDist * refDist) / 100;
-				const distSq = Math.max(dx * dx + dy * dy, minDistSq);
-				// force = R*refDist/distSq -> accel along line = R/x (x=dist/refDist): scale-independent.
-				const force = conf.FG_REPULSION * refDist / distSq;
+				// Spec formula: force = R / distSq (clamped to MIN_DIST_SQ).
+				const distSq = Math.max(dx * dx + dy * dy, conf.FG_MIN_DIST_SQ);
+				const force = conf.FG_REPULSION / distSq;
 
 				ax.set(s1.id, (ax.get(s1.id) ?? 0) - dx * force);
 				ay.set(s1.id, (ay.get(s1.id) ?? 0) - dy * force);

@@ -539,12 +539,12 @@ export const conf = {
 
   CONNECTOR_ITEM_OFFSET: 20,
 
-  // Force-directed graph physics — tweak at runtime: conf.FG_SPRING_K = 0.2
-  // All force constants are scale-relative: spring is normalized by targetDist, repulsion by refDist².
-  FG_SPRING_K: 0.2,         // spring stiffness: force = (dist-target)/target * K  (dimensionless stretch × K)
-  FG_TARGET_GAP: 50,        // fixed edge-to-edge gap at rest (px); added to half-extents of each node
-  FG_REPULSION: 0.06,       // repulsion: force = R * refDist²/distSq  (R = force at equilibrium distance)
-  FG_MIN_DIST_SQ: 100,      // min distSq for repulsion as fraction of refDist² (100 → 1% of refDist²)
+  // Force-directed graph physics — tweak at runtime via MICROBOARD_CONFIG.FG_*
+  // Formulas match the spec exactly: spring = (dist-target)*K, repulsion = R/distSq.
+  FG_SPRING_K: 0.2,         // spring stiffness (spec default: 0.2)
+  FG_TARGET_GAP: 50,        // unused — targetDist is computed dynamically from node sizes
+  FG_REPULSION: 100,        // repulsion constant (spec default: 100)
+  FG_MIN_DIST_SQ: 100,      // min distSq clamp for repulsion singularity (spec default: 100)
   FG_DAMPING: 0.6,          // velocity multiplier per tick (0=instant stop, 1=no damping)
   FG_SLEEP_THRESHOLD: 0.5,  // stop engine when Σ(|vx|+|vy|) < this
   FG_TICK_MS: 16,           // physics tick interval in ms (16 ≈ 60fps, 33 ≈ 30fps)
