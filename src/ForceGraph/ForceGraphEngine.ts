@@ -249,22 +249,12 @@ export class ForceGraphEngine {
 	}
 
 	/**
-	 * Auto-calibrate spring target gap from the average max(w, h) of nodes in the component.
-	 * Larger nodes → longer springs so items visually breathe.
+	 * Returns the edge-to-edge rest gap for the component.
+	 * Using a fixed gap (conf.FG_TARGET_GAP) keeps spring forces predictable
+	 * and ensures fast settling regardless of node size.
 	 */
-	private calibrateTargetGap(nodeIds: Set<string>): number {
-		let totalMaxDim = 0;
-		let count = 0;
-		for (const id of nodeIds) {
-			const item = this.board.items.getById(id);
-			if (!item) continue;
-			const mbr = item.getMbr();
-			totalMaxDim += Math.max(mbr.getWidth(), mbr.getHeight());
-			count++;
-		}
-		const avgMaxDim = count > 0 ? totalMaxDim / count : 100;
-		// Gap = 150% of avg node size so connectors visually breathe
-		return avgMaxDim * 1.5;
+	private calibrateTargetGap(_nodeIds: Set<string>): number {
+		return conf.FG_TARGET_GAP;
 	}
 
 	private getActiveNodeIds(): Set<string> {
