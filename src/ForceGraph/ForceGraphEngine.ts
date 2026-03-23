@@ -99,22 +99,22 @@ export class ForceGraphEngine {
 		if (this.isNodeInActiveGraph(startNodeId)) return;
 
 		const nodeIds = this.bfsComponent(startNodeId);
-		const targetGap = this.calibrateTargetGap(nodeIds);
 
-		this.activeComponents.set(startNodeId, { nodeIds, targetGap });
-
-		// Init velocities and sync baseline for new nodes
-		for (const id of nodeIds) {
-			if (!this.velocities.has(id)) {
-				this.velocities.set(id, { vx: 0, vy: 0 });
-			}
-			const item = this.board.items.getById(id);
-			if (item && !this.lastSyncedPositions.has(id)) {
-				const pos = item.transformation.getTranslation();
-				this.lastSyncedPositions.set(id, { x: pos.x, y: pos.y });
+		// If BFS found nodes that already belong to an existing component, merge into
+		// that component instead of creating a duplicate entry.
+		for (const [, comp] of this.activeComponents) {
+			for (const id of nodeIds) {
+				if (comp.nodeIds.has(id)) {
+					this.initNodes(nodeIds, comp.nodeIds);
+					this.ensureRunning();
+					return;
+				}
 			}
 		}
 
+		const targetGap = this.calibrateTargetGap(nodeIds);
+		this.activeComponents.set(startNodeId, { nodeIds, targetGap });
+		this.initNodes(nodeIds);
 		this.ensureRunning();
 	}
 
@@ -201,6 +201,36 @@ export class ForceGraphEngine {
 
 	// ── Internal helpers ──────────────────────────────────────────────────────
 
+	/** Initialize velocities and sync baseline for a set of node ids.
+	 *  If `target` is provided, new ids are also added into that Set. */
+	private initNodes(nodeIds: Set<string>, target?: Set<string>): void {
+		for (const id of nodeIds) {
+			target?.add(id);
+			if (!this.velocities.has(id)) {
+				this.velocities.set(id, { vx: 0, vy: 0 });
+			}
+			const item = this.board.items.getById(id);
+			if (item && !this.lastSyncedPositions.has(id)) {
+				const pos = item.transformation.getTranslation();
+				this.lastSyncedPositions.set(id, { x: pos.x, y: pos.y });
+			}
+		}
+	}
+
+	/** Re-BFS each active component to pick up nodes/connectors added after enableForGraph. */
+	private refreshComponentTopology(): void {
+		for (const [compId, comp] of this.activeComponents) {
+			const current = this.bfsComponent(compId);
+			const newIds = new Set<string>();
+			for (const id of current) {
+				if (!comp.nodeIds.has(id)) newIds.add(id);
+			}
+			if (newIds.size > 0) {
+				this.initNodes(newIds, comp.nodeIds);
+			}
+		}
+	}
+
 	private ensureRunning(): void {
 		if (this.tickTimer === null) {
 			this.tickTimer = setInterval(() => this.tick(), this.TICK_MS);
@@ -282,6 +312,7 @@ export class ForceGraphEngine {
 	// damping applied per tick, energy = Σ(|vx|+|vy|).
 
 	private tick(): void {
+		this.refreshComponentTopology();
 		const activeIds = this.getActiveNodeIds();
 		const draggedIds = this.board.getDraggedItemIds();
 		const allNodes = this.getNodes();
@@ -323,14 +354,14 @@ export class ForceGraphEngine {
 			const dy = s2.cy - s1.cy;
 			const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-			const compId = this.findComponentId(s1.id);
-			const targetGap = compId
-				? (this.activeComponents.get(compId)?.targetGap ?? conf.FG_TARGET_GAP)
-				: conf.FG_TARGET_GAP;
-			// Size-aware target: half the larger dim of each node + gap between edges
-			const targetDist = (Math.max(s1.w, s1.h) + Math.max(s2.w, s2.h)) * 0.5 + targetGap;
+			const maxDimA = Math.max(s1.w, s1.h);
+			const maxDimB = Math.max(s2.w, s2.h);
+			// Gap = max node size, matching quickAdd spacing (offsetX = width of source item).
+			// center-to-center = halfA + halfB + max(A, B) = 2×dim for equal-size nodes.
+			const targetDist = (maxDimA + maxDimB) * 0.5 + Math.max(maxDimA, maxDimB);
 
-			const force = (dist - targetDist) * conf.FG_SPRING_K;
+			// Normalize by targetDist → dimensionless stretch, stiffness scale-independent.
+			const force = (dist - targetDist) / targetDist * conf.FG_SPRING_K;
 			const fx = (dx / dist) * force;
 			const fy = (dy / dist) * force;
 
@@ -350,8 +381,16 @@ export class ForceGraphEngine {
 
 				const dx = s2.cx - s1.cx;
 				const dy = s2.cy - s1.cy;
-				const distSq = Math.max(dx * dx + dy * dy, conf.FG_MIN_DIST_SQ);
-				const force = conf.FG_REPULSION / distSq;
+				// Reference distance for this pair — same formula as spring targetDist.
+				const refDimA = Math.max(s1.w, s1.h);
+				const refDimB = Math.max(s2.w, s2.h);
+				const refDist = (refDimA + refDimB) * 0.5 + Math.max(refDimA, refDimB);
+				const refDistSq = refDist * refDist;
+				// Scale minDistSq proportionally so clamping is relative too.
+				const minDistSq = conf.FG_MIN_DIST_SQ * refDistSq / 10000;
+				const distSq = Math.max(dx * dx + dy * dy, minDistSq);
+				// Repulsion scales with refDist² → force magnitude independent of node size.
+				const force = conf.FG_REPULSION * refDistSq / distSq;
 
 				ax.set(s1.id, (ax.get(s1.id) ?? 0) - dx * force);
 				ay.set(s1.id, (ay.get(s1.id) ?? 0) - dy * force);
