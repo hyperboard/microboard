@@ -58,11 +58,34 @@ export class ForceGraphEngine {
 	 *  componentId is the nodeId that was passed to enableForGraph(). */
 	private activeComponents = new Map<string, ActiveComponent>();
 
+	/** Set to true while we are emitting a physics sync operation, so the
+	 *  board-event subscription below doesn't double-update lastSyncedPositions. */
+	private isPhysicsEmit = false;
+
 	private readonly TICK_MS = 33;
 	private readonly SYNC_MS = 300;
 	private readonly MIN_MOVE_PX = 0.05;
 
-	constructor(private board: Board) {}
+	constructor(private board: Board) {
+		// Keep lastSyncedPositions aligned with the server when any OTHER operation
+		// (drag, resize, undo, collaboration) moves a tracked item.
+		// Without this, delta-based sync accumulates error whenever outside operations
+		// change the item position between physics sync cycles.
+		board.events.subject.subscribe(event => {
+			if (this.isPhysicsEmit) return;
+			const op = event.body?.operation;
+			if (!op || op.class !== 'Transformation' || op.method !== 'applyMatrix') return;
+			for (const { id, matrix } of (op as ApplyMatrixOperation).items) {
+				const last = this.lastSyncedPositions.get(id);
+				if (last) {
+					this.lastSyncedPositions.set(id, {
+						x: last.x + matrix.translateX,
+						y: last.y + matrix.translateY,
+					});
+				}
+			}
+		});
+	}
 
 	// ── Public per-component API ──────────────────────────────────────────────
 
@@ -364,9 +387,11 @@ export class ForceGraphEngine {
 
 			vel.vx = (vel.vx + (ax.get(id) ?? 0)) * conf.FG_DAMPING;
 			vel.vy = (vel.vy + (ay.get(id) ?? 0)) * conf.FG_DAMPING;
-			totalEnergy += Math.abs(vel.vx) + Math.abs(vel.vy);
 
 			if (Math.abs(vel.vx) >= this.MIN_MOVE_PX || Math.abs(vel.vy) >= this.MIN_MOVE_PX) {
+				// Only count nodes that actually produce visible movement toward the sleep threshold.
+				// Nodes with sub-pixel velocity would inflate totalEnergy and prevent sleep.
+				totalEnergy += Math.abs(vel.vx) + Math.abs(vel.vy);
 				item.transformation.applyMatrixSilent({
 					translateX: vel.vx,
 					translateY: vel.vy,
@@ -396,29 +421,40 @@ export class ForceGraphEngine {
 		);
 		if (nodes.length === 0) return;
 
-		const movedItems = nodes
-			.map(item => {
-				const id = item.getId();
-				const pos = item.transformation.getTranslation();
-				const last = this.lastSyncedPositions.get(id);
-				const dx = last ? pos.x - last.x : 0;
-				const dy = last ? pos.y - last.y : 0;
-				this.lastSyncedPositions.set(id, { x: pos.x, y: pos.y });
-				return { id, dx, dy };
-			})
-			.filter(({ dx, dy }) => Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5);
+		// IMPORTANT: only update lastSyncedPositions for items that actually get sent.
+		// If we updated the baseline for sub-threshold items too, small movements would
+		// never accumulate into a sendable delta → cumulative desync with server.
+		const toSend: { id: string; dx: number; dy: number; x: number; y: number }[] = [];
+		for (const item of nodes) {
+			const id = item.getId();
+			const pos = item.transformation.getTranslation();
+			const last = this.lastSyncedPositions.get(id);
+			const dx = last ? pos.x - last.x : 0;
+			const dy = last ? pos.y - last.y : 0;
+			if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+				toSend.push({ id, dx, dy, x: pos.x, y: pos.y });
+			}
+			// Sub-threshold items: do NOT update baseline so delta keeps accumulating.
+		}
 
-		if (movedItems.length === 0) return;
+		if (toSend.length === 0) return;
+
+		// Commit baseline only for items being sent.
+		for (const { id, x, y } of toSend) {
+			this.lastSyncedPositions.set(id, { x, y });
+		}
 
 		const operation: ApplyMatrixOperation = {
 			class: 'Transformation',
 			method: 'applyMatrix',
-			items: movedItems.map(({ id, dx, dy }) => ({
+			items: toSend.map(({ id, dx, dy }) => ({
 				id,
 				matrix: { translateX: dx, translateY: dy, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
 			})),
 		};
 
+		this.isPhysicsEmit = true;
 		this.board.events.emit(operation);
+		this.isPhysicsEmit = false;
 	}
 }
