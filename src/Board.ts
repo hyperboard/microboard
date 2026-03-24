@@ -1287,11 +1287,15 @@ export class Board {
           itemData.transformation.translateX = translateX + width * 10 + 10;
         }
       }
-      const itemDataWithChildren = itemData as { children?: string[] };
-      if ("children" in itemDataWithChildren && itemDataWithChildren.children?.length) {
-        // handle new id for children
+      const itemDataWithChildren = itemData as { childIds?: string[]; children?: string[] };
+      if ("childIds" in itemDataWithChildren && itemDataWithChildren.childIds?.length) {
+        itemDataWithChildren.childIds = itemDataWithChildren.childIds.map(
+          (childId: string) => newItemIdMap[childId] || childId
+        );
+      } else if ("children" in itemDataWithChildren && itemDataWithChildren.children?.length) {
+        // legacy support
         itemDataWithChildren.children = itemDataWithChildren.children.map(
-          (childId: string) => newItemIdMap[childId]
+          (childId: string) => newItemIdMap[childId] || childId
         );
       }
 

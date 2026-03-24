@@ -98,7 +98,7 @@ function validateFrameData(data: unknown): boolean {
     frameData.hasOwnProperty("borderWidth") &&
     frameData.hasOwnProperty("transformation") &&
     frameData.hasOwnProperty("text") &&
-    frameData.hasOwnProperty("children") &&
+    (frameData.hasOwnProperty("childIds") || frameData.hasOwnProperty("children")) &&
     typeof frameData.shapeType === "string" &&
     isColorValue(frameData.backgroundColor) &&
     typeof frameData.backgroundOpacity === "number" &&
@@ -106,7 +106,7 @@ function validateFrameData(data: unknown): boolean {
     typeof frameData.borderOpacity === "number" &&
     typeof frameData.borderStyle === "string" &&
     typeof frameData.borderWidth === "number" &&
-    Array.isArray(frameData.children) &&
+    (Array.isArray(frameData.childIds) || Array.isArray(frameData.children)) &&
     validateTransformationData(frameData.transformation) &&
     validateRichTextData(frameData.text);
   return isValid;

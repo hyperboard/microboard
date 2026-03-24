@@ -186,7 +186,7 @@ export const conf = {
   i18n,
 
   hooks: {
-    beforeMediaUpload: async (...args: unknown[]) => false,
+    beforeMediaUpload: async (...args: unknown[]) => true,
     beforeMediaRemove: async (...args: unknown[]) => false,
     onUploadMediaError: async (...args: unknown[]) => false,
   },
