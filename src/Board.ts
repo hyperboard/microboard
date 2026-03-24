@@ -1135,6 +1135,19 @@ export class Board {
         console.log(`[paste] ${itemData.itemType} ${itemId}: (${translateX},${translateY}) → (${newTx},${newTy})`);
         itemData.transformation.translateX = newTx;
         itemData.transformation.translateY = newTy;
+        // Sticker/Shape/Frame embed a RichText whose transformation is the SAME
+        // object in memory but serialized separately. When deserializing, text.deserialize
+        // overwrites the shared transformation back to the original coords unless we
+        // update text.transformation here too.
+        const d = itemData as Record<string, unknown>;
+        if (d.text && typeof d.text === "object") {
+          const textData = d.text as Record<string, unknown>;
+          if (textData.transformation && typeof textData.transformation === "object") {
+            const tt = textData.transformation as Record<string, number>;
+            tt.translateX = newTx;
+            tt.translateY = newTy;
+          }
+        }
       } else if (childItemIds.has(itemId)) {
         console.log(`[paste] SKIP child ${itemData.itemType} ${itemId}: keeping local (${translateX},${translateY})`);
       }
