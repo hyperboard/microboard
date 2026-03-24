@@ -392,7 +392,7 @@ export class ForceGraphEngine {
 			const maxDimA = Math.max(s1.w, s1.h);
 			const maxDimB = Math.max(s2.w, s2.h);
 			// target = half-extents sum + one max-dim gap (matches quickAdd spacing).
-			const targetDist = (maxDimA + maxDimB) * 0.5 + Math.max(maxDimA, maxDimB);
+			const targetDist = ((maxDimA + maxDimB) * 0.5 + Math.max(maxDimA, maxDimB)) * 1.5;
 
 			// Spec formula: force = (dist - target) * K
 			const force = (dist - targetDist) * conf.FG_SPRING_K;
