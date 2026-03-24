@@ -1043,10 +1043,23 @@ export class Board {
     }
 
     const newMap: { [key: string]: ItemData } = {};
+
+    // Collect all child IDs from container items (Frame, Group).
+    // Children use LOCAL coordinates relative to their parent, so they must
+    // be excluded from minX/minY computation and from position updates.
+    const childItemIds = new Set<string>();
+    for (const itemId in itemsMap) {
+      const d = itemsMap[itemId] as Record<string, unknown>;
+      if (Array.isArray(d.childIds)) {
+        for (const cid of d.childIds as string[]) childItemIds.add(cid);
+      }
+    }
+
     // iterate over itemsMap to find the minimal translation
     let minX = Infinity;
     let minY = Infinity;
     for (const itemId in itemsMap) {
+      if (childItemIds.has(itemId)) continue; // skip children — they have local coords
       const itemData = itemsMap[itemId];
       const { translateX, translateY } = itemData.transformation || {
         translateX: 0,
@@ -1106,7 +1119,7 @@ export class Board {
           itemData.middlePoint.x += -minX + x;
           itemData.middlePoint.y += -minY + y;
         }
-      } else if (itemData.transformation) {
+      } else if (itemData.transformation && !childItemIds.has(itemId)) {
         itemData.transformation.translateX = translateX - minX + x;
         itemData.transformation.translateY = translateY - minY + y;
       }
