@@ -1044,14 +1044,17 @@ export class Board {
 
     const newMap: { [key: string]: ItemData } = {};
 
-    // Collect all child IDs from container items (Frame, Group).
-    // Children use LOCAL coordinates relative to their parent, so they must
-    // be excluded from minX/minY computation and from position updates.
+    // Collect all child IDs from container items (Frame, Group) and map each
+    // child back to its parent so we can compute new world coords for children.
     const childItemIds = new Set<string>();
+    const childToParent = new Map<string, string>(); // childId → parentId
     for (const itemId in itemsMap) {
       const d = itemsMap[itemId] as Record<string, unknown>;
       if (Array.isArray(d.childIds)) {
-        for (const cid of d.childIds as string[]) childItemIds.add(cid);
+        for (const cid of d.childIds as string[]) {
+          childItemIds.add(cid);
+          childToParent.set(cid, itemId);
+        }
       }
     }
 
@@ -1149,7 +1152,32 @@ export class Board {
           }
         }
       } else if (childItemIds.has(itemId)) {
-        console.log(`[paste] SKIP child ${itemData.itemType} ${itemId}: keeping local (${translateX},${translateY})`);
+        // Children have LOCAL coords relative to their parent container.
+        // applyAddChildren (called by handleNesting) expects WORLD coords and
+        // converts them to local via toLocalOf(). So we need to give children
+        // their new world position = parent.newWorld + childLocal.
+        const parentId = childToParent.get(itemId);
+        const parentData = parentId ? itemsMap[parentId] : undefined;
+        const parentOrigTx = parentData?.transformation?.translateX ?? 0;
+        const parentOrigTy = parentData?.transformation?.translateY ?? 0;
+        const parentNewTx = parentOrigTx - minX + x;
+        const parentNewTy = parentOrigTy - minY + y;
+        const newChildTx = parentNewTx + translateX;
+        const newChildTy = parentNewTy + translateY;
+        console.log(`[paste] child ${itemData.itemType} ${itemId}: local=(${translateX},${translateY}) parentNew=(${parentNewTx},${parentNewTy}) → world=(${newChildTx},${newChildTy})`);
+        if (itemData.transformation) {
+          itemData.transformation.translateX = newChildTx;
+          itemData.transformation.translateY = newChildTy;
+          const d2 = itemData as Record<string, unknown>;
+          if (d2.text && typeof d2.text === "object") {
+            const textData = d2.text as Record<string, unknown>;
+            if (textData.transformation && typeof textData.transformation === "object") {
+              const tt = textData.transformation as Record<string, number>;
+              tt.translateX = newChildTx;
+              tt.translateY = newChildTy;
+            }
+          }
+        }
       }
       if (
         itemData.itemType !== "RichText" &&
@@ -1255,11 +1283,26 @@ export class Board {
     }
 
     const newMap: { [key: string]: ItemData } = {};
-    // iterate over itemsMap to find the minimal translation
+
+    // Collect child IDs from container items (same logic as paste()).
+    const dupChildItemIds = new Set<string>();
+    const dupChildToParent = new Map<string, string>();
+    for (const itemId in itemsMap) {
+      const d = itemsMap[itemId] as Record<string, unknown>;
+      if (Array.isArray(d.childIds)) {
+        for (const cid of d.childIds as string[]) {
+          dupChildItemIds.add(cid);
+          dupChildToParent.set(cid, itemId);
+        }
+      }
+    }
+
+    // iterate over itemsMap to find the minimal translation (top-level only)
     let minX = Infinity;
     let minY = Infinity;
 
     for (const itemId in itemsMap) {
+      if (dupChildItemIds.has(itemId)) continue;
       const itemData = itemsMap[itemId];
       const { translateX, translateY } = itemData.transformation || {
         translateX: 0,
@@ -1315,6 +1358,27 @@ export class Board {
           itemData.middlePoint.x += -minX + right + width;
           itemData.middlePoint.y += -minY + top;
         }
+      } else if (dupChildItemIds.has(itemId)) {
+        // Child: convert local coords to world so handleNesting + applyAddChildren
+        // can re-nest it with the correct local transform.
+        const parentId = dupChildToParent.get(itemId);
+        const parentData = parentId ? itemsMap[parentId] : undefined;
+        const parentOrigTx = parentData?.transformation?.translateX ?? 0;
+        const parentOrigTy = parentData?.transformation?.translateY ?? 0;
+        const parentNewTx = parentOrigTx - minX + right + width;
+        const parentNewTy = parentOrigTy - minY + top;
+        if (itemData.transformation) {
+          const newChildTx = parentNewTx + translateX;
+          const newChildTy = parentNewTy + translateY;
+          itemData.transformation.translateX = newChildTx;
+          itemData.transformation.translateY = newChildTy;
+          itemData.transformation.isLocked = false;
+          const d2 = itemData as Record<string, unknown>;
+          if (d2.text && typeof d2.text === "object") {
+            const tt = ((d2.text as Record<string, unknown>).transformation as Record<string, number> | undefined);
+            if (tt) { tt.translateX = newChildTx; tt.translateY = newChildTy; }
+          }
+        }
       } else if (itemData.transformation) {
         itemData.transformation.translateX = translateX - minX + right + width;
         itemData.transformation.translateY = translateY - minY + top;
@@ -1326,6 +1390,15 @@ export class Board {
 
         if (height === 0 || isSelectedItemsMinWidth) {
           itemData.transformation.translateX = translateX + width * 10 + 10;
+        }
+
+        const d2 = itemData as Record<string, unknown>;
+        if (d2.text && typeof d2.text === "object") {
+          const tt = ((d2.text as Record<string, unknown>).transformation as Record<string, number> | undefined);
+          if (tt) {
+            tt.translateX = itemData.transformation.translateX;
+            tt.translateY = itemData.transformation.translateY;
+          }
         }
       }
       const itemDataWithChildren = itemData as { childIds?: string[]; children?: string[] };
