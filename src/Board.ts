@@ -1211,7 +1211,22 @@ export class Board {
     const items = Object.keys(newMap)
       .map((id) => this.items.getById(id))
       .filter((item) => typeof item !== "undefined");
+
+    // Debug: log frame MBR and child positions before handleNesting
+    for (const item of items) {
+      const mbr = item.getMbr();
+      const pos = item.transformation.getTranslation();
+      console.log(`[nest-pre] ${item.itemType} ${item.getId()}: pos=(${pos.x.toFixed(0)},${pos.y.toFixed(0)}) mbr=(${mbr.left.toFixed(0)},${mbr.top.toFixed(0)},${mbr.right.toFixed(0)},${mbr.bottom.toFixed(0)}) parent=${item.parent}`);
+    }
+
     this.handleNesting(items);
+
+    // Debug: log positions after handleNesting
+    for (const item of items) {
+      const pos = item.transformation.getTranslation();
+      console.log(`[nest-post] ${item.itemType} ${item.getId()}: pos=(${pos.x.toFixed(0)},${pos.y.toFixed(0)}) parent=${item.parent}`);
+    }
+
     this.selection.removeAll();
     this.selection.add(items);
     this.selection.setContext("EditUnderPointer");
