@@ -550,7 +550,7 @@ export const conf = {
   FG_REPULSION: 100,        // repulsion constant (spec default: 100)
   FG_MIN_DIST_SQ: 100,      // min distSq clamp for repulsion singularity (spec default: 100)
   FG_DAMPING: 0.6,          // velocity multiplier per tick (0=instant stop, 1=no damping)
-  FG_SLEEP_THRESHOLD: 0.5,  // stop engine when Σ(|vx|+|vy|) < this
+  FG_SLEEP_THRESHOLD: 10,  // stop engine when Σ(|vx|+|vy|) < this
   FG_TICK_MS: 16,           // physics tick interval in ms (16 ≈ 60fps, 33 ≈ 30fps)
 
   // Gravity mode physics — tweak at runtime: conf.GRAVITY_G = 200

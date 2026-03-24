@@ -36,12 +36,11 @@ import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
-import { ColorValue, coerceColorValue, resolveColor, fixedColor } from 'Color';
+import { ColorValue, coerceColorValue, resolveColor, fixedColor, semanticColor } from 'Color';
 
 import {
 	ConnectionLineWidth,
 	ConnectorLineStyle,
-	CONNECTOR_COLOR,
 	CONNECTOR_LINE_WIDTH,
 	CONNECTOR_BORDER_STYLE,
 	DEFAULT_END_POINTER,
@@ -95,7 +94,7 @@ export class Connector extends BaseItem<Connector> {
 		super(board, id);
 		this.transformation = new Transformation(this.id, this.board.events);
 		this.linkTo = new LinkTo(this.id, this.board.events);
-		this.lineColor = lineColor ?? fixedColor(CONNECTOR_COLOR);
+		this.lineColor = lineColor ?? semanticColor('contrastNeutral');
 		this.lineWidth = lineWidth ?? CONNECTOR_LINE_WIDTH;
 		this.borderStyle = strokeStyle ?? CONNECTOR_BORDER_STYLE;
 		this.text = new RichText(

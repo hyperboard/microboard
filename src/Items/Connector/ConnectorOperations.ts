@@ -1,11 +1,11 @@
 import { BoardPoint, ControlPointData, FindItemFn } from "./ControlPoint";
-import { ConnectionLineWidth, ConnectorLineStyle, CONNECTOR_COLOR } from "./ConnectorTypes";
+import { ConnectionLineWidth, ConnectorLineStyle } from "./ConnectorTypes";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BorderStyle } from "../Path";
-import { ColorValue, fixedColor } from "Color";
+import { ColorValue, semanticColor } from "Color";
 
 export class ConnectorData {
 	readonly itemType = "Connector";
@@ -15,7 +15,7 @@ export class ConnectorData {
 	startPointerStyle: ConnectorPointerStyle = "None";
 	endPointerStyle: ConnectorPointerStyle = "ArrowThin";
 	lineStyle: ConnectorLineStyle = "straight";
-	lineColor: ColorValue = fixedColor(CONNECTOR_COLOR);
+	lineColor: ColorValue = semanticColor('contrastNeutral');
 	linkTo?: string;
 	lineWidth: ConnectionLineWidth = 1;
 	borderStyle: BorderStyle = "solid";
