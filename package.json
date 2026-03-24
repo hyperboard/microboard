@@ -21,6 +21,11 @@
       },
       "types": "./dist/types/index.d.ts"
     },
+    "./protocol": {
+      "import": "./dist/esm/protocol.js",
+      "require": "./dist/cjs/protocol.js",
+      "types": "./dist/types/protocol.d.ts"
+    },
     "./style": "./dist/microboard.css"
   },
   "files": [
@@ -50,6 +55,9 @@
     "jsdom": {
       "optional": true
     }
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/rbush": "^4.0.0",

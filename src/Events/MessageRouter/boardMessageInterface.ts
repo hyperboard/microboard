@@ -1,141 +1,90 @@
-import { Board, BoardSnapshot } from "Board";
-import { SyncBoardEventPack, SyncEvent } from "../Events";
-import { PresenceEventType, PresenceUser } from "Presence/Events";
-import { AiChatEventType } from "./handleAiChatMassage";
+import type { Board, BoardSnapshot } from "Board";
+import type { SyncBoardEventPack, SyncEvent } from "../Events";
+import type { PresenceEventType, PresenceUser } from "Presence/Events";
+import type { AiChatEventType } from "./handleAiChatMassage";
+import type {
+	SocketContractAiChatMsg,
+	SocketContractAuthConfirmationMsg,
+	SocketContractAuthMsg,
+	SocketContractBoardAccessDeniedMsg,
+	SocketContractBoardConnectResponse,
+	SocketContractBoardEventMsg,
+	SocketContractNormalizedBoardSnapshot,
+	SocketContractNormalizedBoardSubscriptionCompletedMsg,
+	SocketContractBoardSnapshotMsg,
+	SocketContractBoardSubscriptionCompletedMsg,
+	SocketContractBoardWsHandshakeJwtPayload,
+	SocketContractConfirmationMsg,
+	SocketContractErrorMsg,
+	SocketContractGetModeMsg,
+	SocketContractInvalidateRightsMsg,
+	SocketContractLogoutMsg,
+	SocketContractModeMsg,
+	SocketContractPingMsg,
+	SocketContractPongMsg,
+	SocketContractPresenceEventMsg,
+	SocketContractSnapshotRequestMsg,
+	SocketContractSubscribeMsg,
+	SocketContractTemplateConnectResponse,
+	SocketContractTemplateWsHandshakeJwtPayload,
+	SocketContractUnsubscribeMsg,
+	SocketContractUserJoinMsg,
+	SocketContractVersionCheckMsg,
+} from "./socketContract";
 
-export interface AuthMsg {
-	type: "Auth";
-	jwt: string;
-}
-
-export interface LogoutMsg {
-	type: "Logout";
-}
-
-export interface InvalidateRightsMsg {
-	type: "InvalidateRights";
-	boardId: string;
-	byUser: boolean;
-}
-
-export interface GetModeMsg {
-	type: "GetMode";
-	boardId: string;
-}
-
-export interface SubscribeMsg {
-	type: "Subscribe";
-	boardId: string;
-	userId: string;
-	index: number;
-	accessKey?: string;
-}
-
-export interface UnsubscribeMsg {
-	type: "Unsubscribe";
-	boardId: string;
-}
-
-export interface ErrorMsg {
-	type: "Error";
-	message: string;
-	deniedBoardId?: string;
-	expectedSequence?: number;
-	receivedSequence?: number;
-}
-
-export interface VersionCheckMsg {
-	type: "VersionCheck";
-	version: string;
-}
-
-export interface AuthConfirmationMsg {
-	type: "AuthConfirmation";
-	sessionId?: string;
-}
-
-export interface PingMsg {
-	type: "ping";
-}
-
-export interface BoardAccessDeniedMsg {
-	type: "BoardAccessDenied";
-	boardId: string;
-}
-
-export interface BoardSubscriptionCompletedMsg {
-	type: "BoardSubscriptionCompleted";
-	boardId: string;
+export type AuthMsg = SocketContractAuthMsg;
+export type LogoutMsg = SocketContractLogoutMsg;
+export type InvalidateRightsMsg = SocketContractInvalidateRightsMsg;
+export type GetModeMsg = SocketContractGetModeMsg;
+export type SubscribeMsg = SocketContractSubscribeMsg;
+export type UnsubscribeMsg = SocketContractUnsubscribeMsg;
+export type ErrorMsg = SocketContractErrorMsg;
+export type VersionCheckMsg = SocketContractVersionCheckMsg;
+export type AuthConfirmationMsg = SocketContractAuthConfirmationMsg;
+export type PingMsg = SocketContractPingMsg;
+export type PongMsg = SocketContractPongMsg;
+export type BoardAccessDeniedMsg = SocketContractBoardAccessDeniedMsg;
+export type BoardConnectResponse = SocketContractBoardConnectResponse;
+export type TemplateConnectResponse = SocketContractTemplateConnectResponse;
+export type BoardWsHandshakeJwtPayload =
+	SocketContractBoardWsHandshakeJwtPayload;
+export type TemplateWsHandshakeJwtPayload =
+	SocketContractTemplateWsHandshakeJwtPayload;
+export type BoardSubscriptionCompletedMsg = Omit<
+	SocketContractNormalizedBoardSubscriptionCompletedMsg,
+	"JSONSnapshot" | "eventsSinceLastSnapshot"
+> & {
 	mode: "view" | "edit";
-	snapshot?: string | null;
 	JSONSnapshot?: BoardSnapshot | null;
-	eventsSinceLastSnapshot: SyncBoardEventPack[];
-	initialSequenceNumber: number;
-}
-
-export interface BoardSnapshotMsg {
-	type: "BoardSnapshot";
-	boardId: string;
-	snapshot: string;
-	lastEventOrder: number;
-}
-
-export interface AiChatMsg<T = AiChatEventType> {
-	type: 'AiChat';
-	boardId: string;
-	event: T;
-}
-
-export interface BoardEventMsg {
-	type: "BoardEvent";
-	boardId: string;
+	eventsSinceLastSnapshot: SyncEvent[];
+};
+export type NormalizedBoardSnapshot = SocketContractNormalizedBoardSnapshot;
+export type WireBoardSubscriptionCompletedMsg =
+	SocketContractBoardSubscriptionCompletedMsg;
+export type BoardSnapshotMsg = SocketContractBoardSnapshotMsg;
+export type BoardEventMsg = Omit<SocketContractBoardEventMsg, "event"> & {
 	event: SyncEvent;
-	sequenceNumber: number;
-}
-
-export interface ConfirmationMsg {
-	type: 'Confirmation';
-	boardId: string;
-	sequenceNumber: number;
-	order: number;
-}
-
-export interface ModeMsg {
-	type: 'Mode';
-	boardId: string;
-	mode: 'view' | 'edit';
-}
-
-export interface SnapshotRequestMsg {
-	type: 'CreateSnapshotRequest';
-	boardId: string;
-}
-
-export interface UserJoinMsg {
-	type: "UserJoin";
-	timestamp: number;
-	userId?: number | string;
-	sessionId?: string;
-	authorUserId?: string;
-	boardId: string;
+};
+export type ConfirmationMsg = SocketContractConfirmationMsg;
+export type ModeMsg = SocketContractModeMsg;
+export type SnapshotRequestMsg = SocketContractSnapshotRequestMsg;
+export type UserJoinMsg = Omit<SocketContractUserJoinMsg, "snapshots"> & {
 	snapshots: Record<string, PresenceUser>;
-}
-
-export interface PresenceEventMsg<T = PresenceEventType> {
-	type: "PresenceEvent";
+};
+export type PresenceEventMsg<T = PresenceEventType> = Omit<
+	SocketContractPresenceEventMsg,
+	"event" | "userId" | "boardId"
+> & {
 	boardId: string;
 	event: T;
-	userId?: string;
-	sessionId?: string;
-	authorUserId?: string;
-	softId: string | null;
-	hardId: string | null;
-	messageId: string;
-	nickname: string;
-	color: string | null;
-	avatar: string | null;
-}
-
+	userId: string;
+};
+export type AiChatMsg<T = AiChatEventType> = Omit<
+	SocketContractAiChatMsg,
+	"event"
+> & {
+	event: T;
+};
 export type EventsMsg =
 	| ModeMsg
 	| BoardEventMsg
@@ -159,9 +108,8 @@ export type SocketMsg =
 	| UnsubscribeMsg
 	| VersionCheckMsg
 	| ErrorMsg
-	| ModeMsg
 	| PingMsg
-	| AiChatMsg
+	| PongMsg
 	| BoardAccessDeniedMsg;
 
 type Subscription = {

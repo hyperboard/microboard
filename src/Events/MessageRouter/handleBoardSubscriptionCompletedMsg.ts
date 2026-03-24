@@ -1,28 +1,48 @@
 import {Board, BoardSnapshot} from "Board";
 import { conf } from "Settings";
 import { BoardEventPack, SyncBoardEvent, SyncEvent } from "../Events";
-import { BoardSubscriptionCompletedMsg } from "./boardMessageInterface";
+import {
+	BoardSubscriptionCompletedMsg,
+	WireBoardSubscriptionCompletedMsg,
+} from "./boardMessageInterface";
 import { expandEvents } from "../Log/expandEvents";
+import { normalizeBoardSubscriptionCompletedMsg } from "./socketContract";
 
 export function handleBoardSubscriptionCompletedMsg(
-  msg: BoardSubscriptionCompletedMsg,
+  msg: WireBoardSubscriptionCompletedMsg | BoardSubscriptionCompletedMsg,
   board: Board
 ): void {
+  const normalized = normalizeForBoard(msg);
   const { log } = board.events;
-  handleSeqNumApplication(msg.initialSequenceNumber, board);
-  if (msg.snapshot) {
-    handleSnapshotApplication(msg.snapshot, board);
+  handleSeqNumApplication(normalized.initialSequenceNumber, board);
+  if (normalized.snapshot) {
+    handleSnapshotApplication(normalized.snapshot, board);
     log.list.clearConfirmedRecords();
-  } else if (msg.JSONSnapshot) {
-    handleHTMLSnapshotApplication(msg.JSONSnapshot, board);
+  } else if (normalized.JSONSnapshot) {
+    handleHTMLSnapshotApplication(normalized.JSONSnapshot, board);
     log.list.clearConfirmedRecords();
   }
-  handleBoardEventListApplication(expandEvents(msg.eventsSinceLastSnapshot), board);
+  handleBoardEventListApplication(
+    expandEvents(normalized.eventsSinceLastSnapshot),
+    board
+  );
 
-  board.setInterfaceType(msg.mode);
+  board.setInterfaceType(normalized.mode);
 
   board.subject.publish();
   onBoardLoad(board);
+}
+
+function normalizeForBoard(
+  msg: WireBoardSubscriptionCompletedMsg | BoardSubscriptionCompletedMsg
+): BoardSubscriptionCompletedMsg {
+  const normalized = normalizeBoardSubscriptionCompletedMsg(msg);
+
+  return {
+    ...normalized,
+    JSONSnapshot: normalized.JSONSnapshot as BoardSnapshot | null | undefined,
+    eventsSinceLastSnapshot: normalized.eventsSinceLastSnapshot as SyncEvent[],
+  };
 }
 
 function handleSeqNumApplication(

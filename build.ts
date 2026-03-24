@@ -123,6 +123,8 @@ const commands = [
   `bun build ./src/node.ts --outdir ./dist/cjs --target node --format cjs ${externalArgs}`,
   `bun build ./src/index.ts --outdir ./dist/esm --target browser --format esm ${externalArgs}`,
   `bun build ./src/index.ts --outdir ./dist/cjs --target browser --format cjs ${externalArgs}`,
+  `bun build ./src/protocol.ts --outdir ./dist/esm --target browser --format esm ${externalArgs}`,
+  `bun build ./src/protocol.ts --outdir ./dist/cjs --target browser --format cjs ${externalArgs}`,
 ];
 
 // Execute build process
