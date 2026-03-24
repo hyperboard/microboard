@@ -47,6 +47,11 @@ export function validateItemsMap(parsedObject: unknown): parsedObject is ItemsMa
 
 export type ItemValidator = (data: unknown) => boolean;
 
+// Accepts both legacy string colors and new ColorValue objects { type, value }
+function isColorValue(v: unknown): boolean {
+  return typeof v === "string" || (typeof v === "object" && v !== null);
+}
+
 export const itemValidators: Record<string, ItemValidator> = {
   Sticker: validateStickerData,
   Shape: validateShapeData,
@@ -95,9 +100,9 @@ function validateFrameData(data: unknown): boolean {
     frameData.hasOwnProperty("text") &&
     frameData.hasOwnProperty("children") &&
     typeof frameData.shapeType === "string" &&
-    typeof frameData.backgroundColor === "string" &&
+    isColorValue(frameData.backgroundColor) &&
     typeof frameData.backgroundOpacity === "number" &&
-    typeof frameData.borderColor === "string" &&
+    isColorValue(frameData.borderColor) &&
     typeof frameData.borderOpacity === "number" &&
     typeof frameData.borderStyle === "string" &&
     typeof frameData.borderWidth === "number" &&
@@ -125,9 +130,9 @@ function validateShapeData(shapeData: unknown): boolean {
     data.hasOwnProperty("transformation") &&
     data.hasOwnProperty("text") &&
     typeof data.shapeType === "string" &&
-    typeof data.backgroundColor === "string" &&
+    isColorValue(data.backgroundColor) &&
     typeof data.backgroundOpacity === "number" &&
-    typeof data.borderColor === "string" &&
+    isColorValue(data.borderColor) &&
     typeof data.borderOpacity === "number" &&
     typeof data.borderStyle === "string" &&
     typeof data.borderWidth === "number" &&
@@ -146,7 +151,7 @@ function validateStickerData(shapeData: unknown): boolean {
     data.hasOwnProperty("backgroundColor") &&
     data.hasOwnProperty("transformation") &&
     data.hasOwnProperty("text") &&
-    typeof data.backgroundColor === "string" &&
+    isColorValue(data.backgroundColor) &&
     validateTransformationData(data.transformation) &&
     validateRichTextData(data.text);
   return isValid;
@@ -209,7 +214,7 @@ function validateConnectorData(connectorData: unknown): boolean {
     typeof data.startPointerStyle === "string" &&
     typeof data.endPointerStyle === "string" &&
     typeof data.lineStyle === "string" &&
-    typeof data.lineColor === "string" &&
+    isColorValue(data.lineColor) &&
     typeof data.lineWidth === "number" &&
     validateTransformationData(data.transformation);
   return isValid;
