@@ -1058,14 +1058,6 @@ export class Board {
       }
     }
 
-    console.log("[paste] childItemIds:", [...childItemIds]);
-    console.log("[paste] items in map:", Object.entries(itemsMap).map(([id, d]) => ({
-      id,
-      type: d.itemType,
-      tx: d.transformation?.translateX,
-      ty: d.transformation?.translateY,
-      isChild: childItemIds.has(id),
-    })));
 
     // iterate over itemsMap to find the minimal translation
     let minX = Infinity;
@@ -1096,7 +1088,6 @@ export class Board {
     }
 
     const { x, y } = this.pointer.point;
-    console.log("[paste] minX:", minX, "minY:", minY, "pointer:", x, y);
 
     // Snapshot original translations BEFORE the update loop — transformations are
     // mutated in-place, so reading parentData.transformation later would give the
@@ -1144,7 +1135,6 @@ export class Board {
       } else if (itemData.transformation && !childItemIds.has(itemId)) {
         const newTx = translateX - minX + x;
         const newTy = translateY - minY + y;
-        console.log(`[paste] ${itemData.itemType} ${itemId}: (${translateX},${translateY}) → (${newTx},${newTy})`);
         itemData.transformation.translateX = newTx;
         itemData.transformation.translateY = newTy;
         // Sticker/Shape/Frame embed a RichText whose transformation is the SAME
@@ -1173,7 +1163,6 @@ export class Board {
         const parentNewTy = parentOrigTy - minY + y;
         const newChildTx = parentNewTx + translateX;
         const newChildTy = parentNewTy + translateY;
-        console.log(`[paste] child ${itemData.itemType} ${itemId}: local=(${translateX},${translateY}) parentNew=(${parentNewTx},${parentNewTy}) → world=(${newChildTx},${newChildTy})`);
         if (itemData.transformation) {
           itemData.transformation.translateX = newChildTx;
           itemData.transformation.translateY = newChildTy;
@@ -1221,20 +1210,7 @@ export class Board {
       .map((id) => this.items.getById(id))
       .filter((item) => typeof item !== "undefined");
 
-    // Debug: log frame MBR and child positions before handleNesting
-    for (const item of items) {
-      const mbr = item.getMbr();
-      const pos = item.transformation.getTranslation();
-      console.log(`[nest-pre] ${item.itemType} ${item.getId()}: pos=(${pos.x.toFixed(0)},${pos.y.toFixed(0)}) mbr=(${mbr.left.toFixed(0)},${mbr.top.toFixed(0)},${mbr.right.toFixed(0)},${mbr.bottom.toFixed(0)}) parent=${item.parent}`);
-    }
-
     this.handleNesting(items);
-
-    // Debug: log positions after handleNesting
-    for (const item of items) {
-      const pos = item.transformation.getTranslation();
-      console.log(`[nest-post] ${item.itemType} ${item.getId()}: pos=(${pos.x.toFixed(0)},${pos.y.toFixed(0)}) parent=${item.parent}`);
-    }
 
     this.selection.removeAll();
     this.selection.add(items);
