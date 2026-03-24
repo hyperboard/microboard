@@ -12,7 +12,6 @@ import { ImageItem } from "Items/Image/Image";
 import { Sticker } from "Items/Sticker/Sticker";
 import { RichText } from "Items/RichText/RichText";
 import { Frame } from "Items/Frame/Frame";
-import { tempStorage } from "App/SessionStorage";
 import { Item } from "Items/Item";
 import { Line } from "Items/Line/Line";
 

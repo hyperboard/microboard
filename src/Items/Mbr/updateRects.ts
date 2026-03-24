@@ -2,7 +2,6 @@ import { Board } from 'Board';
 import { Camera } from 'Camera';
 import { Mbr } from './Mbr';
 import { RichText } from 'Items/RichText/RichText';
-import { RefObject } from 'react';
 
 export function updateRects(
 	board: Board,
