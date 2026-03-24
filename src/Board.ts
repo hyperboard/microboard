@@ -1055,6 +1055,15 @@ export class Board {
       }
     }
 
+    console.log("[paste] childItemIds:", [...childItemIds]);
+    console.log("[paste] items in map:", Object.entries(itemsMap).map(([id, d]) => ({
+      id,
+      type: d.itemType,
+      tx: d.transformation?.translateX,
+      ty: d.transformation?.translateY,
+      isChild: childItemIds.has(id),
+    })));
+
     // iterate over itemsMap to find the minimal translation
     let minX = Infinity;
     let minY = Infinity;
@@ -1084,6 +1093,7 @@ export class Board {
     }
 
     const { x, y } = this.pointer.point;
+    console.log("[paste] minX:", minX, "minY:", minY, "pointer:", x, y);
 
     const mediaStorageIds: string[] = [];
 
@@ -1120,8 +1130,13 @@ export class Board {
           itemData.middlePoint.y += -minY + y;
         }
       } else if (itemData.transformation && !childItemIds.has(itemId)) {
-        itemData.transformation.translateX = translateX - minX + x;
-        itemData.transformation.translateY = translateY - minY + y;
+        const newTx = translateX - minX + x;
+        const newTy = translateY - minY + y;
+        console.log(`[paste] ${itemData.itemType} ${itemId}: (${translateX},${translateY}) → (${newTx},${newTy})`);
+        itemData.transformation.translateX = newTx;
+        itemData.transformation.translateY = newTy;
+      } else if (childItemIds.has(itemId)) {
+        console.log(`[paste] SKIP child ${itemData.itemType} ${itemId}: keeping local (${translateX},${translateY})`);
       }
       if (
         itemData.itemType !== "RichText" &&
