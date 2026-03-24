@@ -1098,6 +1098,15 @@ export class Board {
     const { x, y } = this.pointer.point;
     console.log("[paste] minX:", minX, "minY:", minY, "pointer:", x, y);
 
+    // Snapshot original translations BEFORE the update loop — transformations are
+    // mutated in-place, so reading parentData.transformation later would give the
+    // already-updated value and double-apply the offset for children.
+    const originalTranslations = new Map<string, { tx: number; ty: number }>();
+    for (const itemId in itemsMap) {
+      const t = itemsMap[itemId].transformation;
+      originalTranslations.set(itemId, { tx: t?.translateX ?? 0, ty: t?.translateY ?? 0 });
+    }
+
     const mediaStorageIds: string[] = [];
 
     for (const itemId in itemsMap) {
@@ -1157,9 +1166,9 @@ export class Board {
         // converts them to local via toLocalOf(). So we need to give children
         // their new world position = parent.newWorld + childLocal.
         const parentId = childToParent.get(itemId);
-        const parentData = parentId ? itemsMap[parentId] : undefined;
-        const parentOrigTx = parentData?.transformation?.translateX ?? 0;
-        const parentOrigTy = parentData?.transformation?.translateY ?? 0;
+        const parentOrig = parentId ? originalTranslations.get(parentId) : undefined;
+        const parentOrigTx = parentOrig?.tx ?? 0;
+        const parentOrigTy = parentOrig?.ty ?? 0;
         const parentNewTx = parentOrigTx - minX + x;
         const parentNewTy = parentOrigTy - minY + y;
         const newChildTx = parentNewTx + translateX;
@@ -1341,6 +1350,13 @@ export class Board {
       minY = 0;
     }
 
+    // Snapshot originals before the mutation loop (same reason as in paste()).
+    const dupOriginalTranslations = new Map<string, { tx: number; ty: number }>();
+    for (const itemId in itemsMap) {
+      const t = itemsMap[itemId].transformation;
+      dupOriginalTranslations.set(itemId, { tx: t?.translateX ?? 0, ty: t?.translateY ?? 0 });
+    }
+
     const mbr = this.selection.getMbr();
     const selectedItems = this.selection.items.list();
     const isSelectedItemsMinWidth = selectedItems.some(
@@ -1377,9 +1393,9 @@ export class Board {
         // Child: convert local coords to world so handleNesting + applyAddChildren
         // can re-nest it with the correct local transform.
         const parentId = dupChildToParent.get(itemId);
-        const parentData = parentId ? itemsMap[parentId] : undefined;
-        const parentOrigTx = parentData?.transformation?.translateX ?? 0;
-        const parentOrigTy = parentData?.transformation?.translateY ?? 0;
+        const parentOrig = parentId ? dupOriginalTranslations.get(parentId) : undefined;
+        const parentOrigTx = parentOrig?.tx ?? 0;
+        const parentOrigTy = parentOrig?.ty ?? 0;
         const parentNewTx = parentOrigTx - minX + right + width;
         const parentNewTy = parentOrigTy - minY + top;
         if (itemData.transformation) {
