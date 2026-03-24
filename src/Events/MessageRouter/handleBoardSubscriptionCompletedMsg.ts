@@ -25,7 +25,7 @@ export function handleBoardSubscriptionCompletedMsg(
   onBoardLoad(board);
 }
 
-export function handleSeqNumApplication(
+function handleSeqNumApplication(
   initialSequenceNumber: number,
   board: Board
 ): void {
@@ -38,7 +38,7 @@ export function handleSeqNumApplication(
   startIntervals(board);
 }
 
-export function startIntervals(board: Board): void {
+function startIntervals(board: Board): void {
   const { log } = board.events;
 
   if (log.publishIntervalTimer) {
@@ -181,7 +181,7 @@ function sendBoardEvent(
   }
 }
 
-export function onBoardLoad(board: Board): void {
+function onBoardLoad(board: Board): void {
   const searchParams = new URLSearchParams(window.location.search.slice(1));
   const toFocusId = searchParams.get("focus") ?? "";
   const toFocusItem = board.items.getById(toFocusId);

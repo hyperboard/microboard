@@ -1,6 +1,6 @@
 import { Item } from "./Item";
 
-export function reverMapOf<Itm extends Item, T>(
+function reverMapOf<Itm extends Item, T>(
 	item: Itm | Itm[],
 	getCallback: (item: Itm) => T | null | false | undefined,
 ): { [key: string]: T } {

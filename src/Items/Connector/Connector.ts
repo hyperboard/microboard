@@ -46,8 +46,8 @@ import {
 	DEFAULT_END_POINTER,
 	CONNECTOR_POINTER_TYPES,
 } from './ConnectorTypes';
-export const DRAW_TEXT_BORDER = false;
-export const TEXT_BORDER_PADDING = 0;
+const DRAW_TEXT_BORDER = false;
+const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
 	snapBorder: 'rgb(71, 120, 245)',
 	snapBackgroundHighlight: 'rgba(0,0,0,0.1)',
@@ -60,7 +60,7 @@ export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
 };
 
 export const CONNECTOR_ANCHOR_TYPE = 'rect';
-export const CONNECTOR_LINE_CAP = 'round';
+const CONNECTOR_LINE_CAP = 'round';
 export class Connector extends BaseItem<Connector> {
 	readonly itemType = 'Connector';
 	parent = 'Board';

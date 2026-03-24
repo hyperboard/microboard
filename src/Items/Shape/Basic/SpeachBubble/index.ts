@@ -52,7 +52,7 @@ const convexity = 2;
 const nearBreakpoint = 10;
 const farBreakpoint = 20;
 
-export const createSpeachBubblePath = (mbr: Mbr) => {
+const createSpeachBubblePath = (mbr: Mbr) => {
 	const h = mbr.getHeight();
 	const w = mbr.getWidth();
 	const rectangleHeight = h - h * 0.1;
