@@ -1458,6 +1458,23 @@ export type SocketContractPresenceEventMsg = z.infer<
 export type SocketContractEventsMsg = z.infer<typeof EventsMsgSchema>;
 export type SocketContractSocketMsg = z.infer<typeof SocketMsgSchema>;
 export type SocketContractOperation = z.infer<typeof SocketOperationSchema>;
+export type SocketContractBoardEventBody = z.infer<
+	typeof SocketBoardEventBodySchema
+>;
+export type SocketContractBoardEventPackBody = z.infer<
+	typeof SocketBoardEventPackBodySchema
+>;
+export type SocketContractBoardEvent = z.infer<typeof SocketBoardEventSchema>;
+export type SocketContractBoardEventPack = z.infer<
+	typeof SocketBoardEventPackSchema
+>;
+export type SocketContractSyncBoardEvent = z.infer<
+	typeof SocketSyncBoardEventSchema
+>;
+export type SocketContractSyncBoardEventPack = z.infer<
+	typeof SocketSyncBoardEventPackSchema
+>;
+export type SocketContractSyncEvent = z.infer<typeof SocketSyncEventSchema>;
 export type SocketContractAccessMode = z.infer<typeof AccessModeSchema>;
 export type SocketContractBoardWsHandshakeJwtPayload = z.infer<
 	typeof BoardWsHandshakeJwtPayloadSchema

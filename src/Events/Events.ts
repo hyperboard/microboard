@@ -7,6 +7,14 @@ import { Operation } from './EventsOperations';
 import { PresenceEventType } from 'Presence/Events';
 import { conf } from 'Settings';
 import { createCommand } from './CreateCommand';
+import type {
+	SocketContractBoardEvent,
+	SocketContractBoardEventBody,
+	SocketContractBoardEventPack,
+	SocketContractBoardEventPackBody,
+	SocketContractSyncBoardEvent,
+	SocketContractSyncBoardEventPack,
+} from './MessageRouter/socketContract';
 import {
 	getBoardEventSessionId,
 	getConnectionAuthorUserId,
@@ -14,44 +22,48 @@ import {
 	getConnectionSessionIds,
 } from './identity';
 
-export interface BoardEvent {
-	order: number;
-	body: BoardEventBody;
-}
+type PackedOperation = Operation & { actualId?: string };
 
-export interface BoardEventBody {
-	eventId: string;
-	userId?: number | string;
-	authorUserId?: string;
-	sessionId?: string;
-	boardId: string;
+export type BoardEventBody = {
+	eventId: SocketContractBoardEventBody['eventId'];
+	userId?: SocketContractBoardEventBody['userId'];
+	authorUserId?: SocketContractBoardEventBody['authorUserId'];
+	sessionId?: SocketContractBoardEventBody['sessionId'];
+	boardId: SocketContractBoardEventBody['boardId'];
 	operation: Operation;
-}
+};
 
-export interface BoardEventPack {
-	order: number;
+export type BoardEvent = {
+	order: SocketContractBoardEvent['order'];
+	body: BoardEventBody;
+};
+
+export type BoardEventPackBody = {
+	eventId: SocketContractBoardEventPackBody['eventId'];
+	userId?: SocketContractBoardEventPackBody['userId'];
+	authorUserId?: SocketContractBoardEventPackBody['authorUserId'];
+	sessionId?: SocketContractBoardEventPackBody['sessionId'];
+	boardId: SocketContractBoardEventPackBody['boardId'];
+	operations: PackedOperation[];
+};
+
+export type BoardEventPack = {
+	order: SocketContractBoardEventPack['order'];
 	body: BoardEventPackBody;
-}
+};
 
-export interface BoardEventPackBody {
-	eventId: string;
-	userId?: number | string;
-	authorUserId?: string;
-	sessionId?: string;
-	boardId: string;
-	operations: (Operation & { actualId?: string })[];
-}
+export type SyncBoardEvent = BoardEvent & {
+	lastKnownOrder: SocketContractSyncBoardEvent['lastKnownOrder'];
+};
 
-export interface SyncBoardEvent extends BoardEvent {
-	lastKnownOrder: number;
-}
+type SyncBoardEventPackBody = BoardEventPackBody & {
+	lastKnownOrder: SocketContractSyncBoardEventPack['body']['lastKnownOrder'];
+};
 
-interface SyncBoardEventPackBody extends BoardEventPackBody {
-	lastKnownOrder: number;
-}
-export interface SyncBoardEventPack extends BoardEventPack {
+export type SyncBoardEventPack = {
+	order: SocketContractSyncBoardEventPack['order'];
 	body: SyncBoardEventPackBody;
-}
+};
 
 export type SyncEvent = SyncBoardEvent | SyncBoardEventPack;
 
@@ -83,28 +95,24 @@ export class Events {
 	 * @param command Optional command associated with the operation
 	 */
 	emit(operation: Operation, command?: Command): void {
-		if (operation.method === "transformMany") {
-			console.error("[DEBUG] transformMany emitted from Events.emit!", JSON.stringify(operation));
-			console.trace("[DEBUG] transformMany stack trace");
-		}
-			const sessionId = this.getSessionId();
-			const authorUserId = this.getAuthorUserId();
-			const body = {
-				eventId: this.getNextEventId(),
-				userId: sessionId,
-				authorUserId,
-				sessionId,
-				boardId: this.board.getBoardId(),
-				operation: operation,
-			} as BoardEventBody;
+		const sessionId = this.getSessionId();
+		const authorUserId = this.getAuthorUserId();
+		const body = {
+			eventId: this.getNextEventId(),
+			userId: sessionId,
+			authorUserId,
+			sessionId,
+			boardId: this.board.getBoardId(),
+			operation,
+		} as BoardEventBody;
 		const event = { order: 0, body };
 		const record = {
 			event,
 			command: command || Events.createCommand(this.board, operation),
 		};
 		this.log.insertNewLocalEventRecordAfterEmit(record);
-			this.setLatestUserEvent(operation, sessionId);
-			this.subject.publish(event);
+		this.setLatestUserEvent(operation, sessionId);
+		this.subject.publish(event);
 
 		if (this.board.getBoardId().includes('local')) {
 			if (this.log.saveFileTimeout) {
@@ -135,13 +143,13 @@ export class Events {
 	 * @param apply Whether to apply the undo operation (defaults to true)
 	 */
 	undo(): void {
-			const currentSessionIds = this.getSessionIds();
-			const record = this.log.getUndoRecord(currentSessionIds);
+		const currentSessionIds = this.getSessionIds();
+		const record = this.log.getUndoRecord(currentSessionIds);
 		if (!record) {
 			return;
 		}
-			const { operation, eventId } = record.event.body;
-			const canUndo = this.canUndoEvent(operation, getBoardEventSessionId(record.event.body));
+		const { operation, eventId } = record.event.body;
+		const canUndo = this.canUndoEvent(operation, getBoardEventSessionId(record.event.body));
 		if (!canUndo) {
 			return;
 		}
@@ -157,8 +165,8 @@ export class Events {
 	 * @param apply Whether to apply the redo operation (defaults to true)
 	 */
 	redo(): void {
-			const sessionIds = this.getSessionIds();
-			const record = this.log.getRedoRecord(sessionIds);
+		const sessionIds = this.getSessionIds();
+		const record = this.log.getRedoRecord(sessionIds);
 		if (!record) {
 			return;
 		}
@@ -174,15 +182,15 @@ export class Events {
 	 * @returns Whether an undo operation is possible
 	 */
 	canUndo(): boolean {
-			const sessionIds = this.getSessionIds();
-			const record = this.log.getUndoRecord(sessionIds);
+		const sessionIds = this.getSessionIds();
+		const record = this.log.getUndoRecord(sessionIds);
 		if (!record) {
 			return false;
 		}
-			return this.canUndoEvent(
-				record.event.body.operation,
-				getBoardEventSessionId(record.event.body),
-			);
+		return this.canUndoEvent(
+			record.event.body.operation,
+			getBoardEventSessionId(record.event.body),
+		);
 	}
 
 	/**
@@ -190,9 +198,9 @@ export class Events {
 	 * @returns Whether a redo operation is possible
 	 */
 	canRedo(): boolean {
-			const sessionIds = this.getSessionIds();
-			const record = this.log.getRedoRecord(sessionIds);
-			return record !== null;
+		const sessionIds = this.getSessionIds();
+		const record = this.log.getRedoRecord(sessionIds);
+		return record !== null;
 	}
 
 	/**
@@ -212,9 +220,9 @@ export class Events {
 		if (isRedoPasteOrDuplicate) {
 			return true;
 		}
-			const key = this.getOpKey(op);
-			const latest = this.latestEvent[key];
-			return bySessionId === undefined || bySessionId === latest;
+		const key = this.getOpKey(op);
+		const latest = this.latestEvent[key];
+		return bySessionId === undefined || bySessionId === latest;
 	}
 
 	private setLatestUserEvent(op: Operation, sessionId: string): void {

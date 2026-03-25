@@ -537,6 +537,7 @@ function parseHTMLConnector(el: HTMLElement): ConnectorData & { id: string } {
       el.getAttribute("data-line-width") || "1"
     ) as ConnectionLineWidth,
     borderStyle: (el.getAttribute("data-border-style") as BorderStyle) || "",
+    smartJump: (el.getAttribute("data-smart-jump") || "true") !== "false",
     text: new DefaultRichTextData(),
     linkTo: el.getAttribute("data-link-to") || undefined
   };
