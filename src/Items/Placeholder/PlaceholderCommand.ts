@@ -1,5 +1,4 @@
 import { Command } from "../../Events";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 import { Placeholder } from "./Placeholder";
 import { PlaceholderOperation } from "./PlaceholderOperation";
 
@@ -28,24 +27,33 @@ export class PlaceholderCommand implements Command {
 
 		switch (this.operation.method) {
 			case "setBackgroundColor":
-				return mapItemsByOperation(placeholder, placeholder => {
+				return placeholder.map(placeholder => {
 					return {
-						...this.operation,
-						backgroundColor: placeholder.getBackgroundColor(),
+						item: placeholder,
+						operation: {
+							...this.operation,
+							backgroundColor: placeholder.getBackgroundColor(),
+						},
 					};
 				});
 			case "setIcon":
-				return mapItemsByOperation(placeholder, placeholder => {
+				return placeholder.map(placeholder => {
 					return {
-						...this.operation,
-						icon: placeholder.getIcon(),
+						item: placeholder,
+						operation: {
+							...this.operation,
+							icon: placeholder.getIcon(),
+						},
 					};
 				});
 			case "setMiroData":
-				return mapItemsByOperation(placeholder, placeholder => {
+				return placeholder.map(placeholder => {
 					return {
-						...this.operation,
-						miroData: placeholder.getIcon(),
+						item: placeholder,
+						operation: {
+							...this.operation,
+							miroData: placeholder.getIcon(),
+						},
 					};
 				});
 		}

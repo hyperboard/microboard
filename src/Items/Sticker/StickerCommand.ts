@@ -1,6 +1,5 @@
 import { StickerOperation } from "./StickerOperation";
 import { Command } from "../../Events";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 import { Sticker } from "./index";
 
 export class StickerCommand implements Command {
@@ -28,10 +27,13 @@ export class StickerCommand implements Command {
 	getReverse(): { item: Sticker; operation: StickerOperation }[] {
 		switch (this.operation.method) {
 			case "setBackgroundColor":
-				return mapItemsByOperation(this.sticker, sticker => {
+				return this.sticker.map(sticker => {
 					return {
-						...this.operation,
-						backgroundColor: sticker.getBackgroundColor(),
+						item: sticker,
+						operation: {
+							...this.operation,
+							backgroundColor: sticker.getBackgroundColor(),
+						},
 					};
 				});
 		}

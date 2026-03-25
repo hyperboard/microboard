@@ -1,7 +1,6 @@
 import { Shape } from "./Shape";
 import { SetBorderWidth, ShapeOperation } from "./ShapeOperation";
 import { Command, Operation, isShapeOp } from "../../Events";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class ShapeCommand implements Command {
 	private reverse: { item: Shape; operation: ShapeOperation }[];
@@ -37,53 +36,74 @@ export class ShapeCommand implements Command {
 
 		switch (this.operation.method) {
 			case "setBackgroundColor":
-				return mapItemsByOperation(shape, shape => {
+				return shape.map(shape => {
 					return {
-						...this.operation,
-						backgroundColor: shape.getBackgroundColor(),
+						item: shape,
+						operation: {
+							...this.operation,
+							backgroundColor: shape.getBackgroundColor(),
+						},
 					};
 				});
 			case "setBackgroundOpacity":
-				return mapItemsByOperation(shape, shape => {
+				return shape.map(shape => {
 					return {
-						...this.operation,
-						backgroundOpacity: shape.getBackgroundOpacity(),
+						item: shape,
+						operation: {
+							...this.operation,
+							backgroundOpacity: shape.getBackgroundOpacity(),
+						},
 					};
 				});
 			case "setBorderColor":
-				return mapItemsByOperation(shape, shape => {
+				return shape.map(shape => {
 					return {
-						...this.operation,
-						borderColor: shape.getStrokeColor(),
+						item: shape,
+						operation: {
+							...this.operation,
+							borderColor: shape.getStrokeColor(),
+						},
 					};
 				});
 			case "setBorderOpacity":
-				return mapItemsByOperation(shape, shape => {
+				return shape.map(shape => {
 					return {
-						...this.operation,
-						borderOpacity: shape.getBorderOpacity(),
+						item: shape,
+						operation: {
+							...this.operation,
+							borderOpacity: shape.getBorderOpacity(),
+						},
 					};
 				});
 			case "setBorderStyle":
-				return mapItemsByOperation(shape, shape => {
+				return shape.map(shape => {
 					return {
-						...this.operation,
-						borderStyle: shape.getBorderStyle(),
+						item: shape,
+						operation: {
+							...this.operation,
+							borderStyle: shape.getBorderStyle(),
+						},
 					};
 				});
 			case "setBorderWidth":
-				return mapItemsByOperation(shape, _shape => {
+				return shape.map(_shape => {
 					return {
-						...this.operation,
-						borderWidth: (this.operation as SetBorderWidth)
-							.prevBorderWidth,
+						item: _shape,
+						operation: {
+							...this.operation,
+							borderWidth: (this.operation as SetBorderWidth)
+								.prevBorderWidth,
+						},
 					};
 				});
 			case "setShapeType":
-				return mapItemsByOperation(shape, shape => {
+				return shape.map(shape => {
 					return {
-						...this.operation,
-						shapeType: shape.getShapeType(),
+						item: shape,
+						operation: {
+							...this.operation,
+							shapeType: shape.getShapeType(),
+						},
 					};
 				});
 		}

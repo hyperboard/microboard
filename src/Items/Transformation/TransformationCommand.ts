@@ -1,7 +1,6 @@
 import { Transformation } from "./Transformation";
 import { TransformationOperation, MatrixData } from "./TransformationOperations";
 import { Command, Operation, isTransformation } from "../../Events";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 /** Minimal interface to avoid circular import with BaseItem/Item */
 interface TransformableItem {
@@ -97,61 +96,67 @@ export class TransformationCommand implements Command {
 			}
 			// @deprecated — legacy events only
 			case "translateTo":
-				return mapItemsByOperation(
-					this.transformation,
-					transformation => {
-						return {
+				return this.transformation.map(transformation => {
+					return {
+						item: transformation,
+						operation: {
 							...this.operation,
 							x: transformation.getTranslation().x,
 							y: transformation.getTranslation().y,
-						};
-					},
-				);
+						},
+					};
+				});
 			case "translateBy": {
 				const op = this.operation;
-				return mapItemsByOperation(this.transformation, () => {
+				return this.transformation.map(transformation => {
 					return {
-						...this.operation,
-						x: -op.x,
-						y: -op.y,
+						item: transformation,
+						operation: {
+							...this.operation,
+							x: -op.x,
+							y: -op.y,
+						},
 					};
 				});
 			}
 			// @deprecated — legacy events only
 			case "scaleTo":
 			case "scaleToRelativeTo": {
-				return mapItemsByOperation(
-					this.transformation,
-					transformation => {
-						return {
+				return this.transformation.map(transformation => {
+					return {
+						item: transformation,
+						operation: {
 							...op,
 							x: transformation.getScale().x,
 							y: transformation.getScale().y,
-						};
-					},
-				);
+						},
+					};
+				});
 			}
 			case "scaleBy":
 			case "scaleByRelativeTo": {
 				const op = this.operation;
-				return mapItemsByOperation(this.transformation, () => {
+				return this.transformation.map(transformation => {
 					return {
-						...op,
-						x: 1 / op.x,
-						y: 1 / op.y,
+						item: transformation,
+						operation: {
+							...op,
+							x: 1 / op.x,
+							y: 1 / op.y,
+						},
 					};
 				});
 			}
 			case "scaleByTranslateBy": {
 				const op = this.operation;
-				const scaleTransformation = mapItemsByOperation(
-					this.transformation,
-					() => {
-						const scaleX = 1 / op.scale.x;
-						const scaleY = 1 / op.scale.y;
-						const translateX = -op.translate.x;
-						const translateY = -op.translate.y;
-						return {
+				const scaleTransformation = this.transformation.map(transformation => {
+					const scaleX = 1 / op.scale.x;
+					const scaleY = 1 / op.scale.y;
+					const translateX = -op.translate.x;
+					const translateY = -op.translate.y;
+					return {
+						item: transformation,
+						operation: {
 							...op,
 							scale: {
 								x: scaleX,
@@ -161,28 +166,31 @@ export class TransformationCommand implements Command {
 								x: translateX,
 								y: translateY,
 							},
-						};
-					},
-				);
+						},
+					};
+				});
 				return scaleTransformation;
 			}
 			// end @deprecated
 			case "rotateTo":
-				return mapItemsByOperation(
-					this.transformation,
-					transformation => {
-						return {
+				return this.transformation.map(transformation => {
+					return {
+						item: transformation,
+						operation: {
 							...this.operation,
 							degree: transformation.getRotation(),
-						};
-					},
-				);
+						},
+					};
+				});
 			case "rotateBy": {
 				const op = this.operation;
-				return mapItemsByOperation(this.transformation, () => {
+				return this.transformation.map(transformation => {
 					return {
-						...this.operation,
-						degree: -op.degree,
+						item: transformation,
+						operation: {
+							...this.operation,
+							degree: -op.degree,
+						},
 					};
 				});
 			}
@@ -221,23 +229,29 @@ export class TransformationCommand implements Command {
 			}
 			case "locked": {
 				const op = this.operation;
-				return mapItemsByOperation(this.transformation, () => {
+				return this.transformation.map(transformation => {
 					return {
-						...op,
-						item: [...op.item],
-						method: "unlocked",
-						locked: false,
+						item: transformation,
+						operation: {
+							...op,
+							item: [...op.item],
+							method: "unlocked",
+							locked: false,
+						},
 					};
 				});
 			}
 			case "unlocked": {
 				const op = this.operation;
-				return mapItemsByOperation(this.transformation, () => {
+				return this.transformation.map(transformation => {
 					return {
-						...op,
-						item: [...op.item],
-						method: "locked",
-						locked: true,
+						item: transformation,
+						operation: {
+							...op,
+							item: [...op.item],
+							method: "locked",
+							locked: true,
+						},
 					};
 				});
 			}

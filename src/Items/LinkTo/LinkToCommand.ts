@@ -1,7 +1,6 @@
 import { Command } from "../../Events";
 import { LinkTo } from "./LinkTo";
 import { LinkToOperation } from "./LinkToOperation";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class LinkToCommand implements Command {
 	private reverse: { item: LinkTo; operation: LinkToOperation }[];
@@ -31,10 +30,13 @@ export class LinkToCommand implements Command {
 	}[] {
 		switch (this.operation.method) {
 			case "setLinkTo":
-				return mapItemsByOperation(this.linkTo, linkTo => {
+				return this.linkTo.map(linkTo => {
 					return {
-						...this.operation,
-						link: linkTo.link,
+						item: linkTo,
+						operation: {
+							...this.operation,
+							link: linkTo.link,
+						},
 					};
 				});
 		}

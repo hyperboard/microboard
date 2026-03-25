@@ -1,7 +1,6 @@
 import { Frame } from "./Frame";
 import { FrameOperation } from "./FrameOperation";
 import { Command } from "../../Events";
-import { mapItemsByOperation } from "../ItemsCommandUtils";
 
 export class FrameCommand implements Command {
 	private reverse: { item: Frame; operation: FrameOperation }[];
@@ -29,48 +28,66 @@ export class FrameCommand implements Command {
 		const frame = this.frame;
 		switch (this.operation.method) {
 			case "setBackgroundColor":
-				return mapItemsByOperation(frame, frame => {
+				return frame.map(frame => {
 					return {
-						...this.operation,
-						backgroundColor: frame.getBackgroundColor(),
+						item: frame,
+						operation: {
+							...this.operation,
+							backgroundColor: frame.getBackgroundColor(),
+						},
 					};
 				});
 			case "setCanChangeRatio":
-				return mapItemsByOperation(frame, frame => {
+				return frame.map(frame => {
 					return {
-						...this.operation,
-						canChangeRatio: frame.getCanChangeRatio(),
+						item: frame,
+						operation: {
+							...this.operation,
+							canChangeRatio: frame.getCanChangeRatio(),
+						},
 					};
 				});
 			case "setFrameType":
-				return mapItemsByOperation(frame, () => {
+				return frame.map(frame => {
 					return {
-						...this.operation,
-						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-						// @ts-expect-error
-						shapeType: this.operation.prevShapeType,
+						item: frame,
+						operation: {
+							...this.operation,
+							// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+							// @ts-expect-error
+							shapeType: this.operation.prevShapeType,
+						},
 					};
 				});
 			case "addChild":
-				return mapItemsByOperation(frame, frame => {
+				return frame.map(frame => {
 					// REFACTOR add child to mapItems
 					return {
-						...this.operation,
-						children: frame.getChildrenIds(),
+						item: frame,
+						operation: {
+							...this.operation,
+							children: frame.getChildrenIds(),
+						},
 					};
 				});
 			case "removeChild":
-				return mapItemsByOperation(frame, frame => {
+				return frame.map(frame => {
 					return {
-						...this.operation,
-						children: frame.getChildrenIds(),
+						item: frame,
+						operation: {
+							...this.operation,
+							children: frame.getChildrenIds(),
+						},
 					};
 				});
 			case "addChildren":
 			case "removeChildren":
-				return mapItemsByOperation(frame, item => {
+				return frame.map(item => {
 					return {
-						...this.operation
+						item,
+						operation: {
+							...this.operation
+						},
 					};
 				});
 		}
