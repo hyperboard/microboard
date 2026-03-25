@@ -405,7 +405,36 @@ export class ForceGraphEngine {
 			ay.set(s2.id, (ay.get(s2.id) ?? 0) - fy);
 		}
 
-		// ── B. Repulsion — only within same connected component ───────────────
+		// ── B. Axis-alignment force ──────────────────────────────────────────
+		// For each edge, determine the dominant axis (horizontal vs vertical) and
+		// apply a restoring force that reduces the off-axis component, nudging
+		// connected nodes toward a clean H or V arrangement.
+		if (conf.FG_ALIGN_K > 0) {
+			for (const connector of this.getConnectors()) {
+				const { startItem, endItem } = connector.getConnectedItems();
+				if (!startItem || !endItem) continue;
+				const s1 = snapMap.get(startItem.getId());
+				const s2 = snapMap.get(endItem.getId());
+				if (!s1 || !s2) continue;
+
+				const dx = s2.cx - s1.cx;
+				const dy = s2.cy - s1.cy;
+
+				if (Math.abs(dx) >= Math.abs(dy)) {
+					// Horizontal dominant → reduce vertical offset
+					const fy = dy * conf.FG_ALIGN_K;
+					ay.set(s1.id, (ay.get(s1.id) ?? 0) + fy);
+					ay.set(s2.id, (ay.get(s2.id) ?? 0) - fy);
+				} else {
+					// Vertical dominant → reduce horizontal offset
+					const fx = dx * conf.FG_ALIGN_K;
+					ax.set(s1.id, (ax.get(s1.id) ?? 0) + fx);
+					ax.set(s2.id, (ax.get(s2.id) ?? 0) - fx);
+				}
+			}
+		}
+
+		// ── C. Repulsion — only within same connected component ───────────────
 		// fx = dx * R/distSq  ≡  (dx/dist) * R/dist  →  force magnitude ∝ 1/dist
 		for (let i = 0; i < snap.length; i++) {
 			for (let j = i + 1; j < snap.length; j++) {
@@ -431,7 +460,7 @@ export class ForceGraphEngine {
 			}
 		}
 
-		// ── C. Integrate: vx = (vx + fx) * DAMPING; x += vx  (implicit dt=1) ─
+		// ── D. Integrate: vx = (vx + fx) * DAMPING; x += vx  (implicit dt=1) ─
 		let totalEnergy = 0;
 
 		for (const item of allNodes) {
@@ -465,7 +494,7 @@ export class ForceGraphEngine {
 			}
 		}
 
-		// ── D. Sleep when settled ─────────────────────────────────────────────
+		// ── E. Sleep when settled ─────────────────────────────────────────────
 		if (totalEnergy < conf.FG_SLEEP_THRESHOLD && this.tickTimer !== null) {
 			this.stopTimers();
 			this.syncPositions();
