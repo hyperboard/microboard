@@ -74,13 +74,23 @@ jobs:
   notify-ui:
     runs-on: ubuntu-latest
     needs: publish
+    env:
+      TARGET_REPOSITORY: ${{ vars.UI_REPOSITORY }}
+      DISPATCH_TOKEN: ${{ secrets.UI_REPOSITORY_DISPATCH_TOKEN }}
     steps:
+      - name: Skip UI notification when configuration is missing
+        if: ${{ env.TARGET_REPOSITORY == '' || env.DISPATCH_TOKEN == '' }}
+        run: |
+          echo "Skipping UI repository notification."
+          echo "Expected UI_REPOSITORY and UI_REPOSITORY_DISPATCH_TOKEN to be configured."
+
       - name: Notify UI repository about published version
+        if: ${{ env.TARGET_REPOSITORY != '' && env.DISPATCH_TOKEN != '' }}
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.UI_REPOSITORY_DISPATCH_TOKEN }}
+          github-token: ${{ env.DISPATCH_TOKEN }}
           script: |
-            const [owner, repo] = "${{ vars.UI_REPOSITORY }}".split("/");
+            const [owner, repo] = "${{ env.TARGET_REPOSITORY }}".split("/");
 
             if (!owner || !repo) {
               core.setFailed("Repository variable UI_REPOSITORY must be set as owner/repo.");
@@ -105,13 +115,23 @@ jobs:
   notify-backend:
     runs-on: ubuntu-latest
     needs: publish
+    env:
+      TARGET_REPOSITORY: ${{ vars.BACKEND_REPOSITORY }}
+      DISPATCH_TOKEN: ${{ secrets.BACKEND_REPOSITORY_DISPATCH_TOKEN }}
     steps:
+      - name: Skip backend notification when configuration is missing
+        if: ${{ env.TARGET_REPOSITORY == '' || env.DISPATCH_TOKEN == '' }}
+        run: |
+          echo "Skipping backend repository notification."
+          echo "Expected BACKEND_REPOSITORY and BACKEND_REPOSITORY_DISPATCH_TOKEN to be configured."
+
       - name: Notify backend repository about published version
+        if: ${{ env.TARGET_REPOSITORY != '' && env.DISPATCH_TOKEN != '' }}
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.BACKEND_REPOSITORY_DISPATCH_TOKEN }}
+          github-token: ${{ env.DISPATCH_TOKEN }}
           script: |
-            const [owner, repo] = "${{ vars.BACKEND_REPOSITORY }}".split("/");
+            const [owner, repo] = "${{ env.TARGET_REPOSITORY }}".split("/");
 
             if (!owner || !repo) {
               core.setFailed("Repository variable BACKEND_REPOSITORY must be set as owner/repo.");

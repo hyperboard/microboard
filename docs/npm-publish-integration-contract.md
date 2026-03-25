@@ -32,6 +32,8 @@ Event contract:
 
 The notifications are sent by the `notify-ui` and `notify-backend` jobs, both of which depend on the `publish` job.
 
+If a downstream repository variable or dispatch token is not configured, the corresponding notification job logs a skip notice and does not fail the publish workflow.
+
 ## Payload sent to downstream repositories
 
 Both downstream repositories receive the same `client_payload` object:
@@ -96,7 +98,7 @@ Recommended token types:
 
 ## Required GitHub secrets and variables
 
-This repository must define the following configuration for cross-repository communication.
+This repository should define the following configuration for cross-repository communication.
 
 ### Repository variables
 
@@ -123,8 +125,8 @@ Use this checklist whenever setting up or auditing this repository's release int
 - Confirm `trunk` is the only branch configured to trigger the publish workflow.
 - Confirm npm trusted publishing is configured for this repository and `.github/workflows/npm-publish.yml`.
 - Confirm GitHub Actions workflow permissions include `id-token: write`.
-- Confirm `UI_REPOSITORY` and `BACKEND_REPOSITORY` repository variables are present and use `owner/repo` format.
-- Confirm `UI_REPOSITORY_DISPATCH_TOKEN` and `BACKEND_REPOSITORY_DISPATCH_TOKEN` secrets exist.
+- Confirm `UI_REPOSITORY` and `BACKEND_REPOSITORY` repository variables are present and use `owner/repo` format if downstream notifications are expected.
+- Confirm `UI_REPOSITORY_DISPATCH_TOKEN` and `BACKEND_REPOSITORY_DISPATCH_TOKEN` secrets exist if downstream notifications are expected.
 - Confirm each dispatch token has `Contents: write` on its target repository and no broader scope than necessary.
 - Confirm UI and backend repositories each listen for `repository_dispatch` with type `microboard_published`.
 - Confirm UI and backend staging automation consumes `github.event.client_payload.version`.
