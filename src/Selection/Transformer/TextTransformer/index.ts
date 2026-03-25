@@ -1,1 +1,0 @@
-export { getTextResizeType } from "./getTextResizeType";

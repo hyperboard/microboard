@@ -9,7 +9,7 @@ import { ShapeOperation } from "Items/Shape/ShapeOperation";
 import { DrawingOperation } from "Items/Drawing/DrawingOperation";
 
 // TODO API Conditional to Map
-export function canNotBeMerged(op: Operation): boolean {
+function canNotBeMerged(op: Operation): boolean {
   if (op.class === "Transformation") {
     return false;
   }

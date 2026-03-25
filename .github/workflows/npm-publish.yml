@@ -15,6 +15,7 @@ jobs:
     outputs:
       version: ${{ steps.version-bump.outputs.newTag }}
       package_name: ${{ steps.package-metadata.outputs.package_name }}
+      published_at: ${{ steps.publish-metadata.outputs.published_at }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -66,6 +67,10 @@ jobs:
           npm install -g npm@latest
           npm publish --provenance
 
+      - name: Capture publish metadata
+        id: publish-metadata
+        run: echo "published_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
   notify-ui:
     runs-on: ubuntu-latest
     needs: publish
@@ -90,7 +95,40 @@ jobs:
                 package_name: "${{ needs.publish.outputs.package_name }}",
                 version: "${{ needs.publish.outputs.version }}",
                 source_repository: "${{ github.repository }}",
+                source_ref: "${{ github.ref_name }}",
                 source_sha: "${{ github.sha }}",
-                workflow: "${{ github.workflow }}"
+                workflow: "${{ github.workflow }}",
+                published_at: "${{ needs.publish.outputs.published_at }}"
+              }
+            });
+
+  notify-backend:
+    runs-on: ubuntu-latest
+    needs: publish
+    steps:
+      - name: Notify backend repository about published version
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.BACKEND_REPOSITORY_DISPATCH_TOKEN }}
+          script: |
+            const [owner, repo] = "${{ vars.BACKEND_REPOSITORY }}".split("/");
+
+            if (!owner || !repo) {
+              core.setFailed("Repository variable BACKEND_REPOSITORY must be set as owner/repo.");
+              return;
+            }
+
+            await github.rest.repos.createDispatchEvent({
+              owner,
+              repo,
+              event_type: "microboard_published",
+              client_payload: {
+                package_name: "${{ needs.publish.outputs.package_name }}",
+                version: "${{ needs.publish.outputs.version }}",
+                source_repository: "${{ github.repository }}",
+                source_ref: "${{ github.ref_name }}",
+                source_sha: "${{ github.sha }}",
+                workflow: "${{ github.workflow }}",
+                published_at: "${{ needs.publish.outputs.published_at }}"
               }
             });

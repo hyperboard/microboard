@@ -32,10 +32,10 @@ function getBooleanParam(searchParam: string, defaultValue: boolean): boolean {
 
 type PanelType = "titlePanel" | "userPanel";
 /** Tries to find panel in search param, returns default value if not found */
-export function shouldShow(panel: PanelType): boolean {
+function shouldShow(panel: PanelType): boolean {
   return getBooleanParam(panel, true);
 }
 
-export function isTemplateView(): boolean {
+function isTemplateView(): boolean {
   return getBooleanParam("isTemplateView", false);
 }

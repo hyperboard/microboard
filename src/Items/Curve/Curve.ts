@@ -6,7 +6,7 @@ import { Point } from "../Point/Point";
 import { Matrix } from "../Transformation/Matrix";
 import { GeometricNormal } from '../GeometricNormal';
 
-export class BaseCurve {
+class BaseCurve {
 	constructor(public curve: any) {} // TODO: Use Bezier type from @types/bezier-js once installed
 
 	protected updateCache(curve: any): void {

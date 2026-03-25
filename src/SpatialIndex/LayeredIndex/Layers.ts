@@ -53,7 +53,7 @@ export class Layers<Layer> {
 	}
 }
 
-export class MapLayers<Layer> {
+class MapLayers<Layer> {
 	private layers: Map<number, Layer> = new Map();
 	private top = 0;
 	private bottom = 0;

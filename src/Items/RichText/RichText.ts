@@ -51,11 +51,11 @@ import type { SerializedItemData } from "../BaseItem/BaseItem";
 
 let isEditInProcessValue = false;
 
-export function isEditInProcess(): boolean {
+function isEditInProcess(): boolean {
   return isEditInProcessValue;
 }
 
-export function toggleEdit(value: boolean): void {
+function toggleEdit(value: boolean): void {
   isEditInProcessValue = value;
 }
 

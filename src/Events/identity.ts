@@ -16,7 +16,7 @@ export function getBoardEventSessionId(body: EventIdentityBody): string | undefi
   return String(body.userId);
 }
 
-export function getBoardEventAuthorUserId(body: EventIdentityBody): string | undefined {
+function getBoardEventAuthorUserId(body: EventIdentityBody): string | undefined {
   return body.authorUserId;
 }
 

@@ -9,7 +9,6 @@ export * from "./Subject";
 export * from "./Camera";
 export * from "./Pointer";
 export * from "./Presence";
-export * from "./ReversibleOps";
 export * from "./Selection";
 export * from "./SessionStorage";
 export * from "./Validators";

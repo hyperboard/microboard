@@ -2,17 +2,17 @@ import { DrawingContext } from 'Items/DrawingContext';
 import { Mbr } from '../Mbr/Mbr';
 import { Point } from '../Point/Point';
 
-export const ANCHOR_BORDER_COLOR = 'rgb(147, 175, 246)';
-export const ANCHOR_BACKGROUND_COLOR = 'rgb(255, 255, 255)';
-export const ANCHOR_STROKE_WIDTH = 1;
-export const ANCHOR_RADIUS = 50;
+const ANCHOR_BORDER_COLOR = 'rgb(147, 175, 246)';
+const ANCHOR_BACKGROUND_COLOR = 'rgb(255, 255, 255)';
+const ANCHOR_STROKE_WIDTH = 1;
+const ANCHOR_RADIUS = 50;
 
 type Center = {
 	x: number;
 	y: number;
 };
 
-export function renderAnchor(
+function renderAnchor(
 	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 	center: Center,
 	width: number,
@@ -45,7 +45,7 @@ export function renderAnchor(
 	ctx.closePath();
 }
 
-export function renderCircleAnchor(
+function renderCircleAnchor(
 	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 	center: Center,
 	radius: number,

@@ -42,7 +42,7 @@ export class EventsCommand implements Command {
 	}
 }
 
-export const EventsOperationHandlers: Record<
+const EventsOperationHandlers: Record<
 	string,
 	(board: Board, operation: EventsOperation) => void | false
 > = {};

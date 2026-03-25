@@ -30,7 +30,7 @@ function getOperationsFromEventRecords(
 	}));
 }
 
-export function combineOperationsIntoPack(
+function combineOperationsIntoPack(
 	baseEvent: BoardEvent,
 	operations: (Operation & { actualId: string })[],
 ): BoardEventPack {

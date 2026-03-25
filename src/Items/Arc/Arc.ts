@@ -59,7 +59,7 @@ function getArcIntersectionPoints(segment: Line, arc: Arc): Point[] {
 	return points;
 }
 
-export class ArcData {}
+class ArcData {}
 
 // See https://stackoverflow.com/questions/6729056/mapping-svg-arcto-to-html-canvas-arcto
 // TODO

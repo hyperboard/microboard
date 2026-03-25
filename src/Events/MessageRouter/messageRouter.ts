@@ -1,6 +1,7 @@
 import {
 	AiChatMsg,
 	BoardEventMsg,
+	WireBoardSubscriptionCompletedMsg,
 	ConfirmationMsg,
 	ModeMsg,
 	PresenceEventMsg,
@@ -19,7 +20,10 @@ import { handlePresenceEventMessage, handleUserJoinMessage } from './handlePrese
 export const messageRouter = createMessageRouter();
 
 messageRouter.addHandler<BoardEventMsg>('BoardEvent', handleBoardEventMessage);
-messageRouter.addHandler('BoardSubscriptionCompleted', handleBoardSubscriptionCompletedMsg);
+messageRouter.addHandler<WireBoardSubscriptionCompletedMsg>(
+	'BoardSubscriptionCompleted',
+	handleBoardSubscriptionCompletedMsg
+);
 messageRouter.addHandler<ConfirmationMsg>('Confirmation', handleConfirmation);
 
 messageRouter.addHandler<SnapshotRequestMsg>(

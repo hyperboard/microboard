@@ -590,7 +590,7 @@ function findPathPoints(
 /**
  * Removes points from centerLine that will probably be visited twice or lengthen the path
  */
-export function removeUnnecessaryPoints(
+function removeUnnecessaryPoints(
 	pathToCenterLine: Point[],
 	centerLine: Point[],
 	fromStart: boolean
