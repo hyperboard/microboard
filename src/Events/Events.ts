@@ -237,6 +237,17 @@ export class Events {
 		return op.method;
 	}
 
+	/**
+	 * Synchronizes the identity of all unconfirmed local events with the current connection state.
+	 * Call this after a successful token refresh or when falling back to an anonymous session
+	 * to ensure pending operations are sent with the correct session and user IDs.
+	 */
+	refreshIdentity(): void {
+		const sessionId = this.getSessionId();
+		const authorUserId = this.getAuthorUserId();
+		this.log.refreshUnconfirmedIdentity(sessionId, authorUserId);
+	}
+
 	private getSessionId(): string {
 		return getConnectionSessionId(this.connection);
 	}

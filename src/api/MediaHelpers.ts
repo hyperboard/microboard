@@ -1,19 +1,18 @@
 import {conf} from "Settings";
+import { authenticatedFetch } from "./AuthRequest";
 
 const uploadSvgDirectly = async (
   blob: Blob,
-  accessToken: string | null,
   boardId: string,
   baseUrl?: string,
 ): Promise<string> => {
-  const response = await fetch(`${baseUrl || ""}/svg/${boardId}`, {
+  const response = await authenticatedFetch(`${baseUrl || ""}/svg/${boardId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'image/svg+xml',
-      'Authorization': `Bearer ${accessToken}`,
     },
     body: blob,
-  });
+  }, boardId);
 
   if (!response.ok) {
     conf.hooks.onUploadMediaError(response, 'image');
@@ -30,23 +29,21 @@ const uploadSvgDirectly = async (
 
 const uploadWithPresignedUrl = async (
   blob: Blob,
-  accessToken: string | null,
   boardId: string,
   type: "video" | "audio" | "image",
   baseUrl?: string
 ): Promise<string> => {
-  const generateUrlResponse = await fetch(`${baseUrl || ""}/media/upload`, {
+  const generateUrlResponse = await authenticatedFetch(`${baseUrl || ""}/media/upload`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
       fileSize: blob.size,
       fileType: blob.type,
       boardId: boardId,
     }),
-  });
+  }, boardId);
 
   if (!generateUrlResponse.ok) {
     conf.hooks.onUploadMediaError(generateUrlResponse, type);
@@ -78,16 +75,15 @@ const uploadWithPresignedUrl = async (
 
 export const uploadMediaToStorage = async (
   blob: Blob,
-  accessToken: string | null,
   boardId: string,
   type: "video" | "audio" | "image",
   baseUrl?: string,
 ): Promise<string> => {
   try {
     if (blob.type === 'image/svg+xml') {
-      return await uploadSvgDirectly(blob, accessToken, boardId, baseUrl);
+      return await uploadSvgDirectly(blob, boardId, baseUrl);
     } else {
-      return await uploadWithPresignedUrl(blob, accessToken, boardId, type, baseUrl);
+      return await uploadWithPresignedUrl(blob, boardId, type, baseUrl);
     }
   } catch (error) {
     console.error('Media upload process error:', error);
@@ -115,7 +111,7 @@ function getAccessTypeFromUrl(url: string) {
   return null;
 }
 
-export const getMediaSignedUrl = async (url: string, accessToken: string | null): Promise<string | null> => {
+export const getMediaSignedUrl = async (url: string): Promise<string | null> => {
   const accessType = getAccessTypeFromUrl(url);
   if (!accessType) {
     //TODO support old urls
@@ -126,16 +122,9 @@ export const getMediaSignedUrl = async (url: string, accessToken: string | null)
     return url;
   }
 
-  if (!accessToken) {
-    return null;
-  }
-
   try {
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
     });
 
     if (!response.ok) {

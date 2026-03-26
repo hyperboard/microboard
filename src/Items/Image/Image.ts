@@ -122,7 +122,7 @@ export class ImageItem extends BaseItem<ImageItem> {
 
   async setStorageLink(link: string) {
     this.storageLink = link;
-    this.signedUrl = await getMediaSignedUrl(link, this.board.getAccount()?.accessToken || null) || "";
+    this.signedUrl = await getMediaSignedUrl(link) || "";
     if (!this.signedUrl) {
       const canvas = conf.documentFactory.createElement("canvas") as HTMLCanvasElement;
       canvas.width = 100;

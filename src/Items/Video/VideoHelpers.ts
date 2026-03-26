@@ -45,7 +45,6 @@ export const createVideoItem = (
 
 export const prepareVideo = (
 	file: File,
-	accessToken: string | null,
 	boardId: string,
 	baseUrl?: string
 ): Promise<{
@@ -58,9 +57,9 @@ export const prepareVideo = (
 		video.onloadedmetadata = () => {
 			video.onseeked = () => {
 				video.onseeked = null;
-				prepareImage(captureFrame(0.1, video)?.src, accessToken, boardId, baseUrl)
+				prepareImage(captureFrame(0.1, video)?.src, boardId, baseUrl)
 					.then(imageData => {
-						uploadMediaToStorage(file, accessToken, boardId, "video", baseUrl)
+						uploadMediaToStorage(file, boardId, "video", baseUrl)
 							.then(url => {
 								resolve({
 									url,

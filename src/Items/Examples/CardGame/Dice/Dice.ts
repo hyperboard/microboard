@@ -98,7 +98,7 @@ export class Dice extends BaseItem<Dice> {
         this.renderValues[index] = value;
       } else {
         const image = conf.documentFactory.createElement("img") as HTMLImageElement;
-        image.src = await getMediaSignedUrl(value, this.board.getAccount()?.accessToken || null) || "";
+        image.src = await getMediaSignedUrl(value) || "";
         this.renderValues[index] = image;
         image.onload = () => {
           this.subject.publish(this);

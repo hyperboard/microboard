@@ -162,7 +162,7 @@ export class Screen extends BaseItem<Screen> {
     this.backgroundUrl = url || "";
     if (url) {
       this.backgroundImage = conf.documentFactory.createElement("img") as HTMLImageElement;
-      this.backgroundImage.src = await getMediaSignedUrl(url, this.board.getAccount()?.accessToken || null) || "";
+      this.backgroundImage.src = await getMediaSignedUrl(url) || "";
       this.applyBackgroundColor("none");
       this.backgroundImage.onload = () => {
         this.subject.publish(this);

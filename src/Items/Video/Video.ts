@@ -207,7 +207,7 @@ export class VideoItem extends BaseItem<VideoItem> {
   async setPreviewUrl(url: string): Promise<void> {
     if (this.isStorageUrl) {
       try {
-        this.preview.src = await getMediaSignedUrl(url, this.board.getAccount()?.accessToken || null) || "";
+        this.preview.src = await getMediaSignedUrl(url) || "";
       } catch (err) {
         console.error(err);
         this.onError();

@@ -94,8 +94,8 @@ export class Card extends BaseItem<Card> {
     this.backside = conf.documentFactory.createElement(
       "img",
     ) as HTMLImageElement;
-    this.face.src = await getMediaSignedUrl(this.faceUrl, this.board.getAccount()?.accessToken || null) || "";
-    this.backside.src = await getMediaSignedUrl(this.backsideUrl, this.board.getAccount()?.accessToken || null) || "";
+    this.face.src = await getMediaSignedUrl(this.faceUrl) || "";
+    this.backside.src = await getMediaSignedUrl(this.backsideUrl) || "";
     this.face.onload = () => {
       this.subject.publish(this);
     };

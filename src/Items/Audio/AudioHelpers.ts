@@ -5,7 +5,6 @@ import {uploadMediaToStorage} from "api/MediaHelpers";
 
 export const prepareAudio = (
 	file: File,
-	accessToken: string | null,
 	boardId: string,
 	baseUrl?: string
 ): Promise<string> => {
@@ -13,7 +12,7 @@ export const prepareAudio = (
 		const audio = document.createElement('audio');
 		audio.src = URL.createObjectURL(file);
 		audio.onloadedmetadata = () => {
-			uploadMediaToStorage(file, accessToken, boardId, "audio", baseUrl)
+			uploadMediaToStorage(file, boardId, "audio", baseUrl)
 				.then(url => {
 					resolve(url);
 				})

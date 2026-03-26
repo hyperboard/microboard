@@ -114,13 +114,12 @@ export const resizeAndConvertToPng = async (
  */
 export const prepareImage = (
 	inp: string | ArrayBuffer | null | undefined,
-	accessToken: string | null,
 	boardId: string,
 	baseUrl?: string
 ): Promise<ImageConstructorData> =>
 	resizeAndConvertToPng(inp).then(({ width, height, dataURL, hash }) => {
 		const {blob, mimeType} = getBlobFromDataURL(dataURL);
-		return uploadMediaToStorage(blob, accessToken, boardId, "image", baseUrl).then(src => {
+		return uploadMediaToStorage(blob, boardId, "image", baseUrl).then(src => {
 			return {
 				imageDimension: { width, height },
 				base64: dataURL,

@@ -122,6 +122,8 @@ type GetDocumentWidthFunction = () => number;
 type GetDocumentHeightFunction = () => number;
 type GetDPIFunction = () => number;
 type GetYouTubeIdFunction = (url?: string) => string | null;
+type OnAuthInvalidFunction = (boardId?: string) => Promise<boolean>;
+type OnAuthTerminalFailureFunction = (boardId?: string, reason?: string) => void;
 type GetDOMParser = () => {
   parseFromString: (str: string, type: DOMParserSupportedType) => Document;
 };
@@ -173,6 +175,13 @@ export const conf = {
 
   reactEditorFocus: (() => {}) as ReactEditorFocus,
   reactEditorToSlatePoint: (() => null) as ReactEditorToSlatePoint,
+
+  /**
+   * Coordination hooks for authentication and connection state.
+   * UI repository should implement these to handle token refresh and terminal failure.
+   */
+  onAuthInvalid: (async () => false) as OnAuthInvalidFunction,
+  onAuthTerminalFailure: (() => {}) as OnAuthTerminalFailureFunction,
 
   planNames: {
     basic: "Basic",
