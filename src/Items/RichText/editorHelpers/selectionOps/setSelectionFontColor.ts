@@ -1,4 +1,4 @@
-import { Editor } from 'slate';
+import { Editor, Range, Text, Transforms } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 import type { ColorValue } from 'Color';
@@ -14,7 +14,18 @@ export function setSelectionFontColor(
 	}
 
 	if (marks.fontColor !== format) {
-		Editor.addMark(editor, 'fontColor', format);
+		if (editor.selection && Range.isExpanded(editor.selection)) {
+			(Transforms.setNodes as any)(
+				editor,
+					{ fontColor: format },
+					{
+						match: n => Text.isText(n),
+						split: true,
+					}
+			);
+		} else {
+			Editor.addMark(editor, 'fontColor', format);
+		}
 	}
 
 	if (selectionContext === 'EditTextUnderPointer') {

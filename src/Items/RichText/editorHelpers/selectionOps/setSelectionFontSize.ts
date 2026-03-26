@@ -1,4 +1,4 @@
-import { Editor, Transforms } from 'slate';
+import { Editor, Range, Text, Transforms } from 'slate';
 import { getAllTextNodesInSelection } from 'Items/RichText/editorHelpers/common/getAllTextNodesInSelection';
 import { getParagraphWithPassedTextNode } from 'Items/RichText/editorHelpers/common/getParagraph';
 import { ReactEditor } from 'slate-react';
@@ -49,7 +49,18 @@ export function setSelectionFontSize(
 				shouldUpdateElement = true;
 			}
 		} else {
-			Editor.addMark(editor, 'fontSize', size);
+			if (editor.selection && Range.isExpanded(editor.selection)) {
+				(Transforms.setNodes as any)(
+					editor,
+					{ fontSize: size },
+					{
+						match: n => Text.isText(n),
+						split: true,
+					}
+				);
+			} else {
+				Editor.addMark(editor, 'fontSize', size);
+			}
 		}
 	}
 

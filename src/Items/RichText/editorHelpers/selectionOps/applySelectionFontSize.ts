@@ -1,4 +1,4 @@
-import { Editor, Transforms } from 'slate';
+import { Editor, Range, Text, Transforms } from 'slate';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 
 export function applySelectionFontSize(
@@ -26,7 +26,18 @@ export function applySelectionFontSize(
 			focus: Editor.end(editor, []),
 		});
 	}
-	Editor.addMark(editor, 'fontSize', size);
+	if (editor.selection && Range.isExpanded(editor.selection)) {
+		(Transforms.setNodes as any)(
+			editor,
+			{ fontSize: size },
+			{
+				match: n => Text.isText(n),
+				split: true,
+			}
+		);
+	} else {
+		Editor.addMark(editor, 'fontSize', size);
+	}
 
 	if (selectionContext === 'EditTextUnderPointer') {
 		// ReactEditor.focus(editor);
