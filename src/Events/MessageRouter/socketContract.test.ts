@@ -6,7 +6,6 @@ import {
 	parseOperation,
 	parseSocketMsg,
 	SocketOperationSchema,
-	TemplateConnectResponseSchema,
 } from "./socketContract";
 
 describe("socketContract", () => {
@@ -141,15 +140,6 @@ describe("socketContract", () => {
 		expect(parsed.accessMode).toBe("edit");
 	});
 
-	test("parses template websocket handshake responses", () => {
-		const parsed = TemplateConnectResponseSchema.parse({
-			wsUrl: "wss://example.com/api/v1/templates/template-1/ws?token=jwt",
-			jwt: "jwt",
-			userId: "user-1",
-		});
-
-		expect(parsed.userId).toBe("user-1");
-	});
 
 	test("parses pong replies", () => {
 		const parsed = parseSocketMsg({

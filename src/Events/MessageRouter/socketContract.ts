@@ -1386,13 +1386,6 @@ export const BoardWsHandshakeJwtPayloadSchema = z
 	})
 	.strict();
 
-export const TemplateWsHandshakeJwtPayloadSchema = z
-	.object({
-		templateId: z.string(),
-		connectionType: z.literal("template"),
-		isWsToken: z.literal(true),
-	})
-	.strict();
 
 export const BoardConnectResponseSchema = z
 	.object({
@@ -1404,13 +1397,6 @@ export const BoardConnectResponseSchema = z
 	})
 	.strict();
 
-export const TemplateConnectResponseSchema = z
-	.object({
-		wsUrl: z.string(),
-		jwt: z.string(),
-		userId: z.string(),
-	})
-	.strict();
 
 export type SocketContractAuthMsg = z.infer<typeof AuthMsgSchema>;
 export type SocketContractLogoutMsg = z.infer<typeof LogoutMsgSchema>;
@@ -1479,14 +1465,8 @@ export type SocketContractAccessMode = z.infer<typeof AccessModeSchema>;
 export type SocketContractBoardWsHandshakeJwtPayload = z.infer<
 	typeof BoardWsHandshakeJwtPayloadSchema
 >;
-export type SocketContractTemplateWsHandshakeJwtPayload = z.infer<
-	typeof TemplateWsHandshakeJwtPayloadSchema
->;
 export type SocketContractBoardConnectResponse = z.infer<
 	typeof BoardConnectResponseSchema
->;
-export type SocketContractTemplateConnectResponse = z.infer<
-	typeof TemplateConnectResponseSchema
 >;
 
 export function parseSocketMsg(data: unknown): SocketContractSocketMsg {
@@ -1511,11 +1491,6 @@ export function parseBoardConnectResponse(
 	return BoardConnectResponseSchema.parse(data);
 }
 
-export function parseTemplateConnectResponse(
-	data: unknown
-): SocketContractTemplateConnectResponse {
-	return TemplateConnectResponseSchema.parse(data);
-}
 
 export function normalizeBoardSnapshot(
 	data: unknown

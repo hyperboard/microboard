@@ -25,8 +25,6 @@ import type {
 	SocketContractPresenceEventMsg,
 	SocketContractSnapshotRequestMsg,
 	SocketContractSubscribeMsg,
-	SocketContractTemplateConnectResponse,
-	SocketContractTemplateWsHandshakeJwtPayload,
 	SocketContractUnsubscribeMsg,
 	SocketContractUserJoinMsg,
 	SocketContractVersionCheckMsg,
@@ -45,11 +43,8 @@ export type PingMsg = SocketContractPingMsg;
 export type PongMsg = SocketContractPongMsg;
 export type BoardAccessDeniedMsg = SocketContractBoardAccessDeniedMsg;
 export type BoardConnectResponse = SocketContractBoardConnectResponse;
-export type TemplateConnectResponse = SocketContractTemplateConnectResponse;
 export type BoardWsHandshakeJwtPayload =
 	SocketContractBoardWsHandshakeJwtPayload;
-export type TemplateWsHandshakeJwtPayload =
-	SocketContractTemplateWsHandshakeJwtPayload;
 export type BoardSubscriptionCompletedMsg = Omit<
 	SocketContractNormalizedBoardSubscriptionCompletedMsg,
 	"JSONSnapshot" | "eventsSinceLastSnapshot"

@@ -63,36 +63,7 @@ export interface NotifyFunction {
  */
 export type DrawingTool = "Pen" | "Eraser" | "Highlighter";
 
-/**
- * Template categories as a literal union.
- */
-export type TemplateCategory =
-  | "All templates"
-  | "Research & Analysis"
-  | "Diagramming"
-  | "Meeting & Workshop"
-  | "Strategy & Planning"
-  | "Brainstorming"
-  | "Agile Workflow"
-  | "Icebreaker & Game"
-  | "Education";
 
-/**
- * Template language definition.
- */
-export interface TemplateLanguage {
-  value: "ru" | "en" | "de" | "es" | "fr" | "zh";
-  label: string;
-}
-
-export interface Template {
-  id: string;
-  preview: string;
-  languages: string[];
-  tags: string[];
-  name: string;
-  created: string;
-}
 
 export enum ExportQuality {
   HIGH,
@@ -405,25 +376,6 @@ export const conf = {
   ERASER_DEFAULT_COLOR: "rgba(222, 224, 227, 0.5)",
   ERASER_MAX_LINE_LENGTH: 12,
 
-  // Template settings
-  TEMPLATE_CATEGORIES: [
-    "Research & Analysis",
-    "Diagramming",
-    "Meeting & Workshop",
-    "Strategy & Planning",
-    "Brainstorming",
-    "Agile Workflow",
-    "Icebreaker & Game",
-    "Education",
-  ],
-  TEMPLATE_LANGUAGES: [
-    { value: "ru", label: "Russian" },
-    { value: "en", label: "English" },
-    { value: "de", label: "German" },
-    { value: "es", label: "Spanish" },
-    { value: "fr", label: "French" },
-    { value: "zh", label: "Chinese" },
-  ],
   CANVAS_BG_COLOR: "#f6f6f6",
   URL_REGEX: /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i,
   AI_NODE_DEFAULT_NODE_WIDTH: 640,
