@@ -153,6 +153,24 @@ export class EventsLog {
 		}
 		return records[records.length - 1].event;
 	}
+
+	refreshUnconfirmedIdentity(sessionId: string, authorUserId?: string): void {
+		const records = [
+			...this.list.getRecordsToSend(),
+			...this.list.getNewRecords(),
+		];
+
+		for (const record of records) {
+			record.event.body.sessionId = sessionId;
+			record.event.body.userId = sessionId;
+			record.event.body.authorUserId = authorUserId;
+		}
+
+		if (this.pendingEvent) {
+			this.pendingEvent = null;
+			this.firstSentTime = null;
+		}
+	}
 }
 
 export function createEventsLog(board: Board, commandFactory: (ops: Operation) => Command): EventsLog {

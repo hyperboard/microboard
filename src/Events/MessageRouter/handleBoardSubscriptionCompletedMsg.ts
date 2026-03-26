@@ -1,6 +1,7 @@
 import {Board, BoardSnapshot} from "Board";
 import { conf } from "Settings";
 import { BoardEventPack, SyncBoardEvent, SyncEvent } from "../Events";
+import { getConnectionAuthorUserId, getConnectionSessionId } from "../identity";
 import {
 	BoardSubscriptionCompletedMsg,
 	WireBoardSubscriptionCompletedMsg,
@@ -50,11 +51,11 @@ function handleSeqNumApplication(
   board: Board
 ): void {
   const { log } = board.events;
+  const sessionId = getConnectionSessionId(board.events.connection);
+  const authorUserId = getConnectionAuthorUserId(board.events.connection);
 
+  log.refreshUnconfirmedIdentity(sessionId, authorUserId);
   log.currentSequenceNumber = initialSequenceNumber;
-  if (log.pendingEvent) {
-    log.pendingEvent.sequenceNumber = log.currentSequenceNumber;
-  }
   startIntervals(board);
 }
 
