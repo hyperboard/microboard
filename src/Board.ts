@@ -368,6 +368,7 @@ export class Board {
       const itemCenter = item.getMbr().getCenter();
       const groupItem = this.items
         .getGroupItemsInView()
+        .filter((groupItem) => groupItem !== item)
         .filter((groupItem) => groupItem.handleNesting(item))
         .reduce((acc: BaseItem | undefined, groupItem) => {
           if (
