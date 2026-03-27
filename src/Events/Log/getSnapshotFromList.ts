@@ -6,7 +6,7 @@ export function getSnapshotFromList(list: any, board: any) {
   const snapshot = {
     events: list.getConfirmedRecords().map((record: any) => record.event),
     items: board.serialize(),
-    lastIndex: list.getLastIndex(),
+    lastIndex: getLastIndexFromList(list),
   };
   list.applyUnconfirmed();
   return snapshot;
