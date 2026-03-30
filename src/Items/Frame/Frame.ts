@@ -8,6 +8,7 @@ import type { Item } from "../Item";
 import { RichText } from "../RichText/RichText";
 import { Matrix } from "../Transformation/Matrix";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
+import { BaseItem } from "../BaseItem/BaseItem";
 import {Subject} from "Subject";
 import {DrawingContext} from "../DrawingContext";
 import {Operation} from "Events";
@@ -180,6 +181,28 @@ export class Frame extends BaseItem<Frame> {
   //     childId,
   //   });
   // }
+
+  addChildItems(children: BaseItem[]): void {
+    if (!this.index || children.length === 0) return;
+    this.emit({
+      class: this.itemType,
+      method: "addChildren",
+      item: [this.getId()],
+      childId: children.map((child) => child.getId()),
+    });
+  }
+
+  removeChildItems(children: BaseItem[] | BaseItem): void {
+    if (!this.index) return;
+    const childrenArr = Array.isArray(children) ? children : [children];
+    if (childrenArr.length === 0) return;
+    this.emit({
+      class: this.itemType,
+      method: "removeChildren",
+      item: [this.getId()],
+      childId: childrenArr.map((child) => child.getId()),
+    });
+  }
 
   getLinkTo(): string | undefined {
     return this.linkTo.link;
