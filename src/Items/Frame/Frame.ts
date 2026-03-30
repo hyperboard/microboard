@@ -493,6 +493,19 @@ export class Frame extends BaseItem<Frame> {
   }
 
   apply(op: Operation): void {
+    // Handle Frame children ops here (before super) to avoid BaseItem reading
+    // the wrong field — Frame uses childId[], BaseItem expects newData.childIds.
+    if (op.class === "Frame") {
+      if (op.method === "addChildren" || op.method === "addChild") {
+        this.applyAddChildren(op.childId);
+        this.subject.publish(this);
+        return;
+      } else if (op.method === "removeChildren" || op.method === "removeChild") {
+        this.applyRemoveChildren(op.childId);
+        this.subject.publish(this);
+        return;
+      }
+    }
     super.apply(op)
     switch (op.class) {
       case "Frame":
@@ -502,10 +515,6 @@ export class Frame extends BaseItem<Frame> {
           this.applyCanChangeRatio(op.canChangeRatio);
         } else if (op.method === "setFrameType") {
           this.applyFrameType(op.shapeType);
-        } else if (op.method === "addChild") {
-          this.applyAddChildren(op.childId);
-        } else if (op.method === "removeChild") {
-          this.applyRemoveChildren(op.childId);
         }
         break;
       case "RichText":
