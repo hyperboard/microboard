@@ -519,7 +519,8 @@ export class Drawing extends BaseItem<Drawing> {
   }
 
   isPointNearLine(point: Point, threshold: number | undefined = 10): boolean {
-    const { translateX: drawingTranslateX, translateY: drawingTranslateY, scaleX: drawingScaleX, scaleY: drawingScaleY } = this.transformation.getMatrixData();
+    // Use world matrix so nested drawings (inside a Frame) are handled correctly.
+    const { translateX: drawingTranslateX, translateY: drawingTranslateY, scaleX: drawingScaleX, scaleY: drawingScaleY } = this.getWorldMatrix();
     const transformedMouseX =
       (point.x - drawingTranslateX) /
       drawingScaleX;
