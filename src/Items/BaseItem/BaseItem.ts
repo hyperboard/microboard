@@ -225,7 +225,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	}
 
 	addChildItems(children: BaseItem[]): void {
-		if (!this.index) {
+		if (!this.index || children.length === 0) {
 			return;
 		}
 		this.emit({
@@ -241,6 +241,9 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 			return;
 		}
 		const childrenArr = Array.isArray(children) ? children : [children];
+		if (childrenArr.length === 0) {
+			return;
+		}
 		this.emit({
 			class: this.itemType,
 			method: "removeChildren",
