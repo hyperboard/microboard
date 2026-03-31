@@ -360,9 +360,11 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 			) {
 				if (!this.index?.getById(childId) && foundItem) {
 					// Convert the child's current world transform to local (relative to this container).
-					// All operations in the log are world-space, so this conversion is always correct
-					// whether we are processing a live user action or replaying an old event.
-					const localMatrix = foundItem.transformation.toMatrix().toLocalOf(containerNestingMatrix);
+					// Must use getWorldMatrix() (not transformation.toMatrix()) so that items coming
+					// from another container (e.g. inside a Frame or Group) are correctly converted
+					// from their WORLD position rather than their container-relative local position.
+					const worldMatrix = foundItem.getWorldMatrix();
+					const localMatrix = worldMatrix.toLocalOf(containerNestingMatrix);
 					const currentParentId = foundItem.parent;
 					const currentParent =
 						currentParentId !== "Board"
