@@ -65,7 +65,7 @@ export class AlignmentHelper {
       ? this.canvasDrawer.getMbr()
       : Array.isArray(movingItem)
         ? this.combineMBRs(movingItem)
-        : ("getPath" in movingItem ? (movingItem).getPath().getMbr() : (movingItem as BaseItem).getMbr());
+        : (movingItem as BaseItem).getWorldMbr();
     const camera = this.board.camera.getMbr();
     const cameraWidth = camera.getWidth();
     const scale = this.board.camera.getScale();
@@ -126,7 +126,7 @@ export class AlignmentHelper {
       if (item === movingItem || item.itemType === "Comment" || (item instanceof BaseItem && !item.shouldUseRelativeAlignment)) {
         return;
       }
-      const itemMbr = item.getPathMbr();
+      const itemMbr = (item instanceof BaseItem ? item.getWorldMbr() : item.getMbr());
 
       const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
       const centerXItem = (itemMbr.left + itemMbr.right) / 2;
@@ -310,7 +310,7 @@ export class AlignmentHelper {
   ): boolean {
     const itemMbr = Array.isArray(draggingItem)
       ? this.combineMBRs(draggingItem)
-      : draggingItem.getMbr();
+      : (draggingItem instanceof BaseItem ? draggingItem.getWorldMbr() : draggingItem.getMbr());
     const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
     const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 
@@ -494,7 +494,7 @@ export class AlignmentHelper {
   ): boolean {
     const itemMbr = Array.isArray(draggingItem)
       ? this.combineMBRs(draggingItem)
-      : draggingItem.getMbr();
+      : (draggingItem instanceof BaseItem ? draggingItem.getWorldMbr() : draggingItem.getMbr());
 
     const getAlignmentInfo = (line: Line, side: ResizeType) => {
       const alignments: Record<
