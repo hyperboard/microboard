@@ -433,10 +433,6 @@ export class Frame extends BaseItem<Frame> {
     this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
     this.borderStyle = data.borderStyle ?? this.borderStyle;
     this.borderWidth = data.borderWidth ?? this.borderWidth;
-    if (data.transformation) {
-      this.transformation.deserialize(data.transformation);
-      this.transformPath();
-    }
     if (data.childIds) {
       this.childIds = data.childIds || [];
     }
@@ -444,6 +440,13 @@ export class Frame extends BaseItem<Frame> {
       this.text.deserialize(data.text);
       // Re-apply offsets and ensure container is local
       this.updateTextContainer();
+    }
+    // Apply item-level transformation AFTER text.deserialize, because RichText.deserialize
+    // also calls this.transformation.deserialize (same reference) with stale local coords.
+    // The item-level transformation must always win.
+    if (data.transformation) {
+      this.transformation.deserialize(data.transformation);
+      this.transformPath();
     }
     this.canChangeRatio = data.canChangeRatio ?? this.canChangeRatio;
     this.subject.publish(this);
