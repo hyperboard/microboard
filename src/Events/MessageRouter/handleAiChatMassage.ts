@@ -1,5 +1,5 @@
 import { Board } from 'Board';
-import { Connector } from 'Items';
+import { Connector, connectorOps } from 'Items';
 import { AINode, ThreadDirection } from 'Items/AINode';
 import { AudioItem } from 'Items/Audio';
 import { ImageItem } from 'Items/Image';
@@ -244,7 +244,7 @@ function handleAudioGenerate(response: GenerateAudioResponse, board: Board): voi
 			2: 3,
 			3: 2,
 		};
-		connector.setEndPoint(getControlPointData(boardAudio, reverseIndexMap[threadDirection]));
+		connector.apply(connectorOps.setEndPoint([connector], getControlPointData(boardAudio, reverseIndexMap[threadDirection])));
 
 		board.aiGeneratingOnItem = undefined;
 		board.aiImageConnectorID = undefined;
@@ -331,11 +331,14 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 									2: 3,
 									3: 2,
 								};
-								oldIdConnector.setEndPoint(
-									getControlPointData(
-									newImageAI,
-									reverseIndexMap[threadDirection]
-								)
+								oldIdConnector.apply(
+									connectorOps.setEndPoint(
+										[oldIdConnector],
+										getControlPointData(
+											newImageAI,
+											reverseIndexMap[threadDirection]
+										)
+									)
 								);
 							}
 							board.selection.removeAll();

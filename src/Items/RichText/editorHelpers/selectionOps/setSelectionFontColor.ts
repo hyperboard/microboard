@@ -1,4 +1,4 @@
-import { Editor, Range, Text, Transforms } from 'slate';
+import { Editor, Node, Range, Text, Transforms } from 'slate';
 import { ReactEditor } from 'slate-react';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 import type { ColorValue } from 'Color';
@@ -19,7 +19,7 @@ export function setSelectionFontColor(
 				editor,
 					{ fontColor: format },
 					{
-						match: n => Text.isText(n),
+						match: (n: Node) => Text.isText(n),
 						split: true,
 					}
 			);

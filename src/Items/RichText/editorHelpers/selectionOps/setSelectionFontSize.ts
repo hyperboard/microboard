@@ -1,4 +1,4 @@
-import { Editor, Range, Text, Transforms } from 'slate';
+import { Editor, Node, Range, Text, Transforms } from 'slate';
 import { getAllTextNodesInSelection } from 'Items/RichText/editorHelpers/common/getAllTextNodesInSelection';
 import { getParagraphWithPassedTextNode } from 'Items/RichText/editorHelpers/common/getParagraph';
 import { ReactEditor } from 'slate-react';
@@ -54,7 +54,7 @@ export function setSelectionFontSize(
 					editor,
 					{ fontSize: size },
 					{
-						match: n => Text.isText(n),
+						match: (n: Node) => Text.isText(n),
 						split: true,
 					}
 				);

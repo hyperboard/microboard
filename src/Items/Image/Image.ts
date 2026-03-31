@@ -120,7 +120,7 @@ export class ImageItem extends BaseItem<ImageItem> {
     this.updateMbr();
   }
 
-  async setStorageLink(link: string) {
+  private async setStorageLink(link: string) {
     this.storageLink = link;
     this.signedUrl = await getMediaSignedUrl(link) || "";
     if (!this.signedUrl) {
@@ -305,9 +305,6 @@ export class ImageItem extends BaseItem<ImageItem> {
     }
   }
 
-  setDimensions(dim: Dimension): void {
-    this.imageDimension = dim;
-  }
 
   apply(op: Operation): void {
     switch (op.class) {
@@ -318,12 +315,13 @@ export class ImageItem extends BaseItem<ImageItem> {
         this.linkTo.apply(op);
         break;
       case "Image":
-        // this.deserialize(op.data);
-        if (op.data.base64) {
-          this.image.src = op.data.base64;
+        if (op.method === "updateImageData") {
+          if (op.data.base64) {
+            this.image.src = op.data.base64;
+          }
+          this.setStorageLink(op.data.storageLink);
+          this.imageDimension = op.data.imageDimension;
         }
-        this.setStorageLink(op.data.storageLink);
-        this.setDimensions(op.data.imageDimension);
         this.subject.publish(this);
         break;
     }

@@ -1,4 +1,4 @@
-import { Editor, Range, Text, Transforms } from 'slate';
+import { Editor, Node, Range, Text, Transforms } from 'slate';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 
 export function applySelectionFontSize(
@@ -31,7 +31,7 @@ export function applySelectionFontSize(
 			editor,
 			{ fontSize: size },
 			{
-				match: n => Text.isText(n),
+				match: (n: Node) => Text.isText(n),
 				split: true,
 			}
 		);

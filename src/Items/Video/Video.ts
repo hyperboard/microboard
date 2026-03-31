@@ -109,7 +109,7 @@ export class VideoItem extends BaseItem<VideoItem> {
       this.setPreviewUrl(previewUrl);
     }
     if (url) {
-      this.setUrl(url);
+      this.url = url;
     }
     this.videoDimension = videoDimension;
     this.transformation = new Transformation(id, events);
@@ -152,16 +152,8 @@ export class VideoItem extends BaseItem<VideoItem> {
     return this.isStorageUrl;
   }
 
-  setVideoData({ previewUrl, url }: { previewUrl: string; url: string }) {
-    this.emit({
-      class: "Video",
-      item: [this.id],
-      method: "updateVideoData",
-      data: { previewUrl, url, videoDimension: this.videoDimension },
-    });
-  }
 
-  applyVideoData({
+  private applyVideoData({
     previewUrl = "",
     url = "",
   }: {
@@ -170,7 +162,7 @@ export class VideoItem extends BaseItem<VideoItem> {
   }): void {
     this.previewUrl = previewUrl;
     this.setPreviewUrl(previewUrl);
-    this.setUrl(url);
+    this.url = url;
   }
 
   setIsPlaying(isPlaying: boolean) {
@@ -191,9 +183,6 @@ export class VideoItem extends BaseItem<VideoItem> {
     return this.playBtnMbr;
   }
 
-  setUrl(url: string): void {
-    this.url = url;
-  }
 
   private setPreview(image: HTMLImageElement): void {
     this.preview = image;
@@ -204,7 +193,7 @@ export class VideoItem extends BaseItem<VideoItem> {
     this.subject.publish(this);
   }
 
-  async setPreviewUrl(url: string): Promise<void> {
+  private async setPreviewUrl(url: string): Promise<void> {
     if (this.isStorageUrl) {
       try {
         this.preview.src = await getMediaSignedUrl(url) || "";
@@ -362,7 +351,7 @@ export class VideoItem extends BaseItem<VideoItem> {
       this.isStorageUrl = data.isStorageUrl;
     }
     if (data.url) {
-      this.setUrl(data.url);
+      this.url = data.url;
     }
     if (data.extension) {
       this.extension = data.extension;

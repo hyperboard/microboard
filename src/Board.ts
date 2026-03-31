@@ -17,6 +17,7 @@ import { Matrix } from "Items/Transformation/Matrix";
 import { Mbr } from "Items/Mbr/Mbr";
 import type { Comment } from "Items/Comment/Comment";
 import type { Connector } from "Items/Connector/Connector";
+import { connectorOps } from "Items/Connector/connectorOps";
 import type { ConnectorData } from "Items/Connector/ConnectorOperations";
 import type { Frame } from "Items/Frame/Frame";
 import type { FrameData } from "Items/Frame/FrameData";
@@ -247,8 +248,8 @@ export class Board {
         if (item.itemType === "Connector" && data[item.getId()]) {
           const connector = item as Connector;
           const connectorData = data[item.getId()] as ConnectorData;
-          connector.applyStartPoint(connectorData.startPoint);
-          connector.applyEndPoint(connectorData.endPoint);
+          connector.apply(connectorOps.setStartPoint([connector], connectorData.startPoint));
+          connector.apply(connectorOps.setEndPoint([connector], connectorData.endPoint));
         }
       });
       return;
@@ -688,8 +689,8 @@ export class Board {
             : {}),
         };
 
-        connector.item.setStartPoint(startData);
-        connector.item.setEndPoint(endData);
+        connector.item.apply(connectorOps.setStartPoint([connector.item], startData));
+        connector.item.apply(connectorOps.setEndPoint([connector.item], endData));
       });
       return Object.values(idsMap);
     }
@@ -748,8 +749,8 @@ export class Board {
 
     for (const key in createdConnectors) {
       const { item, itemData } = createdConnectors[key];
-      item.applyStartPoint(itemData.startPoint);
-      item.applyEndPoint(itemData.endPoint);
+      item.apply(connectorOps.setStartPoint([item as Connector], itemData.startPoint));
+      item.apply(connectorOps.setEndPoint([item as Connector], itemData.endPoint));
     }
     for (const key in createdGroups) {
       const { item, itemData } = createdGroups[key];
@@ -808,8 +809,8 @@ export class Board {
 
     for (const key in createdConnectors) {
       const { item, itemData } = createdConnectors[key];
-      item.applyStartPoint(itemData.startPoint);
-      item.applyEndPoint(itemData.endPoint);
+      item.apply(connectorOps.setStartPoint([item as Connector], itemData.startPoint));
+      item.apply(connectorOps.setEndPoint([item as Connector], itemData.endPoint));
     }
     for (const key in createdGroups) {
       const { item, itemData } = createdGroups[key];

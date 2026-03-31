@@ -444,43 +444,16 @@ export class Drawing extends BaseItem<Drawing> {
     this.subject.publish(this);
   }
 
-  setStrokeOpacity(opacity: number): this {
-    this.emit({
-      class: "Drawing",
-      method: "setStrokeOpacity",
-      item: [this.id],
-      opacity,
-    });
-    return this;
-  }
 
   getStrokeOpacity(): number {
     return this.borderOpacity;
   }
 
-  setBorderStyle(style: BorderStyle): this {
-    this.emit({
-      class: "Drawing",
-      method: "setStrokeStyle",
-      item: [this.id],
-      style,
-    });
-    return this;
-  }
 
   getBorderStyle(): BorderStyle {
     return this.borderStyle;
   }
 
-  setStrokeColor(color: ColorValue): this {
-    this.emit({
-      class: "Drawing",
-      method: "setStrokeColor",
-      item: [this.id],
-      color,
-    });
-    return this;
-  }
 
   getStrokeColor(): ColorValue {
     return this.borderColor;
@@ -495,22 +468,12 @@ export class Drawing extends BaseItem<Drawing> {
     return this.colorRole;
   }
 
-  setStrokeWidth(width: number): this {
-    this.emit({
-      class: "Drawing",
-      method: "setStrokeWidth",
-      item: [this.id],
-      width,
-      prevWidth: this.strokeWidth,
-    });
-    return this;
-  }
 
   getLinkTo(): string | undefined {
     return this.linkTo.link;
   }
 
-  getStrokeWidth(): number {
+  getStrokeWidth(): BorderWidth {
     return this.strokeWidth;
   }
 

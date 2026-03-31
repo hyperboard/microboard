@@ -10,20 +10,21 @@ import type { BaseItem } from "Items/BaseItem/BaseItem";
 import type { Frame } from "Items/Frame/Frame";
 import type { ImageItem } from "Items/Image/Image";
 import type { RichText } from "Items/RichText/RichText";
-import type { Sticker } from "Items/Sticker/Sticker";
 import { Mbr } from "Items/Mbr/Mbr";
-import type { Shape } from "Items/Shape/Shape";
-import type { Drawing } from "Items/Drawing/Drawing";
+import { Shape, shapeOps } from "Items/Shape";
+import { Drawing, drawingOps } from "Items/Drawing";
+import { Sticker, stickerOps, connectorOps } from "Items";
 import type { FrameData } from "Items/Frame/FrameData";
 import { AINode, CONTEXT_NODE_HIGHLIGHT_COLOR } from "Items/AINode/AINode";
 import { HorisontalAlignment, VerticalAlignment } from "Items/Alignment";
-import { ColorValue } from "Color/ColorValue";
+import { ColorValue, coerceColorValue } from "Color";
 import { ConnectorLineStyle } from "Items/Connector/ConnectorTypes";
 import { CONNECTOR_COLOR } from "../Items/Connector/ConnectorTypes";
+import { ConnectionLineWidth } from "Items/Connector/ConnectorTypes";
 import { ConnectorPointerStyle } from "Items/Connector/Pointers/Pointers";
 import { DrawingContext } from "Items/DrawingContext";
 import { FrameType } from "Items/Frame/Basic";
-import { BorderStyle } from "Items/Path/Path";
+import { BorderStyle, BorderWidth } from "Items/Path/Path";
 import { TextStyle } from "Items/RichText/Editor/TextNode";
 import { ItemOp } from "Items/RichText/RichTextOperations";
 import { DefaultShapeData } from "Items/Shape/ShapeData";
@@ -803,9 +804,12 @@ export class BoardSelection {
     return defaultShapeData.borderColor;
   }
 
-  getStrokeWidth(): number {
-    const shape = this.items.list()[0];
-    return "getStrokeWidth" in shape ? shape.getStrokeWidth() : defaultShapeData.borderWidth;
+  getStrokeWidth(): BorderWidth {
+    const item = this.items.list()[0];
+    if (item instanceof Shape || item instanceof Drawing) {
+      return item.getStrokeWidth();
+    }
+    return 1 as BorderWidth;
   }
 
   getConnectorLineWidth(): number {
@@ -845,22 +849,60 @@ export class BoardSelection {
       endPointerStyle: style,
     });
   }
-
   switchPointers(): void {
-    this.emit({
-      class: "Connector",
-      method: "switchPointers",
-      item: this.items.ids(),
-    });
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.switchPointers(items));
+    }
   }
 
   setConnectorLineStyle(style: ConnectorLineStyle): void {
-    this.emit({
-      class: "Connector",
-      method: "setLineStyle",
-      item: this.items.ids(),
-      lineStyle: style,
-    });
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setLineStyle(items, style));
+    }
+  }
+
+  setConnectorStartPointerStyle(style: ConnectorPointerStyle): void {
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setStartPointerStyle(items, style));
+    }
+  }
+
+  setConnectorEndPointerStyle(style: ConnectorPointerStyle): void {
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setEndPointerStyle(items, style));
+    }
+  }
+
+  setConnectorLineColor(color: ColorValue): void {
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setLineColor(items, color));
+    }
+  }
+
+  setConnectorLineWidth(width: ConnectionLineWidth): void {
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setLineWidth(items, width));
+    }
+  }
+
+  setConnectorBorderStyle(style: BorderStyle): void {
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setBorderStyle(items, style));
+    }
+  }
+
+  setConnectorSmartJump(value: boolean): void {
+    const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
+    if (items.length > 0) {
+      this.emit(connectorOps.setSmartJump(items, value));
+    }
   }
 
   getConnectorLineStyle(): string {
@@ -1141,129 +1183,93 @@ export class BoardSelection {
   }
 
   setStrokeStyle(borderStyle: BorderStyle): void {
-    // TODO make single operation to set strokeStyle on any item with stroke
-    const shapes = this.items.getIdsByItemTypes(["Shape"]);
-    if (shapes.length > 0) {
-      this.emit({
-        class: "Shape",
-        method: "setBorderStyle",
-        item: shapes,
-        borderStyle,
-      });
-    }
-    const drawings = this.items.getIdsByItemTypes(["Drawing"]);
-    if (drawings.length > 0) {
-      this.emit({
-        class: "Drawing",
-        method: "setStrokeStyle",
-        item: drawings,
-        style: borderStyle,
-      });
-    }
-    const connectors = this.items.getIdsByItemTypes(["Connector"]);
-    if (connectors.length > 0) {
-      this.emit({
-        class: "Connector",
-        method: "setBorderStyle",
-        item: connectors,
-        borderStyle,
-      });
-    }
+    const operations: Record<string, Operation> = {};
+    this.items.list().forEach((item) => {
+      if (item.itemType === "Shape") {
+        if (!operations["Shape"]) operations["Shape"] = shapeOps.setBorderStyle([item as Shape], borderStyle);
+        else (operations["Shape"] as any).item.push(item.getId());
+      } else if (item.itemType === "Drawing") {
+        if (!operations["Drawing"]) operations["Drawing"] = drawingOps.setBorderStyle([item as Drawing], borderStyle);
+        else (operations["Drawing"] as any).item.push(item.getId());
+      } else if (item.itemType === "Connector") {
+        if (!operations["Connector"]) operations["Connector"] = { class: "Connector", method: "setBorderStyle", item: [item.getId()], borderStyle };
+        else (operations["Connector"] as any).item.push(item.getId());
+      }
+    });
+    Object.values(operations).forEach((op) => this.emit(op));
   }
 
   setStrokeColor(borderColor: string): void {
-    // TODO make single operation to set strokeColor on any item with stroke
-    const operation: Record<string, any> = {
-      class: "Shape",
-      method: "setBorderColor",
-      item: [] as string[],
-      newData: { borderColor }
-    };
-    const operations: { [itemType: string]: BaseOperation<any> } = {};
-
+    const color = coerceColorValue(borderColor);
+    const operations: Record<string, Operation> = {};
     this.items.list().forEach((item) => {
-      if (!operations[item.itemType]) {
-        const operationCopy = { ...operation }
-        if (item.itemType === "Connector") {
-          operationCopy.method = "setLineColor"
-          operationCopy.lineColor = borderColor;
-        } else if (item.itemType === "Drawing") {
-          operationCopy.method = "setStrokeColor"
-          operationCopy.color = borderColor;
-        } else {
-          operationCopy.borderColor = borderColor;
-        }
-        operations[item.itemType] = { ...operationCopy, class: item.itemType, item: [item.getId()] } as BaseOperation<any>;
-      } else {
-        operations[item.itemType].item.push(item.getId());
+      if (item.itemType === "Shape") {
+        if (!operations["Shape"]) operations["Shape"] = shapeOps.setBorderColor([item as Shape], color);
+        else (operations["Shape"] as any).item.push(item.getId());
+      } else if (item.itemType === "Drawing") {
+        if (!operations["Drawing"]) operations["Drawing"] = drawingOps.setStrokeColor([item as Drawing], color);
+        else (operations["Drawing"] as any).item.push(item.getId());
+      } else if (item.itemType === "Connector") {
+        if (!operations["Connector"]) operations["Connector"] = { class: "Connector", method: "setLineColor", item: [item.getId()], lineColor: color };
+        else (operations["Connector"] as any).item.push(item.getId());
       }
-    })
-
-    Object.values(operations).forEach((op) => {
-      this.emit(op as any);
-    })
+    });
+    Object.values(operations).forEach((op) => this.emit(op));
   }
 
-  setStrokeWidth(width: number): void {
-    // TODO make single operation to set strokeWidth on any item with stroke
-    const operation: Record<string, any> = {
-      class: "Shape",
-      method: "setBorderWidth",
-      item: [] as string[],
-      newData: { borderWidth: width }
-    };
-    const operations: { [itemType: string]: BaseOperation<any> } = {};
-
+  setStrokeWidth(width: BorderWidth): void {
+    const operations: Record<string, Operation> = {};
     this.items.list().forEach((item) => {
-      if (!operations[item.itemType]) {
-        const operationCopy = { ...operation }
-        if (item.itemType === "Connector") {
-          operationCopy.method = "setLineWidth";
-          operationCopy.lineWidth = width;
-        } else if (item.itemType === "Drawing") {
-          operationCopy.method = "setStrokeWidth";
-          operationCopy.width = width;
-          operationCopy.prevWidth = this.getStrokeWidth();
-        } else {
-          operationCopy.borderWidth = width;
-          operationCopy.prevBorderWidth = this.getStrokeWidth();
-        }
-        operations[item.itemType] = { ...operationCopy, class: item.itemType, item: [item.getId()] } as BaseOperation<any>;
-      } else {
-        operations[item.itemType].item.push(item.getId());
+      if (item.itemType === "Shape") {
+        if (!operations["Shape"]) operations["Shape"] = shapeOps.setBorderWidth([item as Shape], width);
+        else (operations["Shape"] as any).item.push(item.getId());
+      } else if (item.itemType === "Drawing") {
+        if (!operations["Drawing"]) operations["Drawing"] = drawingOps.setStrokeWidth([item as Drawing], width);
+        else (operations["Drawing"] as any).item.push(item.getId());
+      } else if (item.itemType === "Connector") {
+        if (!operations["Connector"]) operations["Connector"] = { class: "Connector", method: "setLineWidth", item: [item.getId()], lineWidth: width as ConnectionLineWidth };
+        else (operations["Connector"] as any).item.push(item.getId());
       }
-    })
-
-    Object.values(operations).forEach((op) => {
-      this.emit(op as any);
-    })
-
-
+    });
+    Object.values(operations).forEach((op) => this.emit(op));
   }
 
   setFillColor(backgroundColor: string): void {
-    // TODO make single operation to set color on any item with fill
-    const operation = {
-      class: "Shape",
-      method: "setBackgroundColor",
-      item: [] as string[],
-      backgroundColor,
-      newData: { backgroundColor }
-    };
-    const operations: { [itemType: string]: BaseOperation<any> } = {};
+    const color = coerceColorValue(backgroundColor);
+    const operations: Record<string, Operation> = {};
 
     this.items.list().forEach((item) => {
-      if (!operations[item.itemType]) {
-        operations[item.itemType] = { ...operation, class: item.itemType, item: [item.getId()] } as BaseOperation<any>;
-      } else {
-        operations[item.itemType].item.push(item.getId());
+      if (item.itemType === "Shape") {
+        const shape = item as Shape;
+        if (!operations["Shape"]) {
+          operations["Shape"] = shapeOps.setBackgroundColor([shape], color);
+        } else {
+          (operations["Shape"] as any).item.push(shape.getId());
+        }
+      } else if (item.itemType === "Sticker") {
+        const sticker = item as Sticker;
+        if (!operations["Sticker"]) {
+          operations["Sticker"] = stickerOps.setBackgroundColor([sticker], color);
+        } else {
+          (operations["Sticker"] as any).item.push(sticker.getId());
+        }
+      } else if (item.itemType === "RichText") {
+        if (!operations["RichText"]) {
+          operations["RichText"] = {
+            class: "RichText",
+            method: "setBackgroundColor",
+            item: [item.getId()],
+            backgroundColor: color,
+          } as any;
+        } else {
+          (operations["RichText"] as any).item.push(item.getId());
+        }
       }
-    })
+    });
 
     Object.values(operations).forEach((op) => {
-      this.emit(op as any);
-    })
-
+      this.emit(op);
+    });
   }
 
   setCanChangeRatio(canChangeRatio: boolean): void {
@@ -1298,12 +1304,10 @@ export class BoardSelection {
   }
 
   setShapeType(shapeType: ShapeType): void {
-    this.emit({
-      class: "Shape",
-      method: "setShapeType",
-      item: this.items.ids(),
-      shapeType,
-    });
+    const shapes = this.items.getItemsByItemTypes(["Shape"]) as Shape[];
+    if (shapes.length > 0) {
+      this.emit(shapeOps.setShapeType(shapes, shapeType));
+    }
   }
 
   setFontSize(size: number | "auto"): void {

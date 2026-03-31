@@ -1,4 +1,4 @@
-import { BorderStyle } from "../Path";
+import { BorderStyle, BorderWidth } from "../Path";
 import { ColorValue } from "Color";
 
 interface DrawingSetStrokeColorOp {
@@ -11,8 +11,8 @@ interface DrawingSetStrokeWidthOp {
 	class: "Drawing";
 	method: "setStrokeWidth";
 	item: string[];
-	width: number;
-	prevWidth: number;
+	width: BorderWidth;
+	prevWidth: BorderWidth;
 }
 interface DrawingSetStrokeOpacityOp {
 	class: "Drawing";

@@ -1,6 +1,6 @@
 import { beforeAll, describe, it, expect } from 'bun:test';
 import { Board } from 'Board';
-import { Shape } from './Shape';
+import { Shape, shapeOps } from './index';
 import { Point } from '../Point';
 import { Mbr } from '../Mbr';
 import { initNodeSettings } from 'api/initNodeSettings';
@@ -15,37 +15,37 @@ describe('to diagram user of shapes', () => {
 	it('changes shape`s type', () => {
 		const shape = new Shape(board);
 		const type = 'Circle';
-		shape.setShapeType(type);
+		shape.apply(shapeOps.setShapeType([shape], type));
 		expect(shape.getShapeType()).toBe(type);
 	});
 	it('changes shapes background color', () => {
 		const shape = new Shape(board);
 		const color = fixedColor('rgb(255, 0, 0)');
-		shape.setBackgroundColor(color);
+		shape.apply(shapeOps.setBackgroundColor([shape], color));
 		expect(shape.getBackgroundColor()).toEqual(color);
 	});
 	it('changes shapes background color with semantic color', () => {
 		const shape = new Shape(board);
 		const color = semanticColor('contrastBlue');
-		shape.setBackgroundColor(color);
+		shape.apply(shapeOps.setBackgroundColor([shape], color));
 		expect(shape.getBackgroundColor()).toEqual(color);
 	});
 	it('changes shapes border color', () => {
 		const shape = new Shape(board);
 		const color = fixedColor('rgb(0, 0, 0)');
-		shape.setBorderColor(color);
+		shape.apply(shapeOps.setBorderColor([shape], color));
 		expect(shape.getStrokeColor()).toEqual(color);
 	});
 	it('changes shapes border style', () => {
 		const shape = new Shape(board);
 		const style = 'dot';
-		shape.setBorderStyle(style);
+		shape.apply(shapeOps.setBorderStyle([shape], style));
 		expect(shape.getBorderStyle()).toBe(style);
 	});
 	it('changes shape`s border width', () => {
 		const shape = new Shape(board);
 		const width = 2;
-		shape.setBorderWidth(width);
+		shape.apply(shapeOps.setBorderWidth([shape], width));
 		expect(shape.getStrokeWidth()).toBe(width);
 	});
 

@@ -11,14 +11,18 @@ export * from "./Path";
 export * from "./Transformation";
 
 export * from "./Connector";
+export { connectorOps } from "./Connector/connectorOps";
 export * from "./RichText";
 export * from "./Shape";
 export * from "./Sticker";
 export * from "./Frame";
 export * from "./Video";
+export { videoOps } from "./Video/videoOps";
 export * from "./Audio";
+export { audioOps } from "./Audio/audioOps";
 export * from "./AINode";
 export * from "./Image";
+export { imageOps } from "./Image/imageOps";
 export * from "./Drawing";
 export * from "./Placeholder";
 export * from "./Group";

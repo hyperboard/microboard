@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Connector, Point } from "Items";
+import { Connector, Point, connectorOps } from "Items";
 import { Anchor } from "Items/Anchor";
 import { ControlPoint } from "Items/Connector";
 // TODO move to conf
@@ -130,15 +130,15 @@ export class ConnectorTransformer extends Tool {
       const point = this.snap.getControlPoint();
       switch (this.statePointer) {
         case "start":
-          connector.setStartPoint(point, this.beginTimeStamp);
+          connector.apply(connectorOps.setStartPoint([connector], point, this.beginTimeStamp));
           this.selection.subject.publish(this.selection);
           break;
         case "end":
-          connector.setEndPoint(point, this.beginTimeStamp);
+          connector.apply(connectorOps.setEndPoint([connector], point, this.beginTimeStamp));
           this.selection.subject.publish(this.selection);
           break;
         case "middle":
-          connector.setMiddlePoint(point, this.beginTimeStamp);
+          connector.apply(connectorOps.setMiddlePoint([connector], point, this.beginTimeStamp));
           break;
       }
       this.selection.subject.publish(this.selection);

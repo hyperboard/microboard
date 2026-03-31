@@ -46,6 +46,7 @@ import {
 	DEFAULT_END_POINTER,
 	CONNECTOR_POINTER_TYPES,
 } from './ConnectorTypes';
+import { connectorOps } from './connectorOps';
 const DRAW_TEXT_BORDER = false;
 const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
@@ -267,7 +268,7 @@ export class Connector extends BaseItem<Connector> {
 
 		// Emit setStartPoint so the jump is persisted and synced to collaborators.
 		// applyStartPoint (called internally) handles updatePaths + subject.publish.
-		this.setStartPoint(new FixedPoint(item, toRelativePoint(best, item)));
+		this.apply(connectorOps.setStartPoint([this], new FixedPoint(item, toRelativePoint(best, item))));
 		return true;
 	}
 
@@ -309,18 +310,10 @@ export class Connector extends BaseItem<Connector> {
 
 		if (Math.abs(best.x - end.x) < EPS && Math.abs(best.y - end.y) < EPS) return false;
 
-		this.setEndPoint(new FixedPoint(item, toRelativePoint(best, item)));
+		this.apply(connectorOps.setEndPoint([this], new FixedPoint(item, toRelativePoint(best, item))));
 		return true;
 	}
 
-	setSmartJump(value: boolean): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setSmartJump',
-			item: [this.id],
-			smartJump: value,
-		});
-	}
 
 	private applySmartJump(value: boolean): void {
 		this.smartJump = value;
@@ -439,17 +432,8 @@ export class Connector extends BaseItem<Connector> {
 		this.updatePaths();
 	}
 
-	setStartPoint(point: ControlPoint | ControlPointData, timestamp?: number): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setStartPoint',
-			item: [this.id],
-			startPointData: 'serialize' in point ? point.serialize() : point,
-			timestamp,
-		});
-	}
 
-	applyStartPoint(pointData: ControlPointData, updatePath = true): void {
+	protected applyStartPoint(pointData: ControlPointData, updatePath = true): void {
 		if (
 			pointData.pointType !== 'Board' &&
 			this.startPoint.pointType !== 'Board' &&
@@ -470,17 +454,8 @@ export class Connector extends BaseItem<Connector> {
 		}
 	}
 
-	setEndPoint(point: ControlPoint | ControlPointData, timestamp?: number): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setEndPoint',
-			item: [this.id],
-			endPointData: 'serialize' in point ? point.serialize() : point,
-			timestamp,
-		});
-	}
 
-	applyEndPoint(pointData: ControlPointData, updatePath = true): void {
+	protected applyEndPoint(pointData: ControlPointData, updatePath = true): void {
 		this.unsubscribeFromItem(this.endPoint, this.observerEndPointItem);
 		const optionalFn = this.getOptionalFindFn();
 		this.endPoint = getControlPoint(
@@ -493,7 +468,7 @@ export class Connector extends BaseItem<Connector> {
 		}
 	}
 
-	applyMiddlePoint(pointData: ControlPointData | null, updatePath = true): void {
+	protected applyMiddlePoint(pointData: ControlPointData | null, updatePath = true): void {
 		// console.log("pointData", pointData);
 		if (!pointData) {
 			return;
@@ -520,79 +495,29 @@ export class Connector extends BaseItem<Connector> {
 		this.updatePaths();
 	}
 
-	setMiddlePoint(point: ControlPoint | ControlPointData, timestamp?: number): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setMiddlePoint',
-			item: [this.id],
-			middlePointData: 'serialize' in point ? point.serialize() : point,
-			timestamp,
-		});
-	}
 
-	setStartPointerStyle(style: ConnectorPointerStyle): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setStartPointerStyle',
-			item: [this.id],
-			startPointerStyle: style,
-		});
-	}
 
 	private applyStartPointerStyle(style: ConnectorPointerStyle): void {
 		this.startPointerStyle = style;
 		this.updatePaths();
 	}
 
-	setEndPointerStyle(style: ConnectorPointerStyle): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setEndPointerStyle',
-			item: [this.id],
-			endPointerStyle: style,
-		});
-	}
 
 	private applyEndPointerStyle(style: ConnectorPointerStyle): void {
 		this.endPointerStyle = style;
 		this.updatePaths();
 	}
 
-	setLineColor(color: ColorValue): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setLineColor',
-			item: [this.id],
-			lineColor: color,
-		});
-	}
 
 	private applyLineColor(color: ColorValue): void {
 		this.lineColor = color;
 		this.updatePaths();
 	}
 
-	setLineStyle(style: ConnectorLineStyle): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setLineStyle',
-			item: [this.id],
-			lineStyle: style,
-		});
-	}
 
 	private applyLineStyle(style: ConnectorLineStyle): void {
 		this.lineStyle = style;
 		this.updatePaths();
-	}
-
-	private setBorderStyle(style: BorderStyle): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setBorderStyle',
-			item: [this.id],
-			borderStyle: style,
-		});
 	}
 
 	private applyBorderStyle(style: BorderStyle): void {
@@ -600,14 +525,6 @@ export class Connector extends BaseItem<Connector> {
 		this.updatePaths();
 	}
 
-	setLineWidth(width: ConnectionLineWidth): void {
-		this.emit({
-			class: 'Connector',
-			method: 'setLineWidth',
-			item: [this.id],
-			lineWidth: width,
-		});
-	}
 
 	private applyLineWidth(width: ConnectionLineWidth): void {
 		this.lineWidth = width;

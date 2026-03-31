@@ -1,4 +1,4 @@
-import { Editor, Range, Text, Transforms } from 'slate';
+import { Editor, Node, Range, Text, Transforms } from 'slate';
 import { getSelectionMarks } from 'Items/RichText/editorHelpers/common/getSelectionMarks';
 import type { ColorValue } from 'Color';
 
@@ -16,7 +16,7 @@ export function applySelectionFontColor(editor: Editor, fontColor: string | Colo
 			editor,
 			{ fontColor },
 			{
-				match: n => Text.isText(n),
+				match: (n: Node) => Text.isText(n),
 				split: true,
 			}
 		);

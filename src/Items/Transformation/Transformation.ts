@@ -1,12 +1,30 @@
 import { SubjectOperation } from 'SubjectOperation';
-import { Events, Operation } from '../../Events';
+import { Events } from '../../Events';
 import { Point } from '../Point';
 import { Matrix } from './Matrix';
 import { TransformationCommand } from './TransformationCommand';
 import { DefaultTransformationData, TransformationData } from './TransformationData';
-import { MatrixData, TransformationOperation } from './TransformationOperations';
+import {
+	ApplyMatrixOperation,
+	MatrixData,
+	TransformationOperation
+} from './TransformationOperations';
 
 const defaultData = new DefaultTransformationData();
+
+type LocalTransformationOperation =
+	| {
+			class: 'Transformation';
+			method: 'setLocalMatrix';
+			item: string[];
+			matrix: MatrixData;
+	  }
+	| {
+			class: 'Transformation';
+			method: 'setLocal';
+			item: string[];
+			data: Partial<MatrixData>;
+	  };
 
 export class Transformation {
 	readonly subject = new SubjectOperation<Transformation, TransformationOperation>();
@@ -52,34 +70,37 @@ export class Transformation {
 	 * Used by the nesting system to convert between world and local coordinate spaces.
 	 */
 	setLocalMatrix(matrix: Matrix): void {
-		this.previous = this._matrix.copy();
-		this._matrix = matrix.copy();
-		this.subject.publish(this, {
+		this.apply({
 			class: 'Transformation',
-			method: 'applyMatrix',
-			items: [{ id: this.id, matrix: this.getMatrixData() }],
+			method: 'setLocalMatrix',
+			item: [this.id],
+			matrix: {
+				translateX: matrix.translateX,
+				translateY: matrix.translateY,
+				scaleX: matrix.scaleX,
+				scaleY: matrix.scaleY,
+				shearX: matrix.shearX,
+				shearY: matrix.shearY,
+			},
 		});
 	}
 
 	setLocal(x: number, y: number, scaleX?: number, scaleY?: number): void
 	setLocal(data: Partial<MatrixData>): void
 	setLocal(xOrData: number | Partial<MatrixData>, y?: number, scaleX?: number, scaleY?: number): void {
-		this.previous = this._matrix.copy();
-		if (typeof xOrData === 'object') {
-			if (xOrData.translateX !== undefined) this._matrix.translateX = xOrData.translateX;
-			if (xOrData.translateY !== undefined) this._matrix.translateY = xOrData.translateY;
-			if (xOrData.scaleX !== undefined) this._matrix.scaleX = xOrData.scaleX;
-			if (xOrData.scaleY !== undefined) this._matrix.scaleY = xOrData.scaleY;
-		} else {
-			this._matrix.translateX = xOrData;
-			this._matrix.translateY = y!;
-			if (scaleX !== undefined) this._matrix.scaleX = scaleX;
-			if (scaleY !== undefined) this._matrix.scaleY = scaleY;
-		}
-		this.subject.publish(this, {
+		const data = typeof xOrData === 'object'
+			? xOrData
+			: {
+				translateX: xOrData,
+				translateY: y!,
+				scaleX,
+				scaleY,
+			};
+		this.apply({
 			class: 'Transformation',
-			method: 'applyMatrix',
-			items: [{ id: this.id, matrix: this.getMatrixData() }],
+			method: 'setLocal',
+			item: [this.id],
+			data,
 		});
 	}
 
@@ -345,9 +366,27 @@ export class Transformation {
 
 	// ─── Apply (called by command system, not directly) ───────────────────────
 
-	apply(op: Operation): void {
+	apply(op: TransformationOperation | LocalTransformationOperation): void {
 		this.previous = this._matrix.copy();
 		switch (op.method) {
+			case 'setLocalMatrix':
+				this._matrix = new Matrix(
+					op.matrix.translateX,
+					op.matrix.translateY,
+					op.matrix.scaleX,
+					op.matrix.scaleY,
+					op.matrix.shearX,
+					op.matrix.shearY
+				);
+				break;
+			case 'setLocal':
+				if (op.data.translateX !== undefined) this._matrix.translateX = op.data.translateX;
+				if (op.data.translateY !== undefined) this._matrix.translateY = op.data.translateY;
+				if (op.data.scaleX !== undefined) this._matrix.scaleX = op.data.scaleX;
+				if (op.data.scaleY !== undefined) this._matrix.scaleY = op.data.scaleY;
+				if (op.data.shearX !== undefined) this._matrix.shearX = op.data.shearX;
+				if (op.data.shearY !== undefined) this._matrix.shearY = op.data.shearY;
+				break;
 			case 'applyMatrix': {
 				const itemOp = op.items.find(i => i.id === this.id);
 				if (itemOp) {
@@ -397,7 +436,20 @@ export class Transformation {
 			default:
 				return;
 		}
-		this.subject.publish(this, op);
+		this.subject.publish(this, this.getPublishedOperation(op));
+	}
+
+	private getPublishedOperation(
+		op: TransformationOperation | LocalTransformationOperation
+	): TransformationOperation {
+		if (op.method === 'setLocal' || op.method === 'setLocalMatrix') {
+			return {
+				class: 'Transformation',
+				method: 'applyMatrix',
+				items: [{ id: this.id, matrix: this.getMatrixData() }],
+			} satisfies ApplyMatrixOperation;
+		}
+		return op as TransformationOperation;
 	}
 
 	// ─── Legacy apply helpers (for replaying old events) ─────────────────────

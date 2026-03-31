@@ -1,5 +1,5 @@
 import { Board } from 'Board';
-import { Drawing } from 'Items/Drawing';
+import { Drawing, drawingOps } from 'Items/Drawing';
 import { BorderStyle } from 'Items/Path';
 import { conf } from 'Settings';
 import { ColorValue, semanticColor } from 'Color';
@@ -31,7 +31,7 @@ export class AddHighlighter extends AddDrawing {
 
 	protected applyDrawingRole(drawing: Drawing): void {
 		drawing.setColorRole('background');
-		drawing.setStrokeOpacity(0.5);
+		drawing.apply(drawingOps.setStrokeOpacity([drawing], 0.5));
 	}
 
 	protected updateSettings(): void {

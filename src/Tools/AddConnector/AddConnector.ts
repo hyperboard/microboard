@@ -96,7 +96,12 @@ export class AddConnector extends BoardTool {
         this.strokeStyle
       );
     } else {
-      this.connector.applyEndPoint('serialize' in point ? point.serialize() : point);
+      this.connector.apply({
+        class: 'Connector',
+        method: 'setEndPoint',
+        item: [this.connector.getId()],
+        endPointData: 'serialize' in point ? point.serialize() : point,
+      });
       this.isDoneSecondPoint = true;
     }
     this.board.tools.publish();
@@ -111,7 +116,12 @@ export class AddConnector extends BoardTool {
         this.isDraggingFromFirstToSecond = true;
       }
       const point = this.snap.getControlPoint();
-      this.connector.applyEndPoint('serialize' in point ? point.serialize() : point);
+      this.connector.apply({
+        class: 'Connector',
+        method: 'setEndPoint',
+        item: [this.connector.getId()],
+        endPointData: 'serialize' in point ? point.serialize() : point,
+      });
     }
     this.board.tools.publish();
     return true;

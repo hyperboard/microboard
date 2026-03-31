@@ -6,7 +6,8 @@ import { Path } from "../Path/Path";
 import { Paths } from "../Path/Paths";
 import { Matrix } from "../Transformation/Matrix";
 import { TransformationOperation } from "../Transformation/TransformationOperations";
-import type { Connector } from "../Connector/Connector";
+import { Connector } from "../Connector/Connector";
+import { connectorOps } from "../Connector/connectorOps";
 import { BasicShapes } from "./Basic";
 import { ShapeType } from "./index";
 import { BorderStyle, BorderWidth, LinePatterns } from "../Path";
@@ -275,8 +276,11 @@ export class Shape extends BaseItem<Shape> {
           const nearestPoint = this.getNearestEdgePointTo(
             (connector as Connector).getEndPoint().copy()
           );
-          (connector as Connector).setEndPoint(
-            new FixedPoint(this, toRelativePoint(nearestPoint, this))
+          (connector as Connector).apply(
+            connectorOps.setEndPoint(
+              [connector as Connector],
+              new FixedPoint(this, toRelativePoint(nearestPoint, this))
+            )
           );
         }
 
@@ -284,22 +288,17 @@ export class Shape extends BaseItem<Shape> {
           const nearestPoint = this.getNearestEdgePointTo(
             (connector as Connector).getStartPoint().copy()
           );
-          (connector as Connector).setStartPoint(
-            new FixedPoint(this, toRelativePoint(nearestPoint, this))
+          (connector as Connector).apply(
+            connectorOps.setStartPoint(
+              [connector as Connector],
+              new FixedPoint(this, toRelativePoint(nearestPoint, this))
+            )
           );
         }
       }
     }
   }
 
-  setShapeType(shapeType: ShapeType): void {
-    this.emit({
-      class: "Shape",
-      method: "setShapeType",
-      item: [this.getId()],
-      shapeType,
-    });
-  }
 
   getBackgroundColor(): ColorValue {
     return this.backgroundColor;
@@ -309,14 +308,6 @@ export class Shape extends BaseItem<Shape> {
     this.backgroundColor = backgroundColor;
   }
 
-  setBackgroundColor(backgroundColor: ColorValue): void {
-    this.emit({
-      class: "Shape",
-      method: "setBackgroundColor",
-      item: [this.getId()],
-      backgroundColor,
-    });
-  }
 
   getBackgroundOpacity(): number {
     return this.backgroundOpacity;
@@ -335,14 +326,6 @@ export class Shape extends BaseItem<Shape> {
     this.path.setBackgroundOpacity(backgroundOpacity);
   }
 
-  setBackgroundOpacity(backgroundOpacity: number): void {
-    this.emit({
-      class: "Shape",
-      method: "setBackgroundOpacity",
-      item: [this.getId()],
-      backgroundOpacity,
-    });
-  }
 
   getStrokeColor(): ColorValue {
     return this.borderColor;
@@ -352,14 +335,6 @@ export class Shape extends BaseItem<Shape> {
     this.borderColor = borderColor;
   }
 
-  setBorderColor(borderColor: ColorValue): void {
-    this.emit({
-      class: "Shape",
-      method: "setBorderColor",
-      item: [this.getId()],
-      borderColor,
-    });
-  }
 
   getBorderOpacity(): number {
     return this.borderOpacity;
@@ -370,14 +345,6 @@ export class Shape extends BaseItem<Shape> {
     this.path.setBorderOpacity(borderOpacity);
   }
 
-  setBorderOpacity(borderOpacity: number): void {
-    this.emit({
-      class: "Shape",
-      method: "setBorderOpacity",
-      item: [this.getId()],
-      borderOpacity,
-    });
-  }
 
   getBorderStyle(): BorderStyle {
     return this.borderStyle;
@@ -388,14 +355,6 @@ export class Shape extends BaseItem<Shape> {
     this.path.setBorderStyle(borderStyle);
   }
 
-  setBorderStyle(borderStyle: BorderStyle): void {
-    this.emit({
-      class: "Shape",
-      method: "setBorderStyle",
-      item: [this.getId()],
-      borderStyle,
-    });
-  }
 
   getStrokeWidth(): BorderWidth {
     return this.borderWidth;
@@ -406,15 +365,6 @@ export class Shape extends BaseItem<Shape> {
     this.path.setBorderWidth(borderWidth);
   }
 
-  setBorderWidth(borderWidth: BorderWidth): void {
-    this.emit({
-      class: "Shape",
-      method: "setBorderWidth",
-      item: [this.getId()],
-      borderWidth,
-      prevBorderWidth: this.borderWidth,
-    });
-  }
 
   getIntersectionPoints(segment: Line): Point[] {
     return this.getIntersectionPoints(segment); // REFACTOR infloop

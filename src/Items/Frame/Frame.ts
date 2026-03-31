@@ -32,7 +32,6 @@ import {
   getProportionalResize,
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import {ResizeType} from "Selection/Transformer/TransformerHelpers/getResizeType";
-import {BaseItem} from "../BaseItem";
 import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 

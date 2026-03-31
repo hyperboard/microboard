@@ -1,6 +1,6 @@
 import { Board } from 'Board';
 import { Point } from 'Items';
-import { Drawing } from 'Items/Drawing';
+import { Drawing, drawingOps } from 'Items/Drawing';
 import { DrawingContext } from 'Items/DrawingContext';
 import { BorderStyle } from 'Items/Path';
 import { conf } from 'Settings';
@@ -128,9 +128,9 @@ export class AddDrawing extends BoardTool {
     }
     const drawing = new Drawing(this.board, points);
     drawing.transformation.translateTo(x, y);
-    drawing.setStrokeColor(coerceColorValue(this.strokeColor));
-    drawing.setStrokeWidth(this.strokeWidth);
-    drawing.setBorderStyle(this.strokeStyle);
+    drawing.apply(drawingOps.setStrokeColor([drawing], coerceColorValue(this.strokeColor)));
+    drawing.apply(drawingOps.setStrokeWidth([drawing], this.strokeWidth as any));
+    drawing.apply(drawingOps.setBorderStyle([drawing], this.strokeStyle));
     this.applyDrawingRole(drawing);
     this.board.add(drawing).updateMbr();
     this.board.selection.removeAll();
@@ -176,9 +176,9 @@ export class AddDrawing extends BoardTool {
     }
 
     const drawing = this.drawing;
-    drawing.setStrokeColor(coerceColorValue(this.strokeColor));
-    drawing.setStrokeWidth(this.strokeWidth);
-    drawing.setBorderStyle(this.strokeStyle);
+    drawing.apply(drawingOps.setStrokeColor([drawing], coerceColorValue(this.strokeColor)));
+    drawing.apply(drawingOps.setStrokeWidth([drawing], this.strokeWidth as any));
+    drawing.apply(drawingOps.setBorderStyle([drawing], this.strokeStyle));
     this.applyDrawingRole(drawing);
     drawing.render(context);
   }

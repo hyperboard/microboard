@@ -8,7 +8,8 @@ import {
 	RichText,
 	Mbr,
 	ThreadDirection,
-	DefaultTransformationData
+	DefaultTransformationData,
+	connectorOps
 } from 'Items';
 import { AINode } from 'Items/AINode';
 import { ControlPointData, getControlPoint } from 'Items/Connector/ControlPoint';
@@ -151,7 +152,7 @@ export function quickAddItem(
 	const added = board.add(newItem);
 	const pointData = getControlPointData(added, dirIndex, added.itemType === 'RichText');
 	const newEndPoint = getControlPoint(pointData, itemId => board.items.findById(itemId));
-	connector.setEndPoint(newEndPoint);
+	connector.apply(connectorOps.setEndPoint([connector], newEndPoint));
 	board.selection.removeAll();
 	board.selection.add(added);
 

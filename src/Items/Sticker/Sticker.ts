@@ -266,14 +266,6 @@ export class Sticker extends BaseItem<Sticker> {
     this.backgroundColor = backgroundColor;
   }
 
-  setBackgroundColor(backgroundColor: ColorValue): void {
-    this.emit({
-      class: "Sticker",
-      method: "setBackgroundColor",
-      item: [this.getId()],
-      backgroundColor,
-    });
-  }
 
   getIntersectionPoints(segment: Line): Point[] {
     throw new Error("Not implemented");
@@ -460,6 +452,7 @@ export class Sticker extends BaseItem<Sticker> {
     return points;
   }
 
+  /** Entry point for AddSticker tool during item creation */
   applyDiagonal(line: Line) {
     const l = line.getLength() / _hypotenuse;
     let x = line.start.x;
@@ -474,6 +467,7 @@ export class Sticker extends BaseItem<Sticker> {
     this.transformation.setLocal(x, y, l, l);
     this.saveStickerData();
   }
+  /** Entry point for AddSticker tool during item creation */
   applyTransformToCenter(pt: Point, newWidth?: number) {
     if (newWidth) {
       const scale = newWidth / width;

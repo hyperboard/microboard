@@ -89,15 +89,6 @@ export class AudioItem extends BaseItem<AudioItem> {
     return this.isPlaying;
   }
 
-  setUrl(url: string): void {
-    this.url = url;
-    this.emit({
-      class: "Audio",
-      method: "setUrl",
-      item: [this.getId()],
-      url,
-    });
-  }
 
   getStorageId() {
     return this.url.split("/").pop();

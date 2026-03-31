@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Drawing } from "Items/Drawing";
+import { Drawing, drawingOps } from "Items/Drawing";
 import { DrawingContext } from "Items/DrawingContext";
 import { BorderStyle } from "Items/Path";
 import { coerceColorValue } from "Color";
@@ -103,9 +103,9 @@ export class Eraser extends BoardTool {
 
   render(context: DrawingContext): void {
     const drawing = this.drawing;
-    drawing.setStrokeColor(coerceColorValue(this.strokeColor));
-    drawing.setStrokeWidth(this.strokeWidth);
-    drawing.setBorderStyle(this.strokeStyle);
+    drawing.apply(drawingOps.setStrokeColor([drawing], coerceColorValue(this.strokeColor)));
+    drawing.apply(drawingOps.setStrokeWidth([drawing], this.strokeWidth as any));
+    drawing.apply(drawingOps.setBorderStyle([drawing], this.strokeStyle));
     drawing.render(context);
   }
 }
