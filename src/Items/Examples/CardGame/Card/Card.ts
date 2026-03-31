@@ -300,7 +300,7 @@ registerHotkey({
         return;
       }
       items.forEach((item) => {
-        item.rotate(false);
+        item.rotate(-90);
       })
     }
   }
@@ -318,7 +318,7 @@ registerHotkey({
         return;
       }
       items.forEach((item) => {
-        item.rotate(true);
+        item.rotate(90);
       })
     }
   }

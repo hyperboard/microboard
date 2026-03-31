@@ -1,6 +1,7 @@
 import { BaseOperation } from "Events/EventsOperations";
+import { TransformationOperation } from "Items/Transformation/TransformationOperations";
 
-export type CardOperation = SetIsOpen | SetIsInDeck;
+export type CardOperation = SetIsOpen | SetIsInDeck | TransformationOperation;
 
 export interface SetIsOpen extends BaseOperation<{ isOpen: boolean }> {
 	class: "Card";

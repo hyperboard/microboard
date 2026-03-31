@@ -6,6 +6,7 @@ import { createEvents } from "Events/Events";
 import { Frame } from "Items/Frame/Frame";
 import { Sticker } from "Items/Sticker/Sticker";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import { transformOps } from "Items/Transformation/transformOps";
 
 /**
  * Creates a Board with events enabled (local mode, no network connection).
@@ -21,7 +22,7 @@ function makeBoard(): Board {
  */
 function addFrame(board: Board, scale: number): Frame {
   const proto = new Frame(board, board.items.getById.bind(board.items));
-  proto.transformation.setLocal({ translateX: 0, translateY: 0, scaleX: scale, scaleY: scale });
+  proto.apply(transformOps.setLocal(proto.id, { translateX: 0, translateY: 0, scaleX: scale, scaleY: scale }));
   return board.add(proto) as unknown as Frame;
 }
 
@@ -30,7 +31,7 @@ function addFrame(board: Board, scale: number): Frame {
  */
 function addSticker(board: Board, worldX: number, worldY: number): Sticker {
   const proto = new Sticker(board);
-  proto.transformation.setLocal({ translateX: worldX, translateY: worldY, scaleX: 1, scaleY: 1 });
+  proto.apply(transformOps.setLocal(proto.id, { translateX: worldX, translateY: worldY, scaleX: 1, scaleY: 1 }));
   return board.add(proto) as unknown as Sticker;
 }
 
@@ -165,7 +166,7 @@ describe("Frame: snapshot round-trip preserves nested item positions", () => {
   test("sticker stays at correct local coords after snapshot serialize/deserialize", () => {
     // frame at (500, 300), sticker at world (650, 400)
     const frame = addFrame(board, 1);
-    frame.transformation.setLocal({ translateX: 500, translateY: 300, scaleX: 1, scaleY: 1 });
+    frame.apply(transformOps.setLocal(frame.id, { translateX: 500, translateY: 300, scaleX: 1, scaleY: 1 }));
     const sticker = addSticker(board, 650, 400);
 
     frame.applyAddChildren([sticker.getId()]);
@@ -197,7 +198,7 @@ describe("Frame: snapshot round-trip preserves nested item positions", () => {
 
   test("sticker stays correct for scaled frame after round-trip", () => {
     const frame = addFrame(board, 2);
-    frame.transformation.setLocal({ translateX: 1000, translateY: 500, scaleX: 2, scaleY: 2 });
+    frame.apply(transformOps.setLocal(frame.id, { translateX: 1000, translateY: 500, scaleX: 2, scaleY: 2 }));
     const sticker = addSticker(board, 1200, 700);
 
     frame.applyAddChildren([sticker.getId()]);

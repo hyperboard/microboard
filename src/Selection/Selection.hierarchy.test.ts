@@ -4,6 +4,7 @@ import { Board } from "Board";
 import { createEvents } from "Events/Events";
 import { Frame } from "Items/Frame/Frame";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import { transformOps } from "Items/Transformation/transformOps";
 import type { SelectionHierarchyNode } from "Selection";
 
 initNodeSettings();
@@ -27,13 +28,12 @@ function createItem(
   item.top = top;
   item.right = right;
   item.bottom = bottom;
-  item.transformation.setLocal({
+  item.apply(transformOps.setLocal(item.id, {
     translateX: left,
     translateY: top,
     scaleX: 1,
     scaleY: 1,
-    rotate: 0,
-  });
+  }));
   board.index.insert(item);
   return item;
 }
@@ -46,7 +46,7 @@ function createFrame(
   scaleY = 1
 ): Frame {
   const frame = new Frame(board, board.items.getById.bind(board.items));
-  frame.transformation.setLocal({ translateX, translateY, scaleX, scaleY });
+  frame.apply(transformOps.setLocal(frame.id, { translateX, translateY, scaleX, scaleY }));
   return board.add(frame) as Frame;
 }
 
@@ -265,7 +265,7 @@ describe("hierarchical selection rules", () => {
     frame.applyAddChildren([child.getId()]);
     const before = child.getWorldMatrix();
 
-    frame.transformation.translateBy(15, 5);
+    frame.apply(transformOps.translateBy(frame.id, 15, 5));
 
     expect(child.getWorldMatrix().translateX).toBe(before.translateX + 15);
     expect(child.getWorldMatrix().translateY).toBe(before.translateY + 5);
@@ -277,7 +277,7 @@ describe("hierarchical selection rules", () => {
     frame.applyAddChildren([child.getId()]);
     const before = child.getWorldMatrix();
 
-    frame.transformation.scaleTo(3, 4);
+    frame.apply(transformOps.scaleTo(frame, 3, 4));
 
     const after = child.getWorldMatrix();
     expect(after.translateX).toBe(before.translateX);

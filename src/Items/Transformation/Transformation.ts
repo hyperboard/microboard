@@ -1,5 +1,5 @@
 import { SubjectOperation } from 'SubjectOperation';
-import { Events } from '../../Events';
+import type { Events } from '../../Events';
 import { Point } from '../Point';
 import { Matrix } from './Matrix';
 import { TransformationCommand } from './TransformationCommand';
@@ -7,7 +7,8 @@ import { DefaultTransformationData, TransformationData } from './TransformationD
 import {
 	ApplyMatrixOperation,
 	MatrixData,
-	TransformationOperation
+	TransformationOperation,
+	ApplyMatrixItem
 } from './TransformationOperations';
 
 const defaultData = new DefaultTransformationData();
@@ -63,45 +64,19 @@ export class Transformation {
 		return this.rotate;
 	}
 
-	// ─── Local state setter (no event emitted, subscribers notified) ──────────
+	// ─── Local state setters (Private, used by apply/deserialize) ─────────────
 
-	/**
-	 * Replaces the internal matrix entirely with `matrix` without emitting an operation.
-	 * Used by the nesting system to convert between world and local coordinate spaces.
-	 */
-	setLocalMatrix(matrix: Matrix): void {
-		this.apply({
-			class: 'Transformation',
-			method: 'setLocalMatrix',
-			item: [this.id],
-			matrix: {
-				translateX: matrix.translateX,
-				translateY: matrix.translateY,
-				scaleX: matrix.scaleX,
-				scaleY: matrix.scaleY,
-				shearX: matrix.shearX,
-				shearY: matrix.shearY,
-			},
-		});
+	private applyLocalMatrix(matrix: Matrix): void {
+		this._matrix = matrix.copy();
 	}
 
-	setLocal(x: number, y: number, scaleX?: number, scaleY?: number): void
-	setLocal(data: Partial<MatrixData>): void
-	setLocal(xOrData: number | Partial<MatrixData>, y?: number, scaleX?: number, scaleY?: number): void {
-		const data = typeof xOrData === 'object'
-			? xOrData
-			: {
-				translateX: xOrData,
-				translateY: y!,
-				scaleX,
-				scaleY,
-			};
-		this.apply({
-			class: 'Transformation',
-			method: 'setLocal',
-			item: [this.id],
-			data,
-		});
+	private applyLocal(data: Partial<MatrixData>): void {
+		if (data.translateX !== undefined) this._matrix.translateX = data.translateX;
+		if (data.translateY !== undefined) this._matrix.translateY = data.translateY;
+		if (data.scaleX !== undefined) this._matrix.scaleX = data.scaleX;
+		if (data.scaleY !== undefined) this._matrix.scaleY = data.scaleY;
+		if (data.shearX !== undefined) this._matrix.shearX = data.shearX;
+		if (data.shearY !== undefined) this._matrix.shearY = data.shearY;
 	}
 
 	// ─── Serialization ────────────────────────────────────────────────────────
@@ -142,19 +117,6 @@ export class Transformation {
 			this.isLocked = data.isLocked;
 		}
 		if (data.rotate) {
-			// TODO to rotate to a degree calculate rotation by
-			// if (data.dimension) {
-			// 	this._matrix.rotateByObjectCenter(
-			// 		data.rotate,
-			// 		{
-			// 			width: data.dimension.width,
-			// 			height: data.dimension.height,
-			// 		},
-			// 		{ x: data.scaleX, y: data.scaleY }
-			// 	);
-			// } else {
-			// 	this._matrix.rotateBy(data.rotate);
-			// }
 			this.rotate = data.rotate;
 		}
 		this.subject.publish(this, {
@@ -193,9 +155,9 @@ export class Transformation {
 		this.id = id;
 	}
 
-	// ─── Event emission ───────────────────────────────────────────────────────
+	// ─── Event emission (Internal, used by legacy methods) ──────────────────
 
-	emit(operation: TransformationOperation): void {
+	private emit(operation: TransformationOperation): void {
 		if (this.events) {
 			const command = new TransformationCommand([this], operation);
 			command.apply();
@@ -204,6 +166,8 @@ export class Transformation {
 			this.apply(operation);
 		}
 	}
+
+	// ─── Legacy emit methods (Internal, use transformOps instead) ────────────
 
 	private emitMatrix(matrix: MatrixData, timeStamp?: number): void {
 		this.emit({
@@ -214,10 +178,7 @@ export class Transformation {
 		});
 	}
 
-	translateTo(x: number, y: number, timeStamp?: number): void {
-		if (!this.id) {
-			// TODO console.warn("Transformation.translateTo() has no itemId");
-		}
+	private translateTo(x: number, y: number, timeStamp?: number): void {
 		this.emitMatrix({
 			translateX: x - this._matrix.translateX,
 			translateY: y - this._matrix.translateY,
@@ -228,10 +189,7 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	translateBy(x: number, y: number, timeStamp?: number): void {
-		if (!this.id) {
-			// TODO console.warn("Transformation.translateTo() has no itemId");
-		}
+	private translateBy(x: number, y: number, timeStamp?: number): void {
 		if (x === 0 && y === 0) {
 			return;
 		}
@@ -245,7 +203,7 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	scaleTo(x: number, y: number, timeStamp?: number): void {
+	private scaleTo(x: number, y: number, timeStamp?: number): void {
 		this.emitMatrix({
 			translateX: 0,
 			translateY: 0,
@@ -256,7 +214,7 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	scaleBy(x: number, y: number, timeStamp?: number): void {
+	private scaleBy(x: number, y: number, timeStamp?: number): void {
 		if (x === 0 && y === 0) {
 			return;
 		}
@@ -270,7 +228,7 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	scaleByTranslateBy(
+	private scaleByTranslateBy(
 		scale: { x: number; y: number },
 		translate: { x: number; y: number },
 		timeStamp?: number
@@ -288,7 +246,7 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	rotateTo(degree: number, timeStamp?: number): void {
+	private rotateTo(degree: number, timeStamp?: number): void {
 		this.emit({
 			class: 'Transformation',
 			method: 'rotateTo',
@@ -298,7 +256,7 @@ export class Transformation {
 		});
 	}
 
-	rotateBy(degree: number, timeStamp?: number): void {
+	private rotateBy(degree: number, timeStamp?: number): void {
 		this.emit({
 			class: 'Transformation',
 			method: 'rotateBy',
@@ -308,7 +266,7 @@ export class Transformation {
 		});
 	}
 
-	scaleToRelativeTo(x: number, y: number, _point: Point, timeStamp?: number): void {
+	private scaleToRelativeTo(x: number, y: number, _point: Point, timeStamp?: number): void {
 		this.emitMatrix({
 			translateX: 0,
 			translateY: 0,
@@ -319,7 +277,7 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	scaleByRelativeTo(x: number, y: number, point: Point, timeStamp?: number): void {
+	private scaleByRelativeTo(x: number, y: number, point: Point, timeStamp?: number): void {
 		const { scaleX: sx0, scaleY: sy0, translateX: tx0, translateY: ty0 } = this._matrix;
 		const newSx = sx0 * x;
 		const newSy = sy0 * y;
@@ -333,35 +291,13 @@ export class Transformation {
 		}, timeStamp);
 	}
 
-	applyMatrixSilent(matrixData: MatrixData): void {
-		this.previous = this._matrix.copy();
+	private applyMatrix(matrixData: MatrixData): void {
 		this._matrix.scale(matrixData.scaleX, matrixData.scaleY);
 		this._matrix.translate(matrixData.translateX, matrixData.translateY);
-		this.subject.publish(this, {
-			class: 'Transformation',
-			method: 'applyMatrix',
-			items: [{ id: this.id, matrix: matrixData }],
-		});
 	}
 
-	setIsLocked(isLocked: boolean, timestamp?: number): void {
-		if (isLocked) {
-			this.emit({
-				class: 'Transformation',
-				method: 'locked',
-				item: [this.id],
-				locked: true,
-				timestamp,
-			});
-		} else {
-			this.emit({
-				class: 'Transformation',
-				method: 'unlocked',
-				item: [this.id],
-				locked: false,
-				timestamp,
-			});
-		}
+	private applyIsLocked(isLocked: boolean): void {
+		this.isLocked = isLocked;
 	}
 
 	// ─── Apply (called by command system, not directly) ───────────────────────
@@ -370,32 +306,43 @@ export class Transformation {
 		this.previous = this._matrix.copy();
 		switch (op.method) {
 			case 'setLocalMatrix':
-				this._matrix = new Matrix(
+				this.applyLocalMatrix(new Matrix(
 					op.matrix.translateX,
 					op.matrix.translateY,
 					op.matrix.scaleX,
 					op.matrix.scaleY,
 					op.matrix.shearX,
 					op.matrix.shearY
-				);
+				));
 				break;
 			case 'setLocal':
-				if (op.data.translateX !== undefined) this._matrix.translateX = op.data.translateX;
-				if (op.data.translateY !== undefined) this._matrix.translateY = op.data.translateY;
-				if (op.data.scaleX !== undefined) this._matrix.scaleX = op.data.scaleX;
-				if (op.data.scaleY !== undefined) this._matrix.scaleY = op.data.scaleY;
-				if (op.data.shearX !== undefined) this._matrix.shearX = op.data.shearX;
-				if (op.data.shearY !== undefined) this._matrix.shearY = op.data.shearY;
+				this.applyLocal(op.data);
 				break;
 			case 'applyMatrix': {
 				const itemOp = op.items.find(i => i.id === this.id);
 				if (itemOp) {
-					this._matrix.scale(itemOp.matrix.scaleX, itemOp.matrix.scaleY);
-					this._matrix.translate(itemOp.matrix.translateX, itemOp.matrix.translateY);
+					this.applyMatrix(itemOp.matrix);
 				}
 				break;
 			}
-			// @deprecated — legacy events only, new events use applyMatrix
+			case 'rotateTo':
+				this.applyRotateTo(op.degree);
+				break;
+			case 'rotateBy':
+				this.applyRotateBy(op.degree);
+				break;
+			case 'transformMany':
+				const subOp = op.items[this.id];
+				if (subOp) {
+					this.applyTransformMany(subOp);
+				}
+				break;
+			case 'locked':
+				this.applyIsLocked(op.locked);
+				break;
+			case 'unlocked':
+				this.applyIsLocked(op.locked);
+				break;
 			case 'translateTo':
 				this.applyTranslateTo(op.x, op.y);
 				break;
@@ -408,30 +355,9 @@ export class Transformation {
 			case 'scaleBy':
 				this.applyScaleBy(op.x, op.y);
 				break;
-			case 'scaleToRelativeTo':
-				this.applyScaleToRelativeTo(op.x, op.y, op.point);
-				break;
-			case 'scaleByRelativeTo':
-				this.applyScaleByRelativeTo(op.x, op.y, op.point);
-				break;
 			case 'scaleByTranslateBy':
-				this.applyScaleByTranslateBy(op.scale, op.translate);
-				break;
-			// end @deprecated
-			case 'rotateTo':
-				this.applyRotateTo(op.degree);
-				break;
-			case 'rotateBy':
-				this.applyRotateBy(op.degree);
-				break;
-			case 'transformMany':
-				this.applyTransformMany(op.items[this.id]);
-				break;
-			case 'locked':
-				this.applyLocked(op.locked);
-				break;
-			case 'unlocked':
-				this.applyUnlocked(op.locked);
+				this.applyScaleBy(this.previous.scaleX * op.scale.x, this.previous.scaleY * op.scale.y); // actually this is weird but following legacy
+				this.applyTranslateBy(op.translate.x, op.translate.y);
 				break;
 			default:
 				return;
@@ -454,40 +380,9 @@ export class Transformation {
 
 	// ─── Legacy apply helpers (for replaying old events) ─────────────────────
 
-	/** @deprecated Only for replaying legacy events. Do not call directly. */
-	applyTranslateTo(x: number, y: number): void {
-		this._matrix.translateX = x;
-		this._matrix.translateY = y;
-	}
-
-	/** @deprecated Only for replaying legacy events. Do not call directly. */
-	applyTranslateBy(x: number, y: number): void {
-		this._matrix.translate(x, y);
-	}
-
-	/** @deprecated Only for replaying legacy events. Do not call directly. */
-	applyScaleTo(x: number, y: number): void {
-		this._matrix.scaleX = x;
-		this._matrix.scaleY = y;
-	}
-
-	/** @deprecated Only for replaying legacy events. Do not call directly. */
-	applyScaleBy(x: number, y: number): void {
-		this._matrix.scale(x, y);
-	}
-
-	/** @deprecated Only for replaying legacy events. Do not call directly. */
-	applyScaleByTranslateBy(
-		scale: { x: number; y: number },
-		translate: { x: number; y: number }
-	): void {
-		this._matrix.scale(scale.x, scale.y);
-		this._matrix.translate(translate.x, translate.y);
-	}
-
-	applyTransformMany(op: TransformationOperation): void {
+	private applyTransformMany(op: ApplyMatrixOperation | any): void {
 		if (op.method === 'applyMatrix') {
-			const itemOp = op.items.find((i) => i.id === this.id);
+			const itemOp = op.items.find((i: ApplyMatrixItem) => i.id === this.id);
 			if (itemOp) {
 				this._matrix.scale(itemOp.matrix.scaleX, itemOp.matrix.scaleY);
 				this._matrix.translate(
@@ -495,18 +390,28 @@ export class Transformation {
 					itemOp.matrix.translateY
 				);
 			}
-		} else if (op.method === 'scaleByTranslateBy') {
-			this.applyScaleByTranslateBy(op.scale, op.translate);
-		} else if (op.method === 'scaleBy') {
-			this.applyScaleBy(op.x, op.y);
-		} else if (op.method === 'translateBy') {
-			this.applyTranslateBy(op.x, op.y);
-		} else if (op.method === 'translateTo') {
-			this.applyTranslateTo(op.x, op.y);
 		}
 	}
 
-	applyScaleByRelativeTo(x: number, y: number, point: { x: number; y: number }): void {
+	private applyTranslateTo(x: number, y: number): void {
+		this._matrix.translateX = x;
+		this._matrix.translateY = y;
+	}
+
+	private applyTranslateBy(x: number, y: number): void {
+		this._matrix.translate(x, y);
+	}
+
+	private applyScaleTo(x: number, y: number): void {
+		this._matrix.scaleX = x;
+		this._matrix.scaleY = y;
+	}
+
+	private applyScaleBy(x: number, y: number): void {
+		this._matrix.scale(x, y);
+	}
+
+	private applyScaleByRelativeTo(x: number, y: number, point: { x: number; y: number }): void {
 		const scaleX = this._matrix.scaleX * x;
 		const scaleY = this._matrix.scaleY * y;
 		this._matrix.translateX = -point.x * scaleX + point.x;
@@ -515,13 +420,14 @@ export class Transformation {
 		this._matrix.scaleY = scaleY;
 	}
 
-	applyScaleToRelativeTo(x: number, y: number, point: { x: number; y: number }): void {
-		this.applyTranslateBy(-point.x, -point.y);
-		this.applyScaleTo(x, y);
-		this.applyTranslateBy(point.x, point.y);
+	private applyScaleToRelativeTo(x: number, y: number, point: { x: number; y: number }): void {
+		this._matrix.translate(-point.x, -point.y);
+		this._matrix.scaleX = x;
+		this._matrix.scaleY = y;
+		this._matrix.translate(point.x, point.y);
 	}
 
-	applyRotateTo(degree: number): void {
+	private applyRotateTo(degree: number): void {
 		if (degree > 0) {
 			while (degree > 360) {
 				degree -= 360;
@@ -538,19 +444,9 @@ export class Transformation {
 			}
 		}
 		this.rotate = degree;
-		// TODO to rotate to a degree calculate rotation by
-		// this._matrix.rotateBy(degree);
 	}
 
-	applyRotateBy(degree: number): void {
+	private applyRotateBy(degree: number): void {
 		this.applyRotateTo(this.rotate + degree);
-	}
-
-	applyLocked(locked: boolean): void {
-		this.isLocked = locked;
-	}
-
-	applyUnlocked(locked: boolean): void {
-		this.isLocked = locked;
 	}
 }

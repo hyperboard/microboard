@@ -1,6 +1,8 @@
 import { Transformation } from "./Transformation";
 import { TransformationOperation, MatrixData } from "./TransformationOperations";
-import { Command, Operation, isTransformation } from "../../Events";
+import type { Command } from "../../Events/Command";
+import type { Operation } from "../../Events/EventsOperations";
+import { isTransformation } from "../../Events/EventsOperations";
 
 /** Minimal interface to avoid circular import with BaseItem/Item */
 interface TransformableItem {
@@ -68,9 +70,8 @@ export class TransformationCommand implements Command {
 	}[] {
 		const op = this.operation;
 
-		switch (this.operation.method) {
+		switch (op.method) {
 			case "applyMatrix": {
-				const op = this.operation;
 				return this.transformation.map(t => {
 					const itemOp = op.items.find(i => i.id === t.getId());
 					if (!itemOp) return { item: t, operation: op };
@@ -94,167 +95,138 @@ export class TransformationCommand implements Command {
 					};
 				});
 			}
-			// @deprecated — legacy events only
-			case "translateTo":
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...this.operation,
-							x: transformation.getTranslation().x,
-							y: transformation.getTranslation().y,
-						},
-					};
-				});
-			case "translateBy": {
-				const op = this.operation;
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...this.operation,
-							x: -op.x,
-							y: -op.y,
-						},
-					};
-				});
-			}
-			// @deprecated — legacy events only
-			case "scaleTo":
-			case "scaleToRelativeTo": {
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...op,
-							x: transformation.getScale().x,
-							y: transformation.getScale().y,
-						},
-					};
-				});
-			}
-			case "scaleBy":
-			case "scaleByRelativeTo": {
-				const op = this.operation;
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...op,
-							x: 1 / op.x,
-							y: 1 / op.y,
-						},
-					};
-				});
-			}
-			case "scaleByTranslateBy": {
-				const op = this.operation;
-				const scaleTransformation = this.transformation.map(transformation => {
-					const scaleX = 1 / op.scale.x;
-					const scaleY = 1 / op.scale.y;
-					const translateX = -op.translate.x;
-					const translateY = -op.translate.y;
-					return {
-						item: transformation,
-						operation: {
-							...op,
-							scale: {
-								x: scaleX,
-								y: scaleY,
-							},
-							translate: {
-								x: translateX,
-								y: translateY,
-							},
-						},
-					};
-				});
-				return scaleTransformation;
-			}
-			// end @deprecated
 			case "rotateTo":
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...this.operation,
-							degree: transformation.getRotation(),
-						},
-					};
-				});
+				if (op.method === "rotateTo") {
+					return this.transformation.map(transformation => {
+						return {
+							item: transformation,
+							operation: {
+								...op,
+								degree: transformation.getRotation(),
+							},
+						} as { item: Transformation; operation: TransformationOperation };
+					});
+				}
+				return [];
 			case "rotateBy": {
-				const op = this.operation;
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...this.operation,
-							degree: -op.degree,
-						},
-					};
-				});
+				if (op.method === "rotateBy") {
+					return this.transformation.map(transformation => {
+						return {
+							item: transformation,
+							operation: {
+								...op,
+								degree: -op.degree,
+							},
+						} as { item: Transformation; operation: TransformationOperation };
+					});
+				}
+				return [];
 			}
 			case "transformMany": {
-				const { operation, transformation } = this;
-				return transformation.map(currTrans => {
-					const op = operation.items[currTrans.getId()];
-					let m: MatrixData;
-					if (op.method === "applyMatrix") {
-						m = op.items.find(i => i.id === currTrans.getId())?.matrix || { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 };
-					} else if (op.method === "scaleByTranslateBy") {
-						m = { translateX: -op.translate.x, translateY: -op.translate.y, scaleX: 1 / op.scale.x, scaleY: 1 / op.scale.y, shearX: 0, shearY: 0 };
-					} else {
-						m = { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 };
-					}
-
-					return {
-						item: currTrans,
-						operation: {
-							class: "Transformation" as const,
-							method: "applyMatrix" as const,
-							items: [{
-								id: currTrans.getId(),
-								matrix: {
-									translateX: op.method === "applyMatrix" ? -m.translateX : m.translateX,
-									translateY: op.method === "applyMatrix" ? -m.translateY : m.translateY,
-									scaleX: op.method === "applyMatrix" ? 1 / m.scaleX : m.scaleX,
-									scaleY: op.method === "applyMatrix" ? 1 / m.scaleY : m.scaleY,
-									shearX: 0,
-									shearY: 0,
-								},
-							}],
-						},
-					};
-				});
+				if (op.method === "transformMany") {
+					const { items } = op;
+					return this.transformation.map(currTrans => {
+						const subOp = items[currTrans.getId()];
+						if (subOp && subOp.method === "applyMatrix") {
+							const itemOp = subOp.items.find(i => i.id === currTrans.getId());
+							if (itemOp) {
+								return {
+									item: currTrans,
+									operation: {
+										class: "Transformation" as const,
+										method: "applyMatrix" as const,
+										items: [{
+											id: currTrans.getId(),
+											matrix: {
+												translateX: -itemOp.matrix.translateX,
+												translateY: -itemOp.matrix.translateY,
+												scaleX: 1 / itemOp.matrix.scaleX,
+												scaleY: 1 / itemOp.matrix.scaleY,
+												shearX: 0,
+												shearY: 0,
+											},
+										}],
+									},
+								} as { item: Transformation; operation: TransformationOperation };
+							}
+						}
+						// Fallback if subOp is not applyMatrix or not found
+						return {
+							item: currTrans,
+							operation: {
+								class: "Transformation" as const,
+								method: "applyMatrix" as const,
+								items: [{
+									id: currTrans.getId(),
+									matrix: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
+								}],
+							},
+						} as { item: Transformation; operation: TransformationOperation };
+					});
+				}
+				return [];
 			}
 			case "locked": {
-				const op = this.operation;
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...op,
-							item: [...op.item],
-							method: "unlocked",
-							locked: false,
-						},
-					};
-				});
+				if (op.method === "locked") {
+					return this.transformation.map(transformation => {
+						return {
+							item: transformation,
+							operation: {
+								...op,
+								item: [...op.item],
+								method: "unlocked",
+								locked: false,
+							} as TransformationOperation,
+						};
+					});
+				}
+				return [];
 			}
 			case "unlocked": {
-				const op = this.operation;
-				return this.transformation.map(transformation => {
-					return {
-						item: transformation,
-						operation: {
-							...op,
-							item: [...op.item],
-							method: "locked",
-							locked: true,
-						},
-					};
-				});
+				if (op.method === "unlocked") {
+					return this.transformation.map(transformation => {
+						return {
+							item: transformation,
+							operation: {
+								...op,
+								item: [...op.item],
+								method: "locked",
+								locked: true,
+							} as TransformationOperation,
+						};
+					});
+				}
+				return [];
 			}
+			case "translateBy":
+				return this.transformation.map(t => ({
+					item: t,
+					operation: { ...op, x: -op.x, y: -op.y },
+				}));
+			case "translateTo":
+				return this.transformation.map(t => ({
+					item: t,
+					operation: { ...op, x: t.previous.translateX, y: t.previous.translateY },
+				}));
+			case "scaleBy":
+				return this.transformation.map(t => ({
+					item: t,
+					operation: { ...op, x: 1 / op.x, y: 1 / op.y },
+				}));
+			case "scaleTo":
+				return this.transformation.map(t => ({
+					item: t,
+					operation: { ...op, x: t.previous.scaleX, y: t.previous.scaleY },
+				}));
+			case "scaleByTranslateBy":
+				return this.transformation.map(t => ({
+					item: t,
+					operation: {
+						...op,
+						scale: { x: 1 / op.scale.x, y: 1 / op.scale.y },
+						translate: { x: -op.translate.x, y: -op.translate.y },
+					},
+				}));
 			default:
 				return [
 					{ item: this.transformation[0], operation: this.operation },

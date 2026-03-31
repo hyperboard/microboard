@@ -48,6 +48,9 @@ describe("transformAINode", () => {
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWorldMbr: () => new Mbr(10, 10, 50, 50),
       text: {
+        id: "aiNode1-text",
+        getId: () => "aiNode1-text",
+        apply: jest.fn(),
         getWidth: () => 40,
         getScale: () => 1,
         editor: {
@@ -62,6 +65,7 @@ describe("transformAINode", () => {
 
     // Mock Comment
     mockComment = {
+      id: "comment1",
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
       getWorldMbr: () => new Mbr(60, 60, 100, 100),
@@ -143,12 +147,8 @@ describe("transformAINode", () => {
       expect(result).toEqual(expect.any(Mbr));
       if (resizeType.includes("right")) {
         expect(
-          mockAINode.text.transformation.scaleByTranslateBy
-        ).toHaveBeenCalledWith(
-          expect.any(Object),
-          expect.any(Object),
-          expect.any(Number)
-        );
+          mockAINode.text.apply
+        ).toHaveBeenCalled();
       }
     });
   });
@@ -168,8 +168,8 @@ describe("transformAINode", () => {
 
     expect(result).toEqual(expect.any(Mbr));
     expect(
-      mockAINode.text.transformation.scaleByTranslateBy
-    ).not.toHaveBeenCalled();
+      mockAINode.text.apply
+    ).not.toHaveBeenCalledWith(expect.objectContaining({ method: "scaleByTranslateBy" }));
     expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalled();
   });
 

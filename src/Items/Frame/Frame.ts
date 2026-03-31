@@ -6,9 +6,9 @@ import { Path } from "../Path/Path";
 import { Paths } from "../Path/Paths";
 import type { Item } from "../Item";
 import { RichText } from "../RichText/RichText";
+import { transformOps } from "../Transformation/transformOps";
 import { Matrix } from "../Transformation/Matrix";
-import type { SerializedItemData } from "../BaseItem/BaseItem";
-import { BaseItem } from "../BaseItem/BaseItem";
+import { BaseItem, BaseItemData, SerializedItemData } from "../BaseItem/BaseItem";
 import {Subject} from "Subject";
 import {DrawingContext} from "../DrawingContext";
 import {Operation} from "Events";
@@ -348,17 +348,14 @@ export class Frame extends BaseItem<Frame> {
     }
 
     const oldMatrix = this.transformation.toMatrix();
-    this.transformation.scaleByTranslateBy(
-      {
-        x: scaleX,
-        y: scaleY,
-      },
-      {
-        x: translateX,
-        y: translateY,
-      },
-      timeStamp
-    );
+    this.apply(transformOps.applyMatrix(this.id, {
+      translateX: translateX,
+      translateY: translateY,
+      scaleX: scaleX,
+      scaleY: scaleY,
+      shearX: 0,
+      shearY: 0,
+    }));
     const newMatrix = this.transformation.toMatrix();
 
 
@@ -374,7 +371,7 @@ export class Frame extends BaseItem<Frame> {
 
   scaleLikeLastFrame(): void {
     const scale = this.getLastFrameScale();
-    this.transformation.scaleTo(scale.x, scale.y);
+    this.apply(transformOps.scaleTo(this, scale.x, scale.y));
   }
 
   setLastFrameScale(): void {
@@ -467,11 +464,10 @@ export class Frame extends BaseItem<Frame> {
     if (saveProportions) {
       const newMatrix = this.getSavedProportionsMatrix();
       this.path.transform(newMatrix);
-      this.transformation.applyScaleTo(newMatrix.scaleX, newMatrix.scaleY);
+      this.apply(transformOps.scaleTo(this, newMatrix.scaleX, newMatrix.scaleY));
     } else {
       this.path.transform(this.transformation.toMatrix());
     }
-
     // TODO fix text container Y translation
     // const scaleY = this.transformation.getScale().y;
     // const offsetY = (this.textContainer.top - this.getMbr().top) / scaleY;
@@ -607,7 +603,7 @@ export class Frame extends BaseItem<Frame> {
     }
     if (this.newShape === "Custom" || shapeType === "Custom") {
       const scale = this.getLastFrameScale();
-      this.transformation.applyScaleTo(scale.x, scale.y);
+      this.apply(transformOps.scaleTo(this, scale.x, scale.y));
       this.transformPath(false);
     } else {
       this.transformPath(true);

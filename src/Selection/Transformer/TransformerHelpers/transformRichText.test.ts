@@ -44,7 +44,9 @@ describe("transformRichText", () => {
 
     // Mock RichText with all required methods
     mockRichText = {
+      id: "richText1",
       getId: () => "richText1",
+      apply: jest.fn(),
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWorldMbr: () => new Mbr(10, 10, 50, 50),
       getWidth: () => 40,
@@ -64,6 +66,7 @@ describe("transformRichText", () => {
 
     // Mock Comment
     mockComment = {
+      id: "comment1",
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
       getWorldMbr: () => new Mbr(60, 60, 100, 100),
@@ -162,7 +165,7 @@ describe("transformRichText", () => {
       result.onPointerUpCb?.();
       expect(board.pointer.setCursor).toHaveBeenCalledWith("default");
       expect(board.selection.shouldRenderItemsMbr).toBe(true);
-      expect(mockRichText.transformation.scaleByTranslateBy).toHaveBeenCalled();
+      expect(mockRichText.apply).toHaveBeenCalled();
     }
   });
 

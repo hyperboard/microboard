@@ -34,8 +34,8 @@ import { positionRelatively, resetElementScale, scaleElementBy } from 'HTMLRende
 import { DocumentFactory } from 'api/DocumentFactory';
 import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
-import { BaseItem } from "../BaseItem/BaseItem";
-import type { SerializedItemData } from "../BaseItem/BaseItem";
+import { transformOps } from "../Transformation/transformOps";
+import { BaseItem, SerializedItemData, BaseItemData } from "../BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor, fixedColor, semanticColor } from 'Color';
 
 import {
@@ -776,7 +776,7 @@ export class Connector extends BaseItem<Connector> {
 		const { x, y } = this.calculateMiddlePoint();
 		const textWidth = this.text.getWidth();
 		const textHeight = this.text.getHeight();
-		this.text.transformation.applyTranslateTo(x - textWidth / 2, y - textHeight / 2);
+		this.text.apply(transformOps.translateTo(this.text, x - textWidth / 2, y - textHeight / 2));
 
 		this.text.render(context);
 
@@ -974,7 +974,7 @@ export class Connector extends BaseItem<Connector> {
 		}
 		const mbr = this.getMbr();
 		const transformation = new Transformation();
-		transformation.setLocal(mbr.left, mbr.top);
+		transformation.apply(transformOps.setLocal(this.id, { translateX: mbr.left, translateY: mbr.top }));
 		return {
 			id: this.id,
 			itemType: 'Connector',
@@ -1058,7 +1058,7 @@ export class Connector extends BaseItem<Connector> {
 		const height = this.text!.getHeight();
 		const width = this.text!.getWidth();
 
-		this.text.transformation.applyTranslateTo(x - width / 2, y - height / 2);
+		this.text.apply(transformOps.translateTo(this.text, x - width / 2, y - height / 2));
 		this.text.updateElement();
 
 		// this.animationFrameId = 0;

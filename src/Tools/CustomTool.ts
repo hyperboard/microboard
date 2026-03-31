@@ -1,5 +1,6 @@
 import { BoardTool } from "Tools/BoardTool";
 import { Board } from "Board";
+import { transformOps } from "Items/Transformation/transformOps";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Line } from "Items/Line/Line";
 import { Mbr } from "Items/Mbr/Mbr";
@@ -61,7 +62,7 @@ export class ShapeTool extends CustomTool {
 	initTransformation(sx?: number, sy?: number): void {
 		sx = sx || this.bounds.getWidth() / 100;
 		sy = sy || this.bounds.getHeight() / 100;
-		this.item.transformation.setLocal(this.bounds.left, this.bounds.top, sx, sy);
+		this.item.apply(transformOps.setLocal(this.item.id, { translateX: this.bounds.left, translateY: this.bounds.top, scaleX: sx, scaleY: sy }));
 	}
 
 	pointerDown(): boolean {
@@ -147,10 +148,10 @@ export class StickerTool extends CustomTool {
 
 	pointerDown(): boolean {
 		const point = this.board.pointer.point;
-		this.item.transformation.setLocal(point.x - this.settings.width / 2, point.y - this.settings.height / 2);
+		this.item.apply(transformOps.setLocal(this.item.id, { translateX: point.x - this.settings.width / 2, translateY: point.y - this.settings.height / 2 }));
 		const width = this.item.getWidth();
 		const height = this.item.getHeight();
-		this.item.transformation.scaleBy(width / this.settings.width, height / this.settings.height);
+		this.item.apply(transformOps.scaleBy(this.item.id, width / this.settings.width, height / this.settings.height));
 		const addedItem = this.board.add(this.item as Item);
 		this.board.selection.removeAll();
 		this.board.selection.add(addedItem);

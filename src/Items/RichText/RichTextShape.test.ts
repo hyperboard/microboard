@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import { Board } from 'Board';
 import { Shape } from '../Shape/Shape';
+import { transformOps } from 'Items/Transformation/transformOps';
 import { initNodeSettings } from 'api/initNodeSettings';
 
 beforeAll(() => {
@@ -15,10 +16,10 @@ describe('RichText in Shape', () => {
 
         const initialWidth = rt.getMaxWidth() || 0;
 
-        shape.transformation.setLocal({
+        shape.apply(transformOps.setLocal(shape.getId(), {
             scaleX: 2,
             scaleY: 2,
-        });
+        }));
 
         const scaledWidth = rt.getMaxWidth() || 0;
         expect(scaledWidth).toBeGreaterThan(0);

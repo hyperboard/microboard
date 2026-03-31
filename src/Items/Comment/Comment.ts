@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { DocumentFactory } from "api/DocumentFactory";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import { transformOps } from "Items/Transformation/transformOps";
 import { Board } from "Board";
 
 export interface Commentator {
@@ -301,7 +302,7 @@ export class Comment extends BaseItem<Comment> {
     if (translateX && translateY) {
       this.anchor = new Point(translateX, translateY);
     } else {
-      this.transformation.setLocal(this.anchor.x, this.anchor.y);
+      this.apply(transformOps.setLocal(this.id, { translateX: this.anchor.x, translateY: this.anchor.y }));
     }
     this._syncing = false;
   }

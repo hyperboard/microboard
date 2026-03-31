@@ -38,6 +38,7 @@ import { toRelativePoint } from "Items/Connector/ControlPoint";
 import { conf } from "Settings";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
+import { transformOps } from "../Transformation/transformOps";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -607,22 +608,20 @@ export class Shape extends BaseItem<Shape> {
     pointer: Point,
     mbr: Mbr,
     opposite: Point,
-    startMbr: Mbr,
+    _startMbr: Mbr,
     timeStamp: number
   ): { matrix: Matrix; mbr: Mbr } {
     const res = getResize(resizeType, pointer, mbr, opposite);
 
-    this.transformation.scaleByTranslateBy(
-      {
-        x: res.matrix.scaleX,
-        y: res.matrix.scaleY,
-      },
-      {
-        x: res.matrix.translateX,
-        y: res.matrix.translateY,
-      },
-      timeStamp
-    );
+    this.apply(transformOps.applyMatrix(this.id, {
+      translateX: res.matrix.translateX,
+      translateY: res.matrix.translateY,
+      scaleX: res.matrix.scaleX,
+      scaleY: res.matrix.scaleY,
+      shearX: 0,
+      shearY: 0,
+    }, timeStamp));
+
     res.mbr = this.getMbr();
     return res;
   }

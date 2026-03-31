@@ -3,6 +3,7 @@ import { Line, Mbr, Shape, Point } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { ShapeType } from "Items/Shape";
 import { shapeOps } from "Items/Shape/shapeOps";
+import { transformOps } from "Items/Transformation/transformOps";
 import { DEFAULT_SHAPE, ADD_TO_SELECTION } from "Items/Shape/ShapeData";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { conf } from "Settings";
@@ -59,7 +60,12 @@ export class AddShape extends BoardTool {
   initTransformation(sx?: number, sy?: number): void {
     sx = sx || this.bounds.getWidth() / 100;
     sy = sy || this.bounds.getHeight() / 100;
-    this.shape.transformation.setLocal(this.bounds.left, this.bounds.top, sx, sy);
+    this.shape.apply(transformOps.setLocal(this.shape.id, {
+      translateX: this.bounds.left,
+      translateY: this.bounds.top,
+      scaleX: sx,
+      scaleY: sy,
+    }));
   }
 
   leftButtonDown(): boolean {

@@ -2,6 +2,7 @@ import { Board } from 'Board';
 import { calculatePosition } from 'Items/Image/calculatePosition';
 import { prepareImage } from 'Items/Image/ImageHelpers';
 import { VideoConstructorData, VideoItem } from './Video';
+import { transformOps } from '../Transformation/transformOps';
 import {uploadMediaToStorage} from "api/MediaHelpers";
 
 export const getVideoMetadata = (file: File): Promise<{ width: number; height: number }> => {
@@ -33,8 +34,8 @@ export const createVideoItem = (
 	const video = new VideoItem(videoData, board, board.events, '', extension);
 	video.doOnceBeforeOnLoad(() => {
 		const { scaleX, scaleY, translateX, translateY } = calculatePosition(video, board);
-		video.transformation.applyTranslateTo(translateX, translateY);
-		video.transformation.applyScaleTo(scaleX, scaleY);
+		video.apply(transformOps.translateTo(video, translateX, translateY));
+		video.apply(transformOps.scaleTo(video, scaleX, scaleY));
 		video.updateMbr();
 		const boardVideo = board.add(video);
 		board.selection.removeAll();

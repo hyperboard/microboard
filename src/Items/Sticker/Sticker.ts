@@ -19,6 +19,7 @@ import { StickerData, StickerOperation } from "./StickerOperation";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { SessionStorage } from "SessionStorage";
 import { Board } from "Board";
+import { transformOps } from "../Transformation/transformOps";
 import { DocumentFactory } from "api/DocumentFactory";
 import {
   positionRelatively,
@@ -464,7 +465,7 @@ export class Sticker extends BaseItem<Sticker> {
       y -= l * height;
     }
 
-    this.transformation.setLocal(x, y, l, l);
+    this.apply(transformOps.setLocal(this.id, { translateX: x, translateY: y, scaleX: l, scaleY: l }));
     this.saveStickerData();
   }
   /** Entry point for AddSticker tool during item creation */
@@ -475,9 +476,9 @@ export class Sticker extends BaseItem<Sticker> {
       const w = width * scale;
       const h = height * scale;
 
-      this.transformation.setLocal(pt.x - w / 2, pt.y - h / 2, scale, scale);
+      this.apply(transformOps.setLocal(this.id, { translateX: pt.x - w / 2, translateY: pt.y - h / 2, scaleX: scale, scaleY: scale }));
     } else {
-      this.transformation.setLocal(pt.x - width / 2, pt.y - height / 2, 1, 1);
+      this.apply(transformOps.setLocal(this.id, { translateX: pt.x - width / 2, translateY: pt.y - height / 2, scaleX: 1, scaleY: 1 }));
     }
   }
   doResize(
@@ -508,26 +509,26 @@ export class Sticker extends BaseItem<Sticker> {
 
       const startWidth = this.getMbr().getWidth();
       if (needGrow) {
-        this.transformation.scaleBy(1.33, 1, timeStamp);
+        this.apply(transformOps.scaleBy(this.id, 1.33, 1, timeStamp));
         if (resizeType === "left") {
-          this.transformation.translateBy(
+          this.apply(transformOps.translateBy(this.id,
             startWidth - this.getMbr().getWidth(),
             0,
             timeStamp
-          );
+          ));
         }
       } else if (needShrink) {
-        this.transformation.scaleBy(1 / 1.33, 1, timeStamp);
+        this.apply(transformOps.scaleBy(this.id, 1 / 1.33, 1, timeStamp));
         if (resizeType === "left") {
-          this.transformation.translateBy(
+          this.apply(transformOps.translateBy(this.id,
             startWidth - this.getMbr().getWidth(),
             0,
             timeStamp
-          );
+          ));
         }
       }
     } else {
-      this.transformation.scaleByTranslateBy(
+      this.apply(transformOps.scaleByTranslateBy(this.id,
         {
           x: res.matrix.scaleX,
           y: res.matrix.scaleY,
@@ -537,7 +538,7 @@ export class Sticker extends BaseItem<Sticker> {
           y: res.matrix.translateY,
         },
         timeStamp
-      );
+      ));
     }
     res.mbr = this.getMbr();
     this.saveStickerData();

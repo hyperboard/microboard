@@ -1,5 +1,6 @@
 import { Board } from 'Board';
 import { Line, Mbr, Point, RichText } from 'Items';
+import { transformOps } from 'Items/Transformation/transformOps';
 import { DrawingContext } from 'Items/DrawingContext';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
@@ -49,8 +50,8 @@ export class AddText extends BoardTool {
 			const board = this.board;
 
 			const richText = new RichText(this.board, new Mbr());
-			richText.transformation.applyTranslateTo(this.bounds.left, this.bounds.top);
-			richText.transformation.applyScaleBy(1, 1);
+			richText.apply(transformOps.translateTo(richText, this.bounds.left, this.bounds.top));
+			richText.apply(transformOps.scaleBy(richText.id, 1, 1));
 			richText.editor.maxWidth = 600;
 			richText.insideOf = richText.itemType;
 			const text = board.add(richText);

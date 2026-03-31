@@ -5,9 +5,10 @@ import { Board } from "Board";
 import { RichText } from "Items/RichText/RichText";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Point } from "Items/Point/Point";
-import { Comment } from "Items/Comment/Comment";
+import type { Comment } from "Items/Comment/Comment";
 import { Matrix } from "Items/Transformation/Matrix";
 import { AINode } from "Items/AINode/AINode";
+import { transformOps } from "Items/Transformation/transformOps";
 
 export function transformRichText({
   board,
@@ -78,7 +79,7 @@ export function transformRichText({
         board.pointer.setCursor("default");
         board.selection.shouldRenderItemsMbr = true;
         if (isLeft) {
-          single.transformation.translateBy(single.getWidth() - newWidth, 0);
+          single.apply(transformOps.translateBy(single.id, single.getWidth() - newWidth, 0));
         }
         single.editor.setMaxWidth(newWidth);
       };
@@ -88,7 +89,7 @@ export function transformRichText({
       };
     } else {
       single.editor.setMaxWidth(resizedMbr.getWidth() / single.getScale());
-      single.transformation.translateBy(matrix.translateX, 0);
+      single.apply(transformOps.translateBy(single.id, matrix.translateX, 0));
       matrix.translateY = 0;
       matrix.scaleY = 1;
       transformComments();
@@ -165,11 +166,11 @@ export function transformRichText({
         const scaleY = mbrHeight / single.getHeight();
         const translateX = left - single.left;
         const translateY = top - single.top;
-        single.transformation.scaleByTranslateBy(
+        single.apply(transformOps.scaleByTranslateBy(single.id,
           { x: scaleX, y: scaleY },
           { x: translateX, y: translateY },
           Date.now()
-        );
+        ));
       };
 
       return {
@@ -177,11 +178,11 @@ export function transformRichText({
         onPointerUpCb,
       };
     } else {
-      single.transformation.scaleByTranslateBy(
+      single.apply(transformOps.scaleByTranslateBy(single.id,
         { x: matrix.scaleX, y: matrix.scaleY },
         { x: matrix.translateX, y: matrix.translateY },
         Date.now()
-      );
+      ));
       transformComments();
       return {
         resizedMbr: getTransformedTextMbr(single, resizedMbr, isWidth),

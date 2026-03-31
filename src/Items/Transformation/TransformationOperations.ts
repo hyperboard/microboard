@@ -4,6 +4,7 @@ interface TransformationBase {
 	class: "Transformation";
 	item: string[];
 	timestamp?: number;
+	silent?: boolean;
 }
 
 /** @deprecated Use ApplyMatrixOperation instead. Kept for reading legacy events. */
@@ -82,6 +83,7 @@ export interface ApplyMatrixOperation {
 	method: "applyMatrix";
 	items: ApplyMatrixItem[];
 	timeStamp?: number;
+	silent?: boolean;
 }
 
 export interface TransformManyItems {
@@ -101,12 +103,11 @@ export interface TransformMany {
 
 export type TransformationOperation =
 	| ApplyMatrixOperation
-	| TranslateOperation
-	| ScaleOperation
 	| RotateOperation
-	| ScaleRelativeToOperation
-	| ScaleByTranslateByOperation
 	| DeserializeOperation
 	| TransformMany
 	| Locked
-	| Unlocked;
+	| Unlocked
+	| TranslateOperation
+	| ScaleOperation
+	| ScaleByTranslateByOperation;

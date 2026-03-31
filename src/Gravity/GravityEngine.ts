@@ -1,6 +1,7 @@
 import { Board } from 'Board';
 import { conf } from 'Settings';
 import { ApplyMatrixOperation } from 'Items/Transformation/TransformationOperations';
+import { transformOps } from 'Items/Transformation/transformOps';
 
 interface Velocity {
 	vx: number;
@@ -191,14 +192,14 @@ export class GravityEngine {
 			const moveY = vel.vy * dt;
 
 			if (Math.abs(moveX) >= this.MIN_MOVE_PX || Math.abs(moveY) >= this.MIN_MOVE_PX) {
-				items[i].transformation.applyMatrixSilent({
+				items[i].apply(transformOps.applyMatrix(items[i].getId(), {
 					translateX: moveX,
 					translateY: moveY,
 					scaleX: 1,
 					scaleY: 1,
 					shearX: 0,
 					shearY: 0,
-				});
+				}, undefined, true));
 			}
 		}
 	}

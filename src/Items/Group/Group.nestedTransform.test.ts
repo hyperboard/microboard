@@ -7,6 +7,7 @@ import { Frame } from "Items/Frame/Frame";
 import { Sticker } from "Items/Sticker/Sticker";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Group } from "Items/Group/Group";
+import { transformOps } from "Items/Transformation/transformOps";
 
 function makeBoard(): Board {
   const board = new Board("test-board");
@@ -16,13 +17,13 @@ function makeBoard(): Board {
 
 function addFrame(board: Board, tx: number, ty: number): Frame {
   const proto = new Frame(board, board.items.getById.bind(board.items));
-  proto.transformation.setLocal({ translateX: tx, translateY: ty, scaleX: 1, scaleY: 1 });
+  proto.apply(transformOps.setLocal(proto.id, { translateX: tx, translateY: ty, scaleX: 1, scaleY: 1 }));
   return board.add(proto) as unknown as Frame;
 }
 
 function addSticker(board: Board, tx: number, ty: number): Sticker {
   const proto = new Sticker(board);
-  proto.transformation.setLocal({ translateX: tx, translateY: ty, scaleX: 1, scaleY: 1 });
+  proto.apply(transformOps.setLocal(proto.id, { translateX: tx, translateY: ty, scaleX: 1, scaleY: 1 }));
   return board.add(proto) as unknown as Sticker;
 }
 

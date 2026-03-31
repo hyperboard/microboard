@@ -8,6 +8,7 @@ import {Subject} from "Subject";
 import {registerItem} from "Items/RegisterItem";
 import {Card} from "Items/Examples/CardGame/Card/Card";
 import {DrawingContext} from "Items/DrawingContext";
+import {transformOps} from "Items/Transformation/transformOps";
 import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
 import {Path} from "../../../Path";
@@ -68,15 +69,15 @@ export class Deck extends BaseItem<Deck> {
           && (!firstCardDimensions || (firstCardDimensions.width === foundItem.getDimensions().width && firstCardDimensions.height === foundItem.getDimensions().height))
         if (canAddItem) {
           this.isPerpendicular = foundItem.getIsRotatedPerpendicular()
-          foundItem.transformation.setLocal(
-            this.left + (this.index?.listAll().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
-            this.top + (this.index?.listAll().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
-          );
+          foundItem.apply(transformOps.setLocal(foundItem.id, {
+            translateX: this.left + (this.index?.listAll().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
+            translateY: this.top + (this.index?.listAll().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
+          }));
           if (firstCard) {
             const {scaleX, scaleY} = foundItem.transformation.getMatrixData();
             const {scaleX: targetScaleX, scaleY: targetScaleY} = firstCard.transformation.getMatrixData();
             if (scaleX !== targetScaleX || scaleY !== targetScaleY) {
-              foundItem.transformation.setLocal({ scaleX: targetScaleX, scaleY: targetScaleY });
+              foundItem.apply(transformOps.setLocal(foundItem.id, { scaleX: targetScaleX, scaleY: targetScaleY }));
             }
           }
           this.board.selection.remove(foundItem);
@@ -358,7 +359,7 @@ registerHotkey({
       if (!card) {
         return;
       }
-      card.transformation.translateTo(left, top - 280);
+      card.apply(transformOps.translateTo(card, left, top - 280));
       if (deck.getDeck().length === 0) {
         board?.remove(deck);
       }
@@ -382,7 +383,7 @@ registerHotkey({
       if (!card) {
         return;
       }
-      card.transformation.translateTo(left, top - 280);
+      card.apply(transformOps.translateTo(card, left, top - 280));
       if (deck.getDeck().length === 0) {
         board?.remove(deck);
       }
@@ -406,7 +407,7 @@ registerHotkey({
       if (!card) {
         return;
       }
-      card.transformation.translateTo(left, top - 280);
+      card.apply(transformOps.translateTo(card, left, top - 280));
       if (deck.getDeck().length === 0) {
         board?.remove(deck);
       }
@@ -455,7 +456,7 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
     const onlyCards = board.selection.items.isAllItemsType("Card");
     if (onlyCards) {
       const deck = new Deck(board, "");
-      deck.transformation.setLocal(cardsOrDecks[cardsOrDecks.length - 1].left, cardsOrDecks[cardsOrDecks.length - 1].top);
+      deck.apply(transformOps.setLocal(deck.id, { translateX: cardsOrDecks[cardsOrDecks.length - 1].left, translateY: cardsOrDecks[cardsOrDecks.length - 1].top }));
       const addedDeck = board.add(deck);
       board.selection.removeAll();
       addedDeck.addChildItems(cardsOrDecks);

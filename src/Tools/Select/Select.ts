@@ -1,6 +1,7 @@
 import { Board } from 'Board';
 import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
 import {Line, Mbr, Item, Point, Frame, Connector, Comment, RichText} from 'Items';
+import { transformOps } from 'Items/Transformation/transformOps';
 import { DrawingContext } from 'Items/DrawingContext';
 import { quickAddItem } from 'Selection/QuickAddButtons';
 import { conf } from 'Settings';
@@ -239,7 +240,7 @@ export class Select extends Tool {
 					const translation = this.board.selection.getManyItemsTranslation(translateX, translateY);
 					this.board.selection.transformMany(translation, this.beginTimeStamp);
 				} else {
-					item.transformation.translateBy(translateX, translateY, this.beginTimeStamp);
+					item.apply(transformOps.translateBy(item.id, translateX, translateY, this.beginTimeStamp));
 				}
 			}
 		}

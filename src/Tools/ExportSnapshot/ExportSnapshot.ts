@@ -1,6 +1,7 @@
 import { Path2DFactory } from "api/Path2DFactory";
 import { Board } from "Board";
 import { Mbr, Transformation, Point } from "Items";
+import { transformOps } from "Items/Transformation/transformOps";
 import { DrawingContext } from "Items/DrawingContext";
 import { getOppositePoint } from "Selection/Transformer/TransformerHelpers/getOppositePoint";
 import { getResize } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
@@ -43,7 +44,8 @@ export class ExportSnapshot extends Tool {
   }
 
   rectMoveTo(x: number, y: number): void {
-    this.transformation.translateTo(x, y);
+    const current = this.transformation.getTranslation();
+    this.transformation.apply(transformOps.translateBy("", x - current.x, y - current.y));
     this.mbr.transform(this.transformation.toMatrix());
     this.board.tools.publish();
   }

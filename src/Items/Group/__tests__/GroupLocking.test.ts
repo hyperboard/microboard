@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { Board } from "../../../Board";
 import { Group } from "../Group";
 import { BaseItem } from "../../BaseItem/BaseItem";
+import { transformOps } from "../../Transformation/transformOps";
 
 describe("Group Locking Interaction", () => {
   let board: Board;
@@ -48,14 +49,14 @@ describe("Group Locking Interaction", () => {
     const group = board.group([item1, item2]);
     
     // Manually lock it
-    group.transformation.setIsLocked(true);
+    group.apply(transformOps.lock(group.getId(), true));
     expect(group.transformation.isLocked).toBe(true);
 
     // Now unlock it (simulating Lock.tsx behavior)
     if (group.isLockedGroup) {
        board.removeLockedGroup(group);
     } else {
-       group.transformation.setIsLocked(false);
+       group.apply(transformOps.lock(group.getId(), false));
     }
 
     expect(board.items.getById(group.getId())).toBeDefined();
@@ -77,7 +78,7 @@ describe("Group Locking Interaction", () => {
     if (group.isLockedGroup) {
        board.removeLockedGroup(group);
     } else {
-       group.transformation.setIsLocked(false);
+       group.apply(transformOps.lock(group.getId(), false));
     }
 
     expect(board.items.getById(group.getId())).toBeUndefined();

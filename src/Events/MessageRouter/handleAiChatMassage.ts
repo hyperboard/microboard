@@ -6,6 +6,7 @@ import { ImageItem } from 'Items/Image';
 import { prepareImage } from 'Items/Image/ImageHelpers';
 import { getControlPointData } from 'Selection/QuickAddButtons';
 import { conf } from 'Settings';
+import { transformOps } from 'Items/Transformation/transformOps';
 import { AiChatMsg } from './boardMessageInterface';
 
 export type AiChatEventType =
@@ -228,10 +229,10 @@ function handleAudioGenerate(response: GenerateAudioResponse, board: Board): voi
 
 		const audio = new AudioItem(board, audioUrl, board.events, '', 'wav');
 		const { left, top, right } = placeholderNode.getMbr();
-		audio.transformation.applyTranslateTo(
+		audio.apply(transformOps.translateTo(audio, 
 			left + (right - left - conf.AUDIO_DIMENSIONS.width) / 2,
 			top
-		);
+		));
 		audio.updateMbr();
 		const threadDirection: ThreadDirection = placeholderNode.getThreadDirection();
 		board.remove(placeholderNode, false);
@@ -310,7 +311,7 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 							placeholderCenterX - imageData.imageDimension.width / 2;
 						const imageTopY = placeholderMbr.top;
 						// error
-						imageItem.transformation.translateTo(imageCenterX, imageTopY);
+						imageItem.apply(transformOps.translateTo(imageItem, imageCenterX, imageTopY));
 						imageItem.setId(placeholderId);
 						let threadDirection: ThreadDirection = 3;
 						if (placeholderNode instanceof AINode) {

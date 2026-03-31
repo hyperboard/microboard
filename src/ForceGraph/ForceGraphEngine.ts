@@ -2,6 +2,7 @@ import { Board } from 'Board';
 import { conf } from 'Settings';
 import { ApplyMatrixOperation } from 'Items/Transformation/TransformationOperations';
 import { Connector } from 'Items/Connector/Connector';
+import { transformOps } from 'Items/Transformation/transformOps';
 
 // ── Union-Find for connected-component detection ──────────────────────────────
 class UnionFind {
@@ -486,11 +487,11 @@ export class ForceGraphEngine {
 				// Only count nodes that actually produce visible movement toward the sleep threshold.
 				// Nodes with sub-pixel velocity would inflate totalEnergy and prevent sleep.
 				totalEnergy += Math.abs(vel.vx) + Math.abs(vel.vy);
-				item.transformation.applyMatrixSilent({
+				item.apply(transformOps.applyMatrix(item.getId(), {
 					translateX: vel.vx,
 					translateY: vel.vy,
 					scaleX: 1, scaleY: 1, shearX: 0, shearY: 0,
-				});
+				}, undefined, true));
 			}
 		}
 

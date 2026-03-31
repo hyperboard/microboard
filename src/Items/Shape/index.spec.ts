@@ -1,6 +1,7 @@
 import { beforeAll, describe, it, expect } from 'bun:test';
 import { Board } from 'Board';
 import { Shape, shapeOps } from './index';
+import { transformOps } from '../Transformation/transformOps';
 import { Point } from '../Point';
 import { Mbr } from '../Mbr';
 import { initNodeSettings } from 'api/initNodeSettings';
@@ -68,7 +69,7 @@ describe('to diagram user of shapes', () => {
 	it('drags a shape', () => {
 		const board = new Board();
 		const shape = new Shape(board);
-		shape.transformation.translateTo(10, 20);
+		shape.apply(transformOps.translateTo(shape, 10, 20));
 		expect(shape.transformation.getTranslation()).toEqual({ x: 10, y: 20 });
 	});
 });

@@ -5,6 +5,7 @@ import { DrawingContext } from 'Items/DrawingContext';
 import { BorderStyle } from 'Items/Path';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
+import { transformOps } from 'Items/Transformation/transformOps';
 import { ColorValue, coerceColorValue, semanticColor } from 'Color';
 
 export class AddDrawing extends BoardTool {
@@ -127,7 +128,7 @@ export class AddDrawing extends BoardTool {
       point.y -= y;
     }
     const drawing = new Drawing(this.board, points);
-    drawing.transformation.translateTo(x, y);
+    drawing.apply(transformOps.translateTo(drawing, x, y));
     drawing.apply(drawingOps.setStrokeColor([drawing], coerceColorValue(this.strokeColor)));
     drawing.apply(drawingOps.setStrokeWidth([drawing], this.strokeWidth as any));
     drawing.apply(drawingOps.setBorderStyle([drawing], this.strokeStyle));

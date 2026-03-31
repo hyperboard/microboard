@@ -16,6 +16,7 @@ import { PlaceholderOperation } from "./PlaceholderOperation";
 import { PlaceholderCommand } from "./PlaceholderCommand";
 import { getResize } from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { BaseItem } from "../BaseItem/BaseItem";
+import { transformOps } from "../Transformation/transformOps";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { Board } from "../../Board";
 import { DocumentFactory } from "../../api/DocumentFactory";
@@ -275,7 +276,7 @@ export class Placeholder extends BaseItem<Placeholder> {
     ): { matrix: Matrix; mbr: Mbr } {
         const res = getResize(resizeType, pointer, mbr, opposite);
 
-        this.transformation.scaleByTranslateBy(
+        this.apply(transformOps.scaleByTranslateBy(this.id,
             {
                 x: res.matrix.scaleX,
                 y: res.matrix.scaleY,
@@ -285,7 +286,7 @@ export class Placeholder extends BaseItem<Placeholder> {
                 y: res.matrix.translateY,
             },
             timeStamp
-        );
+        ));
         res.mbr = this.getMbr();
         return res;
     }

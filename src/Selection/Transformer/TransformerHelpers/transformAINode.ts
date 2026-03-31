@@ -3,12 +3,13 @@ import { Mbr } from "Items";
 import { Board } from "Board";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Point } from "Items/Point/Point";
-import { Comment } from "Items/Comment/Comment";
+import type { Comment } from "Items/Comment/Comment";
 import { AINode } from "Items/AINode/AINode";
 import {
   getTransformedTextMbr,
   transformTextFollowingComments,
 } from "Selection/Transformer/TransformerHelpers/transformRichText";
+import { transformOps } from "Items/Transformation/transformOps";
 
 export function transformAINode({
   board,
@@ -42,15 +43,15 @@ export function transformAINode({
     single.text.editor.setMaxWidth(
       resizedMbr.getWidth() / single.text.getScale()
     );
-    single.text.transformation.translateBy(matrix.translateX, 0);
+    single.text.apply(transformOps.translateBy(single.text.id, matrix.translateX, 0));
     matrix.translateY = 0;
     matrix.scaleY = 1;
   } else {
-    single.text.transformation.scaleByTranslateBy(
+    single.text.apply(transformOps.scaleByTranslateBy(single.text.id,
       { x: matrix.scaleX, y: matrix.scaleY },
       { x: matrix.translateX, y: matrix.translateY },
       Date.now()
-    );
+    ));
   }
 
   transformTextFollowingComments({

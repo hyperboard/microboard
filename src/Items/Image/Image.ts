@@ -8,6 +8,7 @@ import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Placeholder } from "../Placeholder/Placeholder";
+import { transformOps } from "../Transformation/transformOps";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
@@ -50,14 +51,14 @@ export function getPlaceholderImage(
     placeholderCanvas.width = imageDimension.width;
     placeholderCanvas.height = imageDimension.height;
 
-    placeholder.transformation.scaleTo(
+    placeholder.apply(transformOps.scaleTo(placeholder,
       imageDimension.width / 100,
       imageDimension.height / 100
-    );
+    ));
   } else {
     placeholderCanvas.width = 250;
     placeholderCanvas.height = 50;
-    placeholder.transformation.scaleTo(250 / 100, 50 / 100);
+    placeholder.apply(transformOps.scaleTo(placeholder, 250 / 100, 50 / 100));
   }
 
   // placeholder.render(context); TODO: had to comment out to run in node. look if it breaks something

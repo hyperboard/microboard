@@ -1,5 +1,6 @@
 import { Board } from 'Board';
 import { Line, Frame, Mbr, Item } from 'Items';
+import { transformOps } from 'Items/Transformation/transformOps';
 import { DrawingContext } from 'Items/DrawingContext';
 import { FrameType } from 'Items/Frame/Basic';
 import { BoardTool } from 'Tools/BoardTool';
@@ -211,19 +212,19 @@ export class AddFrame extends BoardTool {
 	}
 
 	applyScaleTo(x: number, y: number): void {
-		this.frame.transformation.setLocal({ scaleX: x, scaleY: y });
+		this.frame.apply(transformOps.setLocal(this.frame.id, { scaleX: x, scaleY: y }));
 	}
 
 	applyScaleBy(x: number, y: number): void {
-		this.frame.transformation.scaleBy(x, y);
+		this.frame.apply(transformOps.scaleBy(this.frame.id, x, y));
 	}
 
 	applyTranslateTo(x: number, y: number): void {
-		this.frame.transformation.setLocal(x, y);
+		this.frame.apply(transformOps.setLocal(this.frame.id, { translateX: x, translateY: y }));
 	}
 
 	applyTranslateBy(x: number, y: number): void {
-		this.frame.transformation.translateBy(x, y);
+		this.frame.apply(transformOps.translateBy(this.frame.id, x, y));
 	}
 
 	applyAddChildren(children: Item[]): void {

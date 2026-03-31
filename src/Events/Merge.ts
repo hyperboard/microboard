@@ -143,61 +143,63 @@ function mergeTransformationOperations(
   }
 
   // @deprecated — legacy event merging only, new events use applyMatrix
-  const method = opA.method;
+  const anyOpA = opA as any;
+  const anyOpB = opB as any;
+  const method = anyOpA.method;
   switch (method) {
     case "translateBy":
-      if (opB.method !== method) {
+      if (anyOpB.method !== method) {
         return;
       }
       return {
         class: "Transformation",
         method: "translateBy",
-        item: opA.item,
-        x: opA.x + opB.x,
-        y: opA.y + opB.y,
-        timeStamp: opB.timeStamp,
-      };
+        item: anyOpA.item,
+        x: anyOpA.x + anyOpB.x,
+        y: anyOpA.y + anyOpB.y,
+        timeStamp: anyOpB.timeStamp,
+      } as any;
     case "scaleBy":
-      if (opB.method !== method) {
+      if (anyOpB.method !== method) {
         return;
       }
       return {
         class: "Transformation",
         method: "scaleBy",
-        item: opA.item,
-        x: opA.x * opB.x,
-        y: opA.y * opB.y,
-        timeStamp: opB.timeStamp,
-      };
+        item: anyOpA.item,
+        x: anyOpA.x * anyOpB.x,
+        y: anyOpA.y * anyOpB.y,
+        timeStamp: anyOpB.timeStamp,
+      } as any;
     case "rotateBy":
-      if (opB.method !== method) {
+      if (anyOpB.method !== method) {
         return;
       }
       return {
         class: "Transformation",
         method: "rotateBy",
-        item: opA.item,
-        degree: opA.degree + opB.degree,
-        timeStamp: opB.timeStamp,
-      };
+        item: anyOpA.item,
+        degree: anyOpA.degree + anyOpB.degree,
+        timeStamp: anyOpB.timeStamp,
+      } as any;
     case "scaleByTranslateBy":
-      if (opB.method !== method) {
+      if (anyOpB.method !== method) {
         return;
       }
       return {
         class: "Transformation",
         method: "scaleByTranslateBy",
-        item: opA.item,
+        item: anyOpA.item,
         scale: {
-          x: opA.scale.x * opB.scale.x,
-          y: opA.scale.y * opB.scale.y,
+          x: anyOpA.scale.x * anyOpB.scale.x,
+          y: anyOpA.scale.y * anyOpB.scale.y,
         },
         translate: {
-          x: opA.translate.x + opB.translate.x,
-          y: opA.translate.y + opB.translate.y,
+          x: anyOpA.translate.x + anyOpB.translate.x,
+          y: anyOpA.translate.y + anyOpB.translate.y,
         },
-        timeStamp: opB.timeStamp,
-      };
+        timeStamp: anyOpB.timeStamp,
+      } as any;
     // end @deprecated
     default:
       return;

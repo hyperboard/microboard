@@ -42,38 +42,23 @@ function toLocalTransformOp(
 			});
 			return { ...op, items: converted } as ApplyMatrixOperation;
 		}
-		case 'translateBy': {
-			const local = containerMatrix.applyInverseLinear(op.x, op.y);
-			return { ...op, x: local.x, y: local.y };
-		}
-		case 'translateTo': {
-			// Absolute world position → local position via full inverse
-			const pt = new Point(op.x, op.y);
-			containerMatrix.getInverse().apply(pt);
-			return { ...op, x: pt.x, y: pt.y };
-		}
-		case 'scaleTo': {
-			// Legacy absolute scale: convert to local scale
-			return { ...op, x: op.x / containerMatrix.scaleX, y: op.y / containerMatrix.scaleY };
-		}
-		case 'scaleByTranslateBy': {
-			const local = containerMatrix.applyInverseLinear(op.translate.x, op.translate.y);
-			return { ...op, translate: { x: local.x, y: local.y } };
-		}
-		case 'scaleByRelativeTo':
-		case 'scaleToRelativeTo': {
-			const pt = new Point(op.point.x, op.point.y);
-			containerMatrix.getInverse().apply(pt);
-			return { ...op, point: pt };
-		}
 		case 'transformMany': {
 			if (!itemId || !op.items[itemId]) return op;
 			const subOp = op.items[itemId] as TransformationOperation;
 			const localSubOp = toLocalTransformOp(subOp, containerMatrix);
 			return { ...op, items: { ...op.items, [itemId]: localSubOp } } as TransformMany;
 		}
+		case 'translateBy':
+		case 'translateTo': {
+			const local = containerMatrix.applyInverseLinear(op.x, op.y);
+			return { ...op, x: local.x, y: local.y };
+		}
+		case 'scaleByTranslateBy': {
+			const local = containerMatrix.applyInverseLinear(op.translate.x, op.translate.y);
+			return { ...op, translate: { x: local.x, y: local.y } };
+		}
 		default:
-			// scaleBy, rotateTo, rotateBy, locked, unlocked, deserialize — no translation
+			// rotateTo, rotateBy, locked, unlocked, deserialize — no translation
 			return op;
 	}
 }
@@ -252,8 +237,13 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		});
 	}
 
-	rotate(clockwise = true): void {
-		this.transformation.rotateBy(clockwise ? 90 : -90);
+	rotate(degree: number): void {
+		this.apply({
+			class: "Transformation",
+			method: "rotateBy",
+			item: [this.id],
+			degree,
+		});
 	}
 
 	emitNesting(children: BaseItem[]): void {
@@ -377,7 +367,12 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 					
 					foundItem.parent = this.getId();
 					foundItem.onParentChanged(this.getId());
-					foundItem.transformation.setLocalMatrix(localMatrix);
+					foundItem.apply({
+						class: "Transformation",
+						method: "setLocalMatrix",
+						item: [foundItem.id],
+						matrix: localMatrix,
+					} as any);
 					this.index?.insert(foundItem);
 				}
 			}
@@ -404,7 +399,12 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 					this.index?.remove(foundItem, true);
 					foundItem.parent = "Board";
 					foundItem.onParentChanged("Board");
-					foundItem.transformation.setLocalMatrix(worldMatrix);
+					foundItem.apply({
+						class: "Transformation",
+						method: "setLocalMatrix",
+						item: [foundItem.id],
+						matrix: worldMatrix,
+					} as any);
 					this.board.items.index.insert(foundItem);
 				}
 			}

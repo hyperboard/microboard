@@ -1,5 +1,6 @@
 import { Board } from "Board";
 import { StickerTool } from "Tools/CustomTool";
+import { transformOps } from "Items/Transformation/transformOps";
 import {
 	Counter,
 	COUNTER_DIMENSIONS,
@@ -28,7 +29,7 @@ export class AddCounter extends StickerTool {
 		const x = (left + right) / 2 - COUNTER_DIMENSIONS.width / 2;
 		const y = (top + bottom) / 2 - COUNTER_DIMENSIONS.height / 2;
 		const counter = new Counter(this.board, "") as unknown as Item;
-		counter.transformation.setLocal(x, y);
+		counter.apply(transformOps.setLocal(counter.id, { translateX: x, translateY: y }));
 		const addedCounter = this.board.add(counter);
 		this.board.selection.add(addedCounter);
 	}
