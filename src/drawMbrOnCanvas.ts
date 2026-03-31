@@ -4,6 +4,7 @@ import { Item, Matrix, Mbr } from "./Items";
 import { DrawingContext } from "./Items/DrawingContext";
 import { ApplyMatrixItem } from "./Items/Transformation/TransformationOperations";
 import { conf } from "./Settings";
+import { BaseItem } from "./Items/BaseItem/BaseItem";
 
 export interface CanvasDrawer {
 	getLastCreatedCanvas: () => HTMLDivElement | undefined;
@@ -166,7 +167,24 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 			.filter(item => !!item);
 		items.forEach(item => {
 			if (item.itemType !== "Frame") {
-				item.render(context);
+				const baseItem = item as unknown as BaseItem;
+				const isNested = baseItem.parent && baseItem.parent !== "Board";
+				if (isNested) {
+					// Item lives inside a container (Group/Frame). Apply the container's
+					// nesting matrix to the canvas context before rendering so the item
+					// appears at its world position on the drag canvas.
+					const container = board.items.getById(baseItem.parent) as BaseItem | undefined;
+					if (container) {
+						context.ctx.save();
+						container.getNestingMatrix().applyToContext(context.ctx);
+						item.render(context);
+						context.ctx.restore();
+					} else {
+						item.render(context);
+					}
+				} else {
+					item.render(context);
+				}
 				board.selection.renderItemMbr(
 					context,
 					item,
@@ -323,10 +341,16 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		return translation.map(i => i.id).reduce((mbr: Mbr | undefined, id) => {
 			const item = board.items.getById(id);
 			if (item) {
+				// Use world-space MBR so the drag canvas is positioned correctly for
+				// items nested inside Groups or Frames (getMbr() returns local coords).
+				const baseItem = item as unknown as BaseItem;
+				const itemMbr = (baseItem.parent && baseItem.parent !== "Board")
+					? baseItem.getWorldMbr()
+					: item.getMbr();
 				if (!mbr) {
-					mbr = item.getMbr();
+					mbr = itemMbr;
 				} else {
-					mbr.combine(item.getMbr());
+					mbr.combine(itemMbr);
 					if (item.itemType === "Frame") {
 						mbr.combine((item as any).getRichText().getMbr());
 					}
