@@ -5,7 +5,6 @@ import {
 } from "Items/BaseItem/BaseItem";
 import { Board } from "Board";
 import { DrawingContext } from "Items/DrawingContext";
-import { DocumentFactory } from "api/DocumentFactory";
 import { Point } from "Items/Point/Point";
 import { Path } from "Items/Path/Path";
 import { Line } from "Items/Line/Line";
@@ -74,10 +73,6 @@ export class Counter extends BaseItem<Counter> {
 		]);
 	}
 
-	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("photo-item");
-		return div;
-	}
 
 	deserialize(data: SerializedItemData): this {
 		super.deserialize(data);

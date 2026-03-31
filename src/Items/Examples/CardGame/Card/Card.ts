@@ -5,7 +5,6 @@ import {
 } from "Items/BaseItem/BaseItem";
 import {Board} from "Board";
 import {DrawingContext} from "Items/DrawingContext";
-import {DocumentFactory} from "api/DocumentFactory";
 import {Path} from "Items/Path/Path";
 import {Subject} from "Subject";
 import {Paths} from "Items/Path/Paths";
@@ -171,26 +170,6 @@ export class Card extends BaseItem<Card> {
     }
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = super.renderHTML(documentFactory);
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-
-
-    div.style.backgroundImage = `url(${this.imageToRender?.src || this.backsideUrl})`;
-
-    div.id = this.getId();
-    div.style.width = `${this.dimensions.width}px`;
-    div.style.height = `${this.dimensions.height}px`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.style.backgroundSize = "cover";
-    div.setAttribute("rotation", this.transformation.getRotation().toString());
-
-    return div;
-  }
 
   updateMbr(): void {
     const {translateX, translateY, scaleX, scaleY} =

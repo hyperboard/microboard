@@ -5,7 +5,6 @@ import { LinkTo } from "Items/LinkTo/LinkTo";
 import { Transformation } from "Items/Transformation/Transformation";
 import { Board } from "Board";
 import { DrawingContext } from "Items/DrawingContext";
-import { DocumentFactory } from "api/DocumentFactory";
 import type { Operation } from "../../Events/EventsOperations";
 import type { Command } from "../../Events/Command";
 import { TransformationData } from "Items/Transformation/TransformationData";
@@ -630,23 +629,5 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		if (this.index) {
 			this.index.render(context);
 		}
-	}
-
-	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("base-item");
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.getMatrixData();
-		const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-
-		div.style.backgroundColor = "#b2b0c3";
-		div.id = this.getId();
-		div.style.width = `${this.getWidth()}px`;
-		div.style.height = `${this.getHeight()}px`;
-		div.style.transformOrigin = "top left";
-		div.style.transform = transform;
-		div.style.position = "absolute";
-
-		div.setAttribute("serialized-data", JSON.stringify(this.serialize()));
-		return div;
 	}
 }

@@ -20,13 +20,6 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { SessionStorage } from "SessionStorage";
 import { Board } from "Board";
 import { transformOps } from "../Transformation/transformOps";
-import { DocumentFactory } from "api/DocumentFactory";
-import {
-  positionRelatively,
-  resetElementScale,
-  scaleElementBy,
-  translateElementBy,
-} from "HTMLRender";
 import { conf } from "Settings";
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
@@ -329,79 +322,6 @@ export class Sticker extends BaseItem<Sticker> {
     }
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("sticker-item");
-
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${Math.round(translateX)}px, ${Math.round(
-      translateY
-    )}px) scale(${scaleX}, ${scaleY})`;
-    const itemMbr = this.getMbr();
-    const height = itemMbr.getHeight();
-    const unscaledWidth = itemMbr.getWidth() / scaleX;
-    const unscaledHeight = height / scaleY;
-
-    div.id = this.getId();
-    div.style.backgroundColor = resolveColor(this.backgroundColor, conf.theme, 'background');
-    div.style.width = `${unscaledWidth}px`;
-    div.style.height = `${unscaledHeight}px`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.style.boxShadow =
-      "0px 18px 24px rgba(20, 21, 26, 0.25), 0px 8px 8px rgba(20, 21, 26, 0.125)";
-
-    const autoScale =
-      (this.text.isAutosize() && this.text.getAutoSizeScale()) || 1;
-    const textElement = this.text.renderHTML(documentFactory);
-    const padding = 8;
-    textElement.id = `${this.getId()}_text`;
-    textElement.style.overflow = "auto";
-    positionRelatively(textElement, div, padding);
-    resetElementScale(textElement);
-    scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
-    scaleElementBy(textElement, autoScale, autoScale);
-    
-    // Calculate the available width in Board pixels, then translate to CSS/HTML space
-    const maxAvailableWidth = (unscaledWidth - 2 * padding);
-    textElement.style.maxWidth = `${maxAvailableWidth * scaleX}px`;
-    
-    if (autoScale < 1) {
-      // If autosized down, the logical width is larger (width / autoScale)
-      // We need to ensure the element doesn't exceed the sticker bounds
-      textElement.style.width = `${maxAvailableWidth * scaleX}px`;
-    } else {
-      textElement.style.width = "100%";
-    }
-    const textHeight = this.text.layoutNodes.height * autoScale;
-    if (textHeight < height) {
-      const alignment = this.text.getVerticalAlignment();
-      if (alignment === "center") {
-        textElement.style.marginTop = `${(height - textHeight) / 2 / scaleY}px`;
-      } else if (alignment === "bottom") {
-        textElement.style.marginTop = `${(height - textHeight) / scaleY}px`;
-      } else {
-        textElement.style.marginTop = "0px";
-      }
-    }
-
-    div.setAttribute("data-link-to", this.linkTo.serialize() || "");
-    if (this.getLinkTo()) {
-      const linkElement = this.linkTo.renderHTML(documentFactory);
-      scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
-      translateElementBy(
-        linkElement,
-        unscaledWidth - parseInt(linkElement.style.width) / scaleX,
-        0
-      );
-      div.appendChild(linkElement);
-    }
-
-    div.appendChild(textElement);
-
-    return div;
-  }
 
   renderShadow(context: DrawingContext): void {
     const mbr = this.getMbr();

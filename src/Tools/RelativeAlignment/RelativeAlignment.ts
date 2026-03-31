@@ -126,7 +126,7 @@ export class AlignmentHelper {
       if (item === movingItem || item.itemType === "Comment" || (item instanceof BaseItem && !item.shouldUseRelativeAlignment)) {
         return;
       }
-      const itemMbr = (item instanceof BaseItem ? item.getWorldMbr() : item.getMbr());
+      const itemMbr = item.getWorldMbr();
 
       const centerXMoving = (movingMBR.left + movingMBR.right) / 2;
       const centerXItem = (itemMbr.left + itemMbr.right) / 2;
@@ -310,7 +310,7 @@ export class AlignmentHelper {
   ): boolean {
     const itemMbr = Array.isArray(draggingItem)
       ? this.combineMBRs(draggingItem)
-      : (draggingItem instanceof BaseItem ? draggingItem.getWorldMbr() : draggingItem.getMbr());
+      : draggingItem.getWorldMbr();
     const itemCenterX = (itemMbr.left + itemMbr.right) / 2;
     const itemCenterY = (itemMbr.top + itemMbr.bottom) / 2;
 
@@ -494,7 +494,7 @@ export class AlignmentHelper {
   ): boolean {
     const itemMbr = Array.isArray(draggingItem)
       ? this.combineMBRs(draggingItem)
-      : (draggingItem instanceof BaseItem ? draggingItem.getWorldMbr() : draggingItem.getMbr());
+      : draggingItem.getWorldMbr();
 
     const getAlignmentInfo = (line: Line, side: ResizeType) => {
       const alignments: Record<

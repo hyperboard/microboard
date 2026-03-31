@@ -488,17 +488,6 @@ export class Path implements Geometry, PathStylize {
 	}
 
 	// smell have to redo without document
-	renderHTML(documentFactory: DocumentFactory): SVGPathElement {
-		const pathElement = documentFactory.createElementNS('http://www.w3.org/2000/svg', 'path') as any;
-
-		pathElement.setAttribute('d', this.getSvgPath());
-		pathElement.setAttribute('fill', this.backgroundColor);
-		pathElement.setAttribute('fill-opacity', this.backgroundOpacity.toString());
-		pathElement.setAttribute('stroke', this.borderColor);
-		pathElement.setAttribute('vector-effect', 'non-scaling-stroke');
-
-		return pathElement;
-	}
 
 	transform(matrix: Matrix): void {
 		for (const segment of this.segments) {

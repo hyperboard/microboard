@@ -27,7 +27,6 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { BPMN } from "./BPMN";
 import { Board } from "Board";
 import { Subject } from "Subject";
-import { DocumentFactory } from "api/DocumentFactory";
 import {
   positionRelatively,
   resetElementScale,
@@ -454,86 +453,6 @@ export class Shape extends BaseItem<Shape> {
       const { top, right } = this.getMbr();
       this.linkTo.render(context, top, right, this.board.camera.getScale());
     }
-  }
-
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("shape-item");
-
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const mbr = this.getMbr();
-    const width = mbr.getWidth();
-    const height = mbr.getHeight();
-    const unscaledWidth = width / scaleX;
-    const unscaledHeight = height / scaleY;
-
-    const svg = documentFactory.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "svg"
-    );
-    svg.setAttribute("width", `${unscaledWidth}px`);
-    svg.setAttribute("height", `${unscaledHeight}px`);
-    svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-    svg.setAttribute("transform-origin", "0 0");
-    svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
-    svg.setAttribute("style", "position: absolute; overflow: visible;");
-
-    const pathElement = Shapes[this.shapeType].path
-      .copy()
-      .renderHTML(documentFactory);
-    const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
-    paths.forEach((element) => {
-      element.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background"));
-      element.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground"));
-      element.setAttribute(
-        "stroke-dasharray",
-        LinePatterns[this.borderStyle].join(", ")
-      );
-      element.setAttribute("stroke-width", this.borderWidth.toString());
-      element.setAttribute("transform-origin", "0 0");
-      element.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
-    });
-    svg.append(...paths);
-    div.appendChild(svg);
-
-    div.id = this.getId();
-    div.style.width = unscaledWidth + "px";
-    div.style.height = unscaledHeight + "px";
-    div.style.transformOrigin = "left top";
-    div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-    div.style.position = "absolute";
-    div.setAttribute("data-shape-type", this.shapeType);
-    div.setAttribute("fill", resolveColor(this.backgroundColor, conf.theme, "background"));
-    div.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, "foreground"));
-    div.setAttribute("data-border-style", this.borderStyle);
-    div.setAttribute(
-      "stroke-dasharray",
-      LinePatterns[this.borderStyle].join(", ")
-    );
-    div.setAttribute("stroke-width", this.borderWidth.toString());
-
-    const textElement = this.text.renderHTML(documentFactory);
-    textElement.id = `${this.getId()}_text`;
-    textElement.style.overflow = "auto";
-    positionRelatively(textElement, div);
-    resetElementScale(textElement);
-    scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
-
-    div.setAttribute("data-link-to", this.linkTo.serialize() || "");
-    if (this.getLinkTo()) {
-      const linkElement = this.linkTo.renderHTML(documentFactory);
-      scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
-      translateElementBy(
-        linkElement,
-        (width - parseInt(linkElement.style.width)) / scaleX,
-        0
-      );
-      div.appendChild(linkElement);
-    }
-
-    div.appendChild(textElement);
-
-    return div;
   }
 
   getPaths(): Path | Paths {

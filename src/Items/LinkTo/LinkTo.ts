@@ -85,40 +85,4 @@ export class LinkTo {
     ctx.restore();
   }
 
-  // smell have to redo without document
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("link-item");
-    div.classList.add("link-object");
-    div.id = this.id;
-    div.style.width = `24px`;
-    div.style.height = `24px`;
-    div.style.transformOrigin = "top left";
-    div.style.position = "absolute";
-    div.style.backgroundColor = "#FFFFFF";
-    div.style.borderRadius = "2px";
-    div.style.zIndex = "1";
-    const link = documentFactory.createElement("a") as HTMLAnchorElement;
-    link.style.position = "absolute";
-    link.style.width = `100%`;
-    link.style.height = `100%`;
-    link.style.borderRadius = "2px";
-    link.style.display = "flex";
-    link.style.justifyContent = "center";
-    link.style.alignItems = "center";
-    link.setAttribute("target", "_blank");
-    if (this.link) {
-      link.href = this.link;
-      const image = documentFactory.createElement("img") as HTMLImageElement;
-      image.id = this.id;
-      image.classList.add("link-image");
-      image.src = `${new URL(this.link).origin}/favicon.ico`;
-      image.width = 20;
-      image.height = 20;
-      image.style.display = "block";
-      link.appendChild(image);
-    }
-
-    div.appendChild(link);
-    return div;
-  }
 }

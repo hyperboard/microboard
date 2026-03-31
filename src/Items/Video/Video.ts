@@ -1,4 +1,3 @@
-import { DocumentFactory } from "api/DocumentFactory";
 import { Board } from "Board";
 import { Events, Operation } from "Events";
 import { Point } from "../Point/Point";
@@ -284,37 +283,6 @@ export class VideoItem extends BaseItem<VideoItem> {
     }
 
     ctx.restore();
-  }
-
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("video-item");
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-
-    div.style.backgroundImage = this.previewUrl
-      ? `url(${this.previewUrl})`
-      : `url(${
-          createPlaceholderImage(
-            this.videoDimension.width,
-            this.videoDimension.height
-          ).src
-        })`;
-
-    div.id = this.getId();
-    div.style.width = `${this.videoDimension.width}px`;
-    div.style.height = `${this.videoDimension.height}px`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.style.backgroundSize = "cover";
-    div.setAttribute("video-url", this.getUrl());
-    div.setAttribute("preview-url", this.getPreviewUrl());
-    div.setAttribute("extension", this.extension);
-    div.setAttribute("is-storage-url", this.isStorageUrl ? "1" : "");
-    div.setAttribute("data-link-to", "");
-
-    return div;
   }
 
   serialize(): SerializedItemData<VideoItemData> {

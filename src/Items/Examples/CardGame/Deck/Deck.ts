@@ -13,7 +13,6 @@ import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
 import {Path} from "../../../Path";
 import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
-import {DocumentFactory} from "api/DocumentFactory";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -280,33 +279,6 @@ export class Deck extends BaseItem<Deck> {
     }
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = super.renderHTML(documentFactory);
-    const cards = this.index?.listAll() as Card[];
-    const topCard = cards[cards.length - 1];
-    if (!topCard) {
-      return div;
-    }
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
-
-    const topCardElement = topCard.renderHTML(documentFactory);
-    div.appendChild(topCardElement);
-    const offset = ((this.index?.listAll().length || 0) - 1) * 2;
-    topCardElement.style.transform = `translate(${offset}px, ${0}px) scale(1, 1)`
-
-    div.id = this.getId();
-    div.style.width = `${this.getWidth()}px`;
-    div.style.height = `${this.getHeight()}px`;
-    div.style.boxShadow = `${offset}px 0px 0px 0px rgba(34, 60, 80, 0.74) inset`
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.style.backgroundSize = "cover";
-
-    return div;
-  }
 
   private updateCache(context: DrawingContext) {
     const cards = this.index?.listAll() as Card[];

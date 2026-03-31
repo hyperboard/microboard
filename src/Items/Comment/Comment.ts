@@ -13,7 +13,6 @@ import { SerializedItemData } from "../BaseItem";
 import { Line } from "../Line";
 import { v4 as uuidv4 } from "uuid";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { DocumentFactory } from "api/DocumentFactory";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { transformOps } from "Items/Transformation/transformOps";
 import { Board } from "Board";
@@ -447,16 +446,4 @@ export class Comment extends BaseItem<Comment> {
   renderHoverHighlight(_context: DrawingContext): void {}
 
   render(context: DrawingContext): void {}
-
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("comment-item");
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.setAttribute("comment-data", JSON.stringify(this.serialize()));
-    return div;
-  }
 }

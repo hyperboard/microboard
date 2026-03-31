@@ -22,10 +22,8 @@ import {
   SnapshotInfo,
 } from "Tools/ExportSnapshot/exportBoardSnapshot";
 import {LinkTo} from "../LinkTo/LinkTo";
-import {translateElementBy} from "HTMLRender";
 
 import {DefaultFrameData, FRAME_TITLE_COLOR, FrameData} from "./FrameData";
-import {DocumentFactory} from "api/DocumentFactory";
 
 import {conf} from "Settings";
 import {
@@ -679,66 +677,6 @@ export class Frame extends BaseItem<Frame> {
       nMbr.backgroundColor = "rgba(173, 216, 230, 0.25)";
       nMbr.render(context);
     }
-  }
-
-  // smell have to redo without document
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("frame-item");
-    div.id = this.getId();
-
-    div.style.backgroundColor = resolveColor(this.backgroundColor, conf.theme, 'background');
-    div.style.opacity = this.backgroundOpacity.toString();
-
-    div.style.borderColor = resolveColor(this.borderColor, conf.theme, 'foreground');
-    div.style.borderWidth = `${this.borderWidth}px`;
-    div.style.borderStyle = this.borderStyle;
-
-    const {translateX, translateY, scaleX, scaleY} =
-      this.transformation.getMatrixData();
-
-    // const transform = `translate(${Math.round(translateX)}px, ${Math.round(translateY)}px) scale(${scaleX}, ${scaleY})`;
-    const transform = `translate(${Math.round(translateX)}px, ${Math.round(
-      translateY
-    )}px) scale(1, 1)`;
-
-    const width = this.getMbr().getWidth();
-    const height = this.getMbr().getHeight();
-    // const path = Frames[this.shapeType].path.copy();
-    // const unscaledMbr = path.getMbr();
-    // const unscaledWidth = unscaledMbr.getWidth();
-    // const unscaledHeight = unscaledMbr.getHeight();
-
-    // div.style.width = `${unscaledWidth}px`;
-    // div.style.height = `${unscaledHeight}px`;
-    div.style.width = `${width}px`;
-    div.style.height = `${height}px`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    // div.setAttribute("data-shape-type", this.shapeType);
-
-    const textElement = this.text.renderHTML(documentFactory);
-    textElement.style.transform = `translate(0px, -30px) scale(1, 1)`;
-    // positionRelatively(textElement,  div);
-    // resetElementScale(textElement);
-    // scaleElementBy(textElement, 1 / scaleX, 1 / scaleY);
-    // translateElementBy(textElement, 0, -45 / scaleY);
-    textElement.id = `${this.getId()}_text`;
-    textElement.style.overflow = "visible";
-    div.appendChild(textElement);
-
-    div.setAttribute("data-link-to", this.linkTo.serialize() || "");
-    if (this.getLinkTo()) {
-      const linkElement = this.linkTo.renderHTML(documentFactory);
-      translateElementBy(
-        linkElement,
-        width - parseInt(linkElement.style.width),
-        0
-      );
-      div.appendChild(linkElement);
-    }
-
-    return div;
   }
 
   getRichText(): RichText {

@@ -5,7 +5,6 @@ import { Transformation } from "../Transformation/Transformation";
 import { TransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { DocumentFactory } from "api/DocumentFactory";
 import { Path } from "../Path/Path";
 import { Point } from "Items/Point/Point";
 import { Line } from "Items/Line/Line";
@@ -153,27 +152,6 @@ export class AudioItem extends BaseItem<AudioItem> {
 
     ctx.fill();
     ctx.restore();
-  }
-
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("audio-item");
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-
-    div.id = this.getId();
-    div.style.width = `${conf.AUDIO_DIMENSIONS.width}px`;
-    div.style.height = `${conf.AUDIO_DIMENSIONS.height}px`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.setAttribute("audio-url", this.getUrl());
-    if (this.extension) {
-      div.setAttribute("extension", this.extension);
-    }
-    div.setAttribute("data-link-to", "");
-
-    return div;
   }
 
   serialize(): SerializedItemData<AudioItemData> {

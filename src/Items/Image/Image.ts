@@ -11,10 +11,8 @@ import { Placeholder } from "../Placeholder/Placeholder";
 import { transformOps } from "../Transformation/transformOps";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
 import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
-import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import {getMediaSignedUrl} from "api/MediaHelpers";
@@ -339,39 +337,6 @@ export class ImageItem extends BaseItem<ImageItem> {
       const { top, right } = this.getMbr();
       this.linkTo.render(context, top, right, this.board.camera.getScale());
     }
-  }
-
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("image-item");
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-
-
-    div.style.backgroundImage = `url(${this.storageLink})`;
-
-    div.id = this.getId();
-    div.style.width = `${this.imageDimension.width}px`;
-    div.style.height = `${this.imageDimension.height}px`;
-    div.style.transformOrigin = "top left";
-    div.style.transform = transform;
-    div.style.position = "absolute";
-    div.style.backgroundSize = "cover";
-    div.setAttribute("rotation", this.transformation.getRotation().toString());
-
-    div.setAttribute("data-link-to", this.linkTo.serialize() || "");
-    if (this.getLinkTo()) {
-      const linkElement = this.linkTo.renderHTML(documentFactory);
-      scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
-      translateElementBy(
-        linkElement,
-        (this.getMbr().getWidth() - parseInt(linkElement.style.width)) / scaleX,
-        0
-      );
-      div.appendChild(linkElement);
-    }
-
-    return div;
   }
 
   getPath(): Path | Paths {

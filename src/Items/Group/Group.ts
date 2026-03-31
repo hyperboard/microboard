@@ -12,7 +12,6 @@ import type { Item } from "../Item";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
-import { DocumentFactory } from "api/DocumentFactory";
 
 export interface GroupData {
   readonly itemType: "Group";
@@ -201,16 +200,4 @@ export class Group extends BaseItem<Group> {
     ctx.restore();
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("div");
-    div.id = this.id;
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-
-    div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-    div.style.position = "absolute";
-    div.style.transformOrigin = "0 0";
-
-    return div;
-  }
 }

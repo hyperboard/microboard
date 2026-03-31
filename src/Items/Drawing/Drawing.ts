@@ -13,8 +13,6 @@ import { TransformationData } from "../Transformation/TransformationData";
 import { Geometry } from "../Geometry";
 import { isSafari } from "isSafari";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { scaleElementBy, translateElementBy } from "HTMLRender/HTMLRender";
-import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { Board } from "Board";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
@@ -248,66 +246,6 @@ export class Drawing extends BaseItem<Drawing> {
     }
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = documentFactory.createElement("drawing-item");
-
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const mbr = this.getMbr();
-    const width = mbr.getWidth();
-    const height = mbr.getHeight();
-    const unscaledWidth = width / scaleX;
-    const unscaledHeight = height / scaleY;
-
-    const svg = documentFactory.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "svg"
-    );
-    svg.setAttribute("width", `${unscaledWidth}px`);
-    svg.setAttribute("height", `${unscaledHeight}px`);
-    svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-    svg.setAttribute("style", "position: absolute; overflow: visible;");
-    // svg.setAttribute("transform-origin", "0 0");
-    // svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
-
-    const pathElement = documentFactory.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "path"
-    );
-    pathElement.setAttribute("d", this.getPathData());
-    pathElement.setAttribute("stroke", resolveColor(this.borderColor, conf.theme, this.colorRole));
-    pathElement.setAttribute("stroke-opacity", `${this.borderOpacity}`);
-    pathElement.setAttribute("stroke-width", `${this.strokeWidth}`);
-    pathElement.setAttribute("fill", "none");
-    // pathElement.setAttribute("transform-origin", "0 0");
-    // pathElement.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
-    // pathElement.setAttribute("vector-effect", "non-scaling-stroke");
-
-    svg.appendChild(pathElement);
-
-    div.appendChild(svg);
-
-    div.id = this.getId();
-    div.style.width = unscaledWidth + "px";
-    div.style.height = unscaledHeight + "px";
-    div.style.transformOrigin = "left top";
-    div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-    div.style.position = "absolute";
-
-    div.setAttribute("data-link-to", this.linkTo.serialize() || "");
-    if (this.getLinkTo()) {
-      const linkElement = this.linkTo.renderHTML(documentFactory);
-      scaleElementBy(linkElement, 1 / scaleX, 1 / scaleY);
-      translateElementBy(
-        linkElement,
-        (width - parseInt(linkElement.style.width)) / scaleX,
-        0
-      );
-      div.appendChild(linkElement);
-    }
-
-    return div;
-  }
 
   private getPathData(): string {
     const points = this.points;

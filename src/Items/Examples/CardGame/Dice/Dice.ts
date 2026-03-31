@@ -5,7 +5,6 @@ import {createRoundedRectanglePath} from "Items/Shape/Basic/RoundedRectangle";
 import {Subject} from "Subject";
 import {Board} from "Board";
 import {DrawingContext} from "Items";
-import {DocumentFactory} from "../../../../api/DocumentFactory";
 import {DiceOperation} from "./DiceOperation";
 import {registerItem} from "Items";
 import {AddDice} from "./AddDice";
@@ -347,73 +346,6 @@ export class Dice extends BaseItem<Dice> {
     }
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = super.renderHTML(documentFactory);
-    const { translateX, translateY, scaleX, scaleY } =
-      this.transformation.getMatrixData();
-    const mbr = this.getMbr();
-    const width = mbr.getWidth();
-    const height = mbr.getHeight();
-    const unscaledWidth = width / scaleX;
-    const unscaledHeight = height / scaleY;
-
-    const svg = documentFactory.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "svg"
-    );
-    svg.setAttribute("width", `${unscaledWidth}px`);
-    svg.setAttribute("height", `${unscaledHeight}px`);
-    svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-    svg.setAttribute("transform-origin", "0 0");
-    svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
-    svg.setAttribute("style", "position: absolute; overflow: visible;");
-
-    const pathElement = Shapes["RoundedRectangle"].path
-      .copy()
-      .renderHTML(documentFactory);
-    const paths = Array.isArray(pathElement) ? pathElement : [pathElement];
-    paths.forEach((element) => {
-      element.setAttribute("fill", this.backgroundColor);
-      element.setAttribute("stroke", this.borderColor);
-      element.setAttribute(
-        "stroke-dasharray",
-        LinePatterns[this.borderStyle].join(", ")
-      );
-      element.setAttribute("stroke-width", this.borderWidth.toString());
-      element.setAttribute("transform-origin", "0 0");
-      element.setAttribute("transform", `scale(${scaleX}, ${scaleY})`);
-    });
-    svg.append(...paths);
-    div.appendChild(svg);
-
-    div.id = this.getId();
-    div.style.width = unscaledWidth + "px";
-    div.style.height = unscaledHeight + "px";
-    div.style.transformOrigin = "left top";
-    div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-    div.style.position = "absolute";
-    div.style.display = "flex";
-    div.style.alignItems = "center";
-    div.style.textAlign = "center";
-    div.style.justifyContent = "center";
-    div.style.backgroundColor = "transparent";
-
-    const innerDiv = document.createElement("div") as HTMLDivElement;
-    innerDiv.style.font = `bold ${unscaledWidth / 3}px sans-serif`;
-    innerDiv.style.width = `${unscaledWidth / 3}px`
-    innerDiv.style.height = `${unscaledHeight / 3}px`
-    innerDiv.style.position = "relative";
-
-    const valueToRender = this.renderValues[this.valueIndex];
-    if (typeof valueToRender === "number") {
-      innerDiv.innerHTML = valueToRender.toString();
-    } else {
-      innerDiv.style.backgroundImage = `url(${valueToRender.src})`;
-      innerDiv.style.backgroundSize = "cover";
-    }
-    div.appendChild(innerDiv);
-    return div;
-  }
 }
 
 registerItem({

@@ -5,7 +5,6 @@ import {
 } from "Items/BaseItem/BaseItem";
 import { Board } from "Board";
 import { DrawingContext } from "Items/DrawingContext";
-import { DocumentFactory } from "api/DocumentFactory";
 import { Point } from "Items/Point/Point";
 import { BorderStyle, BorderWidth, Path } from "Items/Path/Path";
 import { Line } from "Items/Line/Line";
@@ -108,38 +107,6 @@ export class Star extends BaseItem<Star> {
 		return this.path.copy();
 	}
 
-	renderHTML(documentFactory: DocumentFactory): HTMLElement {
-		const div = documentFactory.createElement("star-item");
-		const { translateX, translateY, scaleX, scaleY } =
-			this.transformation.getMatrixData();
-		const mbr = this.getMbr();
-		const unscaledWidth = mbr.getWidth() / scaleX;
-		const unscaledHeight = mbr.getHeight() / scaleY;
-
-		const svg = documentFactory.createElementNS(
-			"http://www.w3.org/2000/svg",
-			"svg",
-		);
-		svg.setAttribute("width", `${unscaledWidth}px`);
-		svg.setAttribute("height", `${unscaledHeight}px`);
-		svg.setAttribute("viewBox", `0 0 ${unscaledWidth} ${unscaledHeight}`);
-		svg.setAttribute("transform-origin", "0 0");
-		svg.setAttribute("transform", `scale(${1 / scaleX}, ${1 / scaleY})`);
-		svg.setAttribute("style", "position: absolute; overflow: visible;");
-
-		const pathElement = this.path.renderHTML(documentFactory);
-		svg.appendChild(pathElement);
-		div.appendChild(svg);
-
-		div.id = this.getId();
-		div.style.width = `${unscaledWidth}px`;
-		div.style.height = `${unscaledHeight}px`;
-		div.style.transformOrigin = "left top";
-		div.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
-		div.style.position = "absolute";
-
-		return div;
-	}
 
 	deserialize(data: SerializedItemData): this {
 		super.deserialize(data);

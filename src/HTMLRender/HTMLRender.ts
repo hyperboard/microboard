@@ -1,3 +1,8 @@
+import { DocumentFactory } from "api/DocumentFactory";
+import { Path, Paths } from "Items/Path";
+import { LinkTo } from "Items/LinkTo/LinkTo";
+import { conf } from "Settings";
+
 export function getTranslationFromHTML(el: HTMLElement): [number, number] {
 	const transform = el.style.transform;
 	const translateMatch = transform.match(/translate\(([^)]+)\)/);
@@ -99,17 +104,64 @@ export function positionAbsolutely(
 	return toPosition;
 }
 
-// export function scaleRelatively(
-// 	toScale: HTMLElement,
-// 	scaleBy: HTMLElement,
-// ): void {
-// 	const [currentScaleX, currentScaleY] = getScaleFromHTML(toScale);
-// 	const [referenceScaleX, referenceScaleY] = getScaleFromHTML(scaleBy);
-// 	const [newScaleX, newScaleY] = [
-// 		currentScaleX / referenceScaleX,
-// 		currentScaleY / referenceScaleY,
-// 	];
-
-// 	const [translateX, translateY] = getTranslationFromHTML(toScale);
-// 	toScale.style.transform = `translate(${translateX * newScaleX}px, ${translateY * newScaleY}px) scale(${newScaleX}, ${newScaleY})`;
 // }
+
+export function renderPathToHTML(
+    path: Path | Paths,
+    documentFactory: DocumentFactory
+): SVGPathElement | SVGPathElement[] {
+    if (path instanceof Path) {
+        const svgPath = documentFactory.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+        ) as SVGPathElement;
+        svgPath.setAttribute("d", path.getSvgPath());
+        svgPath.setAttribute("fill", path.getBackgroundColor() || "none");
+        svgPath.setAttribute("fill-opacity", (path as any).backgroundOpacity?.toString() || "1");
+        svgPath.setAttribute("stroke", path.getBorderColor() || "none");
+        svgPath.setAttribute("stroke-width", path.getBorderWidth().toString());
+        svgPath.setAttribute("vector-effect", "non-scaling-stroke");
+        return svgPath;
+    } else {
+        return path.getPaths().map((p) => renderPathToHTML(p, documentFactory) as SVGPathElement);
+    }
+}
+
+export function renderLinkToHTML(
+    linkTo: LinkTo,
+    documentFactory: DocumentFactory
+): HTMLElement {
+    const div = documentFactory.createElement("link-item");
+    div.classList.add("link-object");
+    div.id = (linkTo as any).id || "";
+    div.style.width = `24px`;
+    div.style.height = `24px`;
+    div.style.transformOrigin = "top left";
+    div.style.position = "absolute";
+    div.style.backgroundColor = "#FFFFFF";
+    div.style.borderRadius = "2px";
+    div.style.zIndex = "1";
+    const link = documentFactory.createElement("a") as HTMLAnchorElement;
+    link.style.position = "absolute";
+    link.style.width = `100%`;
+    link.style.height = `100%`;
+    link.style.borderRadius = "2px";
+    link.style.display = "flex";
+    link.style.justifyContent = "center";
+    link.style.alignItems = "center";
+    link.setAttribute("target", "_blank");
+    if (linkTo.link) {
+        link.href = linkTo.link;
+        const image = documentFactory.createElement("img") as HTMLImageElement;
+        image.id = (linkTo as any).id || "";
+        image.classList.add("link-image");
+        image.src = `${new URL(linkTo.link).origin}/favicon.ico`;
+        image.width = 20;
+        image.height = 20;
+        image.style.display = "block";
+        link.appendChild(image);
+    }
+
+    div.appendChild(link);
+    return div;
+}

@@ -18,6 +18,7 @@ import {Subject} from 'Subject';
 import {LayeredIndex} from './LayeredIndex';
 import {BaseItem, SerializedItemData} from "../Items/BaseItem";
 import {ItemDataWithId} from "../Items/Item";
+import { renderItemToHTML } from "Items/Renderers";
 
 /**
  * Transforms a world-space axis-aligned bounding box into the local coordinate space
@@ -826,13 +827,13 @@ export class Items {
     const GroupsHTML = groups.map(group => {
       group.getChildrenIds()?.forEach(childId => childrenMap.set(childId, group.getId()));
 
-      const html = group.renderHTML(documentFactory);
+      const html = renderItemToHTML(group, documentFactory);
       translateElementBy(html, -lowestCoordinates.left, -lowestCoordinates.top);
 
       return html;
     });
     const restHTML = rest
-      .map(item => 'renderHTML' in item && item.renderHTML(documentFactory))
+      .map(item => renderItemToHTML(item as BaseItem, documentFactory))
       .filter(item => !!item)
       .map(item => {
         if (item.tagName.toLowerCase() === 'connector-item') {

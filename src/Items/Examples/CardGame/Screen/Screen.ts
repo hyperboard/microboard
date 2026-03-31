@@ -12,7 +12,6 @@ import {Line} from "../../../Line";
 import {Point} from "../../../Point";
 import {AddPouch, AddScreen} from "./AddScreen";
 import {ScreenOperation} from "./ScreenOperation";
-import {DocumentFactory} from "api/DocumentFactory";
 import {conf} from "Settings";
 import {getMediaSignedUrl} from "api/MediaHelpers";
 
@@ -254,18 +253,6 @@ export class Screen extends BaseItem<Screen> {
     }
   }
 
-  renderHTML(documentFactory: DocumentFactory): HTMLElement {
-    const div = super.renderHTML(documentFactory);
-    div.style.backgroundColor = this.backgroundColor;
-    div.style.borderColor = this.borderColor;
-    div.style.borderWidth = `${this.borderWidth}px`;
-    div.style.borderStyle = this.borderStyle;
-    if (this.backgroundUrl) {
-      div.style.backgroundSize = "cover";
-      div.style.backgroundImage = `url(${this.backgroundUrl})`
-    }
-    return div;
-  }
 }
 
 registerItem({

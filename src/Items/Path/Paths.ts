@@ -213,9 +213,6 @@ export class Paths implements Geometry {
 		}
 	}
 
-	renderHTML(documentFactory: DocumentFactory): SVGPathElement[] {
-		return this.paths.map(path => path.renderHTML(documentFactory));
-	}
 
 	transform(matrix: Matrix): void {
 		for (const path of this.paths) {
