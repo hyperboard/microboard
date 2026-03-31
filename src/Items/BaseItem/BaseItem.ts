@@ -279,7 +279,9 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		}
 	): boolean {
 		const isItem = "itemType" in item;
-		const itemMbr = isItem ? item.getMbr() : item;
+		// Use world-space MBR so nested items (inside a group) are compared in the
+		// same coordinate space as the container's own world MBR.
+		const itemMbr = isItem ? (item as BaseItem).getWorldMbr() : item;
 		if (item instanceof BaseItem && !item.canBeNested) {
 			return false;
 		}
@@ -288,7 +290,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		}
 
 		const mbr = this.getMbr().copy();
-		if (item.isEnclosedOrCrossedBy(mbr)) {
+		if (itemMbr.isEnclosedOrCrossedBy(mbr)) {
 			if (mbr.isInside(itemMbr.getCenter())) {
 				if (!options || !options.onlyForOut) {
 					return true;
