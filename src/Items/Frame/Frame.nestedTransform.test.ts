@@ -146,3 +146,77 @@ describe("BaseItem.getWorldMbr: nested item world bounds", () => {
     expect(worldMbr.bottom).toBeCloseTo(localMbr.bottom, 0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Snapshot round-trip: nested items should stay in place after snapshot load
+// ---------------------------------------------------------------------------
+describe("Frame: snapshot round-trip preserves nested item positions", () => {
+  let board: Board;
+
+  // Simulate server: apply events directly without going through the log's
+  // revert/apply cycle. Use board.serialize() like getSnapshotFromList does
+  // when all events are confirmed (no unconfirmed ops on the server).
+  function makeServerSnapshot(b: Board) {
+    return { items: b.serialize(), events: [], lastIndex: 0 };
+  }
+
+  beforeEach(() => { board = makeBoard(); });
+
+  test("sticker stays at correct local coords after snapshot serialize/deserialize", () => {
+    // frame at (500, 300), sticker at world (650, 400)
+    const frame = addFrame(board, 1);
+    frame.transformation.setLocal({ translateX: 500, translateY: 300, scaleX: 1, scaleY: 1 });
+    const sticker = addSticker(board, 650, 400);
+
+    frame.applyAddChildren([sticker.getId()]);
+
+    // local = world - frameTranslation = (150, 100)
+    const localBefore = sticker.transformation.getTranslation();
+    expect(localBefore.x).toBeCloseTo(150, 0);
+    expect(localBefore.y).toBeCloseTo(100, 0);
+
+    // snapshot should have WORLD coords for nested sticker
+    const snapshot = makeServerSnapshot(board);
+    const stickerData = snapshot.items.find((d: any) => d.id === sticker.getId());
+    expect(stickerData).toBeTruthy();
+    expect(stickerData.transformation.translateX).toBeCloseTo(650, 0);
+    expect(stickerData.transformation.translateY).toBeCloseTo(400, 0);
+
+    // load into fresh board
+    const board2 = makeBoard();
+    board2.deserialize(snapshot);
+
+    const sticker2 = board2.items.getById(sticker.getId()) as unknown as BaseItem;
+    expect(sticker2).toBeTruthy();
+    expect(sticker2.parent).toBe(frame.getId());
+
+    const localAfter = sticker2.transformation.getTranslation();
+    expect(localAfter.x).toBeCloseTo(150, 0);
+    expect(localAfter.y).toBeCloseTo(100, 0);
+  });
+
+  test("sticker stays correct for scaled frame after round-trip", () => {
+    const frame = addFrame(board, 2);
+    frame.transformation.setLocal({ translateX: 1000, translateY: 500, scaleX: 2, scaleY: 2 });
+    const sticker = addSticker(board, 1200, 700);
+
+    frame.applyAddChildren([sticker.getId()]);
+
+    // Frame ignores scale for nesting: localX = 1200 - 1000 = 200, localY = 700 - 500 = 200
+    const localBefore = sticker.transformation.getTranslation();
+    expect(localBefore.x).toBeCloseTo(200, 0);
+    expect(localBefore.y).toBeCloseTo(200, 0);
+
+    const snapshot = makeServerSnapshot(board);
+    const board2 = makeBoard();
+    board2.deserialize(snapshot);
+
+    const sticker2 = board2.items.getById(sticker.getId()) as unknown as BaseItem;
+    expect(sticker2).toBeTruthy();
+    expect(sticker2.parent).toBe(frame.getId());
+
+    const localAfter = sticker2.transformation.getTranslation();
+    expect(localAfter.x).toBeCloseTo(200, 0);
+    expect(localAfter.y).toBeCloseTo(200, 0);
+  });
+});

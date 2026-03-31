@@ -180,11 +180,14 @@ export class Sticker extends BaseItem<Sticker> {
     if (data.backgroundColor != null) {
       this.backgroundColor = coerceColorValue(data.backgroundColor);
     }
-    if (data.transformation) {
-      this.transformation.deserialize(data.transformation);
-    }
     if (data.text) {
       this.text.deserialize(data.text);
+    }
+    // Apply item-level transformation AFTER text.deserialize, because RichText.deserialize
+    // also calls this.transformation.deserialize (same reference) with stale local coords.
+    // The item-level transformation must always win.
+    if (data.transformation) {
+      this.transformation.deserialize(data.transformation);
     }
     this.text.updateElement();
     const linkTo = data.linkTo;

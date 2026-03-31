@@ -170,12 +170,14 @@ export class Shape extends BaseItem<Shape> {
     this.borderOpacity = data.borderOpacity ?? this.borderOpacity;
     this.borderStyle = data.borderStyle ?? this.borderStyle;
     this.borderWidth = data.borderWidth ?? this.borderWidth;
-    if (data.transformation) {
-      this.transformation.deserialize(data.transformation);
-      this.transformPath();
-    }
     if (data.text) {
       this.text.deserialize(data.text);
+    }
+    // Apply item-level transformation AFTER text.deserialize, because RichText.deserialize
+    // also calls this.transformation.deserialize (same reference) with stale local coords.
+    // The item-level transformation must always win.
+    if (data.transformation) {
+      this.transformation.deserialize(data.transformation);
     }
     this.transformPath();
     this.text.updateElement();
