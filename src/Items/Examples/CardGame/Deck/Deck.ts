@@ -40,10 +40,6 @@ export class Deck extends BaseItem<Deck> {
     this.index!.listEnclosedBy = () => []
     this.index!.listEnclosedOrCrossedBy = () => []
 
-    this.transformation.subject.subscribe(() => {
-      this.updateMbr();
-      this.subject.publish(this);
-    });
     this.updateMbr();
   }
 
@@ -180,14 +176,20 @@ export class Deck extends BaseItem<Deck> {
     this.addChildItems(reversed);
   }
 
-  apply(op: DeckOperation): void {
+  apply(op: any): void {
     super.apply(op);
-    if (op.class === "Deck") {
-      if (op.method === "startAnimation" && op.newData.timeStamp && Date.now() - op.newData.timeStamp < 4000) {
+    if (op.class === "Transformation") {
+      this.updateMbr();
+    } else if (op.class === "Deck") {
+      if (
+        op.method === "startAnimation" &&
+        op.newData.timeStamp &&
+        Date.now() - op.newData.timeStamp < 4000
+      ) {
         this.startAnimation();
         setTimeout(() => {
           this.stopAnimation();
-        }, 2000)
+        }, 2000);
       }
       this.isCacheDirty = true;
     }

@@ -61,18 +61,17 @@ export class Screen extends BaseItem<Screen> {
     this.ownerId = data.ownerId || "";
     this.path = new Path(); // use a dummy path, it will be reassigned in transformPath
 
-    this.transformation.subject.subscribe(() => {
-      this.transformPath();
-      this.updateMbr();
-      this.subject.publish(this);
-    });
     this.transformPath();
     this.updateMbr();
   }
 
-  apply(op: ScreenOperation): void {
+  apply(op: any): void {
     super.apply(op);
     switch (op.class) {
+      case "Transformation":
+        this.transformPath();
+        this.updateMbr();
+        break;
       case "Screen":
         switch (op.method) {
           case "setBorderWidth":

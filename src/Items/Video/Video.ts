@@ -75,8 +75,6 @@ export class VideoItem extends BaseItem<VideoItem> {
   private previewUrl = "";
   private isStorageUrl = false;
   preview!: HTMLImageElement;
-  readonly transformation: Transformation;
-  readonly linkTo: LinkTo;
   readonly subject = new Subject<VideoItem>();
   loadCallbacks: ((video: VideoItem) => void)[] = [];
   beforeLoadCallbacks: ((video: VideoItem) => void)[] = [];
@@ -101,7 +99,6 @@ export class VideoItem extends BaseItem<VideoItem> {
       videoDimension.width,
       videoDimension.height
     ));
-    this.linkTo = new LinkTo(this.id, events);
     this.board = board;
     // img storage link or youtube preview url
     if (previewUrl) {
@@ -112,12 +109,6 @@ export class VideoItem extends BaseItem<VideoItem> {
       this.url = url;
     }
     this.videoDimension = videoDimension;
-    this.transformation = new Transformation(id, events);
-    this.linkTo.subject.subscribe(() => {
-      this.updateMbr();
-      this.subject.publish(this);
-    });
-    this.transformation.subject.subscribe(this.onTransform);
   }
 
   setCurrentTime(time: number) {
@@ -128,10 +119,6 @@ export class VideoItem extends BaseItem<VideoItem> {
     return this.currentTime;
   }
 
-  onTransform = (): void => {
-    this.updateMbr();
-    this.subject.publish(this);
-  };
 
   doOnceBeforeOnLoad = (callback: (video: VideoItem) => void): void => {
     this.loadCallbacks.push(callback);
@@ -346,6 +333,7 @@ export class VideoItem extends BaseItem<VideoItem> {
   	deserialize(data: SerializedItemData<VideoItemData> | VideoItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.updateMbr();
     }
     if (data.isStorageUrl) {
       this.isStorageUrl = data.isStorageUrl;
@@ -372,9 +360,7 @@ export class VideoItem extends BaseItem<VideoItem> {
     switch (op.class) {
       case "Transformation":
         super.apply(op);
-        break;
-      case "LinkTo":
-        this.linkTo.apply(op);
+        this.updateMbr();
         break;
       case "Video":
         if (op.method === "updateVideoData") {
@@ -383,9 +369,12 @@ export class VideoItem extends BaseItem<VideoItem> {
             previewUrl: op.data.previewUrl,
           });
         }
-        this.subject.publish(this);
         break;
+      default:
+        super.apply(op);
+        return;
     }
+    this.subject.publish(this);
   }
 
   emit(operation: Operation): void {

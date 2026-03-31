@@ -29,6 +29,7 @@ import { TransformationOperation } from "../Transformation/TransformationOperati
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
 import { LinkTo } from "../LinkTo/LinkTo";
+import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
 import { getBlockNodes } from "./CanvasText/Render";
 import { BlockNode, BlockType } from "./Editor/BlockNode";
@@ -158,27 +159,7 @@ export class RichText extends BaseItem<RichText> {
 
       this.subject.publish(this);
     });
-    this.transformation.subject.subscribe(
-      (tr: Transformation, op: TransformationOperation) => {
-        this.prevMbr = this.getMbr();
-        if (op.method === "applyMatrix") {
-          const itemOp = op.items.find(i => i.id === this.id);
-          if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
-            this.setAINodeShirkWidth();
-            if (!this.isInShape) {
-              this.transformCanvas();
-            } else {
-              this.updateElement();
-            }
-          } else {
-            this.transformCanvas();
-          }
-        } else if (op.method === "deserialize") {
-          this.setAINodeShirkWidth();
-          this.updateElement();
-        }
-      }
-    );
+
     if (
       !insideOf ||
       insideOf === "RichText" ||
@@ -568,30 +549,49 @@ export class RichText extends BaseItem<RichText> {
 
   apply(op: Operation): void {
     switch (op.class) {
-      case "Transformation":
+      case "Transformation": {
+        this.prevMbr = this.getMbr();
         super.apply(op);
+        const transformOp = op as TransformationOperation;
+        if (transformOp.method === "applyMatrix") {
+          const itemOp = transformOp.items.find((i) => i.id === this.id);
+          if (
+            itemOp &&
+            (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)
+          ) {
+            this.setAINodeShirkWidth();
+            if (!this.isInShape) {
+              this.transformCanvas();
+            } else {
+              this.updateElement();
+            }
+          } else {
+            this.transformCanvas();
+          }
+        }
         break;
-      case "LinkTo":
-        this.linkTo.apply(op);
-        break;
-      case "RichText":
-        if (op.method === "setMaxWidth") {
-          this.applyMaxWidth(op.maxWidth ?? 0);
-        } else if (op.method === "setFontSize") {
-          if (op.fontSize === "auto") {
+      }
+      case "RichText": {
+        const opRT = op as RichTextOperation;
+        if (opRT.method === "setMaxWidth") {
+          this.applyMaxWidth(opRT.maxWidth ?? 0);
+        } else if (opRT.method === "setFontSize") {
+          if (opRT.fontSize === "auto") {
             this.autosizeEnable();
-            this.applySelectionFontSize(14, op.context);
+            this.applySelectionFontSize(14, opRT.context);
           } else {
             this.autosizeDisable();
-            this.applySelectionFontSize(op.fontSize, op.context);
+            this.applySelectionFontSize(opRT.fontSize, opRT.context);
           }
         } else {
           this.selection = null;
-          this.editor.applyRichTextOp(op);
+          this.editor.applyRichTextOp(opRT);
         }
         this.updateElement();
         break;
+      }
       default:
+        super.apply(op);
         return;
     }
 
@@ -603,6 +603,7 @@ export class RichText extends BaseItem<RichText> {
     this.apply(op);
     this.editor.isCommandApplication = false;
   }
+
 
   getId(): string {
     return this.id;
@@ -996,6 +997,8 @@ export class RichText extends BaseItem<RichText> {
     }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.setAINodeShirkWidth();
+      this.updateElement();
     }
     if (data.containerMaxWidth) {
       this.containerMaxWidth = data.containerMaxWidth;

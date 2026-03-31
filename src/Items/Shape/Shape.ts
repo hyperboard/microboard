@@ -20,6 +20,7 @@ import { Operation } from "Events";
 import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
+import { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { getResize } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { tempStorage } from "SessionStorage";
 import { LinkTo } from "../LinkTo/LinkTo";
@@ -47,11 +48,9 @@ export const Shapes = { ...BasicShapes, ...BPMN };
 export class Shape extends BaseItem<Shape> {
   readonly itemType = "Shape";
   parent = "Board";
-  readonly transformation: Transformation;
   private path: Path | Paths;
   private textContainer: Mbr;
   readonly text: RichText;
-  readonly linkTo: LinkTo;
   readonly subject = new Subject<Shape>();
   transformationRenderBlock?: boolean = undefined;
 
@@ -68,8 +67,6 @@ export class Shape extends BaseItem<Shape> {
     private mbr = Shapes[shapeType].path.getMbr().copy()
   ) {
     super(board, id);
-    this.linkTo = new LinkTo(this.id, this.board.events);
-    this.transformation = new Transformation(this.id, this.board.events);
     this.path = Shapes[this.shapeType].path.copy();
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
     this.text = new RichText(
@@ -84,23 +81,7 @@ export class Shape extends BaseItem<Shape> {
       "Shape"
     );
 
-    this.transformation.subject.subscribe(
-      (_subject: Transformation, op: TransformationOperation) => {
-        this.transformPath();
-        this.updateMbr();
-        if (op.method === "applyMatrix") {
-          const itemOp = op.items.find(i => i.id === this.id);
-          if (itemOp && itemOp.matrix.scaleX === 1 && itemOp.matrix.scaleY === 1) {
-            this.text.transformCanvas();
-          } else {
-            this.text.updateElement();
-          }
-        } else {
-          this.text.updateElement();
-        }
-        this.subject.publish(this);
-      }
-    );
+
     this.text.subject.subscribe(() => {
       this.updateMbr();
       this.subject.publish(this);
@@ -180,6 +161,7 @@ export class Shape extends BaseItem<Shape> {
     // The item-level transformation must always win.
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.transformPath();
     }
     this.transformPath();
     this.text.updateElement();
@@ -207,24 +189,43 @@ export class Shape extends BaseItem<Shape> {
 
   apply(op: Operation): void {
     switch (op.class) {
-      case "Shape":
-        this.applyShapeOperation(op);
+      case "Transformation":
+        super.apply(op);
+        this.transformPath();
         this.updateMbr();
+        const tOp = op as TransformationOperation;
+        if (tOp.method === "applyMatrix") {
+          const itemOp = tOp.items.find((i) => i.id === this.id);
+          if (
+            itemOp &&
+            itemOp.matrix.scaleX === 1 &&
+            itemOp.matrix.scaleY === 1
+          ) {
+            this.text.transformCanvas();
+          } else {
+            this.text.updateElement();
+          }
+        } else {
+          this.text.updateElement();
+        }
         break;
       case "RichText":
         this.text.apply(op);
         break;
-      case "Transformation":
-        super.apply(op);
-        break;
       case "LinkTo":
-        this.linkTo.apply(op);
+        this.linkTo.apply(op as LinkToOperation);
+        break;
+      case "Shape":
+        this.applyShapeOperation(op as ShapeOperation);
+        this.updateMbr();
         break;
       default:
+        super.apply(op);
         return;
     }
     this.subject.publish(this);
   }
+
 
   private applyShapeOperation(op: ShapeOperation): void {
     switch (op.method) {

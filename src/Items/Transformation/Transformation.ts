@@ -28,7 +28,6 @@ type LocalTransformationOperation =
 	  };
 
 export class Transformation {
-	readonly subject = new SubjectOperation<Transformation, TransformationOperation>();
 	private _matrix = new Matrix();
 	previous = new Matrix();
 	private rotate = defaultData.rotate;
@@ -119,12 +118,6 @@ export class Transformation {
 		if (data.rotate) {
 			this.rotate = data.rotate;
 		}
-		this.subject.publish(this, {
-			class: 'Transformation',
-			method: 'deserialize',
-			item: [this.id],
-			data,
-		});
 		return this;
 	}
 
@@ -359,24 +352,10 @@ export class Transformation {
 				this.applyScaleBy(this.previous.scaleX * op.scale.x, this.previous.scaleY * op.scale.y); // actually this is weird but following legacy
 				this.applyTranslateBy(op.translate.x, op.translate.y);
 				break;
-			default:
 				return;
 		}
-		this.subject.publish(this, this.getPublishedOperation(op));
 	}
 
-	private getPublishedOperation(
-		op: TransformationOperation | LocalTransformationOperation
-	): TransformationOperation {
-		if (op.method === 'setLocal' || op.method === 'setLocalMatrix') {
-			return {
-				class: 'Transformation',
-				method: 'applyMatrix',
-				items: [{ id: this.id, matrix: this.getMatrixData() }],
-			} satisfies ApplyMatrixOperation;
-		}
-		return op as TransformationOperation;
-	}
 
 	// ─── Legacy apply helpers (for replaying old events) ─────────────────────
 

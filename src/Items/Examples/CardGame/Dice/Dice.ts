@@ -1,4 +1,5 @@
 import {BaseItem, BaseItemData, SerializedItemData} from "../../../BaseItem/BaseItem";
+import { Operation } from "Events";
 import {BorderWidth, LinePatterns, Path, Shapes, BorderStyle, Point} from "Items";
 import {createRoundedRectanglePath} from "Items/Shape/Basic/RoundedRectangle";
 import {Subject} from "Subject";
@@ -73,12 +74,6 @@ export class Dice extends BaseItem<Dice> {
     this.updateRenderValues();
 
     this.transformPath();
-
-    this.transformation.subject.subscribe(() => {
-      this.transformPath();
-      this.updateMbr();
-      this.subject.publish(this);
-    });
 
     this.updateMbr();
   }
@@ -181,6 +176,7 @@ export class Dice extends BaseItem<Dice> {
 
     this.updateRenderValues();
     this.transformPath();
+    this.updateMbr();
     this.subject.publish(this);
     return this;
   }
@@ -285,9 +281,13 @@ export class Dice extends BaseItem<Dice> {
     this.setValueIndex(Math.floor(Math.random() * this.values.length));
   }
 
-  apply(op: DiceOperation): void {
-    super.apply(op);
+  apply(op: Operation | DiceOperation): void {
     switch (op.class) {
+      case "Transformation":
+        super.apply(op);
+        this.transformPath();
+        this.updateMbr();
+        break;
       case "Dice":
         switch (op.method) {
           case "setBorderWidth":
@@ -319,6 +319,9 @@ export class Dice extends BaseItem<Dice> {
             break;
         }
         break;
+      default:
+        super.apply(op as Operation);
+        return;
     }
     this.subject.publish(this);
   }

@@ -24,8 +24,6 @@ export interface AudioItemData {
 export class AudioItem extends BaseItem<AudioItem> {
   readonly itemType = "Audio";
   parent = "Board";
-  readonly transformation: Transformation;
-  readonly linkTo: LinkTo;
   readonly subject = new Subject<AudioItem>();
   loadCallbacks: ((audio: AudioItem) => void)[] = [];
   beforeLoadCallbacks: ((audio: AudioItem) => void)[] = [];
@@ -42,17 +40,14 @@ export class AudioItem extends BaseItem<AudioItem> {
     private extension?: string
   ) {
     super(board, id);
-    this.linkTo = new LinkTo(this.id, events);
     this.board = board;
     if (url) {
       this.url = url;
     }
-    this.transformation = new Transformation(id, events);
     this.linkTo.subject.subscribe(() => {
       this.updateMbr();
       this.subject.publish(this);
     });
-    this.transformation.subject.subscribe(this.onTransform);
     this.right = this.left + conf.AUDIO_DIMENSIONS.width;
     this.bottom = this.top + conf.AUDIO_DIMENSIONS.height;
     this.shouldUseCustomRender = true;
@@ -66,10 +61,6 @@ export class AudioItem extends BaseItem<AudioItem> {
     return this.currentTime;
   }
 
-  onTransform = (): void => {
-    this.updateMbr();
-    this.subject.publish(this);
-  };
 
   doOnceBeforeOnLoad = (callback: (audio: AudioItem) => void): void => {
     this.loadCallbacks.push(callback);
@@ -198,6 +189,7 @@ export class AudioItem extends BaseItem<AudioItem> {
   	deserialize(data: SerializedItemData<AudioItemData> | AudioItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.updateMbr();
     }
     if (data.url) {
       this.url = data.url;
@@ -213,17 +205,18 @@ export class AudioItem extends BaseItem<AudioItem> {
     switch (op.class) {
       case "Transformation":
         super.apply(op);
-        break;
-      case "LinkTo":
-        this.linkTo.apply(op);
+        this.updateMbr();
         break;
       case "Audio":
         if (op.method === "setUrl") {
           this.url = op.url;
         }
-        this.subject.publish(this);
         break;
+      default:
+        super.apply(op);
+        return;
     }
+    this.subject.publish(this);
   }
 
   emit(operation: Operation): void {

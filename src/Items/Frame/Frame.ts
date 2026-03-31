@@ -23,6 +23,7 @@ import {
 } from "Tools/ExportSnapshot/exportBoardSnapshot";
 import {LinkTo} from "../LinkTo/LinkTo";
 import {translateElementBy} from "HTMLRender";
+
 import {DefaultFrameData, FRAME_TITLE_COLOR, FrameData} from "./FrameData";
 import {DocumentFactory} from "api/DocumentFactory";
 
@@ -43,12 +44,10 @@ const HEADING_BOTTOM_OFFSET = -5;
 export class Frame extends BaseItem<Frame> {
   readonly itemType = "Frame";
   parent = "Board";
-  readonly transformation: Transformation;
   readonly subject = new Subject<Frame>();
   private textContainer: Mbr = new Mbr();
   private path: Path;
   private mbr: Mbr = new Mbr();
-  readonly linkTo: LinkTo;
   readonly text: RichText;
   private canChangeRatio = true;
   canBeNested = false;
@@ -70,8 +69,6 @@ export class Frame extends BaseItem<Frame> {
   ) {
     super(board, id, undefined, true);
     this.path = Frames[this.shapeType].path.copy();
-    this.transformation = new Transformation(this.id, board.events);
-    this.linkTo = new LinkTo(this.id, board.events);
 
     const textBounds = Frames[this.shapeType].textBounds.copy();
     textBounds.top = HEADING_TOP_OFFSET;
@@ -103,12 +100,7 @@ export class Frame extends BaseItem<Frame> {
       return Math.max(1, Math.min(6, 1.2 / cameraScale));
     };
 
-    this.transformation.subject.subscribe(() => {
-      this.transformPath();
-      this.updateMbr();
-      this.text.transformCanvas();
-      this.subject.publish(this);
-    });
+
     this.text.subject.subscribe(() => {
       this.updateMbr();
       this.subject.publish(this);
@@ -124,62 +116,6 @@ export class Frame extends BaseItem<Frame> {
 
     return this;
   }
-
-  /** Sets parent of child and emits add child message */
-  // emitAddChild(children: Item[]): void {
-  //   const childrenIds = children.map((child) => {
-  //     child.parent = this.getId();
-  //     return child.getId();
-  //   });
-  //   this.addChild(childrenIds);
-  // }
-
-  // emitRemoveChild(children: Item[] | Item): void {
-  //   const newChildren = Array.isArray(children) ? children : [children];
-  //   const childrenIds = newChildren.map((child) => {
-  //     child.parent = "Board";
-  //     return child.getId();
-  //   });
-  //   this.removeChild(childrenIds);
-  // }
-
-  // emitNesting(children: Item[]): void {
-  //   const itemsToAdd: Item[] = [];
-  //   const itemsToRemove: Item[] = [];
-  //
-  //   children.forEach((child) => {
-  //     if (this.handleNesting(child)) {
-  //       itemsToAdd.push(child);
-  //     } else {
-  //       itemsToRemove.push(child);
-  //     }
-  //   });
-  //   this.emitAddChild(itemsToAdd);
-  //   this.emitRemoveChild(itemsToRemove);
-  // }
-
-  /**
-   * Parent cant be child,
-   * Child cant be itself,
-   * frame cant be child
-   */
-  // private addChild(childId: string[]): void {
-  //   this.emit({
-  //     class: "Frame",
-  //     method: "addChild",
-  //     item: [this.getId()],
-  //     childId,
-  //   });
-  // }
-
-  // private removeChild(childId: string[]): void {
-  //   this.emit({
-  //     class: "Frame",
-  //     method: "removeChild",
-  //     item: [this.getId()],
-  //     childId,
-  //   });
-  // }
 
   addChildItems(children: BaseItem[]): void {
     if (!this.index || children.length === 0) return;
@@ -206,38 +142,6 @@ export class Frame extends BaseItem<Frame> {
   getLinkTo(): string | undefined {
     return this.linkTo.link;
   }
-
-  /**
-   * Returns:
-   * true - if can be child of the frame
-   * false - if outside of the frame
-   */
-  // handleNesting(
-  //   item: Item | Mbr,
-  //   options?: {
-  //     onlyForOut?: boolean;
-  //     cancelIfChild?: boolean;
-  //   }
-  // ): boolean {
-  //   const isItem = "itemType" in item;
-  //   const itemMbr = isItem ? item.getMbr() : item;
-  //   if (item instanceof Frame) {
-  //     return false;
-  //   }
-  //   if (options?.cancelIfChild && isItem && item.parent !== "Board") {
-  //     return false;
-  //   }
-  //
-  //   const frameMbr = this.getMbr().copy();
-  //   if (item.isEnclosedOrCrossedBy(frameMbr)) {
-  //     if (frameMbr.isInside(itemMbr.getCenter())) {
-  //       if (!options || !options.onlyForOut) {
-  //         return true;
-  //       }
-  //     }
-  //   }
-  //   return false;
-  // }
 
   private initPath(): void {
     this.path = Frames[this.shapeType].path.copy();
@@ -443,6 +347,9 @@ export class Frame extends BaseItem<Frame> {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
       this.transformPath();
+      this.updateMbr();
+      this.text.transformCanvas();
+      this.updateChildrenIds();
     }
     this.canChangeRatio = data.canChangeRatio ?? this.canChangeRatio;
     this.subject.publish(this);
@@ -468,26 +375,11 @@ export class Frame extends BaseItem<Frame> {
     } else {
       this.path.transform(this.transformation.toMatrix());
     }
-    // TODO fix text container Y translation
-    // const scaleY = this.transformation.getScale().y;
-    // const offsetY = (this.textContainer.top - this.getMbr().top) / scaleY;
-    // const textMatrix = new Matrix(
-    // 	0,
-    // 	offsetY,
-    // 	1,
-    // 	1,
-    // );
-    // console.log(this.transformation.getScale().y);
-    // this.text.setContainer(Frames[this.shapeType].textBounds.copy().getTransformed(textMatrix));
 
     this.path.setBackgroundOpacity(this.backgroundOpacity);
     this.path.setBorderWidth(this.borderWidth);
     this.path.setBorderStyle(this.borderStyle);
     this.path.setBorderOpacity(this.borderOpacity);
-    // if (this.shapeType !== "Custom" &&
-    // 	(
-    // 		(this.mbr.getWidth() / this.getMbr().getHeight()).toFixed(0)) !==
-    // 	FRAME_TYPES.find(fr => fr.id === this.shapeType)?.label))
   }
 
   apply(op: Operation): void {
@@ -504,8 +396,13 @@ export class Frame extends BaseItem<Frame> {
         return;
       }
     }
-    super.apply(op)
     switch (op.class) {
+      case "Transformation":
+        super.apply(op);
+        this.transformPath();
+        this.updateMbr();
+        this.text.transformCanvas();
+        break;
       case "Frame":
         if (op.method === "setBackgroundColor") {
           this.applyBackgroundColor(op.backgroundColor);
@@ -518,10 +415,8 @@ export class Frame extends BaseItem<Frame> {
       case "RichText":
         this.text.apply(op);
         break;
-      // case "LinkTo":
-      //   this.linkTo.apply(op);
-      //   break;
       default:
+        super.apply(op);
         return;
     }
     this.subject.publish(this);

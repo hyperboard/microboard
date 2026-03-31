@@ -21,33 +21,13 @@ describe('to transform points, a user', () => {
 		expect(point.y).toBe(5);
 	});
 
-	it('routes setLocal through apply while preserving published preview semantics', () => {
+	it('updates transformation properties via setLocal', () => {
 		const transformation = new Transformation('item-1');
-		const published: { method: string; matrix: Matrix | null }[] = [];
-
-		transformation.subject.subscribe((_subject, op) => {
-			published.push({
-				method: op.method,
-				matrix: op.method === 'applyMatrix'
-					? new Matrix(
-						op.items[0]?.matrix.translateX ?? 0,
-						op.items[0]?.matrix.translateY ?? 0,
-						op.items[0]?.matrix.scaleX ?? 1,
-						op.items[0]?.matrix.scaleY ?? 1,
-						op.items[0]?.matrix.shearX ?? 0,
-						op.items[0]?.matrix.shearY ?? 0,
-					)
-					: null,
-			});
-		});
 
 		transformation.apply(transformOps.setLocal(transformation.getId(), { translateX: 10, translateY: 20, scaleX: 2, scaleY: 3 }));
 
 		expect(transformation.getTranslation()).toEqual({ x: 10, y: 20 });
 		expect(transformation.getScale()).toEqual({ x: 2, y: 3 });
-		expect(published).toHaveLength(1);
-		expect(published[0]?.method).toBe('applyMatrix');
-		expect(published[0]?.matrix?.compare(new Matrix(10, 20, 2, 3))).toBe(true);
 	});
 
 	it('routes setLocalMatrix through apply and preserves the previous matrix', () => {

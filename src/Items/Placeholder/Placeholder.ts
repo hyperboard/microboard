@@ -38,7 +38,6 @@ export class Placeholder extends BaseItem<Placeholder> {
     readonly itemType = "Placeholder";
     shapeType: ShapeType = "Rectangle";
     parent = "Board";
-    readonly transformation: Transformation;
     private path = Shapes[this.shapeType].path.copy() as Path;
     private mbr = Shapes[this.shapeType].path.getMbr().copy();
     readonly subject = new Subject<Placeholder>();
@@ -54,12 +53,6 @@ export class Placeholder extends BaseItem<Placeholder> {
         private icon: string = PlaceholderImg?.toString() || ""
     ) {
         super(board, id);
-        this.transformation = new Transformation(this.id, this.events);
-        this.transformation.subject.subscribe((_subject: Transformation) => {
-            this.transformPath();
-            this.updateMbr();
-            this.subject.publish(this);
-        });
         this.updateMbr();
         this.loadIconImage();
     }
@@ -93,6 +86,7 @@ export class Placeholder extends BaseItem<Placeholder> {
         if (data.transformation) {
             this.transformation.deserialize(data.transformation);
             this.transformPath();
+            this.updateMbr();
         }
         this.subject.publish(this);
         return this;
@@ -110,14 +104,17 @@ export class Placeholder extends BaseItem<Placeholder> {
 
     apply(op: Operation): void {
         switch (op.class) {
+            case "Transformation":
+                super.apply(op);
+                this.transformPath();
+                this.updateMbr();
+                break;
             case "Placeholder":
                 this.applyPlaceholder(op);
                 this.updateMbr();
                 break;
-            case "Transformation":
-                super.apply(op);
-                break;
             default:
+                super.apply(op);
                 return;
         }
         this.subject.publish(this);

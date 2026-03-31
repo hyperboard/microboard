@@ -78,8 +78,6 @@ export class ImageItem extends BaseItem<ImageItem> {
   readonly itemType = "Image";
   parent = "Board";
   image: HTMLImageElement;
-  readonly transformation: Transformation;
-  readonly linkTo: LinkTo;
   readonly subject = new Subject<ImageItem>();
   loadCallbacks: ((image: ImageItem) => void)[] = [];
   beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
@@ -96,21 +94,14 @@ export class ImageItem extends BaseItem<ImageItem> {
     id = "",
   ) {
     super(board, id);
-    this.linkTo = new LinkTo(this.id, events);
     this.board = board;
     this.setStorageLink(storageLink);
     this.imageDimension = imageDimension;
-    this.transformation = new Transformation(id, events);
     this.image = new Image();
     this.setImage(new Image());
     if (typeof base64 === "string") {
       this.image.src = base64;
     }
-    this.linkTo.subject.subscribe(() => {
-      this.updateMbr();
-      this.subject.publish(this);
-    });
-    this.transformation.subject.subscribe(this.onTransform);
   }
 
   private setImage(image: HTMLImageElement): void {
@@ -198,10 +189,6 @@ export class ImageItem extends BaseItem<ImageItem> {
     this.image.onload = this.onLoad;
   };
 
-  onTransform = (): void => {
-    this.updateMbr();
-    this.subject.publish(this);
-  };
 
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
@@ -278,6 +265,7 @@ export class ImageItem extends BaseItem<ImageItem> {
   deserialize(data: SerializedItemData<ImageItemData> | ImageItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.updateMbr();
     }
     this.linkTo.deserialize(data.linkTo);
     this.image.onload = () => {
@@ -311,9 +299,7 @@ export class ImageItem extends BaseItem<ImageItem> {
     switch (op.class) {
       case "Transformation":
         super.apply(op);
-        break;
-      case "LinkTo":
-        this.linkTo.apply(op);
+        this.updateMbr();
         break;
       case "Image":
         if (op.method === "updateImageData") {
@@ -323,9 +309,12 @@ export class ImageItem extends BaseItem<ImageItem> {
           this.setStorageLink(op.data.storageLink);
           this.imageDimension = op.data.imageDimension;
         }
-        this.subject.publish(this);
         break;
+      default:
+        super.apply(op);
+        return;
     }
+    this.subject.publish(this);
   }
 
   render(context: DrawingContext): void {

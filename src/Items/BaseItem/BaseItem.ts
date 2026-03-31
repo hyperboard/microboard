@@ -544,6 +544,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 					}
 				}
 				this.transformation.apply(transformOp);
+				this.updateChildrenIds();
 				break;
 			}
 			case "LinkTo":
@@ -563,6 +564,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 						break;
 				}
 		}
+		this.subject.publish(this as unknown as T);
 	}
 
 	addOnRemoveCallback(cb: () => void): void {

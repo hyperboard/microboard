@@ -67,18 +67,7 @@ export class Card extends BaseItem<Card> {
       this.board.bringToFront(this);
     }, 1000);
 
-    this.transformation.subject.subscribe((_, op) => {
-      if (
-        this.parent === "Board" &&
-        op.method === "applyMatrix" &&
-        op.items.find(i => i.id === this.id)?.matrix.scaleX === 1 &&
-        op.items.find(i => i.id === this.id)?.matrix.scaleY === 1
-      ) {
-        this.throttledBringToFront();
-      }
-      this.updateMbr();
-      this.subject.publish(this);
-    });
+    this.updateMbr();
 
     this.updateMbr();
   }
@@ -267,8 +256,19 @@ export class Card extends BaseItem<Card> {
     }
   }
 
-  apply(op: CardOperation): void {
-    super.apply(op);
+  apply(op: any): void {
+    if (op.class === "Transformation") {
+      if (
+        this.parent === "Board" &&
+        op.method === "applyMatrix" &&
+        op.items.find((i: any) => i.id === this.id)?.matrix.scaleX === 1 &&
+        op.items.find((i: any) => i.id === this.id)?.matrix.scaleY === 1
+      ) {
+        this.throttledBringToFront();
+      }
+      super.apply(op);
+      this.updateMbr();
+    }
     switch (op.class) {
       case "Card":
         switch (op.method) {

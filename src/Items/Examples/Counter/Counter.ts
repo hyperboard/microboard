@@ -30,10 +30,7 @@ export class Counter extends BaseItem<Counter> {
 	constructor(board: Board, id = "") {
 		super(board, id, defaultCounterData);
 
-		this.transformation.subject.subscribe(() => {
-			this.updateMbr();
-			this.subject.publish(this);
-		});
+		this.updateMbr();
 
 		this.updateMbr();
 	}
@@ -105,9 +102,13 @@ export class Counter extends BaseItem<Counter> {
 	}
 
 	apply(op: CounterOperation): void {
-		super.apply(op);
 		switch (op.class) {
+			case "Transformation":
+				super.apply(op);
+				this.updateMbr();
+				break;
 			case "Counter":
+				super.apply(op);
 				switch (op.method) {
 					case "updateCounter":
 						this.count = op.newData.count;

@@ -34,12 +34,10 @@ export interface DrawingData {
 export class Drawing extends BaseItem<Drawing> {
   readonly itemType = "Drawing";
   parent = "Board";
-  readonly transformation: Transformation;
   private path2d = new conf.path2DFactory();
   readonly subject = new Subject<Drawing>();
   untransformedMbr = new Mbr();
   private lines: Line[] = [];
-  readonly linkTo: LinkTo;
   strokeWidth: BorderWidth = 1;
   borderColor: ColorValue = semanticColor('contrastNeutral');
   borderStyle: BorderStyle = "solid";
@@ -55,18 +53,7 @@ export class Drawing extends BaseItem<Drawing> {
     id = ""
   ) {
     super(board, id);
-    this.transformation = new Transformation(id, events);
-    this.linkTo = new LinkTo(this.id, this.events);
-    this.transformation.subject.subscribe(() => {
-      this.updateMbr();
-      this.updateLines();
-      this.subject.publish(this);
-    });
-    this.linkTo.subject.subscribe(() => {
-      this.updateMbr();
-      this.updateLines();
-      this.subject.publish(this);
-    });
+    this.updateLines();
     this.updateLines();
   }
 
@@ -96,7 +83,11 @@ export class Drawing extends BaseItem<Drawing> {
     this.linkTo.deserialize(data.linkTo);
     this.optimizePoints();
     this.transformation.deserialize(data.transformation);
-    this.borderColor = coerceColorValue(data.strokeStyle as string | ColorValue);
+    this.borderColor = coerceColorValue(
+      data.strokeStyle as string | ColorValue
+    );
+    this.updateLines();
+    this.updateMbr();
     this.strokeWidth = data.strokeWidth;
     if (data.colorRole) {
       this.colorRole = data.colorRole;
@@ -432,13 +423,8 @@ export class Drawing extends BaseItem<Drawing> {
         }
         this.updateMbr();
         break;
-      case "Transformation":
-        super.apply(op);
-        break;
-      case "LinkTo":
-        this.linkTo.apply(op);
-        break;
       default:
+        super.apply(op);
         return;
     }
     this.subject.publish(this);

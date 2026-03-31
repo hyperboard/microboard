@@ -25,6 +25,8 @@ import {
 	getControlPoint,
 	toRelativePoint,
 } from './ControlPoint';
+import { TransformationOperation } from '../Transformation/TransformationOperations';
+
 import { getLine } from './getLine/getLine';
 import { ConnectorEdge } from './Pointers';
 import { getStartPointer, getEndPointer } from './Pointers/index';
@@ -65,11 +67,9 @@ const CONNECTOR_LINE_CAP = 'round';
 export class Connector extends BaseItem<Connector> {
 	readonly itemType = 'Connector';
 	parent = 'Board';
-	readonly transformation: Transformation;
 	private middlePoint: ControlPoint | null = new BoardPoint();
 	private lineColor: ColorValue;
 	private smartJump = true;
-	readonly linkTo: LinkTo;
 	private lineWidth: ConnectionLineWidth;
 	borderStyle: BorderStyle;
 	readonly subject = new Subject<Connector>();
@@ -93,8 +93,6 @@ export class Connector extends BaseItem<Connector> {
 		id = "",
 	) {
 		super(board, id);
-		this.transformation = new Transformation(this.id, this.board.events);
-		this.linkTo = new LinkTo(this.id, this.board.events);
 		this.lineColor = lineColor ?? semanticColor('contrastNeutral');
 		this.lineWidth = lineWidth ?? CONNECTOR_LINE_WIDTH;
 		this.borderStyle = strokeStyle ?? CONNECTOR_BORDER_STYLE;
@@ -138,17 +136,7 @@ export class Connector extends BaseItem<Connector> {
 		);
 		this.middlePoint = null;
 
-		this.transformation.subject.subscribe((_sub, op) => {
-			if (op.method === 'applyMatrix') {
-				const itemOp = op.items.find(i => i.id === this.getId());
-				if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
-					this.scalePoints();
-				}
-			}
-			this.translatePoints();
-			this.updatePaths();
-			this.subject.publish(this);
-		});
+
 		this.linkTo.subject.subscribe(() => {
 			this.updatePaths();
 			this.subject.publish(this);
@@ -374,6 +362,18 @@ export class Connector extends BaseItem<Connector> {
 	}
 
 	apply(operation: Operation): void {
+		super.apply(operation);
+		if (operation.class === 'Transformation') {
+			const transformOp = operation as TransformationOperation;
+			if (transformOp.method === 'applyMatrix') {
+				const itemOp = transformOp.items.find(i => i.id === this.getId());
+				if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
+					this.scalePoints();
+				}
+			}
+			this.translatePoints();
+			this.updatePaths();
+		}
 		switch (operation.class) {
 			case 'RichText':
 				this.text.apply(operation);
@@ -415,17 +415,14 @@ export class Connector extends BaseItem<Connector> {
 						break;
 				}
 				break;
-			// case "Transformation":
-			// 	this.transformation.apply(operation);
-			// 	break;
-			case 'LinkTo':
-				this.linkTo.apply(operation);
-				break;
 			default:
+				super.apply(operation);
 				return;
 		}
 		this.subject.publish(this);
 	}
+
+
 
 	complete(id: string): void {
 		this.id = id;
@@ -995,9 +992,7 @@ export class Connector extends BaseItem<Connector> {
 	}
 
 	deserialize(data: SerializedItemData<ConnectorData> | ConnectorData): this {
-		if (data.transformation) {
-			this.transformation.deserialize(data.transformation);
-		}
+
 		if (data.optionalFindItemFn) {
 			this.setOptionalFindFn(data.optionalFindItemFn);
 		}
@@ -1030,9 +1025,12 @@ export class Connector extends BaseItem<Connector> {
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
+			this.translatePoints();
+			this.updatePaths();
+		} else {
+			this.translatePoints();
+			this.updatePaths();
 		}
-		this.translatePoints();
-		this.updatePaths();
 		this.subject.publish(this);
 		return this;
 	}

@@ -23,10 +23,8 @@ export interface GroupData {
 }
 
 export class Group extends BaseItem<Group> {
-  readonly linkTo: LinkTo;
   readonly itemType = "Group";
   parent = "Board";
-  readonly transformation: Transformation;
   readonly subject = new Subject<Group>();
   transformationRenderBlock?: boolean = undefined;
   isLockedGroup = false;
@@ -40,13 +38,6 @@ export class Group extends BaseItem<Group> {
     // isGroupItem=true creates this.index (SimpleSpatialIndex) for child storage.
     super(board, id, undefined, true);
     this.canBeNested = true;
-    this.linkTo = new LinkTo(this.id, this.events);
-    this.transformation = new Transformation(this.id, this.events);
-
-    this.transformation.subject.subscribe(() => {
-      this.updateMbr();
-      this.subject.publish(this);
-    });
 
     // Restore children passed via constructor (used when creating Group from existing data)
     if (childIds.length > 0) {
@@ -63,16 +54,22 @@ export class Group extends BaseItem<Group> {
   }
 
   apply(op: Operation): void {
-    super.apply(op);
     switch (op.class) {
+      case "Transformation":
+        super.apply(op);
+        this.updateMbr();
+        break;
       case "Group":
         if (op.method === "addChild") {
           this.applyAddChildren([op.childId]);
         } else if (op.method === "removeChild") {
           this.applyRemoveChildren([op.childId]);
+        } else {
+          super.apply(op);
         }
         break;
       default:
+        super.apply(op);
         return;
     }
     this.subject.publish(this);
@@ -169,6 +166,7 @@ export class Group extends BaseItem<Group> {
     if (data.isLockedGroup !== undefined) {
       this.isLockedGroup = data.isLockedGroup;
     }
+    this.updateMbr();
     this.subject.publish(this);
     return this;
   }

@@ -31,6 +31,7 @@ import { conf } from "Settings";
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
+import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 
 export const stickerColors = {
   Purple: "rgb(233, 208, 255)",
@@ -79,8 +80,6 @@ const _relation = width / height;
 export class Sticker extends BaseItem<Sticker> {
   parent = "Board";
   readonly itemType = "Sticker";
-  readonly transformation: Transformation;
-  readonly linkTo: LinkTo;
   private stickerPath = StickerShape.stickerPath.copy();
   private textContainer = StickerShape.textBounds.copy();
   text: RichText;
@@ -93,8 +92,6 @@ export class Sticker extends BaseItem<Sticker> {
     public backgroundColor = defaultStickerData.backgroundColor
   ) {
     super(board, id);
-    this.linkTo = new LinkTo(this.id, this.board.events);
-    this.transformation = new Transformation(this.id, this.board.events);
     this.text = new RichText(
       board,
       this.textContainer,
@@ -107,38 +104,7 @@ export class Sticker extends BaseItem<Sticker> {
       this.itemType
     );
 
-    this.transformation.subject.subscribe(
-      (_subject: Transformation, op: TransformationOperation) => {
-        this.transformPath();
-        if (op.method === "applyMatrix") {
-          const itemOp = op.items.find(i => i.id === this.id);
-          if (itemOp) {
-            const prevScaleX = this.transformation.previous.scaleX;
-            const prevScaleY = this.transformation.previous.scaleY;
-            const currentScaleX = this.transformation.getScale().x;
-            const currentScaleY = this.transformation.getScale().y;
-            
-            // Only apply scale if actual scale changed (ignore translation/re-parenting pseudo-scales)
-            const scaleChanged = Math.abs(currentScaleX - prevScaleX) > 0.0001 || Math.abs(currentScaleY - prevScaleY) > 0.0001;
 
-            if (scaleChanged) {
-              if (this.text.isAutosize()) {
-                if (Math.abs(currentScaleX - currentScaleY) > 0.0001) {
-                  this.text.applyAutoSizeScale(this.text.calcAutoSize());
-                } else {
-                  this.text.scaleAutoSizeScale(currentScaleX / prevScaleX);
-                }
-                this.text.recoordinate();
-                this.text.transformCanvas();
-              } else {
-                this.text.handleInshapeScale();
-              }
-            }
-          }
-        }
-        this.subject.publish(this);
-      }
-    );
     this.text.subject.subscribe(() => {
       this.subject.publish(this);
     });
@@ -189,6 +155,7 @@ export class Sticker extends BaseItem<Sticker> {
     // The item-level transformation must always win.
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.transformPath();
     }
     this.text.updateElement();
     const linkTo = data.linkTo;
@@ -233,26 +200,59 @@ export class Sticker extends BaseItem<Sticker> {
 
   apply(op: Operation): void {
     switch (op.class) {
-      case "Sticker":
-        switch (op.method) {
-          case "setBackgroundColor":
-            this.applyBackgroundColor(op.backgroundColor);
-            break;
+      case "Transformation": {
+        super.apply(op);
+        this.transformPath();
+        const transformOp = op as TransformationOperation;
+        if (transformOp.method === "applyMatrix") {
+          const itemOp = transformOp.items.find((i) => i.id === this.id);
+          if (itemOp) {
+            const prevScaleX = this.transformation.previous.scaleX;
+            const prevScaleY = this.transformation.previous.scaleY;
+            const currentScaleX = this.transformation.getScale().x;
+            const currentScaleY = this.transformation.getScale().y;
+
+            // Only apply scale if actual scale changed (ignore translation/re-parenting pseudo-scales)
+            const scaleChanged =
+              Math.abs(currentScaleX - prevScaleX) > 0.0001 ||
+              Math.abs(currentScaleY - prevScaleY) > 0.0001;
+
+            if (scaleChanged) {
+              if (this.text.isAutosize()) {
+                if (Math.abs(currentScaleX - currentScaleY) > 0.0001) {
+                  this.text.applyAutoSizeScale(this.text.calcAutoSize());
+                } else {
+                  this.text.scaleAutoSizeScale(currentScaleX / prevScaleX);
+                }
+                this.text.recoordinate();
+                this.text.transformCanvas();
+              } else {
+                this.text.handleInshapeScale();
+              }
+            }
+          }
         }
+        break;
+      }
+      case "Sticker":
+        this.applyStickerOperation(op as StickerOperation);
         break;
       case "RichText":
         this.text.apply(op);
         break;
-      case "Transformation":
-        super.apply(op);
-        break;
       case "LinkTo":
-        this.linkTo.apply(op);
+        this.linkTo.apply(op as LinkToOperation);
         break;
-      default:
-        return;
     }
     this.subject.publish(this);
+  }
+
+  private applyStickerOperation(op: StickerOperation): void {
+    switch (op.method) {
+      case "setBackgroundColor":
+        this.applyBackgroundColor(op.backgroundColor);
+        break;
+    }
   }
 
   getBackgroundColor(): ColorValue {
@@ -266,7 +266,6 @@ export class Sticker extends BaseItem<Sticker> {
   private applyBackgroundColor(backgroundColor: ColorValue): void {
     this.backgroundColor = backgroundColor;
   }
-
 
   getIntersectionPoints(segment: Line): Point[] {
     throw new Error("Not implemented");

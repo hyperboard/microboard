@@ -66,11 +66,6 @@ export class Star extends BaseItem<Star> {
 		this.path = starPath.copy();
 		this.transformPath();
 
-		this.transformation.subject.subscribe(() => {
-			this.transformPath();
-			this.updateMbr();
-			this.subject.publish(this);
-		});
 
 		this.updateMbr();
 	}
@@ -168,8 +163,12 @@ export class Star extends BaseItem<Star> {
 		});
 	}
 
-	apply(op: StarOperation): void {
+	apply(op: any): void {
 		super.apply(op);
+		if (op.class === "Transformation") {
+			this.transformPath();
+			this.updateMbr();
+		}
 		switch (op.class) {
 			case "Star":
 				switch (op.method) {

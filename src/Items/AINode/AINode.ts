@@ -38,9 +38,7 @@ const ICON_SRC =
 export class AINode extends BaseItem<AINode> {
   readonly itemType = "AINode";
   parent = "Board";
-  readonly transformation: Transformation;
   readonly text: RichText;
-  readonly linkTo: LinkTo;
   private path!: Paths | Path;
   readonly subject = new Subject<AINode>();
   private parentNodeId?: string;
@@ -72,8 +70,6 @@ export class AINode extends BaseItem<AINode> {
     if (threadDirection || threadDirection === 0) {
       this.threadDirection = threadDirection;
     }
-    this.transformation = new Transformation(this.id, this.board.events);
-    this.linkTo = new LinkTo(this.id, this.board.events);
     this.text = new RichText(
       this.board,
       new Mbr(),
@@ -88,33 +84,7 @@ export class AINode extends BaseItem<AINode> {
 
     // this.text.setPaddingTop(0.5);
 
-    this.transformation.subject.subscribe(
-      (_subject: Transformation, op: TransformationOperation) => {
-        if (op.method === "applyMatrix") {
-          const itemOp = op.items.find(i => i.id === this.getId());
-          if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
-            this.prevMbr = this.path?.getMbr();
-            this.text.handleInshapeScale();
-          } else if (itemOp) {
-            this.text.transformCanvas();
-          } else {
-            this.prevMbr = this.path?.getMbr();
-            this.text.updateElement();
-          }
-        } else {
-          this.prevMbr = this.path?.getMbr();
-          this.text.updateElement();
-        }
-        this.transformPath();
-        this.subject.publish(this);
-      }
-    );
     this.text.subject.subscribe(() => {
-      this.prevMbr = this.path?.getMbr();
-      this.transformPath();
-      this.subject.publish(this);
-    });
-    this.text.transformation.subject.subscribe(() => {
       this.prevMbr = this.path?.getMbr();
       this.transformPath();
       this.subject.publish(this);
@@ -178,7 +148,10 @@ export class AINode extends BaseItem<AINode> {
       this.text.deserialize(data.text);
     }
     if (data.transformation) {
+      this.prevMbr = this.path?.getMbr();
       this.transformation.deserialize(data.transformation);
+      this.text.updateElement();
+      this.transformPath();
     }
     this.linkTo.deserialize(data.linkTo);
     if (data.isUserRequest) {
@@ -254,13 +227,33 @@ export class AINode extends BaseItem<AINode> {
       case "RichText":
         this.text.apply(op);
         break;
-      case "Transformation":
+      case "Transformation": {
+        this.prevMbr = this.path?.getMbr();
         super.apply(op);
+        const transformOp = op as TransformationOperation;
+        if (transformOp.method === "applyMatrix") {
+          const itemOp = transformOp.items.find((i) => i.id === this.getId());
+          if (
+            itemOp &&
+            (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)
+          ) {
+            this.text.handleInshapeScale();
+          } else if (itemOp) {
+            this.text.transformCanvas();
+          } else {
+            this.text.updateElement();
+          }
+        } else {
+          this.text.updateElement();
+        }
+        this.transformPath();
         break;
+      }
       case "LinkTo":
         this.linkTo.apply(op);
         break;
       default:
+        super.apply(op);
         return;
     }
     this.subject.publish(this);

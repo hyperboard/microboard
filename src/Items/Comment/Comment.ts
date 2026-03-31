@@ -48,14 +48,12 @@ const ANONYMOUS_ID = 9_999_999_999;
 
 export class Comment extends BaseItem<Comment> {
   parent = "Board";
-  readonly transformation: Transformation;
   private commentators: Commentator[] = [];
   private thread: Message[] = [];
   private usersUnreadMarks: number[] = [];
   private resolved = false;
   private itemToFollow?: string;
   readonly subject = new Subject<Comment>();
-  readonly linkTo: LinkTo;
   transformationRenderBlock?: boolean = undefined;
   resizeEnabled = true;
 
@@ -66,13 +64,7 @@ export class Comment extends BaseItem<Comment> {
     id = ""
   ) {
     super(board, id);
-    this.transformation = new Transformation(id, events);
-    this.transformation.subject.subscribe(() => {
-      this.transform();
-      this.subject.publish(this);
-    });
     this.transform();
-    this.linkTo = new LinkTo(this.id, this.events);
     this.linkTo.subject.subscribe(() => {
       this.subject.publish(this);
     });
@@ -100,6 +92,7 @@ export class Comment extends BaseItem<Comment> {
     this.commentators = data.commentators;
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
+      this.transform();
     }
     this.itemToFollow = data.itemToFollow;
     this.resolved = data.resolved;
@@ -159,10 +152,8 @@ export class Comment extends BaseItem<Comment> {
         this.applyCommentOperation(op);
         this.transform();
         break;
-      case "Transformation":
-        super.apply(op as any);
-        break;
       default:
+        super.apply(op);
         return;
     }
     this.subject.publish(this);
