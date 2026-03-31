@@ -1008,6 +1008,19 @@ export class BoardSelection {
         });
       });
 
+      // Fallback: if the spatial index had stale bounds and didn't return the
+      // item's current parent group, check it directly. This prevents accidental
+      // detachment when a child is dragged within its group after the group moved.
+      selected.forEach((item) => {
+        const entry = selectedMap[item.getId()];
+        if (!entry.nested && item.parent !== "Board") {
+          const currentParent = this.board.items.getById(item.parent) as BaseItem | undefined;
+          if (currentParent?.index && currentParent.handleNesting(item)) {
+            entry.nested = currentParent;
+          }
+        }
+      });
+
       Object.values(selectedMap).forEach((val) => {
         const parentGroup = this.board.items.getById(val.item.parent);
         const parentGroupId = parentGroup?.getId();
