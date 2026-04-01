@@ -535,7 +535,9 @@ export class Select extends Tool {
 				return false;
 			}
 
-			const draggingMbr = draggingItem.getMbr();
+			const draggingMbr = (draggingItem instanceof BaseItem && draggingItem.parent !== "Board")
+				? draggingItem.getWorldMbr()
+				: draggingItem.getMbr();
 			const groups: BaseItem[] = this.board.items
 				.getEnclosedOrCrossed(
 					draggingMbr.left,

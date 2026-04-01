@@ -63,8 +63,13 @@ export class NestingHighlighter extends Tool {
 
 				// Render children
 				group.children.forEach(child => {
-					child.render(context);
-					const childRect = child.getMbr();
+					// Do NOT call child.render(context) here — items are already rendered by
+					// the main canvas pipeline (Group.render() applies the group transform).
+					// Calling render() without the parent group's transform produces a phantom
+					// at local coords (offset from the real item by the group's translation).
+					const childRect = (child instanceof BaseItem && child.parent !== "Board")
+						? child.getWorldMbr()
+						: child.getMbr();
 					childRect.backgroundColor = FRAME_CHILDREN_HIGHLIGHTER_COLOR;
 					childRect.borderColor = FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR;
 					childRect.strokeWidth = 0.3;
