@@ -511,6 +511,25 @@ export class Board {
     });
   }
 
+  /**
+   * Removes a single item from its parent group, placing it back on the board
+   * at its current world position. If the group becomes empty after detach, the
+   * group itself is dissolved.
+   */
+  detachFromGroup(item: BaseItem): void {
+    if (item.parent === "Board") {
+      return;
+    }
+    const parentGroup = this.items.getById(item.parent) as Group | undefined;
+    if (!parentGroup || parentGroup.itemType !== "Group") {
+      return;
+    }
+    parentGroup.removeChildItems([item]);
+    if (parentGroup.getChildrenIds().length === 0) {
+      this.ungroup(parentGroup);
+    }
+  }
+
   getByZIndex(index: number): Item {
     return this.index.getByZIndex(index);
   }
