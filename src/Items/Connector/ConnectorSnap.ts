@@ -8,6 +8,7 @@ import {
 } from "./ControlPoint";
 import { Point } from "../Point";
 import { Item } from "../Item";
+import { BaseItem } from "../BaseItem";
 import { DrawingContext } from "../DrawingContext";
 import { Anchor } from "../Anchor";
 import { Path, Paths } from "../Path";
@@ -113,19 +114,32 @@ export class ConnectorSnap {
 		} else if (anchor) {
 			this.controlPoint = getFixedPoint(item, anchor.getCenter());
 		} else if (point) {
-			const nearest = item.getNearestEdgePointTo(pointer);
-			this.controlPoint = getFixedPoint(item, nearest);
+			// snap.point is already world-space (set by setPoint); use it directly.
+			this.controlPoint = getFixedPoint(item, point.getCenter());
 		} else {
-			if (this.hover.isTimeoutElapsed) {
-				this.controlPoint = getFixedPoint(item, pointer);
-			} else {
-				this.controlPoint = getFixedPoint(item, pointer);
-			}
+			this.controlPoint = getFixedPoint(item, pointer);
 		}
 	}
 
 	setHover(): void {
-		const hover = this.board.items.getUnderPointer(0)[0];
+		let hover: Item | undefined = this.board.items.getUnderPointer(0)[0];
+
+		// Drill into group children to allow snapping to items inside groups.
+		// getUnderPointer returns the Group itself; we need the specific child.
+		if (hover instanceof BaseItem && hover.index) {
+			const group = hover;
+			const inverse = group.getWorldMatrix().getInverse();
+			const pointer = this.board.pointer.point;
+			const localPointer = pointer.copy();
+			localPointer.transform(inverse);
+			for (const child of group.index!.listAll()) {
+				if ((child as BaseItem).getMbr().isUnderPoint(localPointer)) {
+					hover = child;
+					break;
+				}
+			}
+		}
+
 		if (hover) {
 			if (hover !== this.hover.item) {
 				this.hover = {
@@ -208,8 +222,19 @@ export class ConnectorSnap {
 	}
 
 	getClosestPointOnItem(item: Item, position: Point): ControlPoint {
-		const nearestEdgePoint = item.getNearestEdgePointTo(position);
-		return getFixedPoint(item, nearestEdgePoint);
+		// For nested items, position is world-space but getNearestEdgePointTo expects local-space.
+		let worldEdgePoint: Point;
+		if (item instanceof BaseItem && item.parent !== "Board") {
+			const parentMatrix = (item as BaseItem).getParentWorldMatrix();
+			const localPos = position.copy();
+			localPos.transform(parentMatrix.getInverse());
+			const localEdge = item.getNearestEdgePointTo(localPos);
+			worldEdgePoint = localEdge.copy();
+			parentMatrix.apply(worldEdgePoint);
+		} else {
+			worldEdgePoint = item.getNearestEdgePointTo(position);
+		}
+		return getFixedPoint(item, worldEdgePoint);
 	}
 
 	isNearBorder(item: Item | null): boolean {
@@ -244,10 +269,20 @@ export class ConnectorSnap {
 	}
 
 	setAnchors(item: Item): void {
-		const points = item.getSnapAnchorPoints();
-		if (!points) {
+		const localPoints = item.getSnapAnchorPoints();
+		if (!localPoints) {
 			return;
 		}
+
+		// For items nested inside a group, anchor points are in group-local space.
+		// Transform them to world space so snap highlight and toRelativePoint agree.
+		const points = (item instanceof BaseItem && item.parent !== "Board")
+			? localPoints.map(p => {
+				const wp = p.copy();
+				(item as BaseItem).getParentWorldMatrix().apply(wp);
+				return wp;
+			})
+			: localPoints;
 
 		const anchors: Anchor[] = [];
 		for (const { x, y } of points) {
@@ -300,14 +335,26 @@ export class ConnectorSnap {
 		const { item, anchor } = this.snap;
 		if (item) {
 			if (!anchor) {
-				const point = item.getNearestEdgePointTo(pointer);
+				// For nested items, convert pointer to local space before edge lookup,
+				// then convert the result back to world space.
+				let edgePoint: Point;
+				if (item instanceof BaseItem && item.parent !== "Board") {
+					const parentMatrix = (item as BaseItem).getParentWorldMatrix();
+					const localPointer = pointer.copy();
+					localPointer.transform(parentMatrix.getInverse());
+					const localEdge = item.getNearestEdgePointTo(localPointer);
+					edgePoint = localEdge.copy();
+					parentMatrix.apply(edgePoint);
+				} else {
+					edgePoint = item.getNearestEdgePointTo(pointer);
+				}
 				if (
-					point.getDistance(pointer) < this.distance.border ||
+					edgePoint.getDistance(pointer) < this.distance.border ||
 					!this.hover.isTimeoutElapsed
 				) {
 					this.snap.point = new Anchor(
-						point.x,
-						point.y,
+						edgePoint.x,
+						edgePoint.y,
 						5,
 						this.color.pointBorder,
 						this.color.pointBackground,

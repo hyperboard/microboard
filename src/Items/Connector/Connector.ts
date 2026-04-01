@@ -218,19 +218,30 @@ export class Connector extends BaseItem<Connector> {
 		if (start.pointType !== 'Fixed' && start.pointType !== 'Floating') return false;
 
 		const item = start.item;
-		const anchors = item.getSnapAnchorPoints?.();
-		if (!anchors || anchors.length === 0) return false;
+		const localAnchors = item.getSnapAnchorPoints?.();
+		if (!localAnchors || localAnchors.length === 0) return false;
 
-		// Only jump if currently on one of the 4 edge-center anchors (world-space check,
-		// works correctly for scaled items unlike the local-space edge field).
+		// Convert anchor points to world space for nested items (items inside groups store
+		// local transforms, so getSnapAnchorPoints() returns group-local coords).
+		const anchors = (item instanceof BaseItem && item.parent !== 'Board')
+			? localAnchors.map(a => {
+				const p = a.copy();
+				(item as BaseItem).getParentWorldMatrix().apply(p);
+				return p;
+			})
+			: localAnchors;
+
+		// Only jump if currently on one of the 4 edge-center anchors (world-space check).
 		const EPS = 2;
 		const isOnAnchor = anchors.some(a =>
 			Math.abs(a.x - start.x) < EPS && Math.abs(a.y - start.y) < EPS
 		);
 		if (!isOnAnchor) return false;
 
-		// Direction from the start item center toward the end point.
-		const center = item.getMbr().getCenter();
+		// Direction from the start item center toward the end point (world-space).
+		const center = (item instanceof BaseItem && item.parent !== 'Board')
+			? (item as BaseItem).getWorldMbr().getCenter()
+			: item.getMbr().getCenter();
 		const dx = this.endPoint.x - center.x;
 		const dy = this.endPoint.y - center.y;
 		if (dx === 0 && dy === 0) return false;
@@ -266,8 +277,17 @@ export class Connector extends BaseItem<Connector> {
 		if (end.pointType !== 'Fixed' && end.pointType !== 'Floating') return false;
 
 		const item = end.item;
-		const anchors = item.getSnapAnchorPoints?.();
-		if (!anchors || anchors.length === 0) return false;
+		const localAnchors = item.getSnapAnchorPoints?.();
+		if (!localAnchors || localAnchors.length === 0) return false;
+
+		// Convert anchor points to world space for nested items.
+		const anchors = (item instanceof BaseItem && item.parent !== 'Board')
+			? localAnchors.map(a => {
+				const p = a.copy();
+				(item as BaseItem).getParentWorldMatrix().apply(p);
+				return p;
+			})
+			: localAnchors;
 
 		const EPS = 2;
 		const isOnAnchor = anchors.some(a =>
@@ -275,8 +295,10 @@ export class Connector extends BaseItem<Connector> {
 		);
 		if (!isOnAnchor) return false;
 
-		// Direction from the end item center toward the start point.
-		const center = item.getMbr().getCenter();
+		// Direction from the end item center toward the start point (world-space).
+		const center = (item instanceof BaseItem && item.parent !== 'Board')
+			? (item as BaseItem).getWorldMbr().getCenter()
+			: item.getMbr().getCenter();
 		const dx = this.startPoint.x - center.x;
 		const dy = this.startPoint.y - center.y;
 		if (dx === 0 && dy === 0) return false;

@@ -57,6 +57,10 @@ export class Group extends BaseItem<Group> {
       case "Transformation":
         super.apply(op);
         this.updateMbr();
+        // Notify connectors subscribed to children so they follow group movement
+        for (const child of this.index!.listAll()) {
+          (child as BaseItem).subject.publish(child as any);
+        }
         break;
       case "Group":
         if (op.method === "addChild") {
