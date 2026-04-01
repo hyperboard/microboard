@@ -12,7 +12,7 @@ import { ColorValue, fixedColor, semanticColor } from 'Color';
 export const FRAME_BORDER_COLOR = semanticColor('contrastGray');
 
 export const FRAME_HIGHLIGHTER_BORDER_COLOR = '#93AFF6';
-export const FRAME_CHILDREN_HIGHLIGHTER_COLOR = 'rgb(10, 15, 41, .08)';
+export const FRAME_CHILDREN_HIGHLIGHTER_COLOR = 'rgb(255, 0, 0, 0.5)';
 export const FRAME_CHILDREN_HIGHLIGHTER_BORDER_COLOR = '#4778F5';
 
 export const FRAME_TITLE_COLOR = semanticColor('contrastNeutral');
