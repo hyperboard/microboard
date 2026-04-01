@@ -295,6 +295,7 @@ export class Comment extends BaseItem<Comment> {
     } else {
       this.apply(transformOps.setLocal(this.id, { translateX: this.anchor.x, translateY: this.anchor.y }));
     }
+    this.setMbr(new Mbr(this.anchor.x, this.anchor.y, this.anchor.x, this.anchor.y));
     this._syncing = false;
   }
 
@@ -368,13 +369,11 @@ export class Comment extends BaseItem<Comment> {
   }
 
   getAnchorMbr(): Mbr {
-    const anchor = this.anchor.copy();
-    return new Mbr(anchor.x, anchor.y, anchor.x, anchor.y);
+    return this.getMbr();
   }
 
   getMbr(scale?: number): Mbr {
-    const anchor = this.anchor.copy();
-    return new Mbr(anchor.x, anchor.y, anchor.x, anchor.y);
+    return this.mbr.copy();
   }
 
   getPathMbr(): Mbr {

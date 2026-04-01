@@ -4,6 +4,7 @@ import { Board } from "Board";
 import { createEvents } from "Events/Events";
 import { Frame } from "Items/Frame/Frame";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import { Mbr } from "Items/Mbr/Mbr";
 import { transformOps } from "Items/Transformation/transformOps";
 import type { SelectionHierarchyNode } from "Selection";
 
@@ -24,10 +25,7 @@ function createItem(
   bottom: number
 ): BaseItem {
   const item = new BaseItem(board, id);
-  item.left = left;
-  item.top = top;
-  item.right = right;
-  item.bottom = bottom;
+  item.setMbr(new Mbr(left, top, right, bottom));
   item.apply(transformOps.setLocal(item.id, {
     translateX: left,
     translateY: top,
@@ -232,8 +230,10 @@ describe("hierarchical selection rules", () => {
     const sibling = createItem(board, "sibling", 40, 20, 60, 40);
     const group = board.group([child, sibling]);
 
-    child.left += 100;
-    child.right += 100;
+    const childMbr = child.getMbr();
+    childMbr.left += 100;
+    childMbr.right += 100;
+    child.setMbr(childMbr);
 
     const mbr = group.getMbr();
     expect(mbr.left).toBe(40);
@@ -247,8 +247,10 @@ describe("hierarchical selection rules", () => {
     const outerGroup = board.group([outerCover]);
 
     outerGroup.applyAddChildren([innerGroup.getId()]);
-    innerChild.left += 80;
-    innerChild.right += 80;
+    const childMbr = innerChild.getMbr();
+    childMbr.left += 80;
+    childMbr.right += 80;
+    innerChild.setMbr(childMbr);
 
     const innerBounds = innerGroup.getMbr();
     const outerBounds = outerGroup.getMbr();

@@ -47,7 +47,6 @@ export class Frame extends BaseItem<Frame> {
   readonly subject = new Subject<Frame>();
   private textContainer: Mbr = new Mbr();
   private path: Path;
-  private mbr: Mbr = new Mbr();
   readonly text: RichText;
   private canChangeRatio = true;
   canBeNested = false;
@@ -201,11 +200,10 @@ export class Frame extends BaseItem<Frame> {
 
   updateMbr(): void {
     const rect = this.path.getMbr().copy();
-    this.mbr = rect;
-  }
-
-  getMbr(): Mbr {
-    return this.mbr.copy();
+    this.mbr.left = rect.left;
+    this.mbr.top = rect.top;
+    this.mbr.right = rect.right;
+    this.mbr.bottom = rect.bottom;
   }
 
   doResize(

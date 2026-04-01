@@ -58,6 +58,9 @@ export class Star extends BaseItem<Star> {
 	private path: Path;
 	readonly subject = new Subject<Star>();
 	private borderWidth = 1;
+	public backgroundColor: string = defaultStarData.backgroundColor as string;
+	public borderColor: string = defaultStarData.borderColor as string;
+	public borderStyle: BorderStyle = defaultStarData.borderStyle as BorderStyle;
 	isShining = false;
 
 	constructor(board: Board, id = "") {
@@ -97,10 +100,10 @@ export class Star extends BaseItem<Star> {
 
 	updateMbr(): void {
 		const { left, top, right, bottom } = this.path.getMbr();
-		this.left = left;
-		this.right = right;
-		this.top = top;
-		this.bottom = bottom;
+		this.mbr.left = left;
+		this.mbr.right = right;
+		this.mbr.top = top;
+		this.mbr.bottom = bottom;
 	}
 
 	getPath(): Path | Paths {

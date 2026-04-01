@@ -19,54 +19,14 @@ import { BaseItemOperation } from "./BaseItemOperation";
 import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
 import { Point } from "../Point";
 import { Matrix } from "../Transformation/Matrix";
-import { ApplyMatrixOperation, TransformMany, TransformationOperation } from "../Transformation/TransformationOperations";
+import { TransformationOperation } from "../Transformation/TransformationOperations";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { TransformParams, TransformResult } from "./TransformContext";
+import { GeometricNormal } from "../GeometricNormal";
 
 import { getResizeType, ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import type { ItemType } from "Items/Item";
-
-/**
- * Converts a world-space Transformation operation into an equivalent local-space
- * operation relative to `containerMatrix`. Used when replaying ops (including old
- * log events) against items that now store local transforms.
- *
- * Scale ratios in `applyMatrix` are coordinate-space invariant — only translation
- * deltas need to be rotated/scaled by the inverse of the container's linear transform.
- */
-function toLocalTransformOp(
-	op: TransformationOperation,
-	containerMatrix: Matrix,
-	itemId?: string,
-): TransformationOperation {
-	switch (op.method) {
-		case 'applyMatrix': {
-			const converted = op.items.map(item => {
-				const local = containerMatrix.applyInverseLinear(item.matrix.translateX, item.matrix.translateY);
-				return { ...item, matrix: { ...item.matrix, translateX: local.x, translateY: local.y } };
-			});
-			return { ...op, items: converted } as ApplyMatrixOperation;
-		}
-		case 'transformMany': {
-			if (!itemId || !op.items[itemId]) return op;
-			const subOp = op.items[itemId] as TransformationOperation;
-			const localSubOp = toLocalTransformOp(subOp, containerMatrix);
-			return { ...op, items: { ...op.items, [itemId]: localSubOp } } as TransformMany;
-		}
-		case 'translateBy':
-		case 'translateTo': {
-			const local = containerMatrix.applyInverseLinear(op.x, op.y);
-			return { ...op, x: local.x, y: local.y };
-		}
-		case 'scaleByTranslateBy': {
-			const local = containerMatrix.applyInverseLinear(op.translate.x, op.translate.y);
-			return { ...op, translate: { x: local.x, y: local.y } };
-		}
-		default:
-			// rotateTo, rotateBy, locked, unlocked, deserialize — no translation
-			return op;
-	}
-}
+import { toLocalTransformOp } from "./toLocalTransformOp";
 
 export interface BaseItemData {
 	itemType: string;
@@ -81,8 +41,9 @@ export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
 	transformation: TransformationData;
 };
 
-export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geometry {
+export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	static createCommand?: (board: Board, operation: Operation) => Command;
+	protected mbr = new Mbr();
 	readonly transformation: Transformation;
 	readonly linkTo: LinkTo;
 	parent: string = "Board";
@@ -125,7 +86,6 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		private defaultItemData?: BaseItemData,
 		isGroupItem?: boolean,
 	) {
-		super();
 		this.board = board;
 		this.id = id;
 		if (isGroupItem) {
@@ -296,7 +256,32 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	}
 
 	getMbr(): Mbr {
-		return new Mbr(this.left, this.top, this.right, this.bottom);
+		return this.mbr.copy();
+	}
+
+	setMbr(rect: Mbr): void {
+		this.mbr.left = rect.left;
+		this.mbr.top = rect.top;
+		this.mbr.right = rect.right;
+		this.mbr.bottom = rect.bottom;
+		this.subject.publish(this as any);
+	}
+
+	addMbr(rect: Mbr): void {
+		this.mbr.addMbr(rect);
+		this.subject.publish(this as any);
+	}
+
+	getWidth(): number {
+		return this.mbr.getWidth();
+	}
+
+	getHeight(): number {
+		return this.mbr.getHeight();
+	}
+
+	getCenter(): Point {
+		return this.mbr.getCenter();
 	}
 
 	/**
@@ -326,6 +311,22 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 			Math.max(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
 			Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
 		);
+	}
+
+	getIntersectionPoints(segment: Line): Point[] {
+		return this.mbr.getIntersectionPoints(segment);
+	}
+
+	getNearestEdgePointTo(point: Point): Point {
+		return this.mbr.getNearestEdgePointTo(point);
+	}
+
+	isInView(rect: Mbr): boolean {
+		return this.getMbrWithChildren().isInView(rect);
+	}
+
+	getNormal(point: Point): GeometricNormal {
+		return this.mbr.getNormal(point);
 	}
 
 	private hasAncestor(itemId: string): boolean {

@@ -395,8 +395,8 @@ export class RichText extends BaseItem<RichText> {
     maxHeight?: number;
     textScale: number;
   } {
-    let left = this.left;
-    let top = this.top;
+    let left = this.mbr.left;
+    let top = this.mbr.top;
     const { width, height } = this.layoutNodes;
     const maxWidth = this.getMaxWidth();
     const maxHeight = this.getMaxHeight();
@@ -432,10 +432,10 @@ export class RichText extends BaseItem<RichText> {
       const { width, height } = this.layoutNodes;
       this.container = new Mbr(0, 0, width, height);
       const transformed = this.getTransformedContainer();
-      this.left = transformed.left;
-      this.top = transformed.top;
-      this.right = transformed.right;
-      this.bottom = transformed.bottom;
+      this.mbr.left = transformed.left;
+      this.mbr.top = transformed.top;
+      this.mbr.right = transformed.right;
+      this.mbr.bottom = transformed.bottom;
     } else {
       this.alignInRectangle(
         this.getTransformedContainer(),
@@ -464,14 +464,14 @@ export class RichText extends BaseItem<RichText> {
         : alignment === "bottom"
           ? rect.bottom - height
           : center.y - height / 2;
-    this.left = left;
-    this.top = Math.max(top, rect.top);
-    this.right = left + width;
-    this.bottom = top + height;
+    this.mbr.left = left;
+    this.mbr.top = Math.max(top, rect.top);
+    this.mbr.right = left + width;
+    this.mbr.bottom = top + height;
 
     if (this.insideOf === "Sticker" || this.insideOf === "Shape") {
-      this.left = rect.left;
-      this.right = rect.right;
+      this.mbr.left = rect.left;
+      this.mbr.right = rect.right;
     }
   }
 
@@ -1039,7 +1039,7 @@ export class RichText extends BaseItem<RichText> {
     }
     const { ctx } = context;
     ctx.save();
-    ctx.translate(this.left, this.top);
+    ctx.translate(this.mbr.left, this.mbr.top);
 
     const cameraScale = context.getCameraScale();
     const extraScale = this.renderingScale ? this.renderingScale(cameraScale) : 1;

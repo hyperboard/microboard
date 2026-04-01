@@ -164,8 +164,8 @@ export function transformRichText({
         board.selection.shouldRenderItemsMbr = true;
         const scaleX = mbrWidth / single.getWidth();
         const scaleY = mbrHeight / single.getHeight();
-        const translateX = left - single.left;
-        const translateY = top - single.top;
+        const translateX = left - single.getMbr().left;
+        const translateY = top - single.getMbr().top;
         single.apply(transformOps.scaleByTranslateBy(single.id,
           { x: scaleX, y: scaleY },
           { x: translateX, y: translateY },

@@ -38,7 +38,6 @@ export class Placeholder extends BaseItem<Placeholder> {
     shapeType: ShapeType = "Rectangle";
     parent = "Board";
     private path = Shapes[this.shapeType].path.copy() as Path;
-    private mbr = Shapes[this.shapeType].path.getMbr().copy();
     readonly subject = new Subject<Placeholder>();
     transformationRenderBlock?: boolean = undefined;
     iconImage?: HTMLImageElement;
@@ -186,21 +185,16 @@ export class Placeholder extends BaseItem<Placeholder> {
     }
 
     getIntersectionPoints(segment: Line): Point[] {
-        return this.getIntersectionPoints(segment); // REFACTOR infloop
+        return this.mbr.getIntersectionPoints(segment);
     }
 
     updateMbr(): Mbr {
         const rect = this.path.getMbr();
         const rectOffset = 1 / 2;
-        rect.left -= rectOffset;
-        rect.right += rectOffset;
-        rect.top -= rectOffset;
-        rect.bottom += rectOffset;
-        this.mbr = rect;
-        return rect;
-    }
-
-    getMbr(): Mbr {
+        this.mbr.left = rect.left - rectOffset;
+        this.mbr.right = rect.right + rectOffset;
+        this.mbr.top = rect.top - rectOffset;
+        this.mbr.bottom = rect.bottom + rectOffset;
         return this.mbr.copy();
     }
 

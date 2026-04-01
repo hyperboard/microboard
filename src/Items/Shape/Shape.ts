@@ -65,9 +65,9 @@ export class Shape extends BaseItem<Shape> {
     public borderOpacity = defaultShapeData.borderOpacity,
     public borderStyle = defaultShapeData.borderStyle,
     public borderWidth = defaultShapeData.borderWidth,
-    private mbr = Shapes[shapeType].path.getMbr().copy()
   ) {
     super(board, id);
+    this.mbr = Shapes[shapeType].path.getMbr().copy();
     this.path = Shapes[this.shapeType].path.copy();
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
     this.text = new RichText(
@@ -344,11 +344,10 @@ export class Shape extends BaseItem<Shape> {
     const rect = this.path.getMbr();
     const textRect = this.textContainer.getMbr();
     rect.combine([textRect]);
-    this.mbr = rect;
-    return rect;
-  }
-
-  getMbr(): Mbr {
+    this.mbr.left = rect.left;
+    this.mbr.top = rect.top;
+    this.mbr.right = rect.right;
+    this.mbr.bottom = rect.bottom;
     return this.mbr.copy();
   }
 

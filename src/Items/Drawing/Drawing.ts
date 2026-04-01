@@ -120,10 +120,10 @@ export class Drawing extends BaseItem<Drawing> {
 
     const mbr = untransformedMbr.getTransformed(this.transformation.toMatrix());
 
-    this.left = mbr.left;
-    this.top = mbr.top;
-    this.right = mbr.right;
-    this.bottom = mbr.bottom;
+    this.mbr.left = mbr.left;
+    this.mbr.top = mbr.top;
+    this.mbr.right = mbr.right;
+    this.mbr.bottom = mbr.bottom;
   }
 
   updatePath2d(): void {

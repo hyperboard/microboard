@@ -30,9 +30,9 @@ describe("Group", () => {
 		} as any;
 
 		child1 = new BaseItem(board, "child1");
-		(child1 as Mbr).left = 10; (child1 as Mbr).top = 10; (child1 as Mbr).right = 20; (child1 as Mbr).bottom = 20;
+		child1.setMbr(new Mbr(10, 10, 20, 20));
 		child2 = new BaseItem(board, "child2");
-		(child2 as Mbr).left = 30; (child2 as Mbr).top = 30; (child2 as Mbr).right = 40; (child2 as Mbr).bottom = 40;
+		child2.setMbr(new Mbr(30, 30, 40, 40));
 
 		(board.items.getById as any).mockImplementation((id: string) => {
 			if (id === "child1") return child1;

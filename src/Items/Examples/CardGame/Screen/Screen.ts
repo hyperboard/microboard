@@ -204,10 +204,10 @@ export class Screen extends BaseItem<Screen> {
 
   updateMbr(): void {
     const {left, top, right, bottom} = this.path.getMbr();
-    this.left = left;
-    this.right = right;
-    this.top = top;
-    this.bottom = bottom;
+    this.mbr.left = left;
+    this.mbr.right = right;
+    this.mbr.top = top;
+    this.mbr.bottom = bottom;
   }
 
   deserialize(data: SerializedItemData): this {
@@ -241,7 +241,7 @@ export class Screen extends BaseItem<Screen> {
     if (this.backgroundImage && this.backgroundImage.complete && this.backgroundImage.naturalWidth > 0) {
       const ctx = context.ctx;
       ctx.save();
-      ctx.drawImage(this.backgroundImage, this.left, this.top, this.getWidth(), this.getHeight());
+      ctx.drawImage(this.backgroundImage, this.mbr.left, this.mbr.top, this.getWidth(), this.getHeight());
       ctx.restore();
     }
     this.path.render(context);

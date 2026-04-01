@@ -195,17 +195,17 @@ export class ImageItem extends BaseItem<ImageItem> {
     const width = this.image.width * scaleX;
     const height = this.image.height * scaleY;
     if (rotation % 180 === 0) {
-      this.left = translateX;
-      this.top = translateY;
-      this.right = this.left + width;
-      this.bottom = this.top + height;
+      this.mbr.left = translateX;
+      this.mbr.top = translateY;
+      this.mbr.right = this.mbr.left + width;
+      this.mbr.bottom = this.mbr.top + height;
     } else {
       const centerX = translateX + width / 2;
       const centerY = translateY + height / 2;
-      this.left = centerX - height / 2;
-      this.top = centerY - width / 2;
-      this.right = this.left + height;
-      this.bottom = this.top + width;
+      this.mbr.left = centerX - height / 2;
+      this.mbr.top = centerY - width / 2;
+      this.mbr.right = this.mbr.left + height;
+      this.mbr.bottom = this.mbr.top + width;
     }
   }
 
@@ -241,10 +241,10 @@ export class ImageItem extends BaseItem<ImageItem> {
 
   private setCoordinates(): void {
     const { translateX: coordX, translateY: coordY, scaleX: coordScaleX, scaleY: coordScaleY } = this.transformation.getMatrixData();
-    this.left = coordX;
-    this.top = coordY;
-    this.right = this.left + this.image.width * coordScaleX;
-    this.bottom = this.top + this.image.height * coordScaleY;
+    this.mbr.left = coordX;
+    this.mbr.top = coordY;
+    this.mbr.right = this.mbr.left + this.image.width * coordScaleX;
+    this.mbr.bottom = this.mbr.top + this.image.height * coordScaleY;
     this.subject.publish(this);
   }
 

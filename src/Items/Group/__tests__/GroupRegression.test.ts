@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { Board } from "../../../Board";
 import { BaseItem } from "../../BaseItem/BaseItem";
 import { Group } from "../Group";
+import { Mbr } from "../../Mbr/Mbr";
 
 function createItem(
   board: Board,
@@ -12,10 +13,7 @@ function createItem(
   bottom: number
 ): BaseItem {
   const item = new BaseItem(board, id);
-  item.left = left;
-  item.top = top;
-  item.right = right;
-  item.bottom = bottom;
+  item.setMbr(new Mbr(left, top, right, bottom));
   board.index.insert(item);
   return item;
 }

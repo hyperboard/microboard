@@ -57,7 +57,7 @@ export class Dice extends BaseItem<Dice> {
     isGroupItem?: boolean
   ) {
     super(board, id, defaultItemData || defaultDiceData, isGroupItem);
-    this.path = createRoundedRectanglePath(this).copy(); // definitely assign it
+    this.path = createRoundedRectanglePath(this.getMbr()).copy(); // definitely assign it
 
     const data = (defaultItemData || defaultDiceData) as DiceData;
     if (data.type) {
@@ -78,7 +78,7 @@ export class Dice extends BaseItem<Dice> {
   }
 
   private transformPath(): void {
-    this.path = createRoundedRectanglePath(this).copy();
+    this.path = createRoundedRectanglePath(this.getMbr()).copy();
     this.path.transform(this.transformation.toMatrix());
 
     this.path.setBackgroundColor(this.backgroundColor);
@@ -117,8 +117,8 @@ export class Dice extends BaseItem<Dice> {
       const now = Date.now();
       const angle = ((now % 500) / 500) * 2 * Math.PI;
       const mbr = this.getMbr();
-      const centerX = (mbr.left + mbr.right) / 2;
-      const centerY = (mbr.top + mbr.bottom) / 2;
+      const centerX = (this.mbr.left + this.mbr.right) / 2;
+      const centerY = (this.mbr.top + this.mbr.bottom) / 2;
       context.ctx.translate(centerX, centerY);
       context.ctx.rotate(angle);
       context.ctx.translate(-centerX, -centerY);
@@ -126,8 +126,8 @@ export class Dice extends BaseItem<Dice> {
 
     this.path.render(context);
     const mbr = this.getMbr();
-    const centerX = (mbr.left + mbr.right) / 2;
-    const centerY = (mbr.top + mbr.bottom) / 2;
+    const centerX = (this.mbr.left + this.mbr.right) / 2;
+    const centerY = (this.mbr.top + this.mbr.bottom) / 2;
 
     const valueToRender = this.renderValues[this.valueIndex];
     if (typeof valueToRender === "number") {
@@ -160,10 +160,10 @@ export class Dice extends BaseItem<Dice> {
 
   updateMbr(): void {
     const {left, top, right, bottom} = this.path.getMbr();
-    this.left = left;
-    this.right = right;
-    this.top = top;
-    this.bottom = bottom;
+    this.mbr.left = left;
+    this.mbr.right = right;
+    this.mbr.top = top;
+    this.mbr.bottom = bottom;
   }
 
   getPath(): Path {

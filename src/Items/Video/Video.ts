@@ -234,17 +234,17 @@ export class VideoItem extends BaseItem<VideoItem> {
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.getMatrixData();
-    this.left = translateX;
-    this.top = translateY;
-    this.right = this.left + this.videoDimension.width * scaleX;
-    this.bottom = this.top + this.videoDimension.height * scaleY;
+    this.mbr.left = translateX;
+    this.mbr.top = translateY;
+    this.mbr.right = this.mbr.left + this.videoDimension.width * scaleX;
+    this.mbr.bottom = this.mbr.top + this.videoDimension.height * scaleY;
     const playBtnSize = 50;
     const scaledPlayBtn = playBtnSize * this.transformation.getMatrixData().scaleX;
     this.playBtnMbr = new Mbr(
-      this.left + this.getWidth() / 2 - scaledPlayBtn / 2,
-      this.top + this.getHeight() / 2 - scaledPlayBtn / 2,
-      this.right - this.getWidth() / 2 + scaledPlayBtn / 2,
-      this.bottom - this.getHeight() / 2 + scaledPlayBtn / 2
+      this.mbr.left + this.getWidth() / 2 - scaledPlayBtn / 2,
+      this.mbr.top + this.getHeight() / 2 - scaledPlayBtn / 2,
+      this.mbr.right - this.getWidth() / 2 + scaledPlayBtn / 2,
+      this.mbr.bottom - this.getHeight() / 2 + scaledPlayBtn / 2
     );
   }
 
@@ -256,7 +256,7 @@ export class VideoItem extends BaseItem<VideoItem> {
     if (this.shouldUseCustomRender) {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
-      ctx.fillRect(this.left, this.top, this.getWidth(), this.getHeight());
+      ctx.fillRect(this.mbr.left, this.mbr.top, this.getWidth(), this.getHeight());
       ctx.restore();
       return;
     }
@@ -267,7 +267,7 @@ export class VideoItem extends BaseItem<VideoItem> {
     if (this.shouldShowControls && this.previewUrl) {
       ctx.restore();
       ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.fillRect(this.left, this.top, this.getWidth(), this.getHeight());
+      ctx.fillRect(this.mbr.left, this.mbr.top, this.getWidth(), this.getHeight());
 
       const playBtnSize = this.playBtnMbr.getWidth();
       const left = this.playBtnMbr.left;

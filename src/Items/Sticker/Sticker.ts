@@ -170,7 +170,7 @@ export class Sticker extends BaseItem<Sticker> {
     this.stickerPath.transform(this.transformation.toMatrix());
     this.text.setContainer(this.textContainer.copy());
     this.textContainer.transform(this.transformation.toMatrix());
-    // this.text.setContainer(this.textContainer);
+    this.setMbr(this.stickerPath.getMbr());
     this.saveStickerData();
   }
 
@@ -265,10 +265,6 @@ export class Sticker extends BaseItem<Sticker> {
     throw new Error("Not implemented");
   }
 
-  getMbr(): Mbr {
-    const rect = this.stickerPath.getMbr();
-    return rect;
-  }
 
   getNearestEdgePointTo(point: Point): Point {
     return this.stickerPath.getNearestEdgePointTo(point);

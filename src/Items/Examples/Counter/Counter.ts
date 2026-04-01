@@ -41,7 +41,7 @@ export class Counter extends BaseItem<Counter> {
 		const ctx = context.ctx;
 		ctx.save();
 		ctx.globalCompositeOperation = "destination-out";
-		ctx.fillRect(this.left, this.top, this.getWidth(), this.getHeight());
+		ctx.fillRect(this.mbr.left, this.mbr.top, this.getWidth(), this.getHeight());
 		ctx.restore();
 		if (this.getLinkTo()) {
 			const { top, right } = this.getMbr();
@@ -57,10 +57,10 @@ export class Counter extends BaseItem<Counter> {
 	updateMbr(): void {
 		const { translateX, translateY, scaleX, scaleY } =
 			this.transformation.getMatrixData();
-		this.left = translateX;
-		this.top = translateY;
-		this.right = this.left + COUNTER_DIMENSIONS.width * scaleX;
-		this.bottom = this.top + COUNTER_DIMENSIONS.height * scaleY;
+		this.mbr.left = translateX;
+		this.mbr.top = translateY;
+		this.mbr.right = this.mbr.left + COUNTER_DIMENSIONS.width * scaleX;
+		this.mbr.bottom = this.mbr.top + COUNTER_DIMENSIONS.height * scaleY;
 	}
 
 	getPath(): Path | Paths {

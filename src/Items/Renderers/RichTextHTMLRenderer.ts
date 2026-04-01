@@ -182,7 +182,8 @@ export class RichTextHTMLRenderer implements IItemHTMLRenderer {
     }
     const { scaleX, scaleY } = matrix;
 
-    const transform = `translate(${richText.left}px, ${richText.top}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
+    const mbr = richText.getMbr();
+    const transform = `translate(${mbr.left}px, ${mbr.top}px) scale(${scaleX * extraScale}, ${scaleY * extraScale})`;
 
     const transformedWidth = richText.getMbr().getWidth();
     const transformedHeight = richText.getMbr().getHeight();

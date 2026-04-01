@@ -110,11 +110,13 @@ export class AINode extends BaseItem<AINode> {
     const nodeBottom = bottom + (bottom - top > 400 ? 60 : 40) * minScale;
     if (
       !this.path ||
-      (this.text.left < this.path.getMbr().left + leftOffset &&
-        this.text.top < this.path.getMbr().top + topOffset)
+      (this.text.getMbr().left < this.path.getMbr().left + leftOffset &&
+        this.text.getMbr().top < this.path.getMbr().top + topOffset)
     ) {
-      this.text.left = nodeTranslateX + leftOffset;
-      this.text.top = nodeTranslateY + topOffset;
+      const textMbr = this.text.getMbr();
+      textMbr.left = nodeTranslateX + leftOffset;
+      textMbr.top = nodeTranslateY + topOffset;
+      this.text.setMbr(textMbr);
     }
 
     this.path = createNodePath(

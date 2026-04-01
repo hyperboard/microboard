@@ -108,7 +108,7 @@ export class Group extends BaseItem<Group> {
     // World Mbr = union of each child's local Mbr transformed by group's world matrix
     const children = this.index!.listAll();
     if (children.length === 0) {
-      return new Mbr(this.left, this.top, this.right, this.bottom);
+      return this.mbr.copy();
     }
     const groupWorldMatrix = this.getWorldMatrix();
     let left = Number.MAX_SAFE_INTEGER;
@@ -135,10 +135,10 @@ export class Group extends BaseItem<Group> {
     }
 
     const mbr = new Mbr(left, top, right, bottom);
-    this.left   = left;
-    this.top    = top;
-    this.right  = right;
-    this.bottom = bottom;
+    this.mbr.left   = left;
+    this.mbr.top    = top;
+    this.mbr.right  = right;
+    this.mbr.bottom = bottom;
     return mbr;
   }
 

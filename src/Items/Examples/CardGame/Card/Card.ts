@@ -178,17 +178,17 @@ export class Card extends BaseItem<Card> {
     const height = this.dimensions.height * scaleY;
     const width = this.dimensions.width * scaleX;
     if (rotation % 180 === 0) {
-      this.left = translateX;
-      this.top = translateY;
-      this.right = this.left + width;
-      this.bottom = this.top + height;
+      this.mbr.left = translateX;
+      this.mbr.top = translateY;
+      this.mbr.right = this.mbr.left + width;
+      this.mbr.bottom = this.mbr.top + height;
     } else {
       const centerX = translateX + width / 2;
       const centerY = translateY + height / 2;
-      this.left = centerX - height / 2;
-      this.top = centerY - width / 2;
-      this.right = this.left + height;
-      this.bottom = this.top + width;
+      this.mbr.left = centerX - height / 2;
+      this.mbr.top = centerY - width / 2;
+      this.mbr.right = this.mbr.left + height;
+      this.mbr.bottom = this.mbr.top + width;
     }
   }
 

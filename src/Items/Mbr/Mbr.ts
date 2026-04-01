@@ -37,7 +37,6 @@ export class Mbr implements Geometry {
     this.top = toFiniteNumber(top);
     this.right = toFiniteNumber(right);
     this.bottom = toFiniteNumber(bottom);
-    this.updatePath();
   }
 
   getWidth(): number {
@@ -101,8 +100,8 @@ export class Mbr implements Geometry {
       alignment === "top"
         ? rect.top
         : alignment === "bottom"
-        ? rect.bottom - height
-        : center.y - height / 2;
+          ? rect.bottom - height
+          : center.y - height / 2;
     this.left = Math.max(left, rect.left);
     this.top = Math.max(top, rect.top);
     this.right = left + width;
@@ -146,7 +145,6 @@ export class Mbr implements Geometry {
     this.top = min.y;
     this.right = max.x;
     this.bottom = max.y;
-    this.updatePath();
   }
 
   getTransformed(matrix: Matrix): Mbr {
@@ -171,10 +169,6 @@ export class Mbr implements Geometry {
       new Line(new Point(left, top), new Point(left, bottom)),
     ];
   }
-
-  // getPath(): Path {
-  // 	return new Path(this.getLines(), true);
-  // }
 
   getSnapAnchorPoints(): Point[] {
     const mbr = this;
@@ -369,13 +363,6 @@ export class Mbr implements Geometry {
 
     const normal = new Point(normalX, normalY);
     return new GeometricNormal(point, pointOnLine, normal);
-  }
-
-  updatePath(): void {
-    /*
-		this.path = new (conf.path2DFactory)();
-		this.path.rect(this.left, this.top, this.getWidth(), this.getHeight());
-		*/
   }
 
   getRichText(): RichText | null {

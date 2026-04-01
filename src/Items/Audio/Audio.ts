@@ -47,8 +47,8 @@ export class AudioItem extends BaseItem<AudioItem> {
       this.updateMbr();
       this.subject.publish(this);
     });
-    this.right = this.left + conf.AUDIO_DIMENSIONS.width;
-    this.bottom = this.top + conf.AUDIO_DIMENSIONS.height;
+    this.mbr.right = this.mbr.left + conf.AUDIO_DIMENSIONS.width;
+    this.mbr.bottom = this.mbr.top + conf.AUDIO_DIMENSIONS.height;
     this.shouldUseCustomRender = true;
   }
 
@@ -104,10 +104,10 @@ export class AudioItem extends BaseItem<AudioItem> {
   updateMbr(): void {
     const { translateX, translateY, scaleX, scaleY } =
       this.transformation.getMatrixData();
-    this.left = translateX;
-    this.top = translateY;
-    this.right = this.left + conf.AUDIO_DIMENSIONS.width * scaleX;
-    this.bottom = this.top + conf.AUDIO_DIMENSIONS.height * scaleY;
+    this.mbr.left = translateX;
+    this.mbr.top = translateY;
+    this.mbr.right = this.mbr.left + conf.AUDIO_DIMENSIONS.width * scaleX;
+    this.mbr.bottom = this.mbr.top + conf.AUDIO_DIMENSIONS.height * scaleY;
   }
 
   render(context: DrawingContext): void {
@@ -121,33 +121,33 @@ export class AudioItem extends BaseItem<AudioItem> {
     ctx.globalCompositeOperation = "destination-out";
 
     ctx.beginPath();
-    ctx.moveTo(this.left + radius, this.top);
-    ctx.lineTo(this.left + this.getWidth() - radius, this.top);
+    ctx.moveTo(this.mbr.left + radius, this.mbr.top);
+    ctx.lineTo(this.mbr.left + this.getWidth() - radius, this.mbr.top);
     ctx.quadraticCurveTo(
-      this.left + this.getWidth(),
-      this.top,
-      this.left + this.getWidth(),
-      this.top + radius
+      this.mbr.left + this.getWidth(),
+      this.mbr.top,
+      this.mbr.left + this.getWidth(),
+      this.mbr.top + radius
     );
     ctx.lineTo(
-      this.left + this.getWidth(),
-      this.top + this.getHeight() - radius
+      this.mbr.left + this.getWidth(),
+      this.mbr.top + this.getHeight() - radius
     );
     ctx.quadraticCurveTo(
-      this.left + this.getWidth(),
-      this.top + this.getHeight(),
-      this.left + this.getWidth() - radius,
-      this.top + this.getHeight()
+      this.mbr.left + this.getWidth(),
+      this.mbr.top + this.getHeight(),
+      this.mbr.left + this.getWidth() - radius,
+      this.mbr.top + this.getHeight()
     );
-    ctx.lineTo(this.left + radius, this.top + this.getHeight());
+    ctx.lineTo(this.mbr.left + radius, this.mbr.top + this.getHeight());
     ctx.quadraticCurveTo(
-      this.left,
-      this.top + this.getHeight(),
-      this.left,
-      this.top + this.getHeight() - radius
+      this.mbr.left,
+      this.mbr.top + this.getHeight(),
+      this.mbr.left,
+      this.mbr.top + this.getHeight() - radius
     );
-    ctx.lineTo(this.left, this.top + radius);
-    ctx.quadraticCurveTo(this.left, this.top, this.left + radius, this.top);
+    ctx.lineTo(this.mbr.left, this.mbr.top + radius);
+    ctx.quadraticCurveTo(this.mbr.left, this.mbr.top, this.mbr.left + radius, this.mbr.top);
     ctx.closePath();
 
     ctx.fill();

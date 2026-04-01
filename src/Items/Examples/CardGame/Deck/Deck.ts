@@ -65,8 +65,8 @@ export class Deck extends BaseItem<Deck> {
         if (canAddItem) {
           this.isPerpendicular = foundItem.getIsRotatedPerpendicular()
           foundItem.apply(transformOps.setLocal(foundItem.id, {
-            translateX: this.left + (this.index?.listAll().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
-            translateY: this.top + (this.index?.listAll().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
+            translateX: this.mbr.left + (this.index?.listAll().length || 0) * (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET),
+            translateY: this.mbr.top + (this.index?.listAll().length || 0) * (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0)
           }));
           if (firstCard) {
             const {scaleX, scaleY} = foundItem.transformation.getMatrixData();
@@ -200,10 +200,10 @@ export class Deck extends BaseItem<Deck> {
       this.transformation.getMatrixData();
     const items = this.index!.listAll();
     const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
-    this.left = translateX;
-    this.top = translateY;
-    this.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET * ((this.childIds.length || 1) - 1)));
-    this.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET * ((this.childIds.length || 1) - 1) : 0));
+    this.mbr.left = translateX;
+    this.mbr.top = translateY;
+    this.mbr.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET * ((this.childIds.length || 1) - 1)));
+    this.mbr.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET * ((this.childIds.length || 1) - 1) : 0));
     this.path = new Path(this.getMbr().getLines(), true, "#FFFFFF");
   }
 
@@ -232,15 +232,15 @@ export class Deck extends BaseItem<Deck> {
 
     if (this.cachedCanvas && this.cachedCanvas.width && this.cachedCanvas.height) {
       ctx.save();
-      ctx.drawImage(this.cachedCanvas, this.left, this.top);
+      ctx.drawImage(this.cachedCanvas, this.mbr.left, this.mbr.top);
       if (this.animationFrameId) {
         const now = Date.now();
         const progress = (now % 2000) / 2000;
-        const yPos = this.top + (this.getHeight() * Math.abs(Math.sin(progress * Math.PI)));
+        const yPos = this.mbr.top + (this.getHeight() * Math.abs(Math.sin(progress * Math.PI)));
 
         ctx.fillStyle = conf.SELECTION_COLOR;
         ctx.fillRect(
-          this.left,
+          this.mbr.left,
           yPos - 2,
           this.getWidth(),
           4
@@ -430,7 +430,7 @@ export function createDeck(event?: KeyboardEvent, board?: Board): void {
     const onlyCards = board.selection.items.isAllItemsType("Card");
     if (onlyCards) {
       const deck = new Deck(board, "");
-      deck.apply(transformOps.setLocal(deck.id, { translateX: cardsOrDecks[cardsOrDecks.length - 1].left, translateY: cardsOrDecks[cardsOrDecks.length - 1].top }));
+      deck.apply(transformOps.setLocal(deck.id, { translateX: (cardsOrDecks[cardsOrDecks.length - 1] as BaseItem).getMbr().left, translateY: (cardsOrDecks[cardsOrDecks.length - 1] as BaseItem).getMbr().top }));
       const addedDeck = board.add(deck);
       board.selection.removeAll();
       addedDeck.addChildItems(cardsOrDecks);
