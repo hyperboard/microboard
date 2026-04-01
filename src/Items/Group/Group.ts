@@ -28,6 +28,13 @@ export class Group extends BaseItem<Group> {
   transformationRenderBlock?: boolean = undefined;
   isLockedGroup = false;
 
+  /**
+   * Set to this group's id while publishing children during a group transformation.
+   * Connector observers check this to skip smartJump (position is already correct
+   * via recalculatePoint) and avoid persisting spurious setStartPoint/setEndPoint ops.
+   */
+  static movingGroupId: string | null = null;
+
   constructor(
     board: Board,
     private events?: Events,
@@ -57,10 +64,13 @@ export class Group extends BaseItem<Group> {
       case "Transformation":
         super.apply(op);
         this.updateMbr();
-        // Notify connectors subscribed to children so they follow group movement
+        // Notify connectors subscribed to children so they follow group movement.
+        // Set movingGroupId so observers skip smartJump (avoid spurious ops on reload).
+        Group.movingGroupId = this.id;
         for (const child of this.index!.listAll()) {
           (child as BaseItem).subject.publish(child as any);
         }
+        Group.movingGroupId = null;
         break;
       case "Group":
         if (op.method === "addChild") {

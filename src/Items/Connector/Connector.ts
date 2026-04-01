@@ -36,6 +36,7 @@ import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
 import { transformOps } from "../Transformation/transformOps";
 import { BaseItem, SerializedItemData, BaseItemData } from "../BaseItem/BaseItem";
+import { Group } from "../Group/Group";
 import { ColorValue, coerceColorValue, resolveColor, fixedColor, semanticColor } from 'Color';
 
 import {
@@ -184,8 +185,11 @@ export class Connector extends BaseItem<Connector> {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
-			const j1 = this.smartJumpStartEdge();
-			const j2 = this.smartJumpEndEdge();
+			// Skip smartJump when triggered by a group movement — position is already
+			// correct via recalculatePoint and we must not emit spurious setStartPoint ops.
+			const isGroupMoving = Group.movingGroupId !== null;
+			const j1 = isGroupMoving ? false : this.smartJumpStartEdge();
+			const j2 = isGroupMoving ? false : this.smartJumpEndEdge();
 			if (!j1 && !j2) {
 				this.updatePaths();
 				this.subject.publish(this);
@@ -197,8 +201,9 @@ export class Connector extends BaseItem<Connector> {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
 			point.recalculatePoint();
-			const j1 = this.smartJumpEndEdge();
-			const j2 = this.smartJumpStartEdge();
+			const isGroupMoving = Group.movingGroupId !== null;
+			const j1 = isGroupMoving ? false : this.smartJumpEndEdge();
+			const j2 = isGroupMoving ? false : this.smartJumpStartEdge();
 			if (!j1 && !j2) {
 				this.updatePaths();
 				this.subject.publish(this);
