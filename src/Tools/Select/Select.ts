@@ -547,7 +547,10 @@ export class Select extends Tool {
 				)
 				.filter((item) => !!("index" in item && item.index));
 			groups.forEach(group => {
-				if (group.handleNesting(draggingItem)) {
+				// Don't show nesting highlight for items already inside this group —
+				// that causes a "phantom" darkened rect to appear over the item during drag.
+				const alreadyInGroup = draggingItem instanceof BaseItem && draggingItem.parent === group.getId();
+				if (group.handleNesting(draggingItem) && !alreadyInGroup) {
 					this.nestingHighlighter.add(group, draggingItem);
 				} else {
 					this.nestingHighlighter.remove(draggingItem);
@@ -632,7 +635,9 @@ export class Select extends Tool {
 		selection.list().forEach(item => {
 			if (!("index" in item && item.index) && !draggingGroupsIds.includes(item.parent)) {
 				groups.forEach(group => {
-					if (group.handleNesting(item)) {
+					// Skip highlight for items already inside this group (prevents phantom darkened rect).
+					const alreadyInGroup = item instanceof BaseItem && item.parent === group.getId();
+					if (group.handleNesting(item) && !alreadyInGroup) {
 						this.nestingHighlighter.add(group, item);
 					} else {
 						this.nestingHighlighter.remove(item);
