@@ -1,6 +1,15 @@
 import { Line, Mbr, Path } from 'Items';
 import { ControlPoint, BoardPoint } from '../ControlPoint';
 import { findOrthogonalPath } from './findOrthogonalPath';
+import { BaseItem } from '../../BaseItem/BaseItem';
+import type { Item } from '../../Item';
+
+function getItemWorldMbr(item: Item): Mbr {
+	if (item instanceof BaseItem && item.parent !== 'Board') {
+		return item.getWorldMbr();
+	}
+	return item.getMbr();
+}
 
 export function getOrthogonalLine(
 	start: ControlPoint,
@@ -11,10 +20,10 @@ export function getOrthogonalLine(
 	const obstacles: Mbr[] = [];
 
 	if (start.pointType !== 'Board' && !skipObstacles) {
-		obstacles.push(start.item.getMbr());
+		obstacles.push(getItemWorldMbr(start.item));
 	}
 	if (end.pointType !== 'Board' && !skipObstacles) {
-		obstacles.push(end.item.getMbr());
+		obstacles.push(getItemWorldMbr(end.item));
 	}
 
 	const { lines, newStart, newEnd } = findOrthogonalPath(
