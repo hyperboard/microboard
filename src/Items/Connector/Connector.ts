@@ -77,6 +77,7 @@ export class Connector extends BaseItem<Connector> {
 	animationFrameId?: number;
 	readonly text: RichText;
 	transformationRenderBlock?: boolean = undefined;
+	private _updatingTitle = false;
 	private optionalFindItemFn?: FindItemFn;
 	constructor(
 		board: Board,
@@ -887,6 +888,9 @@ export class Connector extends BaseItem<Connector> {
 	}
 
 	updateTitle(): void {
+		if (this._updatingTitle) {
+			return;
+		}
 		const selection = this.board.selection;
 		const isConnectorSelected = selection.items.findById(this.id);
 		if (isConnectorSelected && this.board.selection.getContext() === 'EditTextUnderPointer') {
@@ -901,9 +905,13 @@ export class Connector extends BaseItem<Connector> {
 		const height = this.text!.getHeight();
 		const width = this.text!.getWidth();
 
-		this.text.apply(transformOps.translateTo(this.text, x - width / 2, y - height / 2));
-		this.text.updateElement();
-
+		this._updatingTitle = true;
+		try {
+			this.text.apply(transformOps.translateTo(this.text, x - width / 2, y - height / 2));
+			this.text.updateElement();
+		} finally {
+			this._updatingTitle = false;
+		}
 		// this.animationFrameId = 0;
 	}
 
