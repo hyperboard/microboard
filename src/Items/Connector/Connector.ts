@@ -898,12 +898,10 @@ export class Connector extends BaseItem<Connector> {
 		}
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
-			this.translatePoints();
-			this.updatePaths();
-		} else {
-			this.translatePoints();
-			this.updatePaths();
 		}
+		// Do NOT call translatePoints() here — BoardPoints are stored in absolute world
+		// coordinates and translatePoints() would incorrectly shift them by (mbr.left, mbr.top).
+		this.updatePaths();
 		this.subject.publish(this);
 		return this;
 	}
