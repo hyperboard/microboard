@@ -2,7 +2,7 @@ import {
   getProportionalResize,
   getResize,
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
-import { ImageItem } from "Items/Image/Image";
+import type { ImageItem } from "Items/Image/Image";
 import { tempStorage } from "SessionStorage";
 import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
 import { Point } from "Items/Point/Point";
@@ -13,9 +13,9 @@ import AlignmentHelper from "Tools/RelativeAlignment";
 import { Mbr } from "Items/Mbr/Mbr";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
-import { Item } from "Items/Item";
-import {Frame} from "../../../Items";
-import {BaseItem} from "Items/BaseItem";
+import type { Item } from "Items/Item";
+import type { Frame } from "Items/Frame/Frame";
+import type { BaseItem } from "Items/BaseItem/BaseItem";
 
 export function transformItems({
   board,
@@ -58,7 +58,9 @@ export function transformItems({
       item.itemType === "AINode" ||
       item.itemType === "Video" ||
       item.itemType === "Audio" ||
-      (item instanceof BaseItem && item.onlyProportionalResize)
+      (item.itemType !== "Shape" &&
+        item.itemType !== "Frame" &&
+        (item as any).onlyProportionalResize)
   );
 
   if (includesProportionalItem && (isWidth || isHeight)) {
@@ -66,7 +68,7 @@ export function transformItems({
   }
 
   const isIncludesFixedFrame = items.some(
-    (item) => item instanceof Frame && !item.getCanChangeRatio()
+    (item) => item.itemType === "Frame" && !(item as any).getCanChangeRatio()
   );
 
   const shouldBeProportionalResize =
@@ -85,7 +87,7 @@ export function transformItems({
     return null;
   }
 
-  if (single instanceof ImageItem) {
+  if (single?.itemType === "Image") {
     tempStorage.setImageDimensions({
       width: resize.mbr.getWidth(),
       height: resize.mbr.getHeight(),

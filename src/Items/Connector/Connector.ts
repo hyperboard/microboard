@@ -14,6 +14,7 @@ import type { BorderStyle } from '../Path/Path';
 import { Point } from '../Point/Point';
 import { Matrix } from '../Transformation/Matrix';
 import { Transformation } from '../Transformation/Transformation';
+import { Geometry } from '../Geometry';
 import { ConnectorCommand } from './ConnectorCommand';
 import { ConnectorData, ConnectorOperation } from './ConnectorOperations';
 import {
@@ -168,22 +169,12 @@ export class Connector extends BaseItem<Connector> {
 		});
 		this.text.setClipPath();
 		this.updateTitle();
-		/*
-		const { x, y } = this.getMiddlePoint();
-
-		this.text.transformation.apply({
-			class: "Transformation",
-			method: "translateTo",
-			item: [this.id],
-			x: x,
-			y: y,
-		});
-		*/
 	}
 
 	observerStartPointItem = (): void => {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
+			if (this.handleItemGeometryChange(point, true)) return;
 			point.recalculatePoint();
 			// Skip smartJump when triggered by a group movement — position is already
 			// correct via recalculatePoint and we must not emit spurious setStartPoint ops.
@@ -200,6 +191,7 @@ export class Connector extends BaseItem<Connector> {
 	observerEndPointItem = (): void => {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
+			if (this.handleItemGeometryChange(point, false)) return;
 			point.recalculatePoint();
 			const isGroupMoving = Group.movingGroupId !== null;
 			const j1 = isGroupMoving ? false : this.smartJumpEndEdge();
@@ -210,6 +202,24 @@ export class Connector extends BaseItem<Connector> {
 			}
 		}
 	};
+
+	private handleItemGeometryChange(point: ControlPoint, isStart: boolean): boolean {
+		if (point.pointType === 'Fixed' || point.pointType === 'Floating') {
+			const item = point.item;
+			point.recalculatePoint();
+			const nearestPoint = (item as Geometry).getNearestEdgePointTo(point.copy());
+			const newRelative = toRelativePoint(nearestPoint, item);
+			if (!newRelative.equal(point.relativePoint)) {
+				const op = isStart
+					? connectorOps.setStartPoint([this], new FixedPoint(item, newRelative))
+					: connectorOps.setEndPoint([this], new FixedPoint(item, newRelative));
+				this.apply(op);
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	/**
 	 * If the start point is attached to one of the 4 edge-center anchors, re-evaluate
@@ -337,7 +347,7 @@ export class Connector extends BaseItem<Connector> {
 		return this.smartJump;
 	}
 
-		clearObservedItems() {
+	clearObservedItems() {
 		const startPoint = this.getStartPoint();
 		const endPoint = this.getEndPoint();
 
@@ -492,7 +502,6 @@ export class Connector extends BaseItem<Connector> {
 	}
 
 	protected applyMiddlePoint(pointData: ControlPointData | null, updatePath = true): void {
-		// console.log("pointData", pointData);
 		if (!pointData) {
 			return;
 		}
@@ -633,6 +642,10 @@ export class Connector extends BaseItem<Connector> {
 
 	getNearestEdgePointTo(point: Point): Point {
 		return this.lines.getNearestEdgePointTo(point);
+	}
+
+	isAlignmentSource(): boolean {
+		return false;
 	}
 
 	isEnclosedOrCrossedBy(bounds: Mbr): boolean {
@@ -823,7 +836,6 @@ export class Connector extends BaseItem<Connector> {
 			ctx.stroke();
 		}
 	}
-	// smell have to redo without document
 
 	getPaths(): Path {
 		return this.lines;

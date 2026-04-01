@@ -4,14 +4,14 @@ import {
   getResize,
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { Mbr } from "Items/Mbr/Mbr";
-import { Sticker } from "Items/Sticker/Sticker";
-import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
-import { Shape } from "Items/Shape/Shape";
-import { Frame } from "Items/Frame/Frame";
+import type { Sticker } from "Items/Sticker/Sticker";
+import type { Shape } from "Items/Shape/Shape";
+import type { Frame } from "Items/Frame/Frame";
 import { Board } from "Board";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
-import { Point } from "Items/Point/Point";
-import { Comment } from "Items/Comment/Comment";
+import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
+import type { Point } from "Items/Point/Point";
+import type { Comment } from "Items/Comment/Comment";
 
 export function transformShape({
   mbr,
@@ -67,7 +67,7 @@ export function transformShape({
 
     if (followingComments) {
       const { matrix, mbr: resizedMbr } =
-        single instanceof Sticker
+        single.itemType === "Sticker"
           ? getProportionalResize(
               resizeType,
               board.pointer.point,

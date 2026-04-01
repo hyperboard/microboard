@@ -25,6 +25,7 @@ import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
+import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";
 
 export const stickerColors = {
   Purple: "rgb(233, 208, 255)",
@@ -463,6 +464,15 @@ export class Sticker extends BaseItem<Sticker> {
     this.saveStickerData();
 
     return res;
+  }
+
+  getResizeType(
+    point: Point,
+    cameraScale: number,
+    mbr: Mbr,
+    anchorDistance = 5
+  ): ResizeType | undefined {
+    return getTextResizeType(point, cameraScale, mbr, anchorDistance);
   }
 
   getRichText(): RichText {

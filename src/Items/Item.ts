@@ -30,7 +30,30 @@ export type Item =
   | AudioItem
   | BaseItem;
 
-export type ItemType = Item["itemType"];
+export type ItemType =
+  | "RichText"
+  | "Shape"
+  | "Connector"
+  | "Image"
+  | "ImageItem"
+  | "Drawing"
+  | "Sticker"
+  | "Frame"
+  | "Placeholder"
+  | "Comment"
+  | "Group"
+  | "AINode"
+  | "Video"
+  | "VideoItem"
+  | "Audio"
+  | "AudioItem"
+  | "BaseItem"
+  | "Eraser"
+  | "Card"
+  | "Deck"
+  | "Dice"
+  | "Star"
+  | (string & {});
 export type ItemData =
   | ShapeData
   | RichTextData

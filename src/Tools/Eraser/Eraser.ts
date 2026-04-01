@@ -35,15 +35,7 @@ export class Eraser extends BoardTool {
     const items = this.board.items
       .getUnderPointer(this.strokeWidth / 2)
       .filter((item) => {
-        return (
-          item.itemType === "Drawing" &&
-          item.getLines().find((line) => {
-            return (
-              line.getDistance(this.board.pointer.point) <=
-              item.strokeWidth / 2 + this.strokeWidth / 2
-            );
-          })
-        );
+        return item.isNearPoint(this.board.pointer.point, this.strokeWidth / 2 + (item as any).strokeWidth / 2);
       });
     items.push(
       ...this.board.items
@@ -54,14 +46,7 @@ export class Eraser extends BoardTool {
           this.board.pointer.point.y
         )
         .filter((item) => {
-          return (
-            item.itemType === "Drawing" &&
-            item.getLines().some((line) => {
-              return segments.some((segment) =>
-                segment.hasIntersectionPoint(line)
-              );
-            })
-          );
+          return item.intersectsWithLines(segments);
         })
     );
     if (items.length) {

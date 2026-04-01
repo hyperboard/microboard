@@ -33,4 +33,8 @@ export interface Geometry {
 	render(context: DrawingContext): void;
 	/** Get RichText handle if exists */
 	getRichText(): RichText | null;
+	/** Get anchor points for snapping (e.g. connectors) */
+	getSnapAnchorPoints?(): Point[];
+	/** Get a point on the edge of the item for connection (handles special alignment for text items) */
+	getPointOnEdge?(point: Point, edge?: string): Point;
 }

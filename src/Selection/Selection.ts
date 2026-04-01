@@ -764,7 +764,7 @@ export class BoardSelection {
   }
 
   getAutosize(): boolean {
-    const sticker = this.items.getItemsByItemTypes(["Sticker"])[0];
+    const sticker = this.items.getItemsByItemTypes(["Sticker"])[0] as Sticker;
     return sticker?.text.isAutosize() || false;
   }
 
@@ -813,7 +813,7 @@ export class BoardSelection {
   }
 
   getConnectorLineWidth(): number {
-    const connector = this.items.getItemsByItemTypes(["Connector"])[0];
+    const connector = this.items.getItemsByItemTypes(["Connector"])[0] as Connector;
     return connector?.getLineWidth() || 1;
   }
 
@@ -823,12 +823,12 @@ export class BoardSelection {
   }
 
   getStartPointerStyle(): ConnectorPointerStyle {
-    const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
+    const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as Connector;
     return pointer?.getStartPointerStyle() || "None";
   }
 
   getEndPointerStyle(): ConnectorPointerStyle {
-    const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
+    const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as Connector;
     return pointer?.getEndPointerStyle() || "None";
   }
 
@@ -906,7 +906,7 @@ export class BoardSelection {
   }
 
   getConnectorLineStyle(): string {
-    const pointer = this.items.getItemsByItemTypes(["Connector"])[0];
+    const pointer = this.items.getItemsByItemTypes(["Connector"])[0] as Connector;
     return pointer?.getLineStyle() || "none";
   }
 
@@ -1615,7 +1615,7 @@ export class BoardSelection {
     parents: AINode[];
     lastAssistantMessageId: string | undefined;
   } | null {
-    const AINodes = this.items.getItemsByItemTypes(["AINode"]);
+    const AINodes = this.items.getItemsByItemTypes(["AINode"]) as AINode[];
     if (!AINodes.length) {
       return null;
     }

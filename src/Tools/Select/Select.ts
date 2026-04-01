@@ -266,10 +266,10 @@ export class Select extends Tool {
 			hover.push(hoveredItem);
 		}
 
-		const isHoverAiInput = hover.length === 1 && hover[0].itemType === 'AINode';
+
 		const isLocked = this.board.selection.getIsLockedSelection();
 
-		if (isLocked && !(isHoverAiInput && !!this.board.aiGeneratingOnItem)) {
+		if (isLocked && !hover[0]?.canBeInteractedWithWhileLocked(!!this.board.aiGeneratingOnItem)) {
 			return false;
 		}
 
@@ -349,7 +349,7 @@ export class Select extends Tool {
 			}
 			this.downOnItem = hover[hover.length - 1];
 
-			if (this.downOnItem && !this.initialCursorPos && this.downOnItem.itemType !== 'Comment') {
+			if (this.downOnItem && !this.initialCursorPos && !this.downOnItem.shouldFollowItems()) {
 				const itemCenter = this.downOnItem.getMbr().getCenter();
 				this.initialCursorPos = new Point(
 					this.board.pointer.point.x - itemCenter.x,
@@ -359,8 +359,8 @@ export class Select extends Tool {
 
 			// цепляться за якори в коннекторе когда коннектор еще не выделен
 			if (
-				this.downOnItem instanceof Connector &&
-				this.downOnItem.isConnectedOnePoint() &&
+				!this.downOnItem.isAlignmentSource() &&
+				(this.downOnItem as any).isConnectedOnePoint() &&
 				!this.board.keyboard.isCtrl
 			) {
 				this.board.selection.editUnderPointer();
@@ -452,7 +452,7 @@ export class Select extends Tool {
 
 		this.updateSnapLines();
 
-		if (this.downOnItem?.itemType === 'Comment') {
+		if (this.downOnItem?.shouldFollowItems()) {
 			const topItem = this.board.items.getUnderPointer().pop();
 			this.nestingHighlighter.clear();
 			if (topItem) {
@@ -559,7 +559,7 @@ export class Select extends Tool {
 		}
 
 		const hover = items.getUnderPointer();
-		this.isHoverUnselectedItem = hover.filter(item => item.itemType === 'Placeholder').length === 1;
+		this.isHoverUnselectedItem = hover.filter(item => !item.isReady()).length === 1;
 
 		if (
 			this.isHoverUnselectedItem &&
@@ -670,7 +670,7 @@ export class Select extends Tool {
 		const singleItem = this.board.selection.items.getSingle();
 		const groupItem = this.board.selection.items;
 
-		const isConnectorUnderPointer = this.downOnItem?.itemType === 'Connector';
+		const isConnectorUnderPointer = !this.downOnItem?.isAlignmentSource();
 		const isDraggingSingleSelectedItem = this.isDraggingSelection && singleItem;
 		// const isDregginGroupSelectedItem =
 		// 	this.isDraggingSelection && groupItem;
@@ -724,11 +724,11 @@ export class Select extends Tool {
 
 		const topItem = this.board.items.getUnderPointer().pop();
 		const curr = this.downOnItem;
-		if (curr instanceof Comment && topItem) {
-			curr.setItemToFollow(topItem.getId());
+		if (curr) {
+			curr.onSelectEnd(topItem);
 		}
 
-		if (curr && curr.itemType === 'AINode' && this.board.aiGeneratingOnItem) {
+		if (curr && curr.isBusy()) {
 			this.board.tools.publish();
 			this.clear();
 			return false;

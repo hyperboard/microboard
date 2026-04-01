@@ -16,6 +16,7 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { transformOps } from "Items/Transformation/transformOps";
 import { Board } from "Board";
+import { Item } from "Items/Item";
 
 export interface Commentator {
   username: string;
@@ -444,6 +445,16 @@ export class Comment extends BaseItem<Comment> {
   clearHighlightMbr(): void {}
 
   renderHoverHighlight(_context: DrawingContext): void {}
+
+  shouldFollowItems(): boolean {
+    return true;
+  }
+
+  onSelectEnd(topItem?: Item): void {
+    if (topItem) {
+      this.setItemToFollow(topItem.getId());
+    }
+  }
 
   render(context: DrawingContext): void {}
 }

@@ -30,7 +30,7 @@ import { CommentData } from "./Items/Comment";
 import { DrawingData } from "./Items/Drawing";
 import { AINodeData } from "./Items/AINode";
 
-type MapTagByType = Record<ItemType, string>;
+type MapTagByType = Partial<Record<ItemType, string>>;
 export const tagByType: MapTagByType = {
   Sticker: "sticker-item",
   Shape: "shape-item",
@@ -56,7 +56,7 @@ const headingTagsMap = {
 } as const
 
 type TagFactories = {
-  [K in keyof MapTagByType as MapTagByType[K]]: (
+  [K in keyof typeof tagByType as NonNullable<typeof tagByType[K]>]: (
     el: HTMLElement
   ) =>
     | ItemDataWithId

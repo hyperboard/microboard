@@ -1,4 +1,6 @@
 import { Mbr } from "Items/Mbr/Mbr";
+import { Line } from "Items/Line/Line";
+import { Item } from "Items/Item";
 import { Geometry } from "Items/Geometry";
 import type { RichText } from "Items/RichText/RichText";
 import { LinkTo } from "Items/LinkTo/LinkTo";
@@ -11,14 +13,18 @@ import { TransformationData } from "Items/Transformation/TransformationData";
 import { createEventsList } from "Events/Log/createEventsList";
 import { BaseOperation } from "Events/EventsOperations";
 import { BaseCommand } from "Events/BaseCommand";
-import {Subject} from "../../Subject";
+import { Subject } from "../../Subject";
 import { Path, Paths } from "../Path/index";
-import {BaseItemOperation} from "./BaseItemOperation";
-import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
-import {Point} from "../Point";
-import {Matrix} from "../Transformation/Matrix";
-import {ApplyMatrixOperation, TransformMany, TransformationOperation} from "../Transformation/TransformationOperations";
+import { BaseItemOperation } from "./BaseItemOperation";
+import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
+import { Point } from "../Point";
+import { Matrix } from "../Transformation/Matrix";
+import { ApplyMatrixOperation, TransformMany, TransformationOperation } from "../Transformation/TransformationOperations";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
+import { TransformParams, TransformResult } from "./TransformContext";
+
+import { getResizeType, ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
+import type { ItemType } from "Items/Item";
 
 /**
  * Converts a world-space Transformation operation into an equivalent local-space
@@ -92,7 +98,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	shouldUseRelativeAlignment = true;
 	resizeEnabled = true;
 	onlyProportionalResize = false;
-	itemType = "";
+	itemType: ItemType = '' as any;
 	childIds: string[] = [];
 	isHoverHighlighted = false;
 
@@ -143,7 +149,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	 * Called when this item's parent changes. Subclasses override this to
 	 * propagate the new parent to child objects (e.g. text.parent in Sticker/Shape).
 	 */
-	protected onParentChanged(_newParent: string): void {}
+	protected onParentChanged(_newParent: string): void { }
 
 	getId(): string {
 		return this.id;
@@ -162,7 +168,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 			return new Matrix();
 		}
 		const matrix = container.getWorldMatrix();
-		if (container.itemType === "Frame") {
+		if (!container?.getIsScalingContainer()) {
 			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
 		}
 		return matrix;
@@ -187,7 +193,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	 */
 	getNestingMatrix(): Matrix {
 		const matrix = this.getWorldMatrix();
-		if (this.itemType === "Frame") {
+		if (!this.getIsScalingContainer()) {
 			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
 		}
 		return matrix;
@@ -216,7 +222,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 			class: this.itemType,
 			method: "addChildren",
 			item: [this.getId()],
-			newData: {childIds: children.map(child => child.getId())},
+			newData: { childIds: children.map(child => child.getId()) },
 		});
 	}
 
@@ -232,7 +238,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 			class: this.itemType,
 			method: "removeChildren",
 			item: [this.getId()],
-			newData: {childIds: childrenArr.map(child => child.getId())},
+			newData: { childIds: childrenArr.map(child => child.getId()) },
 		});
 	}
 
@@ -308,10 +314,10 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		const parentMatrix = this.getParentWorldMatrix();
 		const local = this.getMbr();
 		const corners = [
-			new Point(local.left,  local.top),
+			new Point(local.left, local.top),
 			new Point(local.right, local.top),
 			new Point(local.right, local.bottom),
-			new Point(local.left,  local.bottom),
+			new Point(local.left, local.bottom),
 		];
 		for (const c of corners) parentMatrix.apply(c);
 		return new Mbr(
@@ -363,7 +369,7 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 							: undefined;
 					const sourceIndex = currentParent?.index || this.board.items.index;
 					sourceIndex.remove(foundItem, true);
-					
+
 					foundItem.parent = this.getId();
 					foundItem.onParentChanged(this.getId());
 					foundItem.apply({
@@ -495,8 +501,8 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 				class: itemType,
 				method: "toggleResizeEnabled",
 				item: itemIds,
-				newData: {resizeEnabled: false},
-				prevData: {resizeEnabled: true},
+				newData: { resizeEnabled: false },
+				prevData: { resizeEnabled: true },
 			});
 		})
 	}
@@ -518,8 +524,8 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 				class: itemType,
 				method: "toggleResizeEnabled",
 				item: itemIds,
-				newData: {resizeEnabled: true},
-				prevData: {resizeEnabled: false},
+				newData: { resizeEnabled: true },
+				prevData: { resizeEnabled: false },
 			});
 		})
 	}
@@ -587,7 +593,16 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 	}
 
 	isNearPoint(point: Point, distance: number): boolean {
-		return distance > this.getMbrWithChildren().getDistanceToPoint(point);
+		return this.getDistanceToPoint(point) < distance;
+	}
+
+	getDistanceToPoint(point: Point): number {
+		return this.getMbr().getDistanceToPoint(point);
+	}
+
+	intersectsWithLines(lines: Line[]): boolean {
+		const mbr = this.getMbr();
+		return lines.some((line) => line.isEnclosedOrCrossedBy(mbr));
 	}
 
 	isEnclosedOrCrossedBy(rect: Mbr): boolean {
@@ -629,5 +644,56 @@ export class BaseItem<T extends BaseItem<any> = any> extends Mbr implements Geom
 		if (this.index) {
 			this.index.render(context);
 		}
+	}
+
+	getIsScalingContainer(): boolean {
+		return true;
+	}
+
+	getSnapAnchorPoints(): Point[] {
+		return this.getMbr().getSnapAnchorPoints();
+	}
+
+	getPointOnEdge(point: Point, _edge?: string): Point {
+		return point;
+	}
+
+	handleTransform(params: TransformParams): TransformResult {
+		return {
+			resizedMbr: params.mbr,
+		};
+	}
+
+	getResizeType(
+		point: Point,
+		cameraScale: number,
+		mbr: Mbr,
+		anchorDistance = 5
+	): ResizeType | undefined {
+		return getResizeType(point, cameraScale, mbr, anchorDistance);
+	}
+
+	isBusy(): boolean {
+		return false;
+	}
+
+	shouldFollowItems(): boolean {
+		return false;
+	}
+
+	isAlignmentSource(): boolean {
+		return true;
+	}
+
+	isReady(): boolean {
+		return true;
+	}
+
+	onSelectEnd(_topItem?: Item): void {
+		// Default no-op
+	}
+
+	canBeInteractedWithWhileLocked(_isAiGenerating: boolean): boolean {
+		return false;
 	}
 }

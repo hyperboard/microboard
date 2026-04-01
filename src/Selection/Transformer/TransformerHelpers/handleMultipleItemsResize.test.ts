@@ -44,6 +44,7 @@ describe("handleMultipleItemsResize", () => {
 
     // Mock Items — use Object.create so instanceof checks pass
     mockRichText = Object.assign(Object.create(RichText.prototype), {
+      itemType: "RichText",
       getId: () => "richText1",
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWorldMbr: () => new Mbr(10, 10, 50, 50),
@@ -57,6 +58,7 @@ describe("handleMultipleItemsResize", () => {
     }) as unknown as RichText;
 
     mockAINode = Object.assign(Object.create(AINode.prototype), {
+      itemType: "AINode",
       getId: () => "aiNode1",
       getMbr: () => new Mbr(20, 20, 60, 60),
       getWorldMbr: () => new Mbr(20, 20, 60, 60),

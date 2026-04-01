@@ -64,81 +64,77 @@ export const itemCommandFactories: Record<string, ItemCommandFactory> = {
 
 function createConnectorCommand(items: Item[], operation: ItemOperation) {
 	return new ConnectorCommand(
-		items.filter(
-			(item): item is Connector => item.itemType === "Connector",
-		),
+		items as Connector[],
 		operation as ConnectorOperation,
 	);
 }
 
 function createShapeCommand(items: Item[], operation: ItemOperation) {
 	return new ShapeCommand(
-		items.filter((item): item is Shape => item.itemType === "Shape"),
+		items as Shape[],
 		operation as ShapeOperation,
 	);
 }
 
 function createDrawingCommand(items: Item[], operation: ItemOperation) {
 	return new DrawingCommand(
-		items.filter((item): item is Drawing => item.itemType === "Drawing"),
+		items as Drawing[],
 		operation as DrawingOperation,
 	);
 }
 
 function createCommentCommand(items: Item[], operation: ItemOperation) {
 	return new CommentCommand(
-		items.filter((item): item is Comment => item.itemType === "Comment"),
+		items as Comment[],
 		operation as CommentOperation,
 	);
 }
 
 function createStickerCommand(items: Item[], operation: ItemOperation) {
 	return new StickerCommand(
-		items.filter((item): item is Sticker => item.itemType === "Sticker"),
+		items as Sticker[],
 		operation as StickerOperation,
 	);
 }
 
 function createFrameCommand(items: Item[], operation: ItemOperation) {
 	return new FrameCommand(
-		items.filter((item): item is Frame => item.itemType === "Frame"),
+		items as Frame[],
 		operation as FrameOperation,
 	);
 }
 
 function createPlaceholderCommand(items: Item[], operation: ItemOperation) {
 	return new PlaceholderCommand(
-		items.filter(
-			(item): item is Placeholder => item.itemType === "Placeholder",
-		),
+		items as Placeholder[],
 		operation as PlaceholderOperation,
 	);
 }
 
 function createGroupCommand(items: Item[], operation: ItemOperation) {
 	return new GroupCommand(
-		items.filter((item): item is Group => item.itemType === "Group"),
+		items as Group[],
 		operation as GroupOperation,
 	);
 }
 
 function createImageCommand(items: Item[], operation: ItemOperation) {
 	return new ImageCommand(
-		items.filter((item): item is ImageItem => item.itemType === "Image"),
+		items as ImageItem[],
 		operation as ImageOperation,
 	);
 }
 
 function createVideoCommand(items: Item[], operation: ItemOperation) {
 	return new VideoCommand(
-		items.filter((item): item is VideoItem => item.itemType === "Video"),
+		items as VideoItem[],
 		operation as VideoOperation,
 	);
 }
 
 function createAudioCommand(items: Item[], operation: ItemOperation) {
 	return new AudioCommand(
-		items.filter((item): item is AudioItem => item.itemType === "Audio"),
+		items as AudioItem[],
 		operation as AudioOperation,
 	);
 }
@@ -223,67 +219,11 @@ export function createCommand(board: Board, operation: Operation): Command {
 						return true;
 					});
 
-				switch (operation.class) {
-					case "Connector":
-						return itemCommandFactories["Connector"](
-							items,
-							operation,
-						);
-					case "Shape":
-						return itemCommandFactories["Shape"](items, operation);
-					case "Drawing":
-						return itemCommandFactories["Drawing"](
-							items,
-							operation,
-						);
-					case "Comment":
-						return itemCommandFactories["Comment"](
-							items,
-							operation,
-						);
-					case "Sticker":
-						return itemCommandFactories["Sticker"](
-							items,
-							operation,
-						);
-					case "LinkTo":
-						return itemCommandFactories["LinkTo"](items, operation);
-					case "Transformation":
-						return itemCommandFactories["Transformation"](
-							items,
-							operation,
-						);
-					case "RichText":
-						return itemCommandFactories["RichText"](
-							items,
-							operation,
-							board,
-						);
-					case "Frame":
-						return itemCommandFactories["Frame"](items, operation);
-					case "Placeholder":
-						return itemCommandFactories["Placeholder"](
-							items,
-							operation,
-						);
-					case "Group":
-						return itemCommandFactories["Group"](items, operation);
-					case "Image":
-						return itemCommandFactories["Image"](items, operation);
-					case "Video":
-						return itemCommandFactories["Video"](items, operation);
-					case "Audio":
-						return itemCommandFactories["Audio"](items, operation);
-					default: {
-						const itemOp = operation as ItemOperation | TransformationOperation;
-						const opClass = itemOp.class;
-						const commandFactory = itemCommandFactories[opClass];
-						if (!commandFactory) {
-							return new NoOpCommand(`Unsupported command type: ${opClass}`);
-						}
-						return commandFactory(items, itemOp, board);
-					}
+				const commandFactory = itemCommandFactories[operation.class];
+				if (!commandFactory) {
+					return new NoOpCommand(`Unsupported command type: ${operation.class}`);
 				}
+				return commandFactory(items, operation as ItemOperation, board);
 			}
 		}
 	} catch (error) {

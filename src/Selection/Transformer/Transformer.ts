@@ -29,8 +29,8 @@ import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelp
 import { transformShape } from "./TransformerHelpers/transformShape";
 import { transformRichText } from "Selection/Transformer/TransformerHelpers/transformRichText";
 import { transformAINode } from "Selection/Transformer/TransformerHelpers/transformAINode";
-import { transformItems } from "Selection/Transformer/TransformerHelpers/transformItems";
 import { updateFrameChildren } from "Selection/Transformer/TransformerHelpers/updateFrameChildren";
+import { TransformParams } from "Items/BaseItem/TransformContext";
 
 export class Transformer extends Tool {
   anchorType: AnchorType = "default";
@@ -103,13 +103,11 @@ export class Transformer extends Tool {
     const items = this.selection.items;
     const item = items.getSingle();
 
-    let resizeType: ResizeType | undefined;
-    if (item && (item.itemType === "RichText" || item.itemType === "Sticker")) {
-      resizeType = getTextResizeType(pointer.point, camera.getScale(), mbr);
-    } else {
-      resizeType = getResizeType(pointer.point, camera.getScale(), mbr);
+    if (!item || !mbr) {
+      return undefined;
     }
-    return resizeType;
+
+    return item.getResizeType(pointer.point, camera.getScale(), mbr);
   }
 
   updateAlignmentBySnapLines(single: Item | null): void {
@@ -237,84 +235,36 @@ export class Transformer extends Tool {
 
     this.updateAlignmentBySnapLines(single);
 
-    if (
-      single instanceof Shape ||
-      single instanceof Sticker ||
-      single instanceof Frame
-    ) {
-      const { resizedMbr, translation } = transformShape({
-        board: this.board,
-        mbr,
-        isWidth,
-        isHeight,
-        isShiftPressed: this.isShiftPressed,
-        single,
-        resizeType: this.resizeType,
-        oppositePoint: this.oppositePoint,
-        followingComments,
-        startMbr: this.startMbr,
-        beginTimeStamp: this.beginTimeStamp,
-      });
-      this.mbr = resizedMbr;
-      if (translation) {
-        this.selection.transformMany(translation, this.beginTimeStamp);
-      }
-    } else if (single instanceof RichText) {
-      if (!this.mbr) {
-        return false;
-      }
-      const transformationData = transformRichText({
-        board: this.board,
-        single,
-        isWidth,
-        isHeight,
-        isShiftPressed: this.isShiftPressed,
-        mbr,
-        followingComments,
-        oppositePoint: this.oppositePoint,
-        resizeType: this.resizeType,
-      });
-
-      if (transformationData) {
-        this.mbr = transformationData.resizedMbr;
-        if (transformationData.onPointerUpCb) {
-          this.onPointerUpCb = transformationData.onPointerUpCb;
-        }
-      }
-    } else if (single instanceof AINode) {
-      this.mbr = transformAINode({
-        board: this.board,
-        single,
-        isWidth,
-        isHeight,
-        isShiftPressed: this.isShiftPressed,
-        mbr,
-        followingComments,
-        oppositePoint: this.oppositePoint,
-        resizeType: this.resizeType,
-      });
-    } else {
-      const newMbr = transformItems({
-        mbr,
-        board: this.board,
-        isShiftPressed: this.isShiftPressed,
-        oppositePoint: this.oppositePoint,
-        resizeType: this.resizeType,
-        debounceUpd: this.debounceUpd,
-        alignmentHelper: this.alignmentHelper,
-        isWidth,
-        isHeight,
-        beginTimeStamp: this.beginTimeStamp,
+    const params: TransformParams = {
+      board: this.board,
+      selection: this.selection,
+      tools: {
         canvasDrawer: this.canvasDrawer,
-        selection: this.selection,
-        single,
-        snapCursorPos: this.snapCursorPos,
-        setSnapCursorPos: this.setSnapCursorPos.bind(this),
-      });
-      if (!newMbr) {
-        return false;
+        alignmentHelper: this.alignmentHelper,
+        debounceUpd: this.debounceUpd,
+      },
+      resizeType: this.resizeType,
+      mbr,
+      oppositePoint: this.oppositePoint,
+      isWidth: isWidth,
+      isHeight: isHeight,
+      isShiftPressed: this.isShiftPressed,
+      beginTimeStamp: this.beginTimeStamp,
+      followingComments,
+      startMbr: this.startMbr,
+      snapCursorPos: this.snapCursorPos,
+      setSnapCursorPos: this.setSnapCursorPos.bind(this),
+    };
+
+    if (single) {
+      const result = single.handleTransform(params);
+      this.mbr = result.resizedMbr || this.mbr;
+      if (result.translation) {
+        this.selection.transformMany(result.translation, this.beginTimeStamp);
       }
-      this.mbr = newMbr;
+      if (result.onPointerUpCb) {
+        this.onPointerUpCb = result.onPointerUpCb;
+      }
     }
 
     updateFrameChildren({

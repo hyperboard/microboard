@@ -2,12 +2,12 @@ import { getProportionalResize } from "Selection/Transformer/TransformerHelpers/
 import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
 import { Mbr } from "Items/Mbr/Mbr";
 import { Board } from "Board";
-import { RichText } from "Items/RichText/RichText";
+import type { RichText } from "Items/RichText/RichText";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Point } from "Items/Point/Point";
 import type { Comment } from "Items/Comment/Comment";
 import { Matrix } from "Items/Transformation/Matrix";
-import { AINode } from "Items/AINode/AINode";
+import type { AINode } from "Items/AINode/AINode";
 import { transformOps } from "Items/Transformation/transformOps";
 
 export function transformRichText({
@@ -29,7 +29,7 @@ export function transformRichText({
   isWidth: boolean;
   isHeight: boolean;
   isShiftPressed: boolean;
-  followingComments: Comment[] | undefined;
+  followingComments?: Comment[];
 }): { resizedMbr: Mbr; onPointerUpCb?: () => void } | null {
   const isLongText = single.getTextString().length > 5000;
 

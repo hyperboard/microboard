@@ -317,6 +317,24 @@ export class Drawing extends BaseItem<Drawing> {
     return true;
   }
 
+  isNearPoint(point: Point, distance: number): boolean {
+    return this.isPointNearLine(point, distance);
+  }
+
+  getDistanceToPoint(point: Point): number {
+    // We don't have a direct "perpendicular distance to all lines" helper that returns a number,
+    // but isPointNearLine checks a threshold. For a general distance, we'd need to iterate.
+    // Since tools usually check a threshold, isNearPoint is more useful.
+    // Fallback to MBR distance if needed, but isNearPoint is overridden.
+    return super.getDistanceToPoint(point);
+  }
+
+  intersectsWithLines(lines: Line[]): boolean {
+    return this.lines.some((line) => {
+      return lines.some((segment) => segment.hasIntersectionPoint(line));
+    });
+  }
+
   isEnclosedOrCrossedBy(rect: Mbr): boolean {
     for (const line of this.lines) {
       if (line.isEnclosedOrCrossedBy(rect)) {

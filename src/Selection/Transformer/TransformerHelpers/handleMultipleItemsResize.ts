@@ -1,15 +1,13 @@
 import { Matrix } from "Items/Transformation/Matrix";
 import { Mbr } from "Items/Mbr/Mbr";
-import { Item } from "Items/Item";
+import type { Item } from "Items/Item";
 import {
   ApplyMatrixItem,
 } from "Items/Transformation/TransformationOperations";
-import { RichText } from "Items/RichText/RichText";
-import { AINode } from "Items/AINode/AINode";
-import { Sticker } from "Items/Sticker/Sticker";
+import type { RichText } from "Items/RichText/RichText";
+import type { AINode } from "Items/AINode/AINode";
+import type { Sticker } from "Items/Sticker/Sticker";
 import { Board } from "Board";
-import { Frame } from "Items/Frame/Frame";
-import { BaseItem } from "Items/BaseItem";
 
 export function handleMultipleItemsResize({
   board,
@@ -33,7 +31,7 @@ export function handleMultipleItemsResize({
   const rawItems = itemsToResize ? itemsToResize : board.selection.items.list();
   board.items.getComments().forEach((comment) => {
     if (rawItems.some((item) => item.getId() === comment.getItemToFollow())) {
-      rawItems.push(comment);
+      rawItems.push(comment as any);
     }
   });
 
@@ -54,13 +52,13 @@ export function handleMultipleItemsResize({
 
     if (item.itemType === "Drawing") {
       // Drawing items use transform origin directly; for nested Drawings use world position.
-      if (item instanceof BaseItem && item.parent !== "Board") {
-        const worldMatrix = (item as any).getWorldMatrix ? (item as any).getWorldMatrix() : item.transformation.toMatrix();
+      if (item.parent !== "Board") {
+        const worldMatrix = (item as any).getWorldMatrix ? (item as any).getWorldMatrix() : (item as any).transformation.toMatrix();
         itemX = worldMatrix.translateX;
         itemY = worldMatrix.translateY;
       } else {
-        itemX = item.transformation.getMatrixData().translateX;
-        itemY = item.transformation.getMatrixData().translateY;
+        itemX = (item as any).transformation.getMatrixData().translateX;
+        itemY = (item as any).transformation.getMatrixData().translateY;
       }
     }
 
@@ -69,18 +67,18 @@ export function handleMultipleItemsResize({
     const deltaY = itemY - initMbr.top;
     const translateY = deltaY * matrix.scaleY - deltaY + matrix.translateY;
 
-    if (item instanceof RichText) {
+    if (item.itemType === "RichText") {
       result.push(getRichTextTranslation({
-        item,
+        item: item as unknown as RichText,
         isWidth,
         isHeight,
         matrix,
         translateX,
         translateY,
       }));
-    } else if (item instanceof AINode) {
+    } else if (item.itemType === "AINode") {
       result.push(getAINodeTranslation({
-        item,
+        item: item as unknown as AINode,
         isWidth,
         isHeight,
         matrix,
@@ -89,7 +87,7 @@ export function handleMultipleItemsResize({
       }));
     } else {
       result.push(getItemTranslation({
-        item,
+        item: item as any,
         isWidth,
         isHeight,
         matrix,
@@ -120,7 +118,7 @@ function getRichTextTranslation({
 }): ApplyMatrixItem {
   if (isWidth) {
     item.editor.setMaxWidth(
-      (item.getWidth() / item.transformation.getScale().x) * matrix.scaleX
+      (item.getWidth() / (item as any).transformation.getScale().x) * matrix.scaleX
     );
     return { id: item.getId(), matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
   } else if (isHeight) {
@@ -147,7 +145,7 @@ function getAINodeTranslation({
 }): ApplyMatrixItem {
   if (isWidth) {
     item.text.editor.setMaxWidth(
-      (item.text.getWidth() / item.transformation.getScale().x) * matrix.scaleX
+      (item.text.getWidth() / (item as any).transformation.getScale().x) * matrix.scaleX
     );
     return { id: item.getId(), matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
   } else if (isHeight) {
@@ -174,16 +172,16 @@ function getItemTranslation({
   translateY: number;
   isShiftPressed: boolean;
 }): ApplyMatrixItem {
-  if (item instanceof Sticker && (isWidth || isHeight)) {
+  if (item.itemType === "Sticker" && (isWidth || isHeight)) {
     return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
   } else {
     if (
-      item instanceof Frame &&
-      item.getCanChangeRatio() &&
+      item.itemType === "Frame" &&
+      (item as any).getCanChangeRatio() &&
       isShiftPressed &&
-      item.getFrameType() !== "Custom"
+      (item as any).getFrameType() !== "Custom"
     ) {
-      item.setFrameType("Custom");
+      (item as any).setFrameType("Custom");
     }
     return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleY, shearX: 0, shearY: 0 } };
   }

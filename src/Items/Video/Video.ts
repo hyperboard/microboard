@@ -11,7 +11,7 @@ import { conf } from "Settings";
 import { Subject } from "Subject";
 import { VideoCommand } from "./VideoCommand";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
-import {getMediaSignedUrl} from "api/MediaHelpers";
+import { getMediaSignedUrl } from "api/MediaHelpers";
 
 export interface VideoItemData {
   itemType: "Video";
@@ -298,7 +298,7 @@ export class VideoItem extends BaseItem<VideoItem> {
     };
   }
 
-  	deserialize(data: SerializedItemData<VideoItemData> | VideoItemData): this {
+  deserialize(data: SerializedItemData<VideoItemData> | VideoItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
       this.updateMbr();

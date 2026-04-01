@@ -39,6 +39,8 @@ import { conf } from "Settings";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import { transformOps } from "../Transformation/transformOps";
+import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
+import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -265,39 +267,6 @@ export class Shape extends BaseItem<Shape> {
     this.shapeType = shapeType;
     this.initPath();
     this.transformPath();
-    // Smell: Can we not update connectors in shape?
-    // Smell: Can we not iterate over all items?
-    for (const connector of this.board.items.listAll()) {
-      if (
-        connector.itemType === "Connector" &&
-        ((connector as Connector).getConnectedItems().endItem?.getId() === this.getId() ||
-          (connector as Connector).getConnectedItems().startItem?.getId() === this.getId())
-      ) {
-        if ((connector as Connector).getConnectedItems().endItem?.getId() === this.getId()) {
-          const nearestPoint = this.getNearestEdgePointTo(
-            (connector as Connector).getEndPoint().copy()
-          );
-          (connector as Connector).apply(
-            connectorOps.setEndPoint(
-              [connector as Connector],
-              new FixedPoint(this, toRelativePoint(nearestPoint, this))
-            )
-          );
-        }
-
-        if ((connector as Connector).getConnectedItems().startItem?.getId() === this.getId()) {
-          const nearestPoint = this.getNearestEdgePointTo(
-            (connector as Connector).getStartPoint().copy()
-          );
-          (connector as Connector).apply(
-            connectorOps.setStartPoint(
-              [connector as Connector],
-              new FixedPoint(this, toRelativePoint(nearestPoint, this))
-            )
-          );
-        }
-      }
-    }
   }
 
 
@@ -563,5 +532,22 @@ export class Shape extends BaseItem<Shape> {
         return false;
     }
     return true;
+  }
+
+  handleTransform(params: TransformParams): TransformResult {
+    const { board, mbr, resizeType, oppositePoint, isHeight, isWidth, isShiftPressed, beginTimeStamp, followingComments, startMbr } = params;
+    return transformShape({
+      board,
+      mbr,
+      resizeType,
+      oppositePoint,
+      isHeight,
+      isWidth,
+      isShiftPressed,
+      beginTimeStamp,
+      followingComments,
+      startMbr,
+      single: this as any,
+    });
   }
 }

@@ -24,6 +24,8 @@ import { TransformationOperation } from "../Transformation/TransformationOperati
 import { conf } from "Settings";
 import { Subject } from "Subject";
 import { BaseItem, SerializedItemData } from "../BaseItem/BaseItem";
+import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
+import { transformAINode } from "Selection/Transformer/TransformerHelpers/transformAINode";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
@@ -354,5 +356,48 @@ export class AINode extends BaseItem<AINode> {
 
   getPrevMbr(): Mbr | null {
     return this.prevMbr;
+  }
+
+  getPointOnEdge(point: Point, edge?: string): Point {
+    const itemMbr = this.getMbr();
+    const { x: centerX, y: centerY } = itemMbr.getCenter();
+    switch (edge) {
+      case "left":
+        return new Point(itemMbr.left, centerY);
+      case "right":
+        return new Point(itemMbr.right, centerY);
+      case "top":
+        return new Point(centerX, itemMbr.top);
+      case "bottom":
+        return new Point(centerX, itemMbr.bottom);
+      default:
+        return this.getMbr().getClosestEdgeCenterPoint(point);
+    }
+  }
+
+  handleTransform(params: TransformParams): TransformResult {
+    const { board, mbr, resizeType, oppositePoint, isHeight, isWidth, isShiftPressed, followingComments } = params;
+    const res = transformAINode({
+      board,
+      mbr,
+      resizeType,
+      oppositePoint,
+      isHeight,
+      isWidth,
+      isShiftPressed,
+      followingComments,
+      single: this as any,
+    });
+    return {
+      resizedMbr: res,
+    };
+  }
+
+  isBusy(): boolean {
+    return !!this.board.aiGeneratingOnItem;
+  }
+
+  canBeInteractedWithWhileLocked(isAiGenerating: boolean): boolean {
+    return isAiGenerating;
   }
 }

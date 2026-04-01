@@ -430,7 +430,7 @@ export class SpatialIndex implements ISpatialIndex {
           return false;
         }
       }
-      if (item.itemType === "Group") {
+      if ("index" in item && item.index) {
         return false;
       }
       return true;
@@ -448,7 +448,7 @@ export class SpatialIndex implements ISpatialIndex {
   }
 
   getComments(): Comment[] {
-    return this.itemsArray.filter(item => item.itemType === "Comment") as Comment[];
+    return this.itemsArray.filter(item => item.shouldFollowItems()) as Comment[];
   }
 
   getMbr(): Mbr {
@@ -611,7 +611,7 @@ export class Items {
   }
 
   getComments(): Comment[] {
-    return this.listAll().filter((item): item is Comment => item.itemType === "Comment");
+    return this.listAll().filter((item): item is Comment => item.shouldFollowItems());
   }
 
   getUnderPointer(size = 0): Item[] {
@@ -620,7 +620,7 @@ export class Items {
     size = 16;
     const tolerated = this.index.listEnclosedOrCrossedBy(x - size, y - size, x + size, y + size);
 
-    let enclosed = tolerated.some(item => item.itemType === "Connector")
+    let enclosed = tolerated.some(item => !item.isAlignmentSource())
       ? tolerated
       : this.index.listEnclosedOrCrossedBy(x, y, x, y);
 
@@ -637,7 +637,7 @@ export class Items {
       (acc: { nearest?: Item; area: number }, item: Item) => {
         const area = item.getMbr().getHeight() * item.getMbr().getWidth();
 
-        if (item.itemType === "Drawing" && !(item as Drawing).isPointNearLine(this.pointer.point)) {
+        if (item.itemType === "Drawing" && !(item as any).isPointNearLine(this.pointer.point)) {
           return acc;
         }
 
@@ -691,7 +691,7 @@ export class Items {
 
   getLinkedConnectorsById(id: string): Connector[] {
     return this.listAll().filter(item => {
-      if (item.itemType !== "Connector") {
+      if (item.isAlignmentSource()) {
         return false;
       }
 
@@ -709,7 +709,7 @@ export class Items {
       return [];
     }
     return this.listAll().filter(item => {
-      if (item.itemType !== "Connector" || !(item as Connector).isConnected()) {
+      if (item.isAlignmentSource() || !(item as Connector).isConnected()) {
         return false;
       }
       const {startItem, endItem} = (item as Connector).getConnectedItems();

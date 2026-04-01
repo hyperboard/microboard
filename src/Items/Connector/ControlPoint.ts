@@ -2,8 +2,6 @@ import { Point } from "../Point";
 import { Item } from "../Item";
 import { Connector } from "./Connector";
 import { Matrix } from "../Transformation";
-import { RichText } from "../RichText";
-import { AINode } from "../AINode";
 import { BaseItem } from "../BaseItem";
 
 export type Edge = "top" | "bottom" | "left" | "right";
@@ -238,17 +236,11 @@ export function getControlPoint(
 
 		switch (data.pointType) {
 			case "FixedConnector":
-				if (item instanceof Connector) {
-					return new FixedConnectorPoint(
-						item,
-						data.tangent,
-						data.segment,
-					);
-				} else {
-					throw new Error(
-						`getControlPoint(): item must be a connector`,
-					);
-				}
+				return new FixedConnectorPoint(
+					item as Connector,
+					data.tangent,
+					data.segment,
+				);
 			case "Floating":
 				return new FloatingPoint(
 					item,
@@ -293,26 +285,8 @@ function fromRelativePoint(
 	const point = relativePoint.copy();
 	point.transform(matrix);
 
-	// TODO fix richtext width transformation. The connector needs a modified scaleX
-	if (item instanceof RichText || item instanceof AINode) {
-		const itemMbr = item.getMbr();
-		// if (!item.getIsWidthResizing()) {
-		// 	return itemMbr.getNearestPointOnPerimeter(point, false);
-		// }
-
-		const { x: centerX, y: centerY } = itemMbr.getCenter();
-		switch (edge) {
-			case "left":
-				return new Point(itemMbr.left, centerY);
-			case "right":
-				return new Point(itemMbr.right, centerY);
-			case "top":
-				return new Point(centerX, itemMbr.top);
-			case "bottom":
-				return new Point(centerX, itemMbr.bottom);
-			default:
-				return item.getMbr().getClosestEdgeCenterPoint(point);
-		}
+	if (item.getPointOnEdge) {
+		return item.getPointOnEdge(point, edge);
 	}
 
 	return point;

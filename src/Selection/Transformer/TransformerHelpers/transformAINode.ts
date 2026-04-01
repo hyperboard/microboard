@@ -4,7 +4,7 @@ import { Board } from "Board";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Point } from "Items/Point/Point";
 import type { Comment } from "Items/Comment/Comment";
-import { AINode } from "Items/AINode/AINode";
+import type { AINode } from "Items/AINode/AINode";
 import {
   getTransformedTextMbr,
   transformTextFollowingComments,
@@ -30,7 +30,7 @@ export function transformAINode({
   isWidth: boolean;
   isHeight: boolean;
   isShiftPressed: boolean;
-  followingComments: Comment[] | undefined;
+  followingComments?: Comment[];
 }) {
   const { matrix, mbr: resizedMbr } = getProportionalResize(
     resizeType,

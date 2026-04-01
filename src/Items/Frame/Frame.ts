@@ -9,6 +9,8 @@ import { RichText } from "../RichText/RichText";
 import { transformOps } from "../Transformation/transformOps";
 import { Matrix } from "../Transformation/Matrix";
 import { BaseItem, BaseItemData, SerializedItemData } from "../BaseItem/BaseItem";
+import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
+import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import {Subject} from "Subject";
 import {DrawingContext} from "../DrawingContext";
 import {Operation} from "Events";
@@ -681,5 +683,26 @@ export class Frame extends BaseItem<Frame> {
 
   getRichText(): RichText {
     return this.text;
+  }
+
+  getIsScalingContainer(): boolean {
+    return false;
+  }
+
+  handleTransform(params: TransformParams): TransformResult {
+    const { board, mbr, resizeType, oppositePoint, isHeight, isWidth, isShiftPressed, beginTimeStamp, followingComments, startMbr } = params;
+    return transformShape({
+      board,
+      mbr,
+      resizeType,
+      oppositePoint,
+      isHeight,
+      isWidth,
+      isShiftPressed,
+      beginTimeStamp,
+      followingComments,
+      startMbr,
+      single: this as any,
+    });
   }
 }

@@ -1,4 +1,5 @@
-import { Point, Mbr } from "Items";
+import { Point } from "Items/Point/Point";
+import { Mbr } from "Items/Mbr/Mbr";
 
 export type ResizeType =
   | "left"

@@ -28,6 +28,10 @@ import { Transformation } from "../Transformation/Transformation";
 import { TransformationOperation } from "../Transformation/TransformationOperations";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
 import { DrawingContext } from "../DrawingContext";
+import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
+import { transformRichText } from "Selection/Transformer/TransformerHelpers/transformRichText";
+import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";
+import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { LinkTo } from "../LinkTo/LinkTo";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { LayoutBlockNodes } from "./CanvasText/LayoutBlockNodes";
@@ -89,7 +93,7 @@ export class RichText extends BaseItem<RichText> {
   lastClickPoint?: Point;
   initialFontColor?: string | import("Color").ColorValue;
   frameMbr?: Mbr;
-  private _onLimitReached: () => void = () => {};
+  private _onLimitReached: () => void = () => { };
   private shrinkWidth = false;
   prevMbr: Mbr | null = null;
   customTransformationMatrix?: () => Matrix;
@@ -280,7 +284,7 @@ export class RichText extends BaseItem<RichText> {
     }
     try {
       conf.reactEditorFocus(this.editor.editor);
-    } catch {}
+    } catch { }
   };
 
   updateElement = (): void => {
@@ -458,8 +462,8 @@ export class RichText extends BaseItem<RichText> {
       alignment === "top"
         ? rect.top
         : alignment === "bottom"
-        ? rect.bottom - height
-        : center.y - height / 2;
+          ? rect.bottom - height
+          : center.y - height / 2;
     this.left = left;
     this.top = Math.max(top, rect.top);
     this.right = left + width;
@@ -1148,5 +1152,50 @@ export class RichText extends BaseItem<RichText> {
 
   getPrevMbr(): Mbr | null {
     return this.prevMbr;
+  }
+
+  getPointOnEdge(point: Point, edge?: string): Point {
+    const itemMbr = this.getMbr();
+    const { x: centerX, y: centerY } = itemMbr.getCenter();
+    switch (edge) {
+      case "left":
+        return new Point(itemMbr.left, centerY);
+      case "right":
+        return new Point(itemMbr.right, centerY);
+      case "top":
+        return new Point(centerX, itemMbr.top);
+      case "bottom":
+        return new Point(centerX, itemMbr.bottom);
+      default:
+        return this.getMbr().getClosestEdgeCenterPoint(point);
+    }
+  }
+
+  handleTransform(params: TransformParams): TransformResult {
+    const { board, mbr, resizeType, oppositePoint, isHeight, isWidth, isShiftPressed, followingComments } = params;
+    const res = transformRichText({
+      board,
+      mbr,
+      resizeType,
+      oppositePoint,
+      isHeight,
+      isWidth,
+      isShiftPressed,
+      followingComments,
+      single: this as any,
+    });
+    return {
+      resizedMbr: res?.resizedMbr ?? null,
+      onPointerUpCb: res?.onPointerUpCb,
+    };
+  }
+
+  getResizeType(
+    point: Point,
+    cameraScale: number,
+    mbr: Mbr,
+    anchorDistance = 5
+  ): ResizeType | undefined {
+    return getTextResizeType(point, cameraScale, mbr, anchorDistance);
   }
 }

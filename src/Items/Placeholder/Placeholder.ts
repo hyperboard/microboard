@@ -360,6 +360,9 @@ export class Placeholder extends BaseItem<Placeholder> {
         this.renderIcon(context);
     }
 
+    isReady(): boolean {
+        return false;
+    }
 
     getLinkTo(): undefined {
         return undefined;
