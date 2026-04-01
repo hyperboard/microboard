@@ -361,6 +361,11 @@ export class Drawing extends BaseItem<Drawing> {
         }
         this.updateMbr();
         break;
+      case "Transformation":
+        super.apply(op);
+        this.updateMbr();
+        this.updateLines();
+        break;
       default:
         super.apply(op);
         return;
