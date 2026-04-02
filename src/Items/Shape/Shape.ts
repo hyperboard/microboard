@@ -56,32 +56,30 @@ export class Shape extends BaseItem<Shape> {
   readonly subject = new Subject<Shape>();
   transformationRenderBlock?: boolean = undefined;
 
+  public shapeType = defaultShapeData.shapeType;
+  public backgroundColor = defaultShapeData.backgroundColor;
+  public backgroundOpacity = defaultShapeData.backgroundOpacity;
+  public borderColor = defaultShapeData.borderColor;
+  public borderOpacity = defaultShapeData.borderOpacity;
+  public borderStyle = defaultShapeData.borderStyle;
+  public borderWidth = defaultShapeData.borderWidth;
+
   constructor(
     board: Board,
     id = "",
-    public shapeType = defaultShapeData.shapeType,
-    public backgroundColor = defaultShapeData.backgroundColor,
-    public backgroundOpacity = defaultShapeData.backgroundOpacity,
-    public borderColor = defaultShapeData.borderColor,
-    public borderOpacity = defaultShapeData.borderOpacity,
-    public borderStyle = defaultShapeData.borderStyle,
-    public borderWidth = defaultShapeData.borderWidth,
   ) {
     super(board, id);
-    this.mbr = Shapes[shapeType].path.getMbr().copy();
+    this.mbr = Shapes[this.shapeType].path.getMbr().copy();
     this.path = Shapes[this.shapeType].path.copy();
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
-    this.text = new RichText(
-      board,
-      this.textContainer,
-      this.id,
-      this.transformation,
-      this.linkTo,
-      "\u00A0",
-      true,
-      false,
-      "Shape"
-    );
+    this.text = new RichText(this.board, this.id);
+    this.text.container = this.textContainer.copy();
+    this.text.transformation = this.transformation;
+    this.text.linkTo = this.linkTo;
+    this.text.placeholderText = "\u00A0";
+    this.text.isInShape = true;
+    this.text.insideOf = this.itemType;
+    this.text.updateShrinkWidth();
 
 
     this.text.subject.subscribe(() => {

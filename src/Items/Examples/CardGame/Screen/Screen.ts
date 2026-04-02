@@ -11,7 +11,8 @@ import {BorderWidth, Path, BorderStyle} from "../../../Path";
 import {Line} from "../../../Line";
 import {Point} from "../../../Point";
 import {AddPouch, AddScreen} from "./AddScreen";
-import {ScreenOperation} from "./ScreenOperation";
+import { ScreenOperation } from "./ScreenOperation";
+import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
 import {conf} from "Settings";
 import {getMediaSignedUrl} from "api/MediaHelpers";
 
@@ -52,11 +53,10 @@ export class Screen extends BaseItem<Screen> {
   constructor(
     board: Board,
     id = "",
-    defaultItemData?: BaseItemData,
-    isGroupItem?: boolean,
   ) {
-    super(board, id, defaultItemData || defaultScreenData, true);
-    const data = (defaultItemData || defaultScreenData) as ScreenData;
+    super(board, id);
+    this.index = new SimpleSpatialIndex(this.board.camera, this.board.pointer);
+    const data = defaultScreenData;
     this.ownerId = data.ownerId || "";
     this.path = new Path(); // use a dummy path, it will be reassigned in transformPath
 

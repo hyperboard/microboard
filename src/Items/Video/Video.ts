@@ -6,7 +6,9 @@ import { Line } from "Items/Line";
 import { LinkTo } from "Items/LinkTo/LinkTo";
 import { Mbr } from "Items/Mbr";
 import { Path, Paths } from "Items/Path";
-import { TransformationData, Transformation } from "Items/Transformation";
+import { TransformationData, DefaultTransformationData } from "../Transformation/TransformationData";
+import { registerItem } from "Items/RegisterItem";
+import { Transformation } from "Items/Transformation";
 import { conf } from "Settings";
 import { Subject } from "Subject";
 import { VideoCommand } from "./VideoCommand";
@@ -78,36 +80,23 @@ export class VideoItem extends BaseItem<VideoItem> {
   loadCallbacks: ((video: VideoItem) => void)[] = [];
   beforeLoadCallbacks: ((video: VideoItem) => void)[] = [];
   transformationRenderBlock?: boolean = undefined;
-  videoDimension: Dimension;
-  board: Board;
+  videoDimension: Dimension = { width: 100, height: 100 };
   private isPlaying = false;
   private shouldShowControls = false;
   private playBtnMbr: Mbr = new Mbr();
   private currentTime = 0;
+  private extension: string = "mp4";
 
   constructor(
-    { url, videoDimension, previewUrl }: VideoConstructorData,
     board: Board,
-    private events?: Events,
     id = "",
-    private extension: string = "mp4"
   ) {
     super(board, id);
-    this.isStorageUrl = !conf.getYouTubeId(url);
+    this.isStorageUrl = false;
     this.setPreview(createPlaceholderImage(
-      videoDimension.width,
-      videoDimension.height
+      this.videoDimension.width,
+      this.videoDimension.height
     ));
-    this.board = board;
-    // img storage link or youtube preview url
-    if (previewUrl) {
-      this.previewUrl = previewUrl;
-      this.setPreviewUrl(previewUrl);
-    }
-    if (url) {
-      this.url = url;
-    }
-    this.videoDimension = videoDimension;
   }
 
   setCurrentTime(time: number) {
@@ -299,6 +288,13 @@ export class VideoItem extends BaseItem<VideoItem> {
   }
 
   deserialize(data: SerializedItemData<VideoItemData> | VideoItemData): this {
+    if (data.videoDimension) {
+      this.videoDimension = data.videoDimension;
+      this.setPreview(createPlaceholderImage(
+        this.videoDimension.width,
+        this.videoDimension.height
+      ));
+    }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
       this.updateMbr();
@@ -346,10 +342,10 @@ export class VideoItem extends BaseItem<VideoItem> {
   }
 
   emit(operation: Operation): void {
-    if (this.events) {
+    if (this.board.events) {
       const command = new VideoCommand([this], operation);
       command.apply();
-      this.events.emit(operation, command);
+      this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
     }
@@ -438,3 +434,18 @@ export class VideoItem extends BaseItem<VideoItem> {
     super.onRemove();
   }
 }
+
+export const DefaultVideoItemData: VideoItemData = {
+  itemType: "Video",
+  url: "",
+  previewUrl: "",
+  videoDimension: { width: 100, height: 100 },
+  isStorageUrl: false,
+  extension: "",
+  transformation: new DefaultTransformationData(),
+};
+
+registerItem({
+  item: VideoItem,
+  defaultData: DefaultVideoItemData,
+});

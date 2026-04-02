@@ -7,7 +7,7 @@ import { CustomTool } from "Tools/CustomTool";
 import { BaseItem, BaseItemData } from "Items/BaseItem/BaseItem";
 import { BaseOperation, ItemOperation, Operation } from "Events/EventsOperations";
 
-type ItemConstructor = new (board: Board, id: string, ...args: any[]) => any;
+type ItemConstructor = new (board: Board, id: string) => BaseItem;
 
 type RegisterItemArgs = {
   item: ItemConstructor;
@@ -23,7 +23,6 @@ export function registerItem({
   schema,
 }: RegisterItemArgs): void {
   const { itemType } = defaultData;
-  console.log(`[DEBUG] Registering item: ${itemType}, item is defined: ${!!item}`);
   itemFactories[itemType] = createItemFactory(item, defaultData);
   itemValidators[itemType] = createItemValidator(defaultData, schema);
   if (schema) {
@@ -33,7 +32,9 @@ export function registerItem({
     registeredTools[toolData.name] = toolData.tool;
   }
 
-  itemCommandFactories[itemType] = createItemCommandFactory(itemType);
+  if (!itemCommandFactories[itemType]) {
+    itemCommandFactories[itemType] = createItemCommandFactory(itemType);
+  }
 }
 
 export function registerTool(toolData: { name: string; tool: typeof CustomTool }) {
@@ -46,10 +47,9 @@ function createItemFactory(item: ItemConstructor, defaultData: BaseItemData) {
       throw new Error(`Invalid data for ${defaultData.itemType}`);
     }
     if (!item) {
-      console.error(`[ERROR] itemFactory called for ${defaultData.itemType} but item is undefined!`);
       throw new Error(`itemFactory: item is undefined for ${defaultData.itemType}`);
     }
-    return (new item(board, id, defaultData) as BaseItem).setId(id).deserialize(data as BaseItemData);
+    return new item(board, id).setId(id).deserialize(data as BaseItemData);
   };
 }
 

@@ -22,21 +22,10 @@ export class AddShape extends BoardTool {
     super(board);
     this.setCursor();
     const data = tempStorage.getShapeData();
+    this.shape = new Shape(board);
     if (data) {
-      this.shape = new Shape(
-        board,
-        "",
-        data.shapeType,
-        data.backgroundColor,
-        data.backgroundOpacity,
-        data.borderColor,
-        data.borderOpacity,
-        data.borderStyle,
-        data.borderWidth
-      );
+      this.shape.deserialize(data);
       this.setShapeType(data.shapeType);
-    } else {
-      this.shape = new Shape(board);
     }
   }
 

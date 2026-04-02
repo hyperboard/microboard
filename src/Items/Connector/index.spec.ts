@@ -5,16 +5,16 @@ describe("of connectors", () => {
 	/*
 	describe("adds a connector to a board", () => {
 		it("from element to element", () => {
-			const connector = new Connector();
+			const connector = new Connector(board);
 		});
 		it("from element to board", () => {
-			const connector = new Connector();
+			const connector = new Connector(board);
 		});
 		it("from board to element", () => {
-			const connector = new Connector();
+			const connector = new Connector(board);
 		});
 		it("from board to board", () => {
-			const connector = new Connector();
+			const connector = new Connector(board);
 		});
 	});
 	it("changes a connector`s", () => {

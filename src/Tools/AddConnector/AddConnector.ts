@@ -62,18 +62,18 @@ export class AddConnector extends BoardTool {
       this.isQuickAdd = true;
       const closestPoint = this.snap.getClosestPointOnItem(itemToStart, position);
 
-      this.connector = new Connector(
-        this.board,
-        "",
-        closestPoint,
-        closestPoint,
-        this.lineStyle,
-        this.startPointer,
-        this.endPointer,
-        coerceOptionalColorValue(this.lineColor),
-        this.lineWidth,
-        this.strokeStyle
-      );
+      this.connector = new Connector(this.board);
+      this.connector.deserialize({
+        itemType: "Connector",
+        startPoint: closestPoint,
+        endPoint: closestPoint,
+        lineStyle: this.lineStyle,
+        startPointer: this.startPointer,
+        endPointer: this.endPointer,
+        lineColor: coerceOptionalColorValue(this.lineColor),
+        lineWidth: this.lineWidth,
+        strokeStyle: this.strokeStyle,
+      } as any);
     }
   }
 
@@ -85,18 +85,18 @@ export class AddConnector extends BoardTool {
     this.isDown = true;
     const point = this.snap.getControlPoint();
     if (!this.connector) {
-      this.connector = new Connector(
-        this.board,
-        "",
-        point,
-        point,
-        this.lineStyle,
-        this.startPointer,
-        this.endPointer,
-        coerceOptionalColorValue(this.lineColor),
-        this.lineWidth,
-        this.strokeStyle
-      );
+      this.connector = new Connector(this.board);
+      this.connector.deserialize({
+        itemType: "Connector",
+        startPoint: point,
+        endPoint: point,
+        lineStyle: this.lineStyle,
+        startPointer: this.startPointer,
+        endPointer: this.endPointer,
+        lineColor: coerceOptionalColorValue(this.lineColor),
+        lineWidth: this.lineWidth,
+        strokeStyle: this.strokeStyle,
+      } as any);
     } else {
       this.connector.apply({
         class: 'Connector',

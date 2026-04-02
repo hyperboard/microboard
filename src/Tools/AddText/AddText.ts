@@ -49,7 +49,7 @@ export class AddText extends BoardTool {
 		if (this.line) {
 			const board = this.board;
 
-			const richText = new RichText(this.board, new Mbr());
+			const richText = new RichText(this.board);
 			richText.apply(transformOps.translateTo(richText, this.bounds.left, this.bounds.top));
 			richText.apply(transformOps.scaleBy(richText.id, 1, 1));
 			richText.editor.maxWidth = 600;

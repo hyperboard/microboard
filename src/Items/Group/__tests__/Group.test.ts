@@ -40,7 +40,7 @@ describe("Group", () => {
 			return null;
 		});
 
-		group = new Group(board, board.events as any, [], "group1");
+		group = new Group(board, "group1");
 	});
 
 	it("should correctly calculate MBR from children", () => {

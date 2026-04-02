@@ -372,12 +372,15 @@ export class EditorContainer {
 
   private applySelectionOp(op: SelectionOp): void {
     this.shouldEmit = false;
-    // this.editor.selection = op.selection;
     Editor.withoutNormalizing(this.editor, () => {
       for (const operation of op.ops) {
         this.decorated.apply(operation);
       }
     });
+
+    if (op.selection) {
+      Transforms.select(this.editor, op.selection);
+    }
     this.shouldEmit = true;
   }
 

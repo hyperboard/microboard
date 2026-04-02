@@ -43,7 +43,7 @@ function createFrame(
   scaleX = 1,
   scaleY = 1
 ): Frame {
-  const frame = new Frame(board, board.items.getById.bind(board.items));
+  const frame = new Frame(board);
   frame.apply(transformOps.setLocal(frame.id, { translateX, translateY, scaleX, scaleY }));
   return board.add(frame) as Frame;
 }

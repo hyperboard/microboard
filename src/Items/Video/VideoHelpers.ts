@@ -31,7 +31,12 @@ export const createVideoItem = (
 	videoData: VideoConstructorData,
 	onLoadCb: (video: VideoItem) => void
 ) => {
-	const video = new VideoItem(videoData, board, board.events, '', extension);
+	const video = new VideoItem(board);
+	video.deserialize({
+		itemType: 'Video',
+		...videoData,
+		extension
+	} as any);
 	video.doOnceBeforeOnLoad(() => {
 		const { scaleX, scaleY, translateX, translateY } = calculatePosition(video, board);
 		video.apply(transformOps.translateTo(video, translateX, translateY));

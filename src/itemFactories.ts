@@ -1,243 +1,32 @@
-import { Board } from "Board";
-import type { RichTextData } from "./Items/RichText/RichTextData";
+import type { Board } from "Board";
 import type { ItemData, Item } from "Items/Item";
-import { Point } from "Items/Point";
-import { Shape } from "Items/Shape/Shape";
-import { RichText } from "Items/RichText/RichText";
-import { Mbr } from "Items/Mbr/Mbr";
-import { Connector } from "Items/Connector/Connector";
-import { Frame } from "Items/Frame/Frame";
-import type { ShapeData } from "Items/Shape/ShapeData";
-import type { ConnectorData } from "Items/Connector/ConnectorOperations";
-import type { FrameData } from "Items/Frame/FrameData";
-import { Comment } from "Items/Comment/Comment";
-import { AINode, AINodeData } from "Items/AINode";
-import { AudioItem, AudioItemData } from "Items/Audio";
-import { Drawing, DrawingData } from "Items/Drawing";
-import { Group, GroupData } from "Items/Group";
-import { ImageItem, ImageItemData } from "Items/Image";
-import { Placeholder, PlaceholderData } from "Items/Placeholder";
-import { Sticker } from "Items/Sticker";
-import { StickerData } from "Items/Sticker/StickerOperation";
-import { VideoItem, VideoItemData } from "Items/Video";
-import { CommentData } from "./Items/Comment";
-import { SerializedItemData } from "Items/BaseItem/BaseItem";
 
-interface ItemFactory {
-  (id: string, data: ItemData, board: Board): Item;
-}
-
-import { itemFactories as registryItemFactories } from "./RegistryMaps";
+import {
+  itemFactories as registryItemFactories,
+} from "./RegistryMaps";
 export type { ItemFactories } from "./RegistryMaps";
 export const itemFactories = registryItemFactories;
 
-Object.assign(itemFactories, {
-  Sticker: createSticker,
-  Shape: createShape,
-  RichText: createRichText,
-  Connector: createConnector,
-  Image: createImage,
-  Drawing: createDrawing,
-  Frame: createFrame,
-  Placeholder: createPlaceholder,
-  Comment: createComment,
-  Group: createGroup,
-  AINode: createAINode,
-  Video: createVideo,
-  Audio: createAudio,
-});
+// Trigger self-registration of core items
+import "Items/Shape/Shape";
+import "Items/Sticker/Sticker";
+import "Items/RichText/RichText";
+import "Items/Connector/Connector";
+import "Items/Image/Image";
+import "Items/Drawing/Drawing";
+import "Items/Frame/Frame";
+import "Items/Placeholder/Placeholder";
+import "Items/Comment/Comment";
+import "Items/Group/Group";
+import "Items/AINode/AINode";
+import "Items/Video/Video";
+import "Items/Audio/Audio";
 
-function createSticker(id: string, data: ItemData, board: Board): Sticker {
-  if (!isStickerData(data)) {
-    throw new Error("Invalid data for Sticker");
-  }
-  const sticker = new Sticker(board).setId(id).deserialize(data);
-  return sticker;
-}
+// Trigger self-registration of example items
+import "Items/Examples/Star/Star";
+import "Items/Examples/Counter/Counter";
+import "Items/Examples/CardGame/Card/Card";
+import "Items/Examples/CardGame/Deck/Deck";
+import "Items/Examples/CardGame/Dice/Dice";
+import "Items/Examples/CardGame/Screen/Screen";
 
-function createComment(id: string, data: ItemData, board: Board): Comment {
-  if (!isCommentData(data)) {
-    throw new Error("Invalid data for Comment");
-  }
-  const comment = new Comment(board, new Point(), board.events)
-    .setId(id)
-    .deserialize({ ...data, id });
-  return comment;
-}
-
-function createAINode(id: string, data: ItemData, board: Board): AINode {
-  if (!isAINodeData(data)) {
-    throw new Error("Invalid data for AINode");
-  }
-  const nodeData = data as AINodeData;
-  const node = new AINode(
-    board,
-    nodeData.isUserRequest,
-    nodeData.parentNodeId,
-    nodeData.contextItems,
-  )
-    .setId(id)
-    .deserialize({ ...data, id });
-  return node;
-}
-
-function createShape(id: string, data: ItemData, board: Board): Shape {
-  if (!isShapeData(data)) {
-    throw new Error("Invalid data for Shape");
-  }
-  const shape = new Shape(board).setId(id).deserialize(data as ShapeData);
-  return shape;
-}
-
-function createRichText(id: string, data: ItemData, board: Board): RichText {
-  if (!isRichTextData(data)) {
-    throw new Error("Invalid data for RichText");
-  }
-  const richText = new RichText(board, new Mbr(), id)
-    .setId(id)
-    .deserialize(data);
-  return richText;
-}
-
-function createConnector(id: string, data: ItemData, board: Board): Connector {
-  if (!isConnectorData(data)) {
-    throw new Error("Invalid data for Connector");
-  }
-  const connector = new Connector(board).setId(id).deserialize(data);
-  return connector;
-}
-
-function createImage(id: string, data: ItemData, board: Board): ImageItem {
-  if (!isImageItemData(data)) {
-    throw new Error("Invalid data for ImageItem");
-  }
-  const image = new ImageItem(data, board, board.events, id)
-    .setId(id)
-    .deserialize(data);
-  return image;
-}
-
-function createVideo(id: string, data: ItemData, board: Board): VideoItem {
-  if (!isVideoItemData(data)) {
-    throw new Error("Invalid data for VideoItem");
-  }
-  const video = new VideoItem(data, board, board.events, id, data.extension)
-    .setId(id)
-    .deserialize(data);
-  return video;
-}
-
-function createAudio(id: string, data: ItemData, board: Board): AudioItem {
-  if (!isAudioItemData(data)) {
-    throw new Error("Invalid data for AudioItem");
-  }
-  const audio = new AudioItem(
-    board,
-    data.url,
-    board.events,
-    id,
-    data.extension,
-  )
-    .setId(id)
-    .deserialize(data);
-  return audio;
-}
-
-function createDrawing(id: string, data: ItemData, board: Board): Drawing {
-  if (!isDrawingData(data)) {
-    throw new Error("Invalid data for Drawing");
-  }
-  const drawing = new Drawing(board, id, [], board.events)
-    .setId(id)
-    .deserialize({ ...data, id });
-  return drawing;
-}
-
-function createFrame(id: string, data: ItemData, board: Board): Frame {
-  if (!isFrameData(data)) {
-    throw new Error("Invalid data for Drawing");
-  }
-  const frame = new Frame(board, board.items.getById.bind(board.items))
-    .setId(id)
-    .setBoard(board)
-    .deserialize(data as FrameData);
-  return frame;
-}
-
-function createPlaceholder(
-  id: string,
-  data: ItemData,
-  board: Board,
-): Placeholder {
-  if (!isPlaceholderData(data)) {
-    throw new Error("Invalid data for Placeholder");
-  }
-  const placeholder = new Placeholder(board, board.events, data.miroData)
-    .setId(id)
-    .deserialize(data);
-
-  return placeholder;
-}
-
-function createGroup(id: string, data: ItemData, board: Board): Group {
-  if (!isGroupData(data)) {
-    throw new Error("Invalid data for Group");
-  }
-
-  const group = new Group(board, board.events, data.childIds, id)
-    .setId(id)
-    .deserialize({ ...data, id });
-  return group;
-}
-
-export function isStickerData(data: ItemData): data is StickerData {
-  return data.itemType === "Sticker";
-}
-
-export function isCommentData(data: ItemData): data is CommentData {
-  return data.itemType === "Comment";
-}
-
-export function isAINodeData(data: ItemData): data is AINodeData {
-  return data.itemType === "AINode";
-}
-
-export function isShapeData(data: ItemData): data is ShapeData {
-  return data.itemType === "Shape";
-}
-
-export function isRichTextData(data: ItemData): data is RichTextData {
-  return data.itemType === "RichText";
-}
-
-export function isConnectorData(data: ItemData): data is ConnectorData {
-  return data.itemType === "Connector";
-}
-
-export function isImageItemData(data: ItemData): data is ImageItemData {
-  return data.itemType === "Image";
-}
-
-export function isVideoItemData(data: ItemData): data is VideoItemData {
-  return data.itemType === "Video";
-}
-
-export function isAudioItemData(data: ItemData): data is AudioItemData {
-  return data.itemType === "Audio";
-}
-
-export function isDrawingData(data: ItemData): data is DrawingData {
-  return data.itemType === "Drawing";
-}
-
-export function isFrameData(data: ItemData): data is FrameData {
-  return data.itemType === "Frame";
-}
-
-export function isPlaceholderData(data: ItemData): data is PlaceholderData {
-  return data.itemType === "Placeholder";
-}
-
-export function isGroupData(data: ItemData): data is GroupData {
-  return data.itemType === "Group";
-}

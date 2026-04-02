@@ -26,6 +26,9 @@ import { Subject } from "Subject";
 import { BaseItem, SerializedItemData } from "../BaseItem/BaseItem";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformAINode } from "Selection/Transformer/TransformerHelpers/transformAINode";
+import { registerItem } from "Items/RegisterItem";
+import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { DefaultRichTextData } from "../RichText/RichTextData";
 
 export const CONTEXT_NODE_HIGHLIGHT_COLOR = "rgba(183, 138, 240, 1)";
 const BUTTON_SIZE = 20;
@@ -55,10 +58,6 @@ export class AINode extends BaseItem<AINode> {
 
   constructor(
     board: Board,
-    isUserRequest = false,
-    parentNodeId?: string,
-    contextItems: string[] = [],
-    threadDirection?: ThreadDirection,
     id = ""
   ) {
     super(board, id);
@@ -66,23 +65,14 @@ export class AINode extends BaseItem<AINode> {
       "img"
     ) as HTMLImageElement;
     this.buttonIcon.src = ICON_SRC;
-    this.contextItems = contextItems;
-    this.isUserRequest = isUserRequest;
-    this.parentNodeId = parentNodeId;
-    if (threadDirection || threadDirection === 0) {
-      this.threadDirection = threadDirection;
-    }
-    this.text = new RichText(
-      this.board,
-      new Mbr(),
-      this.id,
-      this.transformation,
-      this.linkTo,
-      "\u00A0",
-      false,
-      false,
-      "AINode"
-    );
+    this.text = new RichText(this.board, this.id);
+    this.text.container = new Mbr();
+    this.text.transformation = this.transformation;
+    this.text.linkTo = this.linkTo;
+    this.text.placeholderText = "\u00A0";
+    this.text.isInShape = false;
+    this.text.insideOf = "AINode";
+    this.text.updateShrinkWidth();
 
     // this.text.setPaddingTop(0.5);
 
@@ -403,3 +393,17 @@ export class AINode extends BaseItem<AINode> {
     return isAiGenerating;
   }
 }
+
+export const DefaultAINodeData: AINodeData = {
+  itemType: "AINode",
+  transformation: new DefaultTransformationData(),
+  text: new DefaultRichTextData([], "center"),
+  isUserRequest: false,
+  contextItems: [],
+  threadDirection: 3,
+};
+
+registerItem({
+  item: AINode,
+  defaultData: DefaultAINodeData,
+});

@@ -43,12 +43,12 @@ export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
 export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	static createCommand?: (board: Board, operation: Operation) => Command;
 	protected mbr = new Mbr();
-	readonly transformation: Transformation;
-	readonly linkTo: LinkTo;
+	transformation: Transformation;
+	linkTo: LinkTo;
 	parent: string = "Board";
 	canBeNested = true;
 	transformationRenderBlock?: boolean = undefined;
-	readonly index: SimpleSpatialIndex | null = null;
+	index: SimpleSpatialIndex | null = null;
 	board: Board;
 	id: string;
 	subject = new Subject<T>();
@@ -81,21 +81,10 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	constructor(
 		board: Board,
-		id = "",
-		private defaultItemData?: BaseItemData,
-		isGroupItem?: boolean,
+		id = ""
 	) {
 		this.board = board;
 		this.id = id;
-		if (isGroupItem) {
-			this.index = new SimpleSpatialIndex(board.camera, board.pointer);
-			this.canBeNested = false;
-		}
-		if (defaultItemData) {
-			Object.entries(defaultItemData).forEach(([key, value]) => {
-				(this as unknown as Record<string, unknown>)[key] = value;
-			});
-		}
 		this.linkTo = new LinkTo(this.id, board.events);
 		this.transformation = new Transformation(this.id, board.events);
 	}
@@ -162,7 +151,10 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		this.id = id;
 		this.transformation.setId(id);
 		this.linkTo.setId(id);
-		this.getRichText()?.setId(id);
+		const rt = this.getRichText();
+		if (rt && (rt as any) !== this) {
+			rt.setId(id);
+		}
 		return this;
 	}
 

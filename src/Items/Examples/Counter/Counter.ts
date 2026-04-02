@@ -27,7 +27,7 @@ export class Counter extends BaseItem<Counter> {
 	shouldUseCustomRender = true;
 
 	constructor(board: Board, id = "") {
-		super(board, id, defaultCounterData);
+		super(board, id);
 
 		this.updateMbr();
 

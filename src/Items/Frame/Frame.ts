@@ -12,6 +12,7 @@ import { BaseItem, BaseItemData, SerializedItemData } from "../BaseItem/BaseItem
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import { Subject } from "Subject";
+import { registerItem } from "../RegisterItem";
 import { DrawingContext } from "../DrawingContext";
 import { Operation } from "Events";
 import { FrameOperation } from "./FrameOperation";
@@ -53,20 +54,22 @@ export class Frame extends BaseItem<Frame> {
   newShape: FrameType | null = null;
   transformationRenderBlock?: boolean = undefined;
 
+  private name = "";
+  private shapeType = defaultFrameData.shapeType;
+  public backgroundColor = defaultFrameData.backgroundColor;
+  public backgroundOpacity = defaultFrameData.backgroundOpacity;
+  public borderColor = defaultFrameData.borderColor;
+  public borderOpacity = defaultFrameData.borderOpacity;
+  public borderStyle = defaultFrameData.borderStyle;
+  public borderWidth = defaultFrameData.borderWidth;
+
   constructor(
     board: Board,
-    private getItemById: (id: string) => Item | undefined,
     id = "",
-    private name = "",
-    private shapeType = defaultFrameData.shapeType,
-    public backgroundColor = defaultFrameData.backgroundColor,
-    public backgroundOpacity = defaultFrameData.backgroundOpacity,
-    public borderColor = defaultFrameData.borderColor,
-    public borderOpacity = defaultFrameData.borderOpacity,
-    public borderStyle = defaultFrameData.borderStyle,
-    public borderWidth = defaultFrameData.borderWidth
   ) {
-    super(board, id, undefined, true);
+    super(board, id);
+    this.index = new SimpleSpatialIndex(this.board.camera, this.board.pointer);
+    this.canBeNested = false;
     this.path = Frames[this.shapeType].path.copy();
 
     const textBounds = Frames[this.shapeType].textBounds.copy();
@@ -74,18 +77,16 @@ export class Frame extends BaseItem<Frame> {
     textBounds.bottom = HEADING_BOTTOM_OFFSET;
     this.textContainer = textBounds;
 
-    this.text = new RichText(
-      board,
-      this.textContainer,
-      this.id,
-      this.transformation,
-      this.linkTo,
-      this.name,
-      true,
-      false,
-      "Frame",
-      { ...conf.DEFAULT_TEXT_STYLES, fontSize: 18, fontColor: FRAME_TITLE_COLOR }
-    );
+    this.text = new RichText(this.board, this.id);
+    this.text.container = this.textContainer.copy();
+    this.text.transformation = this.transformation;
+    this.text.linkTo = this.linkTo;
+    this.text.placeholderText = this.name;
+    this.text.isInShape = true;
+    this.text.insideOf = "Frame";
+    this.text.updateShrinkWidth();
+    // @ts-ignore
+    this.text.initialTextStyles = { ...conf.DEFAULT_TEXT_STYLES, fontSize: 18, fontColor: FRAME_TITLE_COLOR };
     this.text.editor.verticalAlignment = "bottom";
     this.text.setSelectionHorisontalAlignment("left");
 
@@ -704,3 +705,8 @@ export class Frame extends BaseItem<Frame> {
     });
   }
 }
+
+registerItem({
+  item: Frame,
+  defaultData: new DefaultFrameData(),
+});

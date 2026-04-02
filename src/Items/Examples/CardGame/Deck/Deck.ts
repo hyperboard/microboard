@@ -12,7 +12,8 @@ import {transformOps} from "Items/Transformation/transformOps";
 import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
 import {Path} from "../../../Path";
-import {registerHotkey} from "../../../../Keyboard/HotkeyRegistry";
+import { registerHotkey } from "../../../../Keyboard/HotkeyRegistry";
+import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -33,7 +34,8 @@ export class Deck extends BaseItem<Deck> {
     board: Board,
     id = "",
   ) {
-    super(board, id, defaultDeckData, true);
+    super(board, id);
+    this.index = new SimpleSpatialIndex(this.board.camera, this.board.pointer);
 
     this.index!.listUnderPoint = () => []
     this.index!.listEnclosedBy = () => []

@@ -92,7 +92,7 @@ export class AddDrawing extends BoardTool {
       return false;
     }
     this.isDown = true;
-    this.drawing = new Drawing(this.board, "", []);
+    this.drawing = new Drawing(this.board);
     this.board.tools.publish();
     return true;
   }
@@ -128,7 +128,11 @@ export class AddDrawing extends BoardTool {
       point.x -= x;
       point.y -= y;
     }
-    const drawing = new Drawing(this.board, "", points);
+    const drawing = new Drawing(this.board);
+    drawing.deserialize({
+      itemType: "Drawing",
+      points: points as any,
+    } as any);
     drawing.apply(transformOps.translateTo(drawing, x, y));
     drawing.apply(propertyOps.setProperty([drawing], "borderColor", coerceColorValue(this.strokeColor)));
     drawing.apply(propertyOps.setProperty([drawing], "strokeWidth", this.strokeWidth as any));

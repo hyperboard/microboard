@@ -2,7 +2,7 @@ import type { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Transformation } from "../Transformation/Transformation";
-import { TransformationData } from "../Transformation/TransformationData";
+import { TransformationData, DefaultTransformationData } from "../Transformation/TransformationData";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { Path } from "../Path/Path";
@@ -11,6 +11,7 @@ import { Line } from "Items/Line/Line";
 import { conf } from "Settings";
 import { AudioCommand } from "Items/Audio/AudioCommand";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { registerItem } from "Items/RegisterItem";
 
 export interface AudioItemData {
   itemType: "Audio";
@@ -30,19 +31,13 @@ export class AudioItem extends BaseItem<AudioItem> {
   private url = "";
   private isPlaying = false;
   private currentTime = 0;
+  private extension?: string;
 
   constructor(
     board: Board,
-    url?: string,
-    private events?: Events,
     id = "",
-    private extension?: string
   ) {
     super(board, id);
-    this.board = board;
-    if (url) {
-      this.url = url;
-    }
     this.linkTo.subject.subscribe(() => {
       this.updateMbr();
       this.subject.publish(this);
@@ -198,10 +193,10 @@ export class AudioItem extends BaseItem<AudioItem> {
   }
 
   emit(operation: Operation): void {
-    if (this.events) {
+    if (this.board.events) {
       const command = new AudioCommand([this], operation);
       command.apply();
-      this.events.emit(operation, command);
+      this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
     }
@@ -296,3 +291,14 @@ export class AudioItem extends BaseItem<AudioItem> {
     super.onRemove();
   }
 }
+
+export const DefaultAudioItemData: AudioItemData = {
+  itemType: "Audio",
+  transformation: new DefaultTransformationData(),
+  url: "",
+};
+
+registerItem({
+  item: AudioItem,
+  defaultData: DefaultAudioItemData,
+});

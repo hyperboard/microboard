@@ -53,13 +53,11 @@ export class Dice extends BaseItem<Dice> {
   constructor(
     board: Board,
     id = "",
-    defaultItemData?: BaseItemData,
-    isGroupItem?: boolean
   ) {
-    super(board, id, defaultItemData || defaultDiceData, isGroupItem);
+    super(board, id);
     this.path = createRoundedRectanglePath(this.getMbr()).copy(); // definitely assign it
 
-    const data = (defaultItemData || defaultDiceData) as DiceData;
+    const data = defaultDiceData;
     if (data.type) {
       this.type = data.type;
     }

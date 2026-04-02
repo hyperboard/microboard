@@ -11,7 +11,11 @@ beforeAll(() => {
 describe('RichText in Shape', () => {
     it('scales maxWidth with shape transformation', () => {
         const board = new Board();
-        const shape = new Shape(board, 'test-id', 'Star');
+        const shape = new Shape(board, 'test-id');
+        shape.deserialize({
+            itemType: 'Shape',
+            shapeType: 'Star'
+        } as any);
         const rt = shape.getRichText();
 
         const initialWidth = rt.getMaxWidth() || 0;

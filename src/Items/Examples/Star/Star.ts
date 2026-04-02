@@ -64,7 +64,7 @@ export class Star extends BaseItem<Star> {
 	isShining = false;
 
 	constructor(board: Board, id = "") {
-		super(board, id, defaultStarData);
+		super(board, id);
 		this.path = starPath.copy();
 		this.transformPath();
 

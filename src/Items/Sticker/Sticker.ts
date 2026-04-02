@@ -81,23 +81,21 @@ export class Sticker extends BaseItem<Sticker> {
   readonly subject = new Subject<Sticker>();
   transformationRenderBlock?: boolean = undefined;
 
+  public backgroundColor = defaultStickerData.backgroundColor;
+
   constructor(
     board: Board,
     id = "",
-    public backgroundColor = defaultStickerData.backgroundColor
   ) {
     super(board, id);
-    this.text = new RichText(
-      board,
-      this.textContainer,
-      this.id,
-      this.transformation,
-      this.linkTo,
-      "\u00A0",
-      false,
-      true,
-      this.itemType
-    );
+    this.text = new RichText(this.board, this.id);
+    this.text.container = this.textContainer.copy();
+    this.text.transformation = this.transformation;
+    this.text.linkTo = this.linkTo;
+    this.text.placeholderText = "\u00A0";
+    this.text.isInShape = false;
+    this.text.insideOf = this.itemType;
+    this.text.updateShrinkWidth();
 
 
     this.text.subject.subscribe(() => {
@@ -254,6 +252,10 @@ export class Sticker extends BaseItem<Sticker> {
 
   getBackgroundColor(): ColorValue {
     return this.backgroundColor;
+  }
+
+  setBackgroundColor(color: ColorValue | string): void {
+    this.backgroundColor = coerceColorValue(color);
   }
 
   getWidth() {

@@ -47,13 +47,18 @@ import { Account } from "types/Account";
 import { GravityEngine } from "./Gravity/GravityEngine";
 import { ForceGraphEngine } from './ForceGraph/ForceGraphEngine';
 import {
+  itemFactories,
+} from "./itemFactories";
+import {
   isAINodeData,
   isAudioItemData,
   isConnectorData,
   isFrameData,
   isImageItemData,
   isVideoItemData,
-} from "itemFactories";
+  isStickerData,
+  isGroupData,
+} from "RegistryMaps";
 
 export type InterfaceType = "edit" | "view" | "loading";
 
@@ -396,7 +401,6 @@ export class Board {
   }
 
   createItem(id: string, data: ItemData): Item {
-    const { itemFactories } = require("itemFactories");
     const factory = itemFactories[data.itemType];
     if (!factory) {
       throw new Error(`Unknown item type: ${data.itemType}`);

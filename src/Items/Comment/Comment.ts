@@ -17,6 +17,8 @@ import { BaseItem } from "Items/BaseItem/BaseItem";
 import { transformOps } from "Items/Transformation/transformOps";
 import { Board } from "Board";
 import { Item } from "Items/Item";
+import { registerItem } from "Items/RegisterItem";
+import { DefaultTransformationData } from "../Transformation/TransformationData";
 
 export interface Commentator {
   username: string;
@@ -53,18 +55,16 @@ export class Comment extends BaseItem<Comment> {
   private usersUnreadMarks: number[] = [];
   private resolved = false;
   private itemToFollow?: string;
+  private anchor = new Point();
   readonly subject = new Subject<Comment>();
   transformationRenderBlock?: boolean = undefined;
   resizeEnabled = true;
 
   constructor(
     board: Board,
-    private anchor = new Point(),
-    private events?: Events,
     id = ""
   ) {
     super(board, id);
-    this.transform();
     this.linkTo.subject.subscribe(() => {
       this.subject.publish(this);
     });
@@ -106,10 +106,10 @@ export class Comment extends BaseItem<Comment> {
   }
 
   public emit(operation: CommentOperation): void {
-    if (this.events) {
+    if (this.board.events) {
       const command = new CommentCommand([this], operation);
       command.apply();
-      this.events.emit(operation, command);
+      this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
     }
@@ -461,3 +461,18 @@ export class Comment extends BaseItem<Comment> {
 
   render(context: DrawingContext): void { }
 }
+
+export const DefaultCommentData: CommentData = {
+  itemType: "Comment",
+  anchor: new Point(),
+  thread: [],
+  commentators: [],
+  transformation: new DefaultTransformationData(),
+  usersUnreadMarks: [],
+  resolved: false,
+};
+
+registerItem({
+  item: Comment,
+  defaultData: DefaultCommentData,
+});

@@ -16,12 +16,11 @@ export class AddFrame extends BoardTool {
 
 	constructor(board: Board) {
 		super(board);
-		this.frame = new Frame(
-			board,
-			board.items.getById.bind(board.items),
-			'',
-			`Frame ${this.board.getMaxFrameSerial() + 1}`
-		);
+		this.frame = new Frame(board);
+		this.frame.deserialize({
+			itemType: 'Frame',
+			name: `Frame ${this.board.getMaxFrameSerial() + 1}`,
+		} as any);
 		this.setCursor();
 	}
 

@@ -23,7 +23,8 @@ import { ItemType } from "../Item";
 import { Matrix } from "../Transformation/Matrix";
 import { Mbr } from "../Mbr/Mbr";
 import { Point } from "../Point/Point";
-import { RichTextData } from "./RichTextData";
+import { RichTextData, DefaultRichTextData } from "./RichTextData";
+import { registerItem } from "../RegisterItem";
 import { Transformation } from "../Transformation/Transformation";
 import { TransformationOperation } from "../Transformation/TransformationOperations";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
@@ -86,7 +87,6 @@ export class RichText extends BaseItem<RichText> {
   private updateRequired = false;
   private autoSizeScale = 1;
   private containerMaxWidth?: number;
-  readonly linkTo: LinkTo;
   maxHeight = 0;
   private selection?: BaseSelection;
   transformationRenderBlock?: boolean = undefined;
@@ -101,52 +101,46 @@ export class RichText extends BaseItem<RichText> {
 
   rtCounter = 0;
 
+  public container: Mbr = new Mbr();
+  public placeholderText = conf.i18n?.t("board.textPlaceholder");
+  public isInShape = false;
+  private autoSize = false;
+  public insideOf?: ItemType;
+  private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES;
+
   constructor(
     board: Board,
-    public container: Mbr,
-    id = "",
-    readonly transformation = new Transformation(id, board.events),
-    linkTo?: LinkTo,
-    public placeholderText = conf.i18n?.t("board.textPlaceholder"),
-    public isInShape = false,
-    private autoSize = false,
-    public insideOf?: ItemType,
-    private initialTextStyles: DefaultTextStyles = conf.DEFAULT_TEXT_STYLES
+    id = ""
   ) {
     super(board, id);
     counter = counter + 1;
     this.rtCounter = counter;
 
-    this.linkTo = linkTo || new LinkTo(this.id, this.board.events);
     let textSizeFromStorage = new SessionStorage().getFontSize(
-      insideOf || "RichText"
+      this.insideOf || "RichText"
     );
     if (!textSizeFromStorage || textSizeFromStorage === "auto") {
-      textSizeFromStorage = initialTextStyles.fontSize;
+      textSizeFromStorage = this.initialTextStyles.fontSize;
     }
     this.editor = new EditorContainer(
       id,
       this.emit,
       (op: RichTextOperation) => {
         this.emitWithoutApplying(op);
-        // this.subject.publish(this);
       },
       (): void => {
         if (this.board.events) {
-          // this.board.events.undo(false);
           this.board.events.undo();
         }
       },
-
       (): void => {
         if (this.board.events) {
-          // this.board.events.redo(false);
           this.board.events.redo();
         }
       },
       this.getScale,
       this.getDefaultHorizontalAlignment(),
-      initialTextStyles,
+      this.initialTextStyles,
       textSizeFromStorage,
       this.isAutosize.bind(this),
       this.autosizeEnable.bind(this),
@@ -164,14 +158,8 @@ export class RichText extends BaseItem<RichText> {
       this.subject.publish(this);
     });
 
-    if (
-      !insideOf ||
-      insideOf === "RichText" ||
-      insideOf === "Connector" ||
-      insideOf === "AINode"
-    ) {
-      this.shrinkWidth = true;
-    }
+    this.updateShrinkWidth();
+
     this.linkTo.subject.subscribe(() => {
       this.updateElement();
       this.subject.publish(this);
@@ -189,6 +177,20 @@ export class RichText extends BaseItem<RichText> {
       Editor.start(this.editor.editor, [])
     );
     this.setClipPath();
+  }
+
+
+  updateShrinkWidth(): void {
+    if (
+      !this.insideOf ||
+      this.insideOf === "RichText" ||
+      this.insideOf === "Connector" ||
+      this.insideOf === "AINode"
+    ) {
+      this.shrinkWidth = true;
+    } else {
+      this.shrinkWidth = false;
+    }
   }
 
   isClosed(): boolean {
@@ -616,9 +618,8 @@ export class RichText extends BaseItem<RichText> {
   }
 
   setId(id: string): this {
-    this.id = id;
+    super.setId(id);
     this.editor.setId(id);
-    this.linkTo.setId(id);
     return this;
   }
 
@@ -988,12 +989,8 @@ export class RichText extends BaseItem<RichText> {
   }
 
   deserialize(data: SerializedItemData<RichTextData> | RichTextData): this {
-    if (data.children) {
+    if (data.children && data.children.length > 0) {
       this.editor.editor.children = data.children;
-      this.editorTransforms.select(
-        this.editor.editor,
-        Editor.start(this.editor.editor, [])
-      );
     }
     if (data.verticalAlignment) {
       this.editor.verticalAlignment = data.verticalAlignment;
@@ -1201,3 +1198,8 @@ export class RichText extends BaseItem<RichText> {
     return getTextResizeType(point, cameraScale, mbr, anchorDistance);
   }
 }
+
+registerItem({
+  item: RichText,
+  defaultData: new DefaultRichTextData(),
+});

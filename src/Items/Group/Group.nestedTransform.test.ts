@@ -16,7 +16,7 @@ function makeBoard(): Board {
 }
 
 function addFrame(board: Board, tx: number, ty: number): Frame {
-  const proto = new Frame(board, board.items.getById.bind(board.items));
+  const proto = new Frame(board);
   proto.apply(transformOps.setLocal(proto.id, { translateX: tx, translateY: ty, scaleX: 1, scaleY: 1 }));
   return board.add(proto) as unknown as Frame;
 }

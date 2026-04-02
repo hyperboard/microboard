@@ -47,17 +47,14 @@ export class Card extends BaseItem<Card> {
   constructor(
     board: Board,
     id = "",
-    defaultData: CardData = defaultCardData,
   ) {
-    super(board, id, defaultData);
+    super(board, id);
 
-    if (defaultData.dimensions) {
-      this.dimensions = defaultData.dimensions;
-    }
+    this.dimensions = defaultCardData.dimensions || this.dimensions;
 
-    if (defaultData.faceUrl && defaultData.backsideUrl) {
-      this.faceUrl = defaultData.faceUrl;
-      this.backsideUrl = defaultData.backsideUrl;
+    if (defaultCardData.faceUrl && defaultCardData.backsideUrl) {
+      this.faceUrl = defaultCardData.faceUrl;
+      this.backsideUrl = defaultCardData.backsideUrl;
 
       this.createImages();
     }

@@ -6,7 +6,8 @@ import { Path } from "../Path/Path";
 import { Paths } from "../Path/Paths";
 import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
-import { TransformationData } from "../Transformation/TransformationData";
+import { TransformationData, DefaultTransformationData } from "../Transformation/TransformationData";
+import { registerItem } from "Items/RegisterItem";
 import { Placeholder } from "../Placeholder/Placeholder";
 import { transformOps } from "../Transformation/transformOps";
 import { Board } from "Board";
@@ -80,26 +81,17 @@ export class ImageItem extends BaseItem<ImageItem> {
   loadCallbacks: ((image: ImageItem) => void)[] = [];
   beforeLoadCallbacks: ((image: ImageItem) => void)[] = [];
   transformationRenderBlock?: boolean = undefined;
+  imageDimension!: Dimension;
   private storageLink!: string;
   private signedUrl = "";
-  imageDimension: Dimension;
-  board: Board;
 
   constructor(
-    { base64, storageLink, imageDimension }: ImageConstructorData,
     board: Board,
-    private events?: Events,
     id = "",
   ) {
     super(board, id);
-    this.board = board;
-    this.setStorageLink(storageLink);
-    this.imageDimension = imageDimension;
     this.image = new Image();
     this.setImage(new Image());
-    if (typeof base64 === "string") {
-      this.image.src = base64;
-    }
   }
 
   private setImage(image: HTMLImageElement): void {
@@ -261,6 +253,9 @@ export class ImageItem extends BaseItem<ImageItem> {
   }
 
   deserialize(data: SerializedItemData<ImageItemData> | ImageItemData): this {
+    if (data.imageDimension) {
+      this.imageDimension = data.imageDimension;
+    }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
       this.updateMbr();
@@ -283,10 +278,10 @@ export class ImageItem extends BaseItem<ImageItem> {
   }
 
   emit(operation: ImageOperation): void {
-    if (this.events) {
+    if (this.board.events) {
       const command = new ImageCommand([this], operation);
       command.apply();
-      this.events.emit(operation, command);
+      this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
     }
@@ -396,3 +391,15 @@ export class ImageItem extends BaseItem<ImageItem> {
     super.onRemove();
   }
 }
+
+export const DefaultImageItemData: ImageItemData = {
+  itemType: "Image",
+  storageLink: "",
+  imageDimension: { width: 100, height: 100 },
+  transformation: new DefaultTransformationData(),
+};
+
+registerItem({
+  item: ImageItem,
+  defaultData: DefaultImageItemData,
+});

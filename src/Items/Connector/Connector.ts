@@ -82,46 +82,42 @@ export class Connector extends BaseItem<Connector> {
 	transformationRenderBlock?: boolean = undefined;
 	private _updatingTitle = false;
 	private optionalFindItemFn?: FindItemFn;
+	private startPoint: ControlPoint = new BoardPoint();
+	private endPoint: ControlPoint = new BoardPoint();
+	private lineStyle: ConnectorLineStyle = 'straight';
+	private startPointerStyle: ConnectorPointerStyle = 'None';
+	private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER;
+
 	constructor(
 		board: Board,
 		id = "",
-		private startPoint: ControlPoint = new BoardPoint(),
-		private endPoint: ControlPoint = new BoardPoint(),
-		private lineStyle: ConnectorLineStyle = 'straight',
-		private startPointerStyle: ConnectorPointerStyle = 'None',
-		private endPointerStyle: ConnectorPointerStyle = DEFAULT_END_POINTER,
-		lineColor?: ColorValue,
-		lineWidth?: ConnectionLineWidth,
-		strokeStyle?: BorderStyle,
 	) {
 		super(board, id);
-		this.lineColor = lineColor ?? semanticColor('contrastNeutral');
-		this.lineWidth = lineWidth ?? CONNECTOR_LINE_WIDTH;
-		this.borderStyle = strokeStyle ?? CONNECTOR_BORDER_STYLE;
-		this.text = new RichText(
-			board,
-			this.getMbr(),
-			this.id,
-			new Transformation(),
-			this.linkTo,
-			conf.i18n.t('connector.textPlaceholder', {
-				ns: 'default',
-			}),
-			true,
-			false,
-			'Connector',
-			{
-				...conf.DEFAULT_TEXT_STYLES,
-				fontSize:
-					typeof window !== 'undefined' && localStorage.getItem('lastConnectorTextSize')
-						? Number(localStorage.getItem('lastConnectorTextSize'))
-						: conf.DEFAULT_TEXT_STYLES.fontSize,
-				fontColor:
-					typeof window !== 'undefined'
-						? localStorage.getItem('lastConnectorTextColor') || conf.DEFAULT_TEXT_STYLES.fontColor
-						: conf.DEFAULT_TEXT_STYLES.fontColor,
-			}
-		);
+		this.lineColor = semanticColor('contrastNeutral');
+		this.lineWidth = CONNECTOR_LINE_WIDTH;
+		this.borderStyle = CONNECTOR_BORDER_STYLE;
+		this.text = new RichText(this.board, this.id);
+		this.text.container = this.getMbr();
+		this.text.transformation = new Transformation();
+		this.text.linkTo = this.linkTo;
+		this.text.placeholderText = conf.i18n.t('connector.textPlaceholder', {
+			ns: 'default',
+		});
+		this.text.isInShape = true;
+		this.text.insideOf = 'Connector';
+		this.text.updateShrinkWidth();
+		// @ts-ignore
+		this.text.initialTextStyles = {
+			...conf.DEFAULT_TEXT_STYLES,
+			fontSize:
+				typeof window !== 'undefined' && localStorage.getItem('lastConnectorTextSize')
+					? Number(localStorage.getItem('lastConnectorTextSize'))
+					: conf.DEFAULT_TEXT_STYLES.fontSize,
+			fontColor:
+				typeof window !== 'undefined'
+					? localStorage.getItem('lastConnectorTextColor') || conf.DEFAULT_TEXT_STYLES.fontColor
+					: conf.DEFAULT_TEXT_STYLES.fontColor,
+		};
 		this.startPointer = getStartPointer(
 			this.startPoint,
 			this.startPointerStyle,

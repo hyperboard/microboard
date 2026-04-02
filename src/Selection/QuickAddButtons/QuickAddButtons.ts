@@ -220,7 +220,7 @@ export function getQuickAddButtons(
     );
     connectorData.startPoint = startPointData;
     connectorData.endPoint = endPointData;
-    connectorData.text = new RichText(board, new Mbr()).serialize();
+    connectorData.text = new RichText(board).serialize();
 
     quickAddItems = {
       newItem,

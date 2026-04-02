@@ -21,7 +21,7 @@ function makeBoard(): Board {
  * Adds a Frame to the board at position (0,0) with the given uniform scale.
  */
 function addFrame(board: Board, scale: number): Frame {
-  const proto = new Frame(board, board.items.getById.bind(board.items));
+  const proto = new Frame(board);
   proto.apply(transformOps.setLocal(proto.id, { translateX: 0, translateY: 0, scaleX: scale, scaleY: scale }));
   return board.add(proto) as unknown as Frame;
 }

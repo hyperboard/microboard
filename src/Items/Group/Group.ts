@@ -8,10 +8,13 @@ import { Mbr } from "../Mbr/Mbr";
 import { Line } from "../Line/Line";
 import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
+import { registerItem } from "Items/RegisterItem";
+import { DefaultTransformationData } from "../Transformation/TransformationData";
 import type { Item } from "../Item";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
 
 export interface GroupData {
   readonly itemType: "Group";
@@ -37,18 +40,11 @@ export class Group extends BaseItem<Group> {
 
   constructor(
     board: Board,
-    private events?: Events,
-    childIds: string[] = [],
     id = ""
   ) {
-    // isGroupItem=true creates this.index (SimpleSpatialIndex) for child storage.
-    super(board, id, undefined, true);
+    super(board, id);
+    this.index = new SimpleSpatialIndex(this.board.camera, this.board.pointer);
     this.canBeNested = true;
-
-    // Restore children passed via constructor (used when creating Group from existing data)
-    if (childIds.length > 0) {
-      this.applyAddChildren(childIds);
-    }
   }
 
   isClosed(): boolean {
@@ -89,10 +85,10 @@ export class Group extends BaseItem<Group> {
   }
 
   emit(operation: GroupOperation): void {
-    if (this.events) {
+    if (this.board.events) {
       const command = new GroupCommand([this], operation);
       command.apply();
-      this.events.emit(operation, command);
+      this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
     }
@@ -169,7 +165,8 @@ export class Group extends BaseItem<Group> {
     };
   }
 
-  deserialize(data: SerializedItemData<GroupData>): this {
+
+  deserialize(data: SerializedItemData<GroupData> | GroupData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }
@@ -215,3 +212,15 @@ export class Group extends BaseItem<Group> {
   }
 
 }
+
+export const DefaultGroupData: GroupData = {
+  itemType: "Group",
+  childIds: [],
+  transformation: new DefaultTransformationData(),
+  isLockedGroup: false,
+};
+
+registerItem({
+  item: Group,
+  defaultData: DefaultGroupData,
+});

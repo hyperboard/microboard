@@ -13,7 +13,7 @@ export class Eraser extends BoardTool {
   strokeWidth = conf.ERASER_STROKE_WIDTH;
   strokeColor = conf.ERASER_DEFAULT_COLOR;
   strokeStyle: BorderStyle = conf.PEN_STROKE_STYLE;
-  drawing = new Drawing(this.board, "", []);
+  drawing = new Drawing(this.board);
   maxPointsInLine = conf.ERASER_MAX_LINE_LENGTH;
 
   constructor(board: Board) {
@@ -77,7 +77,7 @@ export class Eraser extends BoardTool {
 
   leftButtonUp(): boolean {
     this.isDown = false;
-    this.drawing = new Drawing(this.board, "", []);
+    this.drawing = new Drawing(this.board);
     this.board.selection.removeAll();
     this.board.tools.publish();
     return true;

@@ -30,11 +30,11 @@ export class AddComment extends BoardTool {
   leftButtonUp(): boolean {
     this.isDown = false;
     this.board.selection.removeAll();
-    const comment = new Comment(
-      this.board,
-      this.board.pointer.point,
-      this.board.events
-    );
+    const comment = new Comment(this.board);
+    comment.deserialize({
+      itemType: "Comment",
+      anchor: this.board.pointer.point.copy(),
+    } as any);
     this.comment = this.board.add(comment);
     this.board.tools.publish();
     return true;

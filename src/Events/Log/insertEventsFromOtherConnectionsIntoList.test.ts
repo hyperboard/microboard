@@ -99,7 +99,7 @@ export function getAddItemOp(
       translateX: 0,
       translateY: 0,
     },
-    text: { ...new RichText(board, new Mbr()).serialize() },
+    text: { ...new RichText(board).serialize() },
   };
 
   const op: CreateItem = {

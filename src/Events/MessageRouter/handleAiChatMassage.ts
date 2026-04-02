@@ -227,7 +227,12 @@ function handleAudioGenerate(response: GenerateAudioResponse, board: Board): voi
 			return;
 		}
 
-		const audio = new AudioItem(board, audioUrl, board.events, '', 'wav');
+		const audio = new AudioItem(board);
+		audio.deserialize({
+			itemType: 'Audio',
+			url: audioUrl,
+			extension: 'wav'
+		} as any);
 		const { left, top, right } = placeholderNode.getMbr();
 		audio.apply(transformOps.translateTo(audio, 
 			left + (right - left - conf.AUDIO_DIMENSIONS.width) / 2,
@@ -294,15 +299,13 @@ function handleImageGenerate(response: GenerateImageResponse, board: Board): voi
 				if (placeholderId) {
 					const placeholderNode = board.items.getById(placeholderId);
 					if (placeholderNode) {
-						const imageItem = new ImageItem(
-							{
-								base64: imageData.base64,
-								imageDimension: imageData.imageDimension,
-								storageLink: imageData.storageLink,
-							},
-							board,
-							board.events
-						);
+						const imageItem = new ImageItem(board);
+						imageItem.deserialize({
+							itemType: 'Image',
+							base64: imageData.base64,
+							imageDimension: imageData.imageDimension,
+							storageLink: imageData.storageLink,
+						} as any);
 						const placeholderMbr = placeholderNode.getMbr();
 						const placeholderCenterX =
 							placeholderMbr.left + placeholderMbr.getWidth() / 2;

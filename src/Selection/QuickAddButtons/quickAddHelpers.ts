@@ -57,11 +57,11 @@ export function quickAddItem(
 	const startPoint = connector.getStartPoint();
 	const endPoint = connector.getEndPoint();
 	const isShape = type in BasicShapes;
-	let optionalItem: Item = new Shape(
-		board,
-		undefined,
-		isShape ? (type as ShapeType) : 'Rectangle'
-	);
+	let optionalItem: Item = new Shape(board);
+	optionalItem.deserialize({
+		itemType: "Shape",
+		shapeType: isShape ? (type as ShapeType) : 'Rectangle'
+	} as any);
 	switch (type) {
 		case 'RichText':
 			optionalItem = createRichText(board);
@@ -166,7 +166,12 @@ export function quickAddItem(
 }
 
 export function createAINode(board: Board, directionIndex: number, parentNodeId?: string): AINode {
-	const node = new AINode(board, true, parentNodeId, undefined, directionIndex as ThreadDirection);
+	const node = new AINode(board);
+	node.deserialize({
+		itemType: "AINode",
+		parentNodeId,
+		threadDirection: directionIndex as ThreadDirection
+	} as any);
 	const nodeRichText = node.getRichText();
 	nodeRichText.applyMaxWidth(600);
 	nodeRichText.setSelectionHorisontalAlignment('left');
@@ -176,7 +181,7 @@ export function createAINode(board: Board, directionIndex: number, parentNodeId?
 }
 
 export function createRichText(board: Board): RichText {
-	const text = new RichText(board, new Mbr());
+	const text = new RichText(board);
 	text.applyMaxWidth(600);
 	text.setSelectionHorisontalAlignment('left');
 	return text;

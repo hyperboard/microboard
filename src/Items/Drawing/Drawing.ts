@@ -46,14 +46,13 @@ export class Drawing extends BaseItem<Drawing> {
   private borderOpacity = 1;
   transformationRenderBlock?: boolean = undefined;
 
+  public points: Point[] = [];
+
   constructor(
     board: Board,
     id = "",
-    public points: Point[] = [],
-    private events?: Events
   ) {
     super(board, id);
-    this.updateLines();
     this.updateLines();
   }
 
@@ -75,7 +74,7 @@ export class Drawing extends BaseItem<Drawing> {
     };
   }
 
-  deserialize(data: SerializedItemData<DrawingData>): this {
+  deserialize(data: SerializedItemData<DrawingData> | DrawingData): this {
     this.points = [];
     for (const point of data.points) {
       this.points.push(new Point(point.x, point.y));
@@ -347,10 +346,10 @@ export class Drawing extends BaseItem<Drawing> {
   }
 
   emit(operation: DrawingOperation): void {
-    if (this.events) {
+    if (this.board.events) {
       const command = new DrawingCommand([this], operation);
       command.apply();
-      this.events.emit(operation, command);
+      this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
     }
