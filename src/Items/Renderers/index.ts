@@ -11,3 +11,4 @@ export * from "./DrawingHTMLRenderer";
 export * from "./CommentHTMLRenderer";
 export * from "./AINodeHTMLRenderer";
 export * from "./PlaceholderHTMLRenderer";
+export * from "./StickerHTMLRenderer";

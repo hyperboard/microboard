@@ -419,7 +419,7 @@ registerHotkey({
   }
 })
 
-export function createDeck(event?: KeyboardEvent, board?: Board): void {
+function createDeck(event?: KeyboardEvent, board?: Board): void {
   if (!board) {
     return;
   }

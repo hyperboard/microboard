@@ -33,15 +33,10 @@ import type { PlaceholderData } from "Items/Placeholder";
 import type { GroupData } from "Items/Group";
 
 export function isStickerData(data: ItemData): data is StickerData { return data.itemType === "Sticker"; }
-export function isCommentData(data: ItemData): data is CommentData { return data.itemType === "Comment"; }
 export function isAINodeData(data: ItemData): data is AINodeData { return data.itemType === "AINode"; }
-export function isShapeData(data: ItemData): data is ShapeData { return data.itemType === "Shape"; }
-export function isRichTextData(data: ItemData): data is RichTextData { return data.itemType === "RichText"; }
 export function isConnectorData(data: ItemData): data is ConnectorData { return data.itemType === "Connector"; }
 export function isImageItemData(data: ItemData): data is ImageItemData { return data.itemType === "Image"; }
 export function isVideoItemData(data: ItemData): data is VideoItemData { return data.itemType === "Video"; }
 export function isAudioItemData(data: ItemData): data is AudioItemData { return data.itemType === "Audio"; }
-export function isDrawingData(data: ItemData): data is DrawingData { return data.itemType === "Drawing"; }
 export function isFrameData(data: ItemData): data is FrameData { return data.itemType === "Frame"; }
-export function isPlaceholderData(data: ItemData): data is PlaceholderData { return data.itemType === "Placeholder"; }
 export function isGroupData(data: ItemData): data is GroupData { return data.itemType === "Group"; }

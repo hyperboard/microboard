@@ -3,7 +3,8 @@
   "entry": [
     "src/index.ts",
     "src/browser.ts",
-    "src/node.ts"
+    "src/node.ts",
+    "src/protocol.ts"
   ],
   "project": [
     "src/**/*.ts",
