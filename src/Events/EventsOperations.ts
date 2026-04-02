@@ -36,6 +36,15 @@ export interface BaseOperation<T extends Record<string, unknown> = {}> {
     prevData?: T;
 }
 
+export interface SetPropertyOperation {
+    class: "Item";
+    item: string[];
+    method: "setProperty";
+    property: string;
+    value: unknown;
+    prevValues: unknown[];
+}
+
 export type ItemOperation =
     | LinkToOperation
     | TransformationOperation
@@ -50,7 +59,8 @@ export type ItemOperation =
     | CommentOperation
     | ImageOperation
     | VideoOperation
-    | AudioOperation;
+    | AudioOperation
+    | SetPropertyOperation;
 
 export type UndoableOperation = BoardOps | ItemOperation;
 

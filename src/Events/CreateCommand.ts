@@ -4,6 +4,7 @@ import {BoardCommand} from '../BoardCommand';
 import {TransformationCommand} from '../Items/Transformation/TransformationCommand';
 import {RichTextCommand, RichTextGroupCommand} from '../Items/RichText/RichTextCommand';
 import {EventsCommand} from './EventsCommand';
+import {BaseCommand} from './BaseCommand';
 import {ConnectorCommand} from 'Items/Connector/ConnectorCommand';
 import {BaseOperation, ItemOperation, Operation} from './EventsOperations';
 import {DrawingCommand} from 'Items/Drawing/DrawingCommand';
@@ -45,7 +46,11 @@ import {VideoOperation} from "../Items/Video/VideoOperation";
 import {AudioOperation} from "../Items/Audio/AudioOperation";
 import { Command, NoOpCommand, ItemCommandFactory } from './Command';
 
-export const itemCommandFactories: Record<string, ItemCommandFactory> = {
+import { itemCommandFactories as registryItemCommandFactories } from "../RegistryMaps";
+
+export const itemCommandFactories = registryItemCommandFactories;
+
+Object.assign(itemCommandFactories, {
 	Sticker: createStickerCommand,
 	Shape: createShapeCommand,
 	RichText: createRichTextCommand,
@@ -60,7 +65,7 @@ export const itemCommandFactories: Record<string, ItemCommandFactory> = {
 	Audio: createAudioCommand,
 	Transformation: createTransformationCommand,
 	LinkTo: createLinkToCommand,
-};
+});
 
 function createConnectorCommand(items: Item[], operation: ItemOperation) {
 	return new ConnectorCommand(
@@ -184,16 +189,19 @@ function createLinkToCommand(items: Item[], operation: ItemOperation) {
 export function createCommand(board: Board, operation: Operation): Command {
 	// TODO API
 	try {
+		if (operation.method === "setProperty") {
+			return new BaseCommand(board, getItemIdListFromOp(operation), operation);
+		}
 		switch (operation.class) {
 			case "Events": {
 				const events = board.events;
 				if (!events) {
 					return new NoOpCommand("Board Has No Events Record");
 				}
-				return new EventsCommand(board, operation);
+				return new EventsCommand(board, operation as any);
 			}
 			case "Board": {
-				return new BoardCommand(board, operation);
+				return new BoardCommand(board, operation as any);
 			}
 			default: {
 				const itemType = operation.class;

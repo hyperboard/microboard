@@ -26,6 +26,7 @@ import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";
+import { registerItem } from "../RegisterItem";
 
 export const stickerColors = {
   Purple: "rgb(233, 208, 255)",
@@ -193,6 +194,10 @@ export class Sticker extends BaseItem<Sticker> {
   }
 
   apply(op: Operation): void {
+    if (op.method === "setProperty") {
+      super.apply(op);
+      return;
+    }
     switch (op.class) {
       case "Transformation": {
         super.apply(op);
@@ -228,24 +233,22 @@ export class Sticker extends BaseItem<Sticker> {
         }
         break;
       }
-      case "Sticker":
-        this.applyStickerOperation(op as StickerOperation);
-        break;
       case "RichText":
         this.text.apply(op);
         break;
       case "LinkTo":
         this.linkTo.apply(op as LinkToOperation);
         break;
+      default:
+        super.apply(op);
+        return;
     }
     this.subject.publish(this);
   }
 
-  private applyStickerOperation(op: StickerOperation): void {
-    switch (op.method) {
-      case "setBackgroundColor":
-        this.applyBackgroundColor(op.backgroundColor);
-        break;
+  protected onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+    if (property === "backgroundColor") {
+      this.subject.publish(this);
     }
   }
 
@@ -257,9 +260,7 @@ export class Sticker extends BaseItem<Sticker> {
     return this.stickerPath.getWidth();
   }
 
-  private applyBackgroundColor(backgroundColor: ColorValue): void {
-    this.backgroundColor = backgroundColor;
-  }
+
 
   getIntersectionPoints(segment: Line): Point[] {
     throw new Error("Not implemented");
@@ -479,3 +480,8 @@ export class Sticker extends BaseItem<Sticker> {
     return this.linkTo.link;
   }
 }
+
+registerItem({
+  item: Sticker,
+  defaultData: new StickerData(),
+});

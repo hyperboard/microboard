@@ -3,7 +3,7 @@ import { DrawingContext } from "../DrawingContext";
 import { TransformationData } from "../Transformation/TransformationData";
 import { GroupOperation } from "./GroupOperation";
 import { GroupCommand } from "./GroupCommand";
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { Mbr } from "../Mbr/Mbr";
 import { Line } from "../Line/Line";
 import { Point } from "../Point/Point";
@@ -120,24 +120,24 @@ export class Group extends BaseItem<Group> {
       const childLocalMbr = (child as BaseItem).getMbr();
       // Transform the four corners of the child's local Mbr through the group's world matrix
       const corners = [
-        new Point(childLocalMbr.left,  childLocalMbr.top),
+        new Point(childLocalMbr.left, childLocalMbr.top),
         new Point(childLocalMbr.right, childLocalMbr.top),
         new Point(childLocalMbr.right, childLocalMbr.bottom),
-        new Point(childLocalMbr.left,  childLocalMbr.bottom),
+        new Point(childLocalMbr.left, childLocalMbr.bottom),
       ];
       for (const corner of corners) {
         groupWorldMatrix.apply(corner);
-        if (corner.x < left)   left   = corner.x;
-        if (corner.y < top)    top    = corner.y;
-        if (corner.x > right)  right  = corner.x;
+        if (corner.x < left) left = corner.x;
+        if (corner.y < top) top = corner.y;
+        if (corner.x > right) right = corner.x;
         if (corner.y > bottom) bottom = corner.y;
       }
     }
 
     const mbr = new Mbr(left, top, right, bottom);
-    this.mbr.left   = left;
-    this.mbr.top    = top;
-    this.mbr.right  = right;
+    this.mbr.left = left;
+    this.mbr.top = top;
+    this.mbr.right = right;
     this.mbr.bottom = bottom;
     return mbr;
   }

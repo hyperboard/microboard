@@ -10,6 +10,7 @@ export type {
   EventsOperation,
   Operation,
   BaseOperation,
+  SetPropertyOperation,
 } from "./EventsOperations";
 export {
   isTransformation,

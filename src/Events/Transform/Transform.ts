@@ -289,7 +289,7 @@ export function transfromOperation(
 	// board,
 ): Operation | undefined {
 	if (confirmed.class === 'RichText' && toTransform.class === 'RichText') {
-		return transformRichTextOperation(confirmed, toTransform);
+		return transformRichTextOperation(confirmed as any, toTransform as any);
 		// return transformRichTextOperation(confirmed, toTransform, board);
 	}
 

@@ -1,4 +1,4 @@
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line/Line";
@@ -15,7 +15,7 @@ import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
 import { conf } from "Settings";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
-import {getMediaSignedUrl} from "api/MediaHelpers";
+import { getMediaSignedUrl } from "api/MediaHelpers";
 
 export interface ImageItemData {
   itemType: "Image";

@@ -1,6 +1,7 @@
 import { beforeAll, describe, it, expect } from 'bun:test';
 import { Board } from 'Board';
-import { Shape, shapeOps } from './index';
+import { Shape } from './index';
+import { propertyOps } from '../propertyOps';
 import { transformOps } from '../Transformation/transformOps';
 import { Point } from '../Point';
 import { Mbr } from '../Mbr';
@@ -16,37 +17,37 @@ describe('to diagram user of shapes', () => {
 	it('changes shape`s type', () => {
 		const shape = new Shape(board);
 		const type = 'Circle';
-		shape.apply(shapeOps.setShapeType([shape], type));
+		shape.apply(propertyOps.setProperty([shape], "shapeType", type));
 		expect(shape.getShapeType()).toBe(type);
 	});
 	it('changes shapes background color', () => {
 		const shape = new Shape(board);
 		const color = fixedColor('rgb(255, 0, 0)');
-		shape.apply(shapeOps.setBackgroundColor([shape], color));
+		shape.apply(propertyOps.setProperty([shape], "backgroundColor", color));
 		expect(shape.getBackgroundColor()).toEqual(color);
 	});
 	it('changes shapes background color with semantic color', () => {
 		const shape = new Shape(board);
 		const color = semanticColor('contrastBlue');
-		shape.apply(shapeOps.setBackgroundColor([shape], color));
+		shape.apply(propertyOps.setProperty([shape], "backgroundColor", color));
 		expect(shape.getBackgroundColor()).toEqual(color);
 	});
 	it('changes shapes border color', () => {
 		const shape = new Shape(board);
 		const color = fixedColor('rgb(0, 0, 0)');
-		shape.apply(shapeOps.setBorderColor([shape], color));
+		shape.apply(propertyOps.setProperty([shape], "borderColor", color));
 		expect(shape.getStrokeColor()).toEqual(color);
 	});
 	it('changes shapes border style', () => {
 		const shape = new Shape(board);
 		const style = 'dot';
-		shape.apply(shapeOps.setBorderStyle([shape], style));
+		shape.apply(propertyOps.setProperty([shape], "borderStyle", style));
 		expect(shape.getBorderStyle()).toBe(style);
 	});
 	it('changes shape`s border width', () => {
 		const shape = new Shape(board);
 		const width = 2;
-		shape.apply(shapeOps.setBorderWidth([shape], width));
+		shape.apply(propertyOps.setProperty([shape], "borderWidth", width));
 		expect(shape.getStrokeWidth()).toBe(width);
 	});
 

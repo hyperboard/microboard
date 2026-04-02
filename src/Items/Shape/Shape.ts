@@ -13,10 +13,10 @@ import { ShapeType } from "./index";
 import { BorderStyle, BorderWidth, LinePatterns } from "../Path";
 import { RichText } from "../RichText";
 import { ShapeOperation } from "./ShapeOperation";
-import { DefaultShapeData, ShapeData } from "./ShapeData";
+import { DefaultShapeData, ShapeData, ShapeDataSchema } from "./ShapeData";
 import { Geometry } from "../Geometry";
 import { DrawingContext } from "../DrawingContext";
-import { Operation } from "Events";
+import { Operation, SetPropertyOperation } from "Events/EventsOperations";
 import { ShapeCommand } from "./ShapeCommand";
 import { GeometricNormal } from "../GeometricNormal";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
@@ -41,6 +41,7 @@ import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import { transformOps } from "../Transformation/transformOps";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
+import { registerItem } from "../RegisterItem";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -222,9 +223,24 @@ export class Shape extends BaseItem<Shape> {
         break;
       default:
         super.apply(op);
-        return;
+        break;
     }
     this.subject.publish(this);
+  }
+
+  protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
+    super.onPropertyUpdated(property, value, prevValue);
+
+    if (property === 'shapeType') {
+      this.initPath();
+    }
+
+    if (['shapeType', 'borderWidth', 'borderStyle', 'borderColor', 'borderOpacity', 'backgroundColor', 'backgroundOpacity'].includes(property)) {
+      this.transformPath();
+    }
+
+    this.updateMbr();
+    this.saveShapeData();
   }
 
 
@@ -550,3 +566,9 @@ export class Shape extends BaseItem<Shape> {
     });
   }
 }
+
+registerItem({
+  item: Shape,
+  defaultData: new DefaultShapeData(),
+  schema: ShapeDataSchema,
+});

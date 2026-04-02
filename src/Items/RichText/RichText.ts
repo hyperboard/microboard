@@ -576,8 +576,10 @@ export class RichText extends BaseItem<RichText> {
         break;
       }
       case "RichText": {
-        const opRT = op as RichTextOperation;
-        if (opRT.method === "setMaxWidth") {
+        const opRT = op as any;
+        if (opRT.method === "setProperty") {
+          super.apply(op);
+        } else if (opRT.method === "setMaxWidth") {
           this.applyMaxWidth(opRT.maxWidth ?? 0);
         } else if (opRT.method === "setFontSize") {
           if (opRT.fontSize === "auto") {

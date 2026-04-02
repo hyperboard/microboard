@@ -1,4 +1,4 @@
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Transformation } from "../Transformation/Transformation";
@@ -164,7 +164,7 @@ export class AudioItem extends BaseItem<AudioItem> {
     };
   }
 
-  	deserialize(data: SerializedItemData<AudioItemData> | AudioItemData): this {
+  deserialize(data: SerializedItemData<AudioItemData> | AudioItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
       this.updateMbr();

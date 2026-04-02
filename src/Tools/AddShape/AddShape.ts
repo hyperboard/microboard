@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Line, Mbr, Shape, Point } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
 import { ShapeType } from "Items/Shape";
-import { shapeOps } from "Items/Shape/shapeOps";
+import { propertyOps } from "Items/propertyOps";
 import { transformOps } from "Items/Transformation/transformOps";
 import { DEFAULT_SHAPE, ADD_TO_SELECTION } from "Items/Shape/ShapeData";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
@@ -77,7 +77,7 @@ export class AddShape extends BoardTool {
     this.line = new Line(point.copy(), point.copy());
     this.bounds = this.line.getMbr();
     this.bounds.borderColor = conf.SELECTION_COLOR;
-    this.shape.apply(shapeOps.setShapeType([this.shape], this.type));
+    this.shape.apply(propertyOps.setProperty([this.shape], "shapeType", this.type));
     this.initTransformation();
     this.board.tools.publish();
     return true;
@@ -185,7 +185,7 @@ export class AddShape extends BoardTool {
     this.bounds = new Mbr(x, y, x, y);
     this.line = new Line(new Point(x, y), new Point(x, y));
     this.bounds.borderColor = conf.SELECTION_COLOR;
-    this.shape.apply(shapeOps.setShapeType([this.shape], this.type));
+    this.shape.apply(propertyOps.setProperty([this.shape], "shapeType", this.type));
     this.initTransformation();
     this.board.tools.publish();
     this.leftButtonUp();

@@ -159,11 +159,11 @@ export class Board {
   apply(op: Operation): void {
     switch (op.class) {
       case "Board":
-        return this.applyBoardOperation(op);
+        return this.applyBoardOperation(op as any);
       case "Events":
         return;
       default:
-        return this.applyItemOperation(op);
+        return this.applyItemOperation(op as any);
     }
   }
 

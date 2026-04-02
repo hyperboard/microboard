@@ -1,6 +1,7 @@
 import { Board } from 'Board';
 import { Point } from 'Items';
-import { Drawing, drawingOps } from 'Items/Drawing';
+import { Drawing } from 'Items/Drawing';
+import { propertyOps } from 'Items/propertyOps';
 import { DrawingContext } from 'Items/DrawingContext';
 import { BorderStyle } from 'Items/Path';
 import { conf } from 'Settings';
@@ -91,7 +92,7 @@ export class AddDrawing extends BoardTool {
       return false;
     }
     this.isDown = true;
-    this.drawing = new Drawing(this.board, []);
+    this.drawing = new Drawing(this.board, "", []);
     this.board.tools.publish();
     return true;
   }
@@ -127,11 +128,11 @@ export class AddDrawing extends BoardTool {
       point.x -= x;
       point.y -= y;
     }
-    const drawing = new Drawing(this.board, points);
+    const drawing = new Drawing(this.board, "", points);
     drawing.apply(transformOps.translateTo(drawing, x, y));
-    drawing.apply(drawingOps.setStrokeColor([drawing], coerceColorValue(this.strokeColor)));
-    drawing.apply(drawingOps.setStrokeWidth([drawing], this.strokeWidth as any));
-    drawing.apply(drawingOps.setBorderStyle([drawing], this.strokeStyle));
+    drawing.apply(propertyOps.setProperty([drawing], "borderColor", coerceColorValue(this.strokeColor)));
+    drawing.apply(propertyOps.setProperty([drawing], "strokeWidth", this.strokeWidth as any));
+    drawing.apply(propertyOps.setProperty([drawing], "borderStyle", this.strokeStyle));
     this.applyDrawingRole(drawing);
     this.board.add(drawing).updateMbr();
     this.board.selection.removeAll();
@@ -177,9 +178,9 @@ export class AddDrawing extends BoardTool {
     }
 
     const drawing = this.drawing;
-    drawing.apply(drawingOps.setStrokeColor([drawing], coerceColorValue(this.strokeColor)));
-    drawing.apply(drawingOps.setStrokeWidth([drawing], this.strokeWidth as any));
-    drawing.apply(drawingOps.setBorderStyle([drawing], this.strokeStyle));
+    drawing.apply(propertyOps.setProperty([drawing], "borderColor", coerceColorValue(this.strokeColor)));
+    drawing.apply(propertyOps.setProperty([drawing], "strokeWidth", this.strokeWidth as any));
+    drawing.apply(propertyOps.setProperty([drawing], "borderStyle", this.strokeStyle));
     this.applyDrawingRole(drawing);
     drawing.render(context);
   }

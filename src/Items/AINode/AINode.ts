@@ -254,7 +254,7 @@ export class AINode extends BaseItem<AINode> {
         break;
       }
       case "LinkTo":
-        this.linkTo.apply(op);
+        this.linkTo.apply(op as any);
         break;
       default:
         super.apply(op);

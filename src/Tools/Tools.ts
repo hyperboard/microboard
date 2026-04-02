@@ -19,8 +19,9 @@ import { CustomTool } from "Tools/CustomTool";
 import { Tool } from "./Tool";
 import { isIframe } from "api/isIfarme";
 
-export type CustomToolConstructor = new (board: Board, name: string, ...args: any[]) => CustomTool;
-export const registeredTools: Record<string, CustomToolConstructor> = {};
+import { registeredTools as registryRegisteredTools } from "../RegistryMaps";
+export type { CustomToolConstructor } from "../RegistryMaps";
+export const registeredTools = registryRegisteredTools;
 
 export class Tools extends ToolContext {
   readonly subject = new Subject<Tools>();

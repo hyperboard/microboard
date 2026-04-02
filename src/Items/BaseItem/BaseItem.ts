@@ -7,11 +7,10 @@ import { LinkTo } from "Items/LinkTo/LinkTo";
 import { Transformation } from "Items/Transformation/Transformation";
 import { Board } from "Board";
 import { DrawingContext } from "Items/DrawingContext";
-import type { Operation } from "../../Events/EventsOperations";
-import type { Command } from "../../Events/Command";
+import { BaseOperation, Operation, SetPropertyOperation } from "../../Events/EventsOperations";
+import { Command } from "../../Events/Command";
 import { TransformationData } from "Items/Transformation/TransformationData";
-import { createEventsList } from "Events/Log/createEventsList";
-import { BaseOperation } from "Events/EventsOperations";
+import { itemSchemas } from "Items/itemSchemas";
 import { BaseCommand } from "Events/BaseCommand";
 import { Subject } from "../../Subject";
 import { Path, Paths } from "../Path/index";
@@ -465,7 +464,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	emit(operation: Operation | BaseOperation): void {
 		if (this.board.events) {
-			const command = new BaseCommand(this.board, [this.getId()], operation as BaseOperation);
+			const command = new BaseCommand(this.board, [this.getId()], operation as Operation);
 			command.apply();
 			this.board.events.emit(operation as Operation, command);
 		} else {
@@ -533,12 +532,33 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	apply(op: Operation | BaseItemOperation | BaseOperation): void {
 		op = op as Operation;
+
+		if (op.method === "setProperty") {
+			const setPropOp = op as SetPropertyOperation;
+			if (setPropOp.class === this.itemType || setPropOp.class === "Item") {
+				const prevValue = (this as any)[setPropOp.property];
+				let safeValue = setPropOp.value;
+
+				const schema = (itemSchemas[this.itemType] as any)?.shape?.[setPropOp.property];
+				if (schema) {
+					try {
+						safeValue = schema.parse(setPropOp.value);
+					} catch (e) {
+						console.error(`Validation failed for property ${setPropOp.property} on ${this.itemType}:`, e);
+						return;
+					}
+				}
+
+				// @ts-ignore
+				this[setPropOp.property] = safeValue;
+				this.onPropertyUpdated(setPropOp.property, safeValue, prevValue);
+			}
+			return;
+		}
+
 		switch (op.class) {
 			case "Transformation": {
 				let transformOp = op as TransformationOperation;
-				// Items inside a container store local transforms. All operations in the log
-				// are world-space, so we convert the translation deltas to local-space here.
-				// This handles both live events and old log replay transparently.
 				if (this.parent !== "Board") {
 					const container = this.board.items.getById(this.parent) as BaseItem | undefined;
 					if (container?.transformation) {
@@ -569,7 +589,13 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 						this.resizeEnabled = (op.newData as { resizeEnabled: boolean }).resizeEnabled;
 						break;
 				}
+				break;
 		}
+	}
+
+	protected onPropertyUpdated(property: string, value: any, prevValue: any): void {
+		// Lifecycle hook for item-specific side effects.
+		// Subclasses should override this and call super.onPropertyUpdated()
 		this.subject.publish(this as unknown as T);
 	}
 

@@ -1,15 +1,15 @@
-import {BaseItem, BaseItemData, SerializedItemData} from "../../../BaseItem/BaseItem";
+import { BaseItem, BaseItemData, SerializedItemData } from "../../../BaseItem/BaseItem";
 import { Operation } from "Events";
-import {BorderWidth, LinePatterns, Path, Shapes, BorderStyle, Point} from "Items";
-import {createRoundedRectanglePath} from "Items/Shape/Basic/RoundedRectangle";
-import {Subject} from "Subject";
-import {Board} from "Board";
-import {DrawingContext} from "Items";
-import {DiceOperation} from "./DiceOperation";
-import {registerItem} from "Items";
-import {AddDice} from "./AddDice";
-import {conf} from "Settings";
-import {getMediaSignedUrl} from "api/MediaHelpers";
+import { BorderWidth, LinePatterns, Path, Shapes, BorderStyle, Point } from "Items";
+import { createRoundedRectanglePath } from "Items/Shape/Basic/RoundedRectangle";
+import { Subject } from "Subject";
+import { Board } from "Board";
+import { DrawingContext } from "Items";
+import { DiceOperation } from "./DiceOperation";
+import { registerItem } from "Items";
+import { AddDice } from "./AddDice";
+import { conf } from "Settings";
+import { getMediaSignedUrl } from "api/MediaHelpers";
 
 export type DiceType = "common" | "custom";
 
@@ -159,7 +159,7 @@ export class Dice extends BaseItem<Dice> {
   }
 
   updateMbr(): void {
-    const {left, top, right, bottom} = this.path.getMbr();
+    const { left, top, right, bottom } = this.path.getMbr();
     this.mbr.left = left;
     this.mbr.right = right;
     this.mbr.top = top;
@@ -188,11 +188,11 @@ export class Dice extends BaseItem<Dice> {
     return this.type;
   }
 
-  getRange(): {min: number, max: number} {
+  getRange(): { min: number, max: number } {
     if (this.type === "custom") {
-      return {min: 1, max: this.values.length};
+      return { min: 1, max: this.values.length };
     }
-    return {min: this.values[0] as number, max: this.values[this.values.length - 1] as number};
+    return { min: this.values[0] as number, max: this.values[this.values.length - 1] as number };
   }
 
   getBackgroundColor(): string {
@@ -221,8 +221,8 @@ export class Dice extends BaseItem<Dice> {
       class: "Dice",
       method: "setBackgroundColor",
       item: [this.getId()],
-      newData: {backgroundColor},
-      prevData: {backgroundColor: this.backgroundColor},
+      newData: { backgroundColor },
+      prevData: { backgroundColor: this.backgroundColor },
     });
   }
 
@@ -236,8 +236,8 @@ export class Dice extends BaseItem<Dice> {
       class: "Dice",
       method: "setBorderWidth",
       item: [this.getId()],
-      newData: {borderWidth},
-      prevData: {borderWidth: this.borderWidth},
+      newData: { borderWidth },
+      prevData: { borderWidth: this.borderWidth },
     });
   }
 
@@ -251,8 +251,8 @@ export class Dice extends BaseItem<Dice> {
       class: "Dice",
       method: "setBorderColor",
       item: [this.getId()],
-      newData: {borderColor},
-      prevData: {borderColor: this.borderColor}
+      newData: { borderColor },
+      prevData: { borderColor: this.borderColor }
     });
   }
 
@@ -261,8 +261,8 @@ export class Dice extends BaseItem<Dice> {
       class: "Dice",
       method: "changeValues",
       item: [this.getId()],
-      newData: {values},
-      prevData: {values: this.values},
+      newData: { values },
+      prevData: { values: this.values },
     });
   }
 
@@ -271,8 +271,8 @@ export class Dice extends BaseItem<Dice> {
       class: "Dice",
       method: "changeValueIndex",
       item: [this.getId()],
-      newData: {valueIndex, shouldRotate: true, timeStamp: Date.now()},
-      prevData: {value: this.valueIndex, shouldRotate: false}
+      newData: { valueIndex, shouldRotate: true, timeStamp: Date.now() },
+      prevData: { value: this.valueIndex, shouldRotate: false }
     });
   }
 
@@ -351,5 +351,5 @@ export class Dice extends BaseItem<Dice> {
 registerItem({
   item: Dice,
   defaultData: defaultDiceData,
-  toolData: {name: "AddDice", tool: AddDice},
+  toolData: { name: "AddDice", tool: AddDice },
 });

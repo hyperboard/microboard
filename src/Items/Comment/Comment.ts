@@ -1,5 +1,5 @@
 import { Subject } from "Subject";
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { Point } from "../Point";
 import { Transformation, TransformationData } from "../Transformation";
 import { CommentOperation } from "./CommentOperation";
@@ -147,14 +147,18 @@ export class Comment extends BaseItem<Comment> {
   }
 
   apply(op: Operation): void {
+    if (op.method === "setProperty") {
+      super.apply(op);
+      return;
+    }
     switch (op.class) {
       case "Comment":
-        this.applyCommentOperation(op);
+        this.applyCommentOperation(op as CommentOperation);
         this.transform();
         break;
       default:
         super.apply(op);
-        return;
+        break;
     }
     this.subject.publish(this);
   }
@@ -425,25 +429,25 @@ export class Comment extends BaseItem<Comment> {
     return null;
   }
 
-  addChildItems(_children: unknown[]): void {}
+  addChildItems(_children: unknown[]): void { }
 
-  removeChildItems(_children: unknown | unknown[]): void {}
+  removeChildItems(_children: unknown | unknown[]): void { }
 
-  emitNesting(_children: unknown[]): void {}
+  emitNesting(_children: unknown[]): void { }
 
   handleNesting(_item: unknown): boolean {
     return false;
   }
 
-  addOnRemoveCallback(_cb: () => void): void {}
+  addOnRemoveCallback(_cb: () => void): void { }
 
-  onRemove(): void {}
+  onRemove(): void { }
 
-  highlightMbr(): void {}
+  highlightMbr(): void { }
 
-  clearHighlightMbr(): void {}
+  clearHighlightMbr(): void { }
 
-  renderHoverHighlight(_context: DrawingContext): void {}
+  renderHoverHighlight(_context: DrawingContext): void { }
 
   shouldFollowItems(): boolean {
     return true;
@@ -455,5 +459,5 @@ export class Comment extends BaseItem<Comment> {
     }
   }
 
-  render(context: DrawingContext): void {}
+  render(context: DrawingContext): void { }
 }

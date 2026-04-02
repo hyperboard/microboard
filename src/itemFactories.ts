@@ -27,8 +27,11 @@ interface ItemFactory {
   (id: string, data: ItemData, board: Board): Item;
 }
 
-export type ItemFactories = Record<string, ItemFactory>;
-export const itemFactories: ItemFactories = {
+import { itemFactories as registryItemFactories } from "./RegistryMaps";
+export type { ItemFactories } from "./RegistryMaps";
+export const itemFactories = registryItemFactories;
+
+Object.assign(itemFactories, {
   Sticker: createSticker,
   Shape: createShape,
   RichText: createRichText,
@@ -42,7 +45,7 @@ export const itemFactories: ItemFactories = {
   AINode: createAINode,
   Video: createVideo,
   Audio: createAudio,
-};
+});
 
 function createSticker(id: string, data: ItemData, board: Board): Sticker {
   if (!isStickerData(data)) {
@@ -144,8 +147,7 @@ function createDrawing(id: string, data: ItemData, board: Board): Drawing {
   if (!isDrawingData(data)) {
     throw new Error("Invalid data for Drawing");
   }
-  const drawing = new Drawing(board, [], board.events)
-    .setId(id)
+  const drawing = new Drawing(board, id, [], board.events)
     .setId(id)
     .deserialize({ ...data, id });
   return drawing;

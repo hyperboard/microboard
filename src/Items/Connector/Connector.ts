@@ -49,6 +49,7 @@ import {
 	CONNECTOR_POINTER_TYPES,
 } from './ConnectorTypes';
 import { connectorOps } from './connectorOps';
+import { registerItem } from '../RegisterItem';
 const DRAW_TEXT_BORDER = false;
 const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
@@ -83,6 +84,7 @@ export class Connector extends BaseItem<Connector> {
 	private optionalFindItemFn?: FindItemFn;
 	constructor(
 		board: Board,
+		id = "",
 		private startPoint: ControlPoint = new BoardPoint(),
 		private endPoint: ControlPoint = new BoardPoint(),
 		private lineStyle: ConnectorLineStyle = 'straight',
@@ -91,7 +93,6 @@ export class Connector extends BaseItem<Connector> {
 		lineColor?: ColorValue,
 		lineWidth?: ConnectionLineWidth,
 		strokeStyle?: BorderStyle,
-		id = "",
 	) {
 		super(board, id);
 		this.lineColor = lineColor ?? semanticColor('contrastNeutral');
@@ -398,8 +399,13 @@ export class Connector extends BaseItem<Connector> {
 	}
 
 	apply(operation: Operation): void {
-		super.apply(operation);
+		if (operation.method === "setProperty") {
+			super.apply(operation);
+			return;
+		}
+
 		if (operation.class === 'Transformation') {
+			super.apply(operation);
 			const transformOp = operation as TransformationOperation;
 			if (transformOp.method === 'applyMatrix') {
 				const itemOp = transformOp.items.find(i => i.id === this.getId());
@@ -409,7 +415,10 @@ export class Connector extends BaseItem<Connector> {
 			}
 			this.translatePoints();
 			this.updatePaths();
+			this.subject.publish(this);
+			return;
 		}
+
 		switch (operation.class) {
 			case 'RichText':
 				this.text.apply(operation);
@@ -425,29 +434,8 @@ export class Connector extends BaseItem<Connector> {
 					case 'setMiddlePoint':
 						this.applyMiddlePoint(operation.middlePointData);
 						break;
-					case 'setStartPointerStyle':
-						this.applyStartPointerStyle(operation.startPointerStyle);
-						break;
-					case 'setEndPointerStyle':
-						this.applyEndPointerStyle(operation.endPointerStyle);
-						break;
-					case 'setLineStyle':
-						this.applyLineStyle(operation.lineStyle);
-						break;
-					case 'setBorderStyle':
-						this.applyBorderStyle(operation.borderStyle);
-						break;
-					case 'setLineColor':
-						this.applyLineColor(operation.lineColor);
-						break;
-					case 'setLineWidth':
-						this.applyLineWidth(operation.lineWidth);
-						break;
 					case 'switchPointers':
 						this.applySwitchPointers();
-						break;
-					case 'setSmartJump':
-						this.applySmartJump(operation.smartJump);
 						break;
 				}
 				break;
@@ -456,6 +444,23 @@ export class Connector extends BaseItem<Connector> {
 				return;
 		}
 		this.subject.publish(this);
+	}
+
+	protected onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+		if (
+			[
+				"startPointerStyle",
+				"endPointerStyle",
+				"lineColor",
+				"lineWidth",
+				"borderStyle",
+				"lineStyle",
+				"smartJump"
+			].includes(property)
+		) {
+			this.updatePaths();
+			this.subject.publish(this);
+		}
 	}
 
 
@@ -529,39 +534,7 @@ export class Connector extends BaseItem<Connector> {
 
 
 
-	private applyStartPointerStyle(style: ConnectorPointerStyle): void {
-		this.startPointerStyle = style;
-		this.updatePaths();
-	}
 
-
-	private applyEndPointerStyle(style: ConnectorPointerStyle): void {
-		this.endPointerStyle = style;
-		this.updatePaths();
-	}
-
-
-	private applyLineColor(color: ColorValue): void {
-		this.lineColor = color;
-		this.updatePaths();
-	}
-
-
-	private applyLineStyle(style: ConnectorLineStyle): void {
-		this.lineStyle = style;
-		this.updatePaths();
-	}
-
-	private applyBorderStyle(style: BorderStyle): void {
-		this.borderStyle = style;
-		this.updatePaths();
-	}
-
-
-	private applyLineWidth(width: ConnectionLineWidth): void {
-		this.lineWidth = width;
-		this.updatePaths();
-	}
 
 	getStartPoint(): ControlPoint {
 		return this.startPoint;
@@ -1142,3 +1115,8 @@ export class Connector extends BaseItem<Connector> {
 		return this.linkTo.link;
 	}
 }
+
+registerItem({
+	item: Connector,
+	defaultData: new ConnectorData(),
+});

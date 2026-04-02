@@ -44,53 +44,7 @@ export const connectorOps = {
 		timestamp,
 	}),
 
-	setStartPointerStyle: (
-		items: Connector[],
-		style: ConnectorPointerStyle
-	): ConnectorOperation => ({
-		class: "Connector",
-		method: "setStartPointerStyle",
-		item: items.map(i => i.getId()),
-		startPointerStyle: style,
-	}),
 
-	setEndPointerStyle: (
-		items: Connector[],
-		style: ConnectorPointerStyle
-	): ConnectorOperation => ({
-		class: "Connector",
-		method: "setEndPointerStyle",
-		item: items.map(i => i.getId()),
-		endPointerStyle: style,
-	}),
-
-	setLineStyle: (items: Connector[], style: ConnectorLineStyle): ConnectorOperation => ({
-		class: "Connector",
-		method: "setLineStyle",
-		item: items.map(i => i.getId()),
-		lineStyle: style,
-	}),
-
-	setBorderStyle: (items: Connector[], borderStyle: BorderStyle): ConnectorOperation => ({
-		class: "Connector",
-		method: "setBorderStyle",
-		item: items.map(i => i.getId()),
-		borderStyle,
-	}),
-
-	setLineColor: (items: Connector[], color: ColorValue): ConnectorOperation => ({
-		class: "Connector",
-		method: "setLineColor",
-		item: items.map(i => i.getId()),
-		lineColor: color,
-	}),
-
-	setLineWidth: (items: Connector[], width: ConnectionLineWidth): ConnectorOperation => ({
-		class: "Connector",
-		method: "setLineWidth",
-		item: items.map(i => i.getId()),
-		lineWidth: width,
-	}),
 
 	switchPointers: (items: Connector[]): ConnectorOperation => ({
 		class: "Connector",
@@ -98,10 +52,5 @@ export const connectorOps = {
 		item: items.map(i => i.getId()),
 	}),
 
-	setSmartJump: (items: Connector[], smartJump: boolean): ConnectorOperation => ({
-		class: "Connector",
-		method: "setSmartJump",
-		item: items.map(i => i.getId()),
-		smartJump,
-	}),
+
 };

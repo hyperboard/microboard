@@ -64,6 +64,7 @@ export class AddConnector extends BoardTool {
 
       this.connector = new Connector(
         this.board,
+        "",
         closestPoint,
         closestPoint,
         this.lineStyle,
@@ -86,6 +87,7 @@ export class AddConnector extends BoardTool {
     if (!this.connector) {
       this.connector = new Connector(
         this.board,
+        "",
         point,
         point,
         this.lineStyle,

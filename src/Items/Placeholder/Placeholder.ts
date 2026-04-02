@@ -1,4 +1,4 @@
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { DrawingContext } from "../DrawingContext";
 import { Shapes, ShapeType } from "../Shape/index";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
@@ -101,6 +101,10 @@ export class Placeholder extends BaseItem<Placeholder> {
     }
 
     apply(op: Operation): void {
+        if (op.method === "setProperty") {
+            super.apply(op);
+            return;
+        }
         switch (op.class) {
             case "Transformation":
                 super.apply(op);
@@ -108,7 +112,7 @@ export class Placeholder extends BaseItem<Placeholder> {
                 this.updateMbr();
                 break;
             case "Placeholder":
-                this.applyPlaceholder(op);
+                this.applyPlaceholder(op as PlaceholderOperation);
                 this.updateMbr();
                 break;
             default:

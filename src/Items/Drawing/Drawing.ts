@@ -1,4 +1,4 @@
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "../DrawingContext";
 import { Line } from "../Line/Line";
@@ -16,6 +16,8 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { conf } from "Settings";
 import { Board } from "Board";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { registerItem } from "../RegisterItem";
 import { ColorValue, ColorRole, coerceColorValue, resolveColor, semanticColor } from "Color";
 
 export interface DrawingData {
@@ -46,9 +48,9 @@ export class Drawing extends BaseItem<Drawing> {
 
   constructor(
     board: Board,
-    public points: Point[],
-    private events?: Events,
-    id = ""
+    id = "",
+    public points: Point[] = [],
+    private events?: Events
   ) {
     super(board, id);
     this.updateLines();
@@ -102,15 +104,15 @@ export class Drawing extends BaseItem<Drawing> {
 
   updateMbr(): void {
     /*
-		const width = this.untransformedMbr.getWidth();
-		const height = this.untransformedMbr.getHeight();
-		this.left =
-			this.untransformedMbr.left + this.transformation.matrix.translateX;
-		this.top =
-			this.untransformedMbr.top + this.transformation.matrix.translateY;
-		this.right = this.left + width * this.transformation.matrix.scaleX;
-		this.bottom = this.top + height * this.transformation.matrix.scaleY;
-		*/
+    const width = this.untransformedMbr.getWidth();
+    const height = this.untransformedMbr.getHeight();
+    this.left =
+      this.untransformedMbr.left + this.transformation.matrix.translateX;
+    this.top =
+      this.untransformedMbr.top + this.transformation.matrix.translateY;
+    this.right = this.left + width * this.transformation.matrix.scaleX;
+    this.bottom = this.top + height * this.transformation.matrix.scaleY;
+    */
     const offset = this.getStrokeWidth() / 2;
     const untransformedMbr = this.untransformedMbr.copy();
     untransformedMbr.left -= offset;
@@ -355,29 +357,13 @@ export class Drawing extends BaseItem<Drawing> {
   }
 
   apply(op: Operation): void {
+    if (op.method === "setProperty") {
+      super.apply(op);
+      return;
+    }
     switch (op.class) {
-      case "Drawing":
-        switch (op.method) {
-          case "setStrokeColor":
-            this.borderColor = coerceColorValue(op.color as string | ColorValue);
-            break;
-          case "setStrokeWidth":
-            this.strokeWidth = op.width;
-            this.linePattern = scalePatterns(this.strokeWidth)[
-              this.borderStyle
-            ];
-            break;
-          case "setStrokeOpacity":
-            this.borderOpacity = op.opacity;
-            break;
-          case "setStrokeStyle":
-            this.borderStyle = op.style;
-            this.linePattern = scalePatterns(this.strokeWidth)[
-              this.borderStyle
-            ];
-            break;
-        }
-        this.updateMbr();
+      case "LinkTo":
+        this.linkTo.apply(op as any);
         break;
       case "Transformation":
         super.apply(op);
@@ -389,6 +375,16 @@ export class Drawing extends BaseItem<Drawing> {
         return;
     }
     this.subject.publish(this);
+  }
+
+  protected onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+    if (["strokeWidth", "borderStyle"].includes(property)) {
+      this.linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
+    }
+    if (["borderColor", "strokeWidth", "borderOpacity", "borderStyle"].includes(property)) {
+      this.updateMbr();
+      this.subject.publish(this);
+    }
   }
 
 
@@ -428,6 +424,8 @@ export class Drawing extends BaseItem<Drawing> {
     return null;
   }
 
+
+
   isPointNearLine(point: Point, threshold: number | undefined = 10): boolean {
     // Use world matrix so nested drawings (inside a Frame) are handled correctly.
     const { translateX: drawingTranslateX, translateY: drawingTranslateY, scaleX: drawingScaleX, scaleY: drawingScaleY } = this.getWorldMatrix();
@@ -451,6 +449,19 @@ export class Drawing extends BaseItem<Drawing> {
     return false;
   }
 }
+
+registerItem({
+  item: Drawing,
+  defaultData: {
+    itemType: "Drawing",
+    points: [],
+    borderColor: coerceColorValue("#000000"),
+    borderOpacity: 1,
+    borderStyle: "solid",
+    strokeWidth: 2,
+    transformation: new DefaultTransformationData(),
+  } as any,
+});
 
 function getPerpendicularDistance(
   point: Point,

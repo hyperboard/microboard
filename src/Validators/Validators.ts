@@ -52,7 +52,11 @@ function isColorValue(v: unknown): boolean {
   return typeof v === "string" || (typeof v === "object" && v !== null);
 }
 
-export const itemValidators: Record<string, ItemValidator> = {
+import { itemValidators as registryItemValidators } from "../RegistryMaps";
+
+export const itemValidators = registryItemValidators;
+
+Object.assign(itemValidators, {
   Sticker: validateStickerData,
   Shape: validateShapeData,
   RichText: validateRichTextData,
@@ -65,7 +69,7 @@ export const itemValidators: Record<string, ItemValidator> = {
   Group: validateGroupData,
   Video: validateVideoItemData,
   Audio: validateAudioItemData,
-};
+});
 
 function validateItemData(itemData: unknown): boolean {
   // Check if the itemData has a valid itemType property

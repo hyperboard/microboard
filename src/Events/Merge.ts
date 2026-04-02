@@ -79,28 +79,32 @@ export function mergeOperations(
     return;
   }
 
+  if (opA.method === "setProperty") {
+    return mergeSetPropertyOperations(opA as any, opB as any);
+  }
+
   if (opA.class === "Board" && opB.class === "Board") {
-    return mergeBoardOperations(opA, opB);
+    return mergeBoardOperations(opA as any, opB as any);
   }
 
   if (opA.class === "Transformation" && opB.class === "Transformation") {
-    return mergeTransformationOperations(opA, opB);
+    return mergeTransformationOperations(opA as any, opB as any);
   }
 
   if (opA.class === "RichText" && opB.class === "RichText") {
-    return mergeRichTextOperations(opA, opB);
+    return mergeRichTextOperations(opA as any, opB as any);
   }
 
   if (opA.class === "Connector" && opB.class === "Connector") {
-    return mergeConnectorOperations(opA, opB);
+    return mergeConnectorOperations(opA as any, opB as any);
   }
 
   if (opA.class === "Shape" && opB.class === "Shape") {
-    return mergeShapeOperations(opA, opB);
+    return mergeShapeOperations(opA as any, opB as any);
   }
 
   if (opA.class === "Drawing" && opB.class === "Drawing") {
-    return mergeDrawingOperations(opA, opB);
+    return mergeDrawingOperations(opA as any, opB as any);
   }
   return;
 }
@@ -405,6 +409,22 @@ function mergeDrawingOperations(
     };
   }
   return;
+}
+
+function mergeSetPropertyOperations(
+  opA: any,
+  opB: any
+): any | undefined {
+  if (!areItemsTheSame(opA, opB)) {
+    return;
+  }
+  if (opA.property !== opB.property) {
+    return;
+  }
+  return {
+    ...opB,
+    prevValue: opA.prevValue,
+  };
 }
 
 function mergeBoardOperations(

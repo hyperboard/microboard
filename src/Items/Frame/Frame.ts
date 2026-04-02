@@ -11,29 +11,29 @@ import { Matrix } from "../Transformation/Matrix";
 import { BaseItem, BaseItemData, SerializedItemData } from "../BaseItem/BaseItem";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
-import {Subject} from "Subject";
-import {DrawingContext} from "../DrawingContext";
-import {Operation} from "Events";
-import {FrameOperation} from "./FrameOperation";
-import {Frames, FrameType} from "./Basic";
-import {GeometricNormal} from "../GeometricNormal";
-import {FrameCommand} from "./FrameCommand";
-import {Board} from "Board";
+import { Subject } from "Subject";
+import { DrawingContext } from "../DrawingContext";
+import { Operation } from "Events";
+import { FrameOperation } from "./FrameOperation";
+import { Frames, FrameType } from "./Basic";
+import { GeometricNormal } from "../GeometricNormal";
+import { FrameCommand } from "./FrameCommand";
+import { Board } from "Board";
 import {
   exportBoardSnapshot,
   SnapshotInfo,
 } from "Tools/ExportSnapshot/exportBoardSnapshot";
-import {LinkTo} from "../LinkTo/LinkTo";
+import { LinkTo } from "../LinkTo/LinkTo";
 
-import {DefaultFrameData, FRAME_TITLE_COLOR, FrameData} from "./FrameData";
+import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
 
-import {conf} from "Settings";
+import { conf } from "Settings";
 import {
   getResize,
   getProportionalResize,
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
-import {ResizeType} from "Selection/Transformer/TransformerHelpers/getResizeType";
-import {SimpleSpatialIndex} from "../../SpatialIndex/SimpleSpatialIndex";
+import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
+import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 
 const defaultFrameData = new DefaultFrameData();
@@ -84,7 +84,7 @@ export class Frame extends BaseItem<Frame> {
       true,
       false,
       "Frame",
-      {...conf.DEFAULT_TEXT_STYLES, fontSize: 18, fontColor: FRAME_TITLE_COLOR}
+      { ...conf.DEFAULT_TEXT_STYLES, fontSize: 18, fontColor: FRAME_TITLE_COLOR }
     );
     this.text.editor.verticalAlignment = "bottom";
     this.text.setSelectionHorisontalAlignment("left");
@@ -225,7 +225,7 @@ export class Frame extends BaseItem<Frame> {
       };
     }
 
-    let {scaleX, scaleY, translateX, translateY} = res.matrix;
+    let { scaleX, scaleY, translateX, translateY } = res.matrix;
 
     if (this.getCanChangeRatio() && this.shapeType !== "Custom") {
       this.setFrameType("Custom");
@@ -268,7 +268,7 @@ export class Frame extends BaseItem<Frame> {
 
   getLastFrameScale(): { x: number; y: number } {
     const scaleString = localStorage.getItem("lastFrameScale");
-    return scaleString ? JSON.parse(scaleString) : {x: 4, y: 5.565};
+    return scaleString ? JSON.parse(scaleString) : { x: 4, y: 5.565 };
   }
 
   scaleLikeLastFrame(): void {
@@ -278,14 +278,14 @@ export class Frame extends BaseItem<Frame> {
 
   setLastFrameScale(): void {
     const aspectRatios = {
-      A4: {x: 1, y: 1.41},
-      Letter: {x: 1, y: 1.29},
-      Frame16x9: {x: 1.78, y: 1},
-      Frame4x3: {x: 1.33, y: 1},
-      Frame1x1: {x: 1, y: 1},
-      Frame3x2: {x: 1.5, y: 1},
-      Frame9x18: {x: 1, y: 2},
-      Custom: {x: 1, y: 1},
+      A4: { x: 1, y: 1.41 },
+      Letter: { x: 1, y: 1.29 },
+      Frame16x9: { x: 1.78, y: 1 },
+      Frame4x3: { x: 1.33, y: 1 },
+      Frame1x1: { x: 1, y: 1 },
+      Frame3x2: { x: 1.5, y: 1 },
+      Frame9x18: { x: 1, y: 2 },
+      Custom: { x: 1, y: 1 },
     };
     const proportionalScale = {
       x: this.transformation.getScale().x * aspectRatios[this.getFrameType()].x,
@@ -659,7 +659,7 @@ export class Frame extends BaseItem<Frame> {
     this.path.render(context);
     this.renderNewShape(context);
     if (this.getLinkTo()) {
-      const {top, right} = this.getMbr();
+      const { top, right } = this.getMbr();
       this.linkTo.render(context, top, right, this.board.camera.getScale());
     }
   }

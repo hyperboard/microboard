@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Events, Operation } from "Events";
+import type { Events, Operation } from "Events";
 import { Point } from "../Point/Point";
 import { DrawingContext } from "Items/DrawingContext";
 import { Line } from "Items/Line";

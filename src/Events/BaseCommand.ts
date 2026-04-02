@@ -1,21 +1,21 @@
 import type { Board } from "Board";
-import { BaseOperation, Operation, isItemOp } from "./EventsOperations";
+import { BaseOperation, Operation, isItemOp, SetPropertyOperation } from "./EventsOperations";
 import { Command } from "./Command";
 
 export class BaseCommand implements Command {
-  private reverse: { itemId: string; operation: BaseOperation }[];
+  private reverse: { itemId: string; operation: Operation }[];
 
   constructor(
     private board: Board,
     public itemIds: string[],
-    public operation: BaseOperation
+    public operation: Operation
   ) {
     this.reverse = this.getReverse();
   }
 
   merge(op: Operation): this {
     if (isItemOp(op)) {
-      this.operation = op as BaseOperation;
+      this.operation = op;
     }
     return this;
   }
@@ -26,7 +26,7 @@ export class BaseCommand implements Command {
       if (!item) {
         continue;
       }
-      item.apply(this.operation as Operation);
+      item.apply(this.operation);
     }
   }
 
@@ -40,7 +40,7 @@ export class BaseCommand implements Command {
     }
   }
 
-  getReverse(): { itemId: string; operation: BaseOperation }[] {
+  getReverse(): { itemId: string; operation: Operation }[] {
     switch (this.operation.method) {
       case "addChildren":
         return this.itemIds.map((itemId) => {
@@ -49,7 +49,7 @@ export class BaseCommand implements Command {
             operation: {
               ...this.operation,
               method: "removeChildren",
-            },
+            } as Operation,
           };
         });
       case "removeChildren":
@@ -59,16 +59,30 @@ export class BaseCommand implements Command {
             operation: {
               ...this.operation,
               method: "addChildren",
-            },
+            } as Operation,
+          };
+        });
+      case "setProperty":
+        return this.itemIds.map((itemId) => {
+          const op = this.operation as SetPropertyOperation;
+          const idx = op.item.indexOf(itemId);
+          return {
+            itemId,
+            operation: {
+              ...op,
+              item: [itemId],
+              value: idx !== -1 ? op.prevValues[idx] : op.value,
+              prevValues: [op.value],
+            } as Operation,
           };
         });
       default:
         return this.itemIds.map((itemId) => {
-          const op = this.operation;
+          const op = this.operation as BaseOperation;
           let newData: Record<string, any> = {};
           if (op.prevData) {
             newData = { ...op.prevData };
-          } else {
+          } else if (op.newData) {
             const item = this.board.items.getById(itemId);
             if (item) {
               Object.keys(op.newData).forEach((key) => {
@@ -85,7 +99,7 @@ export class BaseCommand implements Command {
             operation: {
               ...op,
               newData,
-            },
+            } as Operation,
           };
         });
     }
