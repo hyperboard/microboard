@@ -8,6 +8,7 @@ import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
 import { TransformationData, DefaultTransformationData } from "../Transformation/TransformationData";
 import { registerItem } from "Items/RegisterItem";
+import { ImageItemDataSchema } from "./Image.schema";
 import { Placeholder } from "../Placeholder/Placeholder";
 import { transformOps } from "../Transformation/transformOps";
 import { Board } from "Board";
@@ -402,4 +403,5 @@ export const DefaultImageItemData: ImageItemData = {
 registerItem({
   item: ImageItem,
   defaultData: DefaultImageItemData,
+  schema: ImageItemDataSchema,
 });

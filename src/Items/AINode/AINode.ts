@@ -27,6 +27,7 @@ import { BaseItem, SerializedItemData } from "../BaseItem/BaseItem";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformAINode } from "Selection/Transformer/TransformerHelpers/transformAINode";
 import { registerItem } from "Items/RegisterItem";
+import { AINodeDataSchema } from "./AINode.schema";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 
@@ -406,4 +407,5 @@ export const DefaultAINodeData: AINodeData = {
 registerItem({
   item: AINode,
   defaultData: DefaultAINodeData,
+  schema: AINodeDataSchema,
 });

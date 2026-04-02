@@ -50,6 +50,7 @@ import {
 } from './ConnectorTypes';
 import { connectorOps } from './connectorOps';
 import { registerItem } from '../RegisterItem';
+import { ConnectorDataSchema } from './Connector.schema';
 const DRAW_TEXT_BORDER = false;
 const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
@@ -1115,4 +1116,5 @@ export class Connector extends BaseItem<Connector> {
 registerItem({
 	item: Connector,
 	defaultData: new ConnectorData(),
+	schema: ConnectorDataSchema,
 });

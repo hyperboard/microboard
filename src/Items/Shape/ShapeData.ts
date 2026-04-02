@@ -1,3 +1,4 @@
+import { ColorValue, fixedColor } from "Color";
 import { conf } from "Settings";
 import { BorderStyle, BorderWidth } from "../Path";
 import { RichTextData } from "../RichText";
@@ -7,8 +8,6 @@ import {
   DefaultTransformationData,
 } from "../Transformation";
 import { ShapeType } from "./index";
-import { ColorValue, fixedColor, SEMANTIC_COLOR_IDS } from "Color";
-import { z } from "zod";
 
 export interface ShapeData {
   readonly itemType: "Shape";
@@ -24,54 +23,6 @@ export interface ShapeData {
   linkTo?: string;
   [key: string]: unknown;
 }
-
-export const ColorValueSchema = z.union([
-  z.object({
-    type: z.literal("semantic"),
-    id: z.enum(SEMANTIC_COLOR_IDS),
-  }),
-  z.object({
-    type: z.literal("fixed"),
-    value: z.string(),
-  }),
-]);
-
-export const TransformationDataSchema = z.object({
-  translateX: z.number(),
-  translateY: z.number(),
-  scaleX: z.number(),
-  scaleY: z.number(),
-  rotate: z.number(),
-  isLocked: z.boolean(),
-});
-
-export const RichTextDataSchema = z.object({
-  itemType: z.literal("RichText"),
-  children: z.array(z.any()),
-  verticalAlignment: z.string(),
-  maxWidth: z.number().optional(),
-  transformation: TransformationDataSchema.optional(),
-  containerMaxWidth: z.number().optional(),
-  insideOf: z.string().optional(),
-  color: z.string().optional(),
-  placeholderText: z.string(),
-  realSize: z.union([z.literal("auto"), z.number()]),
-  linkTo: z.string().optional(),
-});
-
-export const ShapeDataSchema = z.object({
-  itemType: z.literal("Shape"),
-  shapeType: z.string(),
-  backgroundColor: ColorValueSchema,
-  backgroundOpacity: z.number(),
-  borderColor: ColorValueSchema,
-  borderOpacity: z.number(),
-  borderStyle: z.string(),
-  borderWidth: z.number(),
-  transformation: TransformationDataSchema,
-  text: RichTextDataSchema,
-  linkTo: z.string().optional(),
-});
 
 export class DefaultShapeData implements ShapeData {
   readonly itemType = "Shape";

@@ -18,6 +18,7 @@ import { transformOps } from "Items/Transformation/transformOps";
 import { Board } from "Board";
 import { Item } from "Items/Item";
 import { registerItem } from "Items/RegisterItem";
+import { CommentDataSchema } from "./Comment.schema";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 
 export interface Commentator {
@@ -475,4 +476,5 @@ export const DefaultCommentData: CommentData = {
 registerItem({
   item: Comment,
   defaultData: DefaultCommentData,
+  schema: CommentDataSchema,
 });

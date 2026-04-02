@@ -27,6 +27,7 @@ import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";
 import { registerItem } from "../RegisterItem";
+import { StickerDataSchema } from "./Sticker.schema";
 
 export const stickerColors = {
   Purple: "rgb(233, 208, 255)",
@@ -486,4 +487,5 @@ export class Sticker extends BaseItem<Sticker> {
 registerItem({
   item: Sticker,
   defaultData: new StickerData(),
+  schema: StickerDataSchema,
 });

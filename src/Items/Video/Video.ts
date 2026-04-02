@@ -8,6 +8,7 @@ import { Mbr } from "Items/Mbr";
 import { Path, Paths } from "Items/Path";
 import { TransformationData, DefaultTransformationData } from "../Transformation/TransformationData";
 import { registerItem } from "Items/RegisterItem";
+import { VideoItemDataSchema } from "./Video.schema";
 import { Transformation } from "Items/Transformation";
 import { conf } from "Settings";
 import { Subject } from "Subject";
@@ -448,4 +449,5 @@ export const DefaultVideoItemData: VideoItemData = {
 registerItem({
   item: VideoItem,
   defaultData: DefaultVideoItemData,
+  schema: VideoItemDataSchema,
 });

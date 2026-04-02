@@ -12,6 +12,7 @@ import { conf } from "Settings";
 import { AudioCommand } from "Items/Audio/AudioCommand";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { registerItem } from "Items/RegisterItem";
+import { AudioItemDataSchema } from "./Audio.schema";
 
 export interface AudioItemData {
   itemType: "Audio";
@@ -301,4 +302,5 @@ export const DefaultAudioItemData: AudioItemData = {
 registerItem({
   item: AudioItem,
   defaultData: DefaultAudioItemData,
+  schema: AudioItemDataSchema,
 });

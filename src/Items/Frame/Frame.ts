@@ -13,6 +13,7 @@ import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import { Subject } from "Subject";
 import { registerItem } from "../RegisterItem";
+import { FrameDataSchema } from "./Frame.schema";
 import { DrawingContext } from "../DrawingContext";
 import { Operation } from "Events";
 import { FrameOperation } from "./FrameOperation";
@@ -709,4 +710,5 @@ export class Frame extends BaseItem<Frame> {
 registerItem({
   item: Frame,
   defaultData: new DefaultFrameData(),
+  schema: FrameDataSchema,
 });

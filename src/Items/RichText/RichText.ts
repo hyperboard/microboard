@@ -25,6 +25,7 @@ import { Mbr } from "../Mbr/Mbr";
 import { Point } from "../Point/Point";
 import { RichTextData, DefaultRichTextData } from "./RichTextData";
 import { registerItem } from "../RegisterItem";
+import { RichTextDataSchema } from "./RichText.schema";
 import { Transformation } from "../Transformation/Transformation";
 import { TransformationOperation } from "../Transformation/TransformationOperations";
 import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
@@ -1202,4 +1203,5 @@ export class RichText extends BaseItem<RichText> {
 registerItem({
   item: RichText,
   defaultData: new DefaultRichTextData(),
+  schema: RichTextDataSchema,
 });

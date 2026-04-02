@@ -18,6 +18,7 @@ import { Board } from "Board";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import { registerItem } from "../RegisterItem";
+import { DrawingDataSchema } from "./Drawing.schema";
 import { ColorValue, ColorRole, coerceColorValue, resolveColor, semanticColor } from "Color";
 
 export interface DrawingData {
@@ -460,6 +461,7 @@ registerItem({
     strokeWidth: 2,
     transformation: new DefaultTransformationData(),
   } as any,
+  schema: DrawingDataSchema,
 });
 
 function getPerpendicularDistance(

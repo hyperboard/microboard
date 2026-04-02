@@ -9,6 +9,7 @@ import { Line } from "../Line/Line";
 import { Point } from "../Point/Point";
 import { Transformation } from "../Transformation/Transformation";
 import { registerItem } from "Items/RegisterItem";
+import { GroupDataSchema } from "./Group.schema";
 import { DefaultTransformationData } from "../Transformation/TransformationData";
 import type { Item } from "../Item";
 import { Board } from "Board";
@@ -223,4 +224,5 @@ export const DefaultGroupData: GroupData = {
 registerItem({
   item: Group,
   defaultData: DefaultGroupData,
+  schema: GroupDataSchema,
 });
