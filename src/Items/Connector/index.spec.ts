@@ -78,4 +78,51 @@ describe("of connectors", () => {
 		expect(endAfter.x).toBeCloseTo(endBefore.x + 150, 6);
 		expect(endAfter.y).toBeCloseTo(endBefore.y + 80, 6);
 	});
+
+	it("restores grouped connector endpoints after snapshot reload", () => {
+		const board = new Board();
+		const startItem = new BaseItem(board, "start-item");
+		const endItem = new BaseItem(board, "end-item");
+		startItem.setMbr(new Mbr(0, 0, 100, 100));
+		endItem.setMbr(new Mbr(200, 0, 300, 100));
+		board.index.insert(startItem);
+		board.index.insert(endItem);
+
+		const connector = new Connector(board, "connector-1");
+		connector.deserialize({
+			itemType: "Connector",
+			startPoint: new FixedPoint(startItem, new Point(100, 50)).serialize(),
+			endPoint: new FixedPoint(endItem, new Point(0, 50)).serialize(),
+		});
+		board.index.insert(connector);
+		board.group([startItem, endItem, connector]);
+
+		const snapshot = {
+			items: board.serialize(),
+			events: [],
+		};
+
+		const restoredBoard = new Board();
+		restoredBoard.deserialize(snapshot);
+		const restoredConnector = restoredBoard.items.getById("connector-1") as Connector;
+		const restoredStart = restoredConnector.getStartPoint();
+		const restoredEnd = restoredConnector.getEndPoint();
+
+		expect(restoredStart.serialize()).toEqual({
+			pointType: "Fixed",
+			itemId: "start-item",
+			relativeX: 100,
+			relativeY: 50,
+		});
+		expect(restoredEnd.serialize()).toEqual({
+			pointType: "Fixed",
+			itemId: "end-item",
+			relativeX: 0,
+			relativeY: 50,
+		});
+		expect(restoredStart.x).not.toBe(0);
+		expect(restoredStart.y).not.toBe(0);
+		expect(restoredEnd.x).not.toBe(0);
+		expect(restoredEnd.y).not.toBe(0);
+	});
 });

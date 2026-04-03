@@ -266,12 +266,15 @@ export class Board {
 
   private applyAddLockedGroupOperation(op: CreateLockedGroupItem): void {
     const item = this.createItem(op.item, op.data) as Group;
-    const groupChildrenIds = item.getChildrenIds();
-    this.index.insert(item);
-
+    const groupChildrenIds = op.data.childIds || [];
     const lastChildrenId = this.index.getById(
       groupChildrenIds?.[groupChildrenIds.length - 1] ?? ""
     );
+    this.index.insert(item);
+    if (groupChildrenIds.length > 0) {
+      item.applyAddChildren(groupChildrenIds);
+    }
+
     if (lastChildrenId) {
       const zIndex = this.index.getZIndex(lastChildrenId) + 1;
       this.index.moveToZIndex(item, zIndex);
@@ -287,12 +290,15 @@ export class Board {
 
   private applyAddGroupOperation(op: CreateGroup | CreateLockedGroupItem): void {
     const item = this.createItem(op.item, op.data) as Group;
-    const groupChildrenIds = item.getChildrenIds();
-    this.index.insert(item);
-
+    const groupChildrenIds = op.data.childIds || [];
     const lastChildrenId = this.index.getById(
       groupChildrenIds[groupChildrenIds.length - 1]
     );
+    this.index.insert(item);
+    if (groupChildrenIds.length > 0) {
+      item.applyAddChildren(groupChildrenIds);
+    }
+
     if (lastChildrenId) {
       const zIndex = this.index.getZIndex(lastChildrenId) + 1;
       this.index.moveToZIndex(item, zIndex);

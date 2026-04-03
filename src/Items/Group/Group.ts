@@ -171,9 +171,6 @@ export class Group extends BaseItem<Group> {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
     }
-    if (data.childIds && data.childIds.length > 0) {
-      this.applyAddChildren(data.childIds);
-    }
     if (data.isLockedGroup !== undefined) {
       this.isLockedGroup = data.isLockedGroup;
     }
