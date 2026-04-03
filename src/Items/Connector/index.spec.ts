@@ -50,12 +50,32 @@ describe("of connectors", () => {
 		board.index.insert(connector);
 
 		const group = board.group([startItem, endItem, connector]);
-		const startBefore = connector.getStartPoint().serialize();
-		const endBefore = connector.getEndPoint().serialize();
+		const startBefore = connector.getStartPoint().copy();
+		const endBefore = connector.getEndPoint().copy();
 
 		group.apply(transformOps.translateBy(group, 150, 80));
 
-		expect(connector.getStartPoint().serialize()).toEqual(startBefore);
-		expect(connector.getEndPoint().serialize()).toEqual(endBefore);
+		expect(connector.getStartPoint().serialize()).toEqual({
+			pointType: "Fixed",
+			itemId: "start-item",
+			relativeX: 100,
+			relativeY: 50,
+		});
+		expect(connector.getEndPoint().serialize()).toEqual({
+			pointType: "Fixed",
+			itemId: "end-item",
+			relativeX: 0,
+			relativeY: 50,
+		});
+
+		const startAfter = connector.getStartPoint().copy();
+		const endAfter = connector.getEndPoint().copy();
+		startAfter.transform(group.getWorldMatrix());
+		endAfter.transform(group.getWorldMatrix());
+
+		expect(startAfter.x).toBeCloseTo(startBefore.x + 150, 6);
+		expect(startAfter.y).toBeCloseTo(startBefore.y + 80, 6);
+		expect(endAfter.x).toBeCloseTo(endBefore.x + 150, 6);
+		expect(endAfter.y).toBeCloseTo(endBefore.y + 80, 6);
 	});
 });
