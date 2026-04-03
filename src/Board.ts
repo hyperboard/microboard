@@ -29,7 +29,12 @@ import { DrawingContext } from "Items/DrawingContext";
 import type { Group, GroupData } from "Items/Group";
 import type { ImageItem } from "Items/Image";
 import { Keyboard } from "Keyboard";
-import { parsersHTML } from "HTMLAdapter/Parser";
+import {
+  deserializeHTMLAndEmitToBoard,
+  deserializeHTMLToBoard,
+  parseHTML,
+  serializeBoardToHTML,
+} from "HTMLAdapter/BoardHTMLAdapter";
 import { Pointer } from "Pointer";
 import { cursorsMap } from "Pointer/Pointer";
 import { Presence } from "Presence/Presence";
@@ -428,12 +433,7 @@ export class Board {
   ):
     | ItemDataWithId
     | { data: BaseItemData & { id: string }; childrenMap: { [id: string]: ItemDataWithId } } {
-    const parser = parsersHTML[el.tagName.toLowerCase()];
-    if (!parser) {
-      throw new Error(`Unknown element tag: ${el.tagName.toLowerCase()}`);
-    }
-
-    return parser(el);
+    return parseHTML(el);
   }
 
   add<T extends Item>(item: T, timeStamp?: number): T {
@@ -636,167 +636,16 @@ export class Board {
   }
 
   serializeHTML(): string {
-    const boardName = this.getName() || this.getBoardId();
-
-    // div with id="items" and last-event-order are necessary for successfull uploading to storage
-    const items = this.items.getWholeHTML(conf.documentFactory);
-    const itemsDiv = `<div id="items">${items}</div>`;
-    const scripts = `
-			<script type="module" src="https://unpkg.com/microboard-ui-temp/dist/customWebComponents.js"></script>
-      <script type="module" src="https://unpkg.com/microboard-ui-temp/dist/controlsHandlers.js"></script>
-      <script type="module" src="https://unpkg.com/microboard-ui-temp/dist/titlePanel.js"></script>
-      <script defer src="https://unpkg.com/microboard-ui-temp/dist/loadLinksImages.js"></script>
-		`;
-    const body = `<body style="overflow-x: hidden; overflow-y: hidden;">${itemsDiv}${scripts}</body>`;
-    const head = `
-      <head>
-        <meta charset="utf-8" />
-        <meta name="last-event-order" content="${this.events?.log.getLastIndex()}" />
-        <title>Microboard ${boardName}</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
-        <link rel="stylesheet" crossorigin href="https://unpkg.com/microboard-ui-temp/dist/board.css" />
-      </head>`.replace(/\t|\n/g, "");
-    return `${head}${body}`;
+    return serializeBoardToHTML(this);
   }
 
   /** @returns ids of added items */
   deserializeHTMLAndEmit(stringedHTML: string): string[] {
-    const parser = conf.getDOMParser();
-    const doc = parser.parseFromString(stringedHTML, "text/html");
-    const items = doc.body.querySelector("#items");
-    if (items) {
-      const idsMap: Record<string, string> = {};
-      const addedConnectors: { item: Connector; data: ConnectorData }[] = [];
-      const data = Array.from(items.children).map((el) =>
-        this.parseHTML(el as HTMLElement)
-      );
-      for (const parsedData of data) {
-        if ("childrenMap" in parsedData) {
-          // Frame
-          const frameData = parsedData as { data: BaseItemData & { id: string }; childrenMap: { [id: string]: ItemDataWithId } };
-          const addedFrame: BaseItem = this.add(
-            this.createItem(this.getNewItemId(), frameData.data as unknown as ItemData)
-          );
-          const addedChildren = (
-            Object.values(frameData.childrenMap) as unknown as ItemDataWithId[]
-          ).map((childData) => {
-            const created = this.createItem(this.getNewItemId(), childData);
-            const added = this.add(created);
-            idsMap[childData.id] = added.getId();
-            if (added.itemType === "Connector") {
-              addedConnectors.push({
-                item: added as Connector,
-                data: childData as ConnectorData,
-              });
-            }
-            return added;
-          });
-          addedFrame.addChildItems(addedChildren);
-          (frameData.data as any).children = addedChildren.map((item) => item.getId());
-          idsMap[frameData.data.id] = addedFrame.getId();
-        } else {
-          const itemData = parsedData as ItemDataWithId;
-          const added = this.add(
-            this.createItem(this.getNewItemId(), itemData)
-          );
-          if (added.itemType === "Connector") {
-            addedConnectors.push({
-              item: added as Connector,
-              data: itemData as unknown as ConnectorData,
-            });
-          }
-          idsMap[itemData.id] = added.getId();
-        }
-      }
-      addedConnectors.forEach((connector) => {
-        const startData = {
-          ...connector.data.startPoint,
-          ...("itemId" in connector.data.startPoint
-            ? { itemId: idsMap[connector.data.startPoint.itemId] }
-            : {}),
-        };
-        const endData = {
-          ...connector.data.endPoint,
-          ...("itemId" in connector.data.endPoint
-            ? { itemId: idsMap[connector.data.endPoint.itemId] }
-            : {}),
-        };
-
-        connector.item.apply(connectorOps.setStartPoint([connector.item], startData));
-        connector.item.apply(connectorOps.setEndPoint([connector.item], endData));
-      });
-      return Object.values(idsMap);
-    }
-
-    return [];
+    return deserializeHTMLAndEmitToBoard(this, stringedHTML);
   }
 
   deserializeHTML(stringedHTML: string): void {
-    const parser = conf.getDOMParser();
-    const doc = parser.parseFromString(stringedHTML, "text/html");
-    const itemsDiv = doc.body.querySelector("#items");
-    if (!itemsDiv) {
-      return;
-    }
-    const items = Array.from(itemsDiv.children).map((el) =>
-      this.parseHTML(el as HTMLElement)
-    );
-
-    this.index.clear();
-    const createdConnectors: Record<
-      string,
-      { item: Connector; itemData: ConnectorData & { id: string } }
-    > = {};
-    const createdGroups: Record<
-      string,
-      { item: BaseItem; itemData: BaseItemData }
-    > = {};
-
-    const addItem = (itemData: ItemData & { id: string }): Item => {
-      const item = this.createItem(itemData.id, itemData);
-      if (item.itemType === "Connector") {
-        createdConnectors[itemData.id] = {
-          item: item as Connector,
-          itemData: itemData as ConnectorData & { id: string },
-        };
-      }
-      if ("index" in item && item.index) {
-        createdGroups[item.getId()] = { item, itemData };
-      }
-      this.index.insert(item);
-      return item;
-    };
-
-    for (const rawItemData of items) {
-      if ("childrenMap" in rawItemData) {
-        // Frame
-        const frameData = rawItemData as { data: ItemData & { id: string }; childrenMap: { [id: string]: ItemDataWithId } };
-        (Object.values(frameData.childrenMap) as ItemDataWithId[]).map(
-          (childData) => addItem(childData)
-        );
-        addItem(frameData.data);
-      } else {
-        addItem(rawItemData as ItemData & { id: string });
-      }
-    }
-
-    for (const key in createdConnectors) {
-      const { item, itemData } = createdConnectors[key];
-      item.apply(connectorOps.setStartPoint([item as Connector], itemData.startPoint));
-      item.apply(connectorOps.setEndPoint([item as Connector], itemData.endPoint));
-    }
-    for (const key in createdGroups) {
-      const { item, itemData } = createdGroups[key];
-      const childIds = (itemData).childIds;
-      if (childIds) {
-        item.applyAddChildren(childIds);
-      }
-    }
+    deserializeHTMLToBoard(this, stringedHTML);
   }
 
   deserialize(snapshot: BoardSnapshot): void {
