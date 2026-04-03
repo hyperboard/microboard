@@ -6,7 +6,7 @@ import { Sticker } from "Items/Sticker/Sticker";
 import { Shape } from "Items/Shape/Shape";
 import { Frame } from "Items/Frame/Frame";
 import { Comment } from "Items/Comment/Comment";
-import { transformShape } from "./transformShape.ts";
+import { transformShape } from "./transformShape";
 
 describe("transformShape", () => {
   let board: Board;
@@ -19,26 +19,7 @@ describe("transformShape", () => {
   let mockComment: Comment;
 
   beforeEach(() => {
-    // Mock Board with all required properties
-    board = {
-      pointer: {
-        point: new Point(100, 100),
-        getCursor: () => "default",
-        setCursor: jest.fn(),
-      },
-      selection: {
-        shouldRenderItemsMbr: true,
-        transformMany: jest.fn(),
-        items: {
-          list: jest.fn().mockReturnValue([]),
-        },
-      },
-      items: {
-        getComments: () => [],
-      },
-    } as unknown as Board;
-
-    // Mock Matrix with specific values for testing
+    // Mock Matrix
     mockMatrix = new Matrix();
     mockMatrix.scaleX = 2;
     mockMatrix.scaleY = 2;
@@ -49,39 +30,64 @@ describe("transformShape", () => {
     mockMbr = new Mbr(0, 0, 100, 100);
     mockOppositePoint = new Point(0, 0);
 
-    // Mock Sticker
-    mockSticker = {
-      itemType: "Sticker",
-      getId: () => "sticker1",
+    const mockItemBase = {
+      apply: jest.fn(),
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWorldMbr: () => new Mbr(10, 10, 50, 50),
-      doResize: jest.fn().mockReturnValue({ mbr: new Mbr(10, 10, 60, 60) }),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
+      getCanChangeRatio: () => true,
+      getFrameType: () => "None",
+      setFrameType: jest.fn(),
+    };
+
+    // Mock Sticker
+    mockSticker = {
+      ...mockItemBase,
+      id: "sticker1",
+      getId: () => "sticker1",
+      itemType: "Sticker",
     } as unknown as Sticker;
 
     // Mock Shape
     mockShape = {
-      itemType: "Shape",
+      ...mockItemBase,
+      id: "shape1",
       getId: () => "shape1",
-      getMbr: () => new Mbr(10, 10, 50, 50),
-      getWorldMbr: () => new Mbr(10, 10, 50, 50),
-      doResize: jest.fn().mockReturnValue({ mbr: new Mbr(10, 10, 60, 60) }),
+      itemType: "Shape",
     } as unknown as Shape;
 
     // Mock Frame
     mockFrame = {
-      itemType: "Frame",
+      ...mockItemBase,
+      id: "frame1",
       getId: () => "frame1",
-      getMbr: () => new Mbr(10, 10, 50, 50),
-      getWorldMbr: () => new Mbr(10, 10, 50, 50),
-      doResize: jest.fn().mockReturnValue({ mbr: new Mbr(10, 10, 60, 60) }),
+      itemType: "Frame",
     } as unknown as Frame;
+
+    // Mock Board with all required properties
+    board = {
+      pointer: {
+        point: new Point(100, 100),
+      },
+      selection: {
+        moveMany: jest.fn(),
+        items: {
+          list: jest.fn(() => []),
+        },
+      },
+      items: {
+        getComments: () => [],
+      },
+    } as unknown as Board;
 
     // Mock Comment
     mockComment = {
+      id: "comment1",
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
       getWorldMbr: () => new Mbr(60, 60, 100, 100),
-      getItemToFollow: () => mockShape.getId(),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
+      getItemToFollow: () => "shape1",
     } as unknown as Comment;
 
     // Reset all mocks before each test
@@ -101,38 +107,28 @@ describe("transformShape", () => {
       followingComments: undefined,
     });
 
-    expect(mockSticker.doResize).toHaveBeenCalledWith(
-      "right",
-      board.pointer.point,
-      mockMbr,
-      mockOppositePoint,
-      expect.any(Mbr),
-      expect.any(Number)
-    );
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: null,
-    });
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
+    expect(result.translation![0].id).toBe("sticker1");
   });
 
   it("should handle proportional resize for Shape", () => {
+    (board.selection.items.list as jest.Mock).mockReturnValue([mockShape]);
     const result = transformShape({
       board,
       mbr: mockMbr,
       isWidth: true,
-      resizeType: "right",
+      resizeType: "rightBottom",
       single: mockShape,
       oppositePoint: mockOppositePoint,
-      isHeight: false,
+      isHeight: true,
       isShiftPressed: true,
       followingComments: undefined,
     });
 
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: expect.any(Object),
-    });
-    expect(mockShape.doResize).not.toHaveBeenCalled();
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
+    expect(result.translation![0].id).toBe("shape1");
   });
 
   it("should handle regular resize for Frame", () => {
@@ -148,18 +144,8 @@ describe("transformShape", () => {
       followingComments: undefined,
     });
 
-    expect(mockFrame.doResize).toHaveBeenCalledWith(
-      "right",
-      board.pointer.point,
-      mockMbr,
-      mockOppositePoint,
-      expect.any(Mbr),
-      expect.any(Number)
-    );
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: null,
-    });
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
   });
 
   it("should handle following comments during resize", () => {
@@ -175,11 +161,8 @@ describe("transformShape", () => {
       followingComments: [mockComment],
     });
 
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: expect.any(Object),
-    });
-    expect(mockShape.doResize).toHaveBeenCalled();
+    expect(result.translation).toHaveLength(2); // shape + comment
+    expect(result.translation).toContainEqual(expect.objectContaining({ id: "comment1" }));
   });
 
   it("should handle different resize types for Shape", () => {
@@ -204,7 +187,7 @@ describe("transformShape", () => {
       const result = transformShape({
         board,
         mbr: mockMbr,
-        isWidth: false,
+        isWidth: true,
         resizeType,
         single: mockShape,
         oppositePoint: mockOppositePoint,
@@ -213,68 +196,58 @@ describe("transformShape", () => {
         followingComments: undefined,
       });
 
-      expect(result).toEqual({
-        resizedMbr: expect.any(Mbr),
-        translation: null,
-      });
-      expect(mockShape.doResize).toHaveBeenCalledWith(
-        resizeType,
-        point,
-        mockMbr,
-        mockOppositePoint,
-        expect.any(Mbr),
-        expect.any(Number)
-      );
+      expect(result.resizedMbr).toEqual(expect.any(Mbr));
+      expect(result.translation).toHaveLength(1);
     });
   });
 
   it("should handle proportional resize with startMbr", () => {
-    const startMbr = new Mbr(5, 5, 45, 45);
+    (board.selection.items.list as jest.Mock).mockReturnValue([mockShape]);
+    const startMbr = new Mbr(0, 0, 100, 100);
     const result = transformShape({
       board,
       mbr: mockMbr,
       isWidth: true,
-      resizeType: "right",
+      resizeType: "rightBottom",
       single: mockShape,
       oppositePoint: mockOppositePoint,
-      isHeight: false,
+      isHeight: true,
       isShiftPressed: true,
       followingComments: undefined,
       startMbr,
     });
 
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: expect.any(Object),
-    });
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
+    expect(result.translation![0].id).toBe("shape1");
   });
 
   it("should handle Sticker resize with proportional transform", () => {
-    // Even with isShiftPressed, Sticker should use regular resize
     const result = transformShape({
       board,
       mbr: mockMbr,
       isWidth: true,
-      resizeType: "right",
+      resizeType: "rightBottom",
       single: mockSticker,
       oppositePoint: mockOppositePoint,
-      isHeight: false,
+      isHeight: true,
       isShiftPressed: true,
       followingComments: undefined,
     });
 
-    expect(mockSticker.doResize).toHaveBeenCalled();
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: null,
-    });
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
   });
 
   it("should handle resize with multiple following comments", () => {
     const mockComment2 = {
-      ...mockComment,
+      id: "comment2",
       getId: () => "comment2",
-    } as Comment;
+      getMbr: () => new Mbr(120, 120, 150, 150),
+      getWorldMbr: () => new Mbr(120, 120, 150, 150),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
+      getItemToFollow: () => "shape1",
+    } as unknown as Comment;
 
     const result = transformShape({
       board,
@@ -288,10 +261,8 @@ describe("transformShape", () => {
       followingComments: [mockComment, mockComment2],
     });
 
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-      translation: expect.any(Object),
-    });
-    expect(mockShape.doResize).toHaveBeenCalled();
+    expect(result.translation).toHaveLength(3); // shape + 2 comments
+    expect(result.translation).toContainEqual(expect.objectContaining({ id: "comment1" }));
+    expect(result.translation).toContainEqual(expect.objectContaining({ id: "comment2" }));
   });
 });

@@ -18,12 +18,33 @@ describe("handleMultipleItemsResize", () => {
   let mockSticker: Sticker;
   let mockFrame: Frame;
 
+  const createMockItem = (id: string, type: string, x: number, y: number) => {
+    const matrix = new Matrix(x, y, 1, 1);
+    return {
+      id,
+      itemType: type,
+      parent: "Board",
+      getId: () => id,
+      getMbr: () => new Mbr(x, y, x + 40, y + 40),
+      getWorldMbr: () => new Mbr(x, y, x + 40, y + 40),
+      getWorldMatrix: () => matrix.copy(),
+      transformation: {
+        toMatrix: () => matrix.copy(),
+        getMatrixData: () => matrix.getMatrixData(),
+        getScale: () => ({ x: 1, y: 1 }),
+      },
+      getWidth: () => 40,
+      getHeight: () => 40,
+      apply: jest.fn(),
+    };
+  };
+
   beforeEach(() => {
     // Mock Board
     board = {
       selection: {
         items: {
-          list: () => [],
+          list: jest.fn(() => []),
         },
       },
       items: {
@@ -43,52 +64,31 @@ describe("handleMultipleItemsResize", () => {
     mockInitMbr = new Mbr(0, 0, 100, 100);
 
     // Mock Items — use Object.create so instanceof checks pass
-    mockRichText = Object.assign(Object.create(RichText.prototype), {
-      itemType: "RichText",
-      getId: () => "richText1",
-      getMbr: () => new Mbr(10, 10, 50, 50),
-      getWorldMbr: () => new Mbr(10, 10, 50, 50),
-      getWidth: () => 40,
-      transformation: {
-        getScale: () => ({ x: 1, y: 1 }),
-      },
+    mockRichText = Object.assign(Object.create(RichText.prototype), createMockItem("richText1", "RichText", 10, 10), {
       editor: {
         setMaxWidth: jest.fn(),
       },
     }) as unknown as RichText;
 
-    mockAINode = Object.assign(Object.create(AINode.prototype), {
-      itemType: "AINode",
-      getId: () => "aiNode1",
-      getMbr: () => new Mbr(20, 20, 60, 60),
-      getWorldMbr: () => new Mbr(20, 20, 60, 60),
+    mockAINode = Object.assign(Object.create(AINode.prototype), createMockItem("aiNode1", "AINode", 20, 20), {
       text: {
+        id: "aiNode1-text",
+        getId: () => "aiNode1-text",
         getWidth: () => 40,
+        getWorldMatrix: () => new Matrix(20, 20, 1, 1),
         editor: {
           setMaxWidth: jest.fn(),
         },
       },
-      transformation: {
-        getScale: () => ({ x: 1, y: 1 }),
-      },
     }) as unknown as AINode;
 
-    mockSticker = Object.assign(Object.create(Sticker.prototype), {
-      getId: () => "sticker1",
-      getMbr: () => new Mbr(30, 30, 70, 70),
-      getWorldMbr: () => new Mbr(30, 30, 70, 70),
-      itemType: "Sticker",
-    }) as unknown as Sticker;
+    mockSticker = Object.assign(Object.create(Sticker.prototype), createMockItem("sticker1", "Sticker", 30, 30)) as unknown as Sticker;
 
-    mockFrame = {
-      getId: () => "frame1",
-      getMbr: () => new Mbr(40, 40, 80, 80),
-      getWorldMbr: () => new Mbr(40, 40, 80, 80),
-      itemType: "Frame",
+    mockFrame = Object.assign(Object.create(Frame.prototype), createMockItem("frame1", "Frame", 40, 40), {
       getCanChangeRatio: () => true,
       getFrameType: () => "Default",
       setFrameType: jest.fn(),
-    } as unknown as Frame;
+    }) as unknown as Frame;
   });
 
   it("should handle RichText resize with width", () => {
@@ -104,7 +104,8 @@ describe("handleMultipleItemsResize", () => {
 
     expect(result.find(r => r.id === mockRichText.getId())).toEqual({
       id: mockRichText.getId(),
-      matrix: { translateX: mockMatrix.translateX, translateY: 0, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleX, shearX: 0, shearY: 0 },
+      worldMatrix: expect.objectContaining({ translateX: 10 + mockMatrix.translateX }),
+      prevWorldMatrix: expect.any(Object),
     });
   });
 
@@ -121,7 +122,8 @@ describe("handleMultipleItemsResize", () => {
 
     expect(result.find(r => r.id === mockRichText.getId())).toEqual({
       id: mockRichText.getId(),
-      matrix: { translateX: 20, translateY: 20, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
+      worldMatrix: expect.objectContaining({ translateX: 30, translateY: 30 }),
+      prevWorldMatrix: expect.any(Object),
     });
   });
 
@@ -138,7 +140,8 @@ describe("handleMultipleItemsResize", () => {
 
     expect(result.find(r => r.id === mockAINode.getId())).toEqual({
       id: mockAINode.getId(),
-      matrix: { translateX: mockMatrix.translateX, translateY: 0, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleX, shearX: 0, shearY: 0 },
+      worldMatrix: expect.objectContaining({ translateX: 20 + mockMatrix.translateX }),
+      prevWorldMatrix: expect.any(Object),
     });
   });
 
@@ -155,7 +158,8 @@ describe("handleMultipleItemsResize", () => {
 
     expect(result.find(r => r.id === mockSticker.getId())).toEqual({
       id: mockSticker.getId(),
-      matrix: { translateX: 40, translateY: 40, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 },
+      worldMatrix: expect.objectContaining({ translateX: 70, translateY: 70 }),
+      prevWorldMatrix: expect.any(Object),
     });
   });
 
@@ -172,7 +176,8 @@ describe("handleMultipleItemsResize", () => {
 
     expect(result.find(r => r.id === mockFrame.getId())).toEqual({
       id: mockFrame.getId(),
-      matrix: { translateX: 50, translateY: 50, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleY, shearX: 0, shearY: 0 },
+      worldMatrix: expect.objectContaining({ scaleX: 2, scaleY: 2 }),
+      prevWorldMatrix: expect.any(Object),
     });
   });
 
@@ -195,16 +200,7 @@ describe("handleMultipleItemsResize", () => {
   });
 
   it("should handle Drawing item type", () => {
-    const mockDrawing = {
-      getId: () => "drawing1",
-      itemType: "Drawing",
-      getMbr: () => new Mbr(50, 50, 90, 90),
-      getWorldMbr: () => new Mbr(50, 50, 90, 90),
-      getWorldMatrix: () => ({ translateX: 50, translateY: 50 }),
-      transformation: {
-        getMatrixData: () => ({ translateX: 50, translateY: 50 }),
-      },
-    } as unknown as Item;
+    const mockDrawing = createMockItem("drawing1", "Drawing", 50, 50);
 
     const result = handleMultipleItemsResize({
       board,
@@ -213,24 +209,23 @@ describe("handleMultipleItemsResize", () => {
       isWidth: false,
       isHeight: false,
       isShiftPressed: false,
-      itemsToResize: [mockDrawing],
+      itemsToResize: [mockDrawing] as unknown as Item[],
     });
 
-    expect(result.find(r => r.id === mockDrawing.getId())).toEqual({
-      id: mockDrawing.getId(),
-      matrix: { translateX: 60, translateY: 60, scaleX: mockMatrix.scaleX, scaleY: mockMatrix.scaleY, shearX: 0, shearY: 0 },
+    expect(result.find(r => r.id === mockDrawing.id)).toEqual({
+      id: mockDrawing.id,
+      worldMatrix: expect.objectContaining({ translateX: 110, translateY: 110 }),
+      prevWorldMatrix: expect.any(Object),
     });
   });
 
   it("should include comments that follow items", () => {
-    const mockComment = {
-      getId: () => "comment1",
-      getMbr: () => new Mbr(60, 60, 100, 100),
-      getWorldMbr: () => new Mbr(60, 60, 100, 100),
+    const mockComment = createMockItem("comment1", "Comment", 60, 60);
+    Object.assign(mockComment, {
       getItemToFollow: () => mockRichText.getId(),
-    } as unknown as Item;
+    });
 
-    board.items.getComments = () => [mockComment];
+    board.items.getComments = () => [mockComment as unknown as any];
 
     const result = handleMultipleItemsResize({
       board,
@@ -244,6 +239,6 @@ describe("handleMultipleItemsResize", () => {
 
     expect(result).toHaveLength(2);
     expect(result.find(r => r.id === mockRichText.getId())).toBeDefined();
-    expect(result.find(r => r.id === mockComment.getId())).toBeDefined();
+    expect(result.find(r => r.id === mockComment.id)).toBeDefined();
   });
 });

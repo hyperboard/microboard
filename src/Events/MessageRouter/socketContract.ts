@@ -262,6 +262,43 @@ const ApplyMatrixOperationSchema = z
 	.extend(OptionalTransportTimestampSchema.shape)
 	.passthrough();
 
+const MoveItemSchema = z
+	.object({
+		id: z.string(),
+		worldMatrix: MatrixDataSchema,
+		prevWorldMatrix: MatrixDataSchema,
+	})
+	.passthrough();
+
+const MoveOperationSchema = z
+	.object({
+		class: z.literal("Transformation"),
+		method: z.literal("move"),
+		items: z.array(MoveItemSchema),
+	})
+	.extend(OptionalTransportTimestampSchema.shape)
+	.passthrough();
+
+const SetPlacementItemSchema = z
+	.object({
+		id: z.string(),
+		parentId: z.string(),
+		zOrderIndex: z.number(),
+		worldMatrix: MatrixDataSchema,
+		prevParentId: z.string(),
+		prevWorldMatrix: MatrixDataSchema,
+	})
+	.passthrough();
+
+const SetPlacementOperationSchema = z
+	.object({
+		class: z.literal("Transformation"),
+		method: z.literal("setPlacement"),
+		items: z.array(SetPlacementItemSchema),
+	})
+	.extend(OptionalTransportTimestampSchema.shape)
+	.passthrough();
+
 const TransformManyItemsOperationSchema = z.union([
 	ApplyMatrixOperationSchema,
 	ScaleByTranslateByOperationSchema,
@@ -303,6 +340,8 @@ const TransformationOperationSchemas = [
 		.extend(OptionalTransportTimestampSchema.shape)
 		.passthrough(),
 	ApplyMatrixOperationSchema,
+	MoveOperationSchema,
+	SetPlacementOperationSchema,
 	z
 		.object({
 			class: z.literal("Transformation"),

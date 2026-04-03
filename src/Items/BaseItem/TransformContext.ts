@@ -2,14 +2,14 @@ import { Board } from "Board";
 import { Mbr, Point } from "Items";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Comment } from "Items/Comment/Comment";
-import { ApplyMatrixItem } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem, MoveItem } from "Items/Transformation/TransformationOperations";
 
 /** Minimal interface for BoardSelection to avoid circular dependencies */
 export interface ISelection {
   items: {
     list(): any[];
   };
-  transformMany(translations: ApplyMatrixItem[], timeStamp: number): void;
+  moveMany(items: MoveItem[], timeStamp: number): void;
   shouldRenderItemsMbr: boolean;
 }
 
@@ -39,6 +39,6 @@ export type TransformParams = {
 
 export type TransformResult = {
   resizedMbr: Mbr | null;
-  translation?: ApplyMatrixItem[] | null;
+  translation?: MoveItem[] | null;
   onPointerUpCb?: () => void;
 };

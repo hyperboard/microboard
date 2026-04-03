@@ -2,12 +2,12 @@ import { Matrix } from "Items/Transformation/Matrix";
 import { Mbr } from "Items/Mbr/Mbr";
 import type { Item } from "Items/Item";
 import {
-  ApplyMatrixItem,
+  MoveItem,
 } from "Items/Transformation/TransformationOperations";
 import type { RichText } from "Items/RichText/RichText";
 import type { AINode } from "Items/AINode/AINode";
-import type { Sticker } from "Items/Sticker/Sticker";
 import { Board } from "Board";
+import { BaseItem } from "Items/BaseItem/BaseItem";
 
 export function handleMultipleItemsResize({
   board,
@@ -25,9 +25,9 @@ export function handleMultipleItemsResize({
   isHeight: boolean;
   isShiftPressed: boolean;
   itemsToResize?: Item[];
-}): ApplyMatrixItem[] {
+}): MoveItem[] {
   const { matrix } = resize;
-  const result: ApplyMatrixItem[] = [];
+  const result: MoveItem[] = [];
   const rawItems = itemsToResize ? itemsToResize : board.selection.items.list();
   board.items.getComments().forEach((comment) => {
     if (rawItems.some((item) => item.getId() === comment.getItemToFollow())) {
@@ -68,7 +68,7 @@ export function handleMultipleItemsResize({
     const translateY = deltaY * matrix.scaleY - deltaY + matrix.translateY;
 
     if (item.itemType === "RichText") {
-      result.push(getRichTextTranslation({
+      result.push(getRichTextMove({
         item: item as unknown as RichText,
         isWidth,
         isHeight,
@@ -77,7 +77,7 @@ export function handleMultipleItemsResize({
         translateY,
       }));
     } else if (item.itemType === "AINode") {
-      result.push(getAINodeTranslation({
+      result.push(getAINodeMove({
         item: item as unknown as AINode,
         isWidth,
         isHeight,
@@ -86,7 +86,7 @@ export function handleMultipleItemsResize({
         translateY,
       }));
     } else {
-      result.push(getItemTranslation({
+      result.push(getItemMove({
         item: item as any,
         isWidth,
         isHeight,
@@ -101,7 +101,7 @@ export function handleMultipleItemsResize({
   return result;
 }
 
-function getRichTextTranslation({
+export function getRichTextMove({
   item,
   isWidth,
   isHeight,
@@ -115,20 +115,35 @@ function getRichTextTranslation({
   matrix: Matrix;
   translateX: number;
   translateY: number;
-}): ApplyMatrixItem {
+}): MoveItem {
   if (isWidth) {
     item.editor.setMaxWidth(
       (item.getWidth() / (item as any).transformation.getScale().x) * matrix.scaleX
     );
-    return { id: item.getId(), matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
+    const world = (item as unknown as BaseItem).getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += matrix.translateX;
+    world.scaleX *= matrix.scaleX;
+    world.scaleY *= matrix.scaleX;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   } else if (isHeight) {
-    return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
+    const world = (item as unknown as BaseItem).getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += translateX;
+    world.translateY += translateY;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   } else {
-    return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
+    const world = (item as unknown as BaseItem).getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += translateX;
+    world.translateY += translateY;
+    world.scaleX *= matrix.scaleX;
+    world.scaleY *= matrix.scaleX;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   }
 }
 
-function getAINodeTranslation({
+export function getAINodeMove({
   item,
   isWidth,
   isHeight,
@@ -142,20 +157,35 @@ function getAINodeTranslation({
   matrix: Matrix;
   translateX: number;
   translateY: number;
-}): ApplyMatrixItem {
+}): MoveItem {
   if (isWidth) {
     item.text.editor.setMaxWidth(
       (item.text.getWidth() / (item as any).transformation.getScale().x) * matrix.scaleX
     );
-    return { id: item.getId(), matrix: { translateX: matrix.translateX, translateY: 0, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
+    const world = item.text.getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += matrix.translateX;
+    world.scaleX *= matrix.scaleX;
+    world.scaleY *= matrix.scaleX;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   } else if (isHeight) {
-    return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
+    const world = item.text.getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += translateX;
+    world.translateY += translateY;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   } else {
-    return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleX, shearX: 0, shearY: 0 } };
+    const world = item.text.getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += translateX;
+    world.translateY += translateY;
+    world.scaleX *= matrix.scaleX;
+    world.scaleY *= matrix.scaleX;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   }
 }
 
-function getItemTranslation({
+export function getItemMove({
   item,
   isWidth,
   isHeight,
@@ -171,9 +201,13 @@ function getItemTranslation({
   translateX: number;
   translateY: number;
   isShiftPressed: boolean;
-}): ApplyMatrixItem {
+}): MoveItem {
   if (item.itemType === "Sticker" && (isWidth || isHeight)) {
-    return { id: item.getId(), matrix: { translateX, translateY, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } };
+    const world = (item as unknown as BaseItem).getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += translateX;
+    world.translateY += translateY;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   } else {
     if (
       item.itemType === "Frame" &&
@@ -183,6 +217,12 @@ function getItemTranslation({
     ) {
       (item as any).setFrameType("Custom");
     }
-    return { id: item.getId(), matrix: { translateX, translateY, scaleX: matrix.scaleX, scaleY: matrix.scaleY, shearX: 0, shearY: 0 } };
+    const world = (item as unknown as BaseItem).getWorldMatrix().copy();
+    const prevWorld = world.getMatrixData();
+    world.translateX += translateX;
+    world.translateY += translateY;
+    world.scaleX *= matrix.scaleX;
+    world.scaleY *= matrix.scaleY;
+    return { id: item.getId(), worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld };
   }
 }

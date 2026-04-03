@@ -18,6 +18,24 @@ export class Matrix {
 		this.shearY = toFiniteNumber(shearY);
 	}
 
+	static fromData(data: {
+		translateX: number;
+		translateY: number;
+		scaleX: number;
+		scaleY: number;
+		shearX: number;
+		shearY: number;
+	}): Matrix {
+		return new Matrix(
+			data.translateX,
+			data.translateY,
+			data.scaleX,
+			data.scaleY,
+			data.shearX,
+			data.shearY
+		);
+	}
+
 	translate(x: number, y: number): void {
 		// this.translateX = this.scaleX * x + this.shearX * y + this.translateX;
 		// this.translateY = this.scaleY * y + this.shearY * x + this.translateY;
@@ -242,6 +260,24 @@ export class Matrix {
 		return {
 			x: (scaleY * dx - shearX * dy) / denom,
 			y: (-shearY * dx + scaleX * dy) / denom,
+		};
+	}
+
+	getMatrixData(): {
+		translateX: number;
+		translateY: number;
+		scaleX: number;
+		scaleY: number;
+		shearX: number;
+		shearY: number;
+	} {
+		return {
+			translateX: this.translateX,
+			translateY: this.translateY,
+			scaleX: this.scaleX,
+			scaleY: this.scaleY,
+			shearX: this.shearX,
+			shearY: this.shearY,
 		};
 	}
 }

@@ -155,7 +155,7 @@ describe("hierarchical selection rules", () => {
     const item = createItem(board, "item", 10, 10, 30, 30);
 
     board.selection.add(item);
-    board.selection.transformMany(board.selection.getManyItemsTranslation(15, 5), Date.now());
+    board.selection.moveMany(board.selection.getManyItemsMove(15, 5), Date.now());
 
     const moved = item.transformation.getTranslation();
     expect(moved.x).toBe(25);
@@ -169,7 +169,7 @@ describe("hierarchical selection rules", () => {
     const childBefore = child.getWorldMatrix();
 
     board.selection.add(group);
-    board.selection.transformMany(board.selection.getManyItemsTranslation(15, 0), Date.now());
+    board.selection.moveMany(board.selection.getManyItemsMove(15, 0), Date.now());
 
     expect(group.transformation.getTranslation().x).toBe(15);
     expect(child.getWorldMatrix().translateX).toBe(childBefore.translateX + 15);
@@ -182,7 +182,7 @@ describe("hierarchical selection rules", () => {
     const childBefore = child.getWorldMatrix();
 
     board.selection.add(frame);
-    board.selection.transformMany(board.selection.getManyItemsTranslation(20, 10), Date.now());
+    board.selection.moveMany(board.selection.getManyItemsMove(20, 10), Date.now());
 
     expect(frame.transformation.getTranslation().x).toBe(20);
     expect(frame.transformation.getTranslation().y).toBe(10);
@@ -200,7 +200,7 @@ describe("hierarchical selection rules", () => {
 
     board.selection.add(group);
     board.selection.add(outside);
-    board.selection.transformMany(board.selection.getManyItemsTranslation(25, 0), Date.now());
+    board.selection.moveMany(board.selection.getManyItemsMove(25, 0), Date.now());
 
     expect(child.getWorldMatrix().translateX).toBe(childBefore.translateX + 25);
     expect(outside.transformation.getTranslation().x).toBe(outsideBefore.x + 25);

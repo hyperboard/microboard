@@ -1,4 +1,4 @@
-import { MatrixData, TransformationOperation } from "./TransformationOperations";
+import { MatrixData, TransformationOperation, MoveOperation, SetPlacementOperation } from "./TransformationOperations";
 
 interface ItemLike {
 	getId(): string;
@@ -118,5 +118,23 @@ export const transformOps = {
 			item: idsOf(items),
 			locked,
 		} as TransformationOperation;
+	},
+
+	move(items: MoveOperation["items"], timeStamp?: number): TransformationOperation {
+		return {
+			class: "Transformation",
+			method: "move",
+			items,
+			timeStamp,
+		};
+	},
+
+	setPlacement(items: SetPlacementOperation["items"], timeStamp?: number): TransformationOperation {
+		return {
+			class: "Transformation",
+			method: "setPlacement",
+			items,
+			timeStamp,
+		};
 	},
 };

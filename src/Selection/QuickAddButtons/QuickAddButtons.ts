@@ -187,15 +187,18 @@ export function getQuickAddButtons(
       const newItemMbr = newItem.getMbr();
       const scaleX = newItemMbr.getWidth() / 100;
       const scaleY = newItemMbr.getHeight() / 100;
-      shapeData.transformation = {
-        isLocked: false,
-        rotate: 0,
-        translateX: 0,
-        translateY: 0,
-        ...newItemData.transformation,
-        scaleX: scaleX,
-        scaleY: scaleY,
-      };
+      if (newItemData.transformation) {
+        shapeData.transformation = {
+          isLocked: newItemData.transformation.isLocked,
+          rotate: newItemData.transformation.rotate,
+          translateX: newItemData.transformation.translateX,
+          translateY: newItemData.transformation.translateY,
+          shearX: newItemData.transformation.shearX,
+          shearY: newItemData.transformation.shearY,
+          scaleX: scaleX,
+          scaleY: scaleY,
+        };
+      }
       newItemPlaceholder = board.createItem(newItem.getId(), shapeData);
     }
 

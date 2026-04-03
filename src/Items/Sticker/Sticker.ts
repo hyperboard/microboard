@@ -411,6 +411,7 @@ export class Sticker extends BaseItem<Sticker> {
     timeStamp: number
   ): { matrix: Matrix; mbr: Mbr } {
     const res = getProportionalResize(resizeType, pointer, mbr, opposite);
+    const prevWorld = (this as unknown as BaseItem).getWorldMatrix().getMatrixData();
 
     if (["left", "right"].indexOf(resizeType) > -1) {
       const d = startMbr.getWidth() / startMbr.getHeight();
@@ -430,36 +431,39 @@ export class Sticker extends BaseItem<Sticker> {
 
       const startWidth = this.getMbr().getWidth();
       if (needGrow) {
-        this.apply(transformOps.scaleBy(this.id, 1.33, 1, timeStamp));
+        const world = (this as unknown as BaseItem).getWorldMatrix().copy();
+        world.scaleX *= 1.33;
         if (resizeType === "left") {
-          this.apply(transformOps.translateBy(this.id,
-            startWidth - this.getMbr().getWidth(),
-            0,
-            timeStamp
-          ));
+          world.translateX += startWidth - startWidth * 1.33;
         }
+        this.apply(transformOps.move([{
+          id: this.id,
+          worldMatrix: world.getMatrixData(),
+          prevWorldMatrix: prevWorld,
+        }], timeStamp));
       } else if (needShrink) {
-        this.apply(transformOps.scaleBy(this.id, 1 / 1.33, 1, timeStamp));
+        const world = (this as unknown as BaseItem).getWorldMatrix().copy();
+        world.scaleX /= 1.33;
         if (resizeType === "left") {
-          this.apply(transformOps.translateBy(this.id,
-            startWidth - this.getMbr().getWidth(),
-            0,
-            timeStamp
-          ));
+          world.translateX += startWidth - startWidth / 1.33;
         }
+        this.apply(transformOps.move([{
+          id: this.id,
+          worldMatrix: world.getMatrixData(),
+          prevWorldMatrix: prevWorld,
+        }], timeStamp));
       }
     } else {
-      this.apply(transformOps.scaleByTranslateBy(this.id,
-        {
-          x: res.matrix.scaleX,
-          y: res.matrix.scaleY,
-        },
-        {
-          x: res.matrix.translateX,
-          y: res.matrix.translateY,
-        },
-        timeStamp
-      ));
+      const world = (this as unknown as BaseItem).getWorldMatrix().copy();
+      world.translateX += res.matrix.translateX;
+      world.translateY += res.matrix.translateY;
+      world.scaleX *= res.matrix.scaleX;
+      world.scaleY *= res.matrix.scaleY;
+      this.apply(transformOps.move([{
+        id: this.id,
+        worldMatrix: world.getMatrixData(),
+        prevWorldMatrix: prevWorld,
+      }], timeStamp));
     }
     res.mbr = this.getMbr();
     this.saveStickerData();

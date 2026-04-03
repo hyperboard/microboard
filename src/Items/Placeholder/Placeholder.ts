@@ -262,30 +262,29 @@ export class Placeholder extends BaseItem<Placeholder> {
         return points;
     }
 
-    doResize(
-        resizeType: ResizeType,
-        pointer: Point,
-        mbr: Mbr,
-        opposite: Point,
-        startMbr: Mbr,
-        timeStamp: number
-    ): { matrix: Matrix; mbr: Mbr } {
-        const res = getResize(resizeType, pointer, mbr, opposite);
+  doResize(
+    resizeType: ResizeType,
+    pointer: Point,
+    mbr: Mbr,
+    opposite: Point,
+    _startMbr: Mbr,
+    timeStamp: number
+  ): { matrix: Matrix; mbr: Mbr } {
+    const res = getResize(resizeType, pointer, mbr, opposite);
+    const prevWorld = this.getWorldMatrix().getMatrixData();
+    const worldMatrix = this.getWorldMatrix().copy();
+    worldMatrix.translate(res.matrix.translateX, res.matrix.translateY);
+    worldMatrix.scale(res.matrix.scaleX, res.matrix.scaleY);
 
-        this.apply(transformOps.scaleByTranslateBy(this.id,
-            {
-                x: res.matrix.scaleX,
-                y: res.matrix.scaleY,
-            },
-            {
-                x: res.matrix.translateX,
-                y: res.matrix.translateY,
-            },
-            timeStamp
-        ));
-        res.mbr = this.getMbr();
-        return res;
-    }
+    this.apply(transformOps.move([{
+      id: this.id,
+      worldMatrix: worldMatrix.getMatrixData(),
+      prevWorldMatrix: prevWorld,
+    }], timeStamp));
+
+    res.mbr = this.getMbr();
+    return res;
+  }
 
     private transformPath(): void {
         this.path = Shapes[this.shapeType].createPath(this.mbr) as Path;

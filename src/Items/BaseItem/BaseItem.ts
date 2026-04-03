@@ -18,12 +18,13 @@ import { BaseItemOperation } from "./BaseItemOperation";
 import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
 import { Point } from "../Point";
 import { Matrix } from "../Transformation/Matrix";
-import { TransformationOperation } from "../Transformation/TransformationOperations";
+import { TransformationOperation, MoveItem, SetPlacementItem } from "../Transformation/TransformationOperations";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { TransformParams, TransformResult } from "./TransformContext";
 import { GeometricNormal } from "../GeometricNormal";
 
 import { getResizeType, ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
+import { transformOps } from "../Transformation/transformOps";
 import type { ItemType } from "Items/Item";
 import { toLocalTransformOp } from "./toLocalTransformOp";
 
@@ -32,6 +33,7 @@ export interface BaseItemData {
 	transformation?: TransformationData;
 	linkTo?: string;
 	childIds?: string[];
+	parent?: string;
 	[key: string]: unknown;
 }
 
@@ -165,18 +167,24 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		return this.index.items.listAll().map(item => item.getId());
 	}
 
+	/** @deprecated Use transformOps.setPlacement instead */
 	addChildItems(children: BaseItem[]): void {
 		if (!this.index || children.length === 0) {
 			return;
 		}
-		this.emit({
-			class: this.itemType,
-			method: "addChildren",
-			item: [this.getId()],
-			newData: { childIds: children.map(child => child.getId()) },
-		});
+		const timeStamp = Date.now();
+		const items = children.map(child => ({
+			id: child.getId(),
+			parentId: this.getId(),
+			zOrderIndex: 0,
+			worldMatrix: child.getWorldMatrix(),
+			prevParentId: child.parent,
+			prevWorldMatrix: child.getWorldMatrix(),
+		}));
+		this.emitForManyItems(transformOps.setPlacement(items, timeStamp));
 	}
 
+	/** @deprecated Use transformOps.setPlacement instead */
 	removeChildItems(children: BaseItem[] | BaseItem): void {
 		if (!this.index) {
 			return;
@@ -185,12 +193,16 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		if (childrenArr.length === 0) {
 			return;
 		}
-		this.emit({
-			class: this.itemType,
-			method: "removeChildren",
-			item: [this.getId()],
-			newData: { childIds: childrenArr.map(child => child.getId()) },
-		});
+		const timeStamp = Date.now();
+		const items = childrenArr.map(child => ({
+			id: child.getId(),
+			parentId: "Board",
+			zOrderIndex: 0,
+			worldMatrix: child.getWorldMatrix(),
+			prevParentId: this.getId(),
+			prevWorldMatrix: child.getWorldMatrix(),
+		}));
+		this.emitForManyItems(transformOps.setPlacement(items, timeStamp));
 	}
 
 	rotate(degree: number): void {
@@ -200,6 +212,57 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 			item: [this.id],
 			degree,
 		});
+	}
+
+	applySetPlacement(op: SetPlacementItem): void {
+		if (this.parent !== op.parentId) {
+			const currentParentId = this.parent;
+			const currentParent = currentParentId !== "Board"
+					? (this.board.items.getById(currentParentId) as BaseItem | undefined)
+					: undefined;
+			const sourceIndex = currentParent?.index || this.board.items.index;
+			sourceIndex.remove(this as any, true);
+
+			this.parent = op.parentId;
+			this.onParentChanged(op.parentId);
+
+			const newParent = op.parentId !== "Board"
+					? (this.board.items.getById(op.parentId) as BaseItem | undefined)
+					: undefined;
+			const targetIndex = newParent?.index || this.board.items.index;
+			targetIndex.insert(this as any);
+		}
+
+		const parentMatrix = this.getParentWorldMatrix();
+		const localMatrix = Matrix.fromData(op.worldMatrix).toLocalOf(parentMatrix);
+
+		this.transformation.apply({
+			class: "Transformation",
+			method: "setLocalMatrix",
+			item: [this.id],
+			matrix: localMatrix,
+		} as any);
+
+		if (op.zOrderIndex !== undefined) {
+			const currentParentId = this.parent;
+			const currentParent = currentParentId !== "Board"
+					? (this.board.items.getById(currentParentId) as BaseItem | undefined)
+					: undefined;
+			const index = currentParent?.index || this.board.items.index;
+			index.moveToZIndex(this as any, op.zOrderIndex);
+		}
+	}
+
+	applyMove(op: MoveItem): void {
+		const parentMatrix = this.getParentWorldMatrix();
+		const localMatrix = Matrix.fromData(op.worldMatrix).toLocalOf(parentMatrix);
+
+		this.transformation.apply({
+			class: "Transformation",
+			method: "setLocalMatrix",
+			item: [this.id],
+			matrix: localMatrix,
+		} as any);
 	}
 
 	emitNesting(children: BaseItem[]): void {
@@ -335,6 +398,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		return false;
 	}
 
+	/** @deprecated Use applySetPlacement instead */
 	applyAddChildren(childIds: string[]): void {
 		if (!this.index) {
 			return;
@@ -379,6 +443,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		this.subject.publish(this as unknown as T);
 	}
 
+	/** @deprecated Use applySetPlacement instead */
 	applyRemoveChildren(childIds: string[]): void {
 		if (!this.index) {
 			return;
@@ -446,6 +511,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 			transformation: this.transformation.serialize(),
 			itemType: this.itemType,
 			childIds: this.childIds,
+			parent: this.parent,
 			resizeEnabled: this.resizeEnabled,
 		};
 	}
@@ -456,7 +522,10 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	emit(operation: Operation | BaseOperation): void {
 		if (this.board.events) {
-			const command = new BaseCommand(this.board, [this.getId()], operation as Operation);
+			if (!BaseItem.createCommand) {
+				throw new Error("BaseItem.createCommand is not initialized");
+			}
+			const command = BaseItem.createCommand(this.board, operation as Operation);
 			command.apply();
 			this.board.events.emit(operation as Operation, command);
 		} else {
@@ -465,15 +534,16 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	emitForManyItems(operation: Operation | BaseOperation): void {
-		if (!this.board.events) {
-			return;
+		if (this.board.events) {
+			if (!BaseItem.createCommand) {
+				throw new Error("BaseItem.createCommand is not initialized");
+			}
+			const command = BaseItem.createCommand(this.board, operation as Operation);
+			command.apply();
+			this.board.events.emit(operation as Operation, command);
+		} else {
+			this.board.apply(operation as Operation);
 		}
-		if (!BaseItem.createCommand) {
-			throw new Error("BaseItem.createCommand is not initialized");
-		}
-		const command = BaseItem.createCommand(this.board, operation as Operation);
-		command.apply();
-		this.board.events.emit(operation as Operation, command);
 	}
 
 	disableResize(items: BaseItem[]): void {
@@ -524,6 +594,19 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	apply(op: Operation | BaseItemOperation | BaseOperation): void {
 		op = op as Operation;
+
+		if (op.class === "Transformation") {
+			if (op.method === "move") {
+				const itemOp = (op as any).items.find((i: any) => i.id === this.id);
+				if (itemOp) this.applyMove(itemOp);
+				return;
+			}
+			if (op.method === "setPlacement") {
+				const itemOp = (op as any).items.find((i: any) => i.id === this.id);
+				if (itemOp) this.applySetPlacement(itemOp);
+				return;
+			}
+		}
 
 		if (op.method === "setProperty") {
 			const setPropOp = op as SetPropertyOperation;

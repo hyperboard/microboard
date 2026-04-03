@@ -516,14 +516,17 @@ export class Shape extends BaseItem<Shape> {
   ): { matrix: Matrix; mbr: Mbr } {
     const res = getResize(resizeType, pointer, mbr, opposite);
 
-    this.apply(transformOps.applyMatrix(this.id, {
-      translateX: res.matrix.translateX,
-      translateY: res.matrix.translateY,
-      scaleX: res.matrix.scaleX,
-      scaleY: res.matrix.scaleY,
-      shearX: 0,
-      shearY: 0,
-    }, timeStamp));
+    const worldMatrix = (this as any).getWorldMatrix().copy();
+    worldMatrix.translateX += res.matrix.translateX;
+    worldMatrix.translateY += res.matrix.translateY;
+    worldMatrix.scaleX *= res.matrix.scaleX;
+    worldMatrix.scaleY *= res.matrix.scaleY;
+
+    this.apply(transformOps.move([{
+        id: this.id,
+        worldMatrix: worldMatrix.getMatrixData(),
+        prevWorldMatrix: (this as any).getWorldMatrix().getMatrixData(),
+    }], timeStamp));
 
     res.mbr = this.getMbr();
     return res;

@@ -1,3 +1,5 @@
+import { MoveItem } from "Items/Transformation/TransformationOperations";
+import { transformOps } from "Items/Transformation/transformOps";
 import { safeRequestAnimationFrame } from "api/safeRequestAnimationFrame";
 import { Board } from "Board";
 import { Events, Operation, Command, BaseOperation } from "Events";
@@ -88,7 +90,6 @@ export class BoardSelection {
   memorySnapshot: SelectionSnapshot | null = null;
 
   constructor(private board: Board) {
-    console.log("[DEBUG] BoardSelection initialized - version check OK");
     safeRequestAnimationFrame(this.updateScheduledObservers);
     this.tool = new SelectionTransformer(board, this);
     this.quickAddButtons = getQuickAddButtons(this, board);
@@ -1121,28 +1122,31 @@ export class BoardSelection {
     }
   }
 
-  /** Emits applyMatrix with multiple items */
-  transformMany(items: ApplyMatrixItem[], timeStamp?: number): void {
+  /** transforms selected items (container children follow via local transform hierarchy) */
+  moveMany(items: MoveItem[], timeStamp?: number): void {
     this.shouldPublish = false;
-    this.emit({
-      class: "Transformation",
-      method: "applyMatrix",
-      items,
-      timeStamp,
-    });
+    this.emit(transformOps.move(items, timeStamp));
     this.shouldPublish = true;
   }
 
   /** transforms selected items (container children follow via local transform hierarchy) */
-  getManyItemsTranslation(
+  getManyItemsMove(
     x: number,
     y: number,
     unselectedItem?: Item
-  ): ApplyMatrixItem[] {
-    const items: ApplyMatrixItem[] = [];
+  ): MoveItem[] {
+    const items: MoveItem[] = [];
 
-    const addItem = (itemId: string): void => {
-      items.push({ id: itemId, matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } });
+    const addItem = (item: BaseItem): void => {
+      const worldMatrix = item.getWorldMatrix();
+      const newWorld = worldMatrix.copy();
+      newWorld.translateX += x;
+      newWorld.translateY += y;
+      items.push({
+        id: item.getId(),
+        worldMatrix: newWorld.getMatrixData(),
+        prevWorldMatrix: worldMatrix.getMatrixData(),
+      });
     };
 
     // Build a set of selected IDs so we can detect when a child's container is
@@ -1161,12 +1165,12 @@ export class BoardSelection {
       if (item.parent !== "Board" && selectedIds.has(item.parent)) {
         return;
       }
-      addItem(item.getId());
+      addItem(item as BaseItem);
       const followedComments = this.board.items
         .getComments()
         .filter((comment) => comment.getItemToFollow() === item.getId());
       for (const comment of followedComments) {
-        addItem(comment.getId());
+        addItem(comment as BaseItem);
       }
     };
 

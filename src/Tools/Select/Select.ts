@@ -237,10 +237,18 @@ export class Select extends Tool {
 						: item.getMbr().getCenter().y);
 
 				if (Array.isArray(item)) {
-					const translation = this.board.selection.getManyItemsTranslation(translateX, translateY);
-					this.board.selection.transformMany(translation, this.beginTimeStamp);
+					const translation = this.board.selection.getManyItemsMove(translateX, translateY);
+					this.board.selection.moveMany(translation, this.beginTimeStamp);
 				} else {
-					item.apply(transformOps.translateBy(item.id, translateX, translateY, this.beginTimeStamp));
+					const worldMatrix = (item as BaseItem).getWorldMatrix();
+					const newWorld = worldMatrix.copy();
+					newWorld.translateX += translateX;
+					newWorld.translateY += translateY;
+					item.apply(transformOps.move([{
+						id: item.getId(),
+						worldMatrix: newWorld.getMatrixData(),
+						prevWorldMatrix: worldMatrix.getMatrixData(),
+					}], this.beginTimeStamp));
 				}
 			}
 		}
@@ -488,9 +496,9 @@ export class Select extends Tool {
 				// }
 				this.canvasDrawer.translateCanvasBy(x, y);
 				const { translateX, translateY } = this.canvasDrawer.getMatrix();
-				const translation = selection.getManyItemsTranslation(translateX, translateY);
+				const translation = selection.getManyItemsMove(translateX, translateY);
 				this.canvasDrawer.highlightNesting();
-				selection.transformMany(translation, this.beginTimeStamp);
+				selection.moveMany(translation, this.beginTimeStamp);
 				this.canvasDrawer.clearCanvasAndKeys();
 				this.debounceUpd.setFalse();
 				return false;
@@ -498,7 +506,7 @@ export class Select extends Tool {
 				if (this.handleSnapping(this.board.selection.items.list())) {
 					return false;
 				}
-				const translation = selection.getManyItemsTranslation(x, y);
+				const translation = selection.getManyItemsMove(x, y);
 
 				const translationKeys = translation.map(i => i.id);
 				const commentsSet = new Set(this.board.items.getComments().map(comment => comment.getId()));
@@ -515,7 +523,7 @@ export class Select extends Tool {
 						return false;
 					}
 				} else {
-					selection.transformMany(translation, this.beginTimeStamp);
+					selection.moveMany(translation, this.beginTimeStamp);
 				}
 			}
 
@@ -528,8 +536,8 @@ export class Select extends Tool {
 			// translate item without selection
 			const { downOnItem: draggingItem } = this;
 			this.board.selection.removeAll();
-			const translation = this.board.selection.getManyItemsTranslation(x, y, draggingItem);
-			this.board.selection.transformMany(translation, this.beginTimeStamp);
+			const translation = this.board.selection.getManyItemsMove(x, y, draggingItem);
+			this.board.selection.moveMany(translation, this.beginTimeStamp);
 
 			if (this.handleSnapping(this.downOnItem)) {
 				return false;
@@ -835,11 +843,11 @@ export class Select extends Tool {
 		});
 		// this.board.selection.removeAll();
 		if (this.canvasDrawer.getLastCreatedCanvas()) {
-			const translation = this.board.selection.getManyItemsTranslation(
+			const translation = this.board.selection.getManyItemsMove(
 				this.canvasDrawer.getMatrix().translateX,
 				this.canvasDrawer.getMatrix().translateY
 			);
-			this.board.selection.transformMany(translation, this.beginTimeStamp);
+			this.board.selection.moveMany(translation, this.beginTimeStamp);
 		}
 
 		if (this.isMovedAfterDown && this.downOnItem) {

@@ -103,7 +103,7 @@ export function transformItems({
       isHeight,
       isShiftPressed,
     });
-    selection.transformMany(translation, beginTimeStamp);
+    selection.moveMany(translation, beginTimeStamp);
     canvasDrawer.clearCanvasAndKeys();
     return resize.mbr;
   }
@@ -142,7 +142,7 @@ export function transformItems({
         isHeight,
         isShiftPressed,
       });
-      selection.transformMany(translation, beginTimeStamp);
+      selection.moveMany(translation, beginTimeStamp);
       return null;
     }
 
@@ -159,7 +159,7 @@ export function transformItems({
     isHeight,
     isShiftPressed,
   });
-  selection.transformMany(translation, beginTimeStamp);
+  selection.moveMany(translation, beginTimeStamp);
 
   if (translation.length > 10) {
     canvasDrawer.updateCanvasAndKeys(resize.mbr, translation, resize.matrix);

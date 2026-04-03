@@ -86,6 +86,8 @@ export class Transformation {
 			translateY: this._matrix.translateY,
 			scaleX: this._matrix.scaleX,
 			scaleY: this._matrix.scaleY,
+			shearX: this._matrix.shearX,
+			shearY: this._matrix.shearY,
 			rotate: this.rotate,
 			isLocked: this.isLocked,
 		};
@@ -112,6 +114,12 @@ export class Transformation {
 		if (data.scaleY) {
 			this._matrix.scaleY = data.scaleY;
 		}
+		if (data.shearX !== undefined) {
+			this._matrix.shearX = data.shearX;
+		}
+		if (data.shearY !== undefined) {
+			this._matrix.shearY = data.shearY;
+		}
 		if (data.isLocked) {
 			this.isLocked = data.isLocked;
 		}
@@ -122,13 +130,15 @@ export class Transformation {
 	}
 
 	copy(id?: string): Transformation {
-		const { translateX, translateY, scaleX, scaleY } = this._matrix;
+		const { translateX, translateY, scaleX, scaleY, shearX, shearY } = this._matrix;
 		const { rotate } = this;
 		return new Transformation(id || '', this.events).deserialize({
 			translateX,
 			translateY,
 			scaleX,
 			scaleY,
+			shearX,
+			shearY,
 			rotate,
 			isLocked: false,
 		});

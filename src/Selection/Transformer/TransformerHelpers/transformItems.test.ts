@@ -51,7 +51,7 @@ describe("transformItems", () => {
       items: {
         list: () => [] as Item[],
       },
-      transformMany: jest.fn(),
+      moveMany: jest.fn(),
     } as unknown as Selection;
 
     // Mock CanvasDrawer
@@ -89,6 +89,7 @@ describe("transformItems", () => {
       itemType: "Image",
       getId: () => "image1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
     } as unknown as ImageItem;
 
     // Mock Sticker
@@ -96,6 +97,7 @@ describe("transformItems", () => {
       itemType: "Sticker",
       getId: () => "sticker1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
     } as unknown as Sticker;
 
     // Mock RichText
@@ -103,6 +105,7 @@ describe("transformItems", () => {
       itemType: "RichText",
       getId: () => "richtext1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
     } as unknown as RichText;
 
     // Mock Frame
@@ -110,6 +113,7 @@ describe("transformItems", () => {
       itemType: "Frame",
       getId: () => "frame1",
       getMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
       getCanChangeRatio: () => true,
     } as unknown as Frame;
 
@@ -136,7 +140,7 @@ describe("transformItems", () => {
       setSnapCursorPos: jest.fn(),
     });
 
-    expect(selection.transformMany).toHaveBeenCalled();
+    expect(selection.moveMany).toHaveBeenCalled();
     expect(result).toBeInstanceOf(Mbr);
   });
 
@@ -159,7 +163,7 @@ describe("transformItems", () => {
       setSnapCursorPos: jest.fn(),
     });
 
-    expect(selection.transformMany).toHaveBeenCalled();
+    expect(selection.moveMany).toHaveBeenCalled();
     expect(result).toBeInstanceOf(Mbr);
   });
 
@@ -214,9 +218,9 @@ describe("transformItems", () => {
   });
 
   it("should handle canvas drawing for large transformations", () => {
-    const mockTranslation = { item1: { x: 10, y: 10 } };
-    jest.spyOn(selection, "transformMany").mockImplementation(() => {
-      Object.assign(mockTranslation, { item2: { x: 20, y: 20 } });
+    const mockTranslation = [{ id: "item1", worldMatrix: new Matrix().getMatrixData(), prevWorldMatrix: new Matrix().getMatrixData() }];
+    jest.spyOn(selection, "moveMany").mockImplementation(() => {
+      mockTranslation.push({ id: "item2", worldMatrix: new Matrix().getMatrixData(), prevWorldMatrix: new Matrix().getMatrixData() });
     });
 
     const result = transformItems({
@@ -266,6 +270,6 @@ describe("transformItems", () => {
     });
 
     expect(result).toBeInstanceOf(Mbr);
-    expect(selection.transformMany).toHaveBeenCalled();
+    expect(selection.moveMany).toHaveBeenCalled();
   });
 });

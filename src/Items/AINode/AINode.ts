@@ -381,9 +381,7 @@ export class AINode extends BaseItem<AINode> {
       followingComments,
       single: this as any,
     });
-    return {
-      resizedMbr: res,
-    };
+    return res;
   }
 
   isBusy(): boolean {

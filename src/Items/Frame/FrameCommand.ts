@@ -60,36 +60,28 @@ export class FrameCommand implements Command {
 					};
 				});
 			case "addChild":
-				return frame.map(frame => {
-					// REFACTOR add child to mapItems
-					return {
-						item: frame,
-						operation: {
-							...this.operation,
-							children: frame.getChildrenIds(),
-						},
-					};
-				});
 			case "removeChild":
-				return frame.map(frame => {
-					return {
-						item: frame,
-						operation: {
-							...this.operation,
-							children: frame.getChildrenIds(),
-						},
-					};
-				});
 			case "addChildren":
-			case "removeChildren":
+			case "removeChildren": {
+				const op = this.operation as any;
+				const reverseMethod = ({
+					"addChild": "removeChild",
+					"removeChild": "addChild",
+					"addChildren": "removeChildren",
+					"removeChildren": "addChildren",
+				} as Record<string, string>)[op.method];
 				return frame.map(item => {
 					return {
 						item,
 						operation: {
-							...this.operation
-						},
+							class: "Frame",
+							method: reverseMethod,
+							item: op.item,
+							childId: op.childId,
+						} as FrameOperation,
 					};
 				});
+			}
 		}
 	}
 }

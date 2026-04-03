@@ -1,13 +1,12 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { Board } from "Board";
 import { initNodeSettings } from "api/initNodeSettings";
-import { BaseItem } from "../BaseItem/BaseItem";
 import { Mbr } from "../Mbr/Mbr";
 import { Point } from "../Point";
 import { Shape } from "../Shape";
 import { transformOps } from "../Transformation/transformOps";
 import { Connector } from ".";
-import { FixedPoint } from "./ControlPoint";
+import { FixedPoint, BoardPoint } from "./ControlPoint";
 
 beforeAll(() => {
 	initNodeSettings();
@@ -16,7 +15,7 @@ beforeAll(() => {
 describe("of connectors", () => {
 	it("resolves the start point item via optionalFindItemFn", () => {
 		const board = new Board();
-		const shape = new Shape(board, "shape-1");
+		const shape = board.createItem("shape-1", { itemType: "Shape", shapeType: "Rectangle" } as any) as Shape;
 		const connector = new Connector(board);
 		const fixedPoint = new FixedPoint(shape, new Point(0, shape.getMbr().getHeight() / 2));
 
@@ -25,7 +24,7 @@ describe("of connectors", () => {
 			startPoint: fixedPoint.serialize(),
 			endPoint: { pointType: "Board", x: 100, y: 100 },
 			optionalFindItemFn: (id: string) => (id === shape.getId() ? shape : undefined),
-		});
+		} as any);
 
 		const startPoint = connector.getStartPoint();
 		expect(startPoint.pointType).toBe("Fixed");
@@ -34,10 +33,8 @@ describe("of connectors", () => {
 
 	it("keeps connector attachment stable when translating a group", () => {
 		const board = new Board();
-		const startItem = new BaseItem(board, "start-item");
-		const endItem = new BaseItem(board, "end-item");
-		startItem.setMbr(new Mbr(0, 0, 100, 100));
-		endItem.setMbr(new Mbr(200, 0, 300, 100));
+		const startItem = board.createItem("start-item", { itemType: "Shape", shapeType: "Rectangle", transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0, rotate: 0, isLocked: false } } as any) as Shape;
+		const endItem = board.createItem("end-item", { itemType: "Shape", shapeType: "Rectangle", transformation: { translateX: 200, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0, rotate: 0, isLocked: false } } as any) as Shape;
 		board.index.insert(startItem);
 		board.index.insert(endItem);
 
@@ -46,7 +43,7 @@ describe("of connectors", () => {
 			itemType: "Connector",
 			startPoint: new FixedPoint(startItem, new Point(100, 50)).serialize(),
 			endPoint: new FixedPoint(endItem, new Point(0, 50)).serialize(),
-		});
+		} as any);
 		board.index.insert(connector);
 
 		const group = board.group([startItem, endItem, connector]);
@@ -81,10 +78,8 @@ describe("of connectors", () => {
 
 	it("restores grouped connector endpoints after snapshot reload", () => {
 		const board = new Board();
-		const startItem = new BaseItem(board, "start-item");
-		const endItem = new BaseItem(board, "end-item");
-		startItem.setMbr(new Mbr(0, 0, 100, 100));
-		endItem.setMbr(new Mbr(200, 0, 300, 100));
+		const startItem = board.createItem("start-item", { itemType: "Shape", shapeType: "Rectangle", transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0, rotate: 0, isLocked: false } } as any) as Shape;
+		const endItem = board.createItem("end-item", { itemType: "Shape", shapeType: "Rectangle", transformation: { translateX: 200, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0, rotate: 0, isLocked: false } } as any) as Shape;
 		board.index.insert(startItem);
 		board.index.insert(endItem);
 
@@ -93,36 +88,45 @@ describe("of connectors", () => {
 			itemType: "Connector",
 			startPoint: new FixedPoint(startItem, new Point(100, 50)).serialize(),
 			endPoint: new FixedPoint(endItem, new Point(0, 50)).serialize(),
-		});
+		} as any);
 		board.index.insert(connector);
-		board.group([startItem, endItem, connector]);
 
-		const snapshot = {
-			items: board.serialize(),
+		const group = board.group([startItem, endItem, connector]);
+
+		// Snapshot before movement (but after grouping)
+		const snapshotStr = JSON.stringify(board.index.copy());
+
+		group.apply(transformOps.translateBy(group, 150, 80));
+
+		const startMoved = connector.getStartPoint().copy();
+		const endMoved = connector.getEndPoint().copy();
+
+		// Simulate reload
+		const boardRestored = new Board();
+		boardRestored.deserialize({
+			items: JSON.parse(snapshotStr),
 			events: [],
-		};
+			lastIndex: 0
+		});
 
-		const restoredBoard = new Board();
-		restoredBoard.deserialize(snapshot);
-		const restoredConnector = restoredBoard.items.getById("connector-1") as Connector;
+		const restoredConnector = boardRestored.items.getById("connector-1") as Connector;
 		const restoredStart = restoredConnector.getStartPoint();
 		const restoredEnd = restoredConnector.getEndPoint();
 
-		expect(restoredStart.serialize()).toEqual({
-			pointType: "Fixed",
-			itemId: "start-item",
-			relativeX: 100,
-			relativeY: 50,
-		});
-		expect(restoredEnd.serialize()).toEqual({
-			pointType: "Fixed",
-			itemId: "end-item",
-			relativeX: 0,
-			relativeY: 50,
-		});
+		expect(restoredConnector).toBeDefined();
+		expect(restoredStart.pointType).toBe("Fixed");
+		expect(restoredEnd.pointType).toBe("Fixed");
+		
+		// The restored points should NOT be at 0,0 because the items have fixed positions in the snapshot
 		expect(restoredStart.x).not.toBe(0);
 		expect(restoredStart.y).not.toBe(0);
 		expect(restoredEnd.x).not.toBe(0);
 		expect(restoredEnd.y).not.toBe(0);
+
+		// They should match the original pre-move coordinates (which were 100,50 and 200,50)
+		expect(restoredStart.x).toBe(100);
+		expect(restoredStart.y).toBe(50);
+		expect(restoredEnd.x).toBe(200);
+		expect(restoredEnd.y).toBe(50);
 	});
 });

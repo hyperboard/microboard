@@ -591,17 +591,20 @@ export class AlignmentHelper {
     }
 
     if (Array.isArray(item)) {
-      const translation = this.board.selection.getManyItemsTranslation(x, y);
-      this.board.selection.transformMany(translation, timeStamp);
+      const translation = this.board.selection.getManyItemsMove(x, y);
+      this.board.selection.moveMany(translation, timeStamp);
       return;
     }
 
     if ("index" in item && item.index) {
-      const translation = this.board.selection.getManyItemsTranslation(x, y);
-      this.board.selection.transformMany(translation, timeStamp);
+      const translation = this.board.selection.getManyItemsMove(x, y);
+      this.board.selection.moveMany(translation, timeStamp);
     } else {
       const id = item.getId();
-      this.board.selection.transformMany([{ id, matrix: { translateX: x, translateY: y, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0 } }], timeStamp);
+      const world = (item as BaseItem).getWorldMatrix().copy();
+      const prevWorld = world.getMatrixData();
+      world.translate(x, y);
+      this.board.selection.moveMany([{ id, worldMatrix: world.getMatrixData(), prevWorldMatrix: prevWorld }], timeStamp);
     }
   }
 
@@ -622,12 +625,12 @@ export class AlignmentHelper {
     } else if (isCanvasNeedsUpdate) {
       this.canvasDrawer.translateCanvasBy(x, y);
       const { translateX, translateY } = this.canvasDrawer.getMatrix();
-      const translation = this.board.selection.getManyItemsTranslation(
+      const translation = this.board.selection.getManyItemsMove(
         translateX,
         translateY
       );
       this.canvasDrawer.highlightNesting();
-      this.board.selection.transformMany(translation, timeStamp);
+      this.board.selection.moveMany(translation, timeStamp);
       this.canvasDrawer.clearCanvasAndKeys();
       this.debounceUpd.setFalse();
     }

@@ -158,7 +158,21 @@ export class SimpleSpatialIndex implements ISpatialIndex {
   }
 
   getById(id: string): Item | undefined {
-    return this.itemsArray.find(item => item.getId() === id);
+    const found = this.itemsArray.find(item => item.getId() === id);
+    if (found) {
+      return found;
+    }
+
+    for (const item of this.itemsArray) {
+      if ("index" in item && item.index) {
+        const childFound = item.index.getById(id);
+        if (childFound) {
+          return childFound;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   findById(id: string): Item | undefined {

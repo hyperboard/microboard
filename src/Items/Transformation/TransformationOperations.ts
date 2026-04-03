@@ -78,12 +78,42 @@ export interface ApplyMatrixItem {
 	matrix: MatrixData;
 }
 
+/** @deprecated Use MoveOperation or SetPlacementOperation instead */
 export interface ApplyMatrixOperation {
 	class: "Transformation";
 	method: "applyMatrix";
 	items: ApplyMatrixItem[];
 	timeStamp?: number;
 	silent?: boolean;
+}
+
+export interface MoveItem {
+	id: string;
+	worldMatrix: MatrixData;
+	prevWorldMatrix: MatrixData;
+}
+
+export interface MoveOperation {
+	class: "Transformation";
+	method: "move";
+	items: MoveItem[];
+	timeStamp?: number;
+}
+
+export interface SetPlacementItem {
+	id: string;
+	parentId: string;
+	zOrderIndex: number;
+	worldMatrix: MatrixData;
+	prevParentId: string;
+	prevWorldMatrix: MatrixData;
+}
+
+export interface SetPlacementOperation {
+	class: "Transformation";
+	method: "setPlacement";
+	items: SetPlacementItem[];
+	timeStamp?: number;
 }
 
 export interface TransformManyItems {
@@ -103,6 +133,8 @@ export interface TransformMany {
 
 export type TransformationOperation =
 	| ApplyMatrixOperation
+	| MoveOperation
+	| SetPlacementOperation
 	| RotateOperation
 	| DeserializeOperation
 	| TransformMany

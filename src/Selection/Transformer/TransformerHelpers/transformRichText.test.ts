@@ -24,7 +24,7 @@ describe("transformRichText", () => {
       },
       selection: {
         shouldRenderItemsMbr: true,
-        transformMany: jest.fn(),
+        moveMany: jest.fn(),
       },
       items: {
         getComments: () => [],
@@ -49,13 +49,17 @@ describe("transformRichText", () => {
       apply: jest.fn(),
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWorldMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
       getWidth: () => 40,
       getHeight: () => 40,
       getTextString: () => "Short text",
       getScale: () => 1,
+      getFrameType: () => "None",
+      setFrameType: jest.fn(),
       transformation: {
         translateBy: jest.fn(),
         scaleByTranslateBy: jest.fn(),
+        getScale: () => new Point(1, 1),
       },
       editor: {
         setMaxWidth: jest.fn(),
@@ -70,6 +74,7 @@ describe("transformRichText", () => {
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
       getWorldMbr: () => new Mbr(60, 60, 100, 100),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
       getItemToFollow: () => mockRichText.getId(),
     } as unknown as Comment;
 
@@ -92,6 +97,7 @@ describe("transformRichText", () => {
 
     expect(result).toEqual({
       resizedMbr: expect.any(Mbr),
+      translation: [expect.any(Object)],
     });
   });
 
@@ -122,6 +128,7 @@ describe("transformRichText", () => {
       expect(result).toEqual({
         resizedMbr: expect.any(Mbr),
         onPointerUpCb: expect.any(Function),
+        translation: [],
       });
 
       // Test onPointerUp callback
@@ -159,6 +166,7 @@ describe("transformRichText", () => {
       expect(result).toEqual({
         resizedMbr: expect.any(Mbr),
         onPointerUpCb: expect.any(Function),
+        translation: [],
       });
 
       // Test onPointerUp callback
@@ -185,10 +193,11 @@ describe("transformRichText", () => {
       followingComments: [mockComment],
     });
 
-    expect(board.selection.transformMany).toHaveBeenCalled();
-    expect(result).toEqual({
-      resizedMbr: expect.any(Mbr),
-    });
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result.translation).toHaveLength(2); // richText + comment
+      expect(result.translation).toContainEqual(expect.objectContaining({ id: "comment1" }));
+    }
   });
 
   it("should prevent resize when pointer is too close to opposite edge for long text", () => {
@@ -260,6 +269,7 @@ describe("transformRichText", () => {
         expect(result).toEqual({
           resizedMbr: expect.any(Mbr),
           onPointerUpCb: expect.any(Function),
+          translation: [],
         });
       }
     });

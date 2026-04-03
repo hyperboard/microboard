@@ -251,15 +251,15 @@ export class Frame extends BaseItem<Frame> {
       translateY = 0;
     }
 
-    const oldMatrix = this.transformation.toMatrix();
-    this.apply(transformOps.applyMatrix(this.id, {
-      translateX: translateX,
-      translateY: translateY,
-      scaleX: scaleX,
-      scaleY: scaleY,
-      shearX: 0,
-      shearY: 0,
-    }));
+    const prevWorld = this.getWorldMatrix().getMatrixData();
+    const worldMatrix = this.getWorldMatrix().copy();
+    worldMatrix.translate(translateX, translateY);
+    worldMatrix.scale(scaleX, scaleY);
+    this.apply(transformOps.move([{
+      id: this.id,
+      worldMatrix: worldMatrix.getMatrixData(),
+      prevWorldMatrix: prevWorld,
+    }]));
     const newMatrix = this.transformation.toMatrix();
 
 

@@ -3,6 +3,16 @@ import { Board } from "../../../Board";
 import { BaseItem } from "../../BaseItem/BaseItem";
 import { Group } from "../Group";
 import { Mbr } from "../../Mbr/Mbr";
+import { registerItem } from "../../RegisterItem";
+
+class MockBaseItem extends BaseItem {
+  readonly itemType = "BaseItem";
+}
+
+registerItem({
+  item: MockBaseItem as any,
+  defaultData: { itemType: "BaseItem" } as any,
+});
 
 function createItem(
   board: Board,
@@ -12,7 +22,7 @@ function createItem(
   right: number,
   bottom: number
 ): BaseItem {
-  const item = new BaseItem(board, id);
+  const item = new MockBaseItem(board, id);
   item.setMbr(new Mbr(left, top, right, bottom));
   board.index.insert(item);
   return item;

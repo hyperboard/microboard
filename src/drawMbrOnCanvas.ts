@@ -2,7 +2,7 @@ import { Board } from "./Board";
 import { Camera } from "./Camera";
 import { Item, Matrix, Mbr } from "./Items";
 import { DrawingContext } from "./Items/DrawingContext";
-import { ApplyMatrixItem } from "./Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem, MoveItem } from "./Items/Transformation/TransformationOperations";
 import { conf } from "./Settings";
 import { BaseItem } from "./Items/BaseItem/BaseItem";
 
@@ -17,11 +17,11 @@ export interface CanvasDrawer {
 	clearCanvasAndKeys: () => void;
 	updateCanvasAndKeys: (
 		sumMbr: Mbr,
-		translation: ApplyMatrixItem[],
+		translation: MoveItem[],
 		resizingMatrix?: Matrix,
 		actualMbr?: Mbr,
 	) => void;
-	countSumMbr: (translation: ApplyMatrixItem[]) => Mbr | undefined;
+	countSumMbr: (translation: MoveItem[]) => Mbr | undefined;
 	highlightNesting: () => void;
 	getMbr: () => Mbr;
 }
@@ -42,7 +42,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 	function drawMbrOnCanvas(
 		board: Board,
 		mbr: Mbr,
-		translation: ApplyMatrixItem[],
+		translation: MoveItem[],
 		actualMbr?: Mbr,
 	): { canvas: HTMLDivElement; items: Item[] } | undefined {
 		const canvas = document.createElement("canvas");
@@ -287,7 +287,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 
 	function updateCanvasAndKeys(
 		sumMbr: Mbr,
-		translation: ApplyMatrixItem[],
+		translation: MoveItem[],
 		resizingMatrix?: Matrix,
 		actualMbr?: Mbr,
 	): void {
@@ -337,7 +337,7 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 		}
 	}
 
-	function countSumMbr(translation: ApplyMatrixItem[]): Mbr | undefined {
+	function countSumMbr(translation: MoveItem[]): Mbr | undefined {
 		return translation.map(i => i.id).reduce((mbr: Mbr | undefined, id) => {
 			const item = board.items.getById(id);
 			if (item) {

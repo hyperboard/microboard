@@ -348,6 +348,11 @@ export class Board {
       this.findItemAndApply(op.item, (item) => {
         item.apply(op);
       });
+    } else if ("items" in op && Array.isArray(op.items)) {
+      const ids = op.items.map((i: any) => (typeof i === "string" ? i : i.id));
+      this.findItemAndApply(ids, (item) => {
+        item.apply(op);
+      });
     }
   }
 
@@ -378,14 +383,18 @@ export class Board {
 
     arrayed.forEach((item) => {
       const itemCenter = item.getMbr().getCenter();
-      const groupItem = this.items
-        .getGroupItemsInView()
+      const groupsInView = this.items.getGroupItemsInView();
+      
+      const groupItem = groupsInView
         .filter((groupItem) => groupItem !== item)
-        .filter((groupItem) => groupItem.handleNesting(item))
+        .filter((groupItem) => {
+          const canNest = groupItem.handleNesting(item);
+          return canNest;
+        })
         .reduce((acc: BaseItem | undefined, groupItem) => {
           if (
             !acc ||
-            groupItem.getDistanceToPoint(itemCenter) >
+            groupItem.getDistanceToPoint(itemCenter) <
             acc.getDistanceToPoint(itemCenter)
           ) {
             acc = groupItem;
@@ -449,7 +458,7 @@ export class Board {
     const groupData: GroupData = {
       itemType: "Group",
       childIds: items.map((i) => i.getId()),
-      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, rotate: 0, isLocked: false },
+      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0, rotate: 0, isLocked: false },
       isLockedGroup: true,
     };
     this.emit({
@@ -498,7 +507,7 @@ export class Board {
     const groupData: GroupData = {
       itemType: "Group",
       childIds: items.map((i) => i.getId()),
-      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, rotate: 0, isLocked: false },
+      transformation: { translateX: 0, translateY: 0, scaleX: 1, scaleY: 1, shearX: 0, shearY: 0, rotate: 0, isLocked: false },
       isLockedGroup: false,
     };
     this.emit({
@@ -846,7 +855,23 @@ export class Board {
       const itemDataWithChildren = itemData as BaseItemData & { childIds?: string[]; children?: string[] };
       const childIds = itemDataWithChildren.childIds || itemDataWithChildren.children;
       if (childIds) {
-        item.applyAddChildren(childIds);
+        // Only run applyAddChildren if the children's parent is not already set correctly.
+        // This handles legacy snapshots that rely on childIds for hierarchy reconstruction.
+        const needsLegacyReparent = childIds.some(id => {
+          const child = this.index.getById(id) as BaseItem | undefined;
+          return child && child.parent !== item.getId();
+        });
+        
+        if (needsLegacyReparent) {
+          (item as BaseItem).applyAddChildren(childIds);
+        } else {
+          // New snapshots: parents are already set, just ensure they are in the group's index.
+          childIds.forEach(id => {
+            const child = this.index.getById(id);
+            if (child) (item as any).index?.insert(child);
+          });
+          (item as any).updateChildrenIds?.();
+        }
       }
     }
 

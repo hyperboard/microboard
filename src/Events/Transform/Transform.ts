@@ -64,6 +64,7 @@ import { moveNode_moveNode } from './moveNode_moveNode';
 import { moveNode_removeNode } from './moveNode_removeNode';
 import { moveNode_setNode } from './moveNode_setNode';
 import { moveNode_splitNode } from './moveNode_splitNode';
+import { transformTransformationOperation } from './transformTransformationOperation';
 // InsertTextOperation | RemoveTextOperation | MergeNodeOperation | MoveNodeOperation | RemoveNodeOperation | SetNodeOperation | SplitNodeOperation | InsertNodeOperation
 // removeNode, insertNode, mergeNode, splitNode -- dependants, most likely to happen together
 
@@ -290,10 +291,11 @@ export function transfromOperation(
 ): Operation | undefined {
 	if (confirmed.class === 'RichText' && toTransform.class === 'RichText') {
 		return transformRichTextOperation(confirmed as any, toTransform as any);
-		// return transformRichTextOperation(confirmed, toTransform, board);
 	}
 
-	// others
+	if (confirmed.class === 'Transformation' && toTransform.class === 'Transformation') {
+		return transformTransformationOperation(confirmed as any, toTransform as any);
+	}
 
 	return undefined;
 }

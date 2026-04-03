@@ -187,7 +187,6 @@ function createLinkToCommand(items: Item[], operation: ItemOperation) {
 }
 
 export function createCommand(board: Board, operation: Operation): Command {
-	// TODO API
 	try {
 		if (operation.method === "setProperty") {
 			return new BaseCommand(board, getItemIdListFromOp(operation), operation);
@@ -220,7 +219,7 @@ export function createCommand(board: Board, operation: Operation): Command {
 							item.itemType !== operation.class
 						) {
 							console.warn(
-								`Item with ID ${item} is not of operation type: ${itemType}.`,
+								`Item with ID ${item.getId()} is not of operation type: ${itemType}.`,
 							);
 							return false;
 						}

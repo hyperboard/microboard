@@ -178,7 +178,7 @@ export class Transformer extends Tool {
         isHeight,
         isShiftPressed: this.isShiftPressed,
       });
-      this.selection.transformMany(translation, this.beginTimeStamp);
+      this.selection.moveMany(translation, this.beginTimeStamp);
       this.mbr = resize.mbr;
       this.debounceUpd.setFalse();
     }
@@ -260,7 +260,7 @@ export class Transformer extends Tool {
       const result = single.handleTransform(params);
       this.mbr = result.resizedMbr || this.mbr;
       if (result.translation) {
-        this.selection.transformMany(result.translation, this.beginTimeStamp);
+        this.selection.moveMany(result.translation, this.beginTimeStamp);
       }
       if (result.onPointerUpCb) {
         this.onPointerUpCb = result.onPointerUpCb;

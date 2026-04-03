@@ -36,8 +36,12 @@ export class TransformationCommand implements Command {
 
 	merge(op: Operation): this {
 		if (isTransformation(op)) {
-			this.operation = op;
-			this.reverse = this.getReverse();
+			// Merge logic: Collapsing drag streams by comparing timeStamp (gesture boundaries).
+			if (this.operation.timeStamp !== undefined && this.operation.timeStamp === op.timeStamp) {
+				this.operation = op;
+				this.reverse = this.getReverse();
+				return this;
+			}
 		}
 		return this;
 	}
@@ -227,6 +231,47 @@ export class TransformationCommand implements Command {
 						translate: { x: -op.translate.x, y: -op.translate.y },
 					},
 				}));
+			case "move": {
+				return this.transformation.map(t => {
+					const itemOp = op.items.find(i => i.id === t.getId());
+					if (!itemOp) return { item: t, operation: op };
+					return {
+						item: t,
+						operation: {
+							class: "Transformation",
+							method: "move",
+							items: [{
+								id: t.getId(),
+								worldMatrix: itemOp.prevWorldMatrix,
+								prevWorldMatrix: itemOp.worldMatrix,
+							}],
+							timeStamp: op.timeStamp,
+						} as TransformationOperation,
+					};
+				});
+			}
+			case "setPlacement": {
+				return this.transformation.map(t => {
+					const itemOp = op.items.find(i => i.id === t.getId());
+					if (!itemOp) return { item: t, operation: op };
+					return {
+						item: t,
+						operation: {
+							class: "Transformation",
+							method: "setPlacement",
+							items: [{
+								id: t.getId(),
+								parentId: itemOp.prevParentId,
+								prevParentId: itemOp.parentId,
+								zOrderIndex: 0, // Note: prev z-order tracking is complex, usually resolved by OT
+								worldMatrix: itemOp.prevWorldMatrix,
+								prevWorldMatrix: itemOp.worldMatrix,
+							}],
+							timeStamp: op.timeStamp,
+						} as TransformationOperation,
+					};
+				});
+			}
 			default:
 				return [
 					{ item: this.transformation[0], operation: this.operation },

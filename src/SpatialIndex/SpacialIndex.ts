@@ -63,6 +63,7 @@ export interface ISpatialIndex {
   listEnclosedOrCrossedBy(rect: Mbr | { left: number; top: number; right: number; bottom: number } | number, top?: number, right?: number, bottom?: number): Item[];
   listEnclosedBy(rect: Mbr | { left: number; top: number; right: number; bottom: number } | number, top?: number, right?: number, bottom?: number): Item[];
   getZIndex(item: Item): number;
+  moveToZIndex(item: Item, zIndex: number): void;
   getById(id: string): Item | undefined;
   findById(id: string): Item | undefined;
   insert(item: Item): void;
@@ -186,7 +187,7 @@ export class SpatialIndex implements ISpatialIndex {
     return items.flatMap(item => {
       const baseItem = item as BaseItem;
       if (baseItem.index) {
-        return [item, ...baseItem.index.listAll()];
+        return [item, ...this.getItemsWithIncludedChildren(baseItem.index.listAll())];
       }
       return item;
     });

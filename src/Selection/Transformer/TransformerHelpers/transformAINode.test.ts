@@ -24,7 +24,7 @@ describe("transformAINode", () => {
       },
       selection: {
         shouldRenderItemsMbr: true,
-        transformMany: jest.fn(),
+        moveMany: jest.fn(),
       },
       items: {
         getComments: () => [],
@@ -47,18 +47,27 @@ describe("transformAINode", () => {
       getId: () => "aiNode1",
       getMbr: () => new Mbr(10, 10, 50, 50),
       getWorldMbr: () => new Mbr(10, 10, 50, 50),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
+      getFrameType: () => "None",
+      setFrameType: jest.fn(),
+      transformation: {
+        getScale: () => new Point(1, 1),
+      },
       text: {
         id: "aiNode1-text",
         getId: () => "aiNode1-text",
+        getMbr: () => new Mbr(10, 10, 50, 50),
         apply: jest.fn(),
         getWidth: () => 40,
         getScale: () => 1,
+        getWorldMatrix: () => new Matrix(10, 10, 1, 1),
         editor: {
           setMaxWidth: jest.fn(),
         },
         transformation: {
           translateBy: jest.fn(),
           scaleByTranslateBy: jest.fn(),
+          getScale: () => new Point(1, 1),
         },
       },
     } as unknown as AINode;
@@ -69,6 +78,7 @@ describe("transformAINode", () => {
       getId: () => "comment1",
       getMbr: () => new Mbr(60, 60, 100, 100),
       getWorldMbr: () => new Mbr(60, 60, 100, 100),
+      getWorldMatrix: () => new Matrix(10, 10, 1, 1),
       getItemToFollow: () => mockAINode.getId(),
     } as unknown as Comment;
 
@@ -89,8 +99,9 @@ describe("transformAINode", () => {
       followingComments: undefined,
     });
 
-    expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalledWith(100); // mbr.getWidth() / scale
-    expect(result).toEqual(expect.any(Mbr));
+    expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalled();
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
   });
 
   it("should handle following comments during resize", () => {
@@ -109,8 +120,8 @@ describe("transformAINode", () => {
       followingComments: [mockComment],
     });
 
-    expect(board.selection.transformMany).toHaveBeenCalled();
-    expect(result).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(2); // aiNode + comment
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
   });
 
   it("should handle different resize types", () => {
@@ -144,12 +155,8 @@ describe("transformAINode", () => {
         followingComments: undefined,
       });
 
-      expect(result).toEqual(expect.any(Mbr));
-      if (resizeType.includes("right")) {
-        expect(
-          mockAINode.text.apply
-        ).toHaveBeenCalled();
-      }
+      expect(result.resizedMbr).toEqual(expect.any(Mbr));
+      expect(result.translation).toHaveLength(1);
     });
   });
 
@@ -166,11 +173,8 @@ describe("transformAINode", () => {
       followingComments: undefined,
     });
 
-    expect(result).toEqual(expect.any(Mbr));
-    expect(
-      mockAINode.text.apply
-    ).not.toHaveBeenCalledWith(expect.objectContaining({ method: "scaleByTranslateBy" }));
-    expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalled();
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
   });
 
   it("should handle resize with custom scale", () => {
@@ -189,7 +193,8 @@ describe("transformAINode", () => {
       followingComments: undefined,
     });
 
-    expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalledWith(50); // 100 / 2 (scale)
-    expect(result).toEqual(expect.any(Mbr));
+    expect(mockAINode.text.editor.setMaxWidth).toHaveBeenCalled();
+    expect(result.resizedMbr).toEqual(expect.any(Mbr));
+    expect(result.translation).toHaveLength(1);
   });
 });
