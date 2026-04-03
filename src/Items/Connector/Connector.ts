@@ -51,6 +51,7 @@ import {
 import { connectorOps } from './connectorOps';
 import { registerItem } from '../RegisterItem';
 import { ConnectorDataSchema } from './Connector.schema';
+import { SessionStorage } from 'SessionStorage';
 const DRAW_TEXT_BORDER = false;
 const TEXT_BORDER_PADDING = 0;
 export const CONNECTOR_ANCHOR_COLOR: ConnectorAnchorColors = {
@@ -97,6 +98,10 @@ export class Connector extends BaseItem<Connector> {
 		this.lineColor = semanticColor('contrastNeutral');
 		this.lineWidth = CONNECTOR_LINE_WIDTH;
 		this.borderStyle = CONNECTOR_BORDER_STYLE;
+		const savedSmartJump = new SessionStorage().getConnectorSmartJump();
+		if (savedSmartJump !== undefined) {
+			this.smartJump = savedSmartJump;
+		}
 		this.text = new RichText(this.board, this.id);
 		this.text.container = this.getMbr();
 		this.text.transformation = new Transformation();
@@ -345,6 +350,12 @@ export class Connector extends BaseItem<Connector> {
 		return this.smartJump;
 	}
 
+	setSmartJump(value: boolean): void {
+		this.emit(
+			connectorOps.setSmartJump([this], value)
+		);
+	}
+
 	clearObservedItems() {
 		const startPoint = this.getStartPoint();
 		const endPoint = this.getEndPoint();
@@ -433,6 +444,9 @@ export class Connector extends BaseItem<Connector> {
 						break;
 					case 'switchPointers':
 						this.applySwitchPointers();
+						break;
+					case 'setSmartJump':
+						this.applySmartJump(operation.smartJump);
 						break;
 				}
 				break;

@@ -107,6 +107,14 @@ export class SessionStorage {
 		return this.get<ConnectorLineStyle>('connectorLineStyle');
 	}
 
+	setConnectorSmartJump(enabled: boolean): void {
+		this.set('connectorSmartJump', enabled);
+	}
+
+	getConnectorSmartJump(): boolean | undefined {
+		return this.get<boolean>('connectorSmartJump');
+	}
+
 	setShapeData(data: Partial<ShapeData>): void {
 		this.set('lastShapeData', data);
 	}

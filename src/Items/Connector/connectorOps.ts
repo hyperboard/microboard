@@ -52,5 +52,15 @@ export const connectorOps = {
 		item: items.map(i => i.getId()),
 	}),
 
+	setSmartJump: (
+		items: Connector[],
+		smartJump: boolean,
+	): ConnectorOperation => ({
+		class: "Connector",
+		method: "setSmartJump",
+		item: items.map(i => i.getId()),
+		smartJump,
+	}),
+
 
 };

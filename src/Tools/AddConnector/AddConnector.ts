@@ -18,6 +18,7 @@ export class AddConnector extends BoardTool {
   lineColor?: string;
   lineWidth?: ConnectionLineWidth;
   strokeStyle?: BorderStyle;
+  smartJump = true;
 
   snap: ConnectorSnap;
 
@@ -48,6 +49,10 @@ export class AddConnector extends BoardTool {
     if (savedStyle) {
       this.lineStyle = savedStyle;
     }
+    const savedSmartJump = storage.getConnectorSmartJump();
+    if (savedSmartJump !== undefined) {
+      this.smartJump = savedSmartJump;
+    }
     const savedStart = storage.getConnectorPointer('start');
     if (savedStart) {
       this.startPointer = savedStart;
@@ -75,6 +80,7 @@ export class AddConnector extends BoardTool {
         lineColor: coerceOptionalColorValue(this.lineColor),
         lineWidth: this.lineWidth,
         strokeStyle: this.strokeStyle,
+        smartJump: this.smartJump,
       } as any);
     }
   }
@@ -99,6 +105,7 @@ export class AddConnector extends BoardTool {
         lineColor: coerceOptionalColorValue(this.lineColor),
         lineWidth: this.lineWidth,
         strokeStyle: this.strokeStyle,
+        smartJump: this.smartJump,
       } as any);
     } else {
       this.connector.apply({

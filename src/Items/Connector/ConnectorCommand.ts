@@ -148,6 +148,17 @@ export class ConnectorCommand implements Command {
 					});
 				}
 				break;
+			case "setSmartJump":
+				for (const connector of this.connector) {
+					reverse.push({
+						item: connector,
+						operation: {
+							...this.operation,
+							smartJump: connector.getSmartJump(),
+						},
+					});
+				}
+				break;
 		}
 		return reverse;
 	}
