@@ -177,13 +177,18 @@ export class Connector extends BaseItem<Connector> {
 	observerStartPointItem = (): void => {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
+			if (Group.movingGroupId !== null) {
+				point.recalculatePoint();
+				this.updatePaths();
+				this.subject.publish(this);
+				return;
+			}
 			if (this.handleItemGeometryChange(point, true)) return;
 			point.recalculatePoint();
 			// Skip smartJump when triggered by a group movement — position is already
 			// correct via recalculatePoint and we must not emit spurious setStartPoint ops.
-			const isGroupMoving = Group.movingGroupId !== null;
-			const j1 = isGroupMoving ? false : this.smartJumpStartEdge();
-			const j2 = isGroupMoving ? false : this.smartJumpEndEdge();
+			const j1 = this.smartJumpStartEdge();
+			const j2 = this.smartJumpEndEdge();
 			if (!j1 && !j2) {
 				this.updatePaths();
 				this.subject.publish(this);
@@ -194,11 +199,16 @@ export class Connector extends BaseItem<Connector> {
 	observerEndPointItem = (): void => {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
+			if (Group.movingGroupId !== null) {
+				point.recalculatePoint();
+				this.updatePaths();
+				this.subject.publish(this);
+				return;
+			}
 			if (this.handleItemGeometryChange(point, false)) return;
 			point.recalculatePoint();
-			const isGroupMoving = Group.movingGroupId !== null;
-			const j1 = isGroupMoving ? false : this.smartJumpEndEdge();
-			const j2 = isGroupMoving ? false : this.smartJumpStartEdge();
+			const j1 = this.smartJumpEndEdge();
+			const j2 = this.smartJumpStartEdge();
 			if (!j1 && !j2) {
 				this.updatePaths();
 				this.subject.publish(this);
