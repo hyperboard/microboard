@@ -2,7 +2,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { VideoItem } from "Items/Video/Video";
-import { renderLinkToHTML } from "HTMLRender";
+import { renderLinkToHTML } from "../Utils";
 import { IItemHTMLRenderer, registerHTMLRenderer } from "./HTMLItemRenderer";
 
 const VIDEO_ICON_SRC =

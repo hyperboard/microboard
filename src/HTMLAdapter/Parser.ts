@@ -1,4 +1,4 @@
-import { positionAbsolutely } from "HTMLRender";
+import { positionAbsolutely } from "./Utils";
 import { ItemType, ItemData, ItemDataWithId } from "Items/Item";
 import { Matrix } from "Items/Transformation/Matrix";
 import { RichTextData } from "Items/RichText/RichTextData";
@@ -19,16 +19,16 @@ import { StickerData } from "Items/Sticker/StickerOperation";
 import { TransformationData } from "Items/Transformation/TransformationData";
 import { conf } from "Settings";
 import { Descendant } from "slate";
-import { ListItemNode } from "./Items/RichText/Editor/BlockNode";
-import { BaseItemData } from "./Items/BaseItem/BaseItem";
-import { coerceColorValue } from "./Color";
-import { TextNode } from "./Items/RichText/Editor/TextNode";
-import { ImageItemData } from "./Items/Image";
-import { VideoItemData } from "./Items/Video";
-import { AudioItemData } from "./Items/Audio";
-import { CommentData } from "./Items/Comment";
-import { DrawingData } from "./Items/Drawing";
-import { AINodeData } from "./Items/AINode";
+import { ListItemNode } from "Items/RichText/Editor/BlockNode";
+import { BaseItemData } from "Items/BaseItem/BaseItem";
+import { coerceColorValue } from "Color";
+import { TextNode } from "Items/RichText/Editor/TextNode";
+import { ImageItemData } from "Items/Image";
+import { VideoItemData } from "Items/Video";
+import { AudioItemData } from "Items/Audio";
+import { CommentData } from "Items/Comment";
+import { DrawingData } from "Items/Drawing";
+import { AINodeData } from "Items/AINode";
 
 type MapTagByType = Partial<Record<ItemType, string>>;
 export const tagByType: MapTagByType = {

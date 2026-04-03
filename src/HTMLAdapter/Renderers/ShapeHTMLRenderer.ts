@@ -2,7 +2,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { resolveColor } from "Color";
 import { conf } from "Settings";
 import { LinePatterns } from "Items/Path";
-import { positionRelatively, renderLinkToHTML, renderPathToHTML, resetElementScale, scaleElementBy, translateElementBy } from "HTMLRender";
+import { positionRelatively, renderLinkToHTML, renderPathToHTML, resetElementScale, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Shape } from "Items/Shape/Shape";
 import { Shapes } from "Items/Shape/Shapes";

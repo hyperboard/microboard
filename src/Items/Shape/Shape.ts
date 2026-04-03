@@ -33,7 +33,7 @@ import {
   resetElementScale,
   scaleElementBy,
   translateElementBy,
-} from "HTMLRender";
+} from "HTMLAdapter/Utils";
 import { FixedPoint } from "Items/Connector";
 import { toRelativePoint } from "Items/Connector/ControlPoint";
 import { conf } from "Settings";

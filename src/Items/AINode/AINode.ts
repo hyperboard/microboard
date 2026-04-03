@@ -6,7 +6,7 @@ import {
   resetElementScale,
   scaleElementBy,
   translateElementBy,
-} from "HTMLRender/HTMLRender";
+} from "HTMLAdapter/Utils";
 import { AINodeData, createNodePath } from "./AINodeData";
 import { DrawingContext } from "../DrawingContext";
 import { GeometricNormal } from "../GeometricNormal";

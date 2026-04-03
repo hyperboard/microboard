@@ -1,7 +1,7 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { resolveColor } from "Color";
 import { conf } from "Settings";
-import { renderLinkToHTML, translateElementBy } from "HTMLRender";
+import { renderLinkToHTML, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Frame } from "Items/Frame/Frame";
 import { IItemHTMLRenderer, registerHTMLRenderer, renderItemToHTML } from "./HTMLItemRenderer";

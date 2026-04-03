@@ -1,7 +1,7 @@
 import {DocumentFactory} from 'api/DocumentFactory';
 import {ItemsIndexRecord} from 'BoardOperations';
 import {Camera} from 'Camera';
-import {translateElementBy, positionRelatively} from 'HTMLRender';
+import {translateElementBy, positionRelatively} from "HTMLAdapter/Utils";
 import type { Item, ItemData } from "Items/Item";
 import type { Frame } from "Items/Frame/Frame";
 import { Mbr } from "Items/Mbr/Mbr";
@@ -18,7 +18,7 @@ import {Subject} from 'Subject';
 import {LayeredIndex} from './LayeredIndex';
 import {BaseItem, SerializedItemData} from "../Items/BaseItem";
 import {ItemDataWithId} from "../Items/Item";
-import { renderItemToHTML } from "Items/Renderers";
+import { renderItemToHTML } from "HTMLAdapter/Renderers";
 
 /**
  * Transforms a world-space axis-aligned bounding box into the local coordinate space

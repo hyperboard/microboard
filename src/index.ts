@@ -17,11 +17,11 @@ export * from "./Keyboard";
 export * from "./Settings";
 export * from "./SpatialIndex";
 export * from "./Tools";
-export * from "./HTMLRender";
+export * from "./HTMLAdapter/Utils";
 
 export * from "./drawMbrOnCanvas";
 export * from "./itemFactories";
-export * from "./parserHTML";
+export * from "./HTMLAdapter/Parser";
 export * from "./sha256";
 export * from "./lib";
 export { initI18N } from "api/initI18N";

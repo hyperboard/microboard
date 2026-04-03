@@ -1,5 +1,5 @@
 import { DocumentFactory } from "api/DocumentFactory";
-import { renderLinkToHTML, scaleElementBy, translateElementBy } from "HTMLRender";
+import { renderLinkToHTML, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { ImageItem } from "Items/Image/Image";
 import { IItemHTMLRenderer, registerHTMLRenderer } from "./HTMLItemRenderer";

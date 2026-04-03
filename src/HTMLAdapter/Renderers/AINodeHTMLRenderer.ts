@@ -1,6 +1,6 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { Matrix } from "Items/Transformation/Matrix";
-import { positionRelatively, renderLinkToHTML, renderPathToHTML, resetElementScale, scaleElementBy, translateElementBy } from "HTMLRender";
+import { positionRelatively, renderLinkToHTML, renderPathToHTML, resetElementScale, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { AINode } from "Items/AINode/AINode";
 import { createNodePath } from "Items/AINode/AINodeData";

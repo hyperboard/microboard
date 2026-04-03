@@ -2,7 +2,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { resolveColor } from "Color";
 import { conf } from "Settings";
 import { isSafari } from "isSafari";
-import { renderLinkToHTML, scaleElementBy, translateElementBy } from "HTMLRender";
+import { renderLinkToHTML, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Drawing } from "Items/Drawing/Drawing";
 import { IItemHTMLRenderer, registerHTMLRenderer } from "./HTMLItemRenderer";

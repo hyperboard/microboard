@@ -29,7 +29,7 @@ import { DrawingContext } from "Items/DrawingContext";
 import type { Group, GroupData } from "Items/Group";
 import type { ImageItem } from "Items/Image";
 import { Keyboard } from "Keyboard";
-import { parsersHTML } from "parserHTML";
+import { parsersHTML } from "HTMLAdapter/Parser";
 import { Pointer } from "Pointer";
 import { cursorsMap } from "Pointer/Pointer";
 import { Presence } from "Presence/Presence";

@@ -1,7 +1,7 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { resolveColor } from "Color";
 import { conf } from "Settings";
-import { positionRelatively, renderLinkToHTML, resetElementScale, scaleElementBy, translateElementBy } from "HTMLRender";
+import { positionRelatively, renderLinkToHTML, resetElementScale, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Sticker } from "Items/Sticker/Sticker";
 import { IItemHTMLRenderer, registerHTMLRenderer, renderItemToHTML } from "./HTMLItemRenderer";

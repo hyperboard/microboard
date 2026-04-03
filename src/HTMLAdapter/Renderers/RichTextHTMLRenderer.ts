@@ -1,13 +1,13 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { resolveColor } from "Color";
 import { conf } from "Settings";
-import { renderLinkToHTML, scaleElementBy, translateElementBy } from "HTMLRender";
+import { renderLinkToHTML, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { RichText } from "Items/RichText/RichText";
 import { Matrix } from "Items/Transformation/Matrix";
 import { Descendant, Element } from "slate";
 import { TextNode } from "Items/RichText/Editor/TextNode";
-import { decodeHtml } from "parserHTML";
+import { decodeHtml } from "../Parser";
 import { IItemHTMLRenderer, registerHTMLRenderer } from "./HTMLItemRenderer";
 
 export class RichTextHTMLRenderer implements IItemHTMLRenderer {

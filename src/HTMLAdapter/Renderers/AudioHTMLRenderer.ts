@@ -2,7 +2,7 @@ import { DocumentFactory } from "api/DocumentFactory";
 import { conf } from "Settings";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { AudioItem } from "Items/Audio/Audio";
-import { renderLinkToHTML } from "HTMLRender";
+import { renderLinkToHTML } from "../Utils";
 import { IItemHTMLRenderer, registerHTMLRenderer } from "./HTMLItemRenderer";
 
 export class AudioHTMLRenderer implements IItemHTMLRenderer {

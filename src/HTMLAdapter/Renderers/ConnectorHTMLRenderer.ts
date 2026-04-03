@@ -1,7 +1,7 @@
 import { DocumentFactory } from "api/DocumentFactory";
 import { resolveColor } from "Color";
 import { conf } from "Settings";
-import { positionRelatively, renderPathToHTML, resetElementScale, scaleElementBy } from "HTMLRender";
+import { positionRelatively, renderPathToHTML, resetElementScale, scaleElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Connector } from "Items/Connector/Connector";
 import { ControlPoint } from "Items/Connector/ControlPoint";

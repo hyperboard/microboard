@@ -28,7 +28,7 @@
       "Camera/*": ["./Camera/*"],
       "Events/*": ["./Events/*"],
       "Items/*": ["./Items/*"],
-      "HTMLRender/*": ["./HTMLRender/*"],
+      "HTMLAdapter/*": ["./HTMLAdapter/*"],
       "Keyboard/*": ["./Keyboard/*"],
       "Pointer/*": ["./Pointer/*"],
       "Presence/*": ["./Presence/*"],
