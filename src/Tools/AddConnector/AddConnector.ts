@@ -61,12 +61,14 @@ export class AddConnector extends BoardTool {
       this.isDown = true;
       this.isQuickAdd = true;
       const closestPoint = this.snap.getClosestPointOnItem(itemToStart, position);
+      const serializedPoint =
+        "serialize" in closestPoint ? closestPoint.serialize() : closestPoint;
 
       this.connector = new Connector(this.board);
       this.connector.deserialize({
         itemType: "Connector",
-        startPoint: closestPoint,
-        endPoint: closestPoint,
+        startPoint: serializedPoint,
+        endPoint: serializedPoint,
         lineStyle: this.lineStyle,
         startPointer: this.startPointer,
         endPointer: this.endPointer,
@@ -84,12 +86,13 @@ export class AddConnector extends BoardTool {
   leftButtonDown(): boolean {
     this.isDown = true;
     const point = this.snap.getControlPoint();
+    const serializedPoint = "serialize" in point ? point.serialize() : point;
     if (!this.connector) {
       this.connector = new Connector(this.board);
       this.connector.deserialize({
         itemType: "Connector",
-        startPoint: point,
-        endPoint: point,
+        startPoint: serializedPoint,
+        endPoint: serializedPoint,
         lineStyle: this.lineStyle,
         startPointer: this.startPointer,
         endPointer: this.endPointer,
