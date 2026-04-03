@@ -1,5 +1,6 @@
 import { Board } from 'Board';
 import { BoardTool } from 'Tools/BoardTool';
+import { registerTool } from 'Items/RegisterItem';
 
 export class Navigate extends BoardTool {
 	isDown = false;
@@ -81,3 +82,5 @@ export class Navigate extends BoardTool {
 		return false;
 	}
 }
+
+registerTool({ name: 'Navigate', tool: Navigate });

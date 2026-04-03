@@ -9,12 +9,13 @@ import { createDebounceUpdater } from 'Tools/DebounceUpdater';
 import { NestingHighlighter } from 'Tools/NestingHighlighter';
 import AlignmentHelper from 'Tools/RelativeAlignment';
 import { RELATIVE_ALIGNMENT_COLOR } from 'Tools/RelativeAlignment/RelativeAlignment';
-import { Tool } from 'Tools/Tool';
+import { registerTool } from 'Items/RegisterItem';
+import { BoardTool } from 'Tools/BoardTool';
 import { isSafari } from 'isSafari';
 import {BoardSelection} from "../../Selection";
 import {BaseItem} from "Items/BaseItem";
 
-export class Select extends Tool {
+export class Select extends BoardTool {
 	line: null | Line = null;
 	rect: null | Mbr = null;
 	downOnItem: null | Item = null;
@@ -52,8 +53,8 @@ export class Select extends Tool {
 	private snapLine: Line | null = null;
 	initialSnap = false;
 
-	constructor(private board: Board) {
-		super();
+	constructor(board: Board) {
+		super(board);
 		this.canvasDrawer = createCanvasDrawer(board);
 		this.alignmentHelper = new AlignmentHelper(
 			board,
@@ -978,3 +979,5 @@ export class Select extends Tool {
 		}
 	}
 }
+
+registerTool({ name: 'Select', tool: Select });

@@ -1,16 +1,17 @@
 import { Board } from "Board";
 import { Item, Point, Frame } from "Items";
 import { DrawingContext } from "Items/DrawingContext";
-import { AddComment } from "./AddComment";
-import { AddConnector } from "./AddConnector";
-import { AddDrawing, AddHighlighter } from "./AddDrawing";
-import { AddFrame } from "./AddFrame";
-import { AddShape } from "./AddShape";
-import { AddSticker } from "./AddSticker";
-import { AddText } from "./AddText";
+import type { AddComment } from "Items/Comment/Tool/AddComment";
+import type { AddConnector } from "Items/Connector/Tool/AddConnector";
+import type { AddDrawing } from "Items/Drawing/Tool/AddDrawing";
+import type { AddHighlighter } from "Items/Drawing/Tool/AddHighlighter";
+import type { AddFrame } from "Items/Frame/Tool/AddFrame";
+import type { AddShape } from "Items/Shape/Tool/AddShape";
+import type { AddSticker } from "Items/Sticker/Tool/AddSticker";
+import type { AddText } from "Items/RichText/Tool/AddText";
 import { BoardTool } from "./BoardTool";
-import { Eraser } from "./Eraser";
-import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
+import type { Eraser } from "Items/Drawing/Tool/Eraser/Eraser";
+import type { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
@@ -31,7 +32,7 @@ export class Tools extends ToolContext {
     super();
   }
 
-  addRegisteredTool(toolName: string, clearSelection = false): void {
+  addRegisteredTool(toolName: string, clearSelection = false, ...args: any[]): void {
     if (this.board.getInterfaceType() !== "edit") {
       this.tool = new Navigate(this.board);
       return;
@@ -39,13 +40,13 @@ export class Tools extends ToolContext {
     if (this.getAddRegisteredTool(toolName) && !isIframe()) {
       this.cancel();
     } else {
-      const tool = registeredTools[toolName];
-      if (!tool) {
+      const ToolClass = registeredTools[toolName];
+      if (!ToolClass) {
         console.warn(`Tool with name "${toolName}" not found`);
         return;
       }
 
-      this.tool = new tool(this.board, toolName);
+      this.tool = new ToolClass(this.board, ...args);
       if (clearSelection) {
         this.board.selection.removeAll();
       }
@@ -55,7 +56,7 @@ export class Tools extends ToolContext {
 
   getAddRegisteredTool(toolName: string): Tool | undefined {
     const targetTool = registeredTools[toolName];
-    return this.tool instanceof CustomTool && this.tool.name === targetTool.name
+    return this.tool instanceof targetTool
       ? this.tool
       : undefined;
   }
@@ -92,63 +93,27 @@ export class Tools extends ToolContext {
   }
 
   addSticker(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddSticker() && !isIframe()) {
-      this.cancel();
-    } else {
-      this.tool = new AddSticker(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddSticker", clearSelection);
   }
 
   addShape(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddShape() && !isIframe()) {
-      this.cancel();
-    } else {
-      this.tool = new AddShape(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddShape", clearSelection);
   }
 
   getAddShape(): AddShape | undefined {
-    return this.tool instanceof AddShape ? this.tool : undefined;
+    return this.getAddRegisteredTool("AddShape") as AddShape;
   }
 
   getAddSticker(): AddSticker | undefined {
-    return this.tool instanceof AddSticker ? this.tool : undefined;
+    return this.getAddRegisteredTool("AddSticker") as AddSticker;
   }
 
   addText(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddText() && !isIframe()) {
-      this.cancel();
-    } else {
-      this.tool = new AddText(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddText", clearSelection);
   }
 
   getAddText(): AddText | undefined {
-    return this.tool instanceof AddText ? this.tool : undefined;
+    return this.getAddRegisteredTool("AddText") as AddText;
   }
 
   addConnector(
@@ -156,144 +121,65 @@ export class Tools extends ToolContext {
     itemToStart?: Item,
     position?: Point
   ): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddConnector() && !isIframe()) {
-      this.cancel();
-    } else {
-      this.tool = new AddConnector(this.board, itemToStart, position);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddConnector", clearSelection, itemToStart, position);
   }
 
   getAddConnector(): AddConnector | undefined {
-    return this.tool instanceof AddConnector ? this.tool : undefined;
+    return this.getAddRegisteredTool("AddConnector") as AddConnector;
   }
 
   addDrawing(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddDrawing()) {
-      this.cancel();
-    } else {
-      this.tool = new AddDrawing(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddDrawing", clearSelection);
   }
 
   getAddDrawing(): AddDrawing | undefined {
-    return this.tool instanceof AddDrawing && !this.tool.isHighlighter()
-      ? this.tool
+    const tool = this.getAddRegisteredTool("AddDrawing");
+    return tool && "isHighlighter" in tool && !(tool as any).isHighlighter()
+      ? (tool as AddDrawing)
       : undefined;
   }
 
   addHighlighter(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddHighlighter()) {
-      this.cancel();
-    } else {
-      this.tool = new AddHighlighter(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddHighlighter", clearSelection);
   }
 
   getAddHighlighter(): AddHighlighter | undefined {
-    return this.tool instanceof AddHighlighter && this.tool.isHighlighter()
-      ? this.tool
+    const tool = this.getAddRegisteredTool("AddHighlighter");
+    return tool && "isHighlighter" in tool && (tool as any).isHighlighter()
+      ? (tool as AddHighlighter)
       : undefined;
   }
 
   eraser(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getEraser()) {
-      this.cancel();
-    } else {
-      this.tool = new Eraser(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("Eraser", clearSelection);
   }
 
   getEraser(): Eraser | undefined {
-    return this.tool instanceof Eraser ? this.tool : undefined;
+    return this.getAddRegisteredTool("Eraser") as Eraser;
   }
 
   addComment(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddComment() && !isIframe()) {
-      this.cancel();
-    } else {
-      this.tool = new AddComment(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddComment", clearSelection);
   }
 
   getAddComment(): AddComment | undefined {
-    return this.tool instanceof AddComment ? this.tool : undefined;
+    return this.getAddRegisteredTool("AddComment") as AddComment;
   }
 
   export(): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getExport()) {
-      this.cancel();
-    } else {
-      this.tool = new ExportSnapshot(this.board);
-    }
-    this.publish();
+    this.addRegisteredTool("ExportSnapshot");
   }
 
   getExport(): ExportSnapshot | undefined {
-    return this.tool instanceof ExportSnapshot ? this.tool : undefined;
+    return this.getAddRegisteredTool("ExportSnapshot") as ExportSnapshot;
   }
 
   addFrame(clearSelection = false): void {
-    if (this.board.getInterfaceType() !== "edit") {
-      this.tool = new Navigate(this.board);
-      return;
-    }
-    if (this.getAddFrame() && !isIframe()) {
-      this.cancel();
-    } else {
-      this.tool = new AddFrame(this.board);
-      if (clearSelection) {
-        this.board.selection.removeAll();
-      }
-    }
-    this.publish();
+    this.addRegisteredTool("AddFrame", clearSelection);
   }
 
   getAddFrame(): AddFrame | undefined {
-    return this.tool instanceof AddFrame ? this.tool : undefined;
+    return this.getAddRegisteredTool("AddFrame") as AddFrame;
   }
 
   cancel(): void {

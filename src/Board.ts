@@ -43,6 +43,7 @@ import { conf, Theme } from "Settings";
 import { SpatialIndex } from "SpatialIndex";
 import { Subject } from "Subject";
 import { Tools } from "Tools";
+import "Tools/initTools";
 import { v4 as uuidv4 } from "uuid";
 import { ItemsMap } from "Validators";
 import type { BaseItem } from "./Items/BaseItem";

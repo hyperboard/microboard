@@ -10,13 +10,14 @@ import {
   getResizeType,
 } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { conf } from "Settings";
-import { Tool } from "Tools/Tool";
+import { BoardTool } from "Tools/BoardTool";
 import { SnapshotInfo, exportBoardSnapshot } from "./exportBoardSnapshot";
+import { registerTool } from "Items/RegisterItem";
 import { getDecorationResizeType } from "./getDecorationResizeType";
 
 const TOLERANCE = 30;
 
-export class ExportSnapshot extends Tool {
+export class ExportSnapshot extends BoardTool {
   mbr: Mbr;
   transformation = new Transformation();
   isDown = false;
@@ -27,8 +28,8 @@ export class ExportSnapshot extends Tool {
   tempCtx = this.tempCanvas.getContext("2d")!;
   tempDrawingContext: DrawingContext;
 
-  constructor(private board: Board) {
-    super();
+  constructor(board: Board) {
+    super(board);
     const cameraCenter = this.board.camera.getMbr().getCenter();
     this.mbr = new Mbr(
       cameraCenter.x - conf.EXPORT_SELECTION_BOX_WIDTH / 2,
@@ -288,3 +289,5 @@ export class ExportSnapshot extends Tool {
     }
   }
 }
+
+registerTool({ name: 'ExportSnapshot', tool: ExportSnapshot });

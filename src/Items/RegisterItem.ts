@@ -1,9 +1,17 @@
 import { Item, ItemData } from "Items/Item";
 import { z } from "zod";
 import { Board } from "Board";
-import { itemFactories, itemCommandFactories, itemValidators, itemSchemas, registeredTools } from "../RegistryMaps";
+import {
+  BoardToolConstructor,
+  itemFactories,
+  itemCommandFactories,
+  itemValidators,
+  itemSchemas,
+  registeredTools,
+} from "../RegistryMaps";
 import { BaseCommand, Command } from "Events/Command";
 import { CustomTool } from "Tools/CustomTool";
+import { BoardTool } from "Tools/BoardTool";
 import { BaseItem, BaseItemData } from "Items/BaseItem/BaseItem";
 import { BaseOperation, ItemOperation, Operation } from "Events/EventsOperations";
 
@@ -12,7 +20,7 @@ type ItemConstructor = new (board: Board, id: string) => BaseItem;
 type RegisterItemArgs = {
   item: ItemConstructor;
   defaultData: BaseItemData;
-  toolData?: { name: string; tool: typeof CustomTool };
+  toolData?: { name: string; tool: BoardToolConstructor };
   schema?: z.ZodType<any>;
 };
 
@@ -37,7 +45,7 @@ export function registerItem({
   }
 }
 
-export function registerTool(toolData: { name: string; tool: typeof CustomTool }) {
+export function registerTool(toolData: { name: string; tool: BoardToolConstructor }) {
   registeredTools[toolData.name] = toolData.tool;
 }
 
