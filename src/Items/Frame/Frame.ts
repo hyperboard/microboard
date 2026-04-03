@@ -22,9 +22,9 @@ import { GeometricNormal } from "../GeometricNormal";
 import { FrameCommand } from "./FrameCommand";
 import { Board } from "Board";
 import {
-  exportBoardSnapshot,
-  SnapshotInfo,
-} from "Tools/ExportSnapshot/exportBoardSnapshot";
+  exportBoardScreenshot,
+  ScreenshotInfo,
+} from "Tools/ExportScreenshot/exportBoardScreenshot";
 import { LinkTo } from "../LinkTo/LinkTo";
 
 import { DefaultFrameData, FRAME_TITLE_COLOR, FrameData } from "./FrameData";
@@ -608,8 +608,8 @@ export class Frame extends BaseItem<Frame> {
   export(
     board: Board,
     name: string = this.getExportName()
-  ): Promise<SnapshotInfo> {
-    return exportBoardSnapshot({
+  ): Promise<ScreenshotInfo> {
+    return exportBoardScreenshot({
       board,
       nameToExport: name,
       selection: this.getMbr(),

@@ -1,1 +1,0 @@
-export { AddSticker } from "./AddSticker";

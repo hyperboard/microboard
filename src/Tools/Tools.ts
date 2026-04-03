@@ -11,7 +11,7 @@ import type { AddSticker } from "Items/Sticker/Tool/AddSticker";
 import type { AddText } from "Items/RichText/Tool/AddText";
 import { BoardTool } from "./BoardTool";
 import type { Eraser } from "Items/Drawing/Tool/Eraser/Eraser";
-import type { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
+import type { ExportScreenshot } from "./ExportScreenshot/ExportScreenshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 import { ToolContext } from "./ToolContext";
@@ -167,11 +167,11 @@ export class Tools extends ToolContext {
   }
 
   export(): void {
-    this.addRegisteredTool("ExportSnapshot");
+    this.addRegisteredTool("ExportScreenshot");
   }
 
-  getExport(): ExportSnapshot | undefined {
-    return this.getAddRegisteredTool("ExportSnapshot") as ExportSnapshot;
+  getExport(): ExportScreenshot | undefined {
+    return this.getAddRegisteredTool("ExportScreenshot") as ExportScreenshot;
   }
 
   addFrame(clearSelection = false): void {

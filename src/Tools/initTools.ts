@@ -7,7 +7,7 @@ import { AddShape } from "Items/Shape/Tool/AddShape";
 import { AddSticker } from "Items/Sticker/Tool/AddSticker";
 import { AddText } from "Items/RichText/Tool/AddText";
 import { Eraser } from "Items/Drawing/Tool/Eraser/Eraser";
-import { ExportSnapshot } from "./ExportSnapshot/ExportSnapshot";
+import { ExportScreenshot } from "./ExportScreenshot/ExportScreenshot";
 import { Navigate } from "./Navigate";
 import { Select } from "./Select";
 
@@ -25,7 +25,7 @@ export {
   AddSticker,
   AddText,
   Eraser,
-  ExportSnapshot,
+  ExportScreenshot,
   Navigate,
   Select,
 };

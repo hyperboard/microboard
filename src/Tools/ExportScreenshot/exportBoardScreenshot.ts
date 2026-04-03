@@ -3,7 +3,7 @@ import { Camera } from 'Camera';
 import { Mbr, Matrix } from 'Items';
 import { DrawingContext } from 'Items/DrawingContext';
 
-export interface SnapshotInfo {
+export interface ScreenshotInfo {
 	dataUrl: string;
 	nameToExport: string;
 }
@@ -17,14 +17,14 @@ type Args = {
 	upscaleBy?: number;
 };
 
-export async function exportBoardSnapshot({
+export async function exportBoardScreenshot({
 	board,
 	bgColor = 'white',
 	selection,
 	nameToExport,
 	upscaleTo,
 	upscaleBy,
-}: Args): Promise<SnapshotInfo> {
+}: Args): Promise<ScreenshotInfo> {
 	const start = performance.now();
 	const boardId = board.getBoardId();
 	const offscreenCanvas = new OffscreenCanvas(0, 0);

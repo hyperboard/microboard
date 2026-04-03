@@ -11,13 +11,13 @@ import {
 } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { conf } from "Settings";
 import { BoardTool } from "Tools/BoardTool";
-import { SnapshotInfo, exportBoardSnapshot } from "./exportBoardSnapshot";
+import { ScreenshotInfo, exportBoardScreenshot } from "./exportBoardScreenshot";
 import { registerTool } from "Items/RegisterItem";
 import { getDecorationResizeType } from "./getDecorationResizeType";
 
 const TOLERANCE = 30;
 
-export class ExportSnapshot extends BoardTool {
+export class ExportScreenshot extends BoardTool {
   mbr: Mbr;
   transformation = new Transformation();
   isDown = false;
@@ -193,11 +193,11 @@ export class ExportSnapshot extends BoardTool {
     return true;
   }
 
-  async takeSnapshot(): Promise<SnapshotInfo> {
+  async takeScreenshot(): Promise<ScreenshotInfo> {
     if (!this.mbr) {
       throw new Error("No selection");
     }
-    const res = await exportBoardSnapshot({
+    const res = await exportBoardScreenshot({
       board: this.board,
       bgColor: conf.CANVAS_BG_COLOR,
       selection: this.mbr,
@@ -290,4 +290,4 @@ export class ExportSnapshot extends BoardTool {
   }
 }
 
-registerTool({ name: 'ExportSnapshot', tool: ExportSnapshot });
+registerTool({ name: 'ExportScreenshot', tool: ExportScreenshot });

@@ -106,7 +106,7 @@ export type DefaultTextStyles = {
   superscript: boolean;
 };
 
-export interface ExportSnapshotSelection {
+export interface ExportScreenshotSelection {
   startX: number;
   startY: number;
   endX: number;
