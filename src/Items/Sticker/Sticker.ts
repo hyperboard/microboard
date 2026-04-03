@@ -96,6 +96,7 @@ export class Sticker extends BaseItem<Sticker> {
     this.text.placeholderText = "\u00A0";
     this.text.isInShape = false;
     this.text.insideOf = this.itemType;
+    this.text.autosizeEnable();
     this.text.updateShrinkWidth();
 
 
