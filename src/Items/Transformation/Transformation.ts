@@ -259,6 +259,15 @@ export class Transformation {
 		});
 	}
 
+	setIsLocked(isLocked: boolean): void {
+		this.emit({
+			class: 'Transformation',
+			method: isLocked ? 'locked' : 'unlocked',
+			item: [this.id],
+			locked: isLocked,
+		});
+	}
+
 	private scaleToRelativeTo(x: number, y: number, _point: Point, timeStamp?: number): void {
 		this.emitMatrix({
 			translateX: 0,
