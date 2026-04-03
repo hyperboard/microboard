@@ -469,19 +469,17 @@ export class Connector extends BaseItem<Connector> {
 
 
 	protected applyStartPoint(pointData: ControlPointData, updatePath = true): void {
+		const optionalFn = this.getOptionalFindFn();
+		const findItem = optionalFn ? optionalFn : (itemId: string) => this.board.items.findById(itemId);
 		if (
 			pointData.pointType !== 'Board' &&
 			this.startPoint.pointType !== 'Board' &&
 			pointData.itemId === this.startPoint.item.getId()
 		) {
-			this.startPoint = getControlPoint(pointData, itemId =>
-				this.board.items.findById(itemId)
-			);
+			this.startPoint = getControlPoint(pointData, findItem);
 		} else {
 			this.unsubscribeFromItem(this.startPoint, this.observerStartPointItem);
-			this.startPoint = getControlPoint(pointData, itemId =>
-				this.board.items.findById(itemId)
-			);
+			this.startPoint = getControlPoint(pointData, findItem);
 			this.subscribeToItem(this.startPoint, this.observerStartPointItem);
 		}
 		if (updatePath) {
