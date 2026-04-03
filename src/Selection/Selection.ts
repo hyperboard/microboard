@@ -247,9 +247,7 @@ export class BoardSelection {
   }
 
   addAll(): void {
-    const items = this.board.items
-      .listAll()
-      .filter((item) => !item.transformation.isLocked);
+    const items = this.board.items.listAll();
     this.add(items);
     this.setContext("SelectByRect");
   }
@@ -574,16 +572,17 @@ export class BoardSelection {
 
   selectEnclosedOrCrossedBy(rect: Mbr): void {
     this.removeAll();
-    const enclosedFrames = this.board.items
-      .getEnclosed(rect.left, rect.top, rect.right, rect.bottom)
-      .filter((item) => !item.transformation.isLocked);
+    const enclosedFrames = this.board.items.getEnclosed(
+      rect.left,
+      rect.top,
+      rect.right,
+      rect.bottom
+    );
     const list = this.getCanvasSelectableItems(
       this.board.items
         .getEnclosedOrCrossed(rect.left, rect.top, rect.right, rect.bottom)
         .filter(
-          (item) =>
-            (item.itemType !== "Frame" || enclosedFrames.includes(item)) &&
-            !item.transformation.isLocked
+          (item) => item.itemType !== "Frame" || enclosedFrames.includes(item)
         )
     );
     if (list.length !== 0) {
