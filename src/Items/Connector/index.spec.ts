@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { Board } from "Board";
 import { initNodeSettings } from "api/initNodeSettings";
-import { Mbr } from "../Mbr/Mbr";
-import { Point } from "../Point";
+import { Mbr } from "Geometry/Mbr/Mbr";
+import { Point } from "Geometry/Point";
 import { Shape } from "../Shape";
-import { transformOps } from "../Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import { Connector } from ".";
 import { FixedPoint, BoardPoint } from "./ControlPoint";
 

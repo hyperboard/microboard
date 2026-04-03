@@ -2,9 +2,9 @@ import { BoardPoint, ControlPointData, FindItemFn } from "./ControlPoint";
 import { ConnectionLineWidth, ConnectorLineStyle } from "./ConnectorTypes";
 import { ConnectorPointerStyle } from "./Pointers/Pointers";
 import { DefaultRichTextData } from "../RichText/RichTextData";
-import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { DefaultTransformationData } from "Geometry/Transformation/TransformationData";
 import { LinkTo } from "../LinkTo/LinkTo";
-import { BorderStyle } from "../Path";
+import { BorderStyle } from "Geometry/Path";
 import { ColorValue, semanticColor } from "Color";
 
 export class ConnectorData {

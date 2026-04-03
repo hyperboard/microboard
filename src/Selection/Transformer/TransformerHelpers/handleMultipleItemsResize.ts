@@ -1,9 +1,9 @@
-import { Matrix } from "Items/Transformation/Matrix";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Matrix } from "Geometry/Transformation/Matrix";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import type { Item } from "Items/Item";
 import {
   MoveItem,
-} from "Items/Transformation/TransformationOperations";
+} from "Geometry/Transformation/TransformationOperations";
 import type { RichText } from "Items/RichText/RichText";
 import type { AINode } from "Items/AINode/AINode";
 import { Board } from "Board";

@@ -1,8 +1,8 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { Line } from 'Items/Line/Line';
-import { Path } from 'Items/Path/Path';
-import { Point } from 'Items/Point/Point';
-import { Paths } from 'Items/Path/Paths';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { Line } from 'Geometry/Line/Line';
+import { Path } from 'Geometry/Path/Path';
+import { Point } from 'Geometry/Point/Point';
+import { Paths } from 'Geometry/Path/Paths';
 
 export const BPMN_DataObject = {
 	name: 'BPMN_DataObject',

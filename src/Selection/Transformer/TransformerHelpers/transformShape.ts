@@ -1,16 +1,16 @@
-import { MoveItem } from "Items/Transformation/TransformationOperations";
+import { MoveItem } from "Geometry/Transformation/TransformationOperations";
 import {
   getProportionalResize,
   getResize,
 } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import type { Sticker } from "Items/Sticker/Sticker";
 import type { Shape } from "Items/Shape/Shape";
 import type { Frame } from "Items/Frame/Frame";
 import { Board } from "Board";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { handleMultipleItemsResize, getItemMove } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
-import type { Point } from "Items/Point/Point";
+import type { Point } from "Geometry/Point/Point";
 import type { Comment } from "Items/Comment/Comment";
 
 export function transformShape({

@@ -3,7 +3,7 @@ import {BlockNode, NoneListBlockNode} from 'Items/RichText/Editor/BlockNode';
 import { ReactEditor } from 'slate-react';
 import { HistoryEditor } from 'slate-history';
 import { LinkNode, TextNode } from 'Items/RichText/Editor/TextNode';
-import { HorisontalAlignment } from 'Items/Alignment';
+import { HorisontalAlignment } from 'Geometry/Alignment';
 import { convertLinkNodeToTextNode } from 'Items/RichText/CanvasText/convertLinkNodeToTextNode';
 
 import { conf } from 'Settings';

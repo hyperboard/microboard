@@ -1,4 +1,4 @@
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 
 export class Tool {
 	leftButtonDown(): boolean {

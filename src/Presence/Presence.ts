@@ -3,7 +3,7 @@ import { Board } from 'Board';
 import { Camera } from 'Camera';
 import { Events } from 'Events';
 import { Matrix, Item, Mbr } from 'Items';
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { Subject } from 'Subject';
 import { PRESENCE_COLORS } from './consts';
 import {

@@ -1,6 +1,6 @@
 import { LinkTo } from 'Items/LinkTo/LinkTo';
 import { DefaultRichTextData } from '../RichText/RichTextData';
-import { DefaultTransformationData } from '../Transformation/TransformationData';
+import { DefaultTransformationData } from 'Geometry/Transformation/TransformationData';
 import { ColorValue, semanticColor } from 'Color';
 
 export class StickerData {

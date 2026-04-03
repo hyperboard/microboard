@@ -1,4 +1,4 @@
-import { BorderStyle } from "../Path";
+import { BorderStyle } from "Geometry/Path";
 import { ShapeType } from "./ShapeType";
 import { ColorValue } from "Color";
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { Board } from "../../../Board";
 import { BaseItem } from "../../BaseItem/BaseItem";
 import { Group } from "../Group";
-import { Mbr } from "../../Mbr/Mbr";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { registerItem } from "../../RegisterItem";
 
 class MockBaseItem extends BaseItem {

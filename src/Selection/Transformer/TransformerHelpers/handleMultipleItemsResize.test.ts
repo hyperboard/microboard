@@ -1,6 +1,6 @@
 import { Board } from "Board";
-import { Matrix } from "Items/Transformation/Matrix";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Matrix } from "Geometry/Transformation/Matrix";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { Item } from "Items/Item";
 import { RichText } from "Items/RichText/RichText";
 import { AINode } from "Items/AINode/AINode";

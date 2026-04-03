@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { Board } from "../../../Board";
 import { Group } from "../Group";
-import { Point } from "../../Point";
-import { Mbr } from "../../Mbr/Mbr";
+import { Point } from "Geometry/Point";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { BaseItem } from "../../BaseItem/BaseItem";
 import { GroupCommand } from "../GroupCommand";
 import { GroupOperation } from "../GroupOperation";

@@ -1,7 +1,7 @@
 import { ItemData } from "Items";
 import { RichTextDataSchema } from "Items/RichText/RichText.schema";
-import { TransformationDataSchema } from "Items/Transformation/Transformation.schema";
-import { PointSchema } from "Items/Point/Point.schema";
+import { TransformationDataSchema } from "Geometry/Transformation/Transformation.schema";
+import { PointSchema } from "Geometry/Point/Point.schema";
 import { itemValidators } from "../RegistryMaps";
 
 export type ItemsMap = Record<string, ItemData>;

@@ -1,5 +1,5 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import type { Point } from 'Items/Point/Point';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import type { Point } from 'Geometry/Point/Point';
 import type { Item, ItemDataWithId } from 'Items/Item';
 import { Layers } from './Layers';
 import { getContainersSortedByZIndex } from './getContainersSortedByZIndex';

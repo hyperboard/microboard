@@ -1,9 +1,9 @@
 import { Board } from "Board";
 import { Line, Mbr, Shape, Point } from "Items";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { ShapeType } from "Items/Shape";
 import { propertyOps } from "Items/propertyOps";
-import { transformOps } from "Items/Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import { DEFAULT_SHAPE, ADD_TO_SELECTION } from "Items/Shape/ShapeData";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { conf } from "Settings";

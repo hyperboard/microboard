@@ -1,6 +1,6 @@
 import { Descendant } from 'slate';
-import { VerticalAlignment } from '../Alignment';
-import { TransformationData } from '../Transformation/TransformationData';
+import { VerticalAlignment } from 'Geometry/Alignment';
+import { TransformationData } from 'Geometry/Transformation/TransformationData';
 import { ItemType } from '../Item';
 
 export interface RichTextData {

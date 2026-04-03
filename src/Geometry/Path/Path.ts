@@ -1,5 +1,5 @@
 import { isNumberOdd } from 'lib';
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { Geometry } from '../Geometry';
 import { Line } from '../Line';
 import { CubicBezier, QuadraticBezier } from '../Curve';

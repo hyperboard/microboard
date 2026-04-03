@@ -6,11 +6,11 @@ import {
 	FixedPoint,
 	toRelativePoint,
 } from "./ControlPoint";
-import { Point } from "../Point";
+import { Point } from "Geometry/Point";
 import { Item } from "../Item";
-import { DrawingContext } from "../DrawingContext";
-import { Anchor } from "../Anchor";
-import { Path, Paths } from "../Path";
+import { DrawingContext } from "Geometry/DrawingContext";
+import { Anchor } from "Geometry/Anchor";
+import { Path, Paths } from "Geometry/Path";
 import {
 	Connector,
 	CONNECTOR_ANCHOR_COLOR,

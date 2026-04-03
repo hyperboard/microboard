@@ -1,7 +1,7 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { CubicBezier } from 'Items/Curve/Curve';
-import { Path } from 'Items/Path/Path';
-import { Point } from 'Items/Point/Point';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { CubicBezier } from 'Geometry/Curve/Curve';
+import { Path } from 'Geometry/Path/Path';
+import { Point } from 'Geometry/Point/Point';
 
 export const Cloud = {
 	name: 'Cloud',

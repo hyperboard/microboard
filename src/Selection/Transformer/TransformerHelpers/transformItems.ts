@@ -5,12 +5,12 @@ import {
 import type { ImageItem } from "Items/Image/Image";
 import { tempStorage } from "SessionStorage";
 import { handleMultipleItemsResize } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
-import { Point } from "Items/Point/Point";
+import { Point } from "Geometry/Point/Point";
 import { Board } from "Board";
 import { BoardSelection } from "Selection/Selection";
 import { CanvasDrawer } from "drawMbrOnCanvas";
 import AlignmentHelper from "Tools/RelativeAlignment";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
 import type { Item } from "Items/Item";

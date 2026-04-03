@@ -1,15 +1,15 @@
 import { getProportionalResize } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { handleMultipleItemsResize, getRichTextMove } from "Selection/Transformer/TransformerHelpers/handleMultipleItemsResize";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { Board } from "Board";
 import type { RichText } from "Items/RichText/RichText";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
-import { Point } from "Items/Point/Point";
+import { Point } from "Geometry/Point/Point";
 import type { Comment } from "Items/Comment/Comment";
-import { Matrix } from "Items/Transformation/Matrix";
+import { Matrix } from "Geometry/Transformation/Matrix";
 import type { AINode } from "Items/AINode/AINode";
-import { transformOps } from "Items/Transformation/transformOps";
-import { MoveItem } from "Items/Transformation/TransformationOperations";
+import { transformOps } from "Geometry/Transformation/transformOps";
+import { MoveItem } from "Geometry/Transformation/TransformationOperations";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 
 export function transformRichText({

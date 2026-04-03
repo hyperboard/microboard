@@ -1,8 +1,8 @@
 import { Board } from 'Board';
 import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
 import {Line, Mbr, Item, Point, Frame, Connector, Comment, RichText} from 'Items';
-import { transformOps } from 'Items/Transformation/transformOps';
-import { DrawingContext } from 'Items/DrawingContext';
+import { transformOps } from 'Geometry/Transformation/transformOps';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { quickAddItem } from 'Selection/QuickAddButtons';
 import { conf } from 'Settings';
 import { createDebounceUpdater } from 'Tools/DebounceUpdater';

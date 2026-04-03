@@ -1,8 +1,8 @@
 import { Board } from "Board";
 import { Drawing } from "Items/Drawing";
 import { propertyOps } from "Items/propertyOps";
-import { DrawingContext } from "Items/DrawingContext";
-import { BorderStyle } from "Items/Path";
+import { DrawingContext } from "Geometry/DrawingContext";
+import { BorderStyle } from "Geometry/Path";
 import { coerceColorValue } from "Color";
 import { conf } from "Settings";
 import { BoardTool } from "Tools/BoardTool";

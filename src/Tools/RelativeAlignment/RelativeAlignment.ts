@@ -1,11 +1,11 @@
 import { Board } from "Board";
 import { CanvasDrawer } from "drawMbrOnCanvas";
 import { Item, Mbr, Line, Frame, Point } from "Items";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { SpatialIndex } from "SpatialIndex";
 import { DebounceUpdater } from "Tools/DebounceUpdater/DebounceUpdater";
-import { ApplyMatrixItem } from "../../Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem } from 'Geometry/Transformation/TransformationOperations';
 import { BaseItem } from "../../Items/BaseItem";
 
 export const RELATIVE_ALIGNMENT_COLOR = "#4778F5";

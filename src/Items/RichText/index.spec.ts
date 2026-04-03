@@ -1,8 +1,8 @@
 // import { Board } from "../../Board";
 // import { RichText } from "./RichText";
 // import { assert } from "chai";
-// import { testTransformation } from "../Transformation/testTransformation";
-// import { Mbr } from "../Mbr";
+// import { testTransformation } from "Geometry/Transformation/testTransformation";
+// import { Mbr } from "Geometry/Mbr";
 // import { TextStyle } from "./Editor/TextNode";
 // import { BlockType } from "./Editor/BlockNode";
 // import { ConnectionMock } from "Connection";

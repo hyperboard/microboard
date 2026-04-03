@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ColorValueSchema } from "../../Color/Color.schema";
-import { TransformationDataSchema } from "../Transformation/Transformation.schema";
+import { TransformationDataSchema } from "Geometry/Transformation/Transformation.schema";
 import { RichTextDataSchema } from "../RichText/RichText.schema";
 import { ConnectorLineStyles, ConnectionLineWidths } from "./ConnectorTypes";
 

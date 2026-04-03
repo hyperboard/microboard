@@ -1,7 +1,7 @@
 import { Board } from "Board";
-import { Matrix } from "Items/Transformation/Matrix";
-import { Mbr } from "Items/Mbr/Mbr";
-import { Point } from "Items/Point/Point";
+import { Matrix } from "Geometry/Transformation/Matrix";
+import { Mbr } from "Geometry/Mbr/Mbr";
+import { Point } from "Geometry/Point/Point";
 import { RichText } from "Items/RichText/RichText";
 import { Comment } from "Items/Comment/Comment";
 import { transformRichText } from "./transformRichText";

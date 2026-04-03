@@ -2,19 +2,19 @@ import { RichText } from 'Items/RichText/RichText';
 import { Subject } from 'Subject';
 import { Board } from 'Board';
 import { Operation } from 'Events';
-import { CubicBezier } from '../Curve/Curve';
-import { DrawingContext } from '../DrawingContext';
-import { GeometricNormal } from '../GeometricNormal';
+import { CubicBezier } from 'Geometry/Curve/Curve';
+import { DrawingContext } from 'Geometry/DrawingContext';
+import { GeometricNormal } from 'Geometry/GeometricNormal';
 import type { Item } from '../Item';
-import { Line } from '../Line/Line';
-import { Mbr } from '../Mbr/Mbr';
-import { Path } from '../Path/Path';
-import { Paths } from '../Path/Paths';
-import type { BorderStyle } from '../Path/Path';
-import { Point } from '../Point/Point';
-import { Matrix } from '../Transformation/Matrix';
-import { Transformation } from '../Transformation/Transformation';
-import { Geometry } from '../Geometry';
+import { Line } from 'Geometry/Line/Line';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { Path } from 'Geometry/Path/Path';
+import { Paths } from 'Geometry/Path/Paths';
+import type { BorderStyle } from 'Geometry/Path/Path';
+import { Point } from 'Geometry/Point/Point';
+import { Matrix } from 'Geometry/Transformation/Matrix';
+import { Transformation } from 'Geometry/Transformation/Transformation';
+import { Geometry } from 'Geometry/Geometry';
 import { ConnectorCommand } from './ConnectorCommand';
 import { ConnectorData, ConnectorOperation } from './ConnectorOperations';
 import {
@@ -26,7 +26,7 @@ import {
 	getControlPoint,
 	toRelativePoint,
 } from './ControlPoint';
-import { TransformationOperation } from '../Transformation/TransformationOperations';
+import { TransformationOperation } from 'Geometry/Transformation/TransformationOperations';
 
 import { getLine } from './getLine/getLine';
 import { ConnectorEdge } from './Pointers';
@@ -35,7 +35,7 @@ import { ConnectorPointerStyle, Pointer } from './Pointers/Pointers';
 import { LinkTo } from '../LinkTo/LinkTo';
 import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
-import { transformOps } from "../Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import { BaseItem, SerializedItemData, BaseItemData } from "../BaseItem/BaseItem";
 import { Group } from "../Group/Group";
 import { ColorValue, coerceColorValue, resolveColor, fixedColor, semanticColor } from 'Color';

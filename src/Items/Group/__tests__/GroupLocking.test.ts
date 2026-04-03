@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { Board } from "../../../Board";
 import { Group } from "../Group";
 import { BaseItem } from "../../BaseItem/BaseItem";
-import { transformOps } from "../../Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 
 describe("Group Locking Interaction", () => {
   let board: Board;

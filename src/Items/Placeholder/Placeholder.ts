@@ -1,27 +1,27 @@
 import type { Events, Operation } from "Events";
-import { DrawingContext } from "../DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { Shapes, ShapeType } from "../Shape/index";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Subject } from "Subject";
-import { GeometricNormal } from "../GeometricNormal";
-import { Line } from "../Line/Line";
-import { Mbr } from "../Mbr/Mbr";
-import { Path } from "../Path/Path";
-import { Paths } from "../Path/Paths";
-import { Point } from "../Point/Point";
-import { Transformation } from "../Transformation/Transformation";
-import { Matrix } from "../Transformation/Matrix";
-import type { TransformationData } from "../Transformation/TransformationData";
+import { GeometricNormal } from "Geometry/GeometricNormal";
+import { Line } from "Geometry/Line/Line";
+import { Mbr } from "Geometry/Mbr/Mbr";
+import { Path } from "Geometry/Path/Path";
+import { Paths } from "Geometry/Path/Paths";
+import { Point } from "Geometry/Point/Point";
+import { Transformation } from "Geometry/Transformation/Transformation";
+import { Matrix } from "Geometry/Transformation/Matrix";
+import type { TransformationData } from "Geometry/Transformation/TransformationData";
 import { PlaceholderOperation } from "./PlaceholderOperation";
 import { PlaceholderCommand } from "./PlaceholderCommand";
 import { getResize } from "../../Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import { BaseItem } from "../BaseItem/BaseItem";
-import { transformOps } from "../Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
 import { Board } from "../../Board";
 import { registerItem } from "../RegisterItem";
 import { PlaceholderDataSchema } from "./Placeholder.schema";
-import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { DefaultTransformationData } from "Geometry/Transformation/TransformationData";
 
 const PlaceholderImg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M5 11.1L7 9.1L12.5 14.6L16 11.1L19 14.1V5H5V11.1ZM4 3H20C20.2652 3 20.5196 3.10536 20.7071 3.29289C20.8946 3.48043 21 3.73478 21 4V20C21 20.2652 20.8946 20.5196 20.7071 20.7071C20.5196 20.8946 20.2652 21 20 21H4C3.73478 21 3.48043 20.8946 3.29289 20.7071C3.10536 20.5196 3 20.2652 3 20V4C3 3.73478 3.10536 3.48043 3.29289 3.29289C3.48043 3.10536 3.73478 3 4 3ZM15.5 10C15.1022 10 14.7206 9.84196 14.4393 9.56066C14.158 9.27936 14 8.89782 14 8.5C14 8.10218 14.158 7.72064 14.4393 7.43934C14.7206 7.15804 15.1022 7 15.5 7C15.8978 7 16.2794 7.15804 16.5607 7.43934C16.842 7.72064 17 8.10218 17 8.5C17 8.89782 16.842 9.27936 16.5607 9.56066C16.2794 9.84196 15.8978 10 15.5 10Z" fill="white" fill-opacity="0.6"/>

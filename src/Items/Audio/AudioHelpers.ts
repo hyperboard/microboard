@@ -1,6 +1,6 @@
 import { Board } from 'Board';
 import { AudioItem } from 'Items/Audio/Audio';
-import { Matrix } from 'Items/Transformation/Matrix';
+import { Matrix } from 'Geometry/Transformation/Matrix';
 import {uploadMediaToStorage} from "api/MediaHelpers";
 
 export const prepareAudio = (

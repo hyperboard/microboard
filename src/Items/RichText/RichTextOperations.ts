@@ -1,5 +1,5 @@
 import { BaseSelection, Operation } from 'slate';
-import { HorisontalAlignment, VerticalAlignment } from '../Alignment';
+import { HorisontalAlignment, VerticalAlignment } from 'Geometry/Alignment';
 import { TextStyle } from './Editor/TextNode';
 import type { SelectionContext } from 'Selection/Selection';
 import { ColorValue } from 'Color';

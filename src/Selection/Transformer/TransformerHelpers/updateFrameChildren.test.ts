@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { Frame } from "Items/Frame/Frame";
 import { NestingHighlighter } from "Tools/NestingHighlighter/NestingHighlighter";
 import { updateFrameChildren } from "./updateFrameChildren";

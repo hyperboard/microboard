@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ColorValueSchema } from "../../Color/Color.schema";
-import { TransformationDataSchema } from "../Transformation/Transformation.schema";
-import { PointSchema } from "../Point/Point.schema";
+import { TransformationDataSchema } from "Geometry/Transformation/Transformation.schema";
+import { PointSchema } from "Geometry/Point/Point.schema";
 
 export const DrawingDataSchema = z.object({
   itemType: z.literal("Drawing"),

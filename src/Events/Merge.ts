@@ -1,5 +1,5 @@
 import { RichTextOperation } from "Items/RichText/RichTextOperations";
-import { TransformationOperation } from "Items/Transformation/TransformationOperations";
+import { TransformationOperation } from "Geometry/Transformation/TransformationOperations";
 import { ConnectorOperation } from "Items/Connector/ConnectorOperations";
 import { Path } from "slate";
 import { BoardOps, DataMap } from "BoardOperations";

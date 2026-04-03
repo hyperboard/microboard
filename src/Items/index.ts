@@ -1,14 +1,14 @@
 export { BaseItem } from "./BaseItem";
 export type { BaseItemData, SerializedItemData } from "./BaseItem";
 
-export { Point } from "./Point";
-export { Line } from "./Line";
-export { CubicBezier, QuadraticBezier } from "./Curve";
-export { Arc } from "./Arc";
-export { Mbr } from "./Mbr";
-export { DrawingContext } from "./DrawingContext";
-export * from "./Path";
-export * from "./Transformation";
+export { Point } from "Geometry/Point";
+export { Line } from "Geometry/Line";
+export { CubicBezier, QuadraticBezier } from "Geometry/Curve";
+export { Arc } from "Geometry/Arc";
+export { Mbr } from "Geometry/Mbr";
+export { DrawingContext } from "Geometry/DrawingContext";
+export * from "Geometry/Path";
+export * from "Geometry/Transformation";
 
 export * from "./Connector";
 export { connectorOps } from "./Connector/connectorOps";
@@ -35,4 +35,4 @@ export { Deck } from "./Examples/CardGame/Deck";
 export { Dice } from "./Examples/CardGame/Dice";
 export { Screen } from "./Examples/CardGame/Screen";
 export { Comment } from "./Comment";
-export type { HorisontalAlignment, VerticalAlignment } from "./Alignment";
+export type { HorisontalAlignment, VerticalAlignment } from "Geometry/Alignment";

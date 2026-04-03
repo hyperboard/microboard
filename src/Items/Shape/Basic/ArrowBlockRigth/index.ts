@@ -1,7 +1,7 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { Path } from 'Items/Path/Path';
-import { Line } from 'Items/Line/Line';
-import { Point } from 'Items/Point/Point';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { Path } from 'Geometry/Path/Path';
+import { Line } from 'Geometry/Line/Line';
+import { Point } from 'Geometry/Point/Point';
 
 export const ArrowBlockRight = {
 	name: 'ArrowBlockRight',

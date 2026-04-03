@@ -7,7 +7,7 @@ import { BorderStyle, BorderWidth, Path, PathStylize } from './Path';
 import { Matrix } from '../Transformation';
 import { GeometricNormal } from '../GeometricNormal';
 import { DocumentFactory } from 'api/DocumentFactory';
-import { RichText } from '../RichText/RichText';
+import { RichText } from 'Items/RichText/RichText';
 
 export class Paths implements Geometry {
 	private x: number;

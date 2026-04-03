@@ -1,5 +1,5 @@
 import type { ColorValue } from '../../../../Color/index.js';
-import { HorisontalAlignment } from '../../../Alignment.js';
+import { HorisontalAlignment } from 'Geometry/Alignment.js';
 import { BlockNode } from '../../Editor/BlockNode.js';
 import { TextNode, TextStyle } from '../../Editor/TextNode.js';
 

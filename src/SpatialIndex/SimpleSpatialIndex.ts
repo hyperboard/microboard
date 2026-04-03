@@ -1,8 +1,8 @@
 import {Subject} from "../Subject";
-import {DrawingContext} from "../Items/DrawingContext";
+import {DrawingContext} from 'Geometry/DrawingContext';
 import {Item, ItemDataWithId} from "../Items/Item";
-import {Point} from "../Items/Point/Point";
-import {Mbr} from "../Items/Mbr/Mbr";
+import {Point} from 'Geometry/Point/Point';
+import {Mbr} from 'Geometry/Mbr/Mbr';
 import {Camera} from "../Camera";
 import {Pointer} from "../Pointer";
 import type {BaseItem} from "../Items/BaseItem/BaseItem";

@@ -1,4 +1,4 @@
-import { HorisontalAlignment } from 'Items/Alignment';
+import { HorisontalAlignment } from 'Geometry/Alignment';
 import { Editor, Transforms } from 'slate';
 import { ReactEditor } from 'slate-react';
 

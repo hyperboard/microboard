@@ -7,7 +7,7 @@ import { createEvents } from "../Events";
 import { Shape } from "../../Items/Shape/Shape";
 import { Frame } from "../../Items/Frame/Frame";
 import { BaseItem } from "../../Items/BaseItem/BaseItem";
-import { transformOps } from "../../Items/Transformation/transformOps";
+import { transformOps } from 'Geometry/Transformation/transformOps';
 
 describe("New Canonical Placement Operations", () => {
 	let board: Board;

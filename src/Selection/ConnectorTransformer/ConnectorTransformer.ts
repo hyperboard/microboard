@@ -1,6 +1,6 @@
 import { Board } from "Board";
 import { Connector, Point, connectorOps } from "Items";
-import { Anchor } from "Items/Anchor";
+import { Anchor } from "Geometry/Anchor";
 import { ControlPoint } from "Items/Connector";
 // TODO move to conf
 import {
@@ -9,7 +9,7 @@ import {
 } from "Items/Connector/Connector";
 import { ConnectorSnap } from "Items/Connector/ConnectorSnap";
 import { ControlPointData } from "Items/Connector/ControlPoint";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { Cursor } from "Pointer";
 import { BoardSelection } from "Selection";
 import { SelectionItems } from "Selection/SelectionItems";

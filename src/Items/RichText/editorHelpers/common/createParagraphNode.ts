@@ -1,7 +1,7 @@
 import { ParagraphNode } from 'Items/RichText/Editor/BlockNode';
 import { Editor } from 'slate';
 import { CustomEditor } from 'Items/RichText/Editor/Editor.d';
-import { HorisontalAlignment } from 'Items/Alignment';
+import { HorisontalAlignment } from 'Geometry/Alignment';
 
 export function createParagraphNode(
 	text: string,

@@ -1,4 +1,4 @@
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { Mbr } from '../Mbr/Mbr';
 import { Point } from '../Point/Point';
 

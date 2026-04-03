@@ -6,7 +6,7 @@ import { ImageItem } from 'Items/Image';
 import { prepareImage } from 'Items/Image/ImageHelpers';
 import { getControlPointData } from 'Selection/QuickAddButtons';
 import { conf } from 'Settings';
-import { transformOps } from 'Items/Transformation/transformOps';
+import { transformOps } from 'Geometry/Transformation/transformOps';
 import { AiChatMsg } from './boardMessageInterface';
 
 export type AiChatEventType =

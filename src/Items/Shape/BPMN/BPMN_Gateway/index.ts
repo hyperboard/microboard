@@ -1,8 +1,8 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { Line } from 'Items/Line/Line';
-import { Path } from 'Items/Path/Path';
-import { Point } from 'Items/Point/Point';
-import { CubicBezier } from 'Items/Curve/Curve';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { Line } from 'Geometry/Line/Line';
+import { Path } from 'Geometry/Path/Path';
+import { Point } from 'Geometry/Point/Point';
+import { CubicBezier } from 'Geometry/Curve/Curve';
 
 export const BPMN_Gateway = {
 	name: 'BPMN_Gateway',

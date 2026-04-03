@@ -6,7 +6,7 @@ import { createEvents } from "../Events";
 import { createEventsList } from "./createEventsList";
 import { getUnpublishedEventFromList } from "./getUnpublishedEventFromList";
 import { HistoryRecord } from "./EventsLog";
-import { ApplyMatrixOperation } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixOperation } from "Geometry/Transformation/TransformationOperations";
 import { handleConfirmation } from "../MessageRouter/handleConfirmation";
 import { Connection, conf } from "Settings";
 

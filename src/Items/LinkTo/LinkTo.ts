@@ -3,7 +3,7 @@ import { LinkToOperation } from "./LinkToOperation";
 import { Events } from "../../Events";
 import { LinkToCommand } from "./LinkToCommand";
 import { DocumentFactory } from "api/DocumentFactory";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { conf } from "Settings";
 
 export class LinkTo {

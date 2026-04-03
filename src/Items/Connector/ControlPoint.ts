@@ -1,7 +1,7 @@
-import { Point } from "../Point";
+import { Point } from "Geometry/Point";
 import { Item } from "../Item";
 import { Connector } from "./Connector";
-import { Matrix } from "../Transformation";
+import { Matrix } from "Geometry/Transformation";
 import { BaseItem } from "../BaseItem";
 
 export type Edge = "top" | "bottom" | "left" | "right";

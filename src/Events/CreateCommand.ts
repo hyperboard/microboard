@@ -1,7 +1,7 @@
 import {Board} from 'Board';
 import {ShapeCommand} from 'Items/Shape/ShapeCommand';
 import {BoardCommand} from '../BoardCommand';
-import {TransformationCommand} from '../Items/Transformation/TransformationCommand';
+import {TransformationCommand} from 'Geometry/Transformation/TransformationCommand';
 import {RichTextCommand, RichTextGroupCommand} from '../Items/RichText/RichTextCommand';
 import {EventsCommand} from './EventsCommand';
 import {BaseCommand} from './BaseCommand';

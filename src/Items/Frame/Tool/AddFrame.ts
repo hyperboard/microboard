@@ -1,7 +1,7 @@
 import { Board } from 'Board';
 import { Line, Frame, Mbr, Item } from 'Items';
-import { transformOps } from 'Items/Transformation/transformOps';
-import { DrawingContext } from 'Items/DrawingContext';
+import { transformOps } from 'Geometry/Transformation/transformOps';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { FrameType } from 'Items/Frame/Basic';
 import { BoardTool } from 'Tools/BoardTool';
 import { NestingHighlighter } from 'Tools/NestingHighlighter';

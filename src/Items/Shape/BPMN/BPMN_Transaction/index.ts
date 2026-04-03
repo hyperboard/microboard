@@ -1,10 +1,10 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { CubicBezier } from 'Items/Curve/Curve';
-import { Line } from 'Items/Line/Line';
-import { Path } from 'Items/Path/Path';
-import { Paths } from 'Items/Path/Paths';
-import { Point } from 'Items/Point/Point';
-import { Matrix } from 'Items/Transformation/Matrix';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { CubicBezier } from 'Geometry/Curve/Curve';
+import { Line } from 'Geometry/Line/Line';
+import { Path } from 'Geometry/Path/Path';
+import { Paths } from 'Geometry/Path/Paths';
+import { Point } from 'Geometry/Point/Point';
+import { Matrix } from 'Geometry/Transformation/Matrix';
 
 export const BPMN_Transaction = {
 	name: 'BPMN_Transaction',

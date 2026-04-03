@@ -1,5 +1,5 @@
 import { TransformationOperation, Matrix } from "browser";
-import { ApplyMatrixOperation, TransformMany } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixOperation, TransformMany } from "Geometry/Transformation/TransformationOperations";
 
 /**
  * Converts a world-space Transformation operation into an equivalent local-space

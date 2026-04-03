@@ -7,7 +7,7 @@ import { MockPath2D } from "api/MockPath2D";
 import { cursorsMap } from "Pointer/Pointer";
 import { initDefaultI18N } from "api/initDefaultI18N";
 import i18n, { TFunction } from "i18next";
-import type { BorderStyle } from "Items/Path/Path";
+import type { BorderStyle } from "Geometry/Path/Path";
 import type { Theme, ColorValue } from "./Color/ColorValue";
 export type { Theme, ColorValue };
 import { semanticColor } from "./Color/ColorValue";

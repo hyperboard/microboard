@@ -2,7 +2,7 @@ import { Board } from "Board";
 import { Mbr, Point } from "Items";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { Comment } from "Items/Comment/Comment";
-import { ApplyMatrixItem, MoveItem } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixItem, MoveItem } from "Geometry/Transformation/TransformationOperations";
 
 /** Minimal interface for BoardSelection to avoid circular dependencies */
 export interface ISelection {

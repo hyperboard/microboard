@@ -1,7 +1,7 @@
-import { Mbr } from 'Items/Mbr';
-import { Line } from 'Items/Line';
-import { Path } from 'Items/Path';
-import { Point } from 'Items/Point';
+import { Mbr } from 'Geometry/Mbr';
+import { Line } from 'Geometry/Line';
+import { Path } from 'Geometry/Path';
+import { Point } from 'Geometry/Point';
 
 export const Frame3x2 = {
 	name: '3:2',

@@ -1,7 +1,7 @@
 import { Board } from 'Board';
 import { conf } from 'Settings';
-import { ApplyMatrixOperation } from 'Items/Transformation/TransformationOperations';
-import { transformOps } from 'Items/Transformation/transformOps';
+import { ApplyMatrixOperation } from 'Geometry/Transformation/TransformationOperations';
+import { transformOps } from 'Geometry/Transformation/transformOps';
 
 interface Velocity {
 	vx: number;

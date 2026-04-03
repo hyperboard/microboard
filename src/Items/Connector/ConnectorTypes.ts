@@ -1,4 +1,4 @@
-import { BorderStyle } from "../Path";
+import { BorderStyle } from "Geometry/Path";
 
 export const ConnectorLineStyles = ['straight', 'curved', 'orthogonal'] as const;
 export type ConnectorLineStyle = (typeof ConnectorLineStyles)[number];

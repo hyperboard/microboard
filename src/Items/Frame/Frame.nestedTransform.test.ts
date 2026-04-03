@@ -6,7 +6,7 @@ import { createEvents } from "Events/Events";
 import { Frame } from "Items/Frame/Frame";
 import { Sticker } from "Items/Sticker/Sticker";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import { transformOps } from "Items/Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 
 /**
  * Creates a Board with events enabled (local mode, no network connection).

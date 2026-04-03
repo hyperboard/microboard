@@ -7,11 +7,11 @@ import {Board} from "Board";
 import {Subject} from "Subject";
 import {registerItem} from "Items/RegisterItem";
 import {Card} from "Items/Examples/CardGame/Card/Card";
-import {DrawingContext} from "Items/DrawingContext";
-import {transformOps} from "Items/Transformation/transformOps";
+import {DrawingContext} from "Geometry/DrawingContext";
+import {transformOps} from "Geometry/Transformation/transformOps";
 import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
 import {conf} from "../../../../Settings";
-import {Path} from "../../../Path";
+import {Path} from "Geometry/Path";
 import { registerHotkey } from "../../../../Keyboard/HotkeyRegistry";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
 

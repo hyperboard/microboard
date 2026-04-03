@@ -12,7 +12,7 @@ import {
 } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import { ReactEditor, withReact } from "slate-react";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
+import { HorisontalAlignment, VerticalAlignment } from "Geometry/Alignment";
 import { BlockNode, ListType, ParagraphNode } from "./Editor/BlockNode";
 import { TextNode, TextStyle } from "./Editor/TextNode";
 import { isTextEmpty } from "./editorHelpers/common/isTextEmpty";

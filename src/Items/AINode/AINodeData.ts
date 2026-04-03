@@ -1,12 +1,12 @@
-import { TransformationData } from 'Items/Transformation/TransformationData';
+import { TransformationData } from 'Geometry/Transformation/TransformationData';
 import { RichTextData } from 'Items/RichText/RichTextData';
 import { ThreadDirection } from 'Items/AINode/AINode';
-import { Mbr } from 'Items/Mbr/Mbr';
-import { Path } from 'Items/Path/Path';
-import { CubicBezier } from 'Items/Curve/Curve';
-import { Point } from 'Items/Point/Point';
-import { Line } from 'Items/Line/Line';
-import { Matrix } from 'Items/Transformation/Matrix';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { Path } from 'Geometry/Path/Path';
+import { CubicBezier } from 'Geometry/Curve/Curve';
+import { Point } from 'Geometry/Point/Point';
+import { Line } from 'Geometry/Line/Line';
+import { Matrix } from 'Geometry/Transformation/Matrix';
 
 export interface AINodeData {
 	readonly itemType: 'AINode';

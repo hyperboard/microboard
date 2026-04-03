@@ -1,5 +1,5 @@
 import { DocumentFactory } from "api/DocumentFactory";
-import { Path, Paths } from "Items/Path";
+import { Path, Paths } from "Geometry/Path";
 import { LinkTo } from "Items/LinkTo/LinkTo";
 import { conf } from "Settings";
 

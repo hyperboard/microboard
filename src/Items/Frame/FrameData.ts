@@ -1,9 +1,9 @@
 import {
 	DefaultTransformationData,
 	TransformationData,
-} from '../Transformation/TransformationData';
+} from 'Geometry/Transformation/TransformationData';
 import { RichTextData } from '../RichText';
-import { BorderStyle, BorderWidth } from '../Path';
+import { BorderStyle, BorderWidth } from 'Geometry/Path';
 import { DefaultRichTextData } from '../RichText/RichTextData';
 import { FrameType } from './Basic';
 import { conf } from 'Settings';

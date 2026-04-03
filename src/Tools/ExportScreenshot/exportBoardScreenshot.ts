@@ -1,7 +1,7 @@
 import { Board } from 'Board';
 import { Camera } from 'Camera';
 import { Mbr, Matrix } from 'Items';
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 
 export interface ScreenshotInfo {
 	dataUrl: string;

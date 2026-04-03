@@ -1,7 +1,7 @@
 import { safeRequestAnimationFrame } from 'api/safeRequestAnimationFrame';
-import { Matrix } from 'Items/Transformation/Matrix';
-import { Point } from 'Items/Point/Point';
-import { Mbr } from 'Items/Mbr/Mbr';
+import { Matrix } from 'Geometry/Transformation/Matrix';
+import { Point } from 'Geometry/Point/Point';
+import { Mbr } from 'Geometry/Mbr/Mbr';
 import type { Item } from 'Items/Item';
 import { Keyboard } from 'Keyboard';
 import { toFiniteNumber } from 'lib';

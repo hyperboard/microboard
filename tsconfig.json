@@ -36,6 +36,7 @@
       "SpatialIndex/*": ["./SpatialIndex/*"],
       "Tools/*": ["./Tools/*"],
       "types/*": ["./types/*"],
+      "Geometry/*": ["./Geometry/*"],
       "Validators/*": ["./Validators/*"]
     }
   },

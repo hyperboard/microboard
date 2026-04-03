@@ -1,6 +1,6 @@
 import { createEventsList } from "./createEventsList";
 import { HistoryRecord } from "./EventsLog";
-import { ApplyMatrixOperation } from "Items/Transformation/TransformationOperations";
+import { ApplyMatrixOperation } from "Geometry/Transformation/TransformationOperations";
 import { SelectionOp } from "Items/RichText/RichTextOperations";
 import { Operation } from "../EventsOperations";
 

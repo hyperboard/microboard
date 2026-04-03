@@ -2,9 +2,9 @@ import { beforeAll, describe, it, expect } from 'bun:test';
 import { Board } from 'Board';
 import { Shape } from './index';
 import { propertyOps } from '../propertyOps';
-import { transformOps } from '../Transformation/transformOps';
-import { Point } from '../Point';
-import { Mbr } from '../Mbr';
+import { transformOps } from 'Geometry/Transformation/transformOps';
+import { Point } from 'Geometry/Point';
+import { Mbr } from 'Geometry/Mbr';
 import { initNodeSettings } from 'api/initNodeSettings';
 import { fixedColor, semanticColor } from 'Color';
 

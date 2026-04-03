@@ -4,12 +4,12 @@ import {
 	SerializedItemData,
 } from "Items/BaseItem/BaseItem";
 import { Board } from "Board";
-import { DrawingContext } from "Items/DrawingContext";
-import { Point } from "Items/Point/Point";
-import { Path } from "Items/Path/Path";
-import { Line } from "Items/Line/Line";
+import { DrawingContext } from "Geometry/DrawingContext";
+import { Point } from "Geometry/Point/Point";
+import { Path } from "Geometry/Path/Path";
+import { Line } from "Geometry/Line/Line";
 import { Subject } from "Subject";
-import { Paths } from "Items/Path/Paths";
+import { Paths } from "Geometry/Path/Paths";
 import { registerItem } from "Items/RegisterItem";
 import { AddCounter } from "Items/Examples/Counter/AddCounter";
 import { CounterOperation } from "Items/Examples/Counter/CounterOperation";

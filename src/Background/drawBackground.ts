@@ -1,4 +1,4 @@
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { conf } from 'Settings';
 
 // Background surface colors per theme

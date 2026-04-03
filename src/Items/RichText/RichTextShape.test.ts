@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import { Board } from 'Board';
 import { Shape } from '../Shape/Shape';
-import { transformOps } from 'Items/Transformation/transformOps';
+import { transformOps } from 'Geometry/Transformation/transformOps';
 import { initNodeSettings } from 'api/initNodeSettings';
 
 beforeAll(() => {

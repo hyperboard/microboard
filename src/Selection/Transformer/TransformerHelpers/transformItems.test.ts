@@ -1,7 +1,7 @@
 import { Board } from "Board";
-import { Matrix } from "Items/Transformation/Matrix";
-import { Mbr } from "Items/Mbr/Mbr";
-import { Point } from "Items/Point/Point";
+import { Matrix } from "Geometry/Transformation/Matrix";
+import { Mbr } from "Geometry/Mbr/Mbr";
+import { Point } from "Geometry/Point/Point";
 import { Selection } from "Selection/Selection";
 import { CanvasDrawer } from "drawMbrOnCanvas";
 import AlignmentHelper from "Tools/RelativeAlignment";
@@ -13,7 +13,7 @@ import { Sticker } from "Items/Sticker/Sticker";
 import { RichText } from "Items/RichText/RichText";
 import { Frame } from "Items/Frame/Frame";
 import { Item } from "Items/Item";
-import { Line } from "Items/Line/Line";
+import { Line } from "Geometry/Line/Line";
 
 describe("transformItems", () => {
   let board: Board;

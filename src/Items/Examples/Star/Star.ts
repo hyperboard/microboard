@@ -4,13 +4,13 @@ import {
 	SerializedItemData,
 } from "Items/BaseItem/BaseItem";
 import { Board } from "Board";
-import { DrawingContext } from "Items/DrawingContext";
-import { Point } from "Items/Point/Point";
-import { BorderStyle, BorderWidth, Path } from "Items/Path/Path";
-import { Line } from "Items/Line/Line";
+import { DrawingContext } from "Geometry/DrawingContext";
+import { Point } from "Geometry/Point/Point";
+import { BorderStyle, BorderWidth, Path } from "Geometry/Path/Path";
+import { Line } from "Geometry/Line/Line";
 import { Subject } from "Subject";
-import { TransformationData } from "Items/Transformation/TransformationData";
-import { Paths } from "Items/Path/Paths";
+import { TransformationData } from "Geometry/Transformation/TransformationData";
+import { Paths } from "Geometry/Path/Paths";
 import { registerItem } from "Items/RegisterItem";
 import { AddStar } from "./AddStar";
 import { StarOperation } from "Items/Examples/Star/StarOperation";

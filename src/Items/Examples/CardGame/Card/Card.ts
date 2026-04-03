@@ -4,10 +4,10 @@ import {
   SerializedItemData,
 } from "Items/BaseItem/BaseItem";
 import {Board} from "Board";
-import {DrawingContext} from "Items/DrawingContext";
-import {Path} from "Items/Path/Path";
+import {DrawingContext} from "Geometry/DrawingContext";
+import {Path} from "Geometry/Path/Path";
 import {Subject} from "Subject";
-import {Paths} from "Items/Path/Paths";
+import {Paths} from "Geometry/Path/Paths";
 import {registerItem} from "Items/RegisterItem";
 import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
 import {conf} from "Settings";

@@ -4,7 +4,7 @@ import { conf } from "Settings";
 import { renderLinkToHTML, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { RichText } from "Items/RichText/RichText";
-import { Matrix } from "Items/Transformation/Matrix";
+import { Matrix } from "Geometry/Transformation/Matrix";
 import { Descendant, Element } from "slate";
 import { TextNode } from "Items/RichText/Editor/TextNode";
 import { decodeHtml } from "../Parser";

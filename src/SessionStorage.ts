@@ -3,7 +3,7 @@ import { ConnectorLineStyle } from 'Items/Connector';
 import { ConnectionLineWidth } from 'Items/Connector/ConnectorTypes';
 import { ConnectorEdge } from 'Items/Connector/Pointers';
 import { ConnectorPointerStyle } from 'Items/Connector/Pointers/Pointers';
-import { BorderStyle } from 'Items/Path';
+import { BorderStyle } from 'Geometry/Path';
 import { TextStyle } from 'Items/RichText';
 import { StickerData } from 'Items/Sticker/StickerOperation';
 

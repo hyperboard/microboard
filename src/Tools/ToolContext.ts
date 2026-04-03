@@ -1,4 +1,4 @@
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { Tool } from './Tool';
 
 export class ToolContext implements Tool {

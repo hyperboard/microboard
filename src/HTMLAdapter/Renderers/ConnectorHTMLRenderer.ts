@@ -5,7 +5,7 @@ import { positionRelatively, renderPathToHTML, resetElementScale, scaleElementBy
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { Connector } from "Items/Connector/Connector";
 import { ControlPoint } from "Items/Connector/ControlPoint";
-import { Path, Paths } from "Items/Path";
+import { Path, Paths } from "Geometry/Path";
 import { IItemHTMLRenderer, registerHTMLRenderer, renderItemToHTML } from "./HTMLItemRenderer";
 
 export class ConnectorHTMLRenderer implements IItemHTMLRenderer {

@@ -1,12 +1,12 @@
 import { ColorValue, fixedColor } from "Color";
 import { conf } from "Settings";
-import { BorderStyle, BorderWidth } from "../Path";
+import { BorderStyle, BorderWidth } from "Geometry/Path";
 import { RichTextData } from "../RichText";
 import { DefaultRichTextData } from "../RichText/RichTextData";
 import {
   TransformationData,
   DefaultTransformationData,
-} from "../Transformation";
+} from "Geometry/Transformation";
 import { ShapeType } from "./index";
 
 export interface ShapeData {

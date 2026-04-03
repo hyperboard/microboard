@@ -1,4 +1,4 @@
-import type {TransformationOperation} from "../Items/Transformation/TransformationOperations";
+import type {TransformationOperation} from 'Geometry/Transformation/TransformationOperations';
 import type {ShapeOperation} from "../Items/Shape/ShapeOperation";
 import type {RichTextOperation} from "../Items/RichText/RichTextOperations";
 import type {BoardOps} from "../BoardOperations";

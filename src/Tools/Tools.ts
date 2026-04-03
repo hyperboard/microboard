@@ -1,6 +1,6 @@
 import { Board } from "Board";
 import { Item, Point, Frame } from "Items";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import type { AddComment } from "Items/Comment/Tool/AddComment";
 import type { AddConnector } from "Items/Connector/Tool/AddConnector";
 import type { AddDrawing } from "Items/Drawing/Tool/AddDrawing";

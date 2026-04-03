@@ -10,7 +10,7 @@ import {
   RichText,
   Shape,
 } from "Items";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import {
   BaseItem,
   BaseItemData,

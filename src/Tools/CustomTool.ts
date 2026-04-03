@@ -1,11 +1,11 @@
 import { BoardTool } from "Tools/BoardTool";
 import { Board } from "Board";
-import { transformOps } from "Items/Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import { Line } from "Items/Line/Line";
-import { Mbr } from "Items/Mbr/Mbr";
+import { Line } from "Geometry/Line/Line";
+import { Mbr } from "Geometry/Mbr/Mbr";
 import { conf } from "Settings";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { ResizeType } from "Selection/Transformer/TransformerHelpers/getResizeType";
 import { CursorName } from "Pointer/Cursor";
 import { Item } from "Items/Item";

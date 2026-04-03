@@ -1,10 +1,10 @@
 import { DocumentFactory } from "api/DocumentFactory";
-import { Matrix } from "Items/Transformation/Matrix";
+import { Matrix } from "Geometry/Transformation/Matrix";
 import { positionRelatively, renderLinkToHTML, renderPathToHTML, resetElementScale, scaleElementBy, translateElementBy } from "../Utils";
 import { BaseItem } from "Items/BaseItem/BaseItem";
 import { AINode } from "Items/AINode/AINode";
 import { createNodePath } from "Items/AINode/AINodeData";
-import { LinePatterns } from "Items/Path/Path";
+import { LinePatterns } from "Geometry/Path/Path";
 import { IItemHTMLRenderer, registerHTMLRenderer, renderItemToHTML } from "./HTMLItemRenderer";
 
 const BUTTON_SIZE = 20;

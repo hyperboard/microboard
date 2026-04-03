@@ -1,6 +1,6 @@
 import { Board } from "Board";
 import { StickerTool } from "Tools/CustomTool";
-import { transformOps } from "Items/Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import {
 	Counter,
 	COUNTER_DIMENSIONS,

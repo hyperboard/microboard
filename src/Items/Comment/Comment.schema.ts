@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TransformationDataSchema } from '../Transformation/Transformation.schema';
+import { TransformationDataSchema } from 'Geometry/Transformation/Transformation.schema';
 
 export const CommentatorSchema = z.object({
   username: z.string(),

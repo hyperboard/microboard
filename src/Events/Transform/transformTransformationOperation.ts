@@ -1,4 +1,4 @@
-import { TransformationOperation, MoveOperation, SetPlacementOperation } from "../../Items/Transformation/TransformationOperations";
+import { TransformationOperation, MoveOperation, SetPlacementOperation } from 'Geometry/Transformation/TransformationOperations';
 
 export function transformTransformationOperation(
 	confirmed: TransformationOperation,

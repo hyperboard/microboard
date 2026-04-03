@@ -1,10 +1,10 @@
 import { Board } from "./Board";
 import { Camera } from "./Camera";
-import { Item, Matrix, Mbr } from "./Items";
-import { DrawingContext } from "./Items/DrawingContext";
-import { ApplyMatrixItem, MoveItem } from "./Items/Transformation/TransformationOperations";
+import { Item, Matrix, Mbr } from "Items";
+import { DrawingContext } from "Geometry/DrawingContext";
+import { ApplyMatrixItem, MoveItem } from "Geometry/Transformation/TransformationOperations";
 import { conf } from "./Settings";
-import { BaseItem } from "./Items/BaseItem/BaseItem";
+import { BaseItem } from "Items/BaseItem/BaseItem";
 
 export interface CanvasDrawer {
 	getLastCreatedCanvas: () => HTMLDivElement | undefined;

@@ -1,5 +1,5 @@
-import { CubicBezier } from "../../Curve";
-import { Path, Segment } from "../../Path";
+import { CubicBezier } from "Geometry/Curve";
+import { Path, Segment } from "Geometry/Path";
 import {
 	BoardPoint,
 	ControlPoint,
@@ -7,7 +7,7 @@ import {
 	FixedPoint,
 	FloatingPoint,
 } from "../ControlPoint";
-import { Point } from "../../Point";
+import { Point } from "Geometry/Point";
 
 // для того чтобы создать безье сплайн (последовательность кривых) через последовательность точек
 // нужно расчитать параметры кривых с помощью алгоритма для подгонки кривых (curve fitting)

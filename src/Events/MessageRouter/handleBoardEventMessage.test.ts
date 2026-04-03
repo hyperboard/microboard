@@ -7,7 +7,7 @@ import { createEvents } from "../Events";
 import { handleBoardEventMessage } from "./handleBoardEventMessage";
 import { BoardEventMsg } from "./boardMessageInterface";
 import { RichText } from "Items/RichText/RichText";
-import { Mbr } from "Items/Mbr";
+import { Mbr } from "Geometry/Mbr";
 import { ItemData } from "Items";
 
 function createConnection(connectionId: number, sessionId = `session-${connectionId}`): Connection {

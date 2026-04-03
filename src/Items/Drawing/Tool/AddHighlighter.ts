@@ -1,7 +1,7 @@
 import { Board } from 'Board';
 import { Drawing } from 'Items/Drawing';
 import { propertyOps } from 'Items/propertyOps';
-import { BorderStyle } from 'Items/Path';
+import { BorderStyle } from 'Geometry/Path';
 import { conf } from 'Settings';
 import { ColorValue, semanticColor } from 'Color';
 import { AddDrawing } from './AddDrawing';

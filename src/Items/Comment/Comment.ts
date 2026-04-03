@@ -1,25 +1,25 @@
 import { Subject } from "Subject";
 import type { Events, Operation } from "Events";
-import { Point } from "../Point";
-import { Transformation, TransformationData } from "../Transformation";
+import { Point } from "Geometry/Point";
+import { Transformation, TransformationData } from "Geometry/Transformation";
 import { CommentOperation } from "./CommentOperation";
 import { CommentCommand } from "./CommentCommand";
-import { Mbr } from "../Mbr";
-import { Geometry } from "../Geometry";
-import { GeometricNormal } from "../GeometricNormal";
+import { Mbr } from "Geometry/Mbr";
+import { Geometry } from "Geometry/Geometry";
+import { GeometricNormal } from "Geometry/GeometricNormal";
 import { RichText } from "../RichText";
-import { DrawingContext } from "../DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { SerializedItemData } from "../BaseItem";
-import { Line } from "../Line";
+import { Line } from "Geometry/Line";
 import { v4 as uuidv4 } from "uuid";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import { transformOps } from "Items/Transformation/transformOps";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import { Board } from "Board";
 import { Item } from "Items/Item";
 import { registerItem } from "Items/RegisterItem";
 import { CommentDataSchema } from "./Comment.schema";
-import { DefaultTransformationData } from "../Transformation/TransformationData";
+import { DefaultTransformationData } from "Geometry/Transformation/TransformationData";
 
 export interface Commentator {
   username: string;

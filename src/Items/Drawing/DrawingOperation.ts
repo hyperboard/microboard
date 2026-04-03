@@ -1,4 +1,4 @@
-import { BorderStyle, BorderWidth } from "../Path";
+import { BorderStyle, BorderWidth } from "Geometry/Path";
 import { ColorValue } from "Color";
 
 interface DrawingSetStrokeColorOp {

@@ -1,4 +1,4 @@
-import { Path } from "../../Path";
+import { Path } from "Geometry/Path";
 import { ConnectorLineStyle } from "../ConnectorTypes";
 import {BoardPoint, ControlPoint} from "../ControlPoint";
 import { getCurvedLine } from "./getCurvedLine";

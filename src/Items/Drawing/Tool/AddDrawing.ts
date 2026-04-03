@@ -2,11 +2,11 @@ import { Board } from 'Board';
 import { Point } from 'Items';
 import { Drawing } from 'Items/Drawing';
 import { propertyOps } from 'Items/propertyOps';
-import { DrawingContext } from 'Items/DrawingContext';
-import { BorderStyle } from 'Items/Path';
+import { DrawingContext } from 'Geometry/DrawingContext';
+import { BorderStyle } from 'Geometry/Path';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
-import { transformOps } from 'Items/Transformation/transformOps';
+import { transformOps } from 'Geometry/Transformation/transformOps';
 import { ColorValue, coerceColorValue, semanticColor } from 'Color';
 import { registerTool } from 'Items/RegisterItem';
 

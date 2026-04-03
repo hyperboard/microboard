@@ -3,7 +3,7 @@ import { Point } from "./Point";
 import { Line } from "./Line";
 import { DrawingContext } from "./DrawingContext";
 import { GeometricNormal } from "./GeometricNormal";
-import type { RichText } from "./RichText";
+import type { RichText } from "Items/RichText/RichText";
 
 /**
  * Methods that define the geometry of an item.

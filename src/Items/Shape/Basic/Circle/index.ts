@@ -1,8 +1,8 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { CubicBezier } from 'Items/Curve/Curve';
-import { Path } from 'Items/Path/Path';
-import { Point } from 'Items/Point/Point';
-import { Arc } from 'Items/Arc/Arc';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { CubicBezier } from 'Geometry/Curve/Curve';
+import { Path } from 'Geometry/Path/Path';
+import { Point } from 'Geometry/Point/Point';
+import { Arc } from 'Geometry/Arc/Arc';
 
 export const Circle = {
 	name: 'Circle',

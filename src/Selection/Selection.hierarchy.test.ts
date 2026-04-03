@@ -4,8 +4,8 @@ import { Board } from "Board";
 import { createEvents } from "Events/Events";
 import { Frame } from "Items/Frame/Frame";
 import { BaseItem } from "Items/BaseItem/BaseItem";
-import { Mbr } from "Items/Mbr/Mbr";
-import { transformOps } from "Items/Transformation/transformOps";
+import { Mbr } from "Geometry/Mbr/Mbr";
+import { transformOps } from "Geometry/Transformation/transformOps";
 import type { SelectionHierarchyNode } from "Selection";
 
 initNodeSettings();

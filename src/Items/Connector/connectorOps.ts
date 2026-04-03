@@ -1,5 +1,5 @@
 import { ColorValue } from "Color";
-import { BorderStyle } from "../Path";
+import { BorderStyle } from "Geometry/Path";
 import { Connector } from "./Connector";
 import { ControlPoint, ControlPointData } from "./ControlPoint";
 import { ConnectorOperation } from "./ConnectorOperations";

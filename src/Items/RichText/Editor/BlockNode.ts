@@ -1,4 +1,4 @@
-import { HorisontalAlignment } from "../../Alignment";
+import { HorisontalAlignment } from "Geometry/Alignment";
 import { LinkNode, TextNode } from "./TextNode";
 
 export const ListTypes = ["ol_list", "ul_list"] as const;

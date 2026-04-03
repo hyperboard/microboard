@@ -1,8 +1,8 @@
 import { Board } from 'Board';
 import { conf } from 'Settings';
-import { ApplyMatrixOperation } from 'Items/Transformation/TransformationOperations';
+import { ApplyMatrixOperation } from 'Geometry/Transformation/TransformationOperations';
 import { Connector } from 'Items/Connector/Connector';
-import { transformOps } from 'Items/Transformation/transformOps';
+import { transformOps } from 'Geometry/Transformation/transformOps';
 
 // ── Union-Find for connected-component detection ──────────────────────────────
 class UnionFind {

@@ -1,5 +1,5 @@
 import {FixedConnectorPoint, FixedPoint, FloatingPoint, Line, Mbr} from 'Items';
-import { Point } from '../../Point';
+import { Point } from 'Geometry/Point';
 import { ControlPoint } from '../ControlPoint';
 import { ConnectedPointerDirection, getPointerDirection } from '../Pointers';
 import {conf} from "Settings";

@@ -1,7 +1,7 @@
 import { Board } from 'Board';
 import { Line, Mbr, Point, RichText } from 'Items';
-import { transformOps } from 'Items/Transformation/transformOps';
-import { DrawingContext } from 'Items/DrawingContext';
+import { transformOps } from 'Geometry/Transformation/transformOps';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
 import { registerTool } from 'Items/RegisterItem';

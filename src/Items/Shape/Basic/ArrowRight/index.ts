@@ -1,10 +1,10 @@
-import { Mbr } from 'Items/Mbr/Mbr';
-import { Path } from 'Items/Path/Path';
-import { Line } from 'Items/Line/Line';
-import { Point } from 'Items/Point/Point';
-import { Arc } from 'Items/Arc/Arc';
-import { CubicBezier } from 'Items/Curve/Curve';
-import { Paths } from 'Items/Path/Paths';
+import { Mbr } from 'Geometry/Mbr/Mbr';
+import { Path } from 'Geometry/Path/Path';
+import { Line } from 'Geometry/Line/Line';
+import { Point } from 'Geometry/Point/Point';
+import { Arc } from 'Geometry/Arc/Arc';
+import { CubicBezier } from 'Geometry/Curve/Curve';
+import { Paths } from 'Geometry/Path/Paths';
 
 export const ArrowRight = {
 	name: 'ArrowRight',

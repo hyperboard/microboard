@@ -1,4 +1,4 @@
-import { HorisontalAlignment } from "../../Alignment";
+import { HorisontalAlignment } from "Geometry/Alignment";
 import type { ColorValue } from "Color";
 
 export const TextStyles = [

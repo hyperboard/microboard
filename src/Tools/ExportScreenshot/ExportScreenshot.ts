@@ -1,8 +1,8 @@
 import { Path2DFactory } from "api/Path2DFactory";
 import { Board } from "Board";
 import { Mbr, Transformation, Point } from "Items";
-import { transformOps } from "Items/Transformation/transformOps";
-import { DrawingContext } from "Items/DrawingContext";
+import { transformOps } from "Geometry/Transformation/transformOps";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { getOppositePoint } from "Selection/Transformer/TransformerHelpers/getOppositePoint";
 import { getResize } from "Selection/Transformer/TransformerHelpers/getResizeMatrix";
 import {

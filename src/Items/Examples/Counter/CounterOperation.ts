@@ -1,5 +1,5 @@
 import { BaseOperation } from "Events/EventsOperations";
-import { TransformationOperation } from "Items/Transformation/TransformationOperations";
+import { TransformationOperation } from "Geometry/Transformation/TransformationOperations";
 
 export type CounterOperation = UpdateCounter | TransformationOperation;
 

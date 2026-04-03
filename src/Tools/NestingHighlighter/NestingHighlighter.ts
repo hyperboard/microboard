@@ -1,5 +1,5 @@
 import { Frame, Item } from 'Items';
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import {
 	FRAME_HIGHLIGHTER_BORDER_COLOR,
 	FRAME_CHILDREN_HIGHLIGHTER_COLOR,

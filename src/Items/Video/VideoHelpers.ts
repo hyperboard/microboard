@@ -2,7 +2,7 @@ import { Board } from 'Board';
 import { calculatePosition } from 'Items/Image/calculatePosition';
 import { prepareImage } from 'Items/Image/ImageHelpers';
 import { VideoConstructorData, VideoItem } from './Video';
-import { transformOps } from '../Transformation/transformOps';
+import { transformOps } from 'Geometry/Transformation/transformOps';
 import {uploadMediaToStorage} from "api/MediaHelpers";
 
 export const getVideoMetadata = (file: File): Promise<{ width: number; height: number }> => {

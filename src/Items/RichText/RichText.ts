@@ -20,16 +20,16 @@ import {
   Transforms,
 } from "slate";
 import { ItemType } from "../Item";
-import { Matrix } from "../Transformation/Matrix";
-import { Mbr } from "../Mbr/Mbr";
-import { Point } from "../Point/Point";
+import { Matrix } from "Geometry/Transformation/Matrix";
+import { Mbr } from "Geometry/Mbr/Mbr";
+import { Point } from "Geometry/Point/Point";
 import { RichTextData, DefaultRichTextData } from "./RichTextData";
 import { registerItem } from "../RegisterItem";
 import { RichTextDataSchema } from "./RichText.schema";
-import { Transformation } from "../Transformation/Transformation";
-import { TransformationOperation } from "../Transformation/TransformationOperations";
-import { HorisontalAlignment, VerticalAlignment } from "../Alignment";
-import { DrawingContext } from "../DrawingContext";
+import { Transformation } from "Geometry/Transformation/Transformation";
+import { TransformationOperation } from "Geometry/Transformation/TransformationOperations";
+import { HorisontalAlignment, VerticalAlignment } from "Geometry/Alignment";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformRichText } from "Selection/Transformer/TransformerHelpers/transformRichText";
 import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";

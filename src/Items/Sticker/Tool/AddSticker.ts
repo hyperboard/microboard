@@ -1,6 +1,6 @@
 import { Board } from 'Board';
 import { Line, Mbr } from 'Items';
-import { DrawingContext } from 'Items/DrawingContext';
+import { DrawingContext } from 'Geometry/DrawingContext';
 import { Sticker } from 'Items/Sticker';
 import { CursorName } from 'Pointer/Cursor';
 import { tempStorage } from 'SessionStorage';

@@ -6,10 +6,10 @@ import {
 import { Board } from "Board";
 import { Subject } from "Subject";
 import {registerItem, registerTool} from "Items/RegisterItem";
-import { DrawingContext } from "Items/DrawingContext";
-import {BorderWidth, Path, BorderStyle} from "../../../Path";
-import {Line} from "../../../Line";
-import {Point} from "../../../Point";
+import { DrawingContext } from "Geometry/DrawingContext";
+import {BorderWidth, Path, BorderStyle} from "Geometry/Path";
+import {Line} from "Geometry/Line";
+import {Point} from "Geometry/Point";
 import {AddPouch, AddScreen} from "./AddScreen";
 import { ScreenOperation } from "./ScreenOperation";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";

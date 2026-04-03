@@ -1,5 +1,5 @@
 import { Board } from "Board";
-import { DrawingContext } from "Items/DrawingContext";
+import { DrawingContext } from "Geometry/DrawingContext";
 import { Tool } from "Tools/Tool";
 import { ConnectorTransformer } from "./ConnectorTransformer";
 import { SelectionItems } from "./SelectionItems";
