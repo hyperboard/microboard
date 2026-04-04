@@ -1,6 +1,6 @@
-import { BaseItem, BaseItemData, SerializedItemData } from "../../../BaseItem/BaseItem";
+import { BaseItem, BaseItemData, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { Operation } from "Events";
-import { BorderWidth, LinePatterns, Path, Shapes, BorderStyle, Point } from "Items";
+import { BorderWidth, Path, BorderStyle, Point } from "Items";
 import { createRoundedRectanglePath } from "Items/Shape/Basic/RoundedRectangle";
 import { Subject } from "Subject";
 import { Board } from "Board";
@@ -10,6 +10,8 @@ import { registerItem } from "Items";
 import { AddDice } from "./AddDice";
 import { conf } from "Settings";
 import { getMediaSignedUrl } from "api/MediaHelpers";
+import { diceActions } from "./DiceActions";
+import { propertyOps } from "Items/propertyOps";
 
 export type DiceType = "common" | "custom";
 
@@ -215,13 +217,7 @@ export class Dice extends BaseItem<Dice> {
   }
 
   setBackgroundColor(backgroundColor: string): void {
-    this.emit({
-      class: "Dice",
-      method: "setBackgroundColor",
-      item: [this.getId()],
-      newData: { backgroundColor },
-      prevData: { backgroundColor: this.backgroundColor },
-    });
+    this.emit(propertyOps.setProperty([this], "backgroundColor", backgroundColor));
   }
 
   private applyBorderWidth(borderWidth: BorderWidth): void {
@@ -230,13 +226,7 @@ export class Dice extends BaseItem<Dice> {
   }
 
   setBorderWidth(borderWidth: BorderWidth): void {
-    this.emit({
-      class: "Dice",
-      method: "setBorderWidth",
-      item: [this.getId()],
-      newData: { borderWidth },
-      prevData: { borderWidth: this.borderWidth },
-    });
+    this.emit(propertyOps.setProperty([this], "borderWidth", borderWidth));
   }
 
   private applyBorderColor(borderColor: string): void {
@@ -245,33 +235,15 @@ export class Dice extends BaseItem<Dice> {
   }
 
   setBorderColor(borderColor: string): void {
-    this.emit({
-      class: "Dice",
-      method: "setBorderColor",
-      item: [this.getId()],
-      newData: { borderColor },
-      prevData: { borderColor: this.borderColor }
-    });
+    this.emit(propertyOps.setProperty([this], "borderColor", borderColor));
   }
 
-  setValues(values: number[]): void {
-    this.emit({
-      class: "Dice",
-      method: "changeValues",
-      item: [this.getId()],
-      newData: { values },
-      prevData: { values: this.values },
-    });
+  setValues(values: (number | string)[]): void {
+    this.emit(propertyOps.setProperty([this], "values", values));
   }
 
   setValueIndex(valueIndex: number): void {
-    this.emit({
-      class: "Dice",
-      method: "changeValueIndex",
-      item: [this.getId()],
-      newData: { valueIndex, shouldRotate: true, timeStamp: Date.now() },
-      prevData: { value: this.valueIndex, shouldRotate: false }
-    });
+    this.emit(propertyOps.setProperty([this], "valueIndex", valueIndex));
   }
 
   throwDice() {
@@ -323,6 +295,24 @@ export class Dice extends BaseItem<Dice> {
     this.subject.publish(this);
   }
 
+  protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
+    super.onPropertyUpdated(property, value, prevValue);
+    switch (property) {
+      case "backgroundColor":
+        this.path.setBackgroundColor(value);
+        break;
+      case "borderColor":
+        this.path.setBorderColor(value);
+        break;
+      case "borderWidth":
+        this.path.setBorderWidth(value);
+        break;
+      case "values":
+        this.updateRenderValues();
+        break;
+    }
+  }
+
   startRotation() {
     if (!this.animationFrameId) {
       const animate = () => {
@@ -350,4 +340,5 @@ registerItem({
   item: Dice,
   defaultData: defaultDiceData,
   toolData: { name: "AddDice", tool: AddDice },
+  actions: diceActions,
 });

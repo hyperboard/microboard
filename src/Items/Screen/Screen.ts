@@ -15,6 +15,8 @@ import { ScreenOperation } from "./ScreenOperation";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
 import {conf} from "Settings";
 import {getMediaSignedUrl} from "api/MediaHelpers";
+import { screenActions } from "./ScreenActions";
+import { propertyOps } from "Items/propertyOps";
 
 const screenPath = new Path(
   [
@@ -91,6 +93,24 @@ export class Screen extends BaseItem<Screen> {
     this.subject.publish(this);
   }
 
+  protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
+    super.onPropertyUpdated(property, value, prevValue);
+    switch (property) {
+      case "backgroundColor":
+        this.path.setBackgroundColor(value);
+        break;
+      case "borderColor":
+        this.path.setBorderColor(value);
+        break;
+      case "borderWidth":
+        this.path.setBorderWidth(value);
+        break;
+      case "backgroundUrl":
+        this.applyBackgroundUrl(value);
+        break;
+    }
+  }
+
   getOwnerId(): string {
     return this.ownerId;
   }
@@ -117,13 +137,7 @@ export class Screen extends BaseItem<Screen> {
   }
 
   setBackgroundColor(backgroundColor: string): void {
-    this.emit({
-      class: "Screen",
-      method: "setBackgroundColor",
-      item: [this.getId()],
-      newData: {backgroundColor},
-      prevData: {backgroundColor: this.backgroundColor},
-    });
+    this.emit(propertyOps.setProperty([this], "backgroundColor", backgroundColor));
   }
 
   private applyBorderWidth(borderWidth: BorderWidth): void {
@@ -132,13 +146,7 @@ export class Screen extends BaseItem<Screen> {
   }
 
   setBorderWidth(borderWidth: BorderWidth): void {
-    this.emit({
-      class: "Screen",
-      method: "setBorderWidth",
-      item: [this.getId()],
-      newData: {borderWidth},
-      prevData: {borderWidth: this.borderWidth},
-    });
+    this.emit(propertyOps.setProperty([this], "borderWidth", borderWidth));
   }
 
   private applyBorderColor(borderColor: string): void {
@@ -147,13 +155,7 @@ export class Screen extends BaseItem<Screen> {
   }
 
   setBorderColor(borderColor: string): void {
-    this.emit({
-      class: "Screen",
-      method: "setBorderColor",
-      item: [this.getId()],
-      newData: {borderColor},
-      prevData: {borderColor: this.borderColor}
-    });
+    this.emit(propertyOps.setProperty([this], "borderColor", borderColor));
   }
 
   private async applyBackgroundUrl(url?: string): Promise<void> {
@@ -175,13 +177,7 @@ export class Screen extends BaseItem<Screen> {
   }
 
   setBackgroundUrl(url?: string): void {
-    this.emit({
-      class: "Screen",
-      method: "setBackgroundUrl",
-      item: [this.getId()],
-      newData: {backgroundUrl: url},
-      prevData: {backgroundUrl: this.backgroundUrl}
-    });
+    this.emit(propertyOps.setProperty([this], "backgroundUrl", url));
   }
 
   applyOwnerId(ownerId: string): void {
@@ -258,7 +254,8 @@ export class Screen extends BaseItem<Screen> {
 registerItem({
   item: Screen,
   defaultData: defaultScreenData,
-  toolData: {name: "AddScreen", tool: AddScreen}
+  toolData: {name: "AddScreen", tool: AddScreen},
+  actions: screenActions,
 });
 
 registerTool({name: "AddPouch", tool: AddPouch})

@@ -6,14 +6,15 @@ import {
 import {Board} from "Board";
 import {Subject} from "Subject";
 import {registerItem} from "Items/RegisterItem";
-import {Card} from "Items/Examples/CardGame/Card/Card";
+import {Card} from "Items/Card/Card";
 import {DrawingContext} from "Geometry/DrawingContext";
 import {transformOps} from "Geometry/Transformation/transformOps";
-import {DeckOperation} from "Items/Examples/CardGame/Deck/DeckOperation";
-import {conf} from "../../../../Settings";
+import {DeckOperation} from "Items/Deck/DeckOperation";
+import {conf} from "Settings";
 import {Path} from "Geometry/Path";
-import { registerHotkey } from "../../../../Keyboard/HotkeyRegistry";
+import { registerHotkey } from "Keyboard/HotkeyRegistry";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
+import { deckActions } from "./DeckActions";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -317,6 +318,7 @@ export class Deck extends BaseItem<Deck> {
 registerItem({
   item: Deck,
   defaultData: defaultDeckData,
+  actions: deckActions,
 });
 
 registerHotkey({

@@ -52,7 +52,7 @@ export type ItemType =
   | "Card"
   | "Deck"
   | "Dice"
-  | "Star"
+  | "Screen"
   | (string & {});
 export type ItemData =
   | ShapeData

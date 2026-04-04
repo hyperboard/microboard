@@ -22,11 +22,9 @@ import "Items/AINode/AINode";
 import "Items/Video/Video";
 import "Items/Audio/Audio";
 
-// Trigger self-registration of example items
-import "Items/Examples/Star/Star";
-import "Items/Examples/Counter/Counter";
-import "Items/Examples/CardGame/Card/Card";
-import "Items/Examples/CardGame/Deck/Deck";
-import "Items/Examples/CardGame/Dice/Dice";
-import "Items/Examples/CardGame/Screen/Screen";
+// Trigger self-registration of game/card items
+import "Items/Card/Card";
+import "Items/Deck/Deck";
+import "Items/Dice/Dice";
+import "Items/Screen/Screen";
 

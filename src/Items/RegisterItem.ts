@@ -14,6 +14,8 @@ import { CustomTool } from "Tools/CustomTool";
 import { BoardTool } from "Tools/BoardTool";
 import { BaseItem, BaseItemData } from "Items/BaseItem/BaseItem";
 import { BaseOperation, ItemOperation, Operation } from "Events/EventsOperations";
+import type { ItemActionConfig } from "./ItemActions";
+import { itemActions } from "./itemActionsRegistry";
 
 type ItemConstructor = new (board: Board, id: string) => BaseItem;
 
@@ -22,6 +24,8 @@ type RegisterItemArgs = {
   defaultData: BaseItemData;
   toolData?: { name: string; tool: BoardToolConstructor };
   schema?: z.ZodType<any>;
+  /** Declarative UI descriptor for context panel, context menu, and tool panel. */
+  actions?: ItemActionConfig;
 };
 
 export function registerItem({
@@ -29,6 +33,7 @@ export function registerItem({
   defaultData,
   toolData,
   schema,
+  actions,
 }: RegisterItemArgs): void {
   const { itemType } = defaultData;
   itemFactories[itemType] = createItemFactory(item, defaultData);
@@ -38,6 +43,9 @@ export function registerItem({
   }
   if (toolData) {
     registeredTools[toolData.name] = toolData.tool;
+  }
+  if (actions) {
+    itemActions[itemType] = actions;
   }
 
   if (!itemCommandFactories[itemType]) {

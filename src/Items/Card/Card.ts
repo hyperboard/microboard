@@ -9,11 +9,13 @@ import {Path} from "Geometry/Path/Path";
 import {Subject} from "Subject";
 import {Paths} from "Geometry/Path/Paths";
 import {registerItem} from "Items/RegisterItem";
-import {CardOperation} from "Items/Examples/CardGame/Card/CardOperation";
+import {CardOperation} from "Items/Card/CardOperation";
 import {conf} from "Settings";
-import {throttle} from "../../../../utils";
+import {throttle} from "utils";
 import {registerHotkey} from "Keyboard/HotkeyRegistry";
 import {getMediaSignedUrl} from "api/MediaHelpers";
+import { cardActions } from "./CardActions";
+import { propertyOps } from "Items/propertyOps";
 
 
 export interface CardData extends BaseItemData {
@@ -213,22 +215,12 @@ export class Card extends BaseItem<Card> {
       }
     }
     if (openedCardIds.length) {
-      this.emitForManyItems({
-        class: "Card",
-        method: "setIsOpen",
-        item: openedCardIds,
-        newData: {isOpen: false},
-        prevData: {isOpen: true},
-      });
+      const items = openedCardIds.map(id => this.board.items.getById(id)) as Card[];
+      this.emit(propertyOps.setProperty(items, "isOpen", false));
     }
     if (closedCardIds.length) {
-      this.emitForManyItems({
-        class: "Card",
-        method: "setIsOpen",
-        item: closedCardIds,
-        newData: {isOpen: true},
-        prevData: {isOpen: false},
-      });
+      const items = closedCardIds.map(id => this.board.items.getById(id)) as Card[];
+      this.emit(propertyOps.setProperty(items, "isOpen", true));
     }
   }
 
@@ -257,11 +249,19 @@ export class Card extends BaseItem<Card> {
     }
     this.subject.publish(this);
   }
+
+  protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
+    super.onPropertyUpdated(property, value, prevValue);
+    if (property === "isOpen") {
+      this.updateImageToRender();
+    }
+  }
 }
 
 registerItem({
   item: Card,
   defaultData: defaultCardData,
+  actions: cardActions,
 });
 
 registerHotkey({

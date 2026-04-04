@@ -28,11 +28,10 @@ export type { Item, ItemType, ItemData } from "./Item";
 
 export { registerItem } from "./RegisterItem";
 
-export { Star } from "./Examples/Star";
-export { Counter } from "./Examples/Counter";
-export { Card } from "./Examples/CardGame/Card";
-export { Deck } from "./Examples/CardGame/Deck";
-export { Dice } from "./Examples/CardGame/Dice";
-export { Screen } from "./Examples/CardGame/Screen";
+export { Card } from "./Card";
+export { Deck } from "./Deck";
+export { Dice } from "./Dice";
+export { Screen } from "./Screen";
 export { Comment } from "./Comment";
 export type { HorisontalAlignment, VerticalAlignment } from "Geometry/Alignment";
+
