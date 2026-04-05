@@ -1,6 +1,6 @@
 import { Board } from 'Board';
 import createCanvasDrawer, { CanvasDrawer } from 'drawMbrOnCanvas';
-import {Line, Mbr, Item, Point, Frame, Connector, Comment, RichText} from 'Items';
+import { Line, Mbr, Item, Point, Frame, Connector, RichText } from 'Items';
 import { transformOps } from 'Geometry/Transformation/transformOps';
 import { DrawingContext } from 'Geometry/DrawingContext';
 import { quickAddItem } from 'Selection/QuickAddButtons';
@@ -12,8 +12,8 @@ import { RELATIVE_ALIGNMENT_COLOR } from 'Tools/RelativeAlignment/RelativeAlignm
 import { registerTool } from 'Items/RegisterItem';
 import { BoardTool } from 'Tools/BoardTool';
 import { isSafari } from 'isSafari';
-import {BoardSelection} from "../../Selection";
-import {BaseItem} from "Items/BaseItem";
+import { BoardSelection } from '../../Selection';
+import { BaseItem } from 'Items/BaseItem';
 
 export class Select extends BoardTool {
 	line: null | Line = null;
@@ -90,6 +90,453 @@ export class Select extends BoardTool {
 		this.snapLines = { verticalLines: [], horizontalLines: [] };
 	}
 
+	private getHoverItems(hoveredItem?: Item): Item[] {
+		const hover = [
+			...this.board.items.getUnderPointer().filter(item => item.getId() !== hoveredItem?.getId()),
+		];
+		if (hoveredItem) {
+			hover.push(hoveredItem);
+		}
+		return hover;
+	}
+
+	private emitCancelDrawSelect(throttled = true): void {
+		const emit = throttled ? this.board.presence.throttledEmit : this.board.presence.emit;
+		emit.call(this.board.presence, {
+			method: 'CancelDrawSelect',
+			timestamp: Date.now(),
+		});
+	}
+
+	private emitDrawSelect(): void {
+		if (!this.rect) {
+			return;
+		}
+
+		this.board.presence.throttledEmit({
+			method: 'DrawSelect',
+			timestamp: Date.now(),
+			size: {
+				left: this.rect.left,
+				top: this.rect.top,
+				right: this.rect.right,
+				bottom: this.rect.bottom,
+			},
+		});
+	}
+
+	private startSelectionRectangle(): boolean {
+		const { x, y } = this.board.pointer.point;
+		this.line = new Line(new Point(x, y), new Point(x, y));
+		this.rect = this.line.getMbr();
+		this.rect.borderColor = conf.SELECTION_COLOR;
+		this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
+		this.board.tools.publish();
+		this.emitDrawSelect();
+		return false;
+	}
+
+	private updateSelectionRectangle(): boolean {
+		const point = this.board.pointer.point.copy();
+		this.line = new Line(this.line!.start, point);
+		this.rect = this.line.getMbr();
+		this.rect.borderColor = conf.SELECTION_COLOR;
+		this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
+		this.board.tools.publish();
+		this.emitDrawSelect();
+		return false;
+	}
+
+	private initializeSelectionDrag(selectionItems: Item[]): boolean {
+		this.isDraggingSelection = true;
+		this.board.selection.transformationRenderBlock = true;
+		if (!this.initialCursorPos) {
+			const itemCenter = this.alignmentHelper.combineMBRs(selectionItems).getCenter();
+			this.initialCursorPos = new Point(
+				this.board.pointer.point.x - itemCenter.x,
+				this.board.pointer.point.y - itemCenter.y
+			);
+		}
+		this.board.selection.quickAddButtons.clear();
+		return false;
+	}
+
+	private isPointerDownOnSelection(hover: Item[]): boolean {
+		const { selection, pointer } = this.board;
+		const selectionMbr = selection.getMbr();
+		const selectionItems = selection.list();
+		const selectableHover = hover.map(item => this.board.selection.getSelectableItem(item));
+		const isPointerInsideSelection = selectionMbr?.isUnderPoint(pointer.point) ?? false;
+		const areAllHoveredItemsSelected = selectableHover.every(
+			hovered =>
+				hovered && selectionItems.some(selected => selected.getId() === hovered.getId())
+		);
+
+		return isPointerInsideSelection && areAllHoveredItemsSelected;
+	}
+
+	private shouldDrawSelectionRectangle(hover: Item[]): boolean {
+		const frames = hover.filter((item): item is Frame => item instanceof Frame);
+		const hasOnlyFramesUnderPointer = hover.every(item => item instanceof Frame);
+		const isPointerOverAnyFrameText = frames.some(frame =>
+			frame.isTextUnderPoint(this.board.pointer.point)
+		);
+
+		return hasOnlyFramesUnderPointer && !isPointerOverAnyFrameText;
+	}
+
+	private initializeUnselectedItemDrag(hover: Item[]): boolean {
+		this.isDownOnUnselectedItem = hover.length !== 0;
+		this.isDraggingUnselectedItem = this.isDownOnUnselectedItem;
+		if (!this.isDownOnUnselectedItem) {
+			return false;
+		}
+
+		const targetItem = hover[hover.length - 1];
+		const selected = this.board.selection.items.getSingle();
+		if (selected === targetItem) {
+			return false;
+		}
+
+		this.downOnItem = targetItem;
+		this.initializeUnselectedItemCursorOffset();
+
+		if (this.shouldEnterItemEditTool()) {
+			this.board.selection.editUnderPointer();
+			this.board.tools.publish();
+			this.clear();
+			return this.board.selection.tool.leftButtonDown();
+		}
+
+		return false;
+	}
+
+	private initializeUnselectedItemCursorOffset(): void {
+		const dragTarget = this.downOnItem;
+		const hasNoDragTarget = !dragTarget;
+		const cursorOffsetAlreadyInitialized = !!this.initialCursorPos;
+		const itemUsesFollowBehavior = dragTarget?.shouldFollowItems() ?? false;
+
+		if (hasNoDragTarget || cursorOffsetAlreadyInitialized || itemUsesFollowBehavior) {
+			return;
+		}
+
+		const itemCenter = dragTarget.getMbr().getCenter();
+		this.initialCursorPos = new Point(
+			this.board.pointer.point.x - itemCenter.x,
+			this.board.pointer.point.y - itemCenter.y
+		);
+	}
+
+	private shouldEnterItemEditTool(): boolean {
+		const dragTarget = this.downOnItem;
+		const hasDragTarget = !!dragTarget;
+		const isConnectorAnchorHandle = hasDragTarget && !dragTarget.isAlignmentSource();
+		const hasSingleConnectedPoint = hasDragTarget && (dragTarget as any).isConnectedOnePoint();
+		const isCtrlPressed = this.board.keyboard.isCtrl;
+
+		return isConnectorAnchorHandle && hasSingleConnectedPoint && !isCtrlPressed;
+	}
+
+	private handleSelectionRectangleMove(): boolean {
+		return this.updateSelectionRectangle();
+	}
+
+	private handleCameraPanMove(x: number, y: number): boolean {
+		this.board.camera.translateBy(x, y);
+		return false;
+	}
+
+	private highlightFollowItemTarget(): void {
+		if (!this.downOnItem?.shouldFollowItems()) {
+			return;
+		}
+
+		const topItem = this.board.items.getUnderPointer().pop();
+		this.nestingHighlighter.clear();
+		if (topItem) {
+			this.nestingHighlighter.addSingleItem(topItem);
+		}
+	}
+
+	private handleSelectionDragMove(x: number, y: number): boolean {
+		const { selection } = this.board;
+		const selectionMbr = selection.getMbr();
+		const single = selection.items.getSingle();
+
+		if (single && this.handleSnapping(single)) {
+			return false;
+		}
+
+		if (this.handleCanvasSelectionDragMove(x, y, selection)) {
+			return false;
+		}
+
+		if (this.handleDirectSelectionDragMove(x, y, selection)) {
+			return false;
+		}
+
+		this.updateFramesNesting(selectionMbr, selection);
+		return false;
+	}
+
+	private handleCanvasSelectionDragMove(x: number, y: number, selection: BoardSelection): boolean {
+		const hasCanvas = !!this.canvasDrawer.getLastCreatedCanvas();
+		if (!hasCanvas) {
+			return false;
+		}
+
+		if (!this.debounceUpd.shouldUpd()) {
+			this.canvasDrawer.translateCanvasBy(x, y);
+			this.canvasDrawer.highlightNesting();
+			return true;
+		}
+
+		this.canvasDrawer.translateCanvasBy(x, y);
+		const { translateX, translateY } = this.canvasDrawer.getMatrix();
+		const translation = selection.getManyItemsMove(translateX, translateY);
+		this.canvasDrawer.highlightNesting();
+		selection.moveMany(translation, this.beginTimeStamp);
+		this.canvasDrawer.clearCanvasAndKeys();
+		this.debounceUpd.setFalse();
+		return true;
+	}
+
+	private handleDirectSelectionDragMove(x: number, y: number, selection: BoardSelection): boolean {
+		if (this.handleSnapping(this.board.selection.items.list())) {
+			return false;
+		}
+
+		const translation = selection.getManyItemsMove(x, y);
+		const translationKeys = translation.map(item => item.id);
+		const commentsSet = new Set(this.board.items.getComments().map(comment => comment.getId()));
+		const movedNonCommentItemsCount = translationKeys.filter(item => !commentsSet.has(item)).length;
+
+		if (movedNonCommentItemsCount > 10) {
+			const selectedMbr = this.board.selection.getMbr()?.copy();
+			const sumMbr = this.canvasDrawer.countSumMbr(translation);
+			if (sumMbr) {
+				this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation, undefined, selectedMbr);
+				this.canvasDrawer.translateCanvasBy(x, y);
+				this.canvasDrawer.highlightNesting();
+				this.debounceUpd.setFalse();
+				this.debounceUpd.setTimeoutUpdate(1000);
+				return true;
+			}
+		}
+
+		selection.moveMany(translation, this.beginTimeStamp);
+		return false;
+	}
+
+	private handleUnselectedItemDragMove(x: number, y: number): void {
+		if (!this.isDraggingUnselectedItem || !this.downOnItem) {
+			return;
+		}
+
+		const { downOnItem: draggingItem } = this;
+		this.board.selection.removeAll();
+		const translation = this.board.selection.getManyItemsMove(x, y, draggingItem);
+		this.board.selection.moveMany(translation, this.beginTimeStamp);
+
+		if (this.handleSnapping(this.downOnItem)) {
+			return;
+		}
+
+		this.highlightDraggedItemNesting(draggingItem);
+	}
+
+	private highlightDraggedItemNesting(draggingItem: Item): void {
+		const draggingMbr =
+			draggingItem instanceof BaseItem && draggingItem.parent !== 'Board'
+				? draggingItem.getWorldMbr()
+				: draggingItem.getMbr();
+		const groups: BaseItem[] = this.board.items
+			.getEnclosedOrCrossed(
+				draggingMbr.left,
+				draggingMbr.top,
+				draggingMbr.right,
+				draggingMbr.bottom
+			)
+			.filter(item => !!('index' in item && item.index));
+
+		groups.forEach(group => {
+			const alreadyInGroup =
+				draggingItem instanceof BaseItem && draggingItem.parent === group.getId();
+			if (group.handleNesting(draggingItem) && !alreadyInGroup) {
+				this.nestingHighlighter.add(group, draggingItem);
+			} else {
+				this.nestingHighlighter.remove(draggingItem);
+			}
+		});
+	}
+
+	private updateHoverContext(): boolean {
+		const { selection, items } = this.board;
+		const hover = items.getUnderPointer();
+		this.isHoverUnselectedItem = hover.filter(item => !item.isReady()).length === 1;
+		const isHoveringInteractiveItem = this.isHoverUnselectedItem && !this.isDraggingUnselectedItem;
+		const isHoverContextActive = selection.getContext() === 'HoverUnderPointer';
+		const shouldEnterHoverContext = isHoveringInteractiveItem && selection.getContext() === 'None';
+		const shouldLeaveHoverContext =
+			(!this.isHoverUnselectedItem || this.isDraggingUnselectedItem) && isHoverContextActive;
+
+		if (shouldEnterHoverContext) {
+			selection.setContext('HoverUnderPointer');
+			return false;
+		}
+
+		if (shouldLeaveHoverContext) {
+			selection.setContext('None');
+			return false;
+		}
+
+		this.emitCancelDrawSelect();
+		return false;
+	}
+
+	private hasSelectionRectangleArea(): boolean {
+		const isDrawingSelectionRectangle = this.isDrawingRectangle && !!this.line && !!this.rect;
+		const hasRectangleHeight = !!this.rect?.getHeight();
+		const hasRectangleWidth = !!this.rect?.getWidth();
+
+		return isDrawingSelectionRectangle && hasRectangleHeight && hasRectangleWidth;
+	}
+
+	private applySelectionRectangleSelection(): void {
+		if (!this.rect) {
+			return;
+		}
+
+		const isAddToSelection = this.board.keyboard.down === 'Shift';
+		if (isAddToSelection) {
+			const { left, top, right, bottom } = this.rect;
+			const items = this.board.items.getEnclosedOrCrossed(left, top, right, bottom);
+			this.board.selection.add(items);
+		} else {
+			this.board.selection.selectEnclosedOrCrossedBy(this.rect);
+		}
+	}
+
+	private finishSelectionRectangleSelection(cancelWithPresenceEmit = false): boolean {
+		this.applySelectionRectangleSelection();
+		this.board.tools.publish();
+		this.clear();
+		if (cancelWithPresenceEmit) {
+			this.board.presence.emit({
+				method: 'CancelDrawSelect',
+				timestamp: Date.now(),
+			});
+		}
+		return false;
+	}
+
+	private finalizeDownItemInteraction(): boolean {
+		const topItem = this.board.items.getUnderPointer().pop();
+		const curr = this.downOnItem;
+		if (curr) {
+			curr.onSelectEnd(topItem);
+		}
+
+		if (curr && curr.isBusy()) {
+			this.board.tools.publish();
+			this.clear();
+			return false;
+		}
+
+		return true;
+	}
+
+	private handleLeftClickSelection(): boolean {
+		const { isCtrl, isShift } = this.board.keyboard;
+		const hovered = this.board.items.getUnderPointer();
+		this.board.pointer.subject.publish(this.board.pointer);
+
+		if (isCtrl || isShift) {
+			return this.handleModifiedLeftClick(hovered, isShift);
+		}
+
+		return this.handlePlainLeftClick(hovered);
+	}
+
+	private handleModifiedLeftClick(hovered: Item[], isShift: boolean): boolean {
+		const underPointer = this.board.selection.getSelectableItem(hovered[0]);
+		const isEmptySelection = this.board.selection.items.list().length === 0;
+		const shouldKeepExistingSelection = !underPointer && !isEmptySelection && isShift;
+
+		if (shouldKeepExistingSelection) {
+			this.board.selection.add(this.board.selection.items.list());
+			this.clear();
+			this.board.tools.publish();
+			return false;
+		}
+
+		if (!underPointer) {
+			this.board.selection.editUnderPointer();
+			this.clear();
+			return false;
+		}
+
+		const isNotInSelection = this.board.selection.items.findById(underPointer.getId()) === null;
+		if (isNotInSelection) {
+			this.board.selection.add(underPointer);
+			this.board.selection.setContext('EditUnderPointer');
+		} else {
+			this.board.selection.remove(underPointer);
+		}
+
+		this.clear();
+		this.board.tools.publish();
+		return false;
+	}
+
+	private handlePlainLeftClick(hovered: Item[]): boolean {
+		const topItem = hovered.pop();
+		const curr = this.board.selection.items.getSingle();
+		const isEditUnderPointerContext = this.board.selection.getContext() === 'EditUnderPointer';
+		const clickedSelectedItem = !!curr && topItem === curr;
+		const canEditLockedSelection = !this.board.selection.getIsLockedSelection();
+		const shouldEditText =
+			isEditUnderPointerContext && clickedSelectedItem && canEditLockedSelection;
+
+		if (shouldEditText) {
+			curr.getRichText()?.saveLastClickPoint(this.board.pointer.point.copy(), this.board.camera);
+			this.board.selection.editText();
+		} else {
+			this.board.selection.editUnderPointer();
+		}
+
+		this.board.tools.publish();
+		this.clear();
+		return false;
+	}
+
+	private finalizeCanvasSelectionDrag(): void {
+		if (!this.canvasDrawer.getLastCreatedCanvas()) {
+			return;
+		}
+
+		const translation = this.board.selection.getManyItemsMove(
+			this.canvasDrawer.getMatrix().translateX,
+			this.canvasDrawer.getMatrix().translateY
+		);
+		this.board.selection.moveMany(translation, this.beginTimeStamp);
+	}
+
+	private finishLeftDrag(): boolean {
+		this.emitCancelDrawSelect(false);
+		this.finalizeCanvasSelectionDrag();
+
+		if (this.isMovedAfterDown && this.downOnItem) {
+			this.originalCenter = this.downOnItem.getMbr().getCenter();
+		}
+
+		this.clear();
+		this.clearGuidelines();
+		this.board.tools.publish();
+		return false;
+	}
+
 	private handleSnapping(item: Item | Item[]): boolean {
 		if (this.board.keyboard.isShift) {
 			return false;
@@ -110,18 +557,19 @@ export class Select extends BoardTool {
 
 			const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
 			const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
+			const hasMovedBeyondSnapThreshold =
+				cursorDiffX > increasedSnapThreshold || cursorDiffY > increasedSnapThreshold;
+			const canReleaseSnap = hasMovedBeyondSnapThreshold && !!this.initialCursorPos;
 
-			if (
-				(cursorDiffX > increasedSnapThreshold || cursorDiffY > increasedSnapThreshold) &&
-				this.initialCursorPos
-			) {
+			if (canReleaseSnap) {
+				const initialCursorPos = this.initialCursorPos!;
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 				const itemCenter = Array.isArray(item)
 					? this.alignmentHelper.combineMBRs(item).getCenter()
 					: item.getMbr().getCenter();
-				const translateX = this.board.pointer.point.x - this.initialCursorPos.x - itemCenter.x;
-				const translateY = this.board.pointer.point.y - this.initialCursorPos.y - itemCenter.y;
+				const translateX = this.board.pointer.point.x - initialCursorPos.x - itemCenter.x;
+				const translateY = this.board.pointer.point.y - initialCursorPos.y - itemCenter.y;
 				this.alignmentHelper.translateItems(item, translateX, translateY, this.beginTimeStamp);
 			}
 		}
@@ -146,18 +594,19 @@ export class Select extends BoardTool {
 
 			const cursorDiffX = Math.abs(this.board.pointer.point.x - this.snapCursorPos.x);
 			const cursorDiffY = Math.abs(this.board.pointer.point.y - this.snapCursorPos.y);
+			const hasMovedBeyondSnapThreshold =
+				cursorDiffX > increasedSnapThreshold || cursorDiffY > increasedSnapThreshold;
+			const canReleaseSnap = hasMovedBeyondSnapThreshold && !!this.initialCursorPos;
 
-			if (
-				(cursorDiffX > increasedSnapThreshold || cursorDiffY > increasedSnapThreshold) &&
-				this.initialCursorPos
-			) {
+			if (canReleaseSnap) {
+				const initialCursorPos = this.initialCursorPos!;
 				this.isSnapped = false;
 				this.snapCursorPos = null;
 				const itemCenter = this.canvasDrawer.getMbr().getCenter();
-				const targetX = this.board.pointer.point.x - this.initialCursorPos.x;
-				const targetY = this.board.pointer.point.y - this.initialCursorPos.y;
-				const translateX = targetX - (itemCenter.x - this.initialCursorPos.x);
-				const translateY = targetY - (itemCenter.y - this.initialCursorPos.y);
+				const targetX = this.board.pointer.point.x - initialCursorPos.x;
+				const targetY = this.board.pointer.point.y - initialCursorPos.y;
+				const translateX = targetX - (itemCenter.x - initialCursorPos.x);
+				const translateY = targetY - (itemCenter.y - initialCursorPos.y);
 				this.alignmentHelper.translateCanvas(translateX, translateY, this.beginTimeStamp);
 			}
 		}
@@ -225,7 +674,6 @@ export class Select extends BoardTool {
 				const newEndX = this.originalCenter.x + snapDirectionX * mainLineLength;
 				const newEndY = this.originalCenter.y + snapDirectionY * mainLineLength;
 
-				const threshold = Infinity; // Убрали ограничение
 				const translateX =
 					newEndX -
 					(Array.isArray(item)
@@ -268,75 +716,33 @@ export class Select extends BoardTool {
 		}
 		this.clear();
 		this.isLeftDown = true;
-		const { items, selection, pointer } = this.board;
+		const { selection } = this.board;
 		selection.showQuickAddPanel = false;
-		const hover = [...items.getUnderPointer().filter(i => i.getId() !== hoveredItem?.getId())];
-		if (hoveredItem) {
-			hover.push(hoveredItem);
-		}
-
-
+		const hover = this.getHoverItems(hoveredItem);
 		const isLocked = this.board.selection.getIsLockedSelection();
+		const canInteractWhileLocked = hover[0]?.canBeInteractedWithWhileLocked(
+			!!this.board.aiGeneratingOnItem
+		);
+		const shouldBlockLockedInteraction = isLocked && !canInteractWhileLocked;
 
-		if (isLocked && !hover[0]?.canBeInteractedWithWhileLocked(!!this.board.aiGeneratingOnItem)) {
+		if (shouldBlockLockedInteraction) {
 			return false;
 		}
 
 		this.beginTimeStamp = Date.now();
 
-		const selectionMbr = selection.getMbr();
 		const selectionItems = selection.list();
-		const selectableHover = hover.map(item => this.board.selection.getSelectableItem(item));
-		this.isDownOnSelection =
-			selectionMbr !== undefined &&
-			selectionMbr.isUnderPoint(pointer.point) &&
-			selectableHover.every(
-				hovered =>
-					hovered &&
-					selectionItems.some(selected => selected.getId() === hovered.getId())
-			);
+		this.isDownOnSelection = this.isPointerDownOnSelection(hover);
 
-		this.isDraggingSelection = this.isDownOnSelection;
-		if (this.isDraggingSelection) {
-			this.board.selection.transformationRenderBlock = true;
-			if (!this.initialCursorPos) {
-				const itemCenter = this.alignmentHelper.combineMBRs(selectionItems).getCenter();
-				this.initialCursorPos = new Point(
-					this.board.pointer.point.x - itemCenter.x,
-					this.board.pointer.point.y - itemCenter.y
-				);
-			}
-			this.board.selection.quickAddButtons.clear();
-			return false;
+		if (this.isDownOnSelection) {
+			return this.initializeSelectionDrag(selectionItems);
 		}
 
 		this.isDownOnBoard = hover.length === 0;
-		this.isDrawingRectangle =
-			hover.filter(item => !(item instanceof Frame)).length === 0 &&
-			hover
-				.filter((item): item is Frame => item instanceof Frame)
-				.filter(frame => frame.isTextUnderPoint(pointer.point)).length === 0;
+		this.isDrawingRectangle = this.shouldDrawSelectionRectangle(hover);
 
 		if (this.isDrawingRectangle) {
-			const { x, y } = pointer.point;
-			this.line = new Line(new Point(x, y), new Point(x, y));
-			this.rect = this.line.getMbr();
-			this.rect.borderColor = conf.SELECTION_COLOR;
-			this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
-			this.board.tools.publish();
-
-			this.board.presence.throttledEmit({
-				method: 'DrawSelect',
-				timestamp: Date.now(),
-				size: {
-					left: this.rect.left,
-					top: this.rect.top,
-					right: this.rect.right,
-					bottom: this.rect.bottom,
-				},
-			});
-
-			return false;
+			return this.startSelectionRectangle();
 		}
 
 		const isHoverLocked = hover.every(item => item.transformation.isLocked);
@@ -344,42 +750,8 @@ export class Select extends BoardTool {
 			return false;
 		}
 
-		this.board.presence.throttledEmit({
-			method: 'CancelDrawSelect',
-			timestamp: Date.now(),
-		});
-
-		this.isDownOnUnselectedItem = hover.length !== 0;
-		this.isDraggingUnselectedItem = this.isDownOnUnselectedItem;
-		if (this.isDownOnUnselectedItem) {
-			const selected = this.board.selection.items.getSingle();
-			if (selected === hover[hover.length - 1]) {
-				return false;
-			}
-			this.downOnItem = hover[hover.length - 1];
-
-			if (this.downOnItem && !this.initialCursorPos && !this.downOnItem.shouldFollowItems()) {
-				const itemCenter = this.downOnItem.getMbr().getCenter();
-				this.initialCursorPos = new Point(
-					this.board.pointer.point.x - itemCenter.x,
-					this.board.pointer.point.y - itemCenter.y
-				);
-			}
-
-			// цепляться за якори в коннекторе когда коннектор еще не выделен
-			if (
-				!this.downOnItem.isAlignmentSource() &&
-				(this.downOnItem as any).isConnectedOnePoint() &&
-				!this.board.keyboard.isCtrl
-			) {
-				this.board.selection.editUnderPointer();
-				this.board.tools.publish();
-				this.clear();
-				return this.board.selection.tool.leftButtonDown();
-			}
-			return false;
-		}
-		return false;
+		this.emitCancelDrawSelect();
+		return this.initializeUnselectedItemDrag(hover);
 	}
 
 	rightButtonDown(): boolean {
@@ -391,7 +763,8 @@ export class Select extends BoardTool {
 		const { items, selection, pointer } = this.board;
 
 		const selectionMbr = selection.getMbr();
-		this.isDownOnSelection = selectionMbr !== undefined && selectionMbr.isUnderPoint(pointer.point);
+		const isPointerInsideSelection = selectionMbr?.isUnderPoint(pointer.point) ?? false;
+		this.isDownOnSelection = isPointerInsideSelection;
 		if (this.isDownOnSelection) {
 			return false;
 		}
@@ -425,181 +798,39 @@ export class Select extends BoardTool {
 	pointerMoveBy(x: number, y: number): boolean {
 		const isDrawingSelectionMbr = this.isDrawingRectangle && this.line && this.rect;
 		if (isDrawingSelectionMbr) {
-			const point = this.board.pointer.point.copy();
-			this.line = new Line(this.line?.start, point);
-			this.rect = this.line.getMbr();
-			this.rect.borderColor = conf.SELECTION_COLOR;
-			this.rect.backgroundColor = conf.SELECTION_BACKGROUND;
-			this.board.tools.publish();
-
-			this.board.presence.throttledEmit({
-				method: 'DrawSelect',
-				timestamp: Date.now(),
-				size: {
-					left: this.rect.left,
-					top: this.rect.top,
-					right: this.rect.right,
-					bottom: this.rect.bottom,
-				},
-			});
-			return false;
+			return this.handleSelectionRectangleMove();
 		}
 
 		if (this.board.getInterfaceType() !== 'edit') {
 			return false;
 		}
-		const { selection, items } = this.board;
 
 		this.updateMovementFlag();
 
 		if (this.isCameraPan) {
-			this.board.camera.translateBy(x, y);
-			return false;
+			return this.handleCameraPanMove(x, y);
 		}
 
 		this.updateGuidelines();
 
 		this.updateSnapLines();
 
-		if (this.downOnItem?.shouldFollowItems()) {
-			const topItem = this.board.items.getUnderPointer().pop();
-			this.nestingHighlighter.clear();
-			if (topItem) {
-				this.nestingHighlighter.addSingleItem(topItem);
-			}
-		}
+		this.highlightFollowItemTarget();
 
 		if (this.isDraggingSelection) {
-			const selectionMbr = selection.getMbr();
-			const single = selection.items.getSingle();
-			if (single) {
-				if (this.handleSnapping(single)) {
-					return false;
-				}
-			}
-
-			// TODO: fix error case when not selected items are translated with selection
-			const isCanvasOk = this.canvasDrawer.getLastCreatedCanvas() && !this.debounceUpd.shouldUpd();
-
-			const isCanvasNeedsUpdate =
-				this.canvasDrawer.getLastCreatedCanvas() && this.debounceUpd.shouldUpd();
-
-			if (isCanvasOk) {
-				// if (this.handleCanvasSnapping()) {
-				// 	return false;
-				// }
-				this.canvasDrawer.translateCanvasBy(x, y);
-				this.canvasDrawer.highlightNesting();
-				return false;
-			} else if (isCanvasNeedsUpdate) {
-				// if (this.handleCanvasSnapping()) {
-				// 	return false;
-				// }
-				this.canvasDrawer.translateCanvasBy(x, y);
-				const { translateX, translateY } = this.canvasDrawer.getMatrix();
-				const translation = selection.getManyItemsMove(translateX, translateY);
-				this.canvasDrawer.highlightNesting();
-				selection.moveMany(translation, this.beginTimeStamp);
-				this.canvasDrawer.clearCanvasAndKeys();
-				this.debounceUpd.setFalse();
-				return false;
-			} else {
-				if (this.handleSnapping(this.board.selection.items.list())) {
-					return false;
-				}
-				const translation = selection.getManyItemsMove(x, y);
-
-				const translationKeys = translation.map(i => i.id);
-				const commentsSet = new Set(this.board.items.getComments().map(comment => comment.getId()));
-
-				if (translationKeys.filter(item => !commentsSet.has(item)).length > 10) {
-					const selectedMbr = this.board.selection.getMbr()?.copy();
-					const sumMbr = this.canvasDrawer.countSumMbr(translation);
-					if (sumMbr) {
-						this.canvasDrawer.updateCanvasAndKeys(sumMbr, translation, undefined, selectedMbr);
-						this.canvasDrawer.translateCanvasBy(x, y);
-						this.canvasDrawer.highlightNesting();
-						this.debounceUpd.setFalse();
-						this.debounceUpd.setTimeoutUpdate(1000);
-						return false;
-					}
-				} else {
-					selection.moveMany(translation, this.beginTimeStamp);
-				}
-			}
-
-			this.updateFramesNesting(selectionMbr, selection);
-
-			return false;
+			return this.handleSelectionDragMove(x, y);
 		}
 
-		if (this.isDraggingUnselectedItem && this.downOnItem) {
-			// translate item without selection
-			const { downOnItem: draggingItem } = this;
-			this.board.selection.removeAll();
-			const translation = this.board.selection.getManyItemsMove(x, y, draggingItem);
-			this.board.selection.moveMany(translation, this.beginTimeStamp);
-
-			if (this.handleSnapping(this.downOnItem)) {
-				return false;
-			}
-
-			const draggingMbr = (draggingItem instanceof BaseItem && draggingItem.parent !== "Board")
-				? draggingItem.getWorldMbr()
-				: draggingItem.getMbr();
-			const groups: BaseItem[] = this.board.items
-				.getEnclosedOrCrossed(
-					draggingMbr.left,
-					draggingMbr.top,
-					draggingMbr.right,
-					draggingMbr.bottom
-				)
-				.filter((item) => !!("index" in item && item.index));
-			groups.forEach(group => {
-				// Don't show nesting highlight for items already inside this group —
-				// that causes a "phantom" darkened rect to appear over the item during drag.
-				const alreadyInGroup = draggingItem instanceof BaseItem && draggingItem.parent === group.getId();
-				if (group.handleNesting(draggingItem) && !alreadyInGroup) {
-					this.nestingHighlighter.add(group, draggingItem);
-				} else {
-					this.nestingHighlighter.remove(draggingItem);
-				}
-			});
-		}
-
-		const hover = items.getUnderPointer();
-		this.isHoverUnselectedItem = hover.filter(item => !item.isReady()).length === 1;
-
-		if (
-			this.isHoverUnselectedItem &&
-			!this.isDraggingUnselectedItem &&
-			selection.getContext() === 'None'
-		) {
-			selection.setContext('HoverUnderPointer');
-			return false;
-		}
-
-		if (
-			(!this.isHoverUnselectedItem || this.isDraggingUnselectedItem) &&
-			selection.getContext() === 'HoverUnderPointer'
-		) {
-			selection.setContext('None');
-			return false;
-		}
-
-		this.board.presence.throttledEmit({
-			method: 'CancelDrawSelect',
-			timestamp: Date.now(),
-		});
-
-		return false;
+		this.handleUnselectedItemDragMove(x, y);
+		return this.updateHoverContext();
 	}
 
 	private updateMovementFlag(): void {
 		const throttleTime = 10;
 		const timeDiff = this.lastPointerMoveEventTime + throttleTime - Date.now();
+		const isWithinMovementThrottleWindow = timeDiff > 0;
 
-		if (timeDiff > 0) {
+		if (isWithinMovementThrottleWindow) {
 			this.isMovedAfterDown = false;
 		} else {
 			this.isMovedAfterDown = this.isLeftDown || this.isRightDown || this.isMiddleDown;
@@ -608,21 +839,27 @@ export class Select extends BoardTool {
 
 	private updateGuidelines(): void {
 		const { isShift } = this.board.keyboard;
+		const shouldSnapToGuidelines = isShift && this.isLeftDown;
 
-		if (isShift && this.isLeftDown) {
+		if (shouldSnapToGuidelines) {
 			const mousePosition = this.board.pointer.point;
-			if (this.board.selection.list().length > 1) {
-				const items = this.board.selection.list();
-				this.handleShiftGuidelines(items, mousePosition);
-			} else if (this.downOnItem) {
-				this.handleShiftGuidelines(this.downOnItem, mousePosition);
-			} else if (this.isDraggingSelection) {
-				const singleItem = this.board.selection.items.getSingle();
-				if (singleItem) {
-					this.handleShiftGuidelines(singleItem, mousePosition);
+			const selectionItems = this.board.selection.list();
+			const isDraggingMultiSelection = selectionItems.length > 1;
+			const isDraggingUnselectedItem = !!this.downOnItem;
+			const singleSelectedItem = this.board.selection.items.getSingle();
+			const isDraggingSingleSelection = this.isDraggingSelection && !!singleSelectedItem;
+
+				if (isDraggingMultiSelection) {
+					const items = selectionItems;
+					this.handleShiftGuidelines(items, mousePosition);
+				} else if (isDraggingUnselectedItem) {
+					const dragTarget = this.downOnItem!;
+					this.handleShiftGuidelines(dragTarget, mousePosition);
+				} else if (isDraggingSingleSelection) {
+					const dragTarget = singleSelectedItem!;
+					this.handleShiftGuidelines(dragTarget, mousePosition);
 				}
-			}
-		} else {
+			} else {
 			this.clearGuidelines();
 		}
 	}
@@ -642,7 +879,11 @@ export class Select extends BoardTool {
 			.filter(item => !!("index" in item && item.index))
 			.map(group => group.getId());
 		selection.list().forEach(item => {
-			if (!("index" in item && item.index) && !draggingGroupsIds.includes(item.parent)) {
+			const isContainerItem = !!('index' in item && item.index);
+			const isNestedInsideDraggingGroup = draggingGroupsIds.includes(item.parent);
+			const shouldCheckItemNesting = !isContainerItem && !isNestedInsideDraggingGroup;
+
+			if (shouldCheckItemNesting) {
 				groups.forEach(group => {
 					// Skip highlight for items already inside this group (prevents phantom darkened rect).
 					const alreadyInGroup = item instanceof BaseItem && item.parent === group.getId();
@@ -658,9 +899,11 @@ export class Select extends BoardTool {
 
 	private updateSnapLines(): void {
 		const alignmentItem = this.getAlignmentItem();
+		const hasAlignmentTarget = !!alignmentItem;
+		const isUsingCanvasPreview = !!this.canvasDrawer.getLastCreatedCanvas();
 
-		if (alignmentItem) {
-			if (this.canvasDrawer.getLastCreatedCanvas()) {
+		if (hasAlignmentTarget) {
+			if (isUsingCanvasPreview) {
 				this.snapLines = this.alignmentHelper.checkAlignment(
 					alignmentItem,
 					this.board.selection.list()
@@ -677,13 +920,15 @@ export class Select extends BoardTool {
 		let finalItem: Item | Item[] | null = null;
 
 		const singleItem = this.board.selection.items.getSingle();
-		const groupItem = this.board.selection.items;
+		const hasAlignmentSource = this.downOnItem?.isAlignmentSource() ?? false;
+		const isDraggingConnectorHandle = !hasAlignmentSource;
+		const isDraggingSingleSelectedItem = this.isDraggingSelection && !!singleItem;
+		const isDraggingMultiSelection =
+			this.isDownOnSelection &&
+			this.isDraggingSelection &&
+			this.board.selection.items.list().length > 1;
 
-		const isConnectorUnderPointer = !this.downOnItem?.isAlignmentSource();
-		const isDraggingSingleSelectedItem = this.isDraggingSelection && singleItem;
-		// const isDregginGroupSelectedItem =
-		// 	this.isDraggingSelection && groupItem;
-		if (isConnectorUnderPointer) {
+		if (isDraggingConnectorHandle) {
 			return null;
 		}
 		if (this.isDownOnUnselectedItem) {
@@ -693,11 +938,7 @@ export class Select extends BoardTool {
 			finalItem = singleItem;
 		}
 
-		if (
-			this.isDownOnSelection &&
-			this.isDraggingSelection &&
-			this.board.selection.items.list().length > 1
-		) {
+		if (isDraggingMultiSelection) {
 			finalItem = this.board.selection.items.list();
 		}
 
@@ -711,89 +952,16 @@ export class Select extends BoardTool {
 
 		this.initialCursorPos = null;
 
-		if (
-			this.isDrawingRectangle &&
-			this.line &&
-			this.rect &&
-			this.rect.getHeight() &&
-			this.rect.getWidth()
-		) {
-			const isAddToSelection = this.board.keyboard.down === 'Shift';
-			if (isAddToSelection) {
-				const { left, top, right, bottom } = this.rect;
-				const items = this.board.items.getEnclosedOrCrossed(left, top, right, bottom);
-				this.board.selection.add(items);
-			} else {
-				this.board.selection.selectEnclosedOrCrossedBy(this.rect);
-			}
-			this.board.tools.publish();
-			this.clear();
-			return false;
+		if (this.hasSelectionRectangleArea()) {
+			return this.finishSelectionRectangleSelection();
 		}
 
-		const topItem = this.board.items.getUnderPointer().pop();
-		const curr = this.downOnItem;
-		if (curr) {
-			curr.onSelectEnd(topItem);
-		}
-
-		if (curr && curr.isBusy()) {
-			this.board.tools.publish();
-			this.clear();
+		if (!this.finalizeDownItemInteraction()) {
 			return false;
 		}
 
 		if (!this.isMovedAfterDown) {
-			const { isCtrl, isShift } = this.board.keyboard;
-			const hovered = this.board.items.getUnderPointer();
-			this.board.pointer.subject.publish(this.board.pointer);
-
-			if (isCtrl || isShift) {
-				const underPointer = this.board.selection.getSelectableItem(hovered[0]);
-				const isEmptySelection = this.board.selection.items.list().length === 0;
-				if (!underPointer && !isEmptySelection && isShift) {
-					this.board.selection.add(this.board.selection.items.list());
-					this.clear();
-					this.board.tools.publish();
-					return false;
-				}
-				if (!underPointer) {
-					this.board.selection.editUnderPointer();
-					this.clear();
-					return false;
-				}
-				const isNotInSelection = this.board.selection.items.findById(underPointer.getId()) === null;
-				if (isNotInSelection) {
-					this.board.selection.add(underPointer);
-					this.board.selection.setContext('EditUnderPointer');
-				} else {
-					this.board.selection.remove(underPointer);
-				}
-				this.clear();
-				this.board.tools.publish();
-				return false;
-			} else {
-				const topItem = hovered.pop();
-				const curr = this.board.selection.items.getSingle();
-
-				if (
-					this.board.selection.getContext() === 'EditUnderPointer' &&
-					curr &&
-					topItem === curr &&
-					!this.board.selection.getIsLockedSelection()
-				) {
-					curr
-						.getRichText()
-						?.saveLastClickPoint(this.board.pointer.point.copy(), this.board.camera);
-					this.board.selection.editText();
-				} else {
-					this.board.selection.editUnderPointer();
-				}
-
-				this.board.tools.publish();
-				this.clear();
-				return false;
-			}
+			return this.handleLeftClickSelection();
 		}
 
 		if (this.board.getInterfaceType() !== 'edit') {
@@ -802,62 +970,18 @@ export class Select extends BoardTool {
 			return false;
 		}
 
-		if (this.isDraggingUnselectedItem && this.downOnItem) {
+		const isFinishingUnselectedItemDrag = this.isDraggingUnselectedItem && !!this.downOnItem;
+		if (isFinishingUnselectedItemDrag) {
 			this.board.selection.removeAll();
 			this.clear();
 			this.board.tools.publish();
 			return false;
 		}
-		if (this.isDrawingRectangle && this.line && this.rect) {
-			const isAddToSelection = this.board.keyboard.down === 'Shift';
-			if (isAddToSelection) {
-				const { left, top, right, bottom } = this.rect;
-				const items = this.board.items.getEnclosedOrCrossed(left, top, right, bottom);
-				this.board.selection.add(items);
-			} else {
-				this.board.selection.selectEnclosedOrCrossedBy(this.rect);
-			}
-			this.board.tools.publish();
-			this.clear();
-
-			// this.board.presence.throttledEmit({
-			// 	method: "DrawSelect",
-			// 	timestamp: Date.now(),
-			// 	size: {
-			// 		left: this.rect.left,
-			// 		top: this.rect.top,
-			// 		right: this.rect.right,
-			// 		bottom: this.rect.bottom,
-			// 	},
-			// });
-
-			this.board.presence.emit({
-				method: 'CancelDrawSelect',
-				timestamp: Date.now(),
-			});
-
-			return false;
+		const hasSelectionRectangleState = this.isDrawingRectangle && !!this.line && !!this.rect;
+		if (hasSelectionRectangleState) {
+			return this.finishSelectionRectangleSelection(true);
 		}
-		this.board.presence.emit({
-			method: 'CancelDrawSelect',
-			timestamp: Date.now(),
-		});
-		// this.board.selection.removeAll();
-		if (this.canvasDrawer.getLastCreatedCanvas()) {
-			const translation = this.board.selection.getManyItemsMove(
-				this.canvasDrawer.getMatrix().translateX,
-				this.canvasDrawer.getMatrix().translateY
-			);
-			this.board.selection.moveMany(translation, this.beginTimeStamp);
-		}
-
-		if (this.isMovedAfterDown && this.downOnItem) {
-			this.originalCenter = this.downOnItem.getMbr().getCenter();
-		}
-		this.clear();
-		this.clearGuidelines();
-		this.board.tools.publish();
-		return false;
+		return this.finishLeftDrag();
 	}
 
 	rightButtonUp(): boolean {
@@ -869,11 +993,11 @@ export class Select extends BoardTool {
 			this.clear();
 			return false;
 		}
-		if (
+		const isDraggingNonConnectorItem =
 			this.isDraggingUnselectedItem &&
-			this.downOnItem &&
-			this.downOnItem.itemType !== 'Connector'
-		) {
+			!!this.downOnItem &&
+			this.downOnItem.itemType !== 'Connector';
+		if (isDraggingNonConnectorItem) {
 			this.board.selection.removeAll();
 			this.clear();
 			return false;
@@ -897,10 +1021,10 @@ export class Select extends BoardTool {
 			return false;
 		}
 		const toEdit = this.board.selection.items.getSingle();
-		if (
-			toEdit?.transformation.isLocked ||
-			(toEdit?.itemType === 'AINode' && !!this.board.aiGeneratingOnItem)
-		) {
+		const isLocked = !!toEdit?.transformation.isLocked;
+		const isBusyAiNode = toEdit?.itemType === 'AINode' && !!this.board.aiGeneratingOnItem;
+
+		if (isLocked || isBusyAiNode) {
 			return false;
 		}
 
@@ -928,19 +1052,22 @@ export class Select extends BoardTool {
 
 	onConfirm(): void {
 		const single = this.board.selection.items.getSingle();
-		if (this.board.selection.showQuickAddPanel && single && single instanceof Connector) {
-			quickAddItem(this.board, 'Rectangle', single);
-		} else if (
-			single &&
+		const isQuickAddConnector =
+			this.board.selection.showQuickAddPanel && !!single && single instanceof Connector;
+		const canEditSelectionAsText =
+			!!single &&
 			this.board.selection.getContext() !== 'EditTextUnderPointer' &&
-			!this.board.selection.getIsLockedSelection()
-		) {
-			this.board.selection.editText(undefined, true);
-		} else if (
+			!this.board.selection.getIsLockedSelection();
+		const shouldSplitSafariTextNode =
 			isSafari() &&
 			this.board.selection.getContext() === 'EditTextUnderPointer' &&
-			!this.board.selection.getIsLockedSelection()
-		) {
+			!this.board.selection.getIsLockedSelection();
+
+		if (isQuickAddConnector) {
+			quickAddItem(this.board, 'Rectangle', single);
+		} else if (canEditSelectionAsText) {
+			this.board.selection.editText(undefined, true);
+		} else if (shouldSplitSafariTextNode) {
 			if ((single && 'text' in single) || single instanceof RichText) {
 				const text = single instanceof RichText ? single : single.text;
 				text.editor.splitNode();
