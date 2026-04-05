@@ -17,6 +17,7 @@ export * from "./Keyboard";
 export * from "./Settings";
 export * from "./SpatialIndex";
 export * from "./Tools";
+export * from "./Overlay";
 export * from "./HTMLAdapter/Utils";
 
 export * from "./drawMbrOnCanvas";
@@ -26,8 +27,7 @@ export * from "./sha256";
 export * from "./lib";
 export { initI18N } from "api/initI18N";
 export {getMediaSignedUrl} from "api/MediaHelpers"
-export { itemActions } from "./Items/itemActionsRegistry";
-export type { ItemActionConfig, ItemAction, MenuAction, SetPropertyAction, CustomAction, ButtonVariant, IconButton, ColorButton, LabelButton, MenuOption, ToolPanelButton } from "./Items/ItemActions";
+export { itemOverlays as itemActions } from "./Overlay/overlayRegistry";
 
 import { createCommand } from "./Events/CreateCommand";
 import { BaseItem } from "./Items/BaseItem/BaseItem";

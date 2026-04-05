@@ -48,6 +48,7 @@ import {
 	DEFAULT_END_POINTER,
 	CONNECTOR_POINTER_TYPES,
 } from './ConnectorTypes';
+import { connectorOverlay } from "./ConnectorOverlay";
 import { connectorOps } from './connectorOps';
 import { registerItem } from '../RegisterItem';
 import { ConnectorDataSchema } from './Connector.schema';
@@ -1145,4 +1146,5 @@ registerItem({
 	item: Connector,
 	defaultData: new ConnectorData(),
 	schema: ConnectorDataSchema,
+  overlay: connectorOverlay,
 });

@@ -14,7 +14,7 @@ import {conf} from "Settings";
 import {Path} from "Geometry/Path";
 import { registerHotkey } from "Keyboard/HotkeyRegistry";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
-import { deckActions } from "./DeckActions";
+import { deckOverlay } from "./DeckOverlay";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -318,7 +318,7 @@ export class Deck extends BaseItem<Deck> {
 registerItem({
   item: Deck,
   defaultData: defaultDeckData,
-  actions: deckActions,
+  overlay: deckOverlay,
 });
 
 registerHotkey({

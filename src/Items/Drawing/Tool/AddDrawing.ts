@@ -9,6 +9,7 @@ import { BoardTool } from 'Tools/BoardTool';
 import { transformOps } from 'Geometry/Transformation/transformOps';
 import { ColorValue, coerceColorValue, semanticColor } from 'Color';
 import { registerTool } from 'Items/RegisterItem';
+import { addDrawingToolOverlay } from "../DrawingOverlay";
 
 export class AddDrawing extends BoardTool {
   drawing: Drawing | null = null;
@@ -191,4 +192,4 @@ export class AddDrawing extends BoardTool {
   }
 }
 
-registerTool({ name: 'AddDrawing', tool: AddDrawing });
+registerTool({ name: 'AddDrawing', tool: AddDrawing, overlay: addDrawingToolOverlay });

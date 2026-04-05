@@ -7,6 +7,7 @@ import { coerceColorValue } from "Color";
 import { conf } from "Settings";
 import { BoardTool } from "Tools/BoardTool";
 import { registerTool } from "Items/RegisterItem";
+import { eraserToolOverlay } from "../../DrawingOverlay";
 
 export class Eraser extends BoardTool {
   itemType = "Eraser";
@@ -97,4 +98,4 @@ export class Eraser extends BoardTool {
   }
 }
 
-registerTool({ name: "Eraser", tool: Eraser });
+registerTool({ name: "Eraser", tool: Eraser, overlay: eraserToolOverlay });

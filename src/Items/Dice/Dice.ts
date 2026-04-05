@@ -10,8 +10,8 @@ import { registerItem } from "Items";
 import { AddDice } from "./AddDice";
 import { conf } from "Settings";
 import { getMediaSignedUrl } from "api/MediaHelpers";
-import { diceActions } from "./DiceActions";
 import { propertyOps } from "Items/propertyOps";
+import { addDiceToolOverlay, diceOverlay } from "./DiceOverlay";
 
 export type DiceType = "common" | "custom";
 
@@ -339,6 +339,6 @@ export class Dice extends BaseItem<Dice> {
 registerItem({
   item: Dice,
   defaultData: defaultDiceData,
-  toolData: { name: "AddDice", tool: AddDice },
-  actions: diceActions,
+  toolData: { name: "AddDice", tool: AddDice, overlay: addDiceToolOverlay },
+  overlay: diceOverlay,
 });

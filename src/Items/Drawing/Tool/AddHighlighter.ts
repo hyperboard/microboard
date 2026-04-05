@@ -6,6 +6,7 @@ import { conf } from 'Settings';
 import { ColorValue, semanticColor } from 'Color';
 import { AddDrawing } from './AddDrawing';
 import { registerTool } from 'Items/RegisterItem';
+import { addHighlighterToolOverlay } from "../DrawingOverlay";
 
 export class AddHighlighter extends AddDrawing {
 	strokeWidth = conf.HIGHLIGHTER_INITIAL_STROKE_WIDTH;
@@ -48,4 +49,4 @@ export class AddHighlighter extends AddDrawing {
 	}
 }
 
-registerTool({ name: 'AddHighlighter', tool: AddHighlighter });
+registerTool({ name: 'AddHighlighter', tool: AddHighlighter, overlay: addHighlighterToolOverlay });

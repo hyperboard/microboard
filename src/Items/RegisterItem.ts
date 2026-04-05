@@ -14,18 +14,17 @@ import { CustomTool } from "Tools/CustomTool";
 import { BoardTool } from "Tools/BoardTool";
 import { BaseItem, BaseItemData } from "Items/BaseItem/BaseItem";
 import { BaseOperation, ItemOperation, Operation } from "Events/EventsOperations";
-import type { ItemActionConfig } from "./ItemActions";
-import { itemActions } from "./itemActionsRegistry";
+import type { ItemOverlayDefinition, ToolOverlayDefinition } from "Overlay";
+import { registerItemOverlay, registerToolOverlay } from "Overlay";
 
 type ItemConstructor = new (board: Board, id: string) => BaseItem;
 
 type RegisterItemArgs = {
   item: ItemConstructor;
   defaultData: BaseItemData;
-  toolData?: { name: string; tool: BoardToolConstructor };
+  toolData?: { name: string; tool: BoardToolConstructor; overlay?: ToolOverlayDefinition };
   schema?: z.ZodType<any>;
-  /** Declarative UI descriptor for context panel, context menu, and tool panel. */
-  actions?: ItemActionConfig;
+  overlay?: ItemOverlayDefinition;
 };
 
 export function registerItem({
@@ -33,19 +32,24 @@ export function registerItem({
   defaultData,
   toolData,
   schema,
-  actions,
+  overlay,
 }: RegisterItemArgs): void {
   const { itemType } = defaultData;
   itemFactories[itemType] = createItemFactory(item, defaultData);
   itemValidators[itemType] = createItemValidator(defaultData, schema);
+  (item as any).overlay = overlay;
   if (schema) {
     itemSchemas[itemType] = schema as any;
   }
   if (toolData) {
     registeredTools[toolData.name] = toolData.tool;
+    (toolData.tool as any).overlay = toolData.overlay;
+    if (toolData.overlay) {
+      registerToolOverlay(toolData.overlay);
+    }
   }
-  if (actions) {
-    itemActions[itemType] = actions;
+  if (overlay) {
+    registerItemOverlay(overlay);
   }
 
   if (!itemCommandFactories[itemType]) {
@@ -53,8 +57,16 @@ export function registerItem({
   }
 }
 
-export function registerTool(toolData: { name: string; tool: BoardToolConstructor }) {
+export function registerTool(toolData: {
+  name: string;
+  tool: BoardToolConstructor;
+  overlay?: ToolOverlayDefinition;
+}) {
   registeredTools[toolData.name] = toolData.tool;
+  (toolData.tool as any).overlay = toolData.overlay;
+  if (toolData.overlay) {
+    registerToolOverlay(toolData.overlay);
+  }
 }
 
 function createItemFactory(item: ItemConstructor, defaultData: BaseItemData) {

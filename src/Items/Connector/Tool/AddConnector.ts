@@ -10,6 +10,7 @@ import { SessionStorage } from 'SessionStorage';
 import { BoardTool } from 'Tools/BoardTool';
 import { coerceOptionalColorValue } from 'Color';
 import { registerTool } from 'Items/RegisterItem';
+import { addConnectorToolOverlay } from "../ConnectorOverlay";
 
 export class AddConnector extends BoardTool {
   connector: Connector | null = null;
@@ -216,4 +217,4 @@ export class AddConnector extends BoardTool {
   }
 }
 
-registerTool({ name: 'AddConnector', tool: AddConnector });
+registerTool({ name: 'AddConnector', tool: AddConnector, overlay: addConnectorToolOverlay });

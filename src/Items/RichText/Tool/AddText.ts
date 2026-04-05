@@ -5,6 +5,7 @@ import { DrawingContext } from 'Geometry/DrawingContext';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
 import { registerTool } from 'Items/RegisterItem';
+import { addTextToolOverlay } from "../RichTextOverlay";
 
 const height = 16;
 
@@ -108,4 +109,4 @@ export class AddText extends BoardTool {
 	}
 }
 
-registerTool({ name: 'AddText', tool: AddText });
+registerTool({ name: 'AddText', tool: AddText, overlay: addTextToolOverlay });

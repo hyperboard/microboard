@@ -55,6 +55,7 @@ import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
+import { richTextOverlay } from "./RichTextOverlay";
 
 let isEditInProcessValue = false;
 
@@ -1204,4 +1205,5 @@ registerItem({
   item: RichText,
   defaultData: new DefaultRichTextData(),
   schema: RichTextDataSchema,
+  overlay: richTextOverlay,
 });

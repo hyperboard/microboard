@@ -43,6 +43,7 @@ import { transformOps } from "Geometry/Transformation/transformOps";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import { registerItem } from "../RegisterItem";
+import { shapeOverlay } from "./ShapeOverlay";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -573,4 +574,5 @@ registerItem({
   item: Shape,
   defaultData: new DefaultShapeData(),
   schema: ShapeDataSchema,
+  overlay: shapeOverlay,
 });

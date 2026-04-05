@@ -8,6 +8,7 @@ import { conf } from 'Settings';
 import { ColorValue, coerceColorValue, resolveColor } from 'Color';
 import { BoardTool } from 'Tools/BoardTool';
 import { registerTool } from 'Items/RegisterItem';
+import { addStickerToolOverlay } from "../StickerOverlay";
 
 export class AddSticker extends BoardTool {
 	static MIN_SIZE = 5;
@@ -56,6 +57,14 @@ export class AddSticker extends BoardTool {
 
 	getBackgroundColor(): ColorValue {
 		return this.sticker.getBackgroundColor();
+	}
+
+	get backgroundColor(): ColorValue {
+		return this.getBackgroundColor();
+	}
+
+	set backgroundColor(color: ColorValue | string) {
+		this.setBackgroundColor(color);
 	}
 
 	leftButtonDown(): boolean {
@@ -165,4 +174,4 @@ export class AddSticker extends BoardTool {
 	}
 }
 
-registerTool({ name: 'AddSticker', tool: AddSticker });
+registerTool({ name: 'AddSticker', tool: AddSticker, overlay: addStickerToolOverlay });

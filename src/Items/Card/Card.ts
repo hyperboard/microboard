@@ -14,8 +14,8 @@ import {conf} from "Settings";
 import {throttle} from "utils";
 import {registerHotkey} from "Keyboard/HotkeyRegistry";
 import {getMediaSignedUrl} from "api/MediaHelpers";
-import { cardActions } from "./CardActions";
 import { propertyOps } from "Items/propertyOps";
+import { cardOverlay } from "./CardOverlay";
 
 
 export interface CardData extends BaseItemData {
@@ -261,7 +261,7 @@ export class Card extends BaseItem<Card> {
 registerItem({
   item: Card,
   defaultData: defaultCardData,
-  actions: cardActions,
+  overlay: cardOverlay,
 });
 
 registerHotkey({

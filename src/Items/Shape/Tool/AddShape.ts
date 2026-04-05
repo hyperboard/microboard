@@ -11,6 +11,7 @@ import { BoardTool } from "Tools/BoardTool";
 import {tempStorage} from "SessionStorage";
 
 import { registerTool } from "Items/RegisterItem";
+import { addShapeToolOverlay } from "../ShapeOverlay";
 
 export class AddShape extends BoardTool {
   line: Line | undefined;
@@ -190,4 +191,4 @@ export class AddShape extends BoardTool {
   }
 }
 
-registerTool({ name: "AddShape", tool: AddShape });
+registerTool({ name: "AddShape", tool: AddShape, overlay: addShapeToolOverlay });

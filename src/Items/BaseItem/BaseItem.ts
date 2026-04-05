@@ -27,6 +27,8 @@ import { getResizeType, ResizeType } from "Selection/Transformer/TransformerHelp
 import { transformOps } from "Geometry/Transformation/transformOps";
 import type { ItemType } from "Items/Item";
 import { toLocalTransformOp } from "./toLocalTransformOp";
+import type { ItemOverlayDefinition } from "Overlay";
+import { getItemOverlay } from "Overlay";
 
 export interface BaseItemData {
 	itemType: string;
@@ -103,6 +105,10 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	getId(): string {
 		return this.id;
+	}
+
+	getOverlay(): ItemOverlayDefinition | undefined {
+		return getItemOverlay(this);
 	}
 
 	/**

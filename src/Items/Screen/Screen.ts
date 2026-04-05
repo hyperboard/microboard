@@ -15,8 +15,8 @@ import { ScreenOperation } from "./ScreenOperation";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
 import {conf} from "Settings";
 import {getMediaSignedUrl} from "api/MediaHelpers";
-import { screenActions } from "./ScreenActions";
 import { propertyOps } from "Items/propertyOps";
+import { addPouchToolOverlay, addScreenToolOverlay, screenOverlay } from "./ScreenOverlay";
 
 const screenPath = new Path(
   [
@@ -254,8 +254,8 @@ export class Screen extends BaseItem<Screen> {
 registerItem({
   item: Screen,
   defaultData: defaultScreenData,
-  toolData: {name: "AddScreen", tool: AddScreen},
-  actions: screenActions,
+  toolData: {name: "AddScreen", tool: AddScreen, overlay: addScreenToolOverlay},
+  overlay: screenOverlay,
 });
 
-registerTool({name: "AddPouch", tool: AddPouch})
+registerTool({name: "AddPouch", tool: AddPouch, overlay: addPouchToolOverlay})

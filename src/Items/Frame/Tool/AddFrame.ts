@@ -6,6 +6,7 @@ import { FrameType } from 'Items/Frame/Basic';
 import { BoardTool } from 'Tools/BoardTool';
 import { NestingHighlighter } from 'Tools/NestingHighlighter';
 import { registerTool } from 'Items/RegisterItem';
+import { addFrameToolOverlay } from "../FrameOverlay";
 
 export class AddFrame extends BoardTool {
 	line: Line | undefined;
@@ -264,4 +265,4 @@ export class AddFrame extends BoardTool {
 	}
 }
 
-registerTool({ name: 'AddFrame', tool: AddFrame });
+registerTool({ name: 'AddFrame', tool: AddFrame, overlay: addFrameToolOverlay });

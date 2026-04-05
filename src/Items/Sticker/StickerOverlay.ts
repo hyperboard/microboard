@@ -1,0 +1,36 @@
+import type { ToolOverlayDefinition } from "Overlay";
+
+const STICKER_COLORS = [
+  "#FFF475",
+  "#FDBA74",
+  "#A7F3D0",
+  "#BFDBFE",
+  "#DDD6FE",
+  "#FBCFE8",
+];
+
+export const addStickerToolOverlay: ToolOverlayDefinition = {
+  toolName: "AddSticker",
+  label: "Sticker",
+  kind: "create",
+  createsItemType: "Sticker",
+  family: "sticker",
+  icon: {
+    kind: "symbol",
+    key: "tool.sticker",
+    state: {
+      swatch: { kind: "toolProperty", property: "backgroundColor" },
+    },
+  },
+  defaults: {
+    controls: [
+      {
+        id: "stickerBackgroundColor",
+        label: "Color",
+        valueSource: { kind: "toolProperty", property: "backgroundColor" },
+        editor: { kind: "color", palette: STICKER_COLORS },
+        invoke: { kind: "toolProperty", property: "backgroundColor" },
+      },
+    ],
+  },
+};
