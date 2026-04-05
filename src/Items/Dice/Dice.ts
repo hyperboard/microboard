@@ -1,4 +1,5 @@
 import { BaseItem, BaseItemData, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { Operation } from "Events";
 import { BorderWidth, Path, BorderStyle, Point } from "Items";
 import { createRoundedRectanglePath } from "Items/Shape/Basic/RoundedRectangle";
@@ -174,9 +175,7 @@ export class Dice extends BaseItem<Dice> {
     super.deserialize(data);
 
     this.updateRenderValues();
-    this.transformPath();
-    this.updateMbr();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -250,49 +249,66 @@ export class Dice extends BaseItem<Dice> {
     this.setValueIndex(Math.floor(Math.random() * this.values.length));
   }
 
-  apply(op: Operation | DiceOperation): void {
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.transformPath();
-        this.updateMbr();
-        break;
-      case "Dice":
-        switch (op.method) {
-          case "setBorderWidth":
-            this.applyBorderWidth(op.newData.borderWidth);
-            break;
-          case "setBackgroundColor":
-            this.applyBackgroundColor(op.newData.backgroundColor);
-            break;
-          case "setBorderColor":
-            this.applyBorderColor(op.newData.borderColor);
-            break;
-          case "changeValueIndex":
-            if (op.newData.shouldRotate && op.newData.timeStamp && Date.now() - op.newData.timeStamp < 10000) {
-              this.startRotation();
-              setTimeout(() => {
-                this.stopRotation();
-                this.valueIndex = op.newData.valueIndex;
-              }, TIMEOUT)
-            } else {
+  apply(opIn: Operation | DiceOperation): void {
+    const op = opIn as any;
+    if (op.class === "Dice") {
+      switch (op.method) {
+        case "setBorderWidth":
+          this.borderWidth = op.newData.borderWidth;
+          break;
+        case "setBackgroundColor":
+          this.backgroundColor = op.newData.backgroundColor;
+          break;
+        case "setBorderColor":
+          this.borderColor = op.newData.borderColor;
+          break;
+        case "changeValueIndex":
+          if (op.newData.shouldRotate && op.newData.timeStamp && Date.now() - op.newData.timeStamp < 10000) {
+            this.startRotation();
+            setTimeout(() => {
+              this.stopRotation();
               this.valueIndex = op.newData.valueIndex;
-            }
-            break;
-          case "changeValues":
-            if (!op.newData.values[this.valueIndex]) {
-              this.valueIndex = 0;
-            }
-            this.values = op.newData.values;
-            this.updateRenderValues();
-            break;
-        }
-        break;
-      default:
-        super.apply(op as Operation);
-        return;
+              this.updateVisuals(op, UpdateHint.VisualOnly);
+            }, TIMEOUT)
+          } else {
+            this.valueIndex = op.newData.valueIndex;
+          }
+          break;
+        case "changeValues":
+          if (!op.newData.values[this.valueIndex]) {
+            this.valueIndex = 0;
+          }
+          this.values = op.newData.values;
+          this.updateRenderValues();
+          break;
+      }
+    } else {
+      super.apply(op);
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: any, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.path.setBackgroundColor(this.backgroundColor);
+      this.path.setBorderColor(this.borderColor);
+      this.path.setBorderWidth(this.borderWidth);
+      this.subject.publish(this);
+      return;
+    }
+
+    this.transformPath();
+    this.updateMbr();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["backgroundColor", "borderColor", "borderWidth", "values", "valueIndex"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {

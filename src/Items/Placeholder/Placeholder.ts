@@ -18,6 +18,7 @@ import { getResize } from "../../Selection/Transformer/TransformerHelpers/getRes
 import { BaseItem } from "../BaseItem/BaseItem";
 import { transformOps } from "Geometry/Transformation/transformOps";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
+import { UpdateHint } from "../BaseItem/UpdateHint";
 import { Board } from "../../Board";
 import { registerItem } from "../RegisterItem";
 import { PlaceholderDataSchema } from "./Placeholder.schema";
@@ -79,16 +80,13 @@ export class Placeholder extends BaseItem<Placeholder> {
     }
 
     deserialize(data: SerializedItemData<PlaceholderData> | PlaceholderData): this {
-        this.initPath();
         this.backgroundColor = data.backgroundColor ?? this.backgroundColor;
         this.icon = data.icon ?? this.icon;
         this.miroData = data.miroData;
         if (data.transformation) {
             this.transformation.deserialize(data.transformation);
-            this.transformPath();
-            this.updateMbr();
         }
-        this.subject.publish(this);
+        this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
         return this;
     }
 
@@ -102,26 +100,37 @@ export class Placeholder extends BaseItem<Placeholder> {
         return this.id;
     }
 
-    apply(op: Operation): void {
+    apply(opIn: Operation): void {
+        const op = opIn as any;
         if (op.method === "setProperty") {
             super.apply(op);
+        } else if (op.class === "Placeholder") {
+            this.applyPlaceholder(op as PlaceholderOperation);
+        } else {
+            super.apply(op);
+        }
+
+        const hint = this.calculateUpdateHint(op);
+        this.updateVisuals(op, hint);
+    }
+
+    protected override updateVisuals(_op: any, hint: UpdateHint): void {
+        if (hint === UpdateHint.VisualOnly) {
+            this.path.setBackgroundColor(this.backgroundColor);
+            this.subject.publish(this);
             return;
         }
-        switch (op.class) {
-            case "Transformation":
-                super.apply(op);
-                this.transformPath();
-                this.updateMbr();
-                break;
-            case "Placeholder":
-                this.applyPlaceholder(op as PlaceholderOperation);
-                this.updateMbr();
-                break;
-            default:
-                super.apply(op);
-                return;
-        }
+
+        this.transformPath();
+        this.updateMbr();
         this.subject.publish(this);
+    }
+
+    protected override getPropertyUpdateHint(property: string): UpdateHint {
+        if (["backgroundColor", "icon", "miroData"].includes(property)) {
+            return UpdateHint.VisualOnly;
+        }
+        return super.getPropertyUpdateHint(property);
     }
 
     private applyPlaceholder(op: PlaceholderOperation): void {

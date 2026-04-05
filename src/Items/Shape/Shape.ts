@@ -15,7 +15,8 @@ import { RichText } from "../RichText";
 import { ShapeOperation } from "./ShapeOperation";
 import { Geometry } from "Geometry/Geometry";
 import { DrawingContext } from "Geometry/DrawingContext";
-import { Operation, SetPropertyOperation } from "Events/EventsOperations";
+import { Operation, SetPropertyOperation, BaseOperation } from "Events/EventsOperations";
+import { BaseItemOperation } from "Items/BaseItem/BaseItemOperation";
 import { ShapeCommand } from "./ShapeCommand";
 import { DefaultShapeData, ShapeData } from "./ShapeData";
 import { ShapeDataSchema } from "./Shape.schema";
@@ -41,6 +42,7 @@ import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import { transformOps } from "Geometry/Transformation/transformOps";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
+import { UpdateHint } from "../BaseItem/UpdateHint";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import { registerItem } from "../RegisterItem";
 import { shapeOverlay } from "./ShapeOverlay";
@@ -93,9 +95,7 @@ export class Shape extends BaseItem<Shape> {
       this.subject.publish(this);
     });
     this.text.insideOf = this.itemType;
-    this.transformPath();
-    this.updateMbr();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "constructor", class: this.itemType } as any, UpdateHint.FullRebuild);
   }
 
   private saveShapeData(): void {
@@ -163,11 +163,8 @@ export class Shape extends BaseItem<Shape> {
     // The item-level transformation must always win.
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.transformPath();
     }
-    this.transformPath();
-    this.text.updateElement();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -188,59 +185,61 @@ export class Shape extends BaseItem<Shape> {
   getId(): string {
     return this.id;
   }
-
-  apply(op: Operation): void {
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.transformPath();
-        this.updateMbr();
-        const tOp = op as TransformationOperation;
-        if (tOp.method === "applyMatrix") {
-          const itemOp = tOp.items.find((i) => i.id === this.id);
-          if (
-            itemOp &&
-            itemOp.matrix.scaleX === 1 &&
-            itemOp.matrix.scaleY === 1
-          ) {
-            this.text.transformCanvas();
-          } else {
-            this.text.updateElement();
-          }
-        } else {
-          this.text.updateElement();
-        }
-        break;
-      case "RichText":
-        this.text.apply(op);
-        break;
-      case "LinkTo":
-        this.linkTo.apply(op as LinkToOperation);
-        break;
-      case "Shape":
-        this.applyShapeOperation(op as ShapeOperation);
-        this.updateMbr();
-        break;
-      default:
-        super.apply(op);
-        break;
+  override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+    const op = opIn as Operation;
+    if (op.class === "RichText") {
+      this.text.apply(op);
+    } else if (op.class === "Shape") {
+      this.applyShapeOperation(op as ShapeOperation);
+    } else {
+      super.apply(op);
+      return;
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
+    }
+
+    if (hint === UpdateHint.TranslateOnly) {
+      this.transformPath();
+      this.text.transformCanvas();
+      this.updateMbr();
+    } else if (hint === UpdateHint.TransformGeometry) {
+      this.transformPath();
+      this.updateMbr();
+      this.text.updateElement();
+    } else {
+      // LayoutAffecting or FullRebuild
+      if (hint === UpdateHint.FullRebuild) {
+        this.initPath();
+      }
+      this.transformPath();
+      this.updateMbr();
+      this.text.updateElement();
+    }
+
     this.subject.publish(this);
   }
 
   protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
     super.onPropertyUpdated(property, value, prevValue);
-
-    if (property === 'shapeType') {
-      this.initPath();
-    }
-
-    if (['shapeType', 'borderWidth', 'borderStyle', 'borderColor', 'borderOpacity', 'backgroundColor', 'backgroundOpacity'].includes(property)) {
-      this.transformPath();
-    }
-
-    this.updateMbr();
     this.saveShapeData();
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["shapeType", "text"].includes(property)) {
+      return UpdateHint.LayoutAffecting;
+    }
+    if (["backgroundColor", "backgroundOpacity", "borderColor", "borderOpacity", "borderStyle", "borderWidth"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
 

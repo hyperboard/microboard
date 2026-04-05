@@ -1,4 +1,4 @@
-import { Operation } from "Events";
+import { Operation, BaseOperation } from "Events";
 import { Subject } from "Subject";
 import { Line } from "Geometry/Line/Line";
 import { Matrix } from "Geometry/Transformation/Matrix";
@@ -23,6 +23,8 @@ import { transformOps } from "Geometry/Transformation/transformOps";
 import { conf } from "Settings";
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
+import { BaseItemOperation } from "../BaseItem/BaseItemOperation";
+import { UpdateHint } from "../BaseItem/UpdateHint";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";
@@ -108,8 +110,7 @@ export class Sticker extends BaseItem<Sticker> {
       this.subject.publish(this);
     });
     this.text.updateElement();
-    this.transformPath();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "constructor", class: this.itemType } as any, UpdateHint.FullRebuild);
   }
 
   emit(operation: StickerOperation): void {
@@ -150,15 +151,12 @@ export class Sticker extends BaseItem<Sticker> {
     // The item-level transformation must always win.
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.transformPath();
     }
-    this.text.updateElement();
     const linkTo = data.linkTo;
     if (linkTo) {
       this.linkTo.deserialize(linkTo);
     }
-    // this.transformPath();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -193,63 +191,74 @@ export class Sticker extends BaseItem<Sticker> {
     return this.id;
   }
 
-  apply(op: Operation): void {
-    if (op.method === "setProperty") {
+  override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+    const op = opIn as Operation;
+    if (op.class === "RichText") {
+      this.text.apply(op);
+    } else if (op.class === "LinkTo") {
+      this.linkTo.apply(op as LinkToOperation);
+    } else {
       super.apply(op);
       return;
     }
-    switch (op.class) {
-      case "Transformation": {
-        super.apply(op);
-        this.transformPath();
-        const transformOp = op as TransformationOperation;
-        if (transformOp.method === "applyMatrix") {
-          const itemOp = transformOp.items.find((i) => i.id === this.id);
-          if (itemOp) {
-            const prevScaleX = this.transformation.previous.scaleX;
-            const prevScaleY = this.transformation.previous.scaleY;
-            const currentScaleX = this.transformation.getScale().x;
-            const currentScaleY = this.transformation.getScale().y;
 
-            // Only apply scale if actual scale changed (ignore translation/re-parenting pseudo-scales)
-            const scaleChanged =
-              Math.abs(currentScaleX - prevScaleX) > 0.0001 ||
-              Math.abs(currentScaleY - prevScaleY) > 0.0001;
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
 
-            if (scaleChanged) {
-              if (this.text.isAutosize()) {
-                if (Math.abs(currentScaleX - currentScaleY) > 0.0001) {
-                  this.text.applyAutoSizeScale(this.text.calcAutoSize());
-                } else {
-                  this.text.scaleAutoSizeScale(currentScaleX / prevScaleX);
-                }
-                this.text.recoordinate();
-                this.text.transformCanvas();
-              } else {
-                this.text.handleInshapeScale();
-              }
-            }
-          }
-        }
-        break;
-      }
-      case "RichText":
-        this.text.apply(op);
-        break;
-      case "LinkTo":
-        this.linkTo.apply(op as LinkToOperation);
-        break;
-      default:
-        super.apply(op);
-        return;
+  protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
     }
+
+    this.transformPath();
+
+    if (hint === UpdateHint.TranslateOnly) {
+      this.text.transformCanvas();
+    } else if (hint === UpdateHint.TransformGeometry) {
+      const prevScaleX = this.transformation.previous.scaleX;
+      const prevScaleY = this.transformation.previous.scaleY;
+      const currentScaleX = this.transformation.getScale().x;
+      const currentScaleY = this.transformation.getScale().y;
+
+      const scaleChanged =
+        Math.abs(currentScaleX - prevScaleX) > 0.0001 ||
+        Math.abs(currentScaleY - prevScaleY) > 0.0001;
+
+      if (scaleChanged) {
+        if (this.text.isAutosize()) {
+          if (Math.abs(currentScaleX - currentScaleY) > 0.0001) {
+            this.text.applyAutoSizeScale(this.text.calcAutoSize());
+          } else {
+            this.text.scaleAutoSizeScale(currentScaleX / prevScaleX);
+          }
+          this.text.recoordinate();
+          this.text.transformCanvas();
+        } else {
+          this.text.handleInshapeScale();
+        }
+      }
+    } else {
+      // LayoutAffecting or FullRebuild
+      this.text.updateElement();
+    }
+
     this.subject.publish(this);
   }
 
-  protected onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+  protected override onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+    super.onPropertyUpdated(property, value, prevValue);
     if (property === "backgroundColor") {
       this.subject.publish(this);
     }
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (property === "backgroundColor") {
+      return UpdateHint.VisualOnly;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   getBackgroundColor(): ColorValue {

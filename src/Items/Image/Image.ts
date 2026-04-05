@@ -1,4 +1,4 @@
-import type { Events, Operation } from "Events";
+import type { Events, Operation, BaseOperation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "Geometry/DrawingContext";
 import { Line } from "Geometry/Line/Line";
@@ -17,6 +17,8 @@ import { ImageOperation } from "./ImageOperation";
 import { ImageCommand } from "./ImageCommand";
 import { conf } from "Settings";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { BaseItemOperation } from "Items/BaseItem/BaseItemOperation";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { getMediaSignedUrl } from "api/MediaHelpers";
 
 export interface ImageItemData {
@@ -93,6 +95,7 @@ export class ImageItem extends BaseItem<ImageItem> {
     super(board, id);
     this.image = new Image();
     this.setImage(new Image());
+    this.updateVisuals({ method: "constructor", class: this.itemType } as any, UpdateHint.FullRebuild);
   }
 
   private setImage(image: HTMLImageElement): void {
@@ -259,7 +262,6 @@ export class ImageItem extends BaseItem<ImageItem> {
     }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.updateMbr();
     }
     this.linkTo.deserialize(data.linkTo);
     this.image.onload = () => {
@@ -271,10 +273,12 @@ export class ImageItem extends BaseItem<ImageItem> {
     }
 
     if (this.image.src) {
+      this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
       return this;
     }
 
-    this.onError()
+    this.onError();
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -289,26 +293,45 @@ export class ImageItem extends BaseItem<ImageItem> {
   }
 
 
-  apply(op: Operation): void {
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.updateMbr();
-        break;
-      case "Image":
-        if (op.method === "updateImageData") {
-          if (op.data.base64) {
-            this.image.src = op.data.base64;
-          }
-          this.setStorageLink(op.data.storageLink);
-          this.imageDimension = op.data.imageDimension;
+  override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+    const op = opIn as Operation;
+    if (op.class === "Image") {
+      if (op.method === "updateImageData") {
+        if (op.data.base64) {
+          this.image.src = op.data.base64;
         }
-        break;
-      default:
-        super.apply(op);
-        return;
+        this.setStorageLink(op.data.storageLink);
+        this.imageDimension = op.data.imageDimension;
+      }
+    } else if (op.class === "LinkTo") {
+      this.linkTo.apply(op as any);
+    } else {
+      super.apply(op);
+      return;
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
+    }
+
+    this.updateMbr();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (property === "imageDimension") {
+      return UpdateHint.LayoutAffecting;
+    }
+    if (property === "storageLink") {
+      return UpdateHint.VisualOnly;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   render(context: DrawingContext): void {

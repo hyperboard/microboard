@@ -55,6 +55,9 @@ import { setEditorFocus } from "./editorHelpers/common/setEditorFocus";
 import { getAllTextNodesInSelection } from "./editorHelpers/common/getAllTextNodesInSelection";
 import { BaseItem } from "../BaseItem/BaseItem";
 import type { SerializedItemData } from "../BaseItem/BaseItem";
+import { BaseItemOperation } from "../BaseItem/BaseItemOperation";
+import { UpdateHint } from "../BaseItem/UpdateHint";
+import { BaseOperation } from "Events";
 import { richTextOverlay } from "./RichTextOverlay";
 
 let isEditInProcessValue = false;
@@ -555,30 +558,9 @@ export class RichText extends BaseItem<RichText> {
     }
   };
 
-  apply(op: Operation): void {
+  override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+    const op = opIn as Operation;
     switch (op.class) {
-      case "Transformation": {
-        this.prevMbr = this.getMbr();
-        super.apply(op);
-        const transformOp = op as TransformationOperation;
-        if (transformOp.method === "applyMatrix") {
-          const itemOp = transformOp.items.find((i) => i.id === this.id);
-          if (
-            itemOp &&
-            (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)
-          ) {
-            this.setAINodeShirkWidth();
-            if (!this.isInShape) {
-              this.transformCanvas();
-            } else {
-              this.updateElement();
-            }
-          } else {
-            this.transformCanvas();
-          }
-        }
-        break;
-      }
       case "RichText": {
         const opRT = op as any;
         if (opRT.method === "setProperty") {
@@ -597,15 +579,58 @@ export class RichText extends BaseItem<RichText> {
           this.selection = null;
           this.editor.applyRichTextOp(opRT);
         }
-        this.updateElement();
         break;
       }
+      case "LinkTo":
+        this.linkTo.apply(op as LinkToOperation);
+        break;
       default:
         super.apply(op);
         return;
     }
 
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
+    }
+
+    if (hint === UpdateHint.TranslateOnly) {
+      this.transformCanvas();
+    } else if (hint === UpdateHint.TransformGeometry) {
+      if (this.isInShape) {
+        this.updateElement();
+      } else {
+        this.transformCanvas();
+      }
+    } else {
+      // LayoutAffecting or FullRebuild
+      this.updateElement();
+    }
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    const layoutAffectingRichTextProps = [
+      "text",
+      "fontSize",
+      "fontFamily",
+      "fontWeight",
+      "fontStyle",
+      "lineHeight",
+      "letterSpacing",
+      "maxWidth",
+      "verticalAlignment",
+      "realSize",
+    ];
+    if (layoutAffectingRichTextProps.includes(property)) {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   applyCommand(op: Operation): void {
@@ -1024,6 +1049,7 @@ export class RichText extends BaseItem<RichText> {
       });
     }
     this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 

@@ -14,6 +14,7 @@ import { conf } from "Settings";
 import { Subject } from "Subject";
 import { VideoCommand } from "./VideoCommand";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { getMediaSignedUrl } from "api/MediaHelpers";
 
 export interface VideoItemData {
@@ -291,14 +292,9 @@ export class VideoItem extends BaseItem<VideoItem> {
   deserialize(data: SerializedItemData<VideoItemData> | VideoItemData): this {
     if (data.videoDimension) {
       this.videoDimension = data.videoDimension;
-      this.setPreview(createPlaceholderImage(
-        this.videoDimension.width,
-        this.videoDimension.height
-      ));
     }
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.updateMbr();
     }
     if (data.isStorageUrl) {
       this.isStorageUrl = data.isStorageUrl;
@@ -309,37 +305,57 @@ export class VideoItem extends BaseItem<VideoItem> {
     if (data.extension) {
       this.extension = data.extension;
     }
-
-    this.setPreview(createPlaceholderImage(
-      data.videoDimension?.width || 100,
-      data.videoDimension?.height || 100
-    ));
-
     if (data.previewUrl) {
-      this.setPreviewUrl(data.previewUrl);
+      this.previewUrl = data.previewUrl;
     }
+
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
-  apply(op: Operation): void {
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.updateMbr();
-        break;
-      case "Video":
-        if (op.method === "updateVideoData") {
-          this.applyVideoData({
-            url: op.data.url,
-            previewUrl: op.data.previewUrl,
-          });
-        }
-        break;
-      default:
-        super.apply(op);
-        return;
+  apply(opIn: Operation): void {
+    const op = opIn as any;
+    if (op.class === "Video" && op.method === "updateVideoData") {
+      this.applyVideoData({
+        url: op.data.url,
+        previewUrl: op.data.previewUrl,
+      });
+    } else {
+      super.apply(op);
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: any, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
+    }
+
+    if (hint === UpdateHint.FullRebuild) {
+      this.setPreview(createPlaceholderImage(
+        this.videoDimension.width,
+        this.videoDimension.height
+      ));
+      if (this.previewUrl) {
+        this.setPreviewUrl(this.previewUrl);
+      }
+    }
+
+    this.updateMbr();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["url", "previewUrl", "isStorageUrl", "extension"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    if (property === "videoDimension") {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   emit(operation: Operation): void {

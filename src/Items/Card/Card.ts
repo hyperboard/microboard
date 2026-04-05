@@ -3,6 +3,7 @@ import {
   BaseItemData,
   SerializedItemData,
 } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import {Board} from "Board";
 import {DrawingContext} from "Geometry/DrawingContext";
 import {Path} from "Geometry/Path/Path";
@@ -197,10 +198,8 @@ export class Card extends BaseItem<Card> {
 
   deserialize(data: SerializedItemData): this {
     super.deserialize(data);
-
-    this.updateMbr();
     this.createImages();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -224,7 +223,8 @@ export class Card extends BaseItem<Card> {
     }
   }
 
-  apply(op: any): void {
+  apply(opIn: any): void {
+    const op = opIn as any;
     if (op.class === "Transformation") {
       if (
         this.parent === "Board" &&
@@ -235,19 +235,40 @@ export class Card extends BaseItem<Card> {
         this.throttledBringToFront();
       }
       super.apply(op);
-      this.updateMbr();
+    } else if (op.class === "Card") {
+      switch (op.method) {
+        case "setIsOpen":
+          this.isOpen = op.newData.isOpen;
+          break;
+      }
+    } else {
+      super.apply(op);
     }
-    switch (op.class) {
-      case "Card":
-        switch (op.method) {
-          case "setIsOpen":
-            this.isOpen = op.newData.isOpen;
-            this.updateImageToRender();
-            break;
-        }
-        break;
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: any, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.updateImageToRender();
+      this.subject.publish(this);
+      return;
     }
+
+    this.updateMbr();
+    this.updateImageToRender();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["isOpen", "faceUrl", "backsideUrl"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    if (property === "dimensions") {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {

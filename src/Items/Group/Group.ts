@@ -3,7 +3,7 @@ import { DrawingContext } from "Geometry/DrawingContext";
 import { TransformationData } from "Geometry/Transformation/TransformationData";
 import { GroupOperation } from "./GroupOperation";
 import { GroupCommand } from "./GroupCommand";
-import type { Events, Operation } from "Events";
+import type { Events, Operation, BaseOperation } from "Events";
 import { Mbr } from "Geometry/Mbr/Mbr";
 import { Line } from "Geometry/Line/Line";
 import { Point } from "Geometry/Point/Point";
@@ -15,6 +15,8 @@ import type { Item } from "../Item";
 import { Board } from "Board";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { BaseItemOperation } from "Items/BaseItem/BaseItemOperation";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
 
 export interface GroupData {
@@ -46,6 +48,7 @@ export class Group extends BaseItem<Group> {
     super(board, id);
     this.index = new SimpleSpatialIndex(this.board.camera, this.board.pointer);
     this.canBeNested = true;
+    this.updateVisuals({ method: "constructor", class: this.itemType } as any, UpdateHint.FullRebuild);
   }
 
   isClosed(): boolean {
@@ -56,33 +59,56 @@ export class Group extends BaseItem<Group> {
     return null;
   }
 
-  apply(op: Operation): void {
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.updateMbr();
-        // Notify connectors subscribed to children so they follow group movement.
-        // Set movingGroupId so observers skip smartJump (avoid spurious ops on reload).
-        Group.movingGroupId = this.id;
-        for (const child of this.index!.listAll()) {
-          (child as BaseItem).subject.publish(child as any);
-        }
-        Group.movingGroupId = null;
-        break;
-      case "Group":
-        if (op.method === "addChild") {
-          this.applyAddChildren([op.childId]);
-        } else if (op.method === "removeChild") {
-          this.applyRemoveChildren([op.childId]);
-        } else {
-          super.apply(op);
-        }
-        break;
-      default:
+  override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+    const op = opIn as Operation;
+    if (op.class === "Group") {
+      if (op.method === "addChild") {
+        this.applyAddChildren([op.childId]);
+      } else if (op.method === "removeChild") {
+        this.applyRemoveChildren([op.childId]);
+      } else {
         super.apply(op);
         return;
+      }
+    } else if (op.class === "LinkTo") {
+      this.linkTo.apply(op as any);
+    } else {
+      super.apply(op);
+      return;
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
+    }
+
+    this.updateMbr();
+
+    // Notify connectors subscribed to children so they follow group movement.
+    if (op.class === "Transformation") {
+      Group.movingGroupId = this.id;
+      for (const child of this.index!.listAll()) {
+        (child as BaseItem).subject.publish(child as any);
+      }
+      Group.movingGroupId = null;
+    }
+
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (property === "isLockedGroup") {
+      return UpdateHint.VisualOnly;
+    }
+    if (property === "childIds") {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   emit(operation: GroupOperation): void {
@@ -174,8 +200,7 @@ export class Group extends BaseItem<Group> {
     if (data.isLockedGroup !== undefined) {
       this.isLockedGroup = data.isLockedGroup;
     }
-    this.updateMbr();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 

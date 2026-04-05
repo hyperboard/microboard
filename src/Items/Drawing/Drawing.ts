@@ -1,4 +1,4 @@
-import type { Events, Operation } from "Events";
+import type { Events, Operation, BaseOperation } from "Events";
 import { Subject } from "Subject";
 import { DrawingContext } from "Geometry/DrawingContext";
 import { Line } from "Geometry/Line/Line";
@@ -16,6 +16,8 @@ import { LinkTo } from "../LinkTo/LinkTo";
 import { conf } from "Settings";
 import { Board } from "Board";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { BaseItemOperation } from "Items/BaseItem/BaseItemOperation";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { DefaultTransformationData } from "Geometry/Transformation/TransformationData";
 import { registerItem } from "../RegisterItem";
 import { DrawingDataSchema } from "./Drawing.schema";
@@ -54,7 +56,7 @@ export class Drawing extends BaseItem<Drawing> {
     id = "",
   ) {
     super(board, id);
-    this.updateLines();
+    this.updateVisuals({ method: "constructor", class: this.itemType } as any, UpdateHint.FullRebuild);
   }
 
   serialize(): SerializedItemData<DrawingData> {
@@ -92,7 +94,7 @@ export class Drawing extends BaseItem<Drawing> {
     if (data.colorRole) {
       this.colorRole = data.colorRole;
     }
-    this.updateGeometry();
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -356,35 +358,60 @@ export class Drawing extends BaseItem<Drawing> {
     }
   }
 
-  apply(op: Operation): void {
-    if (op.method === "setProperty") {
+  override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+    const op = opIn as Operation;
+    if (op.class === "LinkTo") {
+      this.linkTo.apply(op as any);
+    } else {
       super.apply(op);
       return;
     }
-    switch (op.class) {
-      case "LinkTo":
-        this.linkTo.apply(op as any);
-        break;
-      case "Transformation":
-        super.apply(op);
-        this.updateMbr();
-        this.updateLines();
-        break;
-      default:
-        super.apply(op);
-        return;
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
     }
+
+    if (hint === UpdateHint.LayoutAffecting || hint === UpdateHint.FullRebuild) {
+      if (hint === UpdateHint.FullRebuild) {
+        this.updatePath2d();
+      }
+      this.updateLines();
+      this.updateMbr();
+    } else {
+      // TranslateOnly or TransformGeometry
+      this.updateLines();
+      this.updateMbr();
+    }
+
     this.subject.publish(this);
   }
 
-  protected onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+  protected override onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
     if (["strokeWidth", "borderStyle"].includes(property)) {
       this.linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
     }
-    if (["borderColor", "strokeWidth", "borderOpacity", "borderStyle"].includes(property)) {
-      this.updateMbr();
-      this.subject.publish(this);
+    super.onPropertyUpdated(property, value, prevValue);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    const visualOnlyDrawingProps = [
+      "borderColor",
+      "strokeWidth",
+      "borderStyle",
+      "borderOpacity",
+      "colorRole",
+      "strokeStyle",
+    ];
+    if (visualOnlyDrawingProps.includes(property)) {
+      return UpdateHint.VisualOnly;
     }
+    return super.getPropertyUpdateHint(property);
   }
 
 

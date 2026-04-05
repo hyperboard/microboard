@@ -18,7 +18,7 @@ import { BaseItemOperation } from "./BaseItemOperation";
 import { SimpleSpatialIndex } from "../../SpatialIndex/SimpleSpatialIndex";
 import { Point } from "Geometry/Point";
 import { Matrix } from "Geometry/Transformation/Matrix";
-import { TransformationOperation, MoveItem, SetPlacementItem } from "Geometry/Transformation/TransformationOperations";
+import { TransformationOperation, MoveItem, SetPlacementItem, MatrixData } from "Geometry/Transformation/TransformationOperations";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { TransformParams, TransformResult } from "./TransformContext";
 import { GeometricNormal } from "Geometry/GeometricNormal";
@@ -29,6 +29,7 @@ import type { ItemType } from "Items/Item";
 import { toLocalTransformOp } from "./toLocalTransformOp";
 import type { ItemOverlayDefinition } from "Overlay";
 import { getItemOverlay } from "Overlay";
+import { UpdateHint } from "./UpdateHint";
 
 export interface BaseItemData {
 	itemType: string;
@@ -507,6 +508,8 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 			}
 		});
 
+		this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
+
 		return this;
 	}
 
@@ -598,8 +601,8 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		})
 	}
 
-	apply(op: Operation | BaseItemOperation | BaseOperation): void {
-		op = op as Operation;
+	apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+		const op = opIn as Operation;
 
 		if (op.class === "Transformation") {
 			if (op.method === "move") {
@@ -658,20 +661,23 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 				this.linkTo.apply(op as LinkToOperation);
 				break;
 			case this.itemType:
-				op = op as unknown as BaseItemOperation
-				switch (op.method) {
+				const itemOp = op as unknown as BaseItemOperation
+				switch (itemOp.method) {
 					case "removeChildren":
-						this.applyRemoveChildren((op.newData as { childIds: string[] }).childIds)
+						this.applyRemoveChildren((itemOp.newData as { childIds: string[] }).childIds)
 						break;
 					case "addChildren":
-						this.applyAddChildren((op.newData as { childIds: string[] }).childIds)
+						this.applyAddChildren((itemOp.newData as { childIds: string[] }).childIds)
 						break;
 					case "toggleResizeEnabled":
-						this.resizeEnabled = (op.newData as { resizeEnabled: boolean }).resizeEnabled;
+						this.resizeEnabled = (itemOp.newData as { resizeEnabled: boolean }).resizeEnabled;
 						break;
 				}
 				break;
 		}
+
+		const hint = this.calculateUpdateHint(op);
+		this.updateVisuals(op, hint);
 	}
 
 	protected onPropertyUpdated(property: string, value: any, prevValue: any): void {
@@ -795,6 +801,76 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	isReady(): boolean {
 		return true;
+	}
+
+	protected calculateUpdateHint(op: Operation): UpdateHint {
+		if (op.class === "Transformation") {
+			const tOp = op as TransformationOperation;
+			let isTranslateOnly = true;
+
+			const checkMatrix = (current: MatrixData, prev: MatrixData) => {
+				const EPS = 1e-6;
+				return (
+					Math.abs(current.scaleX - prev.scaleX) < EPS &&
+					Math.abs(current.scaleY - prev.scaleY) < EPS &&
+					Math.abs(current.shearX - prev.shearX) < EPS &&
+					Math.abs(current.shearY - prev.shearY) < EPS
+				);
+			};
+
+			if (tOp.method === "move" || tOp.method === "setPlacement") {
+				const item = (tOp.items as (MoveItem | SetPlacementItem)[]).find(i => i.id === this.id);
+				if (item) {
+					isTranslateOnly = checkMatrix(item.worldMatrix, item.prevWorldMatrix);
+				}
+			} else if (tOp.method === "translateTo" || tOp.method === "translateBy") {
+				isTranslateOnly = true;
+			} else if (tOp.method === "rotateTo" || tOp.method === "rotateBy" || tOp.method === "scaleTo" || tOp.method === "scaleBy") {
+				isTranslateOnly = false;
+			} else {
+				// Fallback for applyMatrix or others where we don't have easy prev/next comparison here
+				isTranslateOnly = false;
+			}
+
+			return isTranslateOnly ? UpdateHint.TranslateOnly : UpdateHint.TransformGeometry;
+		}
+
+		if (op.method === "setProperty") {
+			const setPropOp = op as SetPropertyOperation;
+			return this.getPropertyUpdateHint(setPropOp.property);
+		}
+
+		if (op.class === "RichText") {
+			return UpdateHint.LayoutAffecting;
+		}
+
+		return UpdateHint.FullRebuild;
+	}
+
+	/**
+	 * Determines the update requirement for a specific property change.
+	 * Concrete items should override this to provide hints for their own properties.
+	 */
+	protected getPropertyUpdateHint(property: string): UpdateHint {
+		const layoutAffectingBaseProps = ["parent", "childIds"];
+		const visualOnlyBaseProps = ["linkTo", "resizeEnabled", "onlyProportionalResize", "isHoverHighlighted"];
+
+		if (layoutAffectingBaseProps.includes(property)) {
+			return UpdateHint.LayoutAffecting;
+		}
+		if (visualOnlyBaseProps.includes(property)) {
+			return UpdateHint.VisualOnly;
+		}
+
+		// Conservative default for unknown properties. 
+		// Subclasses will handle their own properties.
+		return UpdateHint.LayoutAffecting;
+	}
+
+	protected updateVisuals(_op: Operation, _hint: UpdateHint): void {
+		// Default implementation can handle standard MBR updates if needed,
+		// but most items will override this.
+		this.subject.publish(this as unknown as T);
 	}
 
 	onSelectEnd(_topItem?: Item): void {

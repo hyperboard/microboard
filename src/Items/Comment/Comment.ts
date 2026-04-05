@@ -14,6 +14,7 @@ import { Line } from "Geometry/Line";
 import { v4 as uuidv4 } from "uuid";
 import { LinkTo } from "../LinkTo/LinkTo";
 import { BaseItem } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { transformOps } from "Geometry/Transformation/transformOps";
 import { Board } from "Board";
 import { Item } from "Items/Item";
@@ -93,16 +94,15 @@ export class Comment extends BaseItem<Comment> {
     this.commentators = data.commentators;
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.transform();
     }
     this.itemToFollow = data.itemToFollow;
     this.resolved = data.resolved;
-    this.subject.publish(this);
     if (data.usersUnreadMarks) {
       this.usersUnreadMarks = data.usersUnreadMarks;
     } else {
       this.usersUnreadMarks = [];
     }
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -147,21 +147,38 @@ export class Comment extends BaseItem<Comment> {
     return this.commentators;
   }
 
-  apply(op: Operation): void {
+  apply(opIn: Operation): void {
+    const op = opIn as Operation;
     if (op.method === "setProperty") {
       super.apply(op);
+    } else if (op.class === "Comment") {
+      this.applyCommentOperation(op as CommentOperation);
+    } else {
+      super.apply(op);
+    }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
       return;
     }
-    switch (op.class) {
-      case "Comment":
-        this.applyCommentOperation(op as CommentOperation);
-        this.transform();
-        break;
-      default:
-        super.apply(op);
-        break;
-    }
+
+    this.transform();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["thread", "resolved", "usersUnreadMarks", "commentators", "itemToFollow"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    if (property === "anchor") {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   private applyCommentOperation(op: CommentOperation): void {

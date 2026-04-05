@@ -1,7 +1,7 @@
 import { RichText } from 'Items/RichText/RichText';
 import { Subject } from 'Subject';
 import { Board } from 'Board';
-import { Operation } from 'Events';
+import { Operation, BaseOperation } from 'Events';
 import { CubicBezier } from 'Geometry/Curve/Curve';
 import { DrawingContext } from 'Geometry/DrawingContext';
 import { GeometricNormal } from 'Geometry/GeometricNormal';
@@ -37,6 +37,8 @@ import { ConnectorAnchorColors } from './types';
 import { conf } from 'Settings';
 import { transformOps } from "Geometry/Transformation/transformOps";
 import { BaseItem, SerializedItemData, BaseItemData } from "../BaseItem/BaseItem";
+import { BaseItemOperation } from "../BaseItem/BaseItemOperation";
+import { UpdateHint } from "../BaseItem/UpdateHint";
 import { Group } from "../Group/Group";
 import { ColorValue, coerceColorValue, resolveColor, fixedColor, semanticColor } from 'Color';
 
@@ -140,13 +142,7 @@ export class Connector extends BaseItem<Connector> {
 			this.lineWidth * 0.1 + 0.3
 		);
 		this.middlePoint = null;
-
-
-		this.linkTo.subject.subscribe(() => {
-			this.updatePaths();
-			this.subject.publish(this);
-		});
-		this.offsetLines();
+		this.updateVisuals({ method: 'constructor', class: this.itemType } as any, UpdateHint.FullRebuild);
 		this.initText();
 	}
 
@@ -423,15 +419,50 @@ export class Connector extends BaseItem<Connector> {
 		return this.id;
 	}
 
-	apply(operation: Operation): void {
-		if (operation.method === "setProperty") {
-			super.apply(operation);
+	override apply(opIn: Operation | BaseItemOperation | BaseOperation): void {
+		const op = opIn as Operation;
+		if (op.class === 'RichText') {
+			this.text.apply(op);
+		} else if (op.class === 'Connector') {
+			switch (op.method) {
+				case 'setStartPoint':
+					this.applyStartPoint(op.startPointData, false);
+					break;
+				case 'setEndPoint':
+					this.applyEndPoint(op.endPointData, false);
+					break;
+				case 'setMiddlePoint':
+					this.applyMiddlePoint(op.middlePointData, false);
+					break;
+				case 'switchPointers':
+					this.applySwitchPointers();
+					break;
+				case 'setSmartJump':
+					this.applySmartJump(op.smartJump);
+					break;
+			}
+		} else {
+			super.apply(op);
 			return;
 		}
 
-		if (operation.class === 'Transformation') {
-			super.apply(operation);
-			const transformOp = operation as TransformationOperation;
+		const hint = this.calculateUpdateHint(op);
+		this.updateVisuals(op, hint);
+	}
+
+	protected override updateVisuals(op: Operation, hint: UpdateHint): void {
+		if (hint === UpdateHint.VisualOnly) {
+			this.lines.setBorderWidth(this.lineWidth);
+			this.lines.setBorderStyle(this.borderStyle);
+			this.subject.publish(this);
+			return;
+		}
+
+		if (hint === UpdateHint.TranslateOnly) {
+			this.translatePoints();
+			this.updatePaths();
+		} else if (hint === UpdateHint.TransformGeometry) {
+			const transformOp = op as TransformationOperation;
 			if (transformOp.method === 'applyMatrix') {
 				const itemOp = transformOp.items.find(i => i.id === this.getId());
 				if (itemOp && (itemOp.matrix.scaleX !== 1 || itemOp.matrix.scaleY !== 1)) {
@@ -440,55 +471,16 @@ export class Connector extends BaseItem<Connector> {
 			}
 			this.translatePoints();
 			this.updatePaths();
-			this.subject.publish(this);
-			return;
+		} else {
+			// LayoutAffecting or FullRebuild
+			this.updatePaths();
 		}
 
-		switch (operation.class) {
-			case 'RichText':
-				this.text.apply(operation);
-				break;
-			case 'Connector':
-				switch (operation.method) {
-					case 'setStartPoint':
-						this.applyStartPoint(operation.startPointData);
-						break;
-					case 'setEndPoint':
-						this.applyEndPoint(operation.endPointData);
-						break;
-					case 'setMiddlePoint':
-						this.applyMiddlePoint(operation.middlePointData);
-						break;
-					case 'switchPointers':
-						this.applySwitchPointers();
-						break;
-					case 'setSmartJump':
-						this.applySmartJump(operation.smartJump);
-						break;
-				}
-				break;
-			default:
-				super.apply(operation);
-				return;
-		}
 		this.subject.publish(this);
 	}
 
-	protected onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
-		if (
-			[
-				"startPointerStyle",
-				"endPointerStyle",
-				"lineColor",
-				"lineWidth",
-				"borderStyle",
-				"lineStyle",
-				"smartJump"
-			].includes(property)
-		) {
-			this.updatePaths();
-			this.subject.publish(this);
-		}
+	protected override onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
+		super.onPropertyUpdated(property, value, prevValue);
 	}
 
 
@@ -910,11 +902,21 @@ export class Connector extends BaseItem<Connector> {
 		if (data.transformation) {
 			this.transformation.deserialize(data.transformation);
 		}
-		// Do NOT call translatePoints() here — BoardPoints are stored in absolute world
-		// coordinates and translatePoints() would incorrectly shift them by (mbr.left, mbr.top).
-		this.updatePaths();
-		this.subject.publish(this);
+		this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
 		return this;
+	}
+
+	protected override getPropertyUpdateHint(property: string): UpdateHint {
+		const layoutAffectingConnectorProps = ["lineStyle", "smartJump", "startPoint", "endPoint", "middlePoint"];
+		const visualOnlyConnectorProps = ["lineColor", "lineWidth", "borderStyle", "startPointerStyle", "endPointerStyle"];
+
+		if (layoutAffectingConnectorProps.includes(property)) {
+			return UpdateHint.LayoutAffecting;
+		}
+		if (visualOnlyConnectorProps.includes(property)) {
+			return UpdateHint.VisualOnly;
+		}
+		return super.getPropertyUpdateHint(property);
 	}
 
 	getConnectorById(items: Item[], connectorId: string): Connector | undefined {

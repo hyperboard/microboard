@@ -3,6 +3,7 @@ import {
   BaseItemData,
   SerializedItemData,
 } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { Board } from "Board";
 import { Subject } from "Subject";
 import {registerItem, registerTool} from "Items/RegisterItem";
@@ -66,31 +67,57 @@ export class Screen extends BaseItem<Screen> {
     this.updateMbr();
   }
 
-  apply(op: any): void {
-    super.apply(op);
-    switch (op.class) {
-      case "Transformation":
-        this.transformPath();
-        this.updateMbr();
-        break;
-      case "Screen":
-        switch (op.method) {
-          case "setBorderWidth":
-            this.applyBorderWidth(op.newData.borderWidth);
-            break;
-          case "setBackgroundColor":
-            this.applyBackgroundColor(op.newData.backgroundColor);
-            break;
-          case "setBorderColor":
-            this.applyBorderColor(op.newData.borderColor);
-            break;
-          case "setBackgroundUrl":
-            this.applyBackgroundUrl(op.newData.backgroundUrl);
-            break;
-        }
-        break;
+  apply(opIn: any): void {
+    const op = opIn as any;
+    if (op.class === "Screen") {
+      switch (op.method) {
+        case "setBorderWidth":
+          this.borderWidth = op.newData.borderWidth;
+          break;
+        case "setBackgroundColor":
+          this.backgroundColor = op.newData.backgroundColor;
+          break;
+        case "setBorderColor":
+          this.borderColor = op.newData.borderColor;
+          break;
+        case "setBackgroundUrl":
+          this.applyBackgroundUrl(op.newData.backgroundUrl);
+          break;
+      }
+    } else {
+      super.apply(op);
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: any, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      if (!this.ownerId) {
+        this.index!.listUnderPoint = () => [];
+        this.index!.listEnclosedBy = () => [];
+        this.index!.listEnclosedOrCrossedBy = () => [];
+      } else {
+        // Restore default behavior if ownerId is set?
+        // Screen seems to keep them disabled if no owner.
+        // Actually the code in deserialize/applyOwnerId suggests it.
+      }
+      this.transformPath();
+      this.subject.publish(this);
+      return;
+    }
+
+    this.transformPath();
+    this.updateMbr();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["backgroundColor", "borderColor", "borderWidth", "backgroundUrl", "ownerId"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
@@ -211,13 +238,7 @@ export class Screen extends BaseItem<Screen> {
     if (this.backgroundUrl) {
       this.applyBackgroundUrl(this.backgroundUrl);
     }
-    if (!this.ownerId) {
-      this.index!.listUnderPoint = () => []
-      this.index!.listEnclosedBy = () => []
-      this.index!.listEnclosedOrCrossedBy = () => []
-    }
-    this.transformPath();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 

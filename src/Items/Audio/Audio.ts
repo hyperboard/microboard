@@ -11,6 +11,7 @@ import { Line } from "Geometry/Line/Line";
 import { conf } from "Settings";
 import { AudioCommand } from "Items/Audio/AudioCommand";
 import { BaseItem, SerializedItemData } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import { registerItem } from "Items/RegisterItem";
 import { AudioItemDataSchema } from "./Audio.schema";
 
@@ -163,7 +164,6 @@ export class AudioItem extends BaseItem<AudioItem> {
   deserialize(data: SerializedItemData<AudioItemData> | AudioItemData): this {
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.updateMbr();
     }
     if (data.url) {
       this.url = data.url;
@@ -172,25 +172,39 @@ export class AudioItem extends BaseItem<AudioItem> {
       this.extension = data.extension;
     }
 
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
-  apply(op: Operation): void {
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.updateMbr();
-        break;
-      case "Audio":
-        if (op.method === "setUrl") {
-          this.url = op.url;
-        }
-        break;
-      default:
-        super.apply(op);
-        return;
+  apply(opIn: Operation): void {
+    const op = opIn as Operation;
+    if (op.class === "Audio") {
+      if (op.method === "setUrl") {
+        this.url = op.url;
+      }
+    } else {
+      super.apply(op);
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: Operation, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
+    }
+
+    this.updateMbr();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["url", "extension"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   emit(operation: Operation): void {

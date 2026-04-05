@@ -9,6 +9,7 @@ import { RichText } from "../RichText/RichText";
 import { transformOps } from "Geometry/Transformation/transformOps";
 import { Matrix } from "Geometry/Transformation/Matrix";
 import { BaseItem, BaseItemData, SerializedItemData } from "../BaseItem/BaseItem";
+import { UpdateHint } from "../BaseItem/UpdateHint";
 import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
 import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import { Subject } from "Subject";
@@ -318,9 +319,8 @@ export class Frame extends BaseItem<Frame> {
   }
 
   deserialize(data: SerializedItemData<FrameData> | FrameData): this {
-    if (data.shapeType) {
-      this.shapeType = data.shapeType ?? this.shapeType;
-      this.initPath();
+    if (data.shapeType != null) {
+      this.shapeType = data.shapeType;
     }
     this.linkTo.deserialize(data.linkTo);
     if (data.backgroundColor != null) {
@@ -338,21 +338,12 @@ export class Frame extends BaseItem<Frame> {
     }
     if (data.text) {
       this.text.deserialize(data.text);
-      // Re-apply offsets and ensure container is local
-      this.updateTextContainer();
     }
-    // Apply item-level transformation AFTER text.deserialize, because RichText.deserialize
-    // also calls this.transformation.deserialize (same reference) with stale local coords.
-    // The item-level transformation must always win.
     if (data.transformation) {
       this.transformation.deserialize(data.transformation);
-      this.transformPath();
-      this.updateMbr();
-      this.text.transformCanvas();
-      this.updateChildrenIds();
     }
     this.canChangeRatio = data.canChangeRatio ?? this.canChangeRatio;
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
@@ -382,44 +373,52 @@ export class Frame extends BaseItem<Frame> {
     this.path.setBorderOpacity(this.borderOpacity);
   }
 
-  apply(op: Operation): void {
+  apply(opIn: Operation): void {
+    const op = opIn as any;
     // Handle Frame children ops here (before super) to avoid BaseItem reading
     // the wrong field — Frame uses childId[], BaseItem expects newData.childIds.
     if (op.class === "Frame") {
       if (op.method === "addChildren" || op.method === "addChild") {
         this.applyAddChildren(op.childId);
-        this.subject.publish(this);
-        return;
       } else if (op.method === "removeChildren" || op.method === "removeChild") {
         this.applyRemoveChildren(op.childId);
-        this.subject.publish(this);
-        return;
+      } else if (op.method === "setBackgroundColor") {
+        this.backgroundColor = op.backgroundColor;
+      } else if (op.method === "setCanChangeRatio") {
+        this.canChangeRatio = op.canChangeRatio;
+      } else if (op.method === "setFrameType") {
+        this.applyFrameType(op.shapeType);
       }
+    } else if (op.class === "RichText") {
+      this.text.apply(op);
+    } else {
+      super.apply(op);
     }
-    switch (op.class) {
-      case "Transformation":
-        super.apply(op);
-        this.transformPath();
-        this.updateMbr();
-        this.text.transformCanvas();
-        break;
-      case "Frame":
-        if (op.method === "setBackgroundColor") {
-          this.applyBackgroundColor(op.backgroundColor);
-        } else if (op.method === "setCanChangeRatio") {
-          this.applyCanChangeRatio(op.canChangeRatio);
-        } else if (op.method === "setFrameType") {
-          this.applyFrameType(op.shapeType);
-        }
-        break;
-      case "RichText":
-        this.text.apply(op);
-        break;
-      default:
-        super.apply(op);
-        return;
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: any, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.subject.publish(this);
+      return;
     }
+
+    this.transformPath();
+    this.updateMbr();
+    this.text.transformCanvas();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (["backgroundColor", "borderColor", "borderWidth", "backgroundOpacity", "borderOpacity", "borderStyle", "canChangeRatio"].includes(property)) {
+      return UpdateHint.VisualOnly;
+    }
+    if (property === "shapeType" || property === "childIds") {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   emit(operation: FrameOperation): void {

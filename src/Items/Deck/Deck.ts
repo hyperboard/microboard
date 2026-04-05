@@ -3,6 +3,7 @@ import {
   BaseItemData,
   SerializedItemData,
 } from "Items/BaseItem/BaseItem";
+import { UpdateHint } from "Items/BaseItem/UpdateHint";
 import {Board} from "Board";
 import {Subject} from "Subject";
 import {registerItem} from "Items/RegisterItem";
@@ -178,11 +179,10 @@ export class Deck extends BaseItem<Deck> {
     this.addChildItems(reversed);
   }
 
-  apply(op: any): void {
+  apply(opIn: any): void {
+    const op = opIn as any;
     super.apply(op);
-    if (op.class === "Transformation") {
-      this.updateMbr();
-    } else if (op.class === "Deck") {
+    if (op.class === "Deck") {
       if (
         op.method === "startAnimation" &&
         op.newData.timeStamp &&
@@ -193,9 +193,29 @@ export class Deck extends BaseItem<Deck> {
           this.stopAnimation();
         }, 2000);
       }
-      this.isCacheDirty = true;
     }
+
+    const hint = this.calculateUpdateHint(op);
+    this.updateVisuals(op, hint);
+  }
+
+  protected override updateVisuals(_op: any, hint: UpdateHint): void {
+    if (hint === UpdateHint.VisualOnly) {
+      this.isCacheDirty = true;
+      this.subject.publish(this);
+      return;
+    }
+
+    this.isCacheDirty = true;
+    this.updateMbr();
     this.subject.publish(this);
+  }
+
+  protected override getPropertyUpdateHint(property: string): UpdateHint {
+    if (property === "childIds") {
+      return UpdateHint.LayoutAffecting;
+    }
+    return super.getPropertyUpdateHint(property);
   }
 
   updateMbr(): void {
@@ -215,8 +235,7 @@ export class Deck extends BaseItem<Deck> {
     if (data.childIds) {
       this.childIds = data.childIds;
     }
-    this.updateMbr();
-    this.subject.publish(this);
+    this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
 
