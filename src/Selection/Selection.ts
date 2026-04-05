@@ -44,6 +44,8 @@ import { BaseSelection, BaseRange } from "slate";
 import { ReactEditor } from "slate-react";
 import { tempStorage } from "SessionStorage";
 import { Group } from "Items/Group";
+import { Deck } from "Items/Deck/Deck";
+import { Card } from "Items/Card/Card";
 
 const defaultShapeData = new DefaultShapeData();
 
@@ -903,6 +905,57 @@ export class BoardSelection {
     const items = this.items.list().filter((i): i is Connector => i.itemType === "Connector");
     if (items.length > 0) {
       this.emit(propertyOps.setProperty(items, "smartJump", value));
+    }
+  }
+
+  createDeck(): void {
+    const single = this.items.getSingle();
+    if (single?.itemType === "Deck") {
+      return;
+    }
+
+    const selected = this.items.listAll();
+    const onlyCards = this.items.isAllItemsType("Card");
+
+    if (onlyCards) {
+      const anchor = selected[selected.length - 1] as BaseItem | undefined;
+      if (!anchor) {
+        return;
+      }
+
+      const deck = new Deck(this.board, "");
+      deck.apply(transformOps.setLocal(deck.id, {
+        translateX: anchor.getMbr().left,
+        translateY: anchor.getMbr().top,
+      }));
+      const addedDeck = this.board.add(deck);
+      this.removeAll();
+      addedDeck.addChildItems(selected);
+      this.add(addedDeck);
+      return;
+    }
+
+    let mainDeck: Deck | null = null;
+    const cards: Card[] = [];
+    selected.forEach(item => {
+      if (item.itemType === "Card") {
+        cards.push(item as Card);
+      } else if (item.itemType === "Deck") {
+        const deck = item as Deck;
+        if (mainDeck) {
+          cards.push(...deck.getDeck());
+          this.board.remove(deck);
+        } else {
+          mainDeck = deck;
+        }
+      }
+    });
+
+    this.removeAll();
+    if (mainDeck) {
+      const targetDeck = mainDeck as Deck;
+      targetDeck.addChildItems(cards);
+      this.add(targetDeck);
     }
   }
 

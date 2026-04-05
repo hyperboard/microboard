@@ -13,6 +13,7 @@ The new runtime surface is exported from `src/Overlay/` and is wired through:
 - `getToolOverlay(...)`
 - `listToolOverlays()`
 - `intersectOverlayActions(items)`
+- `getSelectionOverlayActions(items)`
 - `resolveDynamicOptions(providerId, context)`
 
 The goal of this pass is not to dictate overlay layout. It only describes:
@@ -21,6 +22,7 @@ The goal of this pass is not to dictate overlay layout. It only describes:
 - how tools appear in toolbar-like UI
 - which item actions exist
 - which existing operations / tool state they map to
+- which plugin-owned selection actions exist
 - how inputs should be edited
 - how grouped editors should be presented semantically
 
@@ -86,6 +88,15 @@ Added:
 
 This lets plugins define computed option lists without a type-conditional UI DSL.
 
+### 6. Selection actions are plugin-owned
+
+Added:
+
+- `registerSelectionAction(...)`
+- `getSelectionOverlayActions(items)`
+
+This lets plugins expose cross-item actions like deck creation/merge without pretending they belong to one item type or introducing a central applicability DSL.
+
 ## First-Pass Metadata Implemented
 
 ### Tools
@@ -120,6 +131,12 @@ Implemented metadata for:
 
 Also converted `Card` to the same metadata contract so the repo compiles cleanly and the card/deck decision point is explicit in the new model.
 
+### Selection actions
+
+Implemented metadata for:
+
+- deck creation/merge from card/deck selection
+
 ## Where Metadata Lives
 
 Tool-local metadata:
@@ -151,18 +168,21 @@ These are local to the plugin-owned folders and then registered through the exis
 
 As a union:
 
-- `kind: "svg"` for inline SVG payloads
 - `kind: "asset"` for plugin-owned asset paths
 - `kind: "symbol"` for compatibility with existing UI icon keys
 
-This intentionally does not force a final single format yet.
+In the aligned second pass, the practical phase contract is:
+
+- `symbol`
+- SVG `asset`
+
+Inline metadata `svg` is not part of the supported contract for this phase.
 
 ### 2. How can icons reflect dynamic state, like color?
 
 Via `OverlayIcon.state`:
 
 - `state.swatch`
-- `state.tint`
 
 These point at a `toolProperty` or `itemProperty`.
 
@@ -189,14 +209,15 @@ That is the intended default behavior for mixed selections.
 
 Not with type-condition rules in UI.
 
-Viable modeling directions:
+In the aligned selection-action pass, the chosen direction is:
 
-- same `action.id` exposed by multiple item types when they mean the same thing
-- a shared capability implemented by multiple items
 - a plugin-owned selection action defined by the plugin that owns both item types
-- a plugin that owns both `Card` and `Deck` exposing a selection-level action in a future pass
 
-This pass does **not** guess the final card+deck combined-action model. It only makes the decision point explicit and avoids reintroducing a central applicability DSL.
+Concrete current action:
+
+- `deck.createFromSelection`
+
+That keeps `Deck` item actions focused on existing decks, keeps `Card` item actions focused on cards, and models cross-item deck creation/merge as a true selection-level behavior.
 
 ### 5. Where does editor metadata live relative to operation schemas?
 
@@ -228,7 +249,7 @@ Current concrete example:
 ## Tradeoffs
 
 - Editor metadata is not embedded inside operation execution code because the current operation definitions are mostly type-only, not runtime objects.
-- `symbol` icons remain supported for compatibility, but they are not sufficient alone for future plugin-owned visuals. That is why `svg` and `asset` are part of the contract now.
+- `symbol` icons remain supported for compatibility, but they are not sufficient alone for future plugin-owned visuals. That is why `asset` is part of the contract now.
 - Tool defaults use `toolProperty` references. This is simple and concrete, but it means tools with hidden/nested state may need small proxy properties, as with `AddSticker.backgroundColor`.
 - Grouped controls are modeled as action-local `groups`, which is enough for current overlay editors but not yet a full generic layout grammar.
 
@@ -247,7 +268,6 @@ Not covered in this pass:
 - transform handles
 - hit testing
 - drag/drop routing
-- selection-level plugin actions beyond simple `action.id` intersection
 - runtime execution helpers for `customMethod.args` on the UI side
 
 Notably:
@@ -274,8 +294,9 @@ Already representable:
 - dynamic option lists
 - large catalogs
 - plugin-owned icons
-- dynamic icon swatch/tint hints
+- dynamic icon swatch hints
 - mixed-selection shared-action intersection by identity
+- plugin-owned selection actions like `deck.createFromSelection`
 
 Not yet covered:
 
@@ -286,7 +307,6 @@ Not yet covered:
 - action placement policy
 - nested popover semantics
 - richer text multi-control grouping beyond font size
-- selection-level plugin logic for cross-item interactions like `Card + Deck`
 
 ## Validation
 

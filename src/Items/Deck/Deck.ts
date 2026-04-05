@@ -16,7 +16,8 @@ import {Path} from "Geometry/Path";
 import {Mbr} from "Geometry/Mbr";
 import { registerHotkey } from "Keyboard/HotkeyRegistry";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
-import { deckOverlay } from "./DeckOverlay";
+import { registerSelectionAction } from "Overlay";
+import { createDeckSelectionAction, deckOverlay } from "./DeckOverlay";
 
 export const defaultDeckData: BaseItemData = {
   itemType: "Deck",
@@ -451,45 +452,7 @@ registerHotkey({
 })
 
 function createDeck(event?: KeyboardEvent, board?: Board): void {
-  if (!board) {
-    return;
-  }
-  const single = board.selection.items.getSingle();
-  if (single && single.itemType === "Deck") {
-    return;
-  }
-
-    const cardsOrDecks = board.selection.items.listAll();
-    const onlyCards = board.selection.items.isAllItemsType("Card");
-    if (onlyCards) {
-      const deck = new Deck(board, "");
-      deck.apply(transformOps.setLocal(deck.id, { translateX: (cardsOrDecks[cardsOrDecks.length - 1] as BaseItem).getMbr().left, translateY: (cardsOrDecks[cardsOrDecks.length - 1] as BaseItem).getMbr().top }));
-      const addedDeck = board.add(deck);
-      board.selection.removeAll();
-      addedDeck.addChildItems(cardsOrDecks);
-      board.selection.add(addedDeck);
-    } else {
-      let mainDeck: Deck | null = null;
-      const cards: Card[] = [];
-      cardsOrDecks.forEach((item) => {
-        if (item.itemType === "Card") {
-          cards.push(item as Card);
-        } else if (item.itemType === "Deck") {
-          const deck = item as Deck;
-          if (mainDeck) {
-            cards.push(...deck.getDeck());
-            board.remove(deck);
-          } else {
-            mainDeck = deck;
-          }
-        }
-      });
-      board.selection.removeAll();
-      if (mainDeck) {
-        (mainDeck as Deck).addChildItems(cards);
-        board.selection.add(mainDeck);
-      }
-    }
+  board?.selection.createDeck();
 };
 
 registerHotkey({
@@ -501,3 +464,5 @@ registerHotkey({
     cb: createDeck,
   }
 })
+
+registerSelectionAction(createDeckSelectionAction);

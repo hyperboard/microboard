@@ -1,23 +1,19 @@
+import type { BaseItem } from "Items/BaseItem/BaseItem";
+
 export type OverlayValueSource =
   | { kind: "itemProperty"; property: string }
   | { kind: "toolProperty"; property: string };
 
 export interface OverlayIconStateHint {
   swatch?: OverlayValueSource;
-  tint?: OverlayValueSource;
   note?: string;
 }
 
 export type OverlayIcon =
   | {
-      kind: "svg";
-      svg: string;
-      state?: OverlayIconStateHint;
-    }
-  | {
       kind: "asset";
       path: string;
-      mimeType?: "image/svg+xml" | "image/png";
+      mimeType?: "image/svg+xml";
       state?: OverlayIconStateHint;
     }
   | {
@@ -95,6 +91,12 @@ export interface OverlayDynamicOptionsEditor extends OverlayEditorBase {
   presentation: "list" | "icon-grid";
 }
 
+export interface OverlayToggleEditor extends OverlayEditorBase {
+  kind: "toggle";
+  trueLabel?: string;
+  falseLabel?: string;
+}
+
 export interface OverlayCatalogEditor extends OverlayEditorBase {
   kind: "catalog";
   family?: string;
@@ -110,6 +112,7 @@ export type OverlayEditor =
   | OverlayNumberStepperEditor
   | OverlaySliderEditor
   | OverlayDynamicOptionsEditor
+  | OverlayToggleEditor
   | OverlayCatalogEditor;
 
 export type OverlayInvocationArg =
@@ -124,6 +127,7 @@ export type OverlayInvocation =
   | { kind: "setProperty"; property: string }
   | { kind: "operation"; class: string; method: string; args?: OverlayInvocationArg[] }
   | { kind: "customMethod"; methodName: string; args?: OverlayInvocationArg[] }
+  | { kind: "selectionMethod"; methodName: string; args?: OverlayInvocationArg[] }
   | { kind: "toolProperty"; property: string };
 
 export interface OverlayControlDefinition {
@@ -160,6 +164,17 @@ export interface OverlayActionDefinition {
 export interface ItemOverlayDefinition {
   itemType: string;
   actions: OverlayActionDefinition[];
+}
+
+export interface SelectionOverlayActionDefinition {
+  id: string;
+  label: string;
+  icon?: OverlayIcon;
+  description?: string;
+  invoke: OverlayInvocation;
+  controls?: OverlayControlDefinition[];
+  groups?: OverlayControlGroupDefinition[];
+  isAvailable?: (items: readonly BaseItem[]) => boolean;
 }
 
 export interface ToolDefaultsDefinition {

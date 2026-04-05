@@ -4,6 +4,7 @@ import type {
   ItemOverlayDefinition,
   OverlayActionDefinition,
   OverlayOptionDefinition,
+  SelectionOverlayActionDefinition,
   ToolOverlayDefinition,
 } from "./OverlayMetadata";
 
@@ -20,6 +21,7 @@ export type OverlayDynamicOptionsResolver = (
 export const itemOverlays: Record<string, ItemOverlayDefinition> = {};
 export const toolOverlays: Record<string, ToolOverlayDefinition> = {};
 export const dynamicOptionsResolvers: Record<string, OverlayDynamicOptionsResolver> = {};
+export const selectionActions: Record<string, SelectionOverlayActionDefinition> = {};
 
 export function registerItemOverlay(overlay: ItemOverlayDefinition): void {
   itemOverlays[overlay.itemType] = overlay;
@@ -27,6 +29,10 @@ export function registerItemOverlay(overlay: ItemOverlayDefinition): void {
 
 export function registerToolOverlay(overlay: ToolOverlayDefinition): void {
   toolOverlays[overlay.toolName] = overlay;
+}
+
+export function registerSelectionAction(action: SelectionOverlayActionDefinition): void {
+  selectionActions[action.id] = action;
 }
 
 export function registerDynamicOptionsResolver(
@@ -47,6 +53,16 @@ export function getToolOverlay(toolName: string): ToolOverlayDefinition | undefi
 
 export function listToolOverlays(): ToolOverlayDefinition[] {
   return Object.values(toolOverlays);
+}
+
+export function listSelectionActions(): SelectionOverlayActionDefinition[] {
+  return Object.values(selectionActions);
+}
+
+export function getSelectionOverlayActions(
+  items: readonly BaseItem[],
+): SelectionOverlayActionDefinition[] {
+  return Object.values(selectionActions).filter(action => action.isAvailable?.(items) ?? true);
 }
 
 export function resolveDynamicOptions(
@@ -77,6 +93,7 @@ export function intersectOverlayActions(items: readonly BaseItem[]): OverlayActi
   }
 
   return [...counts.values()].filter(action =>
-    overlays.every(overlay => overlay.actions.some(candidate => candidate.id === action.id)),
+    overlays.every(overlay => overlay.actions.some(candidate => candidate.id === action.id))
+      && (action.target !== "single" || items.length === 1),
   );
 }

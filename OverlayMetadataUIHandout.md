@@ -1,33 +1,61 @@
-# UI Handout: Reading Overlay Metadata from Core
+# UI Handout: Overlay Metadata Contract After Alignment Pass Two
 
-## Where to Read Metadata
+## Purpose
 
-Exports now come from `src/Overlay/`.
+This is the practical contract the UI should implement against in this phase.
 
-The main entry points are:
+Core metadata now intentionally covers:
+
+- tool entries
+- item actions
+- editor/input semantics
+- semantic grouping
+- action invocation mapping
+- dynamic option providers
+- plugin-owned selection actions
+- selection intersection
+- single-selection gating through action `target`
+
+Core metadata intentionally does **not** cover:
+
+- toolbar launcher wrappers
+- submenu structure
+- row placement / layout rules
+- popover layout
+- modal orchestration
+- async picker UX
+- value-dependent hidden/disabled predicates
+
+## Where Metadata Comes From
+
+Exports come from [src/Overlay/index.ts](/home/alex/microboard/hyperboard/microboard/src/Overlay/index.ts).
+
+Use:
 
 - `listToolOverlays()`
 - `getToolOverlay(toolName)`
 - `getItemOverlay(itemOrType)`
 - `intersectOverlayActions(items)`
+- `getSelectionOverlayActions(items)`
 - `resolveDynamicOptions(providerId, context)`
 
 Items also expose:
 
 - `item.getOverlay()`
 
-## Toolbar Metadata
+## Tool Metadata
 
-Toolbar-capable tools now expose:
+Each toolbar-capable tool exposes:
 
 - `toolName`
 - `label`
-- `kind`
+- `kind`: `mode | create`
 - `family`
 - `icon`
+- optional `createsItemType`
 - optional `defaults`
 
-Current tools with metadata:
+Current tools with overlay metadata:
 
 - `AddDrawing`
 - `AddHighlighter`
@@ -41,44 +69,15 @@ Current tools with metadata:
 - `AddScreen`
 - `AddPouch`
 
-### Current tool examples
+Important UI rule:
 
-`AddShape`
+- Core describes tools individually.
+- Core does not describe launcher tools like the current drawing launcher or game-item submenu.
+- If the UI wants grouped launchers, that grouping is UI-owned.
 
-- family: `shape`
-- default control: shape type
-- editor: inline icon enum + catalog
+## Item Action Metadata
 
-`AddConnector`
-
-- family: `connector`
-- defaults: line type, color, width, pattern, start arrow, end arrow, smart jump
-- grouped as one connector-defaults cluster
-
-`AddDrawing` / `AddHighlighter`
-
-- family: `drawing`
-- defaults: color, width, pattern
-- icons expose `state.swatch`
-
-`AddSticker`
-
-- family: `sticker`
-- default: background color
-
-`AddFrame`
-
-- family: `frame`
-- default: frame type
-
-`AddText`
-
-- family: `text`
-- no pre-placement defaults in this pass
-
-## Selection Action Metadata
-
-Each item overlay exposes `actions`.
+Each item overlay exposes `actions[]`.
 
 Action fields:
 
@@ -86,33 +85,174 @@ Action fields:
 - `label`
 - `icon`
 - `target`: `single | each | selection`
+- optional `description`
 - optional `invoke`
 - optional `controls`
 - optional `groups`
 
-### Current item actions
+### Action target semantics
 
-`Shape`
+`target` is now part of the runtime contract, not just descriptive text.
+
+- `single`: valid only when exactly one selected item participates
+- `each`: valid for one or many selected items and applies per item
+- `selection`: valid for the current selection as a whole
+
+`intersectOverlayActions(items)` now filters `target: "single"` actions out of multi-selection results.
+
+This is the supported selection-cardinality mechanism for this phase.
+
+## Selection Actions
+
+Selection actions are plugin-owned actions that apply to the current selection as a whole.
+
+Use:
+
+- `getSelectionOverlayActions(items)`
+
+Current selection action:
+
+- `deck.createFromSelection`
+
+Semantics:
+
+- selected `Card` items can be stacked into a new `Deck`
+- selected `Card` and `Deck` items can be merged into one `Deck`
+
+Hidden cases:
+
+- empty selection
+- a single selected deck
+- selections containing non-card/deck items
+
+## Supported Editor Types
+
+The UI should support these editor kinds:
+
+- `color`
+- `enum-icon`
+- `enum-list`
+- `number`
+- `number-stepper`
+- `slider`
+- `toggle`
+- `dynamic-options`
+- `catalog`
+
+### `toggle`
+
+`toggle` is now first-class and is the preferred boolean editor.
+
+Current use:
+
+- connector `smartJump`
+- connector tool default `smartJump`
+
+Minimal rendering expectation:
+
+- boolean on/off control
+- may use `trueLabel` / `falseLabel` when present
+
+## Supported Icon Types
+
+This phase uses a hybrid icon contract:
+
+- `symbol`
+- `asset`
+
+Not supported in this phase:
+
+- inline `svg`
+- `state.tint`
+
+### `symbol`
+
+Use existing symbol-key rendering where the UI already supports it.
+
+### `asset`
+
+Use plugin-owned SVG asset files referenced by metadata.
+
+Current practical asset usage:
+
+- shape picker inline and catalog icons
+
+### Dynamic icon state
+
+Supported hint:
+
+- `icon.state.swatch`
+
+Not supported in this phase:
+
+- `icon.state.tint`
+
+Treat `state.swatch` as a rendering hint, not a mandate. The UI may show a swatch, accent, or secondary color chip.
+
+## Selection Behavior Rules
+
+Use `intersectOverlayActions(items)` for the default action set.
+
+Expected behavior:
+
+- same-type selection: common actions survive
+- mixed selection: only shared `action.id` values survive
+- any action with `target: "single"` disappears when more than one item is selected
+
+What the UI should **not** expect:
+
+- core does not provide a general hidden/disabled predicate language
+- core does not provide type-rule exceptions like "show card action when first selected item is X"
+
+## Dynamic Options
+
+Dynamic options resolve through:
+
+- `resolveDynamicOptions(providerId, context)`
+
+Current provider:
+
+- `deck.drawCount`
+
+Current expectation:
+
+- pass the current item/selection context
+- render the returned options with the editor’s requested presentation
+
+## Current Action Surface
+
+### Shape
 
 - `shape.shapeType`
 - `shape.fill`
 - `shape.strokeStyle`
 
-`Connector`
+### Connector
 
+- `connector.switchPointers`
 - `connector.style`
 
-`RichText`
+`connector.style` includes:
+
+- line color
+- line type
+- line width
+- pattern
+- start arrow
+- end arrow
+- smart jump
+
+### RichText
 
 - `text.fontSize`
 
-`Dice`
+### Dice
 
 - `dice.throw`
 - `dice.range`
 - `dice.fill`
 
-`Deck`
+### Deck
 
 - `deck.getTopCard`
 - `deck.getBottomCard`
@@ -121,126 +261,66 @@ Action fields:
 - `deck.shuffle`
 - `deck.flip`
 
-`Screen`
+### Selection
+
+- `deck.createFromSelection`
+
+### Screen
 
 - `screen.background`
 
-`Card`
+### Card
 
 - `card.flip`
 - `card.rotateCcw`
 - `card.rotateCw`
 
-## Input Editors
+## Practical UI Simplifications Expected In This Phase
 
-Supported editor kinds in the current contract:
+These are intentional simplifications, not missing core features:
 
-- `color`
-- `enum-icon`
-- `enum-list`
-- `number`
-- `number-stepper`
-- `slider`
-- `dynamic-options`
-- `catalog`
+- render `AddDrawing`, `AddHighlighter`, and `Eraser` as separate tool entries unless the UI wants to group them itself
+- flatten game-item toolbar entries unless the UI wants to own a submenu
+- render connector editing as one grouped editor/popover instead of the current split row
+- simplify rich-text font size to a generic stepper/list control
+- keep screen background-image flow custom for now
+- keep card/deck combined-selection special cases out of the metadata migration
 
-### Grouped controls
+## What UI Must Not Expect From Core
 
-Groups are attached directly to actions.
+- toolbar grouping / launcher metadata
+- submenu metadata
+- row decomposition hints
+- overflow priority
+- modal descriptors
+- async file/media picker descriptors
+- value-dependent hidden/disabled metadata
+- plugin-defined mixed-selection actions beyond plain `action.id` intersection
 
-Current grouped actions:
+## After This Pass, What Can Be Rendered Purely From Metadata?
 
-- shape stroke style
-- connector style
-- drawing defaults
-- highlighter defaults
+The UI can now implement these behaviors directly from metadata:
 
-## Icons
+- top-level rendering of individual tool entries
+- tool default editors
+- shape overlay controls
+- connector grouped style editing
+- connector switch-arrows action
+- connector smart-jump toggle
+- text font-size editing
+- dice throw/range/fill
+- deck single-selection actions with proper single-selection gating
+- deck creation/merge from card/deck selection
+- screen background color
+- card flip/rotate
+- mixed-selection common-action intersection
+- dynamic draw-count options for decks
 
-Current icon formats:
+These behaviors remain intentionally outside the metadata system:
 
-- `symbol`
-- `svg`
-- `asset`
-
-### Dynamic icon hints
-
-Icons may include:
-
-- `state.swatch`
-- `state.tint`
-
-Current practical examples:
-
-- tool pen/highlighter/connector icons can reflect pending color
-- shape/screen fill actions can reflect current item color
-
-Treat these as rendering hints, not strict instructions.
-
-## How to Query Common Actions for Mixed Selection
-
-Use:
-
-- `intersectOverlayActions(items)`
-
-This intersects by `action.id`.
-
-Default expectation:
-
-- same-type selection: you get that type’s common actions
-- mixed selection: you get only shared ids
-
-## Dynamic Options
-
-Dynamic option lists resolve through:
-
-- `resolveDynamicOptions(providerId, context)`
-
-Current provider:
-
-- `deck.drawCount`
-
-This computes the draw-count options from the current selected deck size.
-
-## Mappings to Current UI Controls
-
-Already mappable to existing generic controls:
-
-- shape picker with compact row + “more” catalog
-- generic color swatch picker
-- stroke cluster
-- connector style cluster
-- numeric stepper for font size
-- slider for tool widths
-- list/grid pickers for enums
-- deck action buttons
-
-## Known Gaps
-
-Still not described by current metadata:
-
-- overflow-vs-inline priority
-- disabled state
-- hidden state
-- async file/media pickers
-- modal actions
-- nested editor flows
-- toolbar active-state derivation beyond icon hints
-- quick add
-- hover overlays
-- canvas affordances
-
-Specific current gap examples:
-
-- `Screen.backgroundUrl` file/media flow is not represented yet
-- rich text formatting beyond font size is still partial
-- card/deck combined mixed-selection behavior is still a decision point, not a solved contract
-
-## Explicit Answers for UI Work
-
-1. Plugin-defined icons are represented as `svg`, `asset`, or `symbol`.
-2. Dynamic icon state is hinted through `icon.state.swatch` or `icon.state.tint`.
-3. Common actions are determined by intersecting item-provided `action.id` values.
-4. Mixed item actions like `Card + Deck` should be modeled by shared ids, shared capability, or future plugin-owned selection actions, not by UI type rules.
-5. Editor metadata currently lives in overlay control descriptors next to operation/tool references because operation schemas are not yet runtime metadata objects.
-6. Large tool option spaces are indicated with `catalog`, currently used by the shape tool.
+- drawing launcher behavior and last-used-child logic
+- game-item submenu structure
+- screen background image picker flow
+- conditional hiding/disabling based on runtime item state like `backgroundUrl`
+- modal and async UX structure
+- exact row/inline/popover layout

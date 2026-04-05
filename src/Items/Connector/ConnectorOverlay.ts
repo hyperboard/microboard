@@ -94,14 +94,9 @@ const connectorStyleControls: OverlayControlDefinition[] = [
   {
     id: "smartJump",
     label: "Smart jump",
+    icon: symbolIcon("connector.smartJump"),
     valueSource: { kind: "itemProperty", property: "smartJump" },
-    editor: {
-      kind: "enum-list",
-      options: [
-        { id: "on", label: "On", value: true },
-        { id: "off", label: "Off", value: false },
-      ],
-    },
+    editor: { kind: "toggle", trueLabel: "On", falseLabel: "Off" },
     invoke: { kind: "setProperty", property: "smartJump" },
   },
 ];
@@ -159,14 +154,9 @@ const connectorToolControls: OverlayControlDefinition[] = [
   {
     id: "toolSmartJump",
     label: "Smart jump",
+    icon: symbolIcon("connector.smartJump"),
     valueSource: { kind: "toolProperty", property: "smartJump" },
-    editor: {
-      kind: "enum-list",
-      options: [
-        { id: "on", label: "On", value: true },
-        { id: "off", label: "Off", value: false },
-      ],
-    },
+    editor: { kind: "toggle", trueLabel: "On", falseLabel: "Off" },
     invoke: { kind: "toolProperty", property: "smartJump" },
   },
 ];
@@ -174,6 +164,13 @@ const connectorToolControls: OverlayControlDefinition[] = [
 export const connectorOverlay: ItemOverlayDefinition = {
   itemType: "Connector",
   actions: [
+    {
+      id: "connector.switchPointers",
+      label: "Switch arrows",
+      icon: symbolIcon("connector.switchPointers"),
+      target: "selection",
+      invoke: { kind: "operation", class: "Connector", method: "switchPointers" },
+    },
     {
       id: "connector.style",
       label: "Connector style",

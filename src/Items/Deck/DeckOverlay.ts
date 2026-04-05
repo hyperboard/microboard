@@ -1,4 +1,9 @@
-import type { ItemOverlayDefinition, OverlayDynamicOptionsContext, OverlayOptionDefinition } from "Overlay";
+import type {
+  ItemOverlayDefinition,
+  OverlayDynamicOptionsContext,
+  OverlayOptionDefinition,
+  SelectionOverlayActionDefinition,
+} from "Overlay";
 import { registerDynamicOptionsResolver } from "Overlay";
 
 registerDynamicOptionsResolver("deck.drawCount", (context: OverlayDynamicOptionsContext): OverlayOptionDefinition[] => {
@@ -74,4 +79,24 @@ export const deckOverlay: ItemOverlayDefinition = {
       invoke: { kind: "customMethod", methodName: "flipDeck" },
     },
   ],
+};
+
+export const createDeckSelectionAction: SelectionOverlayActionDefinition = {
+  id: "deck.createFromSelection",
+  label: "Create deck",
+  icon: { kind: "symbol", key: "deck.createFromSelection" },
+  description: "Stacks selected cards into a new deck, or merges selected cards and decks into one deck.",
+  invoke: { kind: "selectionMethod", methodName: "createDeck" },
+  isAvailable: items => {
+    if (items.length === 0) {
+      return false;
+    }
+
+    if (items.length === 1 && items[0]?.itemType === "Deck") {
+      return false;
+    }
+
+    return items.every(item => item.itemType === "Card" || item.itemType === "Deck")
+      && items.some(item => item.itemType === "Card" || item.itemType === "Deck");
+  },
 };
