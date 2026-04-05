@@ -423,6 +423,10 @@ export class Frame extends BaseItem<Frame> {
   }
 
 
+  getIsScalingContainer(): boolean {
+    return false;
+  }
+
   getFrameType(): FrameType {
     return this.shapeType;
   }
@@ -620,11 +624,6 @@ export class Frame extends BaseItem<Frame> {
   getRichText(): RichText {
     return this.text;
   }
-
-  getIsScalingContainer(): boolean {
-    return false;
-  }
-
   handleTransform(params: TransformParams): TransformResult {
     const { board, mbr, resizeType, oppositePoint, isHeight, isWidth, isShiftPressed, beginTimeStamp, followingComments, startMbr } = params;
     return transformShape({

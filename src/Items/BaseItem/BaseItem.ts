@@ -123,42 +123,31 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	/**
-	 * Returns the parent's world matrix. For Frames, only the translation component
-	 * is returned to ensure children are not affected by frame scaling.
+	 * Returns whether this item should scale its children when it is resized.
+	 * Frames/Decks/Screens are typically non-scaling containers.
 	 */
-	getParentWorldMatrix(): Matrix {
-		if (this.parent === "Board") {
-			return new Matrix();
-		}
-		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
-		if (!container) {
-			return new Matrix();
-		}
-		const matrix = container.getWorldMatrix();
-		if (!container?.getIsScalingContainer()) {
-			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
-		}
-		return matrix;
+	getIsScalingContainer(): boolean {
+		return true;
 	}
 
 	/**
 	 * Returns the world matrix for this item by composing its local matrix with its parent's
-	 * world matrix recursively. Calculates on-the-fly to ensure it is always up-to-date.
+	 * nesting matrix recursively. Calculates on-the-fly to ensure it is always up-to-date.
 	 */
 	getWorldMatrix(): Matrix {
 		const matrix = this.transformation.toMatrix();
 		if (this.parent !== "Board" && this.board?.items) {
 			const parent = this.board.items.getById(this.parent);
-			if (parent && "getWorldMatrix" in parent) {
-				return matrix.composeWith((parent as any).getWorldMatrix());
+			if (parent && "getNestingMatrix" in parent) {
+				return matrix.composeWith((parent as any).getNestingMatrix());
 			}
 		}
 		return matrix;
 	}
 
 	/**
-	 * Returns the matrix used for nesting children. For Frames, this is only
-	 * the translation part. For other items it is the full world matrix.
+	 * Returns the matrix used for nesting children. For non-scaling containers,
+	 * this is only the translation portion of the world matrix.
 	 */
 	getNestingMatrix(): Matrix {
 		const matrix = this.getWorldMatrix();
@@ -166,6 +155,19 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 			return new Matrix(matrix.translateX, matrix.translateY, 1, 1, 0, 0);
 		}
 		return matrix;
+	}
+
+	/**
+	 * Returns the parent's nesting matrix. If at top-level, returns an identity matrix.
+	 */
+	getParentWorldMatrix(): Matrix {
+		if (this.parent !== "Board" && this.board?.items) {
+			const parent = this.board.items.getById(this.parent);
+			if (parent && "getNestingMatrix" in parent) {
+				return (parent as any).getNestingMatrix();
+			}
+		}
+		return new Matrix();
 	}
 
 	setId(id: string): this {
@@ -783,10 +785,6 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		if (this.index) {
 			this.index.render(context);
 		}
-	}
-
-	getIsScalingContainer(): boolean {
-		return true;
 	}
 
 	getSnapAnchorPoints(): Point[] {
