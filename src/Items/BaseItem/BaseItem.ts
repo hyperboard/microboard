@@ -48,14 +48,14 @@ export type SerializedItemData<T extends BaseItemData = BaseItemData> = T & {
 export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	static createCommand?: (board: Board, operation: Operation) => Command;
 	protected mbr = new Mbr();
-	transformation: Transformation;
-	linkTo: LinkTo;
+	id: string;
+	public readonly linkTo: LinkTo;
+	public readonly transformation: Transformation;
 	parent: string = "Board";
 	canBeNested = true;
 	transformationRenderBlock?: boolean = undefined;
 	index: SimpleSpatialIndex | null = null;
 	board: Board;
-	id: string;
 	subject = new Subject<T>();
 	onRemoveCallbacks: (() => void)[] = [];
 	shouldUseCustomRender = false;
@@ -84,14 +84,11 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		return this._physicsHalfExtent;
 	}
 
-	constructor(
-		board: Board,
-		id = ""
-	) {
+	constructor(board: Board, id = "") {
 		this.board = board;
-		this.id = id;
-		this.linkTo = new LinkTo(this.id, board.events);
+		this.id = id || Math.random().toString(36).substring(2, 11);
 		this.transformation = new Transformation(this.id, board.events);
+		this.linkTo = new LinkTo(this.id, board.events);
 	}
 
 	updateChildrenIds(): void {
@@ -110,6 +107,19 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	getOverlay(): ItemOverlayDefinition | undefined {
 		return getItemOverlay(this);
+	}
+
+	/**
+	 * Updates the local axis-aligned bounding box.
+	 */
+	updateMbr(): void {
+		if (this.parent !== "Board" && this.board?.items) {
+			const parent = this.board.items.getById(this.parent);
+			if (parent && "updateMbr" in parent) {
+				(parent as any).updateMbr();
+			}
+		}
+		this.subject.publish(this as any);
 	}
 
 	/**
@@ -132,16 +142,18 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	/**
-	 * Returns the full world-space matrix by walking up the parent chain.
-	 * For top-level items (parent === "Board") this is identical to the item's
-	 * own transformation matrix. For nested items it is parentTransform × localMatrix.
-	 * Note: Frames act as non-scaling containers.
+	 * Returns the world matrix for this item by composing its local matrix with its parent's
+	 * world matrix recursively. Calculates on-the-fly to ensure it is always up-to-date.
 	 */
 	getWorldMatrix(): Matrix {
-		if (this.parent === "Board") {
-			return this.transformation.toMatrix();
+		const matrix = this.transformation.toMatrix();
+		if (this.parent !== "Board" && this.board?.items) {
+			const parent = this.board.items.getById(this.parent);
+			if (parent && "getWorldMatrix" in parent) {
+				return matrix.composeWith((parent as any).getWorldMatrix());
+			}
 		}
-		return this.transformation.toMatrix().composeWith(this.getParentWorldMatrix());
+		return matrix;
 	}
 
 	/**
@@ -325,12 +337,12 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		this.mbr.top = rect.top;
 		this.mbr.right = rect.right;
 		this.mbr.bottom = rect.bottom;
-		this.subject.publish(this as any);
+		this.updateMbr();
 	}
 
 	addMbr(rect: Mbr): void {
 		this.mbr.addMbr(rect);
-		this.subject.publish(this as any);
+		this.updateMbr();
 	}
 
 	getWidth(): number {
@@ -347,17 +359,12 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 
 	/**
 	 * Returns the world-space axis-aligned bounding box.
-	 * For top-level items this is identical to getMbr().
-	 * For nested items (parent !== "Board") it transforms the local Mbr corners
-	 * through the world matrix to produce the correct world-space bounds.
+	 * Since this.mbr always represents bounds in parent-space (with the item's local
+	 * transformation already baked in), we only need to transform it through its
+	 * parent's world matrix. Calculates on-the-fly to ensure it is always fresh.
 	 */
 	getWorldMbr(): Mbr {
-		if (this.parent === "Board" || !this.parent || !this.board?.items) {
-			return this.getMbr();
-		}
-		const container = this.board.items.getById(this.parent) as BaseItem | undefined;
-		if (!container) return this.getMbr();
-		const parentMatrix = this.getParentWorldMatrix();
+		const matrix = this.getParentWorldMatrix();
 		const local = this.getMbr();
 		const corners = [
 			new Point(local.left, local.top),
@@ -365,7 +372,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 			new Point(local.right, local.bottom),
 			new Point(local.left, local.bottom),
 		];
-		for (const c of corners) parentMatrix.apply(c);
+		for (const c of corners) matrix.apply(c);
 		return new Mbr(
 			Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
 			Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
@@ -375,11 +382,19 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	getIntersectionPoints(segment: Line): Point[] {
-		return this.mbr.getIntersectionPoints(segment);
+		const parentMatrix = this.getParentWorldMatrix();
+		const parentSegment = new Line(
+			segment.start.getTransformed(parentMatrix.getInverse()),
+			segment.end.getTransformed(parentMatrix.getInverse())
+		);
+		return this.mbr.getIntersectionPoints(parentSegment).map(p => p.getTransformed(parentMatrix));
 	}
 
 	getNearestEdgePointTo(point: Point): Point {
-		return this.mbr.getNearestEdgePointTo(point);
+		const parentMatrix = this.getParentWorldMatrix();
+		const parentPoint = point.getTransformed(parentMatrix.getInverse());
+		const nearest = this.mbr.getNearestEdgePointTo(parentPoint);
+		return nearest.getTransformed(parentMatrix);
 	}
 
 	isInView(rect: Mbr): boolean {
@@ -387,7 +402,14 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	getNormal(point: Point): GeometricNormal {
-		return this.mbr.getNormal(point);
+		const parentMatrix = this.getParentWorldMatrix();
+		const parentPoint = point.getTransformed(parentMatrix.getInverse());
+		const normal = this.mbr.getNormal(parentPoint);
+		return new GeometricNormal(
+			normal.point.getTransformed(parentMatrix),
+			normal.projectionPoint.getTransformed(parentMatrix),
+			normal.normalPoint.getTransformed(parentMatrix)
+		);
 	}
 
 	private hasAncestor(itemId: string): boolean {
@@ -483,9 +505,6 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		this.subject.publish(this as unknown as T);
 	}
 
-	updateMbr(): void {
-		return;
-	}
 
 	getLinkTo(): string | undefined {
 		return this.linkTo.link;
@@ -699,11 +718,14 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	isEnclosedBy(rect: Mbr): boolean {
-		return this.getMbrWithChildren().isEnclosedBy(rect);
+		const parentRect = rect.getTransformed(this.getParentWorldMatrix().getInverse());
+		return this.getMbrWithChildren().isEnclosedBy(parentRect);
 	}
 
 	isUnderPoint(point: Point): boolean {
-		return this.getMbrWithChildren().isUnderPoint(point);
+		const localPoint = point.getTransformed(this.getWorldMatrix().getInverse());
+		const localMbr = this.getMbr().getTransformed(this.transformation.toMatrix().getInverse());
+		return localMbr.isUnderPoint(localPoint);
 	}
 
 	isNearPoint(point: Point, distance: number): boolean {
@@ -711,7 +733,9 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	getDistanceToPoint(point: Point): number {
-		return this.getMbr().getDistanceToPoint(point);
+		const localPoint = point.getTransformed(this.getWorldMatrix().getInverse());
+		const localMbr = this.getMbr().getTransformed(this.transformation.toMatrix().getInverse());
+		return localMbr.getDistanceToPoint(localPoint);
 	}
 
 	intersectsWithLines(lines: Line[]): boolean {
@@ -720,7 +744,8 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	}
 
 	isEnclosedOrCrossedBy(rect: Mbr): boolean {
-		return this.getMbrWithChildren().isEnclosedOrCrossedBy(rect);
+		const parentRect = rect.getTransformed(this.getParentWorldMatrix().getInverse());
+		return this.getMbrWithChildren().isEnclosedOrCrossedBy(parentRect);
 	}
 
 	getMbrWithChildren(): Mbr {

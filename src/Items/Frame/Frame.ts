@@ -81,8 +81,6 @@ export class Frame extends BaseItem<Frame> {
 
     this.text = new RichText(this.board, this.id);
     this.text.container = this.textContainer.copy();
-    this.text.transformation = this.transformation;
-    this.text.linkTo = this.linkTo;
     this.text.placeholderText = this.name;
     this.text.isInShape = true;
     this.text.insideOf = "Frame";
@@ -173,13 +171,6 @@ export class Frame extends BaseItem<Frame> {
     return this.path.copy();
   }
 
-  isTextUnderPoint(point: Point): boolean {
-    return this.text.isUnderPoint(point);
-  }
-
-  getUnderPoint(point: Point): boolean {
-    return this.path.isUnderPoint(point) || this.isTextUnderPoint(point);
-  }
 
   isClosed(): boolean {
     return this.path instanceof Path && this.path.isClosed();
@@ -431,60 +422,6 @@ export class Frame extends BaseItem<Frame> {
     }
   }
 
-  getNearestEdgePointTo(point: Point): Point {
-    return this.path.getNearestEdgePointTo(point);
-  }
-
-  getDistanceToPoint(point: Point): number {
-    const nearest = this.getNearestEdgePointTo(point);
-    return point.getDistance(nearest);
-  }
-
-  // isUnderPoint(point: Point): boolean {
-  //   return this.path.isUnderPoint(point);
-  // }
-  //
-  // isNearPoint(point: Point, distance: number): boolean {
-  //   return distance > this.getDistanceToPoint(point);
-  // }
-  //
-  // isEnclosedOrCrossedBy(rect: Mbr): boolean {
-  //   return this.path.isEnclosedOrCrossedBy(rect);
-  // }
-  //
-  // isEnclosedBy(rect: Mbr): boolean {
-  //   return this.getMbr().isEnclosedBy(rect);
-  // }
-
-  isInView(rect: Mbr): boolean {
-    return this.isEnclosedOrCrossedBy(rect);
-  }
-
-  getSnapAnchorPoints(): Point[] {
-    const anchorPoints = Frames[this.shapeType].anchorPoints;
-    const points: Point[] = [];
-    for (const anchorPoint of anchorPoints) {
-      points.push(anchorPoint.getTransformed(this.transformation.toMatrix()));
-    }
-    return points;
-  }
-
-  getNormal(point: Point): GeometricNormal {
-    return this.path.getNormal(point);
-  }
-
-  getIntersectionPoints(segment: Line): Point[] {
-    const lines = this.getMbr().getLines();
-    const initPoints: Point[] = [];
-    const points = lines.reduce((acc, line) => {
-      const intersections = line.getIntersectionPoints(segment);
-      if (intersections.length > 0) {
-        acc.push(...intersections);
-      }
-      return acc;
-    }, initPoints);
-    return points;
-  }
 
   getFrameType(): FrameType {
     return this.shapeType;

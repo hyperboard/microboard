@@ -23,6 +23,14 @@ export class Mbr implements Geometry {
     return new Mbr(rect.left, rect.top, rect.right, rect.bottom);
   }
 
+  static unionOf(mbrs: Mbr[]): Mbr {
+    if (mbrs.length === 0) {
+      return new Mbr();
+    }
+    const first = mbrs[0].copy();
+    return first.combine(mbrs.slice(1));
+  }
+
   constructor(
     public left = 0,
     public top = 0,

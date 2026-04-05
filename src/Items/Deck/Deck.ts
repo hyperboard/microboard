@@ -13,6 +13,7 @@ import {transformOps} from "Geometry/Transformation/transformOps";
 import {DeckOperation} from "Items/Deck/DeckOperation";
 import {conf} from "Settings";
 import {Path} from "Geometry/Path";
+import {Mbr} from "Geometry/Mbr";
 import { registerHotkey } from "Keyboard/HotkeyRegistry";
 import { SimpleSpatialIndex } from "SpatialIndex/SimpleSpatialIndex";
 import { deckOverlay } from "./DeckOverlay";
@@ -219,14 +220,23 @@ export class Deck extends BaseItem<Deck> {
   }
 
   updateMbr(): void {
-    const {translateX, translateY} =
-      this.transformation.getMatrixData();
-    const items = this.index!.listAll();
-    const itemsMbr = items[0]?.getMbr().combine(items.slice(1).map(item => item.getMbr()));
-    this.mbr.left = translateX;
-    this.mbr.top = translateY;
-    this.mbr.right = translateX + (itemsMbr?.getWidth() || conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET * ((this.childIds.length || 1) - 1)));
-    this.mbr.bottom = translateY + (itemsMbr?.getHeight() || conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET * ((this.childIds.length || 1) - 1) : 0));
+    const children = this.index!.listAll();
+    if (children.length === 0) {
+      const { translateX, translateY } = this.transformation.getMatrixData();
+      this.mbr.left = translateX;
+      this.mbr.top = translateY;
+      this.mbr.right = translateX + conf.CARD_DIMENSIONS.width + (this.isPerpendicular ? 0 : conf.DECK_HORIZONTAL_OFFSET);
+      this.mbr.bottom = translateY + conf.CARD_DIMENSIONS.height + (this.isPerpendicular ? conf.DECK_VERTICAL_OFFSET : 0);
+    } else {
+      const worldUnion = Mbr.unionOf(children.map(c => (c as BaseItem).getWorldMbr()));
+      const parentMatrix = this.getParentWorldMatrix();
+      const parentSpaceMbr = worldUnion.getTransformed(parentMatrix.getInverse());
+
+      this.mbr.left = parentSpaceMbr.left;
+      this.mbr.top = parentSpaceMbr.top;
+      this.mbr.right = parentSpaceMbr.right;
+      this.mbr.bottom = parentSpaceMbr.bottom;
+    }
     this.path = new Path(this.getMbr().getLines(), true, "#FFFFFF");
   }
 

@@ -68,8 +68,6 @@ export class AINode extends BaseItem<AINode> {
     this.buttonIcon.src = ICON_SRC;
     this.text = new RichText(this.board, this.id);
     this.text.container = new Mbr();
-    this.text.transformation = this.transformation;
-    this.text.linkTo = this.linkTo;
     this.text.placeholderText = "\u00A0";
     this.text.isInShape = false;
     this.text.insideOf = "AINode";
@@ -254,66 +252,6 @@ export class AINode extends BaseItem<AINode> {
     this.subject.publish(this);
   }
 
-  getSnapAnchorPoints(): Point[] {
-    const mbr = this.getMbr();
-    const width = mbr.getWidth();
-    const height = mbr.getHeight();
-    return [
-      new Point(mbr.left + width / 2, mbr.top),
-      new Point(mbr.left + width / 2, mbr.bottom),
-      new Point(mbr.left, mbr.top + height / 2),
-      new Point(mbr.right, mbr.top + height / 2),
-    ];
-  }
-
-  getButtonMbr() {
-    return this.buttonMbr;
-  }
-
-  getDistanceToPoint(point: Point): number {
-    const nearest = this.getNearestEdgePointTo(point);
-    return point.getDistance(nearest);
-  }
-
-  getIntersectionPoints(segment: Line): Point[] {
-    throw new Error("Not implemented");
-  }
-
-  getMbr(): Mbr {
-    return this.path.getMbr();
-  }
-
-  getNearestEdgePointTo(point: Point): Point {
-    return this.path.getNearestEdgePointTo(point);
-  }
-
-  getNormal(point: Point): GeometricNormal {
-    return this.path.getNormal(point);
-  }
-
-  isEnclosedBy(rect: Mbr): boolean {
-    return this.path.isEnclosedBy(rect);
-  }
-
-  isEnclosedOrCrossedBy(rect: Mbr): boolean {
-    return this.path.isEnclosedOrCrossedBy(rect);
-  }
-
-  isInView(rect: Mbr): boolean {
-    return this.isEnclosedOrCrossedBy(rect);
-  }
-
-  isNearPoint(point: Point, distance: number): boolean {
-    return distance > this.getDistanceToPoint(point);
-  }
-
-  isUnderPoint(point: Point, tolerance = 5): boolean {
-    return this.path.isUnderPoint(point);
-  }
-
-  getRichText(): RichText {
-    return this.text;
-  }
 
   getLinkTo(): string | undefined {
     return this.linkTo.link;

@@ -179,7 +179,7 @@ export class Select extends BoardTool {
 		const frames = hover.filter((item): item is Frame => item instanceof Frame);
 		const hasOnlyFramesUnderPointer = hover.every(item => item instanceof Frame);
 		const isPointerOverAnyFrameText = frames.some(frame =>
-			frame.isTextUnderPoint(this.board.pointer.point)
+			frame.text.isUnderPoint(this.board.pointer.point)
 		);
 
 		return hasOnlyFramesUnderPointer && !isPointerOverAnyFrameText;

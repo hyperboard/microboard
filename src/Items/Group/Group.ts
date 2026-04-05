@@ -128,45 +128,26 @@ export class Group extends BaseItem<Group> {
   }
 
   getMbr(): Mbr {
-    // World Mbr = union of each child's local Mbr transformed by group's world matrix
     const children = this.index!.listAll();
     if (children.length === 0) {
       return this.mbr.copy();
     }
-    const groupWorldMatrix = this.getWorldMatrix();
-    let left = Number.MAX_SAFE_INTEGER;
-    let top = Number.MAX_SAFE_INTEGER;
-    let right = Number.MIN_SAFE_INTEGER;
-    let bottom = Number.MIN_SAFE_INTEGER;
+    // Correctly union the children's world bounds and project them back into the
+    // group's parent-space. This makes group.mbr consistent with the parent-local contract.
+    const worldUnion = Mbr.unionOf(children.map(c => (c as BaseItem).getWorldMbr()));
+    const parentMatrix = this.getParentWorldMatrix();
+    const parentSpaceMbr = worldUnion.getTransformed(parentMatrix.getInverse());
 
-    for (const child of children) {
-      const childLocalMbr = (child as BaseItem).getMbr();
-      // Transform the four corners of the child's local Mbr through the group's world matrix
-      const corners = [
-        new Point(childLocalMbr.left, childLocalMbr.top),
-        new Point(childLocalMbr.right, childLocalMbr.top),
-        new Point(childLocalMbr.right, childLocalMbr.bottom),
-        new Point(childLocalMbr.left, childLocalMbr.bottom),
-      ];
-      for (const corner of corners) {
-        groupWorldMatrix.apply(corner);
-        if (corner.x < left) left = corner.x;
-        if (corner.y < top) top = corner.y;
-        if (corner.x > right) right = corner.x;
-        if (corner.y > bottom) bottom = corner.y;
-      }
-    }
-
-    const mbr = new Mbr(left, top, right, bottom);
-    this.mbr.left = left;
-    this.mbr.top = top;
-    this.mbr.right = right;
-    this.mbr.bottom = bottom;
-    return mbr;
+    this.mbr.left = parentSpaceMbr.left;
+    this.mbr.top = parentSpaceMbr.top;
+    this.mbr.right = parentSpaceMbr.right;
+    this.mbr.bottom = parentSpaceMbr.bottom;
+    return parentSpaceMbr;
   }
 
   updateMbr(): void {
     this.getMbr();
+    this.subject.publish(this as any);
   }
 
   getChildrenIds(): string[] {
@@ -208,17 +189,6 @@ export class Group extends BaseItem<Group> {
     return this.id;
   }
 
-  getIntersectionPoints(segment: Line): Point[] {
-    const lines = this.getMbr().getLines();
-    const initPoints: Point[] = [];
-    return lines.reduce((acc, line) => {
-      const intersections = line.getIntersectionPoints(segment);
-      if (intersections.length > 0) {
-        acc.push(...intersections);
-      }
-      return acc;
-    }, initPoints);
-  }
 
   render(context: DrawingContext): void {
     if (this.transformationRenderBlock) {
