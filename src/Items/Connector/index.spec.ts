@@ -1,7 +1,6 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { Board } from "Board";
 import { initNodeSettings } from "api/initNodeSettings";
-import { Mbr } from "Geometry/Mbr/Mbr";
 import { Point } from "Geometry/Point";
 import { Shape } from "../Shape";
 import { transformOps } from "Geometry/Transformation/transformOps";
@@ -132,10 +131,34 @@ describe("of connectors", () => {
 
 	it("keeps connector endpoints valid when connector is reparented before its items", () => {
 		const board = new Board();
-		const startItem = new BaseItem(board, "start-item");
-		const endItem = new BaseItem(board, "end-item");
-		startItem.setMbr(new Mbr(0, 0, 100, 100));
-		endItem.setMbr(new Mbr(200, 0, 300, 100));
+		const startItem = board.createItem("start-item", {
+			itemType: "Shape",
+			shapeType: "Rectangle",
+			transformation: {
+				translateX: 0,
+				translateY: 0,
+				scaleX: 1,
+				scaleY: 1,
+				shearX: 0,
+				shearY: 0,
+				rotate: 0,
+				isLocked: false,
+			},
+		} as any) as Shape;
+		const endItem = board.createItem("end-item", {
+			itemType: "Shape",
+			shapeType: "Rectangle",
+			transformation: {
+				translateX: 200,
+				translateY: 0,
+				scaleX: 1,
+				scaleY: 1,
+				shearX: 0,
+				shearY: 0,
+				rotate: 0,
+				isLocked: false,
+			},
+		} as any) as Shape;
 		board.index.insert(startItem);
 		board.index.insert(endItem);
 
@@ -147,7 +170,7 @@ describe("of connectors", () => {
 		});
 		board.index.insert(connector);
 
-		board.group([connector as unknown as BaseItem, startItem, endItem]);
+		board.group([connector, startItem, endItem]);
 
 		expect(connector.getStartPoint().serialize()).toEqual({
 			pointType: "Fixed",
