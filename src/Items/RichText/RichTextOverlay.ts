@@ -1,4 +1,8 @@
-import type { ItemOverlayDefinition, ToolOverlayDefinition } from "Overlay";
+import {
+  styleFontSizeIcon,
+  type ItemOverlayDefinition,
+  type ToolOverlayDefinition,
+} from "Overlay";
 
 export const richTextOverlay: ItemOverlayDefinition = {
   itemType: "RichText",
@@ -6,7 +10,7 @@ export const richTextOverlay: ItemOverlayDefinition = {
     {
       id: "text.fontSize",
       label: "Font size",
-      icon: { kind: "symbol", key: "text.fontSize" },
+      icon: styleFontSizeIcon(),
       target: "each",
       controls: [
         {

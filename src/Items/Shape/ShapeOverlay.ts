@@ -1,5 +1,12 @@
 import type { BorderStyle } from "Geometry/Path";
-import type { ItemOverlayDefinition, OverlayControlDefinition, OverlayOptionDefinition, ToolOverlayDefinition } from "Overlay";
+import {
+  styleFillIcon,
+  styleStrokeIcon,
+  type ItemOverlayDefinition,
+  type OverlayControlDefinition,
+  type OverlayOptionDefinition,
+  type ToolOverlayDefinition,
+} from "Overlay";
 import type { ShapeType } from "./ShapeType";
 
 const COLOR_PALETTE = [
@@ -98,14 +105,10 @@ const fillControl: OverlayControlDefinition = {
   id: "backgroundColor",
   label: "Fill",
   valueSource: { kind: "itemProperty", property: "backgroundColor" },
-  icon: {
-    kind: "symbol",
-    key: "shape.fill",
-    state: {
-      swatch: { kind: "itemProperty", property: "backgroundColor" },
-      note: "UI can render the current fill color as a swatch inside the icon.",
-    },
-  },
+  icon: styleFillIcon({
+    swatch: { kind: "itemProperty", property: "backgroundColor" },
+    note: "UI can render the current fill color as a swatch inside the icon.",
+  }),
   editor: {
     kind: "color",
     palette: COLOR_PALETTE,
@@ -172,14 +175,14 @@ export const shapeOverlay: ItemOverlayDefinition = {
     {
       id: "shape.strokeStyle",
       label: "Stroke style",
-      icon: symbolIcon("shape.stroke"),
+      icon: styleStrokeIcon(),
       target: "each",
       controls: strokeControls,
       groups: [
         {
           id: "shapeStrokeStyle",
           label: "Stroke style",
-          icon: symbolIcon("shape.stroke"),
+          icon: styleStrokeIcon(),
           controlIds: strokeControls.map(control => control.id),
         },
       ],

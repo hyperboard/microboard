@@ -1,4 +1,8 @@
-import type { ItemOverlayDefinition, ToolOverlayDefinition } from "Overlay";
+import {
+  styleFillIcon,
+  type ItemOverlayDefinition,
+  type ToolOverlayDefinition,
+} from "Overlay";
 
 const COLOR_PALETTE = [
   "#FFFFFF",
@@ -44,11 +48,9 @@ export const diceOverlay: ItemOverlayDefinition = {
     {
       id: "dice.fill",
       label: "Fill",
-      icon: {
-        kind: "symbol",
-        key: "shape.fill",
-        state: { swatch: { kind: "itemProperty", property: "backgroundColor" } },
-      },
+      icon: styleFillIcon({
+        swatch: { kind: "itemProperty", property: "backgroundColor" },
+      }),
       target: "each",
       controls: [
         {
