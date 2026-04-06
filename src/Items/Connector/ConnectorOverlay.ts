@@ -1,6 +1,7 @@
 import { CONNECTOR_POINTER_TYPES, ConnectorLineStyles, ConnectionLineWidths } from "./ConnectorTypes";
 import type { BorderStyle } from "Geometry/Path";
 import type { ItemOverlayDefinition, OverlayControlDefinition, OverlayOptionDefinition, ToolOverlayDefinition } from "Overlay";
+import { overlaySymbolIcon } from "Overlay";
 
 const COLOR_PALETTE = [
   "#111111",
@@ -12,7 +13,7 @@ const COLOR_PALETTE = [
   "#7B61FF",
 ];
 
-const symbolIcon = (key: string) => ({ kind: "symbol" as const, key });
+const symbolIcon = (key: string) => overlaySymbolIcon(key);
 
 const lineStyleOptions: OverlayOptionDefinition[] = ConnectorLineStyles.map(style => ({
   id: style,
@@ -187,6 +188,14 @@ export const connectorOverlay: ItemOverlayDefinition = {
       ],
     },
   ],
+  sections: [
+    {
+      id: "connectorArrows",
+      label: "Arrows",
+      icon: symbolIcon("connector.style"),
+      actionIds: ["connector.switchPointers", "connector.style"],
+    },
+  ],
 };
 
 export const addConnectorToolOverlay: ToolOverlayDefinition = {
@@ -207,11 +216,23 @@ export const addConnectorToolOverlay: ToolOverlayDefinition = {
     controls: connectorToolControls,
     groups: [
       {
-        id: "connectorToolStyle",
+        id: "connectorToolQuickDefaults",
+        label: "Connector quick defaults",
+        icon: symbolIcon("connector.lineStyle.straight"),
+        controlIds: ["toolLineStyle"],
+        description: "Primary defaults that match the compact create-surface picker.",
+      },
+      {
+        id: "connectorToolAdvancedDefaults",
         label: "Connector defaults",
         icon: symbolIcon("connector.style"),
         controlIds: connectorToolControls.map(control => control.id),
+        description: "Extended defaults available in richer create flows.",
       },
     ],
+  },
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 8,
   },
 };

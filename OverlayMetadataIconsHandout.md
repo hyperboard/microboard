@@ -8,6 +8,10 @@ The UI should implement only these icon forms in this phase:
 - `asset` with SVG files
 - optional `icon.state.swatch` rendering hint
 
+For built-in core metadata, `symbol` now carries a core-owned `sourcePath` pointing at the sprite shipped by this repo:
+
+- [src/Overlay/overlay-icons.svg](/home/alex/microboard/hyperboard/microboard/src/Overlay/overlay-icons.svg)
+
 Do not implement for this phase:
 
 - inline metadata `svg`
@@ -38,12 +42,19 @@ These paths are used directly by overlay metadata and should be supported by the
 - [src/Items/Shape/Basic/BracesLeft/BracesLeft.icon.svg](/home/alex/microboard/hyperboard/microboard/src/Items/Shape/Basic/BracesLeft/BracesLeft.icon.svg)
 - [src/Items/Shape/Basic/BracesRight/BracesRight.icon.svg](/home/alex/microboard/hyperboard/microboard/src/Items/Shape/Basic/BracesRight/BracesRight.icon.svg)
 
-## New Symbol Keys Added Or Required By Overlay Metadata
+## Core-Owned Symbol Sprite
 
-These symbol ids are referenced by current overlay metadata and should exist in the UI icon sprite or equivalent symbol registry:
+The UI should first try to render `symbol` icons from `icon.sourcePath` when it is present.
 
-- `connector.switchPointers`
-- `connector.smartJump`
+That means built-in overlay icons no longer depend on the old UI-local sprite as their source of truth.
+
+The core sprite now contains the symbol ids used by current overlay metadata, including:
+
+- tool icons such as `tool.pen`, `tool.connector`, `tool.sticker`, `tool.frame`, `tool.text`, `tool.dice`, `tool.screen`, `tool.pouch`
+- action icons such as `deck.drawTop`, `deck.shuffle`, `card.flip`, `dice.throw`, `screen.backgroundImage`
+- editor/family icons such as `connector.lineStyle.*`, `connector.pointer.*`, `stroke.*`, `frame.*`, `shape.bpmn.*`
+
+It also includes a small compatibility subset of legacy ids like `Pen`, `Highlighter`, `Eraser`, `Text`, `Shape`, `Connector`, `Sticker`, `Frame`, `Dice`, `AddScreen`, `AddPouch`, `Switch`, `RotateDice`, `ShuffleDeck`, `GetCard`, `GetBottomCard`, `GetRandomItem`, and `Stack`.
 
 ## Existing Dynamic Swatch Hints Used By Metadata
 
@@ -62,7 +73,7 @@ The UI can optionally render color state from:
 To complete this phase, the UI repo needs:
 
 - asset-path rendering for SVG icons
-- symbol coverage for the keys above
+- `symbol.sourcePath` support for core-owned sprites
 - optional support for `icon.state.swatch`
 
 It does not need:

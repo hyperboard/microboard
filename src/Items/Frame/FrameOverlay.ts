@@ -1,11 +1,12 @@
 import { Frames } from "./Basic";
 import type { ToolOverlayDefinition, OverlayOptionDefinition } from "Overlay";
+import { overlaySymbolIcon } from "Overlay";
 
 const frameTypeOptions: OverlayOptionDefinition[] = Object.keys(Frames).map(frameType => ({
   id: frameType,
   label: frameType === "Custom" ? "Custom" : Frames[frameType as keyof typeof Frames].name,
   value: frameType,
-  icon: { kind: "symbol", key: `frame.${frameType}` },
+  icon: overlaySymbolIcon(`frame.${frameType}`),
 }));
 
 export const addFrameToolOverlay: ToolOverlayDefinition = {
@@ -14,7 +15,7 @@ export const addFrameToolOverlay: ToolOverlayDefinition = {
   kind: "create",
   createsItemType: "Frame",
   family: "frame",
-  icon: { kind: "symbol", key: "tool.frame" },
+  icon: overlaySymbolIcon("tool.frame"),
   defaults: {
     controls: [
       {
@@ -28,5 +29,9 @@ export const addFrameToolOverlay: ToolOverlayDefinition = {
         invoke: { kind: "toolProperty", property: "shape" },
       },
     ],
+  },
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 10,
   },
 };

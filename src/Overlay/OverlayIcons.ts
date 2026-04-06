@@ -1,4 +1,5 @@
 import type { OverlayIcon, OverlayIconStateHint } from "./OverlayMetadata";
+import { OVERLAY_ICON_SPRITE_PATH } from "./IconPack";
 
 export const OVERLAY_SYMBOL_KEYS = {
   styleFill: "style.fill",
@@ -11,7 +12,9 @@ export function symbolIcon(
   key: string,
   state?: OverlayIconStateHint,
 ): OverlayIcon {
-  return state ? { kind: "symbol", key, state } : { kind: "symbol", key };
+  return state
+    ? { kind: "symbol", key, sourcePath: OVERLAY_ICON_SPRITE_PATH, state }
+    : { kind: "symbol", key, sourcePath: OVERLAY_ICON_SPRITE_PATH };
 }
 
 export function styleFillIcon(state?: OverlayIconStateHint): OverlayIcon {

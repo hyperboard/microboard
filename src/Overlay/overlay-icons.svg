@@ -1,0 +1,323 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="tool.pen" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M13.95 4.12a3.82 3.82 0 0 1 5.4 5.41l-8.56 8.58h8.77a.94.94 0 1 1 0 1.89H4.44a.94.94 0 0 1-.94-.94v-4.08c0-.25.1-.49.28-.67zM8.12 18.11l7.48-7.5-2.73-2.74-7.48 7.5v2.74zm6.09-11.58 2.73 2.74 1.08-1.08a1.93 1.93 0 0 0-2.73-2.74z"/>
+  </symbol>
+  <symbol id="tool.highlighter" viewBox="0 0 18 18">
+    <path fill="currentColor" d="M9 17.33A8.33 8.33 0 1 0 9 .67a8.33 8.33 0 0 0 0 16.66m2.72-2.24A6.66 6.66 0 0 1 9 15.67a6.66 6.66 0 0 1-2.72-.58l.27-4.42h4.9zM6.5 9V7.22c0-.43.28-.81.68-.95l3-1c.65-.22 1.32.27 1.32.95V9h.6c.19 0 .37.06.51.18.15.11.25.27.3.45l.18 2.66A6.65 6.65 0 0 0 15.67 9 6.67 6.67 0 1 0 4.91 14.3l.18-2.67c.04-.18.15-.34.29-.45A.83.83 0 0 1 5.9 9z"/>
+  </symbol>
+  <symbol id="tool.eraser" viewBox="0 0 17 17">
+    <path fill="currentColor" d="M6.16 6.38 2.03 10.5l4.33 4.33h1.95l3.15-3.15zm1.17-1.18 5.31 5.31 2.36-2.36-5.31-5.31zm3.34 9.63h5a.83.83 0 1 1 0 1.67H9l-3.33.01L.26 11.1a.83.83 0 0 1 0-1.18L9.1 1.08a.83.83 0 0 1 1.18 0l6.48 6.48a.83.83 0 0 1 0 1.18z"/>
+  </symbol>
+  <symbol id="tool.text" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M13 6v14a1 1 0 1 1-2 0V6H4a1 1 0 1 1 0-2h16a1 1 0 1 1 0 2z"/>
+  </symbol>
+  <symbol id="tool.shape" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M16.5 14.28V10.5A3 3 0 0 0 13.5 7.5H9.72A7.5 7.5 0 1 1 16.5 14.28M4.5 9.5h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1"/>
+  </symbol>
+  <symbol id="tool.connector" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M21.66 3.75a.48.48 0 0 0-.42-.41l-5.47.64a.47.47 0 0 0-.29.8l1.61 1.58L2.56 20.4a.75.75 0 1 0 1.08 1.05L18.17 7.28l1.61 1.57a.47.47 0 0 0 .79-.22z"/>
+  </symbol>
+  <symbol id="tool.sticker" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12.96 20 20 12.96h-5.04c-1.1 0-2 .9-2 2.01z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M20 12.96V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6.96M20 12.96 12.96 20m7.04-7.04h-5.04c-1.1 0-2 .9-2 2.01V20"/>
+  </symbol>
+  <symbol id="tool.frame" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M8 8v8h8V8zm-2-1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm0-4a1 1 0 1 1 2 0v1H6zm10 0a1 1 0 1 1 2 0v1h-2zM2 7a1 1 0 0 1 1-1h1v2H3a1 1 0 0 1-1-1m17 0a1 1 0 0 1 1-1h1v2h-1a1 1 0 0 1-1-1M2 17a1 1 0 0 1 1-1h1v2H3a1 1 0 0 1-1-1m17 0a1 1 0 0 1 1-1h1v2h-1a1 1 0 0 1-1-1M6 20a1 1 0 1 1 2 0v1H6zm10 0a1 1 0 1 1 2 0v1h-2z"/>
+  </symbol>
+  <symbol id="tool.dice" viewBox="0 0 24 24">
+    <rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
+    <circle cx="15" cy="15" r="1.5" fill="currentColor"/>
+    <circle cx="15" cy="9" r="1.5" fill="currentColor"/>
+    <circle cx="9" cy="15" r="1.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="tool.screen" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M9 19h6v2H9z"/>
+  </symbol>
+  <symbol id="tool.pouch" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M7 7V5a5 5 0 0 1 10 0v2h2l-1.5 12h-11L5 7z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M9 10a3 3 0 0 0 6 0"/>
+  </symbol>
+
+  <symbol id="shape.fill" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 4 5 11l7 7 7-7zm0 11.17L7.83 11 12 6.83 16.17 11z"/>
+    <path fill="currentColor" d="M5 19h14v2H5z"/>
+  </symbol>
+  <symbol id="shape.stroke" viewBox="0 0 24 24">
+    <rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="shape.type" viewBox="0 0 24 24">
+    <rect x="3" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="17" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m6.5 17 3.5-5 3.5 5zm7-3h7"/>
+  </symbol>
+
+  <symbol id="text.fontSize" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 18h2l1.2-3h4.6L13 18h2l-4.8-12H8.8zm4-5 1.5-4 1.5 4zM17 8h3v10h-2v-8h-1z"/>
+  </symbol>
+
+  <symbol id="dice.throw" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 4a8 8 0 1 1-7.45 11"/>
+    <path fill="currentColor" d="m6 13 1.5 4L3.5 16z"/>
+  </symbol>
+  <symbol id="dice.range" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M5 18h14M7 15V8m10 7V5"/>
+    <circle cx="7" cy="8" r="1.5" fill="currentColor"/>
+    <circle cx="17" cy="5" r="1.5" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="screen.background" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M6 14 10 10l3 3 2-2 3 3v1H6z"/>
+  </symbol>
+  <symbol id="screen.backgroundImage" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M6 14 10 10l3 3 2-2 3 3v1H6zM18 4h2v2h2v2h-2v2h-2V8h-2V6h2z"/>
+  </symbol>
+  <symbol id="screen.backgroundImage.remove" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M6 14 10 10l3 3 2-2 3 3v1H6z"/>
+    <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M17 5l5 5M22 5l-5 5"/>
+  </symbol>
+
+  <symbol id="deck.drawTop" viewBox="0 0 24 24">
+    <rect x="7" y="6" width="10" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="m12 3 4 4H8z"/>
+  </symbol>
+  <symbol id="deck.drawBottom" viewBox="0 0 24 24">
+    <rect x="7" y="4" width="10" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="m12 21-4-4h8z"/>
+  </symbol>
+  <symbol id="deck.drawRandom" viewBox="0 0 24 24">
+    <rect x="6" y="5" width="10" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <rect x="9" y="8" width="10" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="m4 17 2 2-2 2-2-2zm16-14 2 2-2 2-2-2z"/>
+  </symbol>
+  <symbol id="deck.drawMany" viewBox="0 0 24 24">
+    <rect x="5" y="6" width="8" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <rect x="11" y="6" width="8" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="deck.shuffle" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l8 10h4M20 17v-4m0 4h-4M4 17h4l2.5-3M20 7v4m0-4h-4"/>
+  </symbol>
+  <symbol id="deck.flip" viewBox="0 0 24 24">
+    <rect x="5" y="5" width="9" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M16 7h3v10h-3"/>
+    <path fill="currentColor" d="m15 12 3-3v2h2v2h-2v2z"/>
+  </symbol>
+  <symbol id="deck.createFromSelection" viewBox="0 0 24 24">
+    <rect x="4" y="7" width="8" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <rect x="12" y="7" width="8" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M11 3h2v3h3v2h-3v3h-2V8H8V6h3z"/>
+  </symbol>
+
+  <symbol id="card.flip" viewBox="0 0 24 24">
+    <rect x="5" y="4" width="9" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M16 7h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2"/>
+    <path fill="currentColor" d="m15 12 3-3v2h2v2h-2v2z"/>
+  </symbol>
+  <symbol id="card.rotateCcw" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M7 10a6 6 0 1 1 2 8"/>
+    <path fill="currentColor" d="M8 5v5H3z"/>
+  </symbol>
+  <symbol id="card.rotateCw" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M17 10a6 6 0 1 0-2 8"/>
+    <path fill="currentColor" d="M16 5v5h5z"/>
+  </symbol>
+
+  <symbol id="connector.style" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 18c6-9 10-3 16-12"/>
+    <circle cx="5" cy="18" r="1.5" fill="currentColor"/>
+    <circle cx="19" cy="6" r="1.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="connector.smartJump" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 14h6m4 0h6M10 14a2 2 0 1 1 4 0"/>
+  </symbol>
+  <symbol id="connector.switchPointers" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 8h14M19 16H5"/>
+    <path fill="currentColor" d="m16 5 4 3-4 3zm-8 8-4 3 4 3z"/>
+  </symbol>
+
+  <symbol id="connector.lineStyle.straight" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 18 19 6"/>
+  </symbol>
+  <symbol id="connector.lineStyle.curved" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 17c5-10 9 0 14-10"/>
+  </symbol>
+  <symbol id="connector.lineStyle.orthogonal" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 18h7V8h7"/>
+  </symbol>
+
+  <symbol id="connector.pointer.None" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M5 12h14"/>
+  </symbol>
+  <symbol id="connector.pointer.ArrowThin" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 12h12m0 0-4-4m4 4-4 4"/>
+  </symbol>
+  <symbol id="connector.pointer.ArrowHeavy" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M4 11h8V7l8 5-8 5v-4H4z"/>
+  </symbol>
+  <symbol id="connector.pointer.TriangleFilled" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M5 12h7V7l7 5-7 5v-5z"/>
+  </symbol>
+  <symbol id="connector.pointer.TriangleOutline" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 12h7V7l7 5-7 5v-5z"/>
+  </symbol>
+  <symbol id="connector.pointer.CircleFilled" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M5 12h7"/>
+    <circle cx="16" cy="12" r="4" fill="currentColor"/>
+  </symbol>
+  <symbol id="connector.pointer.CircleOutline" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M5 12h7"/>
+    <circle cx="16" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="connector.pointer.DiamondFilled" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M5 12h6l5-5 5 5-5 5-5-5"/>
+  </symbol>
+  <symbol id="connector.pointer.DiamondOutline" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 12h6l5-5 5 5-5 5-5-5"/>
+  </symbol>
+
+  <symbol id="stroke.solid" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 12h16"/>
+  </symbol>
+  <symbol id="stroke.dot" viewBox="0 0 24 24">
+    <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+    <circle cx="18" cy="12" r="1.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="stroke.dash" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round" d="M4 12h16"/>
+  </symbol>
+  <symbol id="stroke.longDash" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="8 4" stroke-linecap="round" d="M4 12h16"/>
+  </symbol>
+
+  <symbol id="frame.Custom" viewBox="0 0 24 24">
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="frame.A4" viewBox="0 0 24 24">
+    <rect x="7" y="4" width="10" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M9 8h6v2H9zm0 4h6v2H9z"/>
+  </symbol>
+  <symbol id="frame.Letter" viewBox="0 0 24 24">
+    <rect x="6.5" y="4.5" width="11" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="currentColor" d="M9 8h6v2H9z"/>
+  </symbol>
+  <symbol id="frame.Frame16x9" viewBox="0 0 24 24">
+    <rect x="4" y="7" width="16" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="frame.Frame4x3" viewBox="0 0 24 24">
+    <rect x="5" y="6" width="14" height="10.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="frame.Frame1x1" viewBox="0 0 24 24">
+    <rect x="6" y="6" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="frame.Frame3x2" viewBox="0 0 24 24">
+    <rect x="4.5" y="7" width="15" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="frame.Frame9x18" viewBox="0 0 24 24">
+    <rect x="8" y="3" width="8" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+
+  <symbol id="shape.reversedTriangle" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m6 8 6 10 6-10z"/>
+  </symbol>
+  <symbol id="shape.arrowBlockLeft" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M10 5 3 12l7 7v-4h11V9H10z"/>
+  </symbol>
+  <symbol id="shape.arrowBlockRight" viewBox="0 0 24 24">
+    <path fill="currentColor" d="m14 5 7 7-7 7v-4H3V9h11z"/>
+  </symbol>
+  <symbol id="shape.reversedParallelogram" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M7 5h12l-2 14H5z"/>
+  </symbol>
+  <symbol id="shape.predefinedProcess" viewBox="0 0 24 24">
+    <rect x="4" y="6" width="16" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M8 6v12m8-12v12"/>
+  </symbol>
+
+  <symbol id="shape.bpmn.task" viewBox="0 0 24 24">
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="shape.bpmn.gateway" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m12 4 8 8-8 8-8-8z"/>
+  </symbol>
+  <symbol id="shape.bpmn.gatewayParallel" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m12 4 8 8-8 8-8-8z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M12 8v8M8 12h8"/>
+  </symbol>
+  <symbol id="shape.bpmn.gatewayXor" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m12 4 8 8-8 8-8-8z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m9 9 6 6m0-6-6 6"/>
+  </symbol>
+  <symbol id="shape.bpmn.startEvent" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="shape.bpmn.startEventNoneInterrupting" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/>
+  </symbol>
+  <symbol id="shape.bpmn.endEvent" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="3"/>
+  </symbol>
+  <symbol id="shape.bpmn.intermediateEvent" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="shape.bpmn.intermediateEventNoneInterrupting" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/>
+    <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/>
+  </symbol>
+  <symbol id="shape.bpmn.dataObject" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M7 4h7l3 3v13H7z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M14 4v4h4"/>
+  </symbol>
+  <symbol id="shape.bpmn.dataStore" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="7" rx="6" ry="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M6 7v8c0 1.38 2.69 2.5 6 2.5s6-1.12 6-2.5V7"/>
+  </symbol>
+  <symbol id="shape.bpmn.participant" viewBox="0 0 24 24">
+    <rect x="3" y="7" width="18" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M8 7v10"/>
+  </symbol>
+  <symbol id="shape.bpmn.transaction" viewBox="0 0 24 24">
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <rect x="7" y="9" width="10" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="shape.bpmn.eventSubprocess" viewBox="0 0 24 24">
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2"/>
+  </symbol>
+  <symbol id="shape.bpmn.group" viewBox="0 0 24 24">
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2"/>
+  </symbol>
+  <symbol id="shape.bpmn.annotation" viewBox="0 0 24 24">
+    <path fill="none" stroke="currentColor" stroke-width="2" d="M8 5H6v14h2m0-7h10"/>
+  </symbol>
+
+  <symbol id="Pen" viewBox="0 0 24 24"><use href="#tool.pen"/></symbol>
+  <symbol id="Highlighter" viewBox="0 0 18 18"><use href="#tool.highlighter"/></symbol>
+  <symbol id="Eraser" viewBox="0 0 17 17"><use href="#tool.eraser"/></symbol>
+  <symbol id="Text" viewBox="0 0 24 24"><use href="#tool.text"/></symbol>
+  <symbol id="Shape" viewBox="0 0 24 24"><use href="#tool.shape"/></symbol>
+  <symbol id="Connector" viewBox="0 0 24 24"><use href="#tool.connector"/></symbol>
+  <symbol id="Sticker" viewBox="0 0 24 24"><use href="#tool.sticker"/></symbol>
+  <symbol id="Frame" viewBox="0 0 24 24"><use href="#tool.frame"/></symbol>
+  <symbol id="Dice" viewBox="0 0 24 24"><use href="#tool.dice"/></symbol>
+  <symbol id="AddScreen" viewBox="0 0 24 24"><use href="#tool.screen"/></symbol>
+  <symbol id="AddPouch" viewBox="0 0 24 24"><use href="#tool.pouch"/></symbol>
+  <symbol id="Switch" viewBox="0 0 24 24"><use href="#connector.switchPointers"/></symbol>
+  <symbol id="RotateDice" viewBox="0 0 24 24"><use href="#dice.throw"/></symbol>
+  <symbol id="ShuffleDeck" viewBox="0 0 24 24"><use href="#deck.shuffle"/></symbol>
+  <symbol id="GetCard" viewBox="0 0 24 24"><use href="#deck.drawTop"/></symbol>
+  <symbol id="GetBottomCard" viewBox="0 0 24 24"><use href="#deck.drawBottom"/></symbol>
+  <symbol id="GetRandomItem" viewBox="0 0 24 24"><use href="#deck.drawRandom"/></symbol>
+  <symbol id="Stack" viewBox="0 0 24 24"><use href="#deck.createFromSelection"/></symbol>
+</svg>
+  <symbol id="style.fill" viewBox="0 0 24 24"><use href="#shape.fill"/></symbol>
+  <symbol id="style.stroke" viewBox="0 0 24 24"><use href="#shape.stroke"/></symbol>
+  <symbol id="style.fontSize" viewBox="0 0 24 24"><use href="#text.fontSize"/></symbol>
+  <symbol id="style.color" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M6 17h12v2H6z"/>
+    <path fill="none" stroke="currentColor" stroke-width="2" d="m12 4 5 8H7z"/>
+  </symbol>

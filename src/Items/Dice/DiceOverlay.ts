@@ -3,6 +3,7 @@ import {
   type ItemOverlayDefinition,
   type ToolOverlayDefinition,
 } from "Overlay";
+import { overlaySymbolIcon } from "Overlay";
 
 const COLOR_PALETTE = [
   "#FFFFFF",
@@ -19,14 +20,14 @@ export const diceOverlay: ItemOverlayDefinition = {
     {
       id: "dice.throw",
       label: "Throw dice",
-      icon: { kind: "symbol", key: "dice.throw" },
+      icon: overlaySymbolIcon("dice.throw"),
       target: "each",
       invoke: { kind: "customMethod", methodName: "throwDice" },
     },
     {
       id: "dice.range",
       label: "Range",
-      icon: { kind: "symbol", key: "dice.range" },
+      icon: overlaySymbolIcon("dice.range"),
       target: "each",
       controls: [
         {
@@ -63,6 +64,14 @@ export const diceOverlay: ItemOverlayDefinition = {
       ],
     },
   ],
+  sections: [
+    {
+      id: "diceActions",
+      label: "Dice",
+      icon: overlaySymbolIcon("dice.throw"),
+      actionIds: ["dice.throw", "dice.range", "dice.fill"],
+    },
+  ],
 };
 
 export const addDiceToolOverlay: ToolOverlayDefinition = {
@@ -71,5 +80,17 @@ export const addDiceToolOverlay: ToolOverlayDefinition = {
   kind: "create",
   createsItemType: "Dice",
   family: "game",
-  icon: { kind: "symbol", key: "tool.dice" },
+  icon: overlaySymbolIcon("tool.dice"),
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 1,
+    group: {
+      id: "gameItems",
+      label: "Game items",
+      icon: overlaySymbolIcon("tool.dice"),
+      order: 1,
+      behavior: "open-panel",
+    },
+    relatedToolNames: ["AddScreen", "AddPouch"],
+  },
 };

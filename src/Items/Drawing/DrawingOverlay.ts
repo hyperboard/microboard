@@ -1,5 +1,6 @@
 import { conf } from "Settings";
 import type { ToolOverlayDefinition } from "Overlay";
+import { overlaySymbolIcon } from "Overlay";
 
 const COLOR_PALETTE = [
   "#111111",
@@ -55,8 +56,7 @@ export const addDrawingToolOverlay: ToolOverlayDefinition = {
   family: "drawing",
   createsItemType: "Drawing",
   icon: {
-    kind: "symbol",
-    key: "tool.pen",
+    ...overlaySymbolIcon("tool.pen"),
     state: {
       swatch: { kind: "toolProperty", property: "strokeColor" },
       note: "UI can show the pending pen color in the icon.",
@@ -68,10 +68,22 @@ export const addDrawingToolOverlay: ToolOverlayDefinition = {
       {
         id: "drawingDefaults",
         label: "Pen defaults",
-        icon: { kind: "symbol", key: "tool.pen" },
+        icon: overlaySymbolIcon("tool.pen"),
         controlIds: strokeControls.map(control => control.id),
       },
     ],
+  },
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 1,
+    group: {
+      id: "drawingTools",
+      label: "Drawing",
+      icon: overlaySymbolIcon("tool.pen"),
+      order: 5,
+      behavior: "activate-last-used",
+    },
+    relatedToolNames: ["AddHighlighter", "Eraser"],
   },
 };
 
@@ -82,8 +94,7 @@ export const addHighlighterToolOverlay: ToolOverlayDefinition = {
   family: "drawing",
   createsItemType: "Drawing",
   icon: {
-    kind: "symbol",
-    key: "tool.highlighter",
+    ...overlaySymbolIcon("tool.highlighter"),
     state: {
       swatch: { kind: "toolProperty", property: "strokeColor" },
       note: "UI can show the pending highlighter color in the icon.",
@@ -95,10 +106,22 @@ export const addHighlighterToolOverlay: ToolOverlayDefinition = {
       {
         id: "highlighterDefaults",
         label: "Highlighter defaults",
-        icon: { kind: "symbol", key: "tool.highlighter" },
+        icon: overlaySymbolIcon("tool.highlighter"),
         controlIds: strokeControls.map(control => control.id),
       },
     ],
+  },
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 2,
+    group: {
+      id: "drawingTools",
+      label: "Drawing",
+      icon: overlaySymbolIcon("tool.pen"),
+      order: 5,
+      behavior: "activate-last-used",
+    },
+    relatedToolNames: ["AddDrawing", "Eraser"],
   },
 };
 
@@ -107,7 +130,7 @@ export const eraserToolOverlay: ToolOverlayDefinition = {
   label: "Eraser",
   kind: "mode",
   family: "drawing",
-  icon: { kind: "symbol", key: "tool.eraser" },
+  icon: overlaySymbolIcon("tool.eraser"),
   defaults: {
     controls: [
       {
@@ -124,5 +147,17 @@ export const eraserToolOverlay: ToolOverlayDefinition = {
         invoke: { kind: "toolProperty", property: "strokeWidth" },
       },
     ],
+  },
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 3,
+    group: {
+      id: "drawingTools",
+      label: "Drawing",
+      icon: overlaySymbolIcon("tool.pen"),
+      order: 5,
+      behavior: "activate-last-used",
+    },
+    relatedToolNames: ["AddDrawing", "AddHighlighter"],
   },
 };

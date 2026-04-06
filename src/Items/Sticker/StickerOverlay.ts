@@ -1,4 +1,5 @@
 import type { ToolOverlayDefinition } from "Overlay";
+import { overlaySymbolIcon } from "Overlay";
 
 const STICKER_COLORS = [
   "#FFF475",
@@ -16,8 +17,7 @@ export const addStickerToolOverlay: ToolOverlayDefinition = {
   createsItemType: "Sticker",
   family: "sticker",
   icon: {
-    kind: "symbol",
-    key: "tool.sticker",
+    ...overlaySymbolIcon("tool.sticker"),
     state: {
       swatch: { kind: "toolProperty", property: "backgroundColor" },
     },
@@ -28,9 +28,13 @@ export const addStickerToolOverlay: ToolOverlayDefinition = {
         id: "stickerBackgroundColor",
         label: "Color",
         valueSource: { kind: "toolProperty", property: "backgroundColor" },
-        editor: { kind: "color", palette: STICKER_COLORS },
+        editor: { kind: "color", palette: STICKER_COLORS, presentation: "sticker" },
         invoke: { kind: "toolProperty", property: "backgroundColor" },
       },
     ],
+  },
+  launch: { kind: "activate-tool" },
+  surface: {
+    order: 9,
   },
 };

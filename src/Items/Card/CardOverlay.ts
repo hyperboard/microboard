@@ -1,4 +1,5 @@
 import type { ItemOverlayDefinition } from "Overlay";
+import { overlaySymbolIcon } from "Overlay";
 
 export const cardOverlay: ItemOverlayDefinition = {
   itemType: "Card",
@@ -6,14 +7,14 @@ export const cardOverlay: ItemOverlayDefinition = {
     {
       id: "card.flip",
       label: "Flip card",
-      icon: { kind: "symbol", key: "card.flip" },
+      icon: overlaySymbolIcon("card.flip"),
       target: "each",
       invoke: { kind: "customMethod", methodName: "toggleIsOpen" },
     },
     {
       id: "card.rotateCcw",
       label: "Rotate 90 counter clockwise",
-      icon: { kind: "symbol", key: "card.rotateCcw" },
+      icon: overlaySymbolIcon("card.rotateCcw"),
       target: "each",
       invoke: {
         kind: "customMethod",
@@ -24,7 +25,7 @@ export const cardOverlay: ItemOverlayDefinition = {
     {
       id: "card.rotateCw",
       label: "Rotate 90 clockwise",
-      icon: { kind: "symbol", key: "card.rotateCw" },
+      icon: overlaySymbolIcon("card.rotateCw"),
       target: "each",
       invoke: {
         kind: "customMethod",

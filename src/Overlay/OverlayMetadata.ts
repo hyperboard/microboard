@@ -4,6 +4,16 @@ export type OverlayValueSource =
   | { kind: "itemProperty"; property: string }
   | { kind: "toolProperty"; property: string };
 
+export type OverlayCondition =
+  | { kind: "equals"; source: OverlayValueSource; value: unknown }
+  | { kind: "truthy"; source: OverlayValueSource }
+  | { kind: "falsy"; source: OverlayValueSource }
+  | { kind: "itemTypeIn"; itemTypes: string[] }
+  | { kind: "selectionSize"; min?: number; max?: number }
+  | { kind: "allOf"; conditions: OverlayCondition[] }
+  | { kind: "anyOf"; conditions: OverlayCondition[] }
+  | { kind: "not"; condition: OverlayCondition };
+
 export interface OverlayIconStateHint {
   swatch?: OverlayValueSource;
   note?: string;
@@ -19,6 +29,7 @@ export type OverlayIcon =
   | {
       kind: "symbol";
       key: string;
+      sourcePath?: string;
       state?: OverlayIconStateHint;
     };
 
@@ -28,6 +39,7 @@ export interface OverlayOptionDefinition {
   value: unknown;
   icon?: OverlayIcon;
   description?: string;
+  family?: string;
 }
 
 export interface OverlayCatalogDefinition {
@@ -47,12 +59,22 @@ export interface OverlayColorEditor extends OverlayEditorBase {
   kind: "color";
   palette?: string[];
   allowTransparent?: boolean;
+  presentation?: "circle" | "square" | "sticker";
+}
+
+export interface OverlayQuickOptionsDefinition {
+  family?: string;
+  optionIds?: string[];
+  maxVisible?: number;
+  overflow?: "clip" | "scroll" | "show-more";
 }
 
 export interface OverlayEnumIconEditor extends OverlayEditorBase {
   kind: "enum-icon";
   options: OverlayOptionDefinition[];
   catalog?: OverlayCatalogDefinition;
+  layout?: "row" | "grid" | "list";
+  quickOptions?: OverlayQuickOptionsDefinition;
 }
 
 export interface OverlayEnumListEditor extends OverlayEditorBase {
@@ -91,6 +113,22 @@ export interface OverlayDynamicOptionsEditor extends OverlayEditorBase {
   presentation: "list" | "icon-grid";
 }
 
+export interface OverlayAssetUploadFieldDefinition {
+  id: string;
+  label: string;
+  description?: string;
+  accept?: string[];
+  multiple?: boolean;
+  required?: boolean;
+}
+
+export interface OverlayAssetUploadEditor extends OverlayEditorBase {
+  kind: "asset-upload";
+  mode: "single" | "multiple" | "paired";
+  accept?: string[];
+  fields?: OverlayAssetUploadFieldDefinition[];
+}
+
 export interface OverlayToggleEditor extends OverlayEditorBase {
   kind: "toggle";
   trueLabel?: string;
@@ -112,6 +150,7 @@ export type OverlayEditor =
   | OverlayNumberStepperEditor
   | OverlaySliderEditor
   | OverlayDynamicOptionsEditor
+  | OverlayAssetUploadEditor
   | OverlayToggleEditor
   | OverlayCatalogEditor;
 
@@ -138,6 +177,7 @@ export interface OverlayControlDefinition {
   editor: OverlayEditor;
   valueAdapter?: OverlayControlValueAdapter;
   invoke?: OverlayInvocation;
+  when?: OverlayCondition;
 }
 
 export interface OverlayControlGroupDefinition {
@@ -146,6 +186,7 @@ export interface OverlayControlGroupDefinition {
   icon?: OverlayIcon;
   controlIds: string[];
   description?: string;
+  when?: OverlayCondition;
 }
 
 export type OverlayActionTarget = "single" | "each" | "selection";
@@ -159,11 +200,21 @@ export interface OverlayActionDefinition {
   invoke?: OverlayInvocation;
   controls?: OverlayControlDefinition[];
   groups?: OverlayControlGroupDefinition[];
+  when?: OverlayCondition;
+}
+
+export interface OverlayActionSectionDefinition {
+  id: string;
+  label: string;
+  icon?: OverlayIcon;
+  actionIds: string[];
+  description?: string;
 }
 
 export interface ItemOverlayDefinition {
   itemType: string;
   actions: OverlayActionDefinition[];
+  sections?: OverlayActionSectionDefinition[];
 }
 
 export interface SelectionOverlayActionDefinition {
@@ -182,6 +233,33 @@ export interface ToolDefaultsDefinition {
   groups?: OverlayControlGroupDefinition[];
 }
 
+export interface OverlayWorkflowDefinition {
+  kind: "property-sheet";
+  controls: OverlayControlDefinition[];
+  groups?: OverlayControlGroupDefinition[];
+  submitLabel?: string;
+  description?: string;
+}
+
+export interface OverlayToolGroupDefinition {
+  id: string;
+  label: string;
+  icon?: OverlayIcon;
+  description?: string;
+  order?: number;
+  behavior?: "open-panel" | "activate-last-used";
+}
+
+export interface OverlayToolSurfaceDefinition {
+  order?: number;
+  group?: OverlayToolGroupDefinition;
+  relatedToolNames?: string[];
+}
+
+export type OverlayToolLaunchDefinition =
+  | { kind: "activate-tool" }
+  | { kind: "workflow"; workflow: OverlayWorkflowDefinition };
+
 export interface ToolOverlayDefinition {
   toolName: string;
   label: string;
@@ -191,4 +269,6 @@ export interface ToolOverlayDefinition {
   description?: string;
   createsItemType?: string;
   defaults?: ToolDefaultsDefinition;
+  launch?: OverlayToolLaunchDefinition;
+  surface?: OverlayToolSurfaceDefinition;
 }
