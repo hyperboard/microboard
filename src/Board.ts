@@ -438,7 +438,10 @@ export class Board {
   }
 
   add<T extends Item>(item: T, timeStamp?: number): T {
-    const id = this.getNewItemId();
+    const id = item.getId() || this.getNewItemId();
+    if (!item.getId()) {
+      item.setId(id);
+    }
     this.emit({
       class: "Board",
       method: "add",
@@ -452,6 +455,26 @@ export class Board {
     }
     this.handleNesting(newItem);
     return newItem as T;
+  }
+
+  /**
+   * High-level method to create and add an item in one step.
+   * Useful for UI components and converters.
+   */
+  createItemAndAdd<T extends Item>(itemType: string, data: Partial<ItemData>, timeStamp?: number): T {
+    const id = (data as any).id || this.getNewItemId();
+    const fullData = { ...data, itemType, id } as ItemData;
+    const item = this.createItem(id, fullData);
+    
+    // Some items might need special initialization that deserialize doesn't cover
+    // or that should happen before adding to the board.
+    if (item.itemType === "Connector" && (data as any).startPoint && (data as any).endPoint) {
+       const conn = item as any;
+       conn.apply({ class: "Connector", method: "setStartPoint", startPointData: (data as any).startPoint });
+       conn.apply({ class: "Connector", method: "setEndPoint", endPointData: (data as any).endPoint });
+    }
+
+    return this.add(item as T, timeStamp);
   }
 
   addLockedGroup(items: BaseItem[]): Group {

@@ -37,6 +37,7 @@ export interface VideoConstructorData {
   url?: string;
   videoDimension: Dimension;
   previewUrl?: string;
+  [key: string]: unknown;
 }
 
 const VIDEO_ICON_SRC =

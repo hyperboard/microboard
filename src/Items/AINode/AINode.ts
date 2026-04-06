@@ -257,6 +257,10 @@ export class AINode extends BaseItem<AINode> {
     return this.linkTo.link;
   }
 
+  override getRichText(): RichText {
+    return this.text;
+  }
+
   renderButton(context: DrawingContext): void {
     const { left, right, top, bottom } = this.buttonMbr;
     const { ctx } = context;

@@ -19,6 +19,7 @@ export * from "./SpatialIndex";
 export * from "./Tools";
 export * from "./Overlay";
 export * from "./HTMLAdapter/Utils";
+export * from "./Import/Miro/MiroItemConverter";
 
 export * from "./drawMbrOnCanvas";
 export * from "./itemFactories";

@@ -184,7 +184,6 @@ export class RichText extends BaseItem<RichText> {
     this.setClipPath();
   }
 
-
   updateShrinkWidth(): void {
     if (
       !this.insideOf ||
@@ -1169,7 +1168,7 @@ export class RichText extends BaseItem<RichText> {
     return fontSize * this.autoSizeScale;
   }
 
-  getRichText(): RichText {
+  override getRichText(): RichText {
     return this;
   }
 

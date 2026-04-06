@@ -78,8 +78,8 @@ export class Shape extends BaseItem<Shape> {
     this.textContainer = Shapes[this.shapeType].textBounds.copy();
     this.text = new RichText(this.board, this.id);
     this.text.container = this.textContainer.copy();
-    this.text.transformation = this.transformation;
-    this.text.linkTo = this.linkTo;
+    (this.text as any).transformation = this.transformation;
+    (this.text as any).linkTo = this.linkTo;
     this.text.placeholderText = "\u00A0";
     this.text.isInShape = true;
     this.text.insideOf = this.itemType;

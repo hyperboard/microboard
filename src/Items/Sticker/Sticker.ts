@@ -93,8 +93,8 @@ export class Sticker extends BaseItem<Sticker> {
     super(board, id);
     this.text = new RichText(this.board, this.id);
     this.text.container = this.textContainer.copy();
-    this.text.transformation = this.transformation;
-    this.text.linkTo = this.linkTo;
+    (this.text as any).transformation = this.transformation;
+    (this.text as any).linkTo = this.linkTo;
     this.text.placeholderText = "\u00A0";
     this.text.isInShape = false;
     this.text.insideOf = this.itemType;

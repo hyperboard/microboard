@@ -74,6 +74,7 @@ export interface ImageConstructorData {
   base64?: string;
   storageLink: string;
   imageDimension: Dimension;
+  [key: string]: unknown;
 }
 
 export class ImageItem extends BaseItem<ImageItem> {

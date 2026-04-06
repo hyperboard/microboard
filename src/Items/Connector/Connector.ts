@@ -107,8 +107,8 @@ export class Connector extends BaseItem<Connector> {
 		}
 		this.text = new RichText(this.board, this.id);
 		this.text.container = this.getMbr();
-		this.text.transformation = new Transformation();
-		this.text.linkTo = this.linkTo;
+		(this.text as any).transformation = this.transformation;
+		(this.text as any).linkTo = this.linkTo;
 		this.text.placeholderText = conf.i18n.t('connector.textPlaceholder', {
 			ns: 'default',
 		});
@@ -1155,7 +1155,7 @@ export class Connector extends BaseItem<Connector> {
 		return !this.text.isEmpty();
 	}
 
-	getRichText(): RichText {
+	override getRichText(): RichText {
 		return this.text;
 	}
 
