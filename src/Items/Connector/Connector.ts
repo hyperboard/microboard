@@ -174,6 +174,16 @@ export class Connector extends BaseItem<Connector> {
 	observerStartPointItem = (): void => {
 		const point = this.startPoint;
 		if (point.pointType !== 'Board') {
+			const reparentingGroupId = Group.reparentingGroupId;
+			if (
+				reparentingGroupId !== null &&
+				(
+					this.parent === reparentingGroupId ||
+					(point.item instanceof BaseItem && point.item.parent === reparentingGroupId)
+				)
+			) {
+				return;
+			}
 			const movingGroupId = Group.movingGroupId;
 			if (
 				movingGroupId !== null &&
@@ -199,6 +209,16 @@ export class Connector extends BaseItem<Connector> {
 	observerEndPointItem = (): void => {
 		const point = this.endPoint;
 		if (point.pointType !== 'Board') {
+			const reparentingGroupId = Group.reparentingGroupId;
+			if (
+				reparentingGroupId !== null &&
+				(
+					this.parent === reparentingGroupId ||
+					(point.item instanceof BaseItem && point.item.parent === reparentingGroupId)
+				)
+			) {
+				return;
+			}
 			const movingGroupId = Group.movingGroupId;
 			if (
 				movingGroupId !== null &&

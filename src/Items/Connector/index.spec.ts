@@ -129,4 +129,41 @@ describe("of connectors", () => {
 		expect(restoredEnd.x).toBe(200);
 		expect(restoredEnd.y).toBe(50);
 	});
+
+	it("keeps connector endpoints valid when connector is reparented before its items", () => {
+		const board = new Board();
+		const startItem = new BaseItem(board, "start-item");
+		const endItem = new BaseItem(board, "end-item");
+		startItem.setMbr(new Mbr(0, 0, 100, 100));
+		endItem.setMbr(new Mbr(200, 0, 300, 100));
+		board.index.insert(startItem);
+		board.index.insert(endItem);
+
+		const connector = new Connector(board, "connector-1");
+		connector.deserialize({
+			itemType: "Connector",
+			startPoint: new FixedPoint(startItem, new Point(100, 50)).serialize(),
+			endPoint: new FixedPoint(endItem, new Point(0, 50)).serialize(),
+		});
+		board.index.insert(connector);
+
+		board.group([connector as unknown as BaseItem, startItem, endItem]);
+
+		expect(connector.getStartPoint().serialize()).toEqual({
+			pointType: "Fixed",
+			itemId: "start-item",
+			relativeX: 100,
+			relativeY: 50,
+		});
+		expect(connector.getEndPoint().serialize()).toEqual({
+			pointType: "Fixed",
+			itemId: "end-item",
+			relativeX: 0,
+			relativeY: 50,
+		});
+		expect(connector.getStartPoint().x).not.toBe(0);
+		expect(connector.getStartPoint().y).not.toBe(0);
+		expect(connector.getEndPoint().x).not.toBe(0);
+		expect(connector.getEndPoint().y).not.toBe(0);
+	});
 });

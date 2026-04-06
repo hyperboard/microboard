@@ -40,6 +40,7 @@ export class Group extends BaseItem<Group> {
    * via recalculatePoint) and avoid persisting spurious setStartPoint/setEndPoint ops.
    */
   static movingGroupId: string | null = null;
+  static reparentingGroupId: string | null = null;
 
   constructor(
     board: Board,
@@ -118,6 +119,25 @@ export class Group extends BaseItem<Group> {
       this.board.events.emit(operation, command);
     } else {
       this.apply(operation);
+    }
+  }
+
+  override applyAddChildren(childIds: string[]): void {
+    Group.reparentingGroupId = this.getId();
+    super.applyAddChildren(childIds);
+    Group.reparentingGroupId = null;
+    for (const child of this.index?.listAll() || []) {
+      (child as BaseItem).subject.publish(child as any);
+    }
+  }
+
+  override applyRemoveChildren(childIds: string[]): void {
+    Group.reparentingGroupId = this.getId();
+    super.applyRemoveChildren(childIds);
+    Group.reparentingGroupId = null;
+    for (const childId of childIds) {
+      const child = this.board.items.getById(childId) as BaseItem | undefined;
+      child?.subject.publish(child as any);
     }
   }
 
