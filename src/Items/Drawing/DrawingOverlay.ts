@@ -1,6 +1,6 @@
 import { conf } from "Settings";
 import type { ToolOverlayDefinition } from "Overlay";
-import { overlaySymbolIcon } from "Overlay";
+import { overlayAssetIcon } from "Overlay";
 
 const COLOR_PALETTE = [
   "#111111",
@@ -56,7 +56,7 @@ export const addDrawingToolOverlay: ToolOverlayDefinition = {
   family: "drawing",
   createsItemType: "Drawing",
   icon: {
-    ...overlaySymbolIcon("tool.pen"),
+    ...overlayAssetIcon("src/Items/Drawing/icons/Pen.icon.svg"),
     state: {
       swatch: { kind: "toolProperty", property: "strokeColor" },
       note: "UI can show the pending pen color in the icon.",
@@ -68,7 +68,7 @@ export const addDrawingToolOverlay: ToolOverlayDefinition = {
       {
         id: "drawingDefaults",
         label: "Pen defaults",
-        icon: overlaySymbolIcon("tool.pen"),
+        icon: overlayAssetIcon("src/Items/Drawing/icons/Pen.icon.svg"),
         controlIds: strokeControls.map(control => control.id),
       },
     ],
@@ -79,7 +79,7 @@ export const addDrawingToolOverlay: ToolOverlayDefinition = {
     group: {
       id: "drawingTools",
       label: "Drawing",
-      icon: overlaySymbolIcon("tool.pen"),
+      icon: overlayAssetIcon("src/Items/Drawing/icons/Pen.icon.svg"),
       order: 5,
       behavior: "activate-last-used",
     },
@@ -94,7 +94,7 @@ export const addHighlighterToolOverlay: ToolOverlayDefinition = {
   family: "drawing",
   createsItemType: "Drawing",
   icon: {
-    ...overlaySymbolIcon("tool.highlighter"),
+    ...overlayAssetIcon("src/Items/Drawing/icons/Highlighter.icon.svg"),
     state: {
       swatch: { kind: "toolProperty", property: "strokeColor" },
       note: "UI can show the pending highlighter color in the icon.",
@@ -106,7 +106,7 @@ export const addHighlighterToolOverlay: ToolOverlayDefinition = {
       {
         id: "highlighterDefaults",
         label: "Highlighter defaults",
-        icon: overlaySymbolIcon("tool.highlighter"),
+        icon: overlayAssetIcon("src/Items/Drawing/icons/Highlighter.icon.svg"),
         controlIds: strokeControls.map(control => control.id),
       },
     ],
@@ -117,7 +117,7 @@ export const addHighlighterToolOverlay: ToolOverlayDefinition = {
     group: {
       id: "drawingTools",
       label: "Drawing",
-      icon: overlaySymbolIcon("tool.pen"),
+      icon: overlayAssetIcon("src/Items/Drawing/icons/Pen.icon.svg"),
       order: 5,
       behavior: "activate-last-used",
     },
@@ -130,7 +130,7 @@ export const eraserToolOverlay: ToolOverlayDefinition = {
   label: "Eraser",
   kind: "mode",
   family: "drawing",
-  icon: overlaySymbolIcon("tool.eraser"),
+  icon: overlayAssetIcon("src/Items/Drawing/icons/Eraser.icon.svg"),
   defaults: {
     controls: [
       {
@@ -154,7 +154,7 @@ export const eraserToolOverlay: ToolOverlayDefinition = {
     group: {
       id: "drawingTools",
       label: "Drawing",
-      icon: overlaySymbolIcon("tool.pen"),
+      icon: overlayAssetIcon("src/Items/Drawing/icons/Pen.icon.svg"),
       order: 5,
       behavior: "activate-last-used",
     },

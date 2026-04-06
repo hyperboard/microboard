@@ -1,5 +1,7 @@
 # UI Handout: Universal Overlay Metadata Contract
 
+Superseded by [OverlayMetadataUIAgentHandout.md](/home/alex/microboard/hyperboard/microboard/OverlayMetadataUIAgentHandout.md) for the current repo state.
+
 This document supersedes the earlier narrower handouts for day-to-day UI implementation.
 
 Its goal is to let the UI rebuild the old experience as closely as practical while keeping this repo as the authoritative source of item-specific knowledge.

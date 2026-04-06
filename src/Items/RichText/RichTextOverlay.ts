@@ -3,7 +3,7 @@ import {
   type ItemOverlayDefinition,
   type ToolOverlayDefinition,
 } from "Overlay";
-import { overlaySymbolIcon } from "Overlay";
+import { overlayAssetIcon } from "Overlay";
 
 export const richTextOverlay: ItemOverlayDefinition = {
   itemType: "RichText",
@@ -11,7 +11,6 @@ export const richTextOverlay: ItemOverlayDefinition = {
     {
       id: "text.fontSize",
       label: "Font size",
-      icon: styleFontSizeIcon(),
       icon: styleFontSizeIcon(),
       target: "each",
       controls: [
@@ -35,7 +34,7 @@ export const richTextOverlay: ItemOverlayDefinition = {
     {
       id: "textTypography",
       label: "Typography",
-      icon: overlaySymbolIcon("text.fontSize"),
+      icon: overlayAssetIcon("src/Items/RichText/icons/FontSize.icon.svg"),
       actionIds: ["text.fontSize"],
     },
   ],
@@ -47,7 +46,7 @@ export const addTextToolOverlay: ToolOverlayDefinition = {
   kind: "create",
   createsItemType: "RichText",
   family: "text",
-  icon: overlaySymbolIcon("tool.text"),
+  icon: overlayAssetIcon("src/Items/RichText/icons/Text.icon.svg"),
   description: "Creates editable rich text. The current first pass has no pre-placement defaults on this tool.",
   launch: { kind: "activate-tool" },
   surface: {

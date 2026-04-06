@@ -1,4 +1,4 @@
-import type { OverlayIcon } from "./OverlayMetadata";
+import type { OverlayIcon, OverlayIconStateHint } from "./OverlayMetadata";
 
 export const OVERLAY_ICON_SPRITE_PATH = "src/Overlay/overlay-icons.svg";
 
@@ -10,10 +10,20 @@ export function overlaySymbolIcon(key: string): OverlayIcon {
   };
 }
 
-export function overlayAssetIcon(path: string): OverlayIcon {
-  return {
-    kind: "asset",
-    path,
-    mimeType: "image/svg+xml",
-  };
+export function overlayAssetIcon(
+  path: string,
+  state?: OverlayIconStateHint,
+): OverlayIcon {
+  return state
+    ? {
+        kind: "asset",
+        path,
+        mimeType: "image/svg+xml",
+        state,
+      }
+    : {
+        kind: "asset",
+        path,
+        mimeType: "image/svg+xml",
+      };
 }

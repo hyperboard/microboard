@@ -4,7 +4,7 @@ import type {
   OverlayOptionDefinition,
   SelectionOverlayActionDefinition,
 } from "Overlay";
-import { overlaySymbolIcon, registerDynamicOptionsResolver } from "Overlay";
+import { overlayAssetIcon, registerDynamicOptionsResolver } from "Overlay";
 
 registerDynamicOptionsResolver("deck.drawCount", (context: OverlayDynamicOptionsContext): OverlayOptionDefinition[] => {
   const deck = context.item && context.item.itemType === "Deck"
@@ -24,28 +24,28 @@ export const deckOverlay: ItemOverlayDefinition = {
     {
       id: "deck.getTopCard",
       label: "Draw top card",
-      icon: overlaySymbolIcon("deck.drawTop"),
+      icon: overlayAssetIcon("src/Items/Deck/icons/DrawTop.icon.svg"),
       target: "single",
       invoke: { kind: "customMethod", methodName: "getTopCard" },
     },
     {
       id: "deck.getBottomCard",
       label: "Draw bottom card",
-      icon: overlaySymbolIcon("deck.drawBottom"),
+      icon: overlayAssetIcon("src/Items/Deck/icons/DrawBottom.icon.svg"),
       target: "single",
       invoke: { kind: "customMethod", methodName: "getBottomCard" },
     },
     {
       id: "deck.getRandomCard",
       label: "Draw random card",
-      icon: overlaySymbolIcon("deck.drawRandom"),
+      icon: overlayAssetIcon("src/Items/Deck/icons/DrawRandom.icon.svg"),
       target: "single",
       invoke: { kind: "customMethod", methodName: "getRandomCard" },
     },
     {
       id: "deck.getCards",
       label: "Draw cards",
-      icon: overlaySymbolIcon("deck.drawMany"),
+      icon: overlayAssetIcon("src/Items/Deck/icons/DrawMany.icon.svg"),
       target: "single",
       controls: [
         {
@@ -67,14 +67,14 @@ export const deckOverlay: ItemOverlayDefinition = {
     {
       id: "deck.shuffle",
       label: "Shuffle",
-      icon: overlaySymbolIcon("deck.shuffle"),
+      icon: overlayAssetIcon("src/Items/Deck/icons/Shuffle.icon.svg"),
       target: "single",
       invoke: { kind: "customMethod", methodName: "shuffleDeck" },
     },
     {
       id: "deck.flip",
       label: "Flip deck",
-      icon: overlaySymbolIcon("deck.flip"),
+      icon: overlayAssetIcon("src/Items/Deck/icons/Flip.icon.svg"),
       target: "single",
       invoke: { kind: "customMethod", methodName: "flipDeck" },
     },
@@ -84,7 +84,7 @@ export const deckOverlay: ItemOverlayDefinition = {
 export const createDeckSelectionAction: SelectionOverlayActionDefinition = {
   id: "deck.createFromSelection",
   label: "Create deck",
-  icon: overlaySymbolIcon("deck.createFromSelection"),
+  icon: overlayAssetIcon("src/Items/Deck/icons/CreateFromSelection.icon.svg"),
   description: "Stacks selected cards into a new deck, or merges selected cards and decks into one deck.",
   invoke: { kind: "selectionMethod", methodName: "createDeck" },
   isAvailable: items => {

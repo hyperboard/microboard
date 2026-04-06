@@ -7,7 +7,7 @@ import {
   type OverlayOptionDefinition,
   type ToolOverlayDefinition,
 } from "Overlay";
-import { overlayAssetIcon, overlaySymbolIcon } from "Overlay";
+import { overlayAssetIcon } from "Overlay";
 import type { ShapeType } from "./ShapeType";
 
 const COLOR_PALETTE = [
@@ -24,7 +24,11 @@ const COLOR_PALETTE = [
 const inlineShapeAsset = (folder: string, file = folder) =>
   overlayAssetIcon(`src/Items/Shape/Basic/${folder}/${file}.icon.svg`);
 
-const symbolIcon = (key: string) => overlaySymbolIcon(key);
+const localShapeIcon = (file: string) =>
+  overlayAssetIcon(`src/Items/Shape/icons/${file}.icon.svg`);
+
+const bpmnIcon = (folder: string) =>
+  overlayAssetIcon(`src/Items/Shape/BPMN/${folder}/${folder}.icon.svg`);
 
 const BASIC_INLINE_OPTIONS: OverlayOptionDefinition[] = [
   { id: "rectangle", label: "Rectangle", value: "Rectangle", icon: inlineShapeAsset("Rectangle"), family: "basicShapes" },
@@ -36,49 +40,49 @@ const BASIC_INLINE_OPTIONS: OverlayOptionDefinition[] = [
 
 const SHAPE_CATALOG_OPTIONS: OverlayOptionDefinition[] = [
   ...BASIC_INLINE_OPTIONS,
-  { id: "reversed-triangle", label: "Reversed triangle", value: "ReversedTriangle", icon: symbolIcon("shape.reversedTriangle"), family: "basicShapes" },
+  { id: "reversed-triangle", label: "Reversed triangle", value: "ReversedTriangle", icon: localShapeIcon("ReversedTriangle"), family: "basicShapes" },
   { id: "arrow-left", label: "Arrow left", value: "ArrowLeft", icon: inlineShapeAsset("ArrowLeft"), family: "basicShapes" },
   { id: "arrow-right", label: "Arrow right", value: "ArrowRight", icon: inlineShapeAsset("ArrowRight"), family: "basicShapes" },
   { id: "arrow-left-right", label: "Arrow left right", value: "ArrowLeftRight", icon: inlineShapeAsset("ArrowLeftRight"), family: "basicShapes" },
-  { id: "arrow-block-left", label: "Arrow block left", value: "ArrowBlockLeft", icon: symbolIcon("shape.arrowBlockLeft"), family: "basicShapes" },
-  { id: "arrow-block-right", label: "Arrow block right", value: "ArrowBlockRight", icon: symbolIcon("shape.arrowBlockRight"), family: "basicShapes" },
+  { id: "arrow-block-left", label: "Arrow block left", value: "ArrowBlockLeft", icon: localShapeIcon("ArrowBlockLeft"), family: "basicShapes" },
+  { id: "arrow-block-right", label: "Arrow block right", value: "ArrowBlockRight", icon: localShapeIcon("ArrowBlockRight"), family: "basicShapes" },
   { id: "cloud", label: "Cloud", value: "Cloud", icon: inlineShapeAsset("Cloud"), family: "basicShapes" },
   { id: "cross", label: "Cross", value: "Cross", icon: inlineShapeAsset("Cross"), family: "basicShapes" },
   { id: "cylinder", label: "Cylinder", value: "Cylinder", icon: inlineShapeAsset("Cylinder"), family: "basicShapes" },
   { id: "hexagon", label: "Hexagon", value: "Hexagon", icon: inlineShapeAsset("Hexagon"), family: "basicShapes" },
   { id: "octagon", label: "Octagon", value: "Octagon", icon: inlineShapeAsset("Octagon"), family: "basicShapes" },
   { id: "parallelogram", label: "Parallelogram", value: "Parallelogram", icon: inlineShapeAsset("Parallelogram"), family: "basicShapes" },
-  { id: "reversed-parallelogram", label: "Reversed parallelogram", value: "ReversedParallelogram", icon: symbolIcon("shape.reversedParallelogram"), family: "basicShapes" },
+  { id: "reversed-parallelogram", label: "Reversed parallelogram", value: "ReversedParallelogram", icon: localShapeIcon("ReversedParallelogram"), family: "basicShapes" },
   { id: "pentagon", label: "Pentagon", value: "Pentagon", icon: inlineShapeAsset("Pentagon"), family: "basicShapes" },
-  { id: "predefined-process", label: "Predefined process", value: "PredefinedProcess", icon: symbolIcon("shape.predefinedProcess"), family: "basicShapes" },
+  { id: "predefined-process", label: "Predefined process", value: "PredefinedProcess", icon: localShapeIcon("PredefinedProcess"), family: "basicShapes" },
   { id: "speech-bubble", label: "Speech bubble", value: "SpeachBubble", icon: inlineShapeAsset("SpeachBubble"), family: "basicShapes" },
   { id: "star", label: "Star", value: "Star", icon: inlineShapeAsset("Star"), family: "basicShapes" },
   { id: "trapezoid", label: "Trapezoid", value: "Trapezoid", icon: inlineShapeAsset("Trapezoid"), family: "basicShapes" },
   { id: "braces-left", label: "Braces left", value: "BracesLeft", icon: inlineShapeAsset("BracesLeft", "BracesLeft"), family: "basicShapes" },
   { id: "braces-right", label: "Braces right", value: "BracesRight", icon: inlineShapeAsset("BracesRight", "BracesRight"), family: "basicShapes" },
-  { id: "bpmn-task", label: "BPMN task", value: "BPMN_Task", icon: symbolIcon("shape.bpmn.task"), family: "bpmn" },
-  { id: "bpmn-gateway", label: "BPMN gateway", value: "BPMN_Gateway", icon: symbolIcon("shape.bpmn.gateway"), family: "bpmn" },
-  { id: "bpmn-gateway-parallel", label: "BPMN gateway parallel", value: "BPMN_GatewayParallel", icon: symbolIcon("shape.bpmn.gatewayParallel"), family: "bpmn" },
-  { id: "bpmn-gateway-xor", label: "BPMN gateway XOR", value: "BPMN_GatewayXOR", icon: symbolIcon("shape.bpmn.gatewayXor"), family: "bpmn" },
-  { id: "bpmn-start-event", label: "BPMN start event", value: "BPMN_StartEvent", icon: symbolIcon("shape.bpmn.startEvent"), family: "bpmn" },
-  { id: "bpmn-start-event-non-interrupting", label: "BPMN start event non interrupting", value: "BPMN_StartEventNoneInterrupting", icon: symbolIcon("shape.bpmn.startEventNoneInterrupting"), family: "bpmn" },
-  { id: "bpmn-end-event", label: "BPMN end event", value: "BPMN_EndEvent", icon: symbolIcon("shape.bpmn.endEvent"), family: "bpmn" },
-  { id: "bpmn-intermediate-event", label: "BPMN intermediate event", value: "BPMN_IntermediateEvent", icon: symbolIcon("shape.bpmn.intermediateEvent"), family: "bpmn" },
-  { id: "bpmn-intermediate-event-none-interrupting", label: "BPMN intermediate event none interrupting", value: "BPMN_IntermediateEventNoneInterrupting", icon: symbolIcon("shape.bpmn.intermediateEventNoneInterrupting"), family: "bpmn" },
-  { id: "bpmn-data-object", label: "BPMN data object", value: "BPMN_DataObject", icon: symbolIcon("shape.bpmn.dataObject"), family: "bpmn" },
-  { id: "bpmn-data-store", label: "BPMN data store", value: "BPMN_DataStore", icon: symbolIcon("shape.bpmn.dataStore"), family: "bpmn" },
-  { id: "bpmn-participant", label: "BPMN participant", value: "BPMN_Participant", icon: symbolIcon("shape.bpmn.participant"), family: "bpmn" },
-  { id: "bpmn-transaction", label: "BPMN transaction", value: "BPMN_Transaction", icon: symbolIcon("shape.bpmn.transaction"), family: "bpmn" },
-  { id: "bpmn-event-subprocess", label: "BPMN event subprocess", value: "BPMN_EventSubprocess", icon: symbolIcon("shape.bpmn.eventSubprocess"), family: "bpmn" },
-  { id: "bpmn-group", label: "BPMN group", value: "BPMN_Group", icon: symbolIcon("shape.bpmn.group"), family: "bpmn" },
-  { id: "bpmn-annotation", label: "BPMN annotation", value: "BPMN_Annotation", icon: symbolIcon("shape.bpmn.annotation"), family: "bpmn" },
+  { id: "bpmn-task", label: "BPMN task", value: "BPMN_Task", icon: bpmnIcon("BPMN_Task"), family: "bpmn" },
+  { id: "bpmn-gateway", label: "BPMN gateway", value: "BPMN_Gateway", icon: bpmnIcon("BPMN_Gateway"), family: "bpmn" },
+  { id: "bpmn-gateway-parallel", label: "BPMN gateway parallel", value: "BPMN_GatewayParallel", icon: bpmnIcon("BPMN_GatewayParallel"), family: "bpmn" },
+  { id: "bpmn-gateway-xor", label: "BPMN gateway XOR", value: "BPMN_GatewayXOR", icon: bpmnIcon("BPMN_GatewayXOR"), family: "bpmn" },
+  { id: "bpmn-start-event", label: "BPMN start event", value: "BPMN_StartEvent", icon: bpmnIcon("BPMN_StartEvent"), family: "bpmn" },
+  { id: "bpmn-start-event-non-interrupting", label: "BPMN start event non interrupting", value: "BPMN_StartEventNoneInterrupting", icon: bpmnIcon("BPMN_StartEventNoneInterrupting"), family: "bpmn" },
+  { id: "bpmn-end-event", label: "BPMN end event", value: "BPMN_EndEvent", icon: bpmnIcon("BPMN_EndEvent"), family: "bpmn" },
+  { id: "bpmn-intermediate-event", label: "BPMN intermediate event", value: "BPMN_IntermediateEvent", icon: bpmnIcon("BPMN_IntermediateEvent"), family: "bpmn" },
+  { id: "bpmn-intermediate-event-none-interrupting", label: "BPMN intermediate event none interrupting", value: "BPMN_IntermediateEventNoneInterrupting", icon: bpmnIcon("BPMN_IntermediateEventNoneInterrupting"), family: "bpmn" },
+  { id: "bpmn-data-object", label: "BPMN data object", value: "BPMN_DataObject", icon: bpmnIcon("BPMN_DataObject"), family: "bpmn" },
+  { id: "bpmn-data-store", label: "BPMN data store", value: "BPMN_DataStore", icon: bpmnIcon("BPMN_DataStore"), family: "bpmn" },
+  { id: "bpmn-participant", label: "BPMN participant", value: "BPMN_Participant", icon: bpmnIcon("BPMN_Participant"), family: "bpmn" },
+  { id: "bpmn-transaction", label: "BPMN transaction", value: "BPMN_Transaction", icon: bpmnIcon("BPMN_Transaction"), family: "bpmn" },
+  { id: "bpmn-event-subprocess", label: "BPMN event subprocess", value: "BPMN_EventSubprocess", icon: bpmnIcon("BPMN_EventSubprocess"), family: "bpmn" },
+  { id: "bpmn-group", label: "BPMN group", value: "BPMN_Group", icon: bpmnIcon("BPMN_Group"), family: "bpmn" },
+  { id: "bpmn-annotation", label: "BPMN annotation", value: "BPMN_Annotation", icon: bpmnIcon("BPMN_Annotation"), family: "bpmn" },
 ];
 
 const BORDER_STYLE_OPTIONS: OverlayOptionDefinition[] = [
-  { id: "solid", label: "Solid", value: "solid", icon: symbolIcon("stroke.solid") },
-  { id: "dot", label: "Dot", value: "dot", icon: symbolIcon("stroke.dot") },
-  { id: "dash", label: "Dash", value: "dash", icon: symbolIcon("stroke.dash") },
-  { id: "long-dash", label: "Long dash", value: "longDash", icon: symbolIcon("stroke.longDash") },
+  { id: "solid", label: "Solid", value: "solid", icon: localShapeIcon("StrokeSolid") },
+  { id: "dot", label: "Dot", value: "dot", icon: localShapeIcon("StrokeDot") },
+  { id: "dash", label: "Dash", value: "dash", icon: localShapeIcon("StrokeDash") },
+  { id: "long-dash", label: "Long dash", value: "longDash", icon: localShapeIcon("StrokeLongDash") },
 ];
 
 export const shapeTypeControl: OverlayControlDefinition = {
@@ -109,10 +113,6 @@ const fillControl: OverlayControlDefinition = {
   id: "backgroundColor",
   label: "Fill",
   valueSource: { kind: "itemProperty", property: "backgroundColor" },
-  icon: styleFillIcon({
-    swatch: { kind: "itemProperty", property: "backgroundColor" },
-    note: "UI can render the current fill color as a swatch inside the icon.",
-  }),
   icon: styleFillIcon({
     swatch: { kind: "itemProperty", property: "backgroundColor" },
     note: "UI can render the current fill color as a swatch inside the icon.",
@@ -169,7 +169,7 @@ export const shapeOverlay: ItemOverlayDefinition = {
     {
       id: "shape.shapeType",
       label: "Shape type",
-      icon: symbolIcon("shape.type"),
+      icon: localShapeIcon("Type"),
       target: "each",
       controls: [shapeTypeControl],
     },
@@ -200,13 +200,13 @@ export const shapeOverlay: ItemOverlayDefinition = {
     {
       id: "shapeTypeSection",
       label: "Type",
-      icon: symbolIcon("shape.type"),
+      icon: localShapeIcon("Type"),
       actionIds: ["shape.shapeType"],
     },
     {
       id: "shapeAppearanceSection",
       label: "Appearance",
-      icon: symbolIcon("shape.stroke"),
+      icon: localShapeIcon("Stroke"),
       actionIds: ["shape.fill", "shape.strokeStyle"],
     },
   ],
@@ -219,7 +219,7 @@ export const addShapeToolOverlay: ToolOverlayDefinition = {
   createsItemType: "Shape",
   family: "shape",
   icon: {
-    ...overlaySymbolIcon("tool.shape"),
+    ...overlayAssetIcon("src/Items/Shape/icons/Tool.icon.svg"),
     state: {
       note: "UI may swap the top-level icon to the selected shape option when desired.",
     },

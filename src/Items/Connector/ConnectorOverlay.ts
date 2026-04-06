@@ -1,7 +1,7 @@
 import { CONNECTOR_POINTER_TYPES, ConnectorLineStyles, ConnectionLineWidths } from "./ConnectorTypes";
 import type { BorderStyle } from "Geometry/Path";
 import type { ItemOverlayDefinition, OverlayControlDefinition, OverlayOptionDefinition, ToolOverlayDefinition } from "Overlay";
-import { overlaySymbolIcon } from "Overlay";
+import { overlayAssetIcon } from "Overlay";
 
 const COLOR_PALETTE = [
   "#111111",
@@ -13,13 +13,32 @@ const COLOR_PALETTE = [
   "#7B61FF",
 ];
 
-const symbolIcon = (key: string) => overlaySymbolIcon(key);
+const connectorAssetIcon = (file: string) =>
+  overlayAssetIcon(`src/Items/Connector/icons/${file}.icon.svg`);
+
+const lineStyleAssetIcons: Record<string, ReturnType<typeof connectorAssetIcon>> = {
+  straight: connectorAssetIcon("LineStraight"),
+  curved: connectorAssetIcon("LineCurved"),
+  orthogonal: connectorAssetIcon("LineOrthogonal"),
+};
+
+const pointerAssetIcons: Record<string, ReturnType<typeof connectorAssetIcon>> = {
+  None: connectorAssetIcon("PointerNone"),
+  ArrowThin: connectorAssetIcon("PointerArrowThin"),
+  ArrowHeavy: connectorAssetIcon("PointerArrowHeavy"),
+  TriangleFilled: connectorAssetIcon("PointerTriangleFilled"),
+  TriangleOutline: connectorAssetIcon("PointerTriangleOutline"),
+  CircleFilled: connectorAssetIcon("PointerCircleFilled"),
+  CircleOutline: connectorAssetIcon("PointerCircleOutline"),
+  DiamondFilled: connectorAssetIcon("PointerDiamondFilled"),
+  DiamondOutline: connectorAssetIcon("PointerDiamondOutline"),
+};
 
 const lineStyleOptions: OverlayOptionDefinition[] = ConnectorLineStyles.map(style => ({
   id: style,
   label: style[0].toUpperCase() + style.slice(1),
   value: style,
-  icon: symbolIcon(`connector.lineStyle.${style}`),
+  icon: lineStyleAssetIcons[style],
 }));
 
 const lineWidthOptions: OverlayOptionDefinition[] = ConnectionLineWidths.map(width => ({
@@ -32,14 +51,22 @@ const pointerOptions: OverlayOptionDefinition[] = CONNECTOR_POINTER_TYPES.map(po
   id: pointer,
   label: pointer,
   value: pointer,
-  icon: symbolIcon(`connector.pointer.${pointer}`),
+  icon: pointerAssetIcons[pointer],
 }));
 
 const borderStyleOptions: OverlayOptionDefinition[] = (["solid", "dot", "dash", "longDash"] as BorderStyle[]).map(style => ({
   id: style,
   label: style,
   value: style,
-  icon: symbolIcon(`stroke.${style}`),
+  icon: overlayAssetIcon(
+    style === "solid"
+      ? "src/Items/Shape/icons/StrokeSolid.icon.svg"
+      : style === "dot"
+        ? "src/Items/Shape/icons/StrokeDot.icon.svg"
+        : style === "dash"
+          ? "src/Items/Shape/icons/StrokeDash.icon.svg"
+          : "src/Items/Shape/icons/StrokeLongDash.icon.svg",
+  ),
 }));
 
 const connectorStyleControls: OverlayControlDefinition[] = [
@@ -95,7 +122,7 @@ const connectorStyleControls: OverlayControlDefinition[] = [
   {
     id: "smartJump",
     label: "Smart jump",
-    icon: symbolIcon("connector.smartJump"),
+    icon: connectorAssetIcon("SmartJump"),
     valueSource: { kind: "itemProperty", property: "smartJump" },
     editor: { kind: "toggle", trueLabel: "On", falseLabel: "Off" },
     invoke: { kind: "setProperty", property: "smartJump" },
@@ -155,7 +182,7 @@ const connectorToolControls: OverlayControlDefinition[] = [
   {
     id: "toolSmartJump",
     label: "Smart jump",
-    icon: symbolIcon("connector.smartJump"),
+    icon: connectorAssetIcon("SmartJump"),
     valueSource: { kind: "toolProperty", property: "smartJump" },
     editor: { kind: "toggle", trueLabel: "On", falseLabel: "Off" },
     invoke: { kind: "toolProperty", property: "smartJump" },
@@ -168,21 +195,21 @@ export const connectorOverlay: ItemOverlayDefinition = {
     {
       id: "connector.switchPointers",
       label: "Switch arrows",
-      icon: symbolIcon("connector.switchPointers"),
+      icon: connectorAssetIcon("SwitchPointers"),
       target: "selection",
       invoke: { kind: "operation", class: "Connector", method: "switchPointers" },
     },
     {
       id: "connector.style",
       label: "Connector style",
-      icon: symbolIcon("connector.style"),
+      icon: connectorAssetIcon("Style"),
       target: "each",
       controls: connectorStyleControls,
       groups: [
         {
           id: "connectorStyle",
           label: "Connector style",
-          icon: symbolIcon("connector.style"),
+          icon: connectorAssetIcon("Style"),
           controlIds: connectorStyleControls.map(control => control.id),
         },
       ],
@@ -192,7 +219,7 @@ export const connectorOverlay: ItemOverlayDefinition = {
     {
       id: "connectorArrows",
       label: "Arrows",
-      icon: symbolIcon("connector.style"),
+      icon: connectorAssetIcon("Style"),
       actionIds: ["connector.switchPointers", "connector.style"],
     },
   ],
@@ -205,8 +232,7 @@ export const addConnectorToolOverlay: ToolOverlayDefinition = {
   createsItemType: "Connector",
   family: "connector",
   icon: {
-    kind: "symbol",
-    key: "tool.connector",
+    ...connectorAssetIcon("Tool"),
     state: {
       swatch: { kind: "toolProperty", property: "lineColor" },
       note: "UI can tint or swatch the connector icon from the pending line color.",
@@ -218,14 +244,14 @@ export const addConnectorToolOverlay: ToolOverlayDefinition = {
       {
         id: "connectorToolQuickDefaults",
         label: "Connector quick defaults",
-        icon: symbolIcon("connector.lineStyle.straight"),
+        icon: connectorAssetIcon("LineStraight"),
         controlIds: ["toolLineStyle"],
         description: "Primary defaults that match the compact create-surface picker.",
       },
       {
         id: "connectorToolAdvancedDefaults",
         label: "Connector defaults",
-        icon: symbolIcon("connector.style"),
+        icon: connectorAssetIcon("Style"),
         controlIds: connectorToolControls.map(control => control.id),
         description: "Extended defaults available in richer create flows.",
       },

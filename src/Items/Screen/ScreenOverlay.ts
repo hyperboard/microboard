@@ -1,5 +1,5 @@
 import type { ItemOverlayDefinition, ToolOverlayDefinition } from "Overlay";
-import { overlaySymbolIcon } from "Overlay";
+import { overlayAssetIcon } from "Overlay";
 
 const SCREEN_PALETTE = [
   "#FFFFFF",
@@ -15,7 +15,7 @@ export const screenOverlay: ItemOverlayDefinition = {
       id: "screen.background",
       label: "Background",
       icon: {
-        ...overlaySymbolIcon("screen.background"),
+        ...overlayAssetIcon("src/Items/Screen/icons/Background.icon.svg"),
         state: { swatch: { kind: "itemProperty", property: "backgroundColor" } },
       },
       target: "each",
@@ -37,7 +37,7 @@ export const screenOverlay: ItemOverlayDefinition = {
       id: "screen.stroke",
       label: "Stroke",
       icon: {
-        ...overlaySymbolIcon("shape.stroke"),
+        ...overlayAssetIcon("src/Items/Shape/icons/Stroke.icon.svg"),
         state: { swatch: { kind: "itemProperty", property: "borderColor" } },
       },
       target: "each",
@@ -73,7 +73,7 @@ export const screenOverlay: ItemOverlayDefinition = {
         {
           id: "screenStrokeStyle",
           label: "Stroke",
-          icon: overlaySymbolIcon("shape.stroke"),
+          icon: overlayAssetIcon("src/Items/Shape/icons/Stroke.icon.svg"),
           controlIds: ["borderColor", "borderWidth"],
         },
       ],
@@ -81,7 +81,7 @@ export const screenOverlay: ItemOverlayDefinition = {
     {
       id: "screen.backgroundImage",
       label: "Background image",
-      icon: overlaySymbolIcon("screen.backgroundImage"),
+      icon: overlayAssetIcon("src/Items/Screen/icons/BackgroundImage.icon.svg"),
       target: "each",
       when: {
         kind: "falsy",
@@ -104,7 +104,7 @@ export const screenOverlay: ItemOverlayDefinition = {
     {
       id: "screen.removeBackgroundImage",
       label: "Remove background image",
-      icon: overlaySymbolIcon("screen.backgroundImage.remove"),
+      icon: overlayAssetIcon("src/Items/Screen/icons/BackgroundImageRemove.icon.svg"),
       target: "each",
       when: {
         kind: "truthy",
@@ -121,7 +121,7 @@ export const screenOverlay: ItemOverlayDefinition = {
     {
       id: "screenAppearance",
       label: "Appearance",
-      icon: overlaySymbolIcon("screen.background"),
+      icon: overlayAssetIcon("src/Items/Screen/icons/Background.icon.svg"),
       actionIds: ["screen.background", "screen.stroke", "screen.backgroundImage", "screen.removeBackgroundImage"],
     },
   ],
@@ -133,14 +133,14 @@ export const addScreenToolOverlay: ToolOverlayDefinition = {
   kind: "create",
   createsItemType: "Screen",
   family: "container",
-  icon: overlaySymbolIcon("tool.screen"),
+  icon: overlayAssetIcon("src/Items/Screen/icons/Tool.icon.svg"),
   launch: { kind: "activate-tool" },
   surface: {
     order: 2,
     group: {
       id: "gameItems",
       label: "Game items",
-      icon: overlaySymbolIcon("tool.dice"),
+      icon: overlayAssetIcon("src/Items/Dice/icons/Tool.icon.svg"),
       order: 1,
       behavior: "open-panel",
     },
@@ -154,14 +154,14 @@ export const addPouchToolOverlay: ToolOverlayDefinition = {
   kind: "create",
   createsItemType: "Screen",
   family: "container",
-  icon: overlaySymbolIcon("tool.pouch"),
+  icon: overlayAssetIcon("src/Items/Screen/icons/Pouch.icon.svg"),
   launch: { kind: "activate-tool" },
   surface: {
     order: 3,
     group: {
       id: "gameItems",
       label: "Game items",
-      icon: overlaySymbolIcon("tool.dice"),
+      icon: overlayAssetIcon("src/Items/Dice/icons/Tool.icon.svg"),
       order: 1,
       behavior: "open-panel",
     },

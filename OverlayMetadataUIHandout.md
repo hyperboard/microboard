@@ -1,6 +1,6 @@
 # UI Handout: Overlay Metadata Contract After Alignment Pass Two
 
-Superseded by [OverlayMetadataUniversalUIHandout.md](/home/alex/microboard/hyperboard/microboard/OverlayMetadataUniversalUIHandout.md) for new implementation work.
+Superseded by [OverlayMetadataUIAgentHandout.md](/home/alex/microboard/hyperboard/microboard/OverlayMetadataUIAgentHandout.md) for new implementation work.
 
 ## Purpose
 
