@@ -58,6 +58,7 @@ export const BASIC_SHAPES = [
   "ArrowRight",
   "ArrowLeft",
   "Cloud",
+  "IRCloud",
   "Parallelogram",
   "Star",
   "BracesRight",

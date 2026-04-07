@@ -73,4 +73,14 @@ describe('to diagram user of shapes', () => {
 		shape.apply(transformOps.translateTo(shape, 10, 20));
 		expect(shape.transformation.getTranslation()).toEqual({ x: 10, y: 20 });
 	});
+
+	it('supports canvas-ir backed prototype shapes', () => {
+		const shape = new Shape(board);
+		shape.apply(propertyOps.setProperty([shape], "shapeType", "IRCloud"));
+		shape.apply(propertyOps.setProperty([shape], "backgroundColor", fixedColor('rgb(0, 128, 255)')));
+
+		expect(shape.getShapeType()).toBe("IRCloud");
+		expect(shape.isUnderPoint(new Point(50, 50))).toBe(true);
+		expect(shape.getPathMbr().getWidth()).toBeGreaterThan(90);
+	});
 });

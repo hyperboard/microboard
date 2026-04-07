@@ -14,6 +14,7 @@ export type BasicShapeType =
 	| "Cross"
 	| "Cylinder"
 	| "Hexagon"
+	| "IRCloud"
 	| "Octagon"
 	| "Parallelogram"
 	| "ReversedParallelogram"

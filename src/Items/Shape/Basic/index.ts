@@ -8,6 +8,7 @@ import { Cloud } from "./Cloud";
 import { Cross } from "./Cross";
 import { Cylinder } from "./Cylinder";
 import { Hexagon } from "./Hexagon";
+import { IRCloud } from "./IRCloud";
 import { Octagon } from "./Octagon";
 import { Parallelogram } from "./Parallelogram";
 import { Pentagon } from "./Pentagon";
@@ -40,6 +41,7 @@ export const BasicShapes = {
 	Cross,
 	Cylinder,
 	Hexagon,
+	IRCloud,
 	Octagon,
 	Parallelogram,
 	ReversedParallelogram,
