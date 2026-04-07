@@ -30,7 +30,8 @@ export interface DrawingData {
   strokeStyle: ColorValue | string; // string for legacy deserialization
   strokeWidth: number;
   colorRole?: ColorRole; // 'foreground' for pen (default), 'background' for highlighter
-  opacity?: number;
+  borderOpacity?: number;
+  opacity?: number; // compatibility for snapshots created during the temporary shared-opacity migration
   linkTo?: string;
   [key: string]: unknown;
 }
@@ -47,6 +48,7 @@ export class Drawing extends BaseItem<Drawing> {
   borderStyle: BorderStyle = "solid";
   colorRole: ColorRole = 'foreground';
   private linePattern = scalePatterns(this.strokeWidth)[this.borderStyle];
+  private borderOpacity = 1;
   transformationRenderBlock?: boolean = undefined;
 
   public points: Point[] = [];
@@ -72,6 +74,7 @@ export class Drawing extends BaseItem<Drawing> {
       strokeStyle: this.borderColor as ColorValue,
       strokeWidth: this.strokeWidth,
       colorRole: this.colorRole,
+      borderOpacity: this.borderOpacity,
     };
   }
 
@@ -92,7 +95,7 @@ export class Drawing extends BaseItem<Drawing> {
     if (data.colorRole) {
       this.colorRole = data.colorRole;
     }
-    this.opacity = data.opacity ?? this.opacity;
+    this.borderOpacity = data.borderOpacity ?? data.opacity ?? this.borderOpacity;
     this.updateVisuals({ method: "deserialize", class: this.itemType } as any, UpdateHint.FullRebuild);
     return this;
   }
@@ -243,6 +246,7 @@ export class Drawing extends BaseItem<Drawing> {
     const ctx = context.ctx;
     ctx.save();
     ctx.strokeStyle = resolveColor(this.borderColor, conf.theme, this.colorRole);
+    ctx.globalAlpha = this.borderOpacity;
     ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = "round";
     ctx.setLineDash(this.linePattern);
@@ -409,7 +413,7 @@ export class Drawing extends BaseItem<Drawing> {
       "borderColor",
       "strokeWidth",
       "borderStyle",
-      "opacity",
+      "borderOpacity",
       "colorRole",
       "strokeStyle",
     ];
@@ -421,7 +425,7 @@ export class Drawing extends BaseItem<Drawing> {
 
 
   getStrokeOpacity(): number {
-    return this.opacity;
+    return this.borderOpacity;
   }
 
 
@@ -488,7 +492,7 @@ registerItem({
     itemType: "Drawing",
     points: [],
     borderColor: coerceColorValue("#000000"),
-    opacity: 1,
+    borderOpacity: 1,
     borderStyle: "solid",
     strokeWidth: 2,
     transformation: new DefaultTransformationData(),

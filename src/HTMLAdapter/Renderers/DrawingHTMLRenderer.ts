@@ -35,7 +35,7 @@ export class DrawingHTMLRenderer implements IItemHTMLRenderer {
     );
     pathElement.setAttribute("d", this.getPathData(drawing));
     pathElement.setAttribute("stroke", resolveColor(drawing.borderColor, conf.theme, drawing.colorRole));
-    pathElement.setAttribute("stroke-opacity", `${drawing.opacity}`);
+    pathElement.setAttribute("stroke-opacity", `${drawing.getStrokeOpacity()}`);
     pathElement.setAttribute("stroke-width", `${drawing.strokeWidth}`);
     pathElement.setAttribute("fill", "none");
 

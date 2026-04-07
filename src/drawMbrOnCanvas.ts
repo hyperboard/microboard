@@ -177,13 +177,13 @@ export default function createCanvasDrawer(board: Board): CanvasDrawer {
 					if (container) {
 						context.ctx.save();
 						container.getNestingMatrix().applyToContext(context.ctx);
-						(item as unknown as BaseItem).renderWithOpacity(context);
+						item.render(context);
 						context.ctx.restore();
 					} else {
-						(item as unknown as BaseItem).renderWithOpacity(context);
+						item.render(context);
 					}
 				} else {
-					(item as unknown as BaseItem).renderWithOpacity(context);
+					item.render(context);
 				}
 				board.selection.renderItemMbr(
 					context,

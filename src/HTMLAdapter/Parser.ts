@@ -590,6 +590,9 @@ function parseHTMLDrawing(el: HTMLElement): DrawingData & { id: string } {
     transformation,
     strokeStyle: pathElement.getAttribute("stroke") || "",
     strokeWidth: parseFloat(pathElement.getAttribute("stroke-width") || "1"),
+    borderOpacity: parseFloat(
+      pathElement.getAttribute("stroke-opacity") || el.style.opacity || "1",
+    ),
     linkTo: el.getAttribute("data-link-to") || undefined,
   };
 }

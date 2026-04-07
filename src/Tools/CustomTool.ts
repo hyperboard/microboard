@@ -125,7 +125,7 @@ export class ShapeTool extends CustomTool {
 
 	render(context: DrawingContext): void {
 		if (this.isDown) {
-			this.item.renderWithOpacity(context);
+			this.item.render(context);
 			this.bounds.render(context);
 		}
 	}
