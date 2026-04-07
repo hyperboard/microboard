@@ -23,6 +23,7 @@ export * from "./Image";
 export * from "./Drawing";
 export * from "./Placeholder";
 export * from "./Group";
+export * from "./CanvasIRBadge";
 
 export type { Item, ItemType, ItemData } from "./Item";
 
@@ -34,4 +35,3 @@ export { Dice } from "./Dice";
 export { Screen } from "./Screen";
 export { Comment } from "./Comment";
 export type { HorisontalAlignment, VerticalAlignment } from "Geometry/Alignment";
-
