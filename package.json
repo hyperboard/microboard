@@ -26,7 +26,13 @@
       "require": "./dist/cjs/protocol.js",
       "types": "./dist/types/protocol.d.ts"
     },
-    "./style": "./dist/microboard.css"
+    "./style": "./dist/microboard.css",
+    "./overlay-icon-manifest": {
+      "import": "./dist/esm/overlayIconManifest.js",
+      "require": "./dist/cjs/overlayIconManifest.js",
+      "types": "./dist/types/overlayIconManifest.d.ts"
+    },
+    "./overlay-icons/*": "./dist/overlay-icons/*"
   },
   "files": [
     "dist"

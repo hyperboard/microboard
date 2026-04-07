@@ -2,7 +2,8 @@ import type { BaseItem } from "Items/BaseItem/BaseItem";
 
 export type OverlayValueSource =
   | { kind: "itemProperty"; property: string }
-  | { kind: "toolProperty"; property: string };
+  | { kind: "toolProperty"; property: string }
+  | { kind: "selectionProperty"; property: string };
 
 export type OverlayCondition =
   | { kind: "equals"; source: OverlayValueSource; value: unknown }
@@ -23,6 +24,7 @@ export type OverlayIcon =
   | {
       kind: "asset";
       path: string;
+      sourcePath?: string;
       mimeType?: "image/svg+xml";
       state?: OverlayIconStateHint;
     }
@@ -128,6 +130,23 @@ export interface OverlayAssetUploadEditor extends OverlayEditorBase {
   accept?: string[];
   fields?: OverlayAssetUploadFieldDefinition[];
 }
+
+export interface OverlayWorkflowPropertyBinding {
+  property: string;
+  source:
+    | { kind: "controlValue"; controlId: string }
+    | { kind: "uploadField"; controlId: string; fieldId?: string };
+}
+
+export interface OverlayWorkflowCreateItemsSubmission {
+  kind: "create-items";
+  itemType: string;
+  strategy?: "single" | "per-upload-entry";
+  placement?: "center-viewport" | "stagger-from-pointer";
+  properties: OverlayWorkflowPropertyBinding[];
+}
+
+export type OverlayWorkflowSubmission = OverlayWorkflowCreateItemsSubmission;
 
 export interface OverlayToggleEditor extends OverlayEditorBase {
   kind: "toggle";
@@ -239,6 +258,7 @@ export interface OverlayWorkflowDefinition {
   groups?: OverlayControlGroupDefinition[];
   submitLabel?: string;
   description?: string;
+  submit?: OverlayWorkflowSubmission;
 }
 
 export interface OverlayToolGroupDefinition {

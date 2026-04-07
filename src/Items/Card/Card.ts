@@ -16,7 +16,9 @@ import {throttle} from "utils";
 import {registerHotkey} from "Keyboard/HotkeyRegistry";
 import {getMediaSignedUrl} from "api/MediaHelpers";
 import { propertyOps } from "Items/propertyOps";
-import { cardOverlay } from "./CardOverlay";
+import { registerTool } from "Items/RegisterItem";
+import { WorkflowTool } from "Tools/WorkflowTool";
+import { addCardToolOverlay, cardOverlay } from "./CardOverlay";
 
 
 export interface CardData extends BaseItemData {
@@ -283,6 +285,12 @@ registerItem({
   item: Card,
   defaultData: defaultCardData,
   overlay: cardOverlay,
+});
+
+registerTool({
+  name: "AddCard",
+  tool: WorkflowTool,
+  overlay: addCardToolOverlay,
 });
 
 registerHotkey({

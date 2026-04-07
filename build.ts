@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
-import { mkdir, readdir, readFile, writeFile } from "fs/promises";
+import { copyFile, mkdir, readdir, readFile, writeFile } from "fs/promises";
 import { transform } from "lightningcss";
-import { extname, join } from "path";
+import { dirname, extname, join, relative } from "path";
 
 // List of external dependencies
 const externals = ["canvas", "jsdom", "slate", "slate-react"];
@@ -30,6 +30,30 @@ async function findCSSFiles(dir: string): Promise<string[]> {
   }
 
   return cssFiles;
+}
+
+async function findFiles(
+  dir: string,
+  predicate: (fullPath: string) => boolean,
+): Promise<string[]> {
+  const files: string[] = [];
+
+  try {
+    const entries = await readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        files.push(...await findFiles(fullPath, predicate));
+      } else if (entry.isFile() && predicate(fullPath)) {
+        files.push(fullPath);
+      }
+    }
+  } catch (error) {
+    console.warn(`Warning: Could not read directory ${dir}:`, error);
+  }
+
+  return files;
 }
 
 // Function to bundle CSS files using Lightning CSS
@@ -114,6 +138,45 @@ async function bundleCSS(): Promise<void> {
   console.log(`📊 Bundle size: ${(result.code.length / 1024).toFixed(2)} KB`);
 }
 
+function toSvgDataUri(svg: string): string {
+  const compactSvg = svg.replace(/\r?\n/g, "").replace(/\s{2,}/g, " ").trim();
+  return `data:image/svg+xml;utf8,${encodeURIComponent(compactSvg)}`;
+}
+
+async function publishOverlayIcons(): Promise<void> {
+  console.log("🖼️ Publishing overlay icon assets...");
+
+  const svgFiles = [
+    ...(await findFiles("./src", (fullPath) => fullPath.endsWith(".icon.svg"))),
+    "./src/Overlay/overlay-icons.svg",
+  ].sort();
+
+  const manifestEntries = await Promise.all(svgFiles.map(async (sourcePath) => {
+    const relativeFromSrc = relative("./src", sourcePath).replaceAll("\\", "/");
+    const publishedPath = `overlay-icons/${relativeFromSrc}`;
+    const destinationPath = join("./dist", publishedPath);
+    await mkdir(dirname(destinationPath), { recursive: true });
+    await copyFile(sourcePath, destinationPath);
+    const svg = await readFile(sourcePath, "utf-8");
+    return [publishedPath, toSvgDataUri(svg)] as const;
+  }));
+
+  const manifestObject = Object.fromEntries(manifestEntries);
+  const manifestJson = JSON.stringify(manifestObject, null, 2);
+  const esmModule = `export const overlayIconManifest = ${manifestJson};\nexport function getOverlayIconAsset(path) {\n  return overlayIconManifest[path];\n}\n`;
+  const cjsModule = `"use strict";\nconst overlayIconManifest = ${manifestJson};\nfunction getOverlayIconAsset(path) {\n  return overlayIconManifest[path];\n}\nmodule.exports = { overlayIconManifest, getOverlayIconAsset };\n`;
+  const typesModule = `export declare const overlayIconManifest: Record<string, string>;\nexport declare function getOverlayIconAsset(path: string): string | undefined;\n`;
+
+  await mkdir("./dist/esm", { recursive: true });
+  await mkdir("./dist/cjs", { recursive: true });
+  await mkdir("./dist/types", { recursive: true });
+  await writeFile("./dist/esm/overlayIconManifest.js", esmModule);
+  await writeFile("./dist/cjs/overlayIconManifest.js", cjsModule);
+  await writeFile("./dist/types/overlayIconManifest.d.ts", typesModule);
+
+  console.log(`✅ Published ${manifestEntries.length} overlay icon assets`);
+}
+
 // Build commands
 const commands = [
   "rimraf dist",
@@ -151,6 +214,8 @@ async function build() {
       "bunx tsc -p tsconfig.json --noEmit false --emitDeclarationOnly; bunx tsc-alias -p tsconfig.json",
       { stdio: "inherit" }
     );
+
+    await publishOverlayIcons();
 
     console.log("🎉 Build completed successfully!");
   } catch (error) {

@@ -1,5 +1,7 @@
 # UI Agent Handout: Consuming Overlay Metadata From Core
 
+Superseded by [OverlayMetadataPackagedUIAgentHandout.md](/home/alex/microboard/hyperboard/microboard/OverlayMetadataPackagedUIAgentHandout.md).
+
 This is the current handout the UI repo should implement against.
 
 Use this document as the primary integration guide.

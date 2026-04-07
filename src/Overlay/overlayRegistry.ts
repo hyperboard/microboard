@@ -13,6 +13,7 @@ export interface OverlayDynamicOptionsContext {
   item?: BaseItem;
   items?: readonly BaseItem[];
   tool?: Tool;
+  selection?: unknown;
 }
 
 export type OverlayDynamicOptionsResolver = (
@@ -219,10 +220,28 @@ function compareEntriesByOrder(
 
 function readOverlayValueSource(
   context: OverlayDynamicOptionsContext,
-  source: { kind: "itemProperty" | "toolProperty"; property: string },
+  source: { kind: "itemProperty" | "toolProperty" | "selectionProperty"; property: string },
 ): unknown {
-  if (source.kind === "itemProperty") {
-    return context.item ? (context.item as unknown as Record<string, unknown>)[source.property] : undefined;
+  if (source.kind === "selectionProperty") {
+    return readOverlayContextProperty(context.selection, source.property);
   }
-  return context.tool ? (context.tool as unknown as Record<string, unknown>)[source.property] : undefined;
+  if (source.kind === "itemProperty") {
+    return readOverlayContextProperty(context.item, source.property);
+  }
+  return readOverlayContextProperty(context.tool, source.property);
+}
+
+function readOverlayContextProperty(
+  target: unknown,
+  property: string,
+): unknown {
+  if (!target) {
+    return undefined;
+  }
+
+  const value = (target as Record<string, unknown>)[property];
+  if (typeof value === "function") {
+    return (value as () => unknown).call(target);
+  }
+  return value;
 }
