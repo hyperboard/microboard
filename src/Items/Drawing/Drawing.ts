@@ -134,6 +134,10 @@ export class Drawing extends BaseItem<Drawing> {
     this.path2d = new conf.path2DFactory();
     const context = this.path2d;
     const points = this.points;
+    if (points.length === 0) {
+      this.untransformedMbr = new Mbr();
+      return;
+    }
     if (points.length < 3) {
       context.arc(points[0].x, points[0].y, 0.5, 0, Math.PI * 2, true);
       context.closePath();
@@ -199,6 +203,9 @@ export class Drawing extends BaseItem<Drawing> {
   }
 
   optimizePoints(): void {
+    if (this.points.length === 0) {
+      return;
+    }
     const dp = douglasPeucker(this.points, 1);
     // const dp = rdpWithDistanceThreshold(this.points, 1);
     dp.push(this.points[this.points.length - 1]);
