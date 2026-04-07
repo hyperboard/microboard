@@ -1,1 +1,0 @@
-export { AddShape } from "./AddShape";

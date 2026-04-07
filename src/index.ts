@@ -28,7 +28,7 @@ export * from "./sha256";
 export * from "./lib";
 export { initI18N } from "api/initI18N";
 export {getMediaSignedUrl} from "api/MediaHelpers"
-export { itemOverlays as itemActions } from "./Overlay/overlayRegistry";
+
 
 import { createCommand } from "./Events/CreateCommand";
 import { BaseItem } from "./Items/BaseItem/BaseItem";
