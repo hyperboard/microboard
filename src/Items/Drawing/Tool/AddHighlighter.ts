@@ -34,7 +34,7 @@ export class AddHighlighter extends AddDrawing {
 
 	protected applyDrawingRole(drawing: Drawing): void {
 		drawing.setColorRole('background');
-		drawing.apply(propertyOps.setProperty([drawing], "borderOpacity", 0.5));
+		drawing.apply(propertyOps.setProperty([drawing], "opacity", 0.5));
 	}
 
 	protected updateSettings(): void {

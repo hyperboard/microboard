@@ -37,6 +37,7 @@ export interface BaseItemData {
 	linkTo?: string;
 	childIds?: string[];
 	parent?: string;
+	opacity?: number;
 	[key: string]: unknown;
 }
 
@@ -63,6 +64,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 	shouldUseRelativeAlignment = true;
 	resizeEnabled = true;
 	onlyProportionalResize = false;
+	opacity = 1;
 	itemType: ItemType = '' as any;
 	childIds: string[] = [];
 	isHoverHighlighted = false;
@@ -542,6 +544,7 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 			itemType: this.itemType,
 			childIds: this.childIds,
 			parent: this.parent,
+			opacity: this.opacity,
 			resizeEnabled: this.resizeEnabled,
 		};
 	}

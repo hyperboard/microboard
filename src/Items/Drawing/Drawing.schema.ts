@@ -10,6 +10,7 @@ export const DrawingDataSchema = z.object({
   strokeStyle: ColorValueSchema,
   strokeWidth: z.number(),
   colorRole: z.enum(["foreground", "background"]).optional(),
+  opacity: z.number().optional(),
   linkTo: z.string().optional(),
 });
 
