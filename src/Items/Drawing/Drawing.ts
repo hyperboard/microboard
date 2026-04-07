@@ -243,7 +243,6 @@ export class Drawing extends BaseItem<Drawing> {
     const ctx = context.ctx;
     ctx.save();
     ctx.strokeStyle = resolveColor(this.borderColor, conf.theme, this.colorRole);
-    ctx.globalAlpha = this.opacity;
     ctx.lineWidth = this.strokeWidth;
     ctx.lineCap = "round";
     ctx.setLineDash(this.linePattern);

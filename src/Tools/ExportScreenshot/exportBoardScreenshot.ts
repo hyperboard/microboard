@@ -80,7 +80,7 @@ export async function exportBoardScreenshot({
 	const inView = board.items.index.listEnclosedOrCrossedBy(left, top, right, bottom);
 
 	for (const item of inView) {
-		item.render(context);
+		(item as any).renderWithOpacity?.(context) ?? item.render(context);
 	}
 
 	const blob = await offscreenCanvas.convertToBlob({ type: 'image/png' });

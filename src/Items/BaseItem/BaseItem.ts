@@ -790,6 +790,18 @@ export class BaseItem<T extends BaseItem<any> = any> implements Geometry {
 		}
 	}
 
+	renderWithOpacity(context: DrawingContext): void {
+		if (this.opacity === 1) {
+			this.render(context);
+			return;
+		}
+
+		context.ctx.save();
+		context.ctx.globalAlpha *= this.opacity;
+		this.render(context);
+		context.ctx.restore();
+	}
+
 	getSnapAnchorPoints(): Point[] {
 		return this.getMbr().getSnapAnchorPoints();
 	}

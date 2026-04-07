@@ -13,7 +13,9 @@ export function registerHTMLRenderer(itemType: string, renderer: IItemHTMLRender
 
 export function renderItemToHTML(item: BaseItem, documentFactory: DocumentFactory): HTMLElement {
   const renderer = renderers[item.itemType] || defaultRenderer;
-  return renderer.render(item, documentFactory);
+  const element = renderer.render(item, documentFactory);
+  element.style.opacity = `${item.opacity}`;
+  return element;
 }
 
 const defaultRenderer: IItemHTMLRenderer = {

@@ -263,7 +263,7 @@ export class SimpleSpatialIndex implements ISpatialIndex {
 
   render(context: DrawingContext) {
     this.itemsArray.forEach(item => {
-      item.render(context);
+      (item as any).renderWithOpacity?.(context) ?? item.render(context);
     })
   }
 }
