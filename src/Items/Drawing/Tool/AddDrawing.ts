@@ -7,6 +7,7 @@ import { BorderStyle } from 'Geometry/Path';
 import { conf } from 'Settings';
 import { BoardTool } from 'Tools/BoardTool';
 import { transformOps } from 'Geometry/Transformation/transformOps';
+import { DefaultTransformationData } from 'Geometry/Transformation/TransformationData';
 import { ColorValue, coerceColorValue, semanticColor } from 'Color';
 import { registerTool } from 'Items/RegisterItem';
 import { addDrawingToolOverlay } from "../DrawingOverlay";
@@ -134,6 +135,7 @@ export class AddDrawing extends BoardTool {
     drawing.deserialize({
       itemType: "Drawing",
       points: points as any,
+      transformation: new DefaultTransformationData(),
     } as any);
     drawing.apply(transformOps.translateTo(drawing, x, y));
     drawing.apply(propertyOps.setProperty([drawing], "borderColor", coerceColorValue(this.strokeColor)));
