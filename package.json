@@ -63,6 +63,7 @@
     }
   },
   "dependencies": {
+    "web-component-json-codec": "file:../WebComponentJSONCodec",
     "zod": "^4.3.6"
   },
   "devDependencies": {
