@@ -1436,7 +1436,9 @@ export class Board {
 
   setInterfaceType(interfaceType: InterfaceType): void {
     this.interfaceType = interfaceType;
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const isMobile =
+      typeof navigator !== "undefined" &&
+      /Mobi|Android/i.test(navigator.userAgent);
     if (!isMobile) {
       this.tools.select();
     }

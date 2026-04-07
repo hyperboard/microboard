@@ -203,6 +203,10 @@ function sendBoardEvent(
 }
 
 function onBoardLoad(board: Board): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
   const searchParams = new URLSearchParams(window.location.search.slice(1));
   const toFocusId = searchParams.get("focus") ?? "";
   const toFocusItem = board.items.getById(toFocusId);

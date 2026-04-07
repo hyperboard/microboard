@@ -23,6 +23,8 @@ export * from "./Import/Miro/MiroItemConverter";
 
 export * from "./drawMbrOnCanvas";
 export * from "./itemFactories";
+export * from "./Items/itemSchemas";
+export * from "./runtime/registeredItems";
 export * from "./HTMLAdapter/Parser";
 export * from "./sha256";
 export * from "./lib";
