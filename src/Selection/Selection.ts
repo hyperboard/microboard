@@ -338,6 +338,12 @@ export class BoardSelection {
     if (!item) {
       return null;
     }
+    if (item.itemType === "RichText") {
+      const owner = this.board.items.getById(item.getId());
+      if (owner && owner !== item) {
+        return owner;
+      }
+    }
     if (item.itemType === "Group") {
       return null;
     }
