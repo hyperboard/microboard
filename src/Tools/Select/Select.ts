@@ -232,7 +232,9 @@ export class Select extends BoardTool {
 		const dragTarget = this.downOnItem;
 		const hasDragTarget = !!dragTarget;
 		const isConnectorAnchorHandle = hasDragTarget && !dragTarget.isAlignmentSource();
-		const hasSingleConnectedPoint = hasDragTarget && (dragTarget as any).isConnectedOnePoint();
+		const hasSingleConnectedPoint = hasDragTarget
+			&& typeof (dragTarget as any).isConnectedOnePoint === "function"
+			&& (dragTarget as any).isConnectedOnePoint();
 		const isCtrlPressed = this.board.keyboard.isCtrl;
 
 		return isConnectorAnchorHandle && hasSingleConnectedPoint && !isCtrlPressed;
