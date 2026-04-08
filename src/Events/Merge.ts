@@ -423,7 +423,7 @@ function mergeSetPropertyOperations(
   }
   return {
     ...opB,
-    prevValue: opA.prevValue,
+    prevValues: opA.prevValues,
   };
 }
 

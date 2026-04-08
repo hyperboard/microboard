@@ -887,6 +887,17 @@ const AudioOperationSchema = z
 	})
 	.passthrough();
 
+const ItemSetPropertyOperationSchema = z
+	.object({
+		class: z.literal("Item"),
+		method: z.literal("setProperty"),
+		item: StringArraySchema,
+		property: z.string(),
+		value: z.unknown(),
+		prevValues: z.array(z.unknown()),
+	})
+	.passthrough();
+
 export const SocketOperationSchema = z.union([
 	UndoOperationSchema,
 	RedoOperationSchema,
@@ -907,6 +918,7 @@ export const SocketOperationSchema = z.union([
 	ImageOperationSchema,
 	VideoOperationSchema,
 	AudioOperationSchema,
+	ItemSetPropertyOperationSchema,
 ]);
 
 export const SocketBoardEventBodySchema = z
