@@ -193,7 +193,6 @@ export class Shape extends BaseItem<Shape> {
       this.applyShapeOperation(op as ShapeOperation);
     } else {
       super.apply(op);
-      return;
     }
 
     const hint = this.calculateUpdateHint(op);

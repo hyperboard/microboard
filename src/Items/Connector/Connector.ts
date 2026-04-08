@@ -463,7 +463,6 @@ export class Connector extends BaseItem<Connector> {
 			}
 		} else {
 			super.apply(op);
-			return;
 		}
 
 		const hint = this.calculateUpdateHint(op);

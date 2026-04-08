@@ -199,7 +199,6 @@ export class Sticker extends BaseItem<Sticker> {
       this.linkTo.apply(op as LinkToOperation);
     } else {
       super.apply(op);
-      return;
     }
 
     const hint = this.calculateUpdateHint(op);

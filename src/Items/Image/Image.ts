@@ -308,7 +308,6 @@ export class ImageItem extends BaseItem<ImageItem> {
       this.linkTo.apply(op as any);
     } else {
       super.apply(op);
-      return;
     }
 
     const hint = this.calculateUpdateHint(op);
