@@ -1,7 +1,23 @@
 import { itemSchemas } from "Items/itemSchemas";
 import { itemFactories } from "itemFactories";
 import { z } from "zod";
-import type { ComponentSchema, SchemaRegistry } from "web-component-json-codec";
+
+type CodecScalarType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "string[]"
+  | "number[]"
+  | "boolean[]"
+  | "number[][]"
+  | "json";
+
+type ComponentSchema = {
+  type: string;
+  properties: Record<string, { type: CodecScalarType }>;
+};
+
+type SchemaRegistry = Record<string, ComponentSchema>;
 
 type CodecSchemaType =
   | "string"

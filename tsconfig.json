@@ -38,8 +38,6 @@
       "types/*": ["./types/*"],
       "Geometry/*": ["./Geometry/*"],
       "Validators/*": ["./Validators/*"]
-      ,
-      "web-component-json-codec": ["../../WebComponentJSONCodec/src/index.ts"]
     }
   },
   "include": ["src/**/*"],
