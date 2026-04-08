@@ -192,7 +192,9 @@ export class Select extends BoardTool {
 			return false;
 		}
 
-		const targetItem = hover[hover.length - 1];
+		const hoveredTarget = hover[hover.length - 1];
+		const targetItem =
+			this.board.selection.getSelectableItem(hoveredTarget) ?? hoveredTarget;
 		const selected = this.board.selection.items.getSingle();
 		if (selected === targetItem) {
 			return false;
