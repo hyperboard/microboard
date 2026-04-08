@@ -40,7 +40,6 @@ const BASIC_INLINE_OPTIONS: OverlayOptionDefinition[] = [
 
 const SHAPE_CATALOG_OPTIONS: OverlayOptionDefinition[] = [
   ...BASIC_INLINE_OPTIONS,
-  { id: "reversed-triangle", label: "Reversed triangle", value: "ReversedTriangle", icon: localShapeIcon("ReversedTriangle"), family: "basicShapes" },
   { id: "arrow-left", label: "Arrow left", value: "ArrowLeft", icon: shapeSymbolIcon("ArrowLeft"), family: "basicShapes" },
   { id: "arrow-right", label: "Arrow right", value: "ArrowRight", icon: shapeSymbolIcon("ArrowRight"), family: "basicShapes" },
   { id: "arrow-left-right", label: "Arrow left right", value: "ArrowLeftRight", icon: shapeSymbolIcon("ArrowLeftRight"), family: "basicShapes" },
@@ -52,8 +51,6 @@ const SHAPE_CATALOG_OPTIONS: OverlayOptionDefinition[] = [
   { id: "hexagon", label: "Hexagon", value: "Hexagon", icon: shapeSymbolIcon("Hexagon"), family: "basicShapes" },
   { id: "octagon", label: "Octagon", value: "Octagon", icon: shapeSymbolIcon("Octagon"), family: "basicShapes" },
   { id: "parallelogram", label: "Parallelogram", value: "Parallelogram", icon: shapeSymbolIcon("Parallelogram"), family: "basicShapes" },
-  { id: "reversed-parallelogram", label: "Reversed parallelogram", value: "ReversedParallelogram", icon: localShapeIcon("ReversedParallelogram"), family: "basicShapes" },
-  { id: "pentagon", label: "Pentagon", value: "Pentagon", icon: shapeSymbolIcon("Pentagon"), family: "basicShapes" },
   { id: "predefined-process", label: "Predefined process", value: "PredefinedProcess", icon: shapeSymbolIcon("PredefinedProcess"), family: "basicShapes" },
   { id: "speech-bubble", label: "Speech bubble", value: "SpeachBubble", icon: shapeSymbolIcon("SpeachBubble"), family: "basicShapes" },
   { id: "star", label: "Star", value: "Star", icon: shapeSymbolIcon("Star"), family: "basicShapes" },
