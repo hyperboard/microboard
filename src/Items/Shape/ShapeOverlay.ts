@@ -1,5 +1,6 @@
 import type { BorderStyle } from "Geometry/Path";
 import {
+  symbolIcon,
   styleFillIcon,
   styleStrokeIcon,
   type ItemOverlayDefinition,
@@ -219,7 +220,7 @@ export const addShapeToolOverlay: ToolOverlayDefinition = {
   createsItemType: "Shape",
   family: "shape",
   icon: {
-    ...overlayAssetIcon("src/Items/Shape/icons/Tool.icon.svg"),
+    ...symbolIcon("Shape"),
     state: {
       note: "UI may swap the top-level icon to the selected shape option when desired.",
     },
