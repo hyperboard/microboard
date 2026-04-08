@@ -37,9 +37,7 @@
       "Tools/*": ["./Tools/*"],
       "types/*": ["./types/*"],
       "Geometry/*": ["./Geometry/*"],
-      "Validators/*": ["./Validators/*"],
-      "canvas2d-geometry-ir": ["../../Canvas2DGeometryIR/src/index.ts"],
-      "web-component-json-codec": ["../../WebComponentJSONCodec/src/index.ts"]
+      "Validators/*": ["./Validators/*"]
     }
   },
   "include": ["src/**/*"],

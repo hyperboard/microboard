@@ -63,8 +63,8 @@
     }
   },
   "dependencies": {
-    "canvas2d-geometry-ir": "file:../Canvas2DGeometryIR",
-    "web-component-json-codec": "file:../WebComponentJSONCodec",
+    "canvas2d-geometry-ir": "^0.1.0",
+    "web-component-json-codec": "^0.1.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
