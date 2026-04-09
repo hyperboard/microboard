@@ -1,4 +1,5 @@
 import {
+  symbolIcon,
   styleFontSizeIcon,
   type ItemOverlayDefinition,
   type ToolOverlayDefinition,
@@ -46,7 +47,7 @@ export const addTextToolOverlay: ToolOverlayDefinition = {
   kind: "create",
   createsItemType: "RichText",
   family: "text",
-  icon: overlayAssetIcon("src/Items/RichText/icons/Text.icon.svg"),
+  icon: symbolIcon("AddText"),
   description: "Creates editable rich text. The current first pass has no pre-placement defaults on this tool.",
   launch: { kind: "activate-tool" },
   surface: {

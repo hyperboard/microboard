@@ -1,7 +1,7 @@
 import { CONNECTOR_POINTER_TYPES, ConnectorLineStyles, ConnectionLineWidths } from "./ConnectorTypes";
 import type { BorderStyle } from "Geometry/Path";
 import type { ItemOverlayDefinition, OverlayControlDefinition, OverlayOptionDefinition, ToolOverlayDefinition } from "Overlay";
-import { overlayAssetIcon } from "Overlay";
+import { overlayAssetIcon, symbolIcon } from "Overlay";
 
 const COLOR_PALETTE = [
   "#111111",
@@ -195,7 +195,7 @@ export const connectorOverlay: ItemOverlayDefinition = {
     {
       id: "connector.switchPointers",
       label: "Switch arrows",
-      icon: connectorAssetIcon("SwitchPointers"),
+      icon: symbolIcon("Switch"),
       target: "selection",
       invoke: { kind: "operation", class: "Connector", method: "switchPointers" },
     },
