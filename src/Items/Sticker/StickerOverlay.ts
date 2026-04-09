@@ -1,14 +1,8 @@
 import type { ToolOverlayDefinition } from "Overlay";
 import { overlayAssetIcon, symbolIcon } from "Overlay";
+import { CONTRAST_PALETTE_LIST } from "Color";
 
-const STICKER_COLORS = [
-  "#FFF475",
-  "#FDBA74",
-  "#A7F3D0",
-  "#BFDBFE",
-  "#DDD6FE",
-  "#FBCFE8",
-];
+const STICKER_COLORS = CONTRAST_PALETTE_LIST.map((pair) => pair.id);
 
 export const addStickerToolOverlay: ToolOverlayDefinition = {
   toolName: "AddSticker",
