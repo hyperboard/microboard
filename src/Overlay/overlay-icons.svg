@@ -195,30 +195,28 @@
   </symbol>
 
   <symbol id="frame.Custom" viewBox="0 0 24 24">
-    <rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M19 5C19 4.44772 19.4477 4 20 4H22C22.5523 4 23 4.44772 23 5V7C23 7.55228 22.5523 8 22 8V16C22.5523 16 23 16.4477 23 17V19C23 19.5523 22.5523 20 22 20H20C19.4477 20 19 19.5523 19 19H5C5 19.5523 4.55228 20 4 20H2C1.44772 20 1 19.5523 1 19V17C1 16.4477 1.44772 16 2 16V8C1.44772 8 1 7.55228 1 7V5C1 4.44772 1.44772 4 2 4H4C4.55228 4 5 4.44772 5 5H19ZM4 8C4.55228 8 5 7.55228 5 7H19C19 7.55228 19.4477 8 20 8V16C19.4477 16 19 16.4477 19 17H5C5 16.4477 4.55228 16 4 16V8Z"/>
   </symbol>
   <symbol id="frame.A4" viewBox="0 0 24 24">
-    <rect x="7" y="4" width="10" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path fill="currentColor" d="M9 8h6v2H9zm0 4h6v2H9z"/>
+    <path fill="currentColor" d="M15 2.003V2H4.00198C3.44998 2 2.99998 2.455 2.99998 2.992V21.008C3.00024 21.2712 3.10498 21.5235 3.29117 21.7095C3.47737 21.8955 3.72979 22 3.99298 22H20.007C20.1383 21.9991 20.2682 21.9723 20.3891 21.9212C20.5101 21.8701 20.6198 21.7957 20.712 21.7022C20.8042 21.6087 20.8771 21.4979 20.9265 21.3762C20.9759 21.2545 21.0009 21.1243 21 20.993V8L15 2.003ZM18.17 8H15V4.83L18.17 8ZM13 4V9C13 9.26522 13.1053 9.51957 13.2929 9.70711C13.4804 9.89464 13.7348 10 14 10H19V20H4.99998V4H13Z"/>
   </symbol>
   <symbol id="frame.Letter" viewBox="0 0 24 24">
-    <rect x="6.5" y="4.5" width="11" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path fill="currentColor" d="M9 8h6v2H9z"/>
+    <path fill="currentColor" d="M15 2.003V2H4.00198C3.44998 2 2.99998 2.455 2.99998 2.992V21.008C3.00024 21.2712 3.10498 21.5235 3.29117 21.7095C3.47737 21.8955 3.72979 22 3.99298 22H20.007C20.1383 21.9991 20.2682 21.9723 20.3891 21.9212C20.5101 21.8701 20.6198 21.7957 20.712 21.7022C20.8042 21.6087 20.8771 21.4979 20.9265 21.3762C20.9759 21.2545 21.0009 21.1243 21 20.993V8L15 2.003ZM18.17 8H15V4.83L18.17 8ZM13 4V9C13 9.26522 13.1053 9.51957 13.2929 9.70711C13.4804 9.89464 13.7348 10 14 10H19V20H4.99998V4H13Z"/>
   </symbol>
   <symbol id="frame.Frame16x9" viewBox="0 0 24 24">
-    <rect x="4" y="7" width="16" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M21 6H3V18H21V6ZM1 4V20H23V4H1Z"/>
   </symbol>
   <symbol id="frame.Frame4x3" viewBox="0 0 24 24">
-    <rect x="5" y="6" width="14" height="10.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M5 6V18H19V6H5ZM4 4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20H20C20.5523 20 21 19.5523 21 19V5C21 4.44772 20.5523 4 20 4H4Z"/>
   </symbol>
   <symbol id="frame.Frame1x1" viewBox="0 0 24 24">
-    <rect x="6" y="6" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M6 6V18H18V6H6ZM5 4C4.44772 4 4 4.44772 4 5V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V5C20 4.44772 19.5523 4 19 4H5Z"/>
   </symbol>
   <symbol id="frame.Frame3x2" viewBox="0 0 24 24">
-    <rect x="4.5" y="7" width="15" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M5.74592 6.24191V17.7576H18.2516V6.24191H5.74592ZM4.71678 4.25C4.18284 4.25 3.75 4.68197 3.75 5.21483V18.7852C3.75 19.318 4.18284 19.75 4.71678 19.75H19.2832C19.8172 19.75 20.25 19.318 20.25 18.7852V5.21483C20.25 4.68197 19.8172 4.25 19.2832 4.25H4.71678Z"/>
   </symbol>
   <symbol id="frame.Frame9x18" viewBox="0 0 24 24">
-    <rect x="8" y="3" width="8" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M8 3L8 21H16V3H8ZM6 22C6 22.5523 6.44772 23 7 23H17C17.5523 23 18 22.5523 18 22V2C18 1.44772 17.5523 1 17 1H7C6.44772 1 6 1.44772 6 2L6 22Z"/>
   </symbol>
 
   <symbol id="shape.reversedTriangle" viewBox="0 0 24 24">
