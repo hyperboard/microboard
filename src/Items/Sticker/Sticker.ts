@@ -249,6 +249,7 @@ export class Sticker extends BaseItem<Sticker> {
   protected override onPropertyUpdated(property: string, value: unknown, prevValue: unknown): void {
     super.onPropertyUpdated(property, value, prevValue);
     if (property === "backgroundColor") {
+      this.saveStickerData();
       this.subject.publish(this);
     }
   }
