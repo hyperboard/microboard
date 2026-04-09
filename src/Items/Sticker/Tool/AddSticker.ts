@@ -46,10 +46,12 @@ export class AddSticker extends BoardTool {
 
 	setBackgroundColor(color: ColorValue | string): void {
 		this.sticker.apply({
-			class: 'Sticker',
-			method: 'setBackgroundColor',
+			class: 'Item',
+			method: 'setProperty',
 			item: [this.sticker.getId()],
-			backgroundColor: coerceColorValue(color),
+			property: 'backgroundColor',
+			value: coerceColorValue(color),
+			prevValues: [this.sticker.getBackgroundColor()],
 		});
 		this.setCursor(color);
 		this.board.tools.publish();
