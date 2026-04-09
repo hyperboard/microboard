@@ -244,6 +244,8 @@ export interface SelectionOverlayActionDefinition {
   invoke: OverlayInvocation;
   controls?: OverlayControlDefinition[];
   groups?: OverlayControlGroupDefinition[];
+  sectionId?: string;
+  order?: number;
   isAvailable?: (items: readonly BaseItem[]) => boolean;
 }
 

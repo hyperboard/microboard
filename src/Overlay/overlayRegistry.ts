@@ -3,6 +3,7 @@ import type { Tool } from "Tools/Tool";
 import type {
   ItemOverlayDefinition,
   OverlayActionDefinition,
+  OverlayActionSectionDefinition,
   OverlayCondition,
   OverlayOptionDefinition,
   SelectionOverlayActionDefinition,
@@ -45,6 +46,7 @@ export const itemOverlays: Record<string, ItemOverlayDefinition> = {};
 export const toolOverlays: Record<string, ToolOverlayDefinition> = {};
 export const dynamicOptionsResolvers: Record<string, OverlayDynamicOptionsResolver> = {};
 export const selectionActions: Record<string, SelectionOverlayActionDefinition> = {};
+export const selectionActionSections: Record<string, OverlayActionSectionDefinition> = {};
 
 export function registerItemOverlay(overlay: ItemOverlayDefinition): void {
   itemOverlays[overlay.itemType] = overlay;
@@ -56,6 +58,10 @@ export function registerToolOverlay(overlay: ToolOverlayDefinition): void {
 
 export function registerSelectionAction(action: SelectionOverlayActionDefinition): void {
   selectionActions[action.id] = action;
+}
+
+export function registerSelectionActionSection(section: OverlayActionSectionDefinition): void {
+  selectionActionSections[section.id] = section;
 }
 
 export function registerDynamicOptionsResolver(
@@ -127,6 +133,10 @@ export function listCreateSurfaceEntries(): OverlayCreateSurfaceEntry[] {
 
 export function listSelectionActions(): SelectionOverlayActionDefinition[] {
   return Object.values(selectionActions);
+}
+
+export function listSelectionActionSections(): OverlayActionSectionDefinition[] {
+  return Object.values(selectionActionSections);
 }
 
 export function getSelectionOverlayActions(

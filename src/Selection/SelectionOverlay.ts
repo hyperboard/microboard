@@ -1,9 +1,43 @@
 import type { BaseItem } from "Items/BaseItem/BaseItem";
-import { registerSelectionAction, symbolIcon, styleFontSizeIcon } from "Overlay";
+import {
+  registerSelectionAction,
+  registerSelectionActionSection,
+  symbolIcon,
+  styleFontSizeIcon,
+} from "Overlay";
 
 function everyItemHasRichText(items: readonly BaseItem[]): boolean {
   return items.length > 0 && items.every(item => !!item.getRichText?.());
 }
+
+registerSelectionActionSection({
+  id: "selectionTextSize",
+  label: "Text size",
+  actionIds: ["selection.text.fontSize"],
+});
+
+registerSelectionActionSection({
+  id: "selectionTextColors",
+  label: "Text colors",
+  actionIds: ["selection.text.color", "selection.text.highlight"],
+});
+
+registerSelectionActionSection({
+  id: "selectionArrange",
+  label: "Arrange",
+  actionIds: ["selection.bringToFront", "selection.sendToBack"],
+});
+
+registerSelectionActionSection({
+  id: "selectionActions",
+  label: "Actions",
+  actionIds: [
+    "selection.duplicate",
+    "selection.lock",
+    "selection.unlock",
+    "selection.delete",
+  ],
+});
 
 registerSelectionAction({
   id: "selection.delete",
@@ -11,6 +45,8 @@ registerSelectionAction({
   icon: symbolIcon("Delete"),
   description: "Removes the selected items from the board.",
   invoke: { kind: "selectionMethod", methodName: "removeFromBoard" },
+  sectionId: "selectionActions",
+  order: 4,
   isAvailable: items => items.length > 0,
 });
 
@@ -20,6 +56,8 @@ registerSelectionAction({
   icon: symbolIcon("Duplicate"),
   description: "Duplicates the selected items.",
   invoke: { kind: "selectionMethod", methodName: "duplicate" },
+  sectionId: "selectionActions",
+  order: 1,
   isAvailable: items => items.length > 0,
 });
 
@@ -29,6 +67,8 @@ registerSelectionAction({
   icon: symbolIcon("unlock"),
   description: "Locks the selected items.",
   invoke: { kind: "selectionMethod", methodName: "lock" },
+  sectionId: "selectionActions",
+  order: 2,
   isAvailable: items => items.length > 0 && !items.some(item => item.transformation.isLocked),
 });
 
@@ -38,6 +78,8 @@ registerSelectionAction({
   icon: symbolIcon("lock"),
   description: "Unlocks the selected items.",
   invoke: { kind: "selectionMethod", methodName: "unlock" },
+  sectionId: "selectionActions",
+  order: 2,
   isAvailable: items => items.some(item => item.transformation.isLocked),
 });
 
@@ -47,6 +89,8 @@ registerSelectionAction({
   icon: symbolIcon("BringToFront"),
   description: "Moves the selection above overlapping items.",
   invoke: { kind: "selectionMethod", methodName: "bringToFront" },
+  sectionId: "selectionArrange",
+  order: 1,
   isAvailable: items => items.length > 0,
 });
 
@@ -56,6 +100,8 @@ registerSelectionAction({
   icon: symbolIcon("SendToBack"),
   description: "Moves the selection behind overlapping items.",
   invoke: { kind: "selectionMethod", methodName: "sendToBack" },
+  sectionId: "selectionArrange",
+  order: 2,
   isAvailable: items => items.length > 0,
 });
 
@@ -64,6 +110,8 @@ registerSelectionAction({
   label: "Font size",
   icon: styleFontSizeIcon(),
   invoke: { kind: "selectionMethod", methodName: "setFontSize" },
+  sectionId: "selectionTextSize",
+  order: 1,
   controls: [
     {
       id: "fontSize",
@@ -90,6 +138,8 @@ registerSelectionAction({
     swatch: { kind: "selectionProperty", property: "getFontColor" },
   }),
   invoke: { kind: "selectionMethod", methodName: "setFontColor" },
+  sectionId: "selectionTextColors",
+  order: 1,
   controls: [
     {
       id: "fontColor",
@@ -112,6 +162,8 @@ registerSelectionAction({
     swatch: { kind: "selectionProperty", property: "getFontHighlight" },
   }),
   invoke: { kind: "selectionMethod", methodName: "setFontHighlight" },
+  sectionId: "selectionTextColors",
+  order: 2,
   controls: [
     {
       id: "fontHighlight",
