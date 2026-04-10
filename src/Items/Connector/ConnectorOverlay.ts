@@ -47,7 +47,7 @@ const pointerOptions: OverlayOptionDefinition[] = CONNECTOR_POINTER_TYPES.map(po
   icon: pointerAssetIcons[pointer],
 }));
 
-const borderStyleOptions: OverlayOptionDefinition[] = (["solid", "dot", "dash", "longDash"] as BorderStyle[]).map(style => ({
+const borderStyleOptions: OverlayOptionDefinition[] = (["solid", "dot", "dash"] as BorderStyle[]).map(style => ({
   id: style,
   label: style,
   value: style,
@@ -56,9 +56,7 @@ const borderStyleOptions: OverlayOptionDefinition[] = (["solid", "dot", "dash", 
       ? "src/Items/Shape/icons/StrokeSolid.icon.svg"
       : style === "dot"
         ? "src/Items/Shape/icons/StrokeDot.icon.svg"
-        : style === "dash"
-          ? "src/Items/Shape/icons/StrokeDash.icon.svg"
-          : "src/Items/Shape/icons/StrokeLongDash.icon.svg",
+        : "src/Items/Shape/icons/StrokeDash.icon.svg",
   ),
 }));
 

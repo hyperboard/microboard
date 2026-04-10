@@ -71,7 +71,6 @@ const BORDER_STYLE_OPTIONS: OverlayOptionDefinition[] = [
   { id: "solid", label: "Solid", value: "solid", icon: localShapeIcon("StrokeSolid") },
   { id: "dot", label: "Dot", value: "dot", icon: localShapeIcon("StrokeDot") },
   { id: "dash", label: "Dash", value: "dash", icon: localShapeIcon("StrokeDash") },
-  { id: "long-dash", label: "Long dash", value: "longDash", icon: localShapeIcon("StrokeLongDash") },
 ];
 
 export const shapeTypeControl: OverlayControlDefinition = {
