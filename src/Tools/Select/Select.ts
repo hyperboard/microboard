@@ -739,6 +739,9 @@ export class Select extends BoardTool {
 		this.isDownOnSelection = this.isPointerDownOnSelection(hover);
 
 		if (this.isDownOnSelection) {
+			if (this.board.selection.tool.leftButtonDown()) {
+				return true;
+			}
 			return this.initializeSelectionDrag(selectionItems);
 		}
 
@@ -807,6 +810,10 @@ export class Select extends BoardTool {
 
 		if (this.board.getInterfaceType() !== 'edit') {
 			return false;
+		}
+
+		if (this.board.selection.tool.pointerMoveBy(x, y)) {
+			return true;
 		}
 
 		this.updateMovementFlag();
@@ -952,6 +959,12 @@ export class Select extends BoardTool {
 	leftButtonUp(): boolean {
 		if (!this.isLeftDown) {
 			return false;
+		}
+
+		if (this.board.selection.tool.leftButtonUp()) {
+			this.clear();
+			this.board.tools.publish();
+			return true;
 		}
 
 		this.initialCursorPos = null;
