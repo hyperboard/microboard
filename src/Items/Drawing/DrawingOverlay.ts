@@ -7,13 +7,6 @@ const COLOR_PALETTE = [...CONTRAST_PALETTE_LIST.map((pair) => pair.id), "transpa
 
 const strokeControls = [
   {
-    id: "strokeColor",
-    label: "Color",
-    valueSource: { kind: "toolProperty" as const, property: "strokeColor" },
-    editor: { kind: "color" as const, palette: COLOR_PALETTE, allowTransparent: true },
-    invoke: { kind: "toolProperty" as const, property: "strokeColor" },
-  },
-  {
     id: "strokeWidth",
     label: "Width",
     valueSource: { kind: "toolProperty" as const, property: "strokeWidth" },
@@ -25,6 +18,13 @@ const strokeControls = [
       unit: "px",
     },
     invoke: { kind: "toolProperty" as const, property: "strokeWidth" },
+  },
+  {
+    id: "strokeColor",
+    label: "Color",
+    valueSource: { kind: "toolProperty" as const, property: "strokeColor" },
+    editor: { kind: "color" as const, palette: COLOR_PALETTE, allowTransparent: true },
+    invoke: { kind: "toolProperty" as const, property: "strokeColor" },
   },
   {
     id: "strokeStyle",
