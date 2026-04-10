@@ -227,6 +227,25 @@ export class Shape extends BaseItem<Shape> {
   }
 
   protected override onPropertyUpdated(property: string, value: any, prevValue: any): void {
+    switch (property) {
+      case "shapeType":
+        this.initPath();
+        break;
+      case "backgroundOpacity":
+        this.path.setBackgroundOpacity(value);
+        break;
+      case "borderOpacity":
+        this.path.setBorderOpacity(value);
+        break;
+      case "borderStyle":
+        this.path.setBorderStyle(value);
+        break;
+      case "borderWidth":
+        this.path.setBorderWidth(value);
+        break;
+      default:
+        break;
+    }
     super.onPropertyUpdated(property, value, prevValue);
     this.saveShapeData();
   }
