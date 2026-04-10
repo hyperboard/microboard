@@ -373,7 +373,6 @@ export class Drawing extends BaseItem<Drawing> {
       this.linkTo.apply(op as any);
     } else {
       super.apply(op);
-      return;
     }
 
     const hint = this.calculateUpdateHint(op);

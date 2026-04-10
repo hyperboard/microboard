@@ -1212,6 +1212,7 @@ export class RichText extends BaseItem<RichText> {
     });
     return {
       resizedMbr: res?.resizedMbr ?? null,
+      translation: res?.translation ?? null,
       onPointerUpCb: res?.onPointerUpCb,
     };
   }

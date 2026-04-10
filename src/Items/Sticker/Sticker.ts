@@ -28,6 +28,8 @@ import { UpdateHint } from "../BaseItem/UpdateHint";
 import { ColorValue, coerceColorValue, resolveColor } from "Color";
 import type { LinkToOperation } from "../LinkTo/LinkToOperation";
 import { getTextResizeType } from "Selection/Transformer/TextTransformer/getTextResizeType";
+import { TransformParams, TransformResult } from "../BaseItem/TransformContext";
+import { transformShape } from "Selection/Transformer/TransformerHelpers/transformShape";
 import { registerItem } from "../RegisterItem";
 import { StickerDataSchema } from "./Sticker.schema";
 
@@ -487,6 +489,35 @@ export class Sticker extends BaseItem<Sticker> {
     anchorDistance = 5
   ): ResizeType | undefined {
     return getTextResizeType(point, cameraScale, mbr, anchorDistance);
+  }
+
+  handleTransform(params: TransformParams): TransformResult {
+    const {
+      board,
+      mbr,
+      resizeType,
+      oppositePoint,
+      isHeight,
+      isWidth,
+      isShiftPressed,
+      beginTimeStamp,
+      followingComments,
+      startMbr,
+    } = params;
+
+    return transformShape({
+      board,
+      mbr,
+      resizeType,
+      oppositePoint,
+      isHeight,
+      isWidth,
+      isShiftPressed,
+      beginTimeStamp,
+      followingComments,
+      startMbr,
+      single: this as any,
+    });
   }
 
   getRichText(): RichText {
