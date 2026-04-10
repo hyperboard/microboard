@@ -5,6 +5,10 @@ import {
   symbolIcon,
   styleFontSizeIcon,
 } from "Overlay";
+import { CONTRAST_PALETTE_LIST } from "Color";
+
+const SEMANTIC_COLOR_PALETTE = CONTRAST_PALETTE_LIST.map((pair) => pair.id);
+const SEMANTIC_HIGHLIGHT_PALETTE = ["transparent", ...SEMANTIC_COLOR_PALETTE];
 
 function everyItemHasRichText(items: readonly BaseItem[]): boolean {
   return items.length > 0 && items.every(item => !!item.getRichText?.());
@@ -147,7 +151,7 @@ registerSelectionAction({
       valueSource: { kind: "selectionProperty", property: "getFontColor" },
       editor: {
         kind: "color",
-        palette: ["#111111", "#FFFFFF", "#E11D48", "#2563EB", "#16A34A", "#F59E0B"],
+        palette: SEMANTIC_COLOR_PALETTE,
       },
       invoke: { kind: "selectionMethod", methodName: "setFontColor" },
     },
@@ -171,7 +175,7 @@ registerSelectionAction({
       valueSource: { kind: "selectionProperty", property: "getFontHighlight" },
       editor: {
         kind: "color",
-        palette: ["transparent", "#FEF08A", "#FDBA74", "#BFDBFE", "#FBCFE8", "#D9F99D"],
+        palette: SEMANTIC_HIGHLIGHT_PALETTE,
       },
       invoke: { kind: "selectionMethod", methodName: "setFontHighlight" },
     },

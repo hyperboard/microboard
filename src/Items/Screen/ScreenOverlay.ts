@@ -1,12 +1,8 @@
 import type { ItemOverlayDefinition, ToolOverlayDefinition } from "Overlay";
 import { overlayAssetIcon } from "Overlay";
+import { CONTRAST_PALETTE_LIST } from "Color";
 
-const SCREEN_PALETTE = [
-  "#FFFFFF",
-  "#F0F0F0",
-  "#222222",
-  "transparent",
-];
+const SCREEN_PALETTE = [...CONTRAST_PALETTE_LIST.map((pair) => pair.id), "transparent"];
 
 export const screenOverlay: ItemOverlayDefinition = {
   itemType: "Screen",
@@ -48,7 +44,7 @@ export const screenOverlay: ItemOverlayDefinition = {
           valueSource: { kind: "itemProperty", property: "borderColor" },
           editor: {
             kind: "color",
-            palette: ["#000000", "#FFFFFF", "#888888", "transparent"],
+            palette: SCREEN_PALETTE,
             allowTransparent: true,
             presentation: "square",
           },

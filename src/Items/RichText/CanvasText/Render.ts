@@ -1001,6 +1001,7 @@ function underline(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const width = measure.width - (textBlock.marginLeft || 0);
 	ctx.strokeStyle = resolveColor(style.color, conf.theme, 'foreground');
 	ctx.lineWidth = textBlock.fontSize / 14;
+	ctx.setLineDash([]);
 	ctx.beginPath();
 	ctx.moveTo(x, y + (2 * textBlock.fontSize) / 14); // 14 - default fontSize
 	ctx.lineTo(x + width, y + (2 * textBlock.fontSize) / 14);
@@ -1024,6 +1025,7 @@ function cross(ctx: Ctx, textBlock: LayoutTextBlock): void {
 	const height = measure.height;
 	ctx.strokeStyle = resolveColor(style.color, conf.theme, 'foreground');
 	ctx.lineWidth = textBlock.fontSize / 14;
+	ctx.setLineDash([]);
 	ctx.beginPath();
 	ctx.moveTo(x, y - height / 4);
 	ctx.lineTo(x + width, y - height / 4);

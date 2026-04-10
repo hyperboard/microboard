@@ -4,15 +4,9 @@ import {
   type ToolOverlayDefinition,
 } from "Overlay";
 import { overlayAssetIcon } from "Overlay";
+import { CONTRAST_PALETTE_LIST } from "Color";
 
-const COLOR_PALETTE = [
-  "#FFFFFF",
-  "#111111",
-  "#FF4444",
-  "#44BB44",
-  "#4466FF",
-  "#FFDD00",
-];
+const COLOR_PALETTE = CONTRAST_PALETTE_LIST.map((pair) => pair.id);
 
 export const diceOverlay: ItemOverlayDefinition = {
   itemType: "Dice",

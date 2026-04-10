@@ -2,16 +2,9 @@ import { CONNECTOR_POINTER_TYPES, ConnectorLineStyles, ConnectionLineWidths } fr
 import type { BorderStyle } from "Geometry/Path";
 import type { ItemOverlayDefinition, OverlayControlDefinition, OverlayOptionDefinition, ToolOverlayDefinition } from "Overlay";
 import { overlayAssetIcon, symbolIcon } from "Overlay";
+import { CONTRAST_PALETTE_LIST } from "Color";
 
-const COLOR_PALETTE = [
-  "#111111",
-  "#FFFFFF",
-  "#FF6B6B",
-  "#FFD166",
-  "#06D6A0",
-  "#118AB2",
-  "#7B61FF",
-];
+const COLOR_PALETTE = CONTRAST_PALETTE_LIST.map((pair) => pair.id);
 
 const connectorAssetIcon = (file: string) =>
   overlayAssetIcon(`src/Items/Connector/icons/${file}.icon.svg`);

@@ -1,16 +1,9 @@
 import { conf } from "Settings";
 import type { ToolOverlayDefinition } from "Overlay";
 import { overlayAssetIcon } from "Overlay";
+import { CONTRAST_PALETTE_LIST } from "Color";
 
-const COLOR_PALETTE = [
-  "#111111",
-  "#FF6B6B",
-  "#FFD166",
-  "#06D6A0",
-  "#118AB2",
-  "#7B61FF",
-  "transparent",
-];
+const COLOR_PALETTE = [...CONTRAST_PALETTE_LIST.map((pair) => pair.id), "transparent"];
 
 const strokeControls = [
   {
