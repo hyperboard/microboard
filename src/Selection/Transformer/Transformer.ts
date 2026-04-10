@@ -258,10 +258,12 @@ export class Transformer extends Tool {
 
     if (single) {
       const result = single.handleTransform(params);
-      this.mbr = result.resizedMbr || this.mbr;
       if (result.translation) {
         this.selection.moveMany(result.translation, this.beginTimeStamp);
       }
+      this.mbr = result.translation
+        ? single.getMbr()
+        : result.resizedMbr || this.mbr;
       if (result.onPointerUpCb) {
         this.onPointerUpCb = result.onPointerUpCb;
       }
